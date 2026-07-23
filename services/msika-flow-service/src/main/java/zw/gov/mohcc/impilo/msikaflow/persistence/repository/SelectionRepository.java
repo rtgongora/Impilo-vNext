@@ -22,4 +22,10 @@ public interface SelectionRepository extends JpaRepository<SelectionEntity, Stri
 
     /** OF-B10 — AWAITING_PAYMENT timeout sweep input. */
     List<SelectionEntity> findByStatus(SelectionStatus status);
+
+    /** OF-B17 — dispatch retry-sweep input (committed selections whose dispatch failed). */
+    List<SelectionEntity> findByStatusAndDispatchStatus(SelectionStatus status, String dispatchStatus);
+
+    /** OF-B17 — Nhume delivery id → selection (write-back cross-check). */
+    Optional<SelectionEntity> findFirstByDispatchRef(String dispatchRef);
 }

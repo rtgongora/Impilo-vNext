@@ -59,6 +59,16 @@ class NhumeIntegrationWriteBackServiceTest {
                     + ":delivery=" + deliveryId + ":proof=" + proofRef);
             return next;
         }
+
+        @Override
+        public WriteBackOutcome msikaFlowSelectionDeliveryStatus(String selectionRef, String status,
+                                                                 String deliveryId, String proofRef,
+                                                                 String verificationGrade,
+                                                                 WriteBackContext ctx) {
+            calls.add("MSIKA_FLOW_SELECTION:" + selectionRef + ":" + status
+                    + ":delivery=" + deliveryId + ":proof=" + proofRef + ":grade=" + verificationGrade);
+            return next;
+        }
     }
 
     private static DeliveryRequestEntity delivery(String metadataJson) {
@@ -129,6 +139,10 @@ class NhumeIntegrationWriteBackServiceTest {
             @Override public WriteBackOutcome msikaFlowDispatchStatus(
                     String o, String s, String d, String p, WriteBackContext c) {
                 throw new IllegalStateException("msika boom");
+            }
+            @Override public WriteBackOutcome msikaFlowSelectionDeliveryStatus(
+                    String sel, String s, String d, String p, String g, WriteBackContext c) {
+                throw new IllegalStateException("msika selection boom");
             }
         };
         NhumeIntegrationWriteBackService service =

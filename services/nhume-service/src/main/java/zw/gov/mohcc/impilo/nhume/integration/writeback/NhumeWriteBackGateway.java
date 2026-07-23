@@ -28,6 +28,21 @@ public interface NhumeWriteBackGateway {
     WriteBackOutcome msikaFlowDispatchStatus(String orderRef, String status, String deliveryId,
                                              String proofRef, WriteBackContext ctx);
 
+    /**
+     * OF-B17 — project a delivery-status change onto a marketplace commitment
+     * SELECTION ({@code metadata.links.msikaFlowSelectionRef}). Msika Flow owns
+     * the selection truth; Nhume reports the physical fact.
+     *
+     * @param selectionRef       the {@code mf_selections.selection_id}
+     * @param status             PICKED_UP / DELIVERED / DELIVERY_ATTEMPTED /
+     *                           RETURNED / FAILED
+     * @param proofRef           optional proof-of-delivery reference (nullable)
+     * @param verificationGrade  achieved §12.4 PoD grade for DELIVERED (nullable)
+     */
+    WriteBackOutcome msikaFlowSelectionDeliveryStatus(String selectionRef, String status,
+                                                      String deliveryId, String proofRef,
+                                                      String verificationGrade, WriteBackContext ctx);
+
     /** Trust/identity context carried into each outbound call. */
     record WriteBackContext(
             String tenantId,

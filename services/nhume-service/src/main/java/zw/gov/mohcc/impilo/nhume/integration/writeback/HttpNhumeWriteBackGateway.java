@@ -165,6 +165,37 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
         }
     }
 
+    @Override
+    public WriteBackOutcome msikaFlowSelectionDeliveryStatus(String selectionRef, String status,
+                                                             String deliveryId, String proofRef,
+                                                             String verificationGrade,
+                                                             WriteBackContext ctx) {
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("status", status);
+            body.put("deliveryId", deliveryId);
+            if (proofRef != null && !proofRef.isBlank()) {
+                body.put("proofRef", proofRef);
+            }
+            if (verificationGrade != null && !verificationGrade.isBlank()) {
+                body.put("verificationGrade", verificationGrade);
+            }
+            restClient.post()
+                    .uri(msikaFlowBaseUrl + "/internal/v1/msika-flow/selections/{selectionId}/delivery-status",
+                            selectionRef)
+                    .headers(msikaFlowHeaders(ctx, "msika-flow-selection-" + status))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
+            return WriteBackOutcome.ok("marketplace selection reported " + status + " to Msika Flow");
+        } catch (RestClientResponseException ex) {
+            return failedFrom("MSIKA_FLOW_SELECTION", ex);
+        } catch (Exception ex) {
+            return failedUnreachable("MSIKA_FLOW_SELECTION", ex);
+        }
+    }
+
     /**
      * Msika Flow dispatch-status is a service-originated (system) call, not an
      * actor-attributed clinical transition: actor is pinned to nhume-service /

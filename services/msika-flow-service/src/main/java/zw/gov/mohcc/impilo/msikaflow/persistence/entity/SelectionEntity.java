@@ -82,9 +82,40 @@ public class SelectionEntity {
     @Column(name = "step_log_json", columnDefinition = "jsonb")
     private String stepLogJson;
 
-    /** Fulfilment dispatch reference once the step-11 seam is wired (RC-8 idempotent on selection). */
+    /** OF-B17 — the Nhume delivery id for a dispatched DELIVERY pathway (RC-8 idempotent on selection). */
     @Column(name = "dispatch_ref", length = 64)
     private String dispatchRef;
+
+    /** OF-B17 — DISPATCHED | DISPATCH_FAILED | NOT_REQUIRED (honest step-11 truth). */
+    @Column(name = "dispatch_status", length = 24)
+    private String dispatchStatus;
+
+    /** Coded cause when dispatch_status = DISPATCH_FAILED (retry-sweep input). */
+    @Column(name = "dispatch_failure_code", length = 64)
+    private String dispatchFailureCode;
+
+    /** Projection of the Nhume delivery status — Nhume owns the logistics truth. */
+    @Column(name = "delivery_status", length = 32)
+    private String deliveryStatus;
+
+    @Column(name = "delivery_status_at")
+    private OffsetDateTime deliveryStatusAt;
+
+    /** nhume_delivery_proofs id received on PoD-verified DELIVERED. */
+    @Column(name = "delivery_proof_ref", length = 64)
+    private String deliveryProofRef;
+
+    /** Achieved §12.4 proof-of-handover grade on DELIVERED. */
+    @Column(name = "delivery_verification_grade", length = 32)
+    private String deliveryVerificationGrade;
+
+    /** OF-B18 escrow seam: ESCROW_RELEASE_PENDING | NOT_APPLICABLE (honest deferral marker). */
+    @Column(name = "escrow_release_status", length = 32)
+    private String escrowReleaseStatus;
+
+    /** MusheX refund id for the §12.7 refund-on-RETURNED path. */
+    @Column(name = "refund_ref", length = 64)
+    private String refundRef;
 
     @Column(name = "committed_at")
     private OffsetDateTime committedAt;
@@ -156,6 +187,30 @@ public class SelectionEntity {
 
     public String getDispatchRef() { return dispatchRef; }
     public void setDispatchRef(String dispatchRef) { this.dispatchRef = dispatchRef; }
+
+    public String getDispatchStatus() { return dispatchStatus; }
+    public void setDispatchStatus(String dispatchStatus) { this.dispatchStatus = dispatchStatus; }
+
+    public String getDispatchFailureCode() { return dispatchFailureCode; }
+    public void setDispatchFailureCode(String dispatchFailureCode) { this.dispatchFailureCode = dispatchFailureCode; }
+
+    public String getDeliveryStatus() { return deliveryStatus; }
+    public void setDeliveryStatus(String deliveryStatus) { this.deliveryStatus = deliveryStatus; }
+
+    public OffsetDateTime getDeliveryStatusAt() { return deliveryStatusAt; }
+    public void setDeliveryStatusAt(OffsetDateTime deliveryStatusAt) { this.deliveryStatusAt = deliveryStatusAt; }
+
+    public String getDeliveryProofRef() { return deliveryProofRef; }
+    public void setDeliveryProofRef(String deliveryProofRef) { this.deliveryProofRef = deliveryProofRef; }
+
+    public String getDeliveryVerificationGrade() { return deliveryVerificationGrade; }
+    public void setDeliveryVerificationGrade(String deliveryVerificationGrade) { this.deliveryVerificationGrade = deliveryVerificationGrade; }
+
+    public String getEscrowReleaseStatus() { return escrowReleaseStatus; }
+    public void setEscrowReleaseStatus(String escrowReleaseStatus) { this.escrowReleaseStatus = escrowReleaseStatus; }
+
+    public String getRefundRef() { return refundRef; }
+    public void setRefundRef(String refundRef) { this.refundRef = refundRef; }
 
     public OffsetDateTime getCommittedAt() { return committedAt; }
     public void setCommittedAt(OffsetDateTime committedAt) { this.committedAt = committedAt; }

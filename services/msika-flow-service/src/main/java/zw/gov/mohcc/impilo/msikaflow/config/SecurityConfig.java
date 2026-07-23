@@ -42,6 +42,10 @@ public class SecurityConfig {
                 // /internal/v1/claims/*/appeal-resubmit.
                 .requestMatchers(org.springframework.http.HttpMethod.POST,
                         "/internal/v1/msika-flow/orders/*/dispatch-status").permitAll()
+                // OF-B17: Nhume selection delivery-status callback — same mesh-edge
+                // authentication precedent as the order dispatch-status callback.
+                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                        "/internal/v1/msika-flow/selections/*/delivery-status").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));

@@ -55,7 +55,11 @@ public record CreateDeliveryRequest(
         @JsonProperty("sla_id") String slaId,
         @JsonProperty("notes") String notes,
         @JsonProperty("metadata") Map<String, Object> metadata,
-        @JsonProperty("submit_immediately") Boolean submitImmediately
+        @JsonProperty("submit_immediately") Boolean submitImmediately,
+        // OF-B18 §12.4 — per-order-class handover contract (both optional; NULL keeps
+        // the legacy ungraded behaviour so existing callers are unaffected).
+        @JsonProperty("required_pod_grade") String requiredPodGrade,
+        @JsonProperty("named_recipient_required") Boolean namedRecipientRequired
 ) {
 
     public record LocationDto(

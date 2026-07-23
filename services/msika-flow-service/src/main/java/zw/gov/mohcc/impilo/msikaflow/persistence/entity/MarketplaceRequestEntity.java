@@ -101,6 +101,25 @@ public class MarketplaceRequestEntity {
     @Column(name = "coverage_id")
     private UUID coverageId;
 
+    /**
+     * OF-B17 — fulfilment-pathway election. NULL is treated as PICKUP
+     * everywhere (fail-closed: no delivery dispatch without an explicit
+     * DELIVERY election).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "fulfilment_pathway", length = 16)
+    private zw.gov.mohcc.impilo.msikaflow.domain.FulfilmentPathway fulfilmentPathway;
+
+    /**
+     * OF-B17 §11.8 post-commitment delivery-minimum block (name / contact /
+     * address). Request-row-only truth — NEVER included in the published
+     * invitation snapshot, vendor views or event payloads; disclosed to Nhume
+     * only at delivery-task creation (§12.1).
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "delivery_details_json", columnDefinition = "jsonb")
+    private String deliveryDetailsJson;
+
     @Column(name = "requested_by", length = 128)
     private String requestedBy;
 
@@ -174,6 +193,12 @@ public class MarketplaceRequestEntity {
 
     public UUID getCoverageId() { return coverageId; }
     public void setCoverageId(UUID coverageId) { this.coverageId = coverageId; }
+
+    public zw.gov.mohcc.impilo.msikaflow.domain.FulfilmentPathway getFulfilmentPathway() { return fulfilmentPathway; }
+    public void setFulfilmentPathway(zw.gov.mohcc.impilo.msikaflow.domain.FulfilmentPathway fulfilmentPathway) { this.fulfilmentPathway = fulfilmentPathway; }
+
+    public String getDeliveryDetailsJson() { return deliveryDetailsJson; }
+    public void setDeliveryDetailsJson(String deliveryDetailsJson) { this.deliveryDetailsJson = deliveryDetailsJson; }
 
     public String getRequestedBy() { return requestedBy; }
     public void setRequestedBy(String requestedBy) { this.requestedBy = requestedBy; }

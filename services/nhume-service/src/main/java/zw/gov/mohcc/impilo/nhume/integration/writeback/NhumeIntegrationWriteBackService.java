@@ -97,6 +97,17 @@ public class NhumeIntegrationWriteBackService {
             outcomes.put("MSIKA_FLOW", safely("MSIKA_FLOW", () ->
                     gateway.msikaFlowDispatchStatus(marketplaceRef, "DELIVERED", deliveryId, proofRef, ctx)));
         }
+        // OF-B17/OF-B18 — commitment-selection projection: PoD-verified DELIVERED
+        // carries the achieved §12.4 grade so Msika Flow can gate the escrow seam.
+        String selectionRef = links.get("msikaFlowSelectionRef");
+        if (selectionRef != null && !selectionRef.isBlank()) {
+            String proofRef = latestDeliveryProofRef(delivery);
+            String grade = latestDeliveryProofGrade(delivery);
+            String deliveryId = ctx.deliveryId();
+            outcomes.put("MSIKA_FLOW_SELECTION", safely("MSIKA_FLOW_SELECTION", () ->
+                    gateway.msikaFlowSelectionDeliveryStatus(selectionRef, "DELIVERED",
+                            deliveryId, proofRef, grade, ctx)));
+        }
         String dura = links.get("duraRequisitionRef");
         if (dura != null && !dura.isBlank()) {
             outcomes.put("DURA", WriteBackOutcome.skippedNoTransition(
@@ -119,13 +130,48 @@ public class NhumeIntegrationWriteBackService {
         }
         Map<String, String> links = readLinks(delivery.getMetadataJson());
         String marketplaceRef = marketplaceOrderRef(delivery, links);
-        if (marketplaceRef == null) {
+        if (marketplaceRef == null && !links.containsKey("msikaFlowSelectionRef")) {
             return outcomes;
         }
         WriteBackContext ctx = buildContext(delivery, actor);
         String deliveryId = ctx.deliveryId();
-        outcomes.put("MSIKA_FLOW", safely("MSIKA_FLOW", () ->
-                gateway.msikaFlowDispatchStatus(marketplaceRef, "PICKED_UP", deliveryId, null, ctx)));
+        if (marketplaceRef != null) {
+            outcomes.put("MSIKA_FLOW", safely("MSIKA_FLOW", () ->
+                    gateway.msikaFlowDispatchStatus(marketplaceRef, "PICKED_UP", deliveryId, null, ctx)));
+        }
+        String selectionRef = links.get("msikaFlowSelectionRef");
+        if (selectionRef != null && !selectionRef.isBlank()) {
+            outcomes.put("MSIKA_FLOW_SELECTION", safely("MSIKA_FLOW_SELECTION", () ->
+                    gateway.msikaFlowSelectionDeliveryStatus(selectionRef, "PICKED_UP",
+                            deliveryId, null, null, ctx)));
+        }
+        return outcomes;
+    }
+
+    /**
+     * OF-B17 §12.7/§12.8 — non-terminal-happy statuses that a marketplace
+     * commitment must still see honestly: DELIVERY_ATTEMPTED (verification
+     * failed / recipient absent), RETURNED (return chain → refund seam) and
+     * FAILED. Selection-linked deliveries only; never throws, never blocks the
+     * courier flow.
+     */
+    public Map<String, WriteBackOutcome> onDeliveryStatus(DeliveryRequestEntity delivery,
+                                                          String status,
+                                                          TrustLayerGuard.ActorContext actor) {
+        Map<String, WriteBackOutcome> outcomes = new LinkedHashMap<>();
+        if (!enabled) {
+            return outcomes;
+        }
+        Map<String, String> links = readLinks(delivery.getMetadataJson());
+        String selectionRef = links.get("msikaFlowSelectionRef");
+        if (selectionRef == null || selectionRef.isBlank()) {
+            return outcomes;
+        }
+        WriteBackContext ctx = buildContext(delivery, actor);
+        String deliveryId = ctx.deliveryId();
+        outcomes.put("MSIKA_FLOW_SELECTION", safely("MSIKA_FLOW_SELECTION", () ->
+                gateway.msikaFlowSelectionDeliveryStatus(selectionRef, status,
+                        deliveryId, null, null, ctx)));
         return outcomes;
     }
 
@@ -165,6 +211,23 @@ public class NhumeIntegrationWriteBackService {
                     .orElse(null);
         } catch (Exception e) {
             log.warn("Could not resolve delivery proof for write-back: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** Latest DELIVERY-stage proof's achieved §12.4 verification grade, if any — never throws. */
+    private String latestDeliveryProofGrade(DeliveryRequestEntity delivery) {
+        if (proofRepo == null || delivery.getDeliveryId() == null) {
+            return null;
+        }
+        try {
+            return proofRepo.findByDeliveryIdOrderByCapturedAtAsc(delivery.getDeliveryId()).stream()
+                    .filter(p -> "DELIVERY".equals(p.getProofStage()) && p.isVerified())
+                    .reduce((first, second) -> second)
+                    .map(p -> p.getVerificationGrade())
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Could not resolve delivery proof grade for write-back: {}", e.getMessage());
             return null;
         }
     }

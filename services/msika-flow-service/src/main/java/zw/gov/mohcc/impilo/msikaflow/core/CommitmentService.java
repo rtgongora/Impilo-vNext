@@ -86,6 +86,7 @@ public class CommitmentService {
     private final OrosClient orosClient;
     private final OfferFinancialsService offerFinancialsService;
     private final MushexClient mushexClient;
+    private final FulfilmentDispatchService fulfilmentDispatchService;
     private final ObjectMapper objectMapper;
     private final long defaultFulfillmentWindowHours;
 
@@ -101,6 +102,7 @@ public class CommitmentService {
                              OrosClient orosClient,
                              OfferFinancialsService offerFinancialsService,
                              MushexClient mushexClient,
+                             FulfilmentDispatchService fulfilmentDispatchService,
                              ObjectMapper objectMapper,
                              @Value("${msika-flow.marketplace.default-fulfillment-window-hours:24}") long defaultFulfillmentWindowHours) {
         this.requestRepository = requestRepository;
@@ -115,6 +117,7 @@ public class CommitmentService {
         this.orosClient = orosClient;
         this.offerFinancialsService = offerFinancialsService;
         this.mushexClient = mushexClient;
+        this.fulfilmentDispatchService = fulfilmentDispatchService;
         this.objectMapper = objectMapper;
         this.defaultFulfillmentWindowHours = defaultFulfillmentWindowHours;
     }
@@ -532,13 +535,19 @@ public class CommitmentService {
         }
         steps.pass(11, "LOSING_OFFERS_RELEASED", null, null);
 
-        // ── Step 11: fulfilment dispatch — honest PARTIAL seam ──
-        // The existing msika-flow order path is cart/payment-shaped and is not trivially
-        // wireable to an RFO commitment; the dispatch seam (pharmacy dispense episode /
-        // provider work order, idempotent on selectionId per RC-8) is a follow-on build.
-        // Recorded PARTIAL, never faked.
-        steps.partial(12, "FULFILMENT_DISPATCH",
-                "dispatch seam not wired this wave; idempotent on selectionId when built (RC-8)");
+        // ── Step 11: fulfilment dispatch (OF-B17, RC-8 — idempotent on selectionId) ──
+        // Dispatch failure NEVER rolls back the commitment: the order stands with a
+        // coded DISPATCH_FAILED outcome and the retry sweep re-attempts (§8.9 step 11).
+        FulfilmentDispatchService.DispatchOutcome dispatch =
+                fulfilmentDispatchService.dispatchOnCommit(selection, request, offer, lines, inbound);
+        if (dispatch.dispatched()) {
+            steps.pass(12, "FULFILMENT_DISPATCH", null, dispatch.detail());
+        } else if (dispatch.failed()) {
+            steps.partial(12, "FULFILMENT_DISPATCH", dispatch.code(),
+                    dispatch.detail() + " — commitment stands; retry sweep re-attempts (RC-8)");
+        } else {
+            steps.skip(12, "FULFILMENT_DISPATCH", dispatch.detail());
+        }
 
         selection.setStepLogJson(steps.toJson(objectMapper));
         selectionRepository.save(selection);
@@ -756,6 +765,11 @@ public class CommitmentService {
 
         void partial(int seq, String step, String detail) {
             entries.add(new Entry(seq, step, "PARTIAL", null, detail, OffsetDateTime.now()));
+        }
+
+        /** OF-B17 — PARTIAL with a discrete code (e.g. DISPATCH_FAILED, honest not-fatal). */
+        void partial(int seq, String step, String code, String detail) {
+            entries.add(new Entry(seq, step, "PARTIAL", code, detail, OffsetDateTime.now()));
         }
 
         /** OF-B10 — zero-shortfall payment step: nothing owed, recorded, never skipped. */

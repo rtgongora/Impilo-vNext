@@ -28,5 +28,11 @@ public record ProofRequest(
         // handover rejected; UNAVAILABLE → fall back to the declared proof method (unchanged).
         @JsonProperty("biometric_subject_ref") String biometricSubjectRef,
         @JsonProperty("biometric_modality") String biometricModality,
-        @JsonProperty("biometric_probe_base64") String biometricProbeBase64
+        @JsonProperty("biometric_probe_base64") String biometricProbeBase64,
+        // OF-B18 §12.4 — handover attestation artifacts feeding the grade ladder:
+        // the receiver's name (named-recipient check) and the courier's ID-check
+        // attestation (type + document ref) for ID_CHECK / OTP_PLUS_ID grades.
+        @JsonProperty("receiver_name") String receiverName,
+        @JsonProperty("id_document_type") String idDocumentType,
+        @JsonProperty("id_document_ref") String idDocumentRef
 ) {}

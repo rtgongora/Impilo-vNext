@@ -162,6 +162,25 @@ public class DeliveryRequestEntity {
     @Column(name = "return_required", nullable = false)
     private boolean returnRequired;
 
+    /** OF-B18 §12.4 — explicit required proof-of-handover grade; NULL = legacy ungraded class. */
+    @Column(name = "required_pod_grade", length = 32)
+    private String requiredPodGrade;
+
+    /** OF-B18 — the handover must be to the named recipient; verification failure fails closed. */
+    @Column(name = "named_recipient_required", nullable = false)
+    private boolean namedRecipientRequired;
+
+    /** Server-side OTP truth for the OTP_MATCH grade — never sent to the courier surface. */
+    @Column(name = "handover_otp", length = 12)
+    private String handoverOtp;
+
+    /** OF-B18 §12.7 — bounded reattempt counter (attempts exhausted ⇒ RETURNED). */
+    @Column(name = "handover_attempts", nullable = false)
+    private int handoverAttempts;
+
+    @Column(name = "max_handover_attempts", nullable = false)
+    private int maxHandoverAttempts = 3;
+
     @Column(name = "required_by")
     private OffsetDateTime requiredBy;
 
@@ -340,6 +359,16 @@ public class DeliveryRequestEntity {
     public void setChainOfCustodyRequired(boolean v) { this.chainOfCustodyRequired = v; }
     public boolean isReturnRequired() { return returnRequired; }
     public void setReturnRequired(boolean v) { this.returnRequired = v; }
+    public String getRequiredPodGrade() { return requiredPodGrade; }
+    public void setRequiredPodGrade(String v) { this.requiredPodGrade = v; }
+    public boolean isNamedRecipientRequired() { return namedRecipientRequired; }
+    public void setNamedRecipientRequired(boolean v) { this.namedRecipientRequired = v; }
+    public String getHandoverOtp() { return handoverOtp; }
+    public void setHandoverOtp(String v) { this.handoverOtp = v; }
+    public int getHandoverAttempts() { return handoverAttempts; }
+    public void setHandoverAttempts(int v) { this.handoverAttempts = v; }
+    public int getMaxHandoverAttempts() { return maxHandoverAttempts; }
+    public void setMaxHandoverAttempts(int v) { this.maxHandoverAttempts = v; }
     public OffsetDateTime getRequiredBy() { return requiredBy; }
     public void setRequiredBy(OffsetDateTime v) { this.requiredBy = v; }
     public OffsetDateTime getPickupWindowStart() { return pickupWindowStart; }

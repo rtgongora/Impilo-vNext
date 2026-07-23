@@ -61,6 +61,28 @@ public class DeliveryProofEntity {
     @Column(name = "verified", nullable = false)
     private boolean verified;
 
+    /** OF-B18 §12.4 — the achieved proof-of-handover grade (ladder value or UNGRADED). */
+    @Column(name = "verification_grade", length = 32)
+    private String verificationGrade;
+
+    /** Courier-attested receiver name at handover. */
+    @Column(name = "receiver_name", length = 255)
+    private String receiverName;
+
+    /** Result of the named-recipient check (NULL when not applicable). */
+    @Column(name = "named_recipient_match")
+    private Boolean namedRecipientMatch;
+
+    @Column(name = "id_document_type", length = 48)
+    private String idDocumentType;
+
+    @Column(name = "id_document_ref", length = 64)
+    private String idDocumentRef;
+
+    /** Coded refusal cause when verified = FALSE (the DELIVERY_ATTEMPTED evidence). */
+    @Column(name = "failure_reason", length = 128)
+    private String failureReason;
+
     public DeliveryProofEntity() {}
 
     public UUID getProofId() { return proofId; }
@@ -93,4 +115,16 @@ public class DeliveryProofEntity {
     public void setMetadataJson(String v) { this.metadataJson = v; }
     public boolean isVerified() { return verified; }
     public void setVerified(boolean v) { this.verified = v; }
+    public String getVerificationGrade() { return verificationGrade; }
+    public void setVerificationGrade(String v) { this.verificationGrade = v; }
+    public String getReceiverName() { return receiverName; }
+    public void setReceiverName(String v) { this.receiverName = v; }
+    public Boolean getNamedRecipientMatch() { return namedRecipientMatch; }
+    public void setNamedRecipientMatch(Boolean v) { this.namedRecipientMatch = v; }
+    public String getIdDocumentType() { return idDocumentType; }
+    public void setIdDocumentType(String v) { this.idDocumentType = v; }
+    public String getIdDocumentRef() { return idDocumentRef; }
+    public void setIdDocumentRef(String v) { this.idDocumentRef = v; }
+    public String getFailureReason() { return failureReason; }
+    public void setFailureReason(String v) { this.failureReason = v; }
 }

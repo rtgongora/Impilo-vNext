@@ -217,6 +217,17 @@ public class NhumeDeliveryService {
         applyPolicyDefaults(delivery, tenantId);
         computeSlaDueAt(delivery);
 
+        // OF-B18 §12.4 — an OTP-graded contract needs a server-held OTP truth at
+        // creation (an OTP grade can never be "matched" against nothing). The code
+        // rides the recipient notification channel, never the courier surface.
+        if (HandoverGradePolicy.requiresGradedHandover(delivery)
+                && HandoverGradePolicy.requiredGrade(delivery).rank()
+                        >= zw.gov.mohcc.impilo.nhume.domain.HandoverVerificationGrade.OTP_MATCH.rank()
+                && delivery.getHandoverOtp() == null) {
+            delivery.setHandoverOtp(String.format(Locale.ROOT, "%06d",
+                    ThreadLocalRandom.current().nextInt(1_000_000)));
+        }
+
         deliveryRepo.save(delivery);
 
         if (req.items() != null) {
@@ -345,8 +356,30 @@ public class NhumeDeliveryService {
     @Transactional
     public DeliveryRequestEntity markDelivered(UUID deliveryId, StatusChangeRequest req,
                                                 TrustLayerGuard.ActorContext actor) {
+        // OF-B18 — a graded delivery may only be signed off DELIVERED against a
+        // verified DELIVERY-stage proof that meets the required §12.4 grade.
+        deliveryRepo.findById(deliveryId).ifPresent(this::assertHandoverProven);
         return transition(deliveryId, DeliveryStatus.DELIVERED, req, actor,
                 NhumeEvents.DELIVERY_COMPLETED);
+    }
+
+    /** Fail-closed DELIVERED gate for graded order classes (OF-B18 §12.4). */
+    private void assertHandoverProven(DeliveryRequestEntity d) {
+        if (!HandoverGradePolicy.requiresGradedHandover(d)) {
+            return;
+        }
+        zw.gov.mohcc.impilo.nhume.domain.HandoverVerificationGrade required =
+                HandoverGradePolicy.requiredGrade(d);
+        boolean proven = proofRepo.findByDeliveryIdOrderByCapturedAtAsc(d.getDeliveryId()).stream()
+                .filter(p -> "DELIVERY".equals(p.getProofStage()) && p.isVerified())
+                .map(p -> zw.gov.mohcc.impilo.nhume.domain.HandoverVerificationGrade
+                        .parse(p.getVerificationGrade()))
+                .anyMatch(g -> g != null && g.meets(required));
+        if (!proven) {
+            throw new IllegalStateException("HANDOVER_PROOF_REQUIRED: delivery "
+                    + d.getDeliveryId() + " requires a verified proof at grade "
+                    + required + " before DELIVERED sign-off");
+        }
     }
 
     private DeliveryRequestEntity transition(UUID deliveryId, DeliveryStatus target,
@@ -387,8 +420,41 @@ public class NhumeDeliveryService {
                 channelForRecipient(d));
         if (target == DeliveryStatus.DELIVERED) {
             runIntegrationWriteBacks(d, actor);
+        } else if (target == DeliveryStatus.DELIVERY_ATTEMPTED
+                || target == DeliveryStatus.RETURNED
+                || target == DeliveryStatus.FAILED) {
+            // OF-B17 §12.7/§12.8 — a marketplace commitment must see the honest
+            // non-happy statuses too (attempted / returned → refund seam).
+            runSelectionStatusWriteBack(d, target.name(), actor);
         }
         return d;
+    }
+
+    /**
+     * Selection-linked status write-back. Failure NEVER blocks the courier flow
+     * but is NEVER silent either: a failed callback is recorded as an
+     * ops-visible delivery exception (§12.8 — no swallowed-to-warning losses).
+     */
+    private void runSelectionStatusWriteBack(DeliveryRequestEntity d, String status,
+                                             TrustLayerGuard.ActorContext actor) {
+        try {
+            var outcomes = writeBack.onDeliveryStatus(d, status, actor);
+            if (outcomes.isEmpty()) {
+                return;
+            }
+            d.setMetadataJson(writeBack.mergeOutcomes(d.getMetadataJson(), outcomes));
+            deliveryRepo.save(d);
+            boolean anyFailed = outcomes.values().stream()
+                    .anyMatch(o -> o.status() == zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.Status.FAILED);
+            if (anyFailed) {
+                raiseException(d.getDeliveryId(), "SELECTION_WRITEBACK_FAILED", "WARNING",
+                        "Marketplace selection could not be told about " + status
+                                + "; see links_writeback — reconcile before closing", actor);
+            }
+        } catch (Exception e) {
+            log.warn("Selection status write-back pass failed for delivery {}: {}",
+                    d.getDeliveryId(), e.toString());
+        }
     }
 
     /**
@@ -604,6 +670,7 @@ public class NhumeDeliveryService {
         // NO_REFERENCE → fall back to the declared proof method so an outage never blocks delivery.
         String proofMethod = req.proofMethod();
         String biometricRef = req.biometricRef();
+        boolean biometricVerified = false;
         if (req.biometricProbeBase64() != null && !req.biometricProbeBase64().isBlank()
                 && req.biometricSubjectRef() != null && !req.biometricSubjectRef().isBlank()) {
             String modality = req.biometricModality() != null && !req.biometricModality().isBlank()
@@ -613,6 +680,7 @@ public class NhumeDeliveryService {
             if (decision.isMatch()) {
                 proofMethod = "BIOMETRIC";
                 biometricRef = req.biometricSubjectRef();
+                biometricVerified = true;
             } else if (!"UNAVAILABLE".equals(decision.result())
                     && !"NO_REFERENCE".equals(decision.result())) {
                 throw new IllegalStateException(
@@ -621,10 +689,17 @@ public class NhumeDeliveryService {
             // UNAVAILABLE / NO_REFERENCE → fall through on the declared proof method (unchanged).
         }
 
+        // OF-B18 §12.4 — grade-ladder verdict for DELIVERY-stage handovers.
+        // (PICKUP-stage collection sign-offs ride the pharmacy-side OF-B16 ladder.)
+        String stage = orDefault(req.proofStage(), "DELIVERY");
+        HandoverGradePolicy.Verdict verdict = "DELIVERY".equals(stage)
+                ? HandoverGradePolicy.evaluate(d, req, biometricVerified)
+                : new HandoverGradePolicy.Verdict(true, null, null, null);
+
         DeliveryProofEntity proof = new DeliveryProofEntity();
         proof.setProofId(UUID.randomUUID());
         proof.setDeliveryId(deliveryId);
-        proof.setProofStage(orDefault(req.proofStage(), "DELIVERY"));
+        proof.setProofStage(stage);
         proof.setProofMethod(proofMethod);
         proof.setCapturedBy(actor != null ? actor.actorId() : req.capturedBy());
         proof.setOtpCode(req.otpCode());
@@ -635,22 +710,89 @@ public class NhumeDeliveryService {
         proof.setLockerCode(req.lockerCode());
         proof.setWebhookRef(req.webhookRef());
         proof.setMetadataJson(toJson(req.metadata()));
-        proof.setVerified(true);
+        proof.setVerified(verdict.pass());
+        proof.setVerificationGrade(verdict.achievedGradeName());
+        proof.setReceiverName(req.receiverName());
+        proof.setNamedRecipientMatch(verdict.namedRecipientMatch());
+        proof.setIdDocumentType(req.idDocumentType());
+        proof.setIdDocumentRef(req.idDocumentRef());
+        proof.setFailureReason(verdict.failureReason());
         proofRepo.save(proof);
 
         Map<String, Object> payload = buildDeliveryStatePayload(d);
         payload.put("proof_id", proof.getProofId().toString());
         payload.put("proof_method", proof.getProofMethod());
         payload.put("proof_stage", proof.getProofStage());
+        payload.put("verified", proof.isVerified());
+        payload.put("verification_grade", proof.getVerificationGrade());
+        if (proof.getFailureReason() != null) {
+            payload.put("failure_reason", proof.getFailureReason());
+        }
         appendOutboxEvent(NhumeEvents.DELIVERY_PROOF_CAPTURED, d, d.getTenantId(), d.getPodId(),
                 d.getCorrelationId() != null ? d.getCorrelationId().toString() : null,
                 "proof-" + UUID.randomUUID(), payload);
         recordAudit(d, "delivery.proof.captured", actor);
 
+        if (!verdict.pass()) {
+            return handleFailedHandover(d, proof, actor);
+        }
+
         if (Boolean.TRUE.equals(req.markDelivered())
                 && DeliveryStatus.canTransition(parseStatus(d.getStatus()), DeliveryStatus.DELIVERED)) {
-            markDelivered(deliveryId,
-                    new StatusChangeRequest("Auto-marked delivered after proof capture", null), actor);
+            // The just-captured verified proof IS the §12.4 evidence — transition
+            // directly (the public markDelivered gate re-queries persisted proofs).
+            transition(deliveryId, DeliveryStatus.DELIVERED,
+                    new StatusChangeRequest("Auto-marked delivered after proof capture", null),
+                    actor, NhumeEvents.DELIVERY_COMPLETED);
+        }
+        return proof;
+    }
+
+    /**
+     * OF-B18 fail-closed handover refusal (§12.4/§12.7): the failed proof is
+     * kept as evidence, a HANDOVER_ATTEMPTED custody event is appended, the
+     * delivery transitions to DELIVERY_ATTEMPTED, and once the bounded
+     * reattempt budget is exhausted the delivery is RETURNED — never a silent
+     * retry loop, never a DELIVERED without proof.
+     */
+    private DeliveryProofEntity handleFailedHandover(DeliveryRequestEntity d, DeliveryProofEntity proof,
+                                                     TrustLayerGuard.ActorContext actor) {
+        int attempts = d.getHandoverAttempts() + 1;
+        d.setHandoverAttempts(attempts);
+        d.setUpdatedAt(OffsetDateTime.now());
+        deliveryRepo.save(d);
+
+        // Custody truth: the attempted handover is an append-only chain event.
+        ChainOfCustodyEventEntity coc = new ChainOfCustodyEventEntity();
+        coc.setCocId(UUID.randomUUID());
+        coc.setDeliveryId(d.getDeliveryId());
+        coc.setSequenceNo(custodyRepo.findByDeliveryIdOrderBySequenceNoAsc(d.getDeliveryId()).size() + 1);
+        coc.setEventKind("HANDOVER_ATTEMPTED");
+        coc.setCustodyHolder("COURIER");
+        coc.setHandoverNotes("Handover verification failed: " + proof.getFailureReason()
+                + " (attempt " + attempts + "/" + d.getMaxHandoverAttempts() + ")");
+        coc.setVerification(proof.getVerificationGrade());
+        coc.setActorId(actor != null ? actor.actorId() : null);
+        coc.setActorType(actor != null ? actor.actorType() : null);
+        custodyRepo.save(coc);
+
+        raiseException(d.getDeliveryId(), "HANDOVER_VERIFICATION_FAILED", "WARNING",
+                "Handover refused (" + proof.getFailureReason() + "), attempt "
+                        + attempts + " of " + d.getMaxHandoverAttempts(), actor);
+
+        DeliveryStatus current = parseStatus(d.getStatus());
+        if (current != DeliveryStatus.DELIVERY_ATTEMPTED
+                && DeliveryStatus.canTransition(current, DeliveryStatus.DELIVERY_ATTEMPTED)) {
+            transition(d.getDeliveryId(), DeliveryStatus.DELIVERY_ATTEMPTED,
+                    new StatusChangeRequest(proof.getFailureReason(), null), actor,
+                    NhumeEvents.DELIVERY_ATTEMPTED);
+        }
+        if (attempts >= d.getMaxHandoverAttempts()) {
+            // §12.7 — reattempt budget exhausted: return chain begins.
+            transition(d.getDeliveryId(), DeliveryStatus.RETURNED,
+                    new StatusChangeRequest("Handover reattempt budget exhausted after "
+                            + attempts + " attempts — returning to sender", null),
+                    actor, NhumeEvents.DELIVERY_RETURN_COMPLETED);
         }
         return proof;
     }
@@ -735,7 +877,9 @@ public class NhumeDeliveryService {
     }
 
     private static final java.util.Set<String> LINK_KEYS = java.util.Set.of(
-            "daidzaiIncidentRef", "orosOrderRef", "madiOrderRef", "pctReferralRef", "duraRequisitionRef");
+            "daidzaiIncidentRef", "orosOrderRef", "madiOrderRef", "pctReferralRef", "duraRequisitionRef",
+            // OF-B17 — marketplace-commitment linkage (selection + request + dispense episode)
+            "msikaFlowSelectionRef", "msikaFlowRequestRef", "dispenseEpisodeRef");
 
     /** Attach/update a whitelisted integration link in metadata.links (audited). */
     @Transactional
@@ -828,6 +972,10 @@ public class NhumeDeliveryService {
         if (req.specimen() != null) d.setSpecimen(req.specimen());
         if (req.chainOfCustodyRequired() != null) d.setChainOfCustodyRequired(req.chainOfCustodyRequired());
         if (req.returnRequired() != null) d.setReturnRequired(req.returnRequired());
+        if (req.requiredPodGrade() != null && !req.requiredPodGrade().isBlank()) {
+            d.setRequiredPodGrade(req.requiredPodGrade());
+        }
+        if (req.namedRecipientRequired() != null) d.setNamedRecipientRequired(req.namedRecipientRequired());
         d.setRequiredBy(req.requiredBy());
         d.setPickupWindowStart(req.pickupWindowStart());
         d.setPickupWindowEnd(req.pickupWindowEnd());
@@ -941,6 +1089,13 @@ public class NhumeDeliveryService {
         data.put("status", d.getStatus());
         data.put("recipient_name", d.getRecipientName());
         data.put("destination_label", d.getDestinationLabel());
+        // OF-B18 — the handover OTP rides ONLY the recipient's own channel
+        // (SMS/EMAIL/IN_APP); dispatcher/courier surfaces never receive it.
+        if (d.getHandoverOtp() != null
+                && ("SMS".equalsIgnoreCase(channel) || "EMAIL".equalsIgnoreCase(channel)
+                        || "IN_APP".equalsIgnoreCase(channel) || "WHATSAPP".equalsIgnoreCase(channel))) {
+            data.put("handover_otp", d.getHandoverOtp());
+        }
         CommsHubClient.DispatchResult result = commsHub.dispatch(
                 eventCode, channel, recipient, templateCode, data);
         notificationRepo.save(notificationOf(d, eventCode, channel, recipient, templateCode,

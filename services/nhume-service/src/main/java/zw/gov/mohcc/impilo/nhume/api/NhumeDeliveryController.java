@@ -442,6 +442,11 @@ public class NhumeDeliveryController {
         m.put("geofence_match", p.getGeofenceMatch());
         m.put("locker_code", p.getLockerCode());
         m.put("verified", p.isVerified());
+        // OF-B18 §12.4 — the achieved grade and (on refusal) the coded cause,
+        // so the courier surface can show WHY a handover was refused.
+        m.put("verification_grade", p.getVerificationGrade());
+        m.put("named_recipient_match", p.getNamedRecipientMatch());
+        m.put("failure_reason", p.getFailureReason());
         return m;
     }
 

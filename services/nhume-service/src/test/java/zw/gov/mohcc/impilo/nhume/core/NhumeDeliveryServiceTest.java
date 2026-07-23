@@ -116,6 +116,14 @@ class NhumeDeliveryServiceTest {
             calls.add("MSIKA_FLOW:" + orderRef + ":" + status);
             return zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.ok("stub");
         }
+        @Override public zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome
+                msikaFlowSelectionDeliveryStatus(String selectionRef, String status, String deliveryId,
+                                                 String proofRef, String verificationGrade,
+                                                 WriteBackContext ctx) {
+            calls.add("MSIKA_FLOW_SELECTION:" + selectionRef + ":" + status
+                    + (verificationGrade != null ? ":" + verificationGrade : ""));
+            return zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.ok("stub");
+        }
     }
 
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -256,7 +264,7 @@ class NhumeDeliveryServiceTest {
 
         DeliveryProofEntity proof = service.captureProof(id,
                 new ProofRequest("DELIVERY", "OTP", "tester", "123456", null, null, null,
-                        true, null, null, Map.of(), true, null, null, null), actorCtx());
+                        true, null, null, Map.of(), true, null, null, null, null, null, null), actorCtx());
         assertThat(proof.getProofId()).isNotNull();
         assertThat(proof.isVerified()).isTrue();
         assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
@@ -283,7 +291,7 @@ class NhumeDeliveryServiceTest {
         service.startTransit(id, new StatusChangeRequest("en route", null), actorCtx());
         service.captureProof(id,
                 new ProofRequest("DELIVERY", "OTP", "tester", "123456", null, null, null,
-                        true, null, null, Map.of(), true, null, null, null), actorCtx());
+                        true, null, null, Map.of(), true, null, null, null, null, null, null), actorCtx());
 
         assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
         assertThat(stubGateway.calls).containsExactly("OROS:ORD-42", "PCT:REF-7");
@@ -312,7 +320,7 @@ class NhumeDeliveryServiceTest {
         service.startTransit(id, new StatusChangeRequest("en route", null), actorCtx());
         service.captureProof(id,
                 new ProofRequest("DELIVERY", "OTP", "tester", "123456", null, null, null,
-                        true, null, null, Map.of(), true, null, null, null), actorCtx());
+                        true, null, null, Map.of(), true, null, null, null, null, null, null), actorCtx());
 
         assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
         assertThat(stubGateway.calls).containsExactly(
@@ -358,7 +366,7 @@ class NhumeDeliveryServiceTest {
         DeliveryProofEntity proof = service.captureProof(id,
                 new ProofRequest("PICKUP", "RECIPIENT_SIGNATURE", "origin-clerk", null,
                         "sig:collection", null, null, null, null, null, Map.of(), false,
-                        null, null, null),
+                        null, null, null, null, null, null),
                 actorCtx());
 
         assertThat(proof.getProofStage()).isEqualTo("PICKUP");
@@ -372,7 +380,7 @@ class NhumeDeliveryServiceTest {
     private ProofRequest bioProof() {
         return new ProofRequest("DELIVERY", "OTP", "tester", null, null, null, null,
                 null, null, null, Map.of(), false,
-                "subj-recipient-1", "FINGERPRINT", "cHJvYmU=");
+                "subj-recipient-1", "FINGERPRINT", "cHJvYmU=", null, null, null);
     }
 
     @Test
@@ -506,7 +514,7 @@ class NhumeDeliveryServiceTest {
                 true, "OTP", false, false, false, false, false, false, false, false,
                 null, null, null, null, null,
                 List.of("MOTORCYCLE", "BICYCLE"), null, null,
-                "demo", Map.of("test", true), submit);
+                "demo", Map.of("test", true), submit, null, null);
     }
 
     /** Msika Flow marketplace order dispatched via Nhume. */
@@ -525,7 +533,7 @@ class NhumeDeliveryServiceTest {
                 base.chainOfCustodyRequired(), base.returnRequired(), base.requiredBy(),
                 base.pickupWindowStart(), base.pickupWindowEnd(), base.deliveryWindowStart(),
                 base.deliveryWindowEnd(), base.allowedModes(), base.policyId(), base.slaId(),
-                base.notes(), base.metadata(), true);
+                base.notes(), base.metadata(), true, null, null);
     }
 
     private CreateDeliveryRequest coldChainRequest() {
@@ -543,7 +551,7 @@ class NhumeDeliveryServiceTest {
                 base.returnRequired(), base.requiredBy(), base.pickupWindowStart(),
                 base.pickupWindowEnd(), base.deliveryWindowStart(), base.deliveryWindowEnd(),
                 base.allowedModes(), base.policyId(), base.slaId(), base.notes(),
-                base.metadata(), false);
+                base.metadata(), false, null, null);
     }
 
     private TrustLayerGuard.ActorContext actorCtx() {

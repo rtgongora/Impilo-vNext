@@ -49,6 +49,7 @@ class CommitmentServiceTest {
     @Mock private OrosClient orosClient;
     @Mock private OfferFinancialsService offerFinancialsService;
     @Mock private MushexClient mushexClient;
+    @Mock private FulfilmentDispatchService fulfilmentDispatchService;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private CommitmentService service;
@@ -75,7 +76,14 @@ class CommitmentServiceTest {
         service = new CommitmentService(requestRepository, offerRepository, offerLineRepository,
                 selectionRepository, vendorRepository, reservationRepository, outboxRepository,
                 eligibilityService, inventoryClient, orosClient,
-                offerFinancialsService, mushexClient, mapper, 24);
+                offerFinancialsService, mushexClient, fulfilmentDispatchService, mapper, 24);
+
+        // OF-B17 default: pickup pathway (NULL election, fail-closed) — no
+        // delivery dispatch; the logistics tests override per scenario.
+        when(fulfilmentDispatchService.dispatchOnCommit(any(), any(), any(), any(), any()))
+                .thenReturn(new FulfilmentDispatchService.DispatchOutcome(
+                        FulfilmentDispatchService.DISPATCH_NOT_REQUIRED, null,
+                        "no pathway election — PICKUP assumed (fail-closed)"));
 
         request = new MarketplaceRequestEntity();
         request.setRequestId(REQUEST_ID);
@@ -245,14 +253,15 @@ class CommitmentServiceTest {
         // step log recorded
         assertNotNull(result.selection().getStepLogJson());
         assertTrue(result.selection().getStepLogJson().contains("DURA_RESERVATION"));
+        // OF-B17: step 11 is REAL now — pickup pathway records the honest
+        // SKIPPED entry (no delivery task; dispense rides the OROS claim).
         assertTrue(result.selection().getStepLogJson().contains("FULFILMENT_DISPATCH"));
-        assertTrue(result.selection().getStepLogJson().contains("PARTIAL"));
-        // OF-B9/OF-B10: steps 7/8 are REAL now — clearance passed, zero
-        // shortfall recorded WAIVED; the old SKIPPED entries are gone.
+        assertTrue(result.selection().getStepLogJson().contains("PICKUP"));
+        // OF-B9/OF-B10: steps 7/8 are REAL — clearance passed, zero
+        // shortfall recorded WAIVED.
         assertTrue(result.selection().getStepLogJson().contains("FINANCIAL_CLEARANCE"));
         assertTrue(result.selection().getStepLogJson().contains("PAYMENT_EXECUTION"));
         assertTrue(result.selection().getStepLogJson().contains("WAIVED"));
-        assertFalse(result.selection().getStepLogJson().contains("SKIPPED"));
         // financial snapshot persisted with the binding estimate label
         assertNotNull(result.selection().getFinancialJson());
         assertTrue(result.selection().getFinancialJson().contains("estimateNeverFinal"));
@@ -738,5 +747,56 @@ class CommitmentServiceTest {
         assertTrue(result.replayed());
         assertFalse(result.committed());
         assertEquals(CommitmentService.CODE_AWAITING_PAYMENT, result.outcomeCode());
+    }
+
+    // ── OF-B17: step-11 fulfilment dispatch ──────────────────────────────
+
+    @Test
+    void step11_deliveryPathway_dispatchesRealNhumeDelivery_recordedInStepLog() {
+        request.setFulfilmentPathway(zw.gov.mohcc.impilo.msikaflow.domain.FulfilmentPathway.DELIVERY);
+        when(fulfilmentDispatchService.dispatchOnCommit(any(), eq(request), eq(offer), any(), any()))
+                .thenAnswer(inv -> {
+                    SelectionEntity sel = inv.getArgument(0);
+                    sel.setDispatchRef("NHM-DEL-1");
+                    sel.setDispatchStatus(FulfilmentDispatchService.DISPATCH_DISPATCHED);
+                    return new FulfilmentDispatchService.DispatchOutcome(
+                            FulfilmentDispatchService.DISPATCH_DISPATCHED, null,
+                            "nhume delivery NHM-DEL-1 (required PoD grade OTP_MATCH)");
+                });
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-D1", null);
+
+        assertTrue(result.committed());
+        assertEquals("NHM-DEL-1", result.selection().getDispatchRef());
+        assertEquals(FulfilmentDispatchService.DISPATCH_DISPATCHED,
+                result.selection().getDispatchStatus());
+        assertTrue(result.selection().getStepLogJson().contains("FULFILMENT_DISPATCH"));
+        assertTrue(result.selection().getStepLogJson().contains("NHM-DEL-1"));
+        verify(fulfilmentDispatchService).dispatchOnCommit(any(), eq(request), eq(offer), any(), any());
+    }
+
+    @Test
+    void step11_dispatchFailure_neverRollsBackTheCommitment() {
+        request.setFulfilmentPathway(zw.gov.mohcc.impilo.msikaflow.domain.FulfilmentPathway.DELIVERY);
+        when(fulfilmentDispatchService.dispatchOnCommit(any(), any(), any(), any(), any()))
+                .thenReturn(new FulfilmentDispatchService.DispatchOutcome(
+                        FulfilmentDispatchService.DISPATCH_FAILED,
+                        FulfilmentDispatchService.CODE_NHUME_UNAVAILABLE,
+                        "Nhume delivery create refused/unreachable — retry sweep will re-attempt"));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-D2", null);
+
+        // The order stands (RC-8/step-11 doctrine): COMMITTED with the honest
+        // coded PARTIAL entry; holds and claim are NOT compensated.
+        assertTrue(result.committed());
+        assertEquals(SelectionStatus.COMMITTED, result.selection().getStatus());
+        assertTrue(result.selection().getStepLogJson().contains("PARTIAL"));
+        assertTrue(result.selection().getStepLogJson().contains(
+                FulfilmentDispatchService.CODE_NHUME_UNAVAILABLE));
+        verify(inventoryClient, never()).release(any(), any());
+        verify(orosClient, never()).releaseClaim(anyString(), anyString(), any());
+        verify(mushexClient, never()).tryRefund(any(), anyString(), any(), anyString());
     }
 }
