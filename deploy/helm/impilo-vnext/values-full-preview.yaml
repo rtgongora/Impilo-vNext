@@ -485,6 +485,13 @@ fullBootServices:
   # OF-B11: msika-flow's InventoryEventConsumer mirrors DURA reservation events into the
   # mf_reservations projection and fail-closes SELECTED offers on reservation expiry —
   # silent listeners would silently break the §9.4 TTL fail-close contract.
+  # OF-C M4 gate finding: iot-ingestion gates on its own impilo.security.mode knob
+  # (ignores the platform disable-oauth flag) and its issuer defaulted to localhost —
+  # no in-cluster JWT could ever validate. Preview parity + a valid issuer for defence.
+  iot-ingestion-service:
+    env:
+      IMPILO_SECURITY_MODE: "permit-all"
+      KEYCLOAK_ISSUER: "http://keycloak:8080/realms/impilo"
   msika-flow-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
