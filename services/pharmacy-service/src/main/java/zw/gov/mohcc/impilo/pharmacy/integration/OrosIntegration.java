@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Integration service for the OROS Orders and Results Orchestration service.
@@ -104,6 +105,68 @@ public class OrosIntegration {
         } catch (RestClientException e) {
             log.warn("OROS unavailable for result push, orosOrderId={}: {}",
                     orosOrderId, e.getMessage());
+        }
+    }
+
+    /**
+     * OF-B12 §13.3.1: bind the completed dispense episode onto its prescription
+     * claim in OROS. Idempotent on the OROS side; a 409 means the claim is bound
+     * to a DIFFERENT episode — a cross-matching conflict the caller must surface.
+     *
+     * @return true when OROS confirmed the bind; false when OROS was unreachable
+     *         or refused (caller records the unbound state + anomaly event)
+     */
+    public boolean bindClaimEpisode(UUID prescriptionClaimId, String dispenseEpisodeRef) {
+        try {
+            String url = baseUrl + "/v1/prescriptions/claims/" + prescriptionClaimId + "/bind-episode";
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("dispenseEpisodeRef", dispenseEpisodeRef);
+
+            HttpHeaders headers = buildTrustHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+            restTemplate.postForEntity(url, request, Void.class);
+
+            log.info("OROS claim episode bound: claimId={}, episodeRef={}",
+                    prescriptionClaimId, dispenseEpisodeRef);
+            return true;
+
+        } catch (RestClientException e) {
+            log.warn("OROS claim bind failed, claimId={}, episodeRef={}: {}",
+                    prescriptionClaimId, dispenseEpisodeRef, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * OF-B12 compensation (§9.2): release the prescription claim when the
+     * dispense episode is cancelled BEFORE dispensing, restoring the
+     * server-side repeats counter.
+     *
+     * @return true when OROS confirmed the release
+     */
+    public boolean releaseClaim(UUID prescriptionClaimId, String reason) {
+        try {
+            String url = baseUrl + "/v1/prescriptions/claims/" + prescriptionClaimId + "/release";
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("reason", reason);
+
+            HttpHeaders headers = buildTrustHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+            restTemplate.postForEntity(url, request, Void.class);
+
+            log.info("OROS claim released (compensation): claimId={}, reason={}",
+                    prescriptionClaimId, reason);
+            return true;
+
+        } catch (RestClientException e) {
+            log.warn("OROS claim release failed, claimId={}: {}", prescriptionClaimId, e.getMessage());
+            return false;
         }
     }
 

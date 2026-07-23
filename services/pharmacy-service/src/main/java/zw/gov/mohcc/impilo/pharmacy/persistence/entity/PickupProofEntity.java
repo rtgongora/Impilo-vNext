@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.pharmacy.domain.PickupMethod;
 import zw.gov.mohcc.impilo.pharmacy.domain.PickupStatus;
+import zw.gov.mohcc.impilo.pharmacy.domain.PickupVerificationGrade;
 
 /**
  * Records proof of medication pickup, supporting OTP, biometric,
@@ -48,6 +49,24 @@ public class PickupProofEntity {
     @Column(name = "device_fingerprint")
     private String deviceFingerprint;
 
+    // ── OF-B16 collector identity + verification grade (§8.11.3, §12.4) ──
+    /** The identity of the person who physically collected (may differ from actor). */
+    @Column(name = "collector_identity")
+    private String collectorIdentity;
+
+    /** Proof-ladder grade the collection was verified at (server-assigned). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "verification_grade")
+    private PickupVerificationGrade verificationGrade;
+
+    /** Named-recipient path: collection restricted to this named person. */
+    @Column(name = "named_recipient")
+    private String namedRecipient;
+
+    /** HMAC hash of the opaque SMS reference (no token ever rides an SMS). */
+    @Column(name = "sms_reference_hash")
+    private String smsReferenceHash;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -90,4 +109,16 @@ public class PickupProofEntity {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getCollectorIdentity() { return collectorIdentity; }
+    public void setCollectorIdentity(String collectorIdentity) { this.collectorIdentity = collectorIdentity; }
+
+    public PickupVerificationGrade getVerificationGrade() { return verificationGrade; }
+    public void setVerificationGrade(PickupVerificationGrade verificationGrade) { this.verificationGrade = verificationGrade; }
+
+    public String getNamedRecipient() { return namedRecipient; }
+    public void setNamedRecipient(String namedRecipient) { this.namedRecipient = namedRecipient; }
+
+    public String getSmsReferenceHash() { return smsReferenceHash; }
+    public void setSmsReferenceHash(String smsReferenceHash) { this.smsReferenceHash = smsReferenceHash; }
 }

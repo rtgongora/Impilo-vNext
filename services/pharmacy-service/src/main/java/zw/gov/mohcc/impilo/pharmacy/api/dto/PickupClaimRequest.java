@@ -11,6 +11,8 @@ import jakarta.validation.constraints.NotBlank;
  *
  * @param token                the OTP or claim token
  * @param deviceFingerprint    the device fingerprint for audit purposes
+ * @param collectorIdentity    OF-B16: identity of the person physically collecting
+ *                             (recorded on the proof; defaults to delegate/actor)
  * @param biometricSubjectRef  reference of the enrolled subject to match against (optional)
  * @param biometricModality    "FINGERPRINT" | "FACE" | "IRIS" (defaults to FINGERPRINT)
  * @param biometricProbeBase64 the captured probe template, base64-encoded (optional)
@@ -18,6 +20,7 @@ import jakarta.validation.constraints.NotBlank;
 public record PickupClaimRequest(
         @NotBlank String token,
         String deviceFingerprint,
+        String collectorIdentity,
         String biometricSubjectRef,
         String biometricModality,
         String biometricProbeBase64

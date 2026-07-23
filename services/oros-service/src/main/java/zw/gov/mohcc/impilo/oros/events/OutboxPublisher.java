@@ -168,7 +168,9 @@ public class OutboxPublisher {
             case "PRESCRIPTION_AMENDED" -> "oros.prescription.amended.v1";
             case "PRESCRIPTION_CANCELLED" -> "oros.prescription.cancelled.v1";
             case "PRESCRIPTION_EXPIRED" -> "oros.prescription.expired.v1";
-            case "PRESCRIPTION_CLAIMED", "PRESCRIPTION_CLAIM_RELEASED" -> "oros.prescription.claimed.v1";
+            case "PRESCRIPTION_CLAIMED", "PRESCRIPTION_CLAIM_RELEASED",
+                 // OF-B12: episode binding rides the claim stream (§13.3.1)
+                 "PRESCRIPTION_CLAIM_EPISODE_BOUND" -> "oros.prescription.claimed.v1";
 
             case "WORKSTEP_CHANGED", "WORKSTEP_STARTED", "WORKSTEP_COMPLETED" ->
                     "oros.workstep.changed";

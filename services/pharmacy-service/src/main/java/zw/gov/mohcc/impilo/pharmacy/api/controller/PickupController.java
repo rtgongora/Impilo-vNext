@@ -47,7 +47,7 @@ public class PickupController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
         PickupProofEntity proof = pickupProofService.createProof(
-                id, request.method(), request.delegatedTo());
+                id, request.method(), request.delegatedTo(), request.namedRecipient());
 
         log.info("Pickup proof created: orderId={}, method={}, proofId={}",
                 id, request.method(), proof.getProofId());
@@ -69,11 +69,52 @@ public class PickupController {
 
         PickupProofEntity proof = pickupProofService.claimProof(
                 request.token(), request.deviceFingerprint(),
+                request.collectorIdentity(),
                 request.biometricSubjectRef(), request.biometricModality(),
                 request.biometricProbeBase64());
 
         log.info("Pickup claimed: proofId={}, claimedBy={}",
                 proof.getProofId(), proof.getClaimedBy());
+
+        return ResponseEntity.ok(ApiResponse.ok(PickupProofDto.from(proof), correlationId));
+    }
+
+    public record SmsReferenceResolveRequest(@jakarta.validation.constraints.NotBlank String reference) {}
+
+    public record SmsReferenceClaimRequest(
+            @jakarta.validation.constraints.NotBlank String reference,
+            @jakarta.validation.constraints.NotBlank String collectorIdentity,
+            String deviceFingerprint) {}
+
+    /**
+     * OF-B16 named-recipient/SMS path: resolve an opaque SMS reference
+     * server-side (staff-side lookup — returns the named recipient for the
+     * identity check; no token exists in the SMS channel).
+     */
+    @PostMapping("/pickup/resolve-reference")
+    public ResponseEntity<ApiResponse<PickupProofDto>> resolveReference(
+            @Valid @RequestBody SmsReferenceResolveRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        PickupProofEntity proof = pickupProofService.resolveSmsReference(request.reference());
+
+        return ResponseEntity.ok(ApiResponse.ok(PickupProofDto.from(proof), correlationId));
+    }
+
+    /**
+     * OF-B16 named-recipient/SMS path: claim by opaque reference after the staff
+     * identity check of the named recipient. Fail-closed on identity mismatch.
+     */
+    @PostMapping("/pickup/claim-by-reference")
+    public ResponseEntity<ApiResponse<PickupProofDto>> claimByReference(
+            @Valid @RequestBody SmsReferenceClaimRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        PickupProofEntity proof = pickupProofService.claimBySmsReference(
+                request.reference(), request.collectorIdentity(), request.deviceFingerprint());
+
+        log.info("Pickup claimed by SMS reference: proofId={}, collector={}",
+                proof.getProofId(), proof.getCollectorIdentity());
 
         return ResponseEntity.ok(ApiResponse.ok(PickupProofDto.from(proof), correlationId));
     }

@@ -30,6 +30,17 @@ import java.util.UUID;
  * <p>Idempotency is enforced by checking whether a dispense order with the
  * same OROS order ID already exists before creating a new one.</p>
  *
+ * <h3>OF-B12 claim carriage (§13.3.1)</h3>
+ * <p>The {@code oros.order.placed} contract is the serialized OROS
+ * {@code OrderEntity} — its shape is frozen. The prescription claim id
+ * therefore rides the entity's existing {@code externalRefs} JSON document
+ * under the key {@code prescriptionClaimId} (set by the order-placement lane
+ * when a claimed prescription drives the order). This consumer extracts it and
+ * binds the claim onto the created dispense episode; a top-level
+ * {@code prescriptionClaimId} field is also accepted for forward
+ * compatibility. No Kafka header is used — headers do not survive the outbox
+ * table, whose rows carry only topic/key/payload.</p>
+ *
  * <h3>Expected JSON Payload</h3>
  * <pre>{@code
  * {
@@ -40,6 +51,7 @@ import java.util.UUID;
  *   "orderType": "PHARMACY",
  *   "priority": "ROUTINE",
  *   "prescriberNotes": "Take with food",
+ *   "externalRefs": "{\"prescriptionClaimId\":\"uuid\"}",
  *   "items": [
  *     {
  *       "code": "AMX500",
@@ -139,15 +151,19 @@ public class OrosConsumer {
                 // Parse order items
                 List<DispenseEngine.OrderItemData> items = parseItems(event);
 
+                // OF-B12: extract the prescription claim id (external_refs carriage)
+                UUID prescriptionClaimId = parsePrescriptionClaimId(event, orosOrderId);
+
                 dispenseEngine.createFromOrosOrder(
                         orosOrderId,
                         patientCpid,
                         UUID.fromString(facilityId),
                         prescriberNotes,
-                        items);
+                        items,
+                        prescriptionClaimId);
 
-                log.info("Pharmacy dispense order created from OROS: orosOrderId={}, patientCpid={}",
-                        orosOrderId, patientCpid);
+                log.info("Pharmacy dispense order created from OROS: orosOrderId={}, patientCpid={}, claimId={}",
+                        orosOrderId, patientCpid, prescriptionClaimId);
             } finally {
                 TrustContextHolder.clear();
             }
@@ -182,6 +198,41 @@ public class OrosConsumer {
         }
 
         return items;
+    }
+
+    /**
+     * OF-B12: extract the prescription claim id carried on the order.
+     *
+     * <p>Primary carriage is {@code externalRefs} (a JSON document serialized
+     * as a string inside the OrderEntity payload) under key
+     * {@code prescriptionClaimId}; a top-level field of the same name is also
+     * accepted. Malformed values are logged and ignored (the episode is then
+     * created unbound and the §13.3.1 anomaly sweep surfaces it) — the
+     * medication must still flow.</p>
+     */
+    private UUID parsePrescriptionClaimId(JsonNode event, String orosOrderId) {
+        String raw = getTextField(event, "prescriptionClaimId");
+        if (raw == null) {
+            String externalRefs = getTextField(event, "externalRefs");
+            if (externalRefs != null && !externalRefs.isBlank()) {
+                try {
+                    JsonNode refs = objectMapper.readTree(externalRefs);
+                    raw = getTextField(refs, "prescriptionClaimId");
+                } catch (JsonProcessingException e) {
+                    log.warn("Unparseable externalRefs on OROS order {}: {}", orosOrderId, e.getMessage());
+                }
+            }
+        }
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(raw.trim());
+        } catch (IllegalArgumentException e) {
+            log.warn("Malformed prescriptionClaimId '{}' on OROS order {} — episode created unbound",
+                    raw, orosOrderId);
+            return null;
+        }
     }
 
     /**

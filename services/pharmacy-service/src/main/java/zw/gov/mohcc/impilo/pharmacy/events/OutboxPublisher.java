@@ -154,6 +154,16 @@ public class OutboxPublisher {
 
             case "PICKUP_CLAIMED" -> "pharmacy.pickup.claimed";
 
+            // OF-B16: uncollected-pickup escalation (episode cancelled + stock return)
+            case "PICKUP_EXPIRED_RETURN" -> "pharmacy.pickup.expired";
+
+            // OF-B15: substitution → prescriber clarification loop (§8.10.1)
+            case "DISPENSE_CLARIFICATION_REQUESTED",
+                 "DISPENSE_CLARIFICATION_RESOLVED" -> "pharmacy.dispense.clarification.v1";
+
+            // OF-B12: §13.3.1 claim-to-dispense cross-matching anomalies
+            case "DISPENSE_CLAIM_ANOMALY" -> "pharmacy.dispense.claim.anomaly.v1";
+
             case "MUSHEX_CHARGE_REQUESTED" -> "pharmacy.mushex.charge";
 
             case "RECONCILE_RESOLVED" -> "pharmacy.reconcile.updated";

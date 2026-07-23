@@ -18,4 +18,7 @@ public interface PickupProofRepository extends JpaRepository<PickupProofEntity, 
     List<PickupProofEntity> findByDispenseOrderId(UUID dispenseOrderId);
 
     List<PickupProofEntity> findByStatusAndExpiresAtBefore(PickupStatus status, OffsetDateTime cutoff);
+
+    /** OF-B16 named-recipient/SMS path: resolve an opaque SMS reference server-side. */
+    Optional<PickupProofEntity> findBySmsReferenceHashAndStatus(String smsReferenceHash, PickupStatus status);
 }

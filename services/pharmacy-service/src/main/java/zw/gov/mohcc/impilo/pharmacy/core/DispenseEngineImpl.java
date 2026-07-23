@@ -72,17 +72,23 @@ public class DispenseEngineImpl implements DispenseEngine {
     private final StockLedgerService stockLedgerService;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.pharmacy.integration.OrosIntegration orosIntegration;
+    private final zw.gov.mohcc.impilo.pharmacy.persistence.repository.ClarificationRequestRepository clarificationRepository;
 
     public DispenseEngineImpl(DispenseOrderRepository orderRepository,
                               DispenseItemRepository itemRepository,
                               StockLedgerService stockLedgerService,
                               EventOutboxRepository outboxRepository,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              zw.gov.mohcc.impilo.pharmacy.integration.OrosIntegration orosIntegration,
+                              zw.gov.mohcc.impilo.pharmacy.persistence.repository.ClarificationRequestRepository clarificationRepository) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
         this.stockLedgerService = stockLedgerService;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.orosIntegration = orosIntegration;
+        this.clarificationRepository = clarificationRepository;
     }
 
     @Override
@@ -90,6 +96,15 @@ public class DispenseEngineImpl implements DispenseEngine {
     public DispenseOrderEntity createFromOrosOrder(String orosOrderId, String patientCpid,
                                                     UUID facilityId, String prescriberNotes,
                                                     List<OrderItemData> items) {
+        return createFromOrosOrder(orosOrderId, patientCpid, facilityId, prescriberNotes, items, null);
+    }
+
+    @Override
+    @Transactional
+    public DispenseOrderEntity createFromOrosOrder(String orosOrderId, String patientCpid,
+                                                    UUID facilityId, String prescriberNotes,
+                                                    List<OrderItemData> items,
+                                                    UUID prescriptionClaimId) {
         TrustContext ctx = TrustContextHolder.require();
 
         DispenseOrderEntity order = new DispenseOrderEntity();
@@ -101,6 +116,8 @@ public class DispenseEngineImpl implements DispenseEngine {
         order.setStatus(DispenseStatus.PENDING);
         order.setPriority(OrderPriority.ROUTINE);
         order.setPrescriberNotes(prescriberNotes);
+        // OF-B12: bind the prescription claim carried on the OROS order (§13.3.1)
+        order.setPrescriptionClaimId(prescriptionClaimId);
 
         order = orderRepository.save(order);
 
@@ -196,6 +213,7 @@ public class DispenseEngineImpl implements DispenseEngine {
         TrustContext ctx = TrustContextHolder.require();
         DispenseOrderEntity order = requireOrder(orderId);
 
+        requireNoPendingClarification(orderId);
         transition(order, DispenseStatus.PARTIALLY_DISPENSED);
 
         List<DispenseItemEntity> items =
@@ -239,6 +257,7 @@ public class DispenseEngineImpl implements DispenseEngine {
         TrustContext ctx = TrustContextHolder.require();
         DispenseOrderEntity order = requireOrder(orderId);
 
+        requireNoPendingClarification(orderId);
         transition(order, DispenseStatus.DISPENSED);
 
         List<DispenseItemEntity> items =
@@ -269,6 +288,23 @@ public class DispenseEngineImpl implements DispenseEngine {
 
         order.setCompletedBy(ctx.actorId());
         order.setCompletedAt(OffsetDateTime.now());
+
+        // OF-B12 §13.3.1: on episode completion, bind the episode reference onto
+        // the OROS prescription claim. A failed bind is recorded honestly
+        // (claim_bound_at stays null) and surfaces as a coded anomaly event —
+        // the sweep/ops reconcile it; the dispense itself is not rolled back
+        // (the stock effect and professional record are real).
+        if (order.getPrescriptionClaimId() != null) {
+            boolean bound = orosIntegration.bindClaimEpisode(
+                    order.getPrescriptionClaimId(), orderId.toString());
+            if (bound) {
+                order.setClaimBoundAt(OffsetDateTime.now());
+            } else {
+                publishClaimAnomaly(order, "CLAIM_BIND_FAILED",
+                        "OROS bind-episode call failed at dispense completion", ctx.tenantId());
+            }
+        }
+
         order = orderRepository.save(order);
 
         publishEvent("DISPENSE_ORDER", orderId.toString(),
@@ -314,6 +350,7 @@ public class DispenseEngineImpl implements DispenseEngine {
         TrustContext ctx = TrustContextHolder.require();
         DispenseOrderEntity order = requireOrder(orderId);
 
+        DispenseStatus priorStatus = order.getStatus();
         transition(order, DispenseStatus.CANCELLED);
 
         // Cancel all pending items
@@ -322,6 +359,24 @@ public class DispenseEngineImpl implements DispenseEngine {
         for (DispenseItemEntity item : pendingItems) {
             item.setStatus(DispenseItemStatus.CANCELLED);
             itemRepository.save(item);
+        }
+
+        // OF-B12 compensation (§9.2): a cancellation BEFORE any dispensing
+        // releases the prescription claim, restoring the server-side repeats
+        // counter. Post-dispense cancellations (reversal path) never release —
+        // the repeat was consumed; those route through ops/prescriber review.
+        boolean preDispense = priorStatus == DispenseStatus.PENDING
+                || priorStatus == DispenseStatus.ACCEPTED
+                || priorStatus == DispenseStatus.READY;
+        if (order.getPrescriptionClaimId() != null && order.getClaimReleasedAt() == null && preDispense) {
+            boolean released = orosIntegration.releaseClaim(order.getPrescriptionClaimId(),
+                    "Dispense episode " + orderId + " cancelled before dispensing");
+            if (released) {
+                order.setClaimReleasedAt(OffsetDateTime.now());
+            } else {
+                publishClaimAnomaly(order, "CLAIM_RELEASE_FAILED",
+                        "OROS claim release call failed at pre-dispense cancellation", ctx.tenantId());
+            }
         }
 
         order = orderRepository.save(order);
@@ -346,6 +401,36 @@ public class DispenseEngineImpl implements DispenseEngine {
     // ------------------------------------------------------------------
     // Internal helpers
     // ------------------------------------------------------------------
+
+    /**
+     * OF-B15 fail-closed hold (§8.10.1 item 2): the episode cannot reach a
+     * dispensed state while a prescriber clarification is PENDING.
+     */
+    private void requireNoPendingClarification(UUID orderId) {
+        if (clarificationRepository.existsByDispenseOrderIdAndStatus(
+                orderId, zw.gov.mohcc.impilo.pharmacy.domain.ClarificationStatus.PENDING)) {
+            throw new IllegalStateException(
+                    "Dispense order " + orderId + " holds: a prescriber clarification is pending");
+        }
+    }
+
+    /**
+     * OF-B12 §13.3.1: emit a coded claim-linkage anomaly event on the outbox
+     * (topic pharmacy.dispense.claim.anomaly.v1).
+     */
+    private void publishClaimAnomaly(DispenseOrderEntity order, String code,
+                                     String detail, UUID tenantId) {
+        Map<String, Object> anomaly = new LinkedHashMap<>();
+        anomaly.put("code", code);
+        anomaly.put("orderId", order.getOrderId() != null ? order.getOrderId().toString() : null);
+        anomaly.put("orosOrderId", order.getOrosOrderId());
+        anomaly.put("prescriptionClaimId",
+                order.getPrescriptionClaimId() != null ? order.getPrescriptionClaimId().toString() : null);
+        anomaly.put("status", order.getStatus() != null ? order.getStatus().name() : null);
+        anomaly.put("detail", detail);
+        publishEvent("DISPENSE_ORDER", order.getOrderId().toString(),
+                "DISPENSE_CLAIM_ANOMALY", anomaly, tenantId);
+    }
 
     /**
      * Look up an order by ID or throw.

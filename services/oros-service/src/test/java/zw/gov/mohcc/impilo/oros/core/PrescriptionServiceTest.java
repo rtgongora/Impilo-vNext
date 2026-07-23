@@ -436,6 +436,101 @@ class PrescriptionServiceTest {
     }
 
     @Nested
+    @DisplayName("Bind dispense episode (OF-B12 §13.3.1)")
+    class BindEpisode {
+
+        private PrescriptionClaimEntity claimedClaim(UUID claimId) {
+            PrescriptionClaimEntity claim = new PrescriptionClaimEntity();
+            claim.setClaimId(claimId);
+            claim.setTenantId(TENANT_ID);
+            claim.setPrescriptionId(RX_ID);
+            claim.setPrescriptionVersionId(V1_ID);
+            claim.setStatus(PrescriptionClaimEntity.STATUS_CLAIMED);
+            return claim;
+        }
+
+        @Test
+        void bindSetsEpisodeRefAndEmitsEvent() {
+            UUID claimId = UUID.randomUUID();
+            PrescriptionClaimEntity claim = claimedClaim(claimId);
+            when(claimRepository.findByTenantIdAndClaimId(TENANT_ID, claimId)).thenReturn(Optional.of(claim));
+            when(claimRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+                holder.when(TrustContextHolder::require).thenReturn(ctx());
+                PrescriptionClaimEntity bound = service.bindDispenseEpisode(claimId, "EPISODE-1");
+
+                assertThat(bound.getDispenseEpisodeRef()).isEqualTo("EPISODE-1");
+                verify(outboxRepository).save(argThat(e ->
+                        "PRESCRIPTION_CLAIM_EPISODE_BOUND".equals(e.getEventType())
+                                && e.getPayload().contains("EPISODE-1")));
+            }
+        }
+
+        @Test
+        void bindIsIdempotentOnSameRef() {
+            UUID claimId = UUID.randomUUID();
+            PrescriptionClaimEntity claim = claimedClaim(claimId);
+            claim.setDispenseEpisodeRef("EPISODE-1");
+            when(claimRepository.findByTenantIdAndClaimId(TENANT_ID, claimId)).thenReturn(Optional.of(claim));
+
+            try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+                holder.when(TrustContextHolder::require).thenReturn(ctx());
+                PrescriptionClaimEntity bound = service.bindDispenseEpisode(claimId, "EPISODE-1");
+
+                assertThat(bound.getDispenseEpisodeRef()).isEqualTo("EPISODE-1");
+                verify(claimRepository, never()).save(any());
+                verify(outboxRepository, never()).save(any());
+            }
+        }
+
+        @Test
+        void bindToDifferentEpisodeConflicts409() {
+            UUID claimId = UUID.randomUUID();
+            PrescriptionClaimEntity claim = claimedClaim(claimId);
+            claim.setDispenseEpisodeRef("EPISODE-1");
+            when(claimRepository.findByTenantIdAndClaimId(TENANT_ID, claimId)).thenReturn(Optional.of(claim));
+
+            try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+                holder.when(TrustContextHolder::require).thenReturn(ctx());
+                assertThatThrownBy(() -> service.bindDispenseEpisode(claimId, "EPISODE-2"))
+                        .isInstanceOf(OrosDomainException.class)
+                        .hasFieldOrPropertyWithValue("code", "CLAIM_EPISODE_CONFLICT");
+            }
+        }
+
+        @Test
+        void bindOnReleasedClaimRefused() {
+            UUID claimId = UUID.randomUUID();
+            PrescriptionClaimEntity claim = claimedClaim(claimId);
+            claim.setStatus(PrescriptionClaimEntity.STATUS_RELEASED);
+            when(claimRepository.findByTenantIdAndClaimId(TENANT_ID, claimId)).thenReturn(Optional.of(claim));
+
+            try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+                holder.when(TrustContextHolder::require).thenReturn(ctx());
+                assertThatThrownBy(() -> service.bindDispenseEpisode(claimId, "EPISODE-1"))
+                        .isInstanceOf(OrosDomainException.class)
+                        .hasFieldOrPropertyWithValue("code", "CLAIM_NOT_BINDABLE");
+            }
+        }
+
+        @Test
+        void releaseOfBoundClaimRefused_failClosed() {
+            UUID claimId = UUID.randomUUID();
+            PrescriptionClaimEntity claim = claimedClaim(claimId);
+            claim.setDispenseEpisodeRef("EPISODE-1");
+            when(claimRepository.findByTenantIdAndClaimId(TENANT_ID, claimId)).thenReturn(Optional.of(claim));
+
+            try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+                holder.when(TrustContextHolder::require).thenReturn(ctx());
+                assertThatThrownBy(() -> service.releaseClaim(claimId, "cancelled"))
+                        .isInstanceOf(OrosDomainException.class)
+                        .hasFieldOrPropertyWithValue("code", "CLAIM_ALREADY_DISPENSED");
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("Cancel")
     class Cancel {
 

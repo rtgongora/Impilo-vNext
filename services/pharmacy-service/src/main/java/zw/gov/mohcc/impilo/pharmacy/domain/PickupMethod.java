@@ -18,5 +18,12 @@ public enum PickupMethod {
      * Live biometric identity match confirmed at collection through the shared
      * biometric seam. Recorded on the proof when a probe MATCHes at claim time.
      */
-    BIOMETRIC
+    BIOMETRIC,
+
+    /**
+     * OF-B16 named-recipient/no-smartphone path: an opaque short reference is
+     * sent by SMS (never the token); the reference is resolved server-side and
+     * staff verify the named recipient's identity at handover (§8.11.3).
+     */
+    SMS_REFERENCE
 }

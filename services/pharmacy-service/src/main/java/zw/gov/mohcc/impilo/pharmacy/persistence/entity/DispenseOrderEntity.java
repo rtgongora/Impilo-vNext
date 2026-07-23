@@ -66,6 +66,23 @@ public class DispenseOrderEntity {
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
+    // ── OF-B12 prescription-claim linkage (§13.3.1) ────────────────────
+    /** The OROS prescription claim this episode traces to (medication profile). */
+    @Column(name = "prescription_claim_id")
+    private UUID prescriptionClaimId;
+
+    /** Set when OROS confirmed the episode-ref bind on the claim. */
+    @Column(name = "claim_bound_at")
+    private OffsetDateTime claimBoundAt;
+
+    /** Set when the claim was released (pre-dispense cancellation compensation). */
+    @Column(name = "claim_released_at")
+    private OffsetDateTime claimReleasedAt;
+
+    /** Set once a §13.3.1 anomaly event has been emitted for this row (emit-once marker). */
+    @Column(name = "claim_anomaly_flagged_at")
+    private OffsetDateTime claimAnomalyFlaggedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -138,4 +155,16 @@ public class DispenseOrderEntity {
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public UUID getPrescriptionClaimId() { return prescriptionClaimId; }
+    public void setPrescriptionClaimId(UUID prescriptionClaimId) { this.prescriptionClaimId = prescriptionClaimId; }
+
+    public OffsetDateTime getClaimBoundAt() { return claimBoundAt; }
+    public void setClaimBoundAt(OffsetDateTime claimBoundAt) { this.claimBoundAt = claimBoundAt; }
+
+    public OffsetDateTime getClaimReleasedAt() { return claimReleasedAt; }
+    public void setClaimReleasedAt(OffsetDateTime claimReleasedAt) { this.claimReleasedAt = claimReleasedAt; }
+
+    public OffsetDateTime getClaimAnomalyFlaggedAt() { return claimAnomalyFlaggedAt; }
+    public void setClaimAnomalyFlaggedAt(OffsetDateTime claimAnomalyFlaggedAt) { this.claimAnomalyFlaggedAt = claimAnomalyFlaggedAt; }
 }

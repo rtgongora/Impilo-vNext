@@ -344,6 +344,16 @@ public class PrescriptionService {
                     "Claim is not in CLAIMED state (" + claim.getStatus() + ").");
         }
 
+        // OF-B12 fail-closed guard: a claim bound to a dispense episode has been
+        // dispensed — release is strictly a PRE-dispense compensation (§9.2). An
+        // uncollected/reversed post-dispense episode routes through ops review,
+        // never a silent counter restore.
+        if (claim.getDispenseEpisodeRef() != null) {
+            throw new OrosDomainException("CLAIM_ALREADY_DISPENSED", 409,
+                    "Claim is bound to dispense episode " + claim.getDispenseEpisodeRef()
+                            + " — release is a pre-dispense compensation only.");
+        }
+
         PrescriptionEntity rx = prescriptionRepository.findForClaim(claim.getPrescriptionId())
                 .orElseThrow(() -> new OrosDomainException("PRESCRIPTION_NOT_FOUND", 404, "Prescription not found"));
 
@@ -368,6 +378,50 @@ public class PrescriptionService {
                 claimPayload(rx, claim, false), ctx.tenantId());
         log.info("Prescription claim released (compensation): claim={}, remaining restored to {}",
                 claimId, rx.getRepeatsRemaining());
+        return claim;
+    }
+
+    /**
+     * OF-B12 (§13.3.1 claim-to-dispense matching): bind the pharmacy dispense
+     * episode reference onto its claim — every dispense episode traces to exactly
+     * one claim. Idempotent on the same reference; a claim already bound to a
+     * DIFFERENT episode is a cross-matching conflict (409); a released claim
+     * cannot bind (409).
+     */
+    @Transactional
+    public PrescriptionClaimEntity bindDispenseEpisode(UUID claimId, String dispenseEpisodeRef) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (dispenseEpisodeRef == null || dispenseEpisodeRef.isBlank()) {
+            throw new OrosDomainException("EPISODE_REF_REQUIRED", 400,
+                    "A dispense episode reference is required.");
+        }
+        PrescriptionClaimEntity claim = claimRepository.findByTenantIdAndClaimId(ctx.tenantId(), claimId)
+                .orElseThrow(() -> new OrosDomainException("CLAIM_NOT_FOUND", 404, "Claim not found"));
+        if (dispenseEpisodeRef.equals(claim.getDispenseEpisodeRef())) {
+            return claim; // idempotent replay — already bound to this episode
+        }
+        if (claim.getDispenseEpisodeRef() != null) {
+            throw new OrosDomainException("CLAIM_EPISODE_CONFLICT", 409,
+                    "Claim is already bound to a different dispense episode ("
+                            + claim.getDispenseEpisodeRef() + ").");
+        }
+        if (!PrescriptionClaimEntity.STATUS_CLAIMED.equals(claim.getStatus())) {
+            throw new OrosDomainException("CLAIM_NOT_BINDABLE", 409,
+                    "Only a CLAIMED claim can bind a dispense episode (status="
+                            + claim.getStatus() + ").");
+        }
+        claim.setDispenseEpisodeRef(dispenseEpisodeRef);
+        claim = claimRepository.save(claim);
+
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("claimId", claim.getClaimId() != null ? claim.getClaimId().toString() : null);
+        node.put("prescriptionId", claim.getPrescriptionId());
+        node.put("prescriptionVersionId", claim.getPrescriptionVersionId());
+        node.put("dispenseEpisodeRef", dispenseEpisodeRef);
+        node.put("claimStatus", claim.getStatus());
+        publishEvent(claim.getPrescriptionId(), "PRESCRIPTION_CLAIM_EPISODE_BOUND", node, ctx.tenantId());
+        log.info("Prescription claim bound to dispense episode: claim={}, episodeRef={}",
+                claimId, dispenseEpisodeRef);
         return claim;
     }
 

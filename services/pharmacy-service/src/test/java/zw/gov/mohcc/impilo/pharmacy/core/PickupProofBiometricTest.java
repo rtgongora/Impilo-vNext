@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.pharmacy.config.PharmacyProperties;
 import zw.gov.mohcc.impilo.pharmacy.domain.PickupMethod;
 import zw.gov.mohcc.impilo.pharmacy.domain.PickupStatus;
 import zw.gov.mohcc.impilo.pharmacy.persistence.entity.PickupProofEntity;
+import zw.gov.mohcc.impilo.pharmacy.persistence.repository.DispenseOrderRepository;
 import zw.gov.mohcc.impilo.pharmacy.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pharmacy.persistence.repository.PickupProofRepository;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
@@ -42,6 +43,9 @@ class PickupProofBiometricTest {
     @Mock PickupProofRepository proofRepository;
     @Mock EventOutboxRepository outboxRepository;
     @Mock BiometricVerificationClient biometricVerification;
+    @Mock DispenseOrderRepository orderRepository;
+    @Mock DispenseEngine dispenseEngine;
+    @Mock StockLedgerService stockLedgerService;
 
     private PickupProofServiceImpl service;
     private static final String TOKEN = "OTP-123456";
@@ -53,7 +57,8 @@ class PickupProofBiometricTest {
     void setUp() {
         hmacService = new HmacService("unit-test-secret-key");
         service = new PickupProofServiceImpl(proofRepository, outboxRepository, hmacService,
-                new PharmacyProperties(), new ObjectMapper(), biometricVerification);
+                new PharmacyProperties(), new ObjectMapper(), biometricVerification,
+                orderRepository, dispenseEngine, stockLedgerService);
         TrustContextHolder.set(new TrustContext(TENANT_ID, "collector-1", "PATIENT", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, AccessMode.INTERNAL));
     }

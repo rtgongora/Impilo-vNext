@@ -37,15 +37,18 @@ public class SubstitutionEngineImpl implements SubstitutionEngine {
     private final DispenseItemRepository itemRepository;
     private final FormularyRepository formularyRepository;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.pharmacy.persistence.repository.ClarificationRequestRepository clarificationRepository;
 
     public SubstitutionEngineImpl(SubstitutionRuleRepository ruleRepository,
                                   DispenseItemRepository itemRepository,
                                   FormularyRepository formularyRepository,
-                                  ObjectMapper objectMapper) {
+                                  ObjectMapper objectMapper,
+                                  zw.gov.mohcc.impilo.pharmacy.persistence.repository.ClarificationRequestRepository clarificationRepository) {
         this.ruleRepository = ruleRepository;
         this.itemRepository = itemRepository;
         this.formularyRepository = formularyRepository;
         this.objectMapper = objectMapper;
+        this.clarificationRepository = clarificationRepository;
     }
 
     @Override
@@ -119,6 +122,21 @@ public class SubstitutionEngineImpl implements SubstitutionEngine {
             throw new IllegalStateException("Substitution not allowed: " + result.reason());
         }
 
+        // OF-B15 fail-closed approval gate (§8.10.1): a substitution requiring
+        // step-up may only apply once a prescriber clarification has been
+        // APPROVED for exactly this item+target — never unilaterally. The
+        // approval is consumed exactly once (applied_at).
+        zw.gov.mohcc.impilo.pharmacy.persistence.entity.ClarificationRequestEntity approval = null;
+        if (result.requiresStepUp()) {
+            approval = clarificationRepository
+                    .findFirstByDispenseItemIdAndTargetDrugCodeAndStatusAndAppliedAtIsNull(
+                            itemId, targetDrugCode,
+                            zw.gov.mohcc.impilo.pharmacy.domain.ClarificationStatus.APPROVED)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Substitution requires prescriber clarification: no approved clarification "
+                                    + "exists for item " + itemId + " -> " + targetDrugCode));
+        }
+
         // Build substitution JSON record
         String substitutionJson;
         try {
@@ -130,9 +148,19 @@ public class SubstitutionEngineImpl implements SubstitutionEngine {
                     resolveDisplay(ctx.tenantId(), ctx.facilityId(), targetDrugCode));
             subData.put("reason", reason);
             subData.put("appliedBy", ctx.actorId());
+            if (approval != null) {
+                subData.put("clarificationId", approval.getClarificationId().toString());
+                subData.put("approvedBy", approval.getResolvedBy());
+                subData.put("patientConsent", approval.isPatientConsent());
+            }
             substitutionJson = objectMapper.writeValueAsString(subData);
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize substitution data", e);
+        }
+
+        if (approval != null) {
+            approval.setAppliedAt(java.time.OffsetDateTime.now());
+            clarificationRepository.save(approval);
         }
 
         item.setDrugCode(targetDrugCode);

@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.pharmacy.api.dto;
 
 import zw.gov.mohcc.impilo.pharmacy.domain.PickupMethod;
 import zw.gov.mohcc.impilo.pharmacy.domain.PickupStatus;
+import zw.gov.mohcc.impilo.pharmacy.domain.PickupVerificationGrade;
 import zw.gov.mohcc.impilo.pharmacy.persistence.entity.PickupProofEntity;
 
 import java.time.OffsetDateTime;
@@ -19,7 +20,10 @@ public record PickupProofDto(
         String delegatedTo,
         String claimedBy,
         OffsetDateTime claimedAt,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        String collectorIdentity,
+        PickupVerificationGrade verificationGrade,
+        String namedRecipient
 ) {
     /**
      * Factory method to create a pickup proof DTO from the entity.
@@ -34,7 +38,10 @@ public record PickupProofDto(
                 entity.getDelegatedTo(),
                 entity.getClaimedBy(),
                 entity.getClaimedAt(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.getCollectorIdentity(),
+                entity.getVerificationGrade(),
+                entity.getNamedRecipient()
         );
     }
 }

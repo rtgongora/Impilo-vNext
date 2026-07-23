@@ -83,6 +83,8 @@ public class PrescriptionController {
 
     public record ClaimRequest(@NotBlank String token, String vendorRef) {}
 
+    public record BindEpisodeRequest(@NotBlank String dispenseEpisodeRef) {}
+
     public record VerifyTokenRequest(@NotBlank String token) {}
 
     // ── Authoring ────────────────────────────────────────────────────────
@@ -210,6 +212,26 @@ public class PrescriptionController {
         body.put("lines", result.lines().stream().map(PrescriptionController::itemView).toList());
         return ResponseEntity.status(result.duplicateReplay() ? HttpStatus.OK : HttpStatus.CREATED)
                 .body(ApiResponse.ok(body, correlationId));
+    }
+
+    /**
+     * OF-B12 §13.3.1: bind the pharmacy dispense episode onto the claim — internal
+     * seam called by pharmacy-service on episode completion. Idempotent on the same
+     * reference; 409 when already bound to a different episode.
+     */
+    @PostMapping("/claims/{claimId}/bind-episode")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> bindEpisode(
+            @PathVariable UUID claimId,
+            @Valid @RequestBody BindEpisodeRequest request) {
+        String correlationId = correlationId();
+        PrescriptionClaimEntity claim =
+                prescriptionService.bindDispenseEpisode(claimId, request.dispenseEpisodeRef());
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("claimId", claim.getClaimId());
+        body.put("claimStatus", claim.getStatus());
+        body.put("dispenseEpisodeRef", claim.getDispenseEpisodeRef());
+        body.put("prescriptionId", claim.getPrescriptionId());
+        return ResponseEntity.ok(ApiResponse.ok(body, correlationId));
     }
 
     /** Compensation: restore the repeats counter when an episode fails before dispensing (§9.2). */

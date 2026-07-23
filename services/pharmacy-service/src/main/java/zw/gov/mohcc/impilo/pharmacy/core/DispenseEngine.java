@@ -25,6 +25,17 @@ public interface DispenseEngine {
                                              List<DispenseEngine.OrderItemData> items);
 
     /**
+     * OF-B12: create a dispense order from an OROS order that carries a
+     * prescription claim id (medication profile, §13.3.1). The claim is bound
+     * to the episode; on completion the episode reference is written back onto
+     * the OROS claim, and a pre-dispense cancellation releases it (compensation).
+     */
+    DispenseOrderEntity createFromOrosOrder(String orosOrderId, String patientCpid,
+                                             UUID facilityId, String prescriberNotes,
+                                             List<DispenseEngine.OrderItemData> items,
+                                             UUID prescriptionClaimId);
+
+    /**
      * Accept a pending dispense order, assigning it to the current pharmacist.
      */
     DispenseOrderEntity acceptOrder(UUID orderId);
