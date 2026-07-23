@@ -17,9 +17,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * <b>FROZEN LEGACY SILO (OD-13, Vol II §17.1 deprecation note).</b> The flat
+ * {@code rx_prescriptions} model is a migration source, not an authoring target:
+ * no new writers, no new fields. The prescription aggregate (versions, JWS signing,
+ * repeats counter, tokens) lives in <b>oros-service</b> {@code /v1/prescriptions}
+ * (OF-B2). This API remains readable for continuity and MUST NOT be presented on
+ * any new surface; the create path logs a deprecation warning per call.
+ */
 @RestController
 @RequestMapping("/v1/prescriptions")
 public class PrescriptionController {
+
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(PrescriptionController.class);
 
     private final PrescriptionService prescriptionService;
 
@@ -27,10 +38,14 @@ public class PrescriptionController {
         this.prescriptionService = prescriptionService;
     }
 
+    /** @deprecated frozen legacy path (OD-13) — author prescriptions in oros-service. */
+    @Deprecated
     @PostMapping
     public ResponseEntity<ApiResponse<PrescriptionResourceDto>> createPrescription(
             @Valid @RequestBody CreatePrescriptionRequest request) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
+        log.warn("DEPRECATED legacy prescription create used (OD-13 frozen silo) — "
+                + "author via oros-service /v1/prescriptions instead. correlationId={}", correlationId);
         try {
             PrescriptionEntity created = prescriptionService.createPrescription(request);
             return ResponseEntity.status(HttpStatus.CREATED)

@@ -161,6 +161,15 @@ public class OutboxPublisher {
             case "ORDER_AMENDED" -> "oros.order.amended.v1";
             case "ORDER_REPLACED" -> "oros.order.replaced.v1";
 
+            // OF-B2 prescription family (Vol II §18 locked family oros.prescription.*.v1)
+            case "PRESCRIPTION_CREATED" -> "oros.prescription.created.v1";
+            case "PRESCRIPTION_SIGNED" -> "oros.prescription.signed.v1";
+            case "PRESCRIPTION_ACTIVATED" -> "oros.prescription.activated.v1";
+            case "PRESCRIPTION_AMENDED" -> "oros.prescription.amended.v1";
+            case "PRESCRIPTION_CANCELLED" -> "oros.prescription.cancelled.v1";
+            case "PRESCRIPTION_EXPIRED" -> "oros.prescription.expired.v1";
+            case "PRESCRIPTION_CLAIMED", "PRESCRIPTION_CLAIM_RELEASED" -> "oros.prescription.claimed.v1";
+
             case "WORKSTEP_CHANGED", "WORKSTEP_STARTED", "WORKSTEP_COMPLETED" ->
                     "oros.workstep.changed";
 

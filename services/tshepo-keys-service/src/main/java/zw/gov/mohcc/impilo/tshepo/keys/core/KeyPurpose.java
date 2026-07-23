@@ -27,7 +27,9 @@ public enum KeyPurpose {
     /** VITO citizen QR tokens (pickup, wallet, emergency, health-id). */
     QR_SIGNING,
     /** SMART-card print-agent QR assertions (card credential signing). */
-    CARD_ASSERTION;
+    CARD_ASSERTION,
+    /** E-prescription version signing + prescription tokens (OROS, OF-B2 §13.2). */
+    PRESCRIPTION_SIGNING;
 
     public static KeyPurpose fromString(String value) {
         if (value == null || value.isBlank()) {
