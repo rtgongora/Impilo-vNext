@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assessDanger,
   buildSummary,
+  classifyUrgency,
   nextStep,
   toSosPayload,
   type TriageAnswers,
@@ -126,5 +127,38 @@ describe("triage-protocol", () => {
     });
     expect(danger.danger).toBe(false);
     expect(danger.reasons).toHaveLength(0);
+  });
+
+  describe("classifyUrgency (doctrine §13.5 taxonomy)", () => {
+    it("classifies any danger sign as emergency", () => {
+      expect(classifyUrgency({ situation: "TRAUMA", bleeding: "severe" }).tier).toBe("emergency");
+      expect(classifyUrgency({ situation: "CARDIAC", conscious: "yes" }).tier).toBe("emergency");
+    });
+
+    it("classifies pregnancy, mental-health and recent injury as urgency", () => {
+      expect(
+        classifyUrgency({ situation: "MEDICAL", conscious: "yes", breathing: "normal", bleeding: "none", redFlags: ["none"], pregnancy: "yes" }).tier,
+      ).toBe("urgency");
+      expect(classifyUrgency({ situation: "MENTAL_HEALTH", conscious: "yes", breathing: "normal", bleeding: "none", redFlags: ["none"] }).tier).toBe(
+        "urgency",
+      );
+      expect(
+        classifyUrgency({ situation: "TRAUMA", conscious: "yes", breathing: "normal", bleeding: "minor", redFlags: ["none"] }).tier,
+      ).toBe("urgency");
+    });
+
+    it("classifies a calm, non-recent medical presentation as routine", () => {
+      const tier = classifyUrgency({
+        situation: "MEDICAL",
+        conscious: "yes",
+        breathing: "normal",
+        bleeding: "none",
+        redFlags: ["none"],
+        onset: "longer",
+        age: "adult",
+        pregnancy: "no",
+      }).tier;
+      expect(tier).toBe("routine");
+    });
   });
 });

@@ -251,6 +251,66 @@ export function assessDanger(answers: TriageAnswers): DangerAssessment {
   return { danger: reasons.length > 0, reasons };
 }
 
+/**
+ * Urgency taxonomy (gateway doctrine §13.5): emergency / urgency / routine. Nompilo
+ * classifies but always errs toward safety — anything with a danger sign is an emergency,
+ * and several concerning-but-not-danger presentations are treated as urgency (prompt,
+ * same-day care) rather than routine. This drives the review-step recommendation, never a
+ * diagnosis.
+ */
+export type UrgencyTier = "emergency" | "urgency" | "routine";
+
+export interface UrgencyAssessment {
+  tier: UrgencyTier;
+  /** One-line, plain-language reason for the tier. */
+  reason: string;
+}
+
+export function classifyUrgency(answers: TriageAnswers): UrgencyAssessment {
+  if (assessDanger(answers).danger) {
+    return { tier: "emergency", reason: "Danger signs are present — this needs help now." };
+  }
+  // Concerning-but-not-danger presentations that still need prompt (same-day) attention.
+  const recent = answers.onset === "now" || answers.onset === "hour";
+  if (answers.pregnancy === "yes" || answers.pregnancy === "recent") {
+    return { tier: "urgency", reason: "Pregnancy or recent birth — get checked the same day." };
+  }
+  if (answers.situation === "MENTAL_HEALTH") {
+    return { tier: "urgency", reason: "A mental-health concern deserves prompt support." };
+  }
+  if (answers.bleeding === "minor" && answers.situation === "TRAUMA") {
+    return { tier: "urgency", reason: "An injury with bleeding should be seen the same day." };
+  }
+  if (recent && (answers.age === "infant" || answers.age === "older_adult")) {
+    return { tier: "urgency", reason: "New symptoms in a baby or older adult need prompt care." };
+  }
+  if (recent && (answers.situation === "MEDICAL" || answers.situation === "CARDIAC")) {
+    return { tier: "urgency", reason: "New symptoms — seek care today to be safe." };
+  }
+  return {
+    tier: "routine",
+    reason: "No danger signs reported — routine care or self-care is usually appropriate.",
+  };
+}
+
+/** Plain-language next-step guidance per urgency tier (non-diagnostic). */
+export const URGENCY_GUIDANCE: Record<UrgencyTier, { headline: string; action: string }> = {
+  emergency: {
+    headline: "Get help now",
+    action: "Call the emergency numbers or go to the nearest emergency department immediately.",
+  },
+  urgency: {
+    headline: "Seek care today",
+    action:
+      "Visit a clinic or arrange a same-day consultation. Find the nearest facility below, and call the emergency numbers if things get worse.",
+  },
+  routine: {
+    headline: "Routine care",
+    action:
+      "You can book a normal appointment or use self-care. Find a facility below, and return here or call for help if anything changes.",
+  },
+};
+
 /** Simple, safe, non-diagnostic first-aid guidance per danger reason. */
 export const SAFE_ACTIONS: Record<string, string> = {
   unconscious:

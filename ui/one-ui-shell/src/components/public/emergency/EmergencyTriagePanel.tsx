@@ -38,10 +38,12 @@ import { SosStatusTimeline } from "./SosStatusTimeline";
 import {
   assessDanger,
   buildSummary,
+  classifyUrgency,
   nextStep,
   SAFE_ACTIONS,
   toSosPayload,
   TRIAGE_QUESTIONS,
+  URGENCY_GUIDANCE,
   type TriageAnswers,
   type TriageStepId,
 } from "./triage-protocol";
@@ -646,6 +648,27 @@ export function EmergencyTriagePanel() {
 
           {question.kind === "review" && (
             <div className="space-y-3 pl-10">
+              {(() => {
+                const u = classifyUrgency(answers);
+                const g = URGENCY_GUIDANCE[u.tier];
+                const tone =
+                  u.tier === "emergency"
+                    ? "border-red-300 bg-red-50 text-red-900"
+                    : u.tier === "urgency"
+                      ? "border-amber-300 bg-amber-50 text-amber-900"
+                      : "border-emerald-300 bg-emerald-50 text-emerald-900";
+                return (
+                  <div
+                    data-testid="triage-urgency"
+                    data-urgency={u.tier}
+                    className={`rounded-xl border p-4 ${tone}`}
+                  >
+                    <p className="text-[15px] font-bold">{g.headline}</p>
+                    <p className="mt-1 text-sm">{u.reason}</p>
+                    <p className="mt-1 text-sm">{g.action}</p>
+                  </div>
+                );
+              })()}
               <div
                 data-testid="triage-summary"
                 className="whitespace-pre-line rounded-xl bg-white p-4 font-mono text-[13px] leading-relaxed text-slate-800 ring-1 ring-slate-200"
