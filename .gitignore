@@ -116,3 +116,6 @@ reports/full-boot/local-registry-data/
 # Claude Code local worktrees (never commit)
 .claude/worktrees/
 vendor/models/
+
+# Mobile build artifacts (APKs, screenshots, logs) — regenerated per commit
+artifacts/
