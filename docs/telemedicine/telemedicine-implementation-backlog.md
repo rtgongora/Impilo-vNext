@@ -1,6 +1,6 @@
 # Telemedicine Implementation Backlog
 
-Companion to [Volume I — National Telemedicine & Virtual Care Specification](NATIONAL_TELEMEDICINE_VIRTUAL_CARE_SPECIFICATION.md) (§31), [Volume II — National e-Orders, Fulfilment & Telemonitoring Specification](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) (§26) and the [gap matrix](telemedicine-traceability-gap-matrix.md). One backlog serves the whole pack: Volume I epics are TM-B1..TM-B20 (all 20 cores IMPLEMENTED, waves A–D 2026-07-22/23); Volume II epics are OF-B1..OF-B30 (Wave OF-A cores — OF-B1..B6, OF-B11 and the OF-B29 controlled half — IMPLEMENTED, live-proven 2026-07-23 @ `8353d93e1`; rig 36/36 + M2 live proof 28/28 on impilo-full-preview; remainder pending). Priorities: **P0** national-use blocker · P1 national-grade completeness · P2 maturity. "Blocks national use" = a clinical-safety or trust invariant is unmet without it.
+Companion to [Volume I — National Telemedicine & Virtual Care Specification](NATIONAL_TELEMEDICINE_VIRTUAL_CARE_SPECIFICATION.md) (§31), [Volume II — National e-Orders, Fulfilment & Telemonitoring Specification](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) (§26) and the [gap matrix](telemedicine-traceability-gap-matrix.md). One backlog serves the whole pack: Volume I epics are TM-B1..TM-B20 (all 20 cores IMPLEMENTED, waves A–D 2026-07-22/23); Volume II epics are OF-B1..OF-B30 (Wave OF-A cores — OF-B1..B6, OF-B11 and the OF-B29 controlled half — IMPLEMENTED, live-proven 2026-07-23 @ `8353d93e1`, rig 36/36 + M2 live proof 28/28; Wave OF-B cores — OF-B7, OF-B9, OF-B10, OF-B12..B18 and the OF-B8 PA half — IMPLEMENTED, live-proven 2026-07-23, M3 gate 81/0 @ `9fcb42f2f` on impilo-full-preview; remainder pending). Priorities: **P0** national-use blocker · P1 national-grade completeness · P2 maturity. "Blocks national use" = a clinical-safety or trust invariant is unmet without it.
 
 ## Volume I epic index (TM-B)
 
@@ -203,18 +203,18 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 | OF-B4 | MSIKA fulfilment marketplace (request-for-offer) — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
 | OF-B5 | Provider eligibility and matching — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
 | OF-B6 | Offer and quotation lifecycle — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
-| OF-B7 | Patient offer-comparison and selection | P1 | No |
-| OF-B8 | Ruvimbo coverage and prior authorisation | P1 | No |
-| OF-B9 | COSTA patient-liability calculation | P1 | No |
-| OF-B10 | MUSHEX payment and reconciliation | P1 | No |
+| OF-B7 | Patient offer-comparison and selection — **IMPLEMENTED** (live-proven 2026-07-23) | P1 | No |
+| OF-B8 | Ruvimbo coverage and prior authorisation — **PARTIAL** (PA half live-proven 2026-07-23; medicine-registry/formulary half NOT landed) | P1 | No |
+| OF-B9 | COSTA patient-liability calculation — **IMPLEMENTED** (live-proven 2026-07-23) | P1 | No |
+| OF-B10 | MUSHEX payment and reconciliation — **IMPLEMENTED** (live-proven 2026-07-23; escrow-on-PoD deferred) | P1 | No |
 | OF-B11 | DURA stock reservation — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
-| OF-B12 | Pharmacy dispense workflow | P1 | **Yes** (claim linkage) |
-| OF-B13 | Diagnostics fulfilment | P1 | No |
-| OF-B14 | Multi-provider and partial fulfilment | P1 | No |
-| OF-B15 | Substitution and prescriber clarification | P1 | No |
-| OF-B16 | Pickup and collection | P1 | No |
-| OF-B17 | NHUME delivery orchestration | P1 | No |
-| OF-B18 | Chain of custody and proof of delivery | P1 | No |
+| OF-B12 | Pharmacy dispense workflow — **IMPLEMENTED** (live-proven 2026-07-23; claim linkage closed = OF-G4 resolved) | P1 | **Yes** (claim linkage) |
+| OF-B13 | Diagnostics fulfilment — **IMPLEMENTED** (live-proven 2026-07-23; imaging leg #57 not live-run) | P1 | No |
+| OF-B14 | Multi-provider and partial fulfilment — **IMPLEMENTED** (live-proven 2026-07-23; quantity-level split deferred) | P1 | No |
+| OF-B15 | Substitution and prescriber clarification — **IMPLEMENTED** (live-proven 2026-07-23) | P1 | No |
+| OF-B16 | Pickup and collection — **IMPLEMENTED** (live-proven 2026-07-23; locker orchestration deferred) | P1 | No |
+| OF-B17 | NHUME delivery orchestration — **IMPLEMENTED** (live-proven 2026-07-23; durable write-back retry contract open) | P1 | No |
+| OF-B18 | Chain of custody and proof of delivery — **IMPLEMENTED** (live-proven 2026-07-23; escrow-on-PoD deferred) | P1 | No |
 | OF-B19 | Cold-chain IoT | P2 | No |
 | OF-B20 | Drone and alternative delivery-mode enablement | P2 | No |
 | OF-B21 | Community telemonitoring programme | P1 | No |
@@ -300,6 +300,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B7 — Patient offer-comparison and selection (P1)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `f3d66e716` — `/my/orders/[requestId]/offers` comparison surface (`OfferComparisonSurface`) + BFF composition (`MarketplaceRequestBffController`): ranked offers w/ ranked-because set, per-offer financials block (estimate-never-final §10.5), split composition, honest offer-expired/taken states; selection calls the OF-B6 idempotent commit. Live #41/#46 offers-view (M3 gate 81/0 fixrun3 @ `9fcb42f2f`). Deferrals: Nompilo ranking/substitution explanations, USSD/feature-phone parity, OD-12 ranking-policy review before GA.
+
 **Problem.** Comparison/selection experience absent entirely (OF-G10, R53) — patients cannot see, understand or choose between offers.
 **Outcome.** §8F/§11.6 comparison surface (web + citizen app): ranked offers with **ranked-because explanations** (§11.5 fairness — no dark patterns, no hidden commercial influence CC-21), per-offer liability from OF-B9, stock grade badges, delivery-vs-pickup options; Nompilo explains rankings and substitutions without steering; selection calls the OF-B6 idempotent commit.
 **Owner.** ui + experience-bff (+ guidance-service explanations). **Dependencies.** OF-B6 (offers), OF-B9 (per-offer liability); OD-12 (ranking policy).
@@ -308,6 +310,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** None (BFF/UI composition; no datasource in BFF). **Risk.** Low-medium — fairness copy is policy-sensitive; review against OD-12 before GA.
 
 ## OF-B8 — Ruvimbo coverage and prior authorisation (P1)
+
+> **Status 2026-07-23:** honestly **PARTIAL** @ `46a6634b1`. Landed: the PA half — `requires_authorisation`/PA flag on liability estimates (coverage V019), PA_REQUIRED gates commitment (§8.7.6) and a minimum-necessary PA is auto-submitted onto live `cv_authorisations` (SUBMITTED) — live #47 (fixrun3; PA idempotency key made body-exact @ `9fcb42f2f`, auth-type vocabulary corrected to coverage-owned `PRIOR`). NOT landed: the ZIBO national medicine-registry artifact type and `cv_formulary` payer tiers — benefit-code mapping still pending; OF-G14 stays open.
 
 **Problem.** Coverage/PA/claims/COB engines BUILT and proven (R58/R59/R61), but no payer formulary entity and no ZIBO medicine-registry artifact type — drug coverage expressible only as raw benefit definitions (OF-G14, R62).
 **Outcome.** Three-layer formulary per the canonical stance: **ZIBO national medicine registry** (new artifact type — the coding that prevents free-text products anywhere) · **coverage `cv_formulary`** (payer tiers, PA-required flags) · pharmacy facility list (`rx_formulary`, already BUILT); PA-required flags drive the §10.6 prior-auth lifecycle in the offer flow; reservation-aware accumulators per §10.
@@ -318,6 +322,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B9 — COSTA patient-liability calculation (P1)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `46a6634b1` — `OfferFinancialsService` wires COSTA charge + Ruvimbo liability per offer into commitment steps 7–8 (msika-flow V008 finance lane): explicit funding-mode election (SELF_PAY/COVERED/WAIVED), estimate-never-final labelling, fail-closed coded refusals (NOT_COVERED / PA_REQUIRED) with DURA-hold compensation and honest re-offer posture. BUG-4 (missing Idempotency-Key made every payer-covered offer misreport NOT_COVERED — semantically dangerous) live-caught + fixed @ `9fcb42f2f`. Live #41/#46/#47 (fixrun3).
+
 **Problem.** Liability engine BUILT (`cv_liability_estimates`) but not wired into any offer/checkout flow (OF-G13, R60) — patients would select offers blind to cost.
 **Outcome.** §8G/§10.4 per-offer flow: COSTA supplies the charge; Ruvimbo computes eligibility→benefit→estimated liability per offer; **estimate-never-final** labelling binding (§10.5); shortfall feeds OF-B10 payment intents; emergency financial bypass honoured (§10.8 — financial status never obstructs emergency care).
 **Owner.** costa + coverage + msika-flow (call seam). **Dependencies.** OF-B6 (offers to price), OF-B8 (formulary tiers).
@@ -326,6 +332,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** None expected (engine exists; wiring only) — any new columns next-free at execution. **Risk.** Low — wiring work on proven engines.
 
 ## OF-B10 — MUSHEX payment and reconciliation (P1)
+
+> **Status 2026-07-23:** IMPLEMENTED @ `46a6634b1` — real MusheX intent for the shortfall before commit, selection held AWAITING_PAYMENT (no fake synchronous payment), commitment steps 9–12 resumed by the real `mushex.payment.status.changed` kafka path (BUG-7 resume-swallow live-caught + fixed @ `9fcb42f2f` — marketplace resume first, per-path error isolation), payment-timeout TTL sweep, refund-on-RETURNED via the §12.7 return chain (live #68). Live #41 end-to-end paid path (fixrun3). Deferrals: **escrow-on-PoD release** (campaign escrow not yet wired to fulfilment PoD — the PoD verification grade is now written back onto the selection to gate that seam; unpaid selections record escrow NOT_APPLICABLE honestly); cross-pipeline reconciliation view (#70) rides OF-B30.
 
 **Problem.** Payment intents/refunds LIVE (R63), but escrow hold-until-handover is built only for campaigns, not wired to fulfilment proof-of-delivery (OF-G13 escrow half, R64); no cross-pipeline reconciliation view.
 **Outcome.** §8H payment doctrine in the offer flow: intent→PAID for the shortfall before commit; **mushe-wallet escrow released on Nhume proof-of-handover** (OF-B18 seam); refunds on failed delivery/returns (§12.7); payment-fail preservation (clinical order untouched, reservation held to TTL, honest retry §8.8.4); payment events never set fulfilment state (CC-2); reconciliation across intent/claim/settlement without duplication.
@@ -347,6 +355,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B12 — Pharmacy dispense workflow (P1 — blocks national use)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `f22ee9ca6` — claim↔dispense linkage closed (**OF-G4 resolved** @ `9fcb42f2f`): commitment step-6 claims at OROS, the order's `externalRefs.prescriptionClaimId` carries the claim (new narrow allowlisted OROS endpoint, merge-jsonb, idempotent) + pharmacy lazy bind at completeDispense; claim carries `dispense_episode_ref`; repeats decrement server-side only; episodes spawn with real items from the fixed `oros.order.placed` payload (BUG-3 @ `9fcb42f2f`); `DispenseClaimAnomalyJob` pattern sweep; coded 409 envelope for refusals (F-500 fix). Live #41/#44 (fixrun3; pharmacy suite 76/0). Deferrals: MedicationDispense SHR projection (OF-G19 open), counselling capture, offline-tolerant claim sync (#55 not run), dispense-time controlled-register consumption (OF-G7 residue).
+
 **Problem.** Prescription↔dispense claim linkage absent — "refill" stamps a timestamp, `POST /{id}/dispense` flips status with zero stock effect, no repeats decrement (OF-G4, R45 — **P0 gap**); FHIR MedicationDispense/SupplyRequest/DeviceRequest/SupplyDelivery missing from the gateway, no dispense projection anywhere (OF-G19, R73). Dispense engine itself BUILT (R46: FEFO, partial fill, stock ledger, pickup proofs).
 **Outcome.** Dispense episode carries `prescription_version_id`; **claim is atomic with server-side repeats counter** (`oros.prescription.claimed.v1`); dispense drives real `rx_stock_movements` (CC-12: no status flip without stock effect); counselling capture added; MedicationDispense projection to BUTANO at completion via gateway allow-list additions (§16.3); offline-tolerant claim per §15.2 patterns.
 **Owner.** pharmacy + oros + fhir-gateway/butano. **Dependencies.** OF-B2 (prescription versions + tokens), OF-B11 (stock).
@@ -355,6 +365,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** pharmacy — linkage columns + counselling table; fhir-gateway — resource-type allow-list; next-free at execution. **Risk.** Medium — cutover interacts with OD-13 legacy deprecation; dual-run window required.
 
 ## OF-B13 — Diagnostics fulfilment (P1)
+
+> **Status 2026-07-23:** IMPLEMENTED @ `3637e456c` — diagnostics RFO profiles (msika-flow V010): lab offers carry collection mode + home-collection window, commit records honest step skips (no fabricated DURA hold — vendor service-capacity promise recorded; no prescription claim — the OROS order stays spine truth). Live #56 (fixrun3). Deferrals: imaging centre-selection leg (#57) not live-run; specimen-custody cold edge cases ride OF-B19; result-return legs ride the existing OROS spine (proven at OF-A, not re-proven here).
 
 **Problem.** OROS diagnostics spine (accessioning, results) BUILT (R41), but diagnostics have no marketplace path — no lab/imaging RFO variant, no home-collection logistics composition; gaps ride OF-G8/OF-G10 for the diagnostics category.
 **Outcome.** Category B (§7.2) flows through the same RFO rails: lab offers include collection mode (walk-in / home collection via Nhume specimen leg); imaging offers include modality/slot; results return through existing OROS result paths with critical-result guards (Volume I TM-B7 seam); ServiceRequest projections already in place extended with fulfilment linkage.
@@ -365,6 +377,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B14 — Multi-provider and partial fulfilment (P1)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `3637e456c` — `SplitSelectionCoordinator` (msika-flow V010): line-level split commitments sharing a `split_group_id`, per-member DURA reservations, request rollup (COMMITTED only when every line covered), overlapping-line combinations refused before any commit (400 OVERLAPPING_LINE_COVERAGE), drained sibling → honest PARTIAL_COMMIT with the committed member standing (no invented cross-vendor rollback) and the uncovered line staying live. Live #45 (fixrun3). Deferral: quantity-level split (partial quantities of a single line across vendors) — current split is line-level.
+
 **Problem.** Governed splitting (§4.7) has no machinery — a multi-line order cannot be fulfilled by different providers, and partial fill exists only inside a single pharmacy episode (R46); rides the absent RFO layer (OF-G8/OF-G9).
 **Outcome.** Line-level RFO: a request may split into per-line invitations; per-line offers, selections and commitments each pinned to the order version; split visibility for the patient (one order, N fulfilments, unified tracking); no line orphaned — unfulfilled lines re-offered or returned to the prescriber; partial-fill remainder handling unified with split logic.
 **Owner.** msika-flow + oros + ui. **Dependencies.** OF-B4, OF-B6, OF-B7 (comparison shows split composition), OF-B11 (per-line reservations).
@@ -373,6 +387,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** msika-flow — line-level linkage tables, next-free at execution. **Risk.** Medium — combinatorial state space; constrain to per-line machines composed, never a bespoke "split machine".
 
 ## OF-B15 — Substitution and prescriber clarification (P1)
+
+> **Status 2026-07-23:** IMPLEMENTED @ `f22ee9ca6` — clarification loop (pharmacy V006): step-up substitution rule → PENDING clarification (never unilateral), dispense fail-closed held while pending (coded 409 CLARIFICATION_PENDING after the F-500 fix @ `9fcb42f2f`), approval applies the substitution exactly once, resolve replay refused, dispense completes after resolution. Live #44 (fixrun3).
 
 **Problem.** `rx_substitution_rules` engine BUILT (R46) but the prescriber-approval loop is absent — no clarification request/response channel, no amend path to record the approved substitution (rides OF-G2, R43).
 **Outcome.** §4.7 governed substitution: substitution proposal from the fulfiller → prescriber notification → approve/deny with reason → approval recorded as an order amendment (OF-B1 version) → dispense proceeds against the new version; generic-substitution policy tiers (auto-allowed vs approval-required vs never); safety recheck (OF-B3) on every candidate; patient informed in plain language (Nompilo).
@@ -383,6 +399,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B16 — Pickup and collection (P1)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `f22ee9ca6` — verification-grade proof ladder (pharmacy V007): one-time credential delivered exactly once in the creation response, hash-only at rest (BUG-5 fix @ `9fcb42f2f` also closed a latent plaintext-at-rest leak), TOKEN_MATCH claim live (#41); SMS opaque reference (never the token or medication name), server-side resolve + named-recipient staff ID check, identity mismatch fail-closed 409, SMS_REFERENCE_ID_CHECK grade (schema BUG-9 V008 widen @ `9fcb42f2f`); expiry sweep → proof EXPIRED → uncollected episode CANCELLED → stock-return reversal movements (live fixrun3 SMS/expiry legs — catalogue #54 and the #69 non-locker core). Deferrals: locker/curbside orchestration (§8.11) NOT delivered; caregiver MVUMO-delegation collection leg (#53) not live-run; scheduled pickup reminders blocked on TM-G14.
+
 **Problem.** Pickup proofs BUILT (`rx_pickup_proofs`, R46) but claim verification rides the absent token (OF-G6); caregiver collection and no-smartphone paths undefined; locker/curbside flows (§12.5) absent.
 **Outcome.** Pickup = token claim (OF-B2) + identity-grade check per the §12.4 proof ladder; caregiver collection via MVUMO delegation (Volume I R26 machinery, delegation recorded on the proof); SMS one-time pickup code for no-smartphone patients (integrity-only offline per §13.2); locker flow with expiry→return→restock; curbside variant.
 **Owner.** pharmacy + oros (token claim) + mvumo (delegation) + ui/notification. **Dependencies.** OF-B2 (tokens), OF-B12 (dispense linkage).
@@ -392,6 +410,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B17 — NHUME delivery orchestration (P1)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `d1a8f48fa` — `FulfilmentDispatchService` (msika-flow V009): commitment step-11 creates a REAL Nhume delivery task with the courier minimum-necessary payload (§12.2) + dispatch_ref bind, retry sweep for failed dispatches; Nhume write-back projects DELIVERY_ATTEMPTED/DELIVERED/RETURNED onto the selection and triggers refund-on-RETURNED. BUG-10 (headerless service-originated dispatch — payment-resumed commitments permanently undeliverable) live-caught + fixed @ `9fcb42f2f` (full v1.1 header set incl. X-Correlation-ID). Live #42/#68 (fixrun3; proof courier seeded durably via `scripts/seed/22-seed-nhume-proof-courier.sql`). Deferral: write-back transport still best-effort — durable outbox/DLQ + ops-escalation contract remains open (OF-G15 narrowed, not closed).
+
 **Problem.** Nhume logistics SoR BUILT (24-status machine, multi-cargo, R65), but fulfilment↔delivery write-back is best-effort — callback failures swallowed to warnings, no retry/escalation contract (OF-G15, R66).
 **Outcome.** §12.8 write-back hardening: durable outbox-driven callbacks with retry + DLQ + ops escalation, never silent; delivery-task creation from commitment (§12.1) with courier minimum-necessary payloads (§12.2, CC-9 — no clinical content to couriers); failed-delivery/returns/refund loop (§12.7) wired to OF-B10; recipient-unavailable re-attempt policy; new Nhume streams use `nhume.<aggregate>.<action>.v1` (unprefixed legacy grandfathered).
 **Owner.** nhume + msika-flow. **Dependencies.** OF-B6 (commitment), OF-B10 (refunds).
@@ -400,6 +420,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** msika-flow/nhume — callback outbox tables, next-free at execution. **Risk.** Low-medium — hardening of a BUILT seam; event-naming migration discipline required.
 
 ## OF-B18 — Chain of custody and proof of delivery (P1)
+
+> **Status 2026-07-23:** IMPLEMENTED @ `d1a8f48fa` — §12.4 graded proof-of-handover (`HandoverGradePolicy`, nhume V007): required grade per order class (OTP_MATCH second factor for the proven lane), named-recipient verification, server-held OTP minted at task creation; wrong OTP / below-grade proof → handover refused, DELIVERY_ATTEMPTED with bounded attempts and the custody event kept; correct OTP + named recipient → DELIVERED with achieved grade recorded; RETURNED chain (§12.7) → refund seam. Live #68 (fixrun3). Deferrals: escrow release on PoD (grade is written back to the selection to gate that seam — rides the OF-B10 escrow half); controlled-custody detail per OD-15.
 
 **Problem.** Custody machinery BUILT (`nhume_chain_of_custody_events`, `nhume_delivery_proofs`, R65), but the proof-of-handover grade ladder (§12.4) is not enforced per order class, escrow release is not wired to PoD (OF-G13/R64), and controlled-substance custody policy is undecided (OD-15).
 **Outcome.** Graded proof-of-handover per §12.4 (grade required scales with order class — controlled lines demand second-factor handover per §13.4); unbroken custody chain asserted at completion (gap in chain = exception, not silence); PoD event triggers mushe-wallet escrow release (OF-B10 seam) and fulfilment confirmation (§8N); safe handover identity via VITO name-grade (no CPID/HID leak to couriers).

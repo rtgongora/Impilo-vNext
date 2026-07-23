@@ -20,8 +20,8 @@ interim postures so no wave blocks on a pending decision.
 | **M0 — Spec pack** | Two-volume canonical spec + shared matrix/backlog/journeys | PO-reviewable, gates green | ✅ DONE 2026-07-23 |
 | **M1 — Trust spine live** | Signed, versioned, token-claimable prescriptions + order lifecycle on the estate | Wave OF-A deployed + journeys #50/#51 legs green live | ✅ DONE 2026-07-23 (live trust-spine proof 11/11; local rig 36/36) |
 | **M2 — Marketplace live** | RFO round → offer → commitment with real stock reservation, fail-closed eligibility | Journeys #41 (to reservation), #48, #49, #52 green live | ✅ DONE 2026-07-23 (live proof 28/28 @ `8353d93e1`) |
-| **M3 — Money + dispense closed** | Coverage/liability/payment wired into selection; dispense bound to claims; pickup/delivery | Wave OF-B; journeys #42–#47, #53–#57, #68–#70 | 🔶 CURRENT |
-| **M4 — Telemonitoring live** | Plans, thresholds, device readings, alert ladder, CHW workflow | Wave OF-C; journeys #58–#66 | ⬜ |
+| **M3 — Money + dispense closed** | Coverage/liability/payment wired into selection; dispense bound to claims; pickup/delivery | Wave OF-B; journeys #42–#47, #53–#57, #68–#70 | ✅ DONE 2026-07-23 (gate 81/0 @ `9fcb42f2f`, shims removed; ten live-caught bugs incl. three Blockers — payment-resume swallow, headerless service-originated dispatch, coverage misreporting NOT_COVERED — all fixed + re-proven; honest not-run: #55/#57/#70) |
+| **M4 — Telemonitoring live** | Plans, thresholds, device readings, alert ladder, CHW workflow | Wave OF-C; journeys #58–#66 | 🔶 CURRENT |
 | **M5 — Governance close** | Cold-chain/drone lanes honest, fairness analytics, full-suite rig | Wave OF-D; #43, #67, full #41–#70 | ⬜ |
 
 ---
@@ -53,22 +53,37 @@ ranking is the basic ranked-because set pending OD-12.
 
 ---
 
-## Wave OF-B — P1 marketplace-complete + finance (M3 — CURRENT)
+## Wave OF-B — P1 marketplace-complete + finance (✅ COMPLETE 2026-07-23)
 
-Four parallel lanes over the OF-A spine; serialize only where files collide.
+**Built + suite-green + deployed + live-proven (2026-07-23, fix batch @ `9fcb42f2f`; gate re-proof
+81 PASS / 0 FAIL — `scratchpad/ofb-m3-live-proof.sh` fixrun3, all estate shims removed):**
 
-| Lane | Epics | Delivers |
-|---|---|---|
-| Comparison + finance | OF-B7, OF-B8, OF-B9, OF-B10 | Patient comparison UX w/ full ranking transparency; ZIBO medicine registry + payer formulary; per-offer liability (COSTA/Ruvimbo) into checkout; MusheX payment step + escrow-on-PoD + reconciliation |
-| Dispense | OF-B12, OF-B15, OF-B16 | Claim↔dispense linkage (closes OF-G4, the last P0-severity gap), substitution + prescriber clarification loop, pickup proofs/SMS reference/locker orchestration |
-| Logistics | OF-B17, OF-B18 | Nhume RFO-delivery orchestration + escrow release on PoD; custody-grade ladder + named-recipient verification |
-| Diagnostics/split | OF-B13, OF-B14 | Lab/imaging RFO profiles + home collection; multi-provider split fulfilment |
+| Lane | Epics | SHA | Delivered | Honest deferrals |
+|---|---|---|---|---|
+| Comparison + finance | OF-B7, OF-B8 (PA half), OF-B9, OF-B10 | `f3d66e716` (UI/BFF), `46a6634b1` | Offer-comparison surface w/ ranked-because + per-offer financials; PA flag → PA_REQUIRED gate + live minimum-necessary auto-submit (`cv_authorisations` SUBMITTED); OfferFinancialsService (COSTA charge + Ruvimbo liability, steps 7–8, estimate-never-final, coded refusals); real MusheX shortfall intent + kafka payment-resume + refund-on-RETURNED | ZIBO medicine registry + `cv_formulary` NOT landed (benefit-code mapping pending — OF-B8 stays PARTIAL, OF-G14 open); escrow-on-PoD; Nompilo ranking explanations; USSD parity; #70 reconciliation rides OF-B30 |
+| Dispense | OF-B12, OF-B15, OF-B16 | `f22ee9ca6` | Claim↔dispense linkage (**OF-G4 — the last P0-severity gap — resolved**), prescriber clarification loop w/ coded 409 hold, verification-grade pickup proofs + one-time credential + SMS reference + expiry-sweep restock | MedicationDispense SHR projection (OF-G19); counselling capture; locker orchestration; offline claim sync (#55 not run); caregiver-delegation leg (#53) not live-run |
+| Logistics | OF-B17, OF-B18 | `d1a8f48fa` | Real dispatch at commitment step-11 (courier minimum-necessary payload), §12.4 custody-grade ladder (OTP second factor + named recipient), DELIVERY_ATTEMPTED ladder, RETURNED→refund chain, selection write-back projections | Escrow release on PoD (grade written back to gate the seam); durable write-back outbox/DLQ contract (OF-G15 narrowed, not closed) |
+| Diagnostics/split | OF-B13, OF-B14 | `3637e456c` | Diagnostics RFO profiles + home-collection window w/ honest step skips; line-level split fulfilment (`split_group_id`, rollup, overlap refusal, honest PARTIAL_COMMIT) | Imaging leg #57 not live-run; quantity-level split |
 
-**Wave gate:** journeys #42–#47, #53–#57, #68–#70 green live; #41 green end-to-end
-(order → paid → dispensed → SHR write). Decisions consumed: OD-12 (ranking/broadcast),
-OD-15 (controlled custody detail), OD-17 (attested stock).
+**Wave gate result:** 81/0 (fixrun3) — #41 green end-to-end through the paid path
+(author→sign→token→RFO→offer→liability→real MusheX PAID→kafka resume→commit→claim bind→dispense→pickup
+TOKEN_MATCH); #42/#44/#45/#46/#47/#54/#56/#68 + the #69 expiry core green live. Honest residue:
+the #41 SHR MedicationDispense projection leg rides OF-G19; #55 (offline dispense sync), #57
+(imaging) and #70 (reconciliation, rides OF-B30) were not run. Decisions consumed: OD-12
+(ranking/broadcast), OD-15 (controlled custody detail), OD-17 (attested stock).
 
-## Wave OF-C — telemonitoring (M4)
+**Ten live-caught bugs — all fixed @ `9fcb42f2f`, gate re-proven with shims removed:**
+- **BUG-7 (Blocker):** PaymentEventConsumer ran the legacy cart callback first and swallowed its "Settlement not found" — every paid marketplace selection stuck AWAITING_PAYMENT until the TTL sweep killed it. Marketplace resume now runs first with per-path error isolation.
+- **BUG-10 (Blocker):** NhumeClient's service-originated header synthesis omitted X-Correlation-ID → nhume's V11HeaderFilter 400'd every payment-resumed dispatch (and its retry sweep). Full v1.1 header set now synthesized.
+- **BUG-4 (Blocker):** CoverageClient sent no Idempotency-Key → coverage 400 → mapped to REFUSED → every payer-covered offer misreported the hard "NOT_COVERED" refusal to members who ARE covered; the PA path was unreachable live. Deterministic key added (body-exact for PA).
+- **BUG-2/BUG-3:** no producer ever wrote the claim onto the OROS order, and `oros.order.placed` carried no items — consumer-spawned episodes could never bind a claim or be picked. Producer endpoint + additive items payload + pharmacy lazy bind.
+- **BUG-5:** pickup credential generated then lost (and stashed in a persisted column — latent plaintext-at-rest leak). Now delivered exactly once in the creation response, hash-only at rest.
+- **BUG-9:** `rx_pickup_proofs.method` VARCHAR(10) could not hold SMS_REFERENCE — the SMS path had never run on the schema (V008 widen).
+- **F-500:** pharmacy refusals surfaced as bodyless 500s → coded 409 envelope handler.
+- **CFG-1/2:** msika-flow MUSHEX/COSTA/COVERAGE and pharmacy OROS base-URLs defaulted to localhost in-pod — steps 7–8 and the claim seam were dead on the estate; now durable in preview helm values.
+- Fix-run extras: coverage auth-type vocabulary (invented `MARKETPLACE_FULFILMENT` → owned `PRIOR`); PA idempotency-key collision. Ops/seed gaps made durable: proof courier + facility payee credential seeds wired into `scripts/seed-data.sh`.
+
+## Wave OF-C — telemonitoring (M4 — CURRENT)
 
 Strictly ordered start: **OF-B22** (new clinical-plane `telemonitoring-service` skeleton + plan
 engine) first, then **OF-B21 / OF-B24 / OF-B25** in parallel (programme model; device
