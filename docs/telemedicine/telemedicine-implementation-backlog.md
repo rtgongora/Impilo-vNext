@@ -1,6 +1,6 @@
 # Telemedicine Implementation Backlog
 
-Companion to [Volume I — National Telemedicine & Virtual Care Specification](NATIONAL_TELEMEDICINE_VIRTUAL_CARE_SPECIFICATION.md) (§31), [Volume II — National e-Orders, Fulfilment & Telemonitoring Specification](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) (§26) and the [gap matrix](telemedicine-traceability-gap-matrix.md). One backlog serves the whole pack: Volume I epics are TM-B1..TM-B20 (all 20 cores IMPLEMENTED, waves A–D 2026-07-22/23); Volume II epics are OF-B1..OF-B30 (not started). Priorities: **P0** national-use blocker · P1 national-grade completeness · P2 maturity. "Blocks national use" = a clinical-safety or trust invariant is unmet without it.
+Companion to [Volume I — National Telemedicine & Virtual Care Specification](NATIONAL_TELEMEDICINE_VIRTUAL_CARE_SPECIFICATION.md) (§31), [Volume II — National e-Orders, Fulfilment & Telemonitoring Specification](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) (§26) and the [gap matrix](telemedicine-traceability-gap-matrix.md). One backlog serves the whole pack: Volume I epics are TM-B1..TM-B20 (all 20 cores IMPLEMENTED, waves A–D 2026-07-22/23); Volume II epics are OF-B1..OF-B30 (Wave OF-A cores — OF-B1..B6, OF-B11 and the OF-B29 controlled half — IMPLEMENTED, live-proven 2026-07-23 @ `8353d93e1`; rig 36/36 + M2 live proof 28/28 on impilo-full-preview; remainder pending). Priorities: **P0** national-use blocker · P1 national-grade completeness · P2 maturity. "Blocks national use" = a clinical-safety or trust invariant is unmet without it.
 
 ## Volume I epic index (TM-B)
 
@@ -197,17 +197,17 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 | # | Epic | Priority | Blocks national use |
 |---|---|---|---|
-| OF-B1 | Canonical clinical-order aggregate | **P0** | **Yes** |
-| OF-B2 | E-prescription authoring and signing | **P0** | **Yes** |
-| OF-B3 | Medication safety validation | **P0** | **Yes** |
-| OF-B4 | MSIKA fulfilment marketplace (request-for-offer) | **P0** | **Yes** |
-| OF-B5 | Provider eligibility and matching | **P0** | **Yes** |
-| OF-B6 | Offer and quotation lifecycle | **P0** | **Yes** |
+| OF-B1 | Canonical clinical-order aggregate — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
+| OF-B2 | E-prescription authoring and signing — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
+| OF-B3 | Medication safety validation — **IMPLEMENTED** (suite-green 2026-07-23; licensed-DB seam open) | **P0** | **Yes** |
+| OF-B4 | MSIKA fulfilment marketplace (request-for-offer) — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
+| OF-B5 | Provider eligibility and matching — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
+| OF-B6 | Offer and quotation lifecycle — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
 | OF-B7 | Patient offer-comparison and selection | P1 | No |
 | OF-B8 | Ruvimbo coverage and prior authorisation | P1 | No |
 | OF-B9 | COSTA patient-liability calculation | P1 | No |
 | OF-B10 | MUSHEX payment and reconciliation | P1 | No |
-| OF-B11 | DURA stock reservation | **P0** | **Yes** |
+| OF-B11 | DURA stock reservation — **IMPLEMENTED** (live-proven 2026-07-23) | **P0** | **Yes** |
 | OF-B12 | Pharmacy dispense workflow | P1 | **Yes** (claim linkage) |
 | OF-B13 | Diagnostics fulfilment | P1 | No |
 | OF-B14 | Multi-provider and partial fulfilment | P1 | No |
@@ -225,7 +225,7 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 | OF-B26 | Monitoring alert and escalation engine | P1 | No |
 | OF-B27 | Patient and caregiver monitoring experience | P2 | No |
 | OF-B28 | Remote-monitoring command workspace | P2 | No |
-| OF-B29 | Fraud, anomaly and marketplace fairness controls | **P0** (controlled gating) / P2 (anomaly + fairness analytics) | **Yes** (controlled half) |
+| OF-B29 | Fraud, anomaly and marketplace fairness controls — **controlled half IMPLEMENTED** (live-proven 2026-07-23) | **P0** (controlled gating) / P2 (anomaly + fairness analytics) | **Yes** (controlled half) |
 | OF-B30 | End-to-end order-to-outcome runtime proof | P1 | **Gate for every epic** |
 
 **OF-B29 split justification.** The controlled-medicine half (OF-G7, **P0** in the matrix) is a statutory invariant — the DURA controlled register exists (inventory V013) but nothing consumes it, so a controlled substance can today ride the same rails as paracetamol; no national deployment is defensible in that state. The anomaly-detection and fairness-analytics half needs marketplace volume to observe and tune against, which cannot exist before Waves OF-A/OF-B land — so it is honestly P2, not padding.
@@ -233,6 +233,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 ---
 
 ## OF-B1 — Canonical clinical-order aggregate (P0)
+
+> **Status 2026-07-23:** IMPLEMENTED @ `8353d93e1` — immutable versions + supersedes chain (oros V016), §9.1 target states T1–T9, amend/hold/resume/revoke/replace/error-mark; oros 189 tests, rig J-OO-1, live #41 version-pin fail-close proven.
 
 **Problem.** Order amendment/replacement/versioning absent — in-place mutation or nothing; only result-level amend exists (OF-G2, R43). The 13-status OROS spine is BUILT (R41) but has no immutable-version model, so every downstream control (signing, tokens, fraud-by-construction §13.8) has nothing stable to bind to.
 **Outcome.** Spec §8A/§9.1 on the OROS spine: amendment = new immutable version, never in-place mutation; version table with supersedes-chain; cancel/replace semantics per the §9.1 order machine; provenance on every version; `oros.order.amended.v1`/`.replaced.v1` events.
@@ -243,6 +245,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B2 — E-prescription authoring and signing (P0)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `8353d93e1` — OROS aggregate (V017) w/ server-side repeats counter, detached JWS via tshepo-keys (`PRESCRIPTION_SIGNING`, fail-closed), single-active claim token w/ RC-7 rotation; legacy `rx_prescriptions` frozen (OD-13). Rig 36/36 (J-OO-1..5) + live trust-spine proof. Deferral: claim→dispense-episode binding = OF-B12 (OF-G4 stays open).
+
 **Problem.** No clinician signing anywhere — `placed_by`/`prescribed_by` are bare strings (OF-G1, R42); prescription aggregate thin + orphaned — flat single-med `rx_prescriptions`, no items/repeats-ceiling/validity/controlled flag, unlinked to the dispense pipeline (OF-G3, R44); no anti-fraud token (OF-G6, R48).
 **Outcome.** Prescription aggregate lives in **OROS** (parent authorisation; PHARMACY orders = dispense episodes): items, repeats ceiling, validity window, controlled flag, indication; detached JWS signing via tshepo-keys stored with the signed version (`oros.prescription.signed.v1`); opaque PrescriptionToken bound to PrescriptionVersionId per §13.2 (no clinical payload in the QR, server-side retrieval, single-active-claim); legacy `rx_prescriptions` formally deprecated with a cutover plan (OD-13).
 **Owner.** oros + tshepo-keys (+ pharmacy for the legacy deprecation seam). **Dependencies.** OF-B1 (versions to sign); OD-11 (legal signature model + non-medication signing scope); OD-13 (legacy cutover).
@@ -251,6 +255,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** oros — prescription + version + token tables, next-free at execution; pharmacy — deprecation marker only. **Risk.** High — legal-signature semantics (OD-11) and the legacy cutover (OD-13) are decision-gated; build flag-gated dual-write until ratified.
 
 ## OF-B3 — Medication safety validation (P0)
+
+> **Status 2026-07-23:** IMPLEMENTED (wave core) — coded allergy SoR (PCT V052), rules-governance over `clinical.rule_definitions`, engine bugfixes, BFF check activated; suites pct 211 / ckp 102 / bff 1168. Deferral: licensed interaction/dose DB remains a procurement seam (OF-G5 stays PARTIAL).
 
 **Problem.** Safety validation is a hardcoded deterministic rules engine with substring allergy matching; PCT allergy SoR absent so checks degrade honestly to WARNING; no licensed interaction/dose database (OF-G5, R47).
 **Outcome.** Spec §8A layered validation at authoring AND at substitution/dispense recheck: structured allergy model in the PCT SoR (coded, not substring); ZIBO-coded medicine references end-to-end (no free-text products); interaction/dose/pregnancy/renal checks behind a versioned rules seam so a licensed database (procurement decision) drops in without re-architecture; hard-block vs override-with-reason tiers, every override audited.
@@ -261,6 +267,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B4 — MSIKA fulfilment marketplace (request-for-offer) (P0)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `8353d93e1` — request/invitation machines in msika-flow (V006), version-pinned to the OROS order, §11.8 structural PII-minimisation (leak-tested + live DB-checked); full publish→invitation→offer→selection round proven live (#41, M2 proof 28/28).
+
 **Problem.** RFO machinery absent entirely — requests, invitations, PII-minimised publication all grep-zero across msika/coverage (OF-G8, R51, R55).
 **Outcome.** Net-new RFO layer in **msika-flow** per §11: `mf_marketplace_requests` + invitations referencing the OROS order read-only (never copying clinical truth); §9.3 request machine; **PII-minimised publication** per the §11.8 binding table — invitations carry ZIBO-coded lines, coarse Ndila zone and capability flags only, patient identity revealed post-selection; publication modes per §11.2 (targeted/network/broadcast per OD-12); emergency orders never auctioned (§4.4).
 **Owner.** msika-flow (+ oros read-seam, ndila zones). **Dependencies.** OF-B1 (version pin); OF-B5 (eligibility at invitation); OD-12 (broadcast mode + ranking fairness policy).
@@ -270,6 +278,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 
 ## OF-B5 — Provider eligibility and matching (P0)
 
+> **Status 2026-07-23:** IMPLEMENTED @ `8353d93e1` — fail-closed six-precondition eligibility at invitation AND revalidate-at-select, structured refusal codes recorded (PREMISES_UNVERIFIED / CONTROLLED_AUTHORITY_MISSING / FAILED_REVALIDATION proven live against real VARAPI/TUSO/VASHANDI). BUG-1 (headerless TusoClient/VarapiClient) live-caught + fixed.
+
 **Problem.** Only onboarding + risk-friction gates exist; no per-offer/per-acceptance revalidation loop (OF-G11, R54) — a provider whose licence lapsed after onboarding can still win and fulfil an order.
 **Outcome.** §4.3 six-precondition check evaluated at **invitation AND acceptance** (§11.3): VARAPI licence class + dispensing scope, TUSO facility verification + operational status, VASHANDI employment binding (a licence alone is never facility authority), network/capability flags; controlled lines route only to authorised fulfillers (feeds OF-B29); fail-closed with structured refusal codes.
 **Owner.** msika-flow + varapi + tuso + vashandi. **Dependencies.** OF-B4 (invitation seam); OF-B29 controlled-gating half.
@@ -278,6 +288,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** msika-flow — eligibility-snapshot columns on invitations/offers, next-free at execution. **Risk.** Medium — cross-registry latency at accept; mitigate with bounded-staleness snapshots + hard recheck on commit only.
 
 ## OF-B6 — Offer and quotation lifecycle (P0)
+
+> **Status 2026-07-23:** IMPLEMENTED @ `8353d93e1` — offer machine + TTL + revalidate-on-select + §8.9 commitment w/ RC-1/2/3/6/7 (live #41/#48/#49: RC-1 replay, OFFER_EXPIRED, STOCK_UNAVAILABLE→FAILED_REVALIDATION). Honest deferrals: commitment steps 7–8 (financial) SKIPPED pending OF-B9/B10; dispatch seam PARTIAL (RC-8 reserved); ranking = basic ranked-because set pending OD-12.
 
 **Problem.** Offer lifecycle absent — no offer entity, TTL, revalidation-at-acceptance or race handling (OF-G9, R52); stock truth grades unenforced at offer time (R57 partial).
 **Outcome.** §9.4 offer machine in msika-flow: `mf_fulfilment_offers` with price, stock grade (VERIFIED = DURA on-hand−reserved per §8E), fulfilment window, TTL; expiry sweeps; **revalidate-on-select** (§11.7 idempotent selection — eligibility + stock + price all rechecked at commit); reservation TTL = offer TTL; losing offers notified and released.
@@ -323,6 +335,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** mushe-wallet/mushex — escrow-linkage columns, next-free at execution. **Risk.** Medium — money paths; stage escrow behind a flag with the campaign machinery as the proven base.
 
 ## OF-B11 — DURA stock reservation (P0)
+
+> **Status 2026-07-23:** IMPLEMENTED @ `8353d93e1` — DURA `inv_stock_reservations` sole ledger: atomic conditional reserve, coded 409 over-reserve (BUG-2 fixed), release compensation, TTL expiry sweeper; real `inventory.reservation.*.v1` events consumed by msika-flow; `mf_reservations` demoted to projection (FKs relaxed V007, BUG-3 fixed); inventory 110 tests, live #41/#48/#49.
 
 **Problem.** Marketplace reservation is disconnected from DURA — local placeholder `mf_reservations` rows, `InventoryEventConsumer` is a **no-op logger**, no availability check at cart/checkout; double-sell risk confirmed (OF-G12, R56, R57).
 **Outcome.** §8I canonical stance: DURA `inv_stock_reservations` is the **sole** reservation ledger; atomic conditional reserve (available = on-hand − reserved must cover quantity), TTL = fulfilment window, **fail-close — no reservation, no commitment**; `mf_reservations` demoted to a read-projection fed by real `inventory.reservation.*.v1` events; the no-op consumer made real; release on cancel/expiry; attested vendor stock flagged unverified per OD-17.
@@ -485,6 +499,8 @@ Companion to [Volume II — National e-Orders, Fulfilment & Telemonitoring Speci
 **Migration.** telemonitoring-service — read-model/query indexes, next-free at execution. **Risk.** Low-medium.
 
 ## OF-B29 — Fraud, anomaly and marketplace fairness controls (P0 controlled gating / P2 anomaly + fairness)
+
+> **Status 2026-07-23:** controlled-gating half IMPLEMENTED @ `8353d93e1` — never-OPEN (§13.4 → 400 CONTROLLED_OPEN_BROADCAST_FORBIDDEN), pre-eligibility authority filter (controlled lines never exposed to unauthorised vendors), register write gates commitment; live #52. Deferrals: second-factor handover rides OF-B18; dispense-time register consumption rides OF-B12; anomaly + fairness half remains Wave OF-D (P2).
 
 **Problem.** Controlled-medicine workflow gating absent — the DURA controlled register (inventory V013) exists but **nothing consumes it**; no restricted routing, no second-factor handover (OF-G7, R49 — P0). The wider §13 threat catalogue (anomaly detection, provider-performance monitoring §13.7, ranking-fairness monitoring §11.5/§21) has no engine (P2 — needs marketplace volume to tune against).
 **Outcome.** **P0 half:** controlled lines never open-broadcast (§13.4) — restricted routing to authorised fulfillers only (OF-B5 gate), mandatory DURA controlled-register write on dispense, second-factor handover (OF-B18), separation-of-duties checks (§13.5), custody policy per OD-15. **P2 half:** anomaly rules over dispense/claim/offer patterns (§13.7), ranking-fairness monitoring with Rito firewall (§21), immutable audit sweep (§13.6) — version-validation fraud-impossibility (§13.8) is largely delivered by OF-B1/B2 by construction.
