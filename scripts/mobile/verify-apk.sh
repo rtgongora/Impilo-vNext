@@ -20,14 +20,18 @@ PKG="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<<"$BADGING")"
 VERSION="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<<"$BADGING" | head -1)"
 [ -n "$PKG" ] && [ -n "$VERSION" ] || { echo "verify-apk: badging missing package/version" >&2; exit 1; }
 
-unzip -l "$APK" | grep -q "assets/index.android.bundle" \
+# NB: grep without -q so the pipe is fully drained — `grep -q` exits at first
+# match and SIGPIPEs the producer, which pipefail turns into a false failure.
+ZIPLIST="$(unzip -l "$APK")"
+grep "assets/index.android.bundle" >/dev/null <<<"$ZIPLIST" \
   || { echo "verify-apk: $PKG has no bundled JS (assets/index.android.bundle missing) — not standalone" >&2; exit 1; }
-unzip -l "$APK" | grep -q "libhermes" \
+grep "libhermes" >/dev/null <<<"$ZIPLIST" \
   || { echo "verify-apk: $PKG missing Hermes runtime libs" >&2; exit 1; }
 
 if [ -n "$EXPECT_URL" ]; then
   HOST="${EXPECT_URL#*://}"; HOST="${HOST%%/*}"
-  unzip -p "$APK" assets/index.android.bundle | strings | grep -qm1 "$HOST" \
+  BUNDLE_HITS="$(unzip -p "$APK" assets/index.android.bundle | strings | grep -c "$HOST" || true)"
+  [ "$BUNDLE_HITS" -gt 0 ] \
     || { echo "verify-apk: expected base URL host '$HOST' not found in JS bundle" >&2; exit 1; }
 fi
 
