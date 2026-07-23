@@ -1,4 +1,32 @@
-# Public Experience Remediation — 2026-07-20
+# Public Experience Remediation — 2026-07-20 (+resume wave 2026-07-23)
+
+> **Resume wave (2026-07-23)** closed report gaps §5.1 and §5.2 and one platform
+> incident:
+>
+> 1. **Anonymous Nompilo Q&A lane** — guidance-service `PublicGuidanceController.ask`
+>    (personalization forced off, allow-listed response, honesty-gated
+>    llm/retrieval/none, standing disclaimer) behind BFF
+>    `POST /internal/v1/public/gateway/guidance/ask` (`PublicGuidanceAskService`:
+>    per-IP 10/300s + global 120/60s, 500-char cap; registered in SecurityConfig +
+>    public-lane ADR registry, guard green). `NompiloAskInline` on the triage receipt.
+>    Retrieval upgraded: natural-language questions fall back to per-keyword search
+>    (full-phrase LIKE never matched); live-proven grounded answers with sources for
+>    cholera/danger-signs/antibiotics questions.
+> 2. **Map-pin location** — `NdilaMapLibre` gained a non-breaking `onMapClick` seam;
+>    `EmergencyLocationMapPicker` (public MVT tile lane, dynamic import) wired into
+>    the triage location step.
+> 3. **Deploy-clobber incident (live-caught, fixed):** the 2026-07-21 integrated
+>    deploy branch (`claude/deploy-integration-Yypyl`: ndila basemap fix, EMERGENCY
+>    capability search, service-family expansion, find-care filters, welcome
+>    nav/colour, coverage appeals) was never merged to canonical; subsequent canonical
+>    deploys (incl. this wave's) reverted those fixes live — the find-care basemap was
+>    blank again. Fixed by merging the integration branch into canonical
+>    (`209b6ad45`, one conflict resolved keeping coloured steps + Impilo ID naming)
+>    and redeploying bff+tuso+shell from the merged tree. Live re-proof:
+>    EMERGENCY→199, MATERNITY family→904, tile config→public MVT lane, SOS + ask 200.
+>    LAW reinforced: shared-image deploys must come from a tree containing every
+>    session's landed work — check `git log HEAD..origin/<integration-branch>` before
+>    any shell/BFF deploy.
 
 Full design + functionality remediation of the public landing (website) and the
 public Emergency journey (one-ui-shell), per PO brief. No mocks were added; every

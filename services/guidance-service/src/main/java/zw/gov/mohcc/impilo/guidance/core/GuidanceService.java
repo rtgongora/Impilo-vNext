@@ -41,8 +41,25 @@ public class GuidanceService {
     public Map<String, Object> ask(String tenantId, String actorId, String question, boolean personalized) {
         log.info("Guidance ask: tenant={} actor={} personalized={} q={}", tenantId, actorId, personalized, question.length());
 
-        // Search knowledge base for relevant articles
+        // Search knowledge base for relevant articles. The repository search is a full-phrase
+        // LIKE over title/summary, which a natural-language question ("How do I prevent
+        // cholera?") never matches — so fall back to per-keyword retrieval over the question's
+        // significant words, keeping first-hit order and de-duplicating.
         Page<KnowledgeArticleEntity> articles = articleRepo.search(tenantId, question, PageRequest.of(0, 5));
+        if (articles.isEmpty()) {
+            Map<UUID, KnowledgeArticleEntity> byId = new LinkedHashMap<>();
+            for (String keyword : significantKeywords(question)) {
+                for (KnowledgeArticleEntity a :
+                        articleRepo.search(tenantId, keyword, PageRequest.of(0, 5)).getContent()) {
+                    byId.putIfAbsent(a.getId(), a);
+                }
+                if (byId.size() >= 5) break;
+            }
+            if (!byId.isEmpty()) {
+                articles = new org.springframework.data.domain.PageImpl<>(
+                        new ArrayList<>(byId.values()).subList(0, Math.min(5, byId.size())));
+            }
+        }
 
         List<Map<String, String>> sources = articles.getContent().stream()
                 .map(a -> Map.of("title", a.getTitle(), "type", a.getDomain(), "url", a.getSourceUrl() != null ? a.getSourceUrl() : ""))
@@ -119,5 +136,25 @@ public class GuidanceService {
     /** Search knowledge articles. */
     public Page<KnowledgeArticleEntity> search(String tenantId, String query, int page, int size) {
         return articleRepo.search(tenantId, query, PageRequest.of(page, size));
+    }
+
+    private static final Set<String> STOPWORDS = Set.of(
+            "the", "and", "for", "with", "what", "when", "where", "which", "should",
+            "would", "could", "how", "do", "does", "did", "can", "is", "are", "was",
+            "were", "a", "an", "of", "in", "on", "to", "my", "your", "their", "his",
+            "her", "its", "our", "you", "i", "we", "they", "it", "this", "that",
+            "there", "have", "has", "had", "be", "been", "being", "while", "during",
+            "about", "help", "please", "need", "want", "get", "make");
+
+    /** Significant words (4+ chars, not stopwords) from a natural-language question. */
+    static List<String> significantKeywords(String question) {
+        if (question == null || question.isBlank()) return List.of();
+        List<String> keywords = new ArrayList<>();
+        for (String token : question.toLowerCase(Locale.ROOT).split("[^\\p{L}\\p{N}]+")) {
+            if (token.length() >= 4 && !STOPWORDS.contains(token) && !keywords.contains(token)) {
+                keywords.add(token);
+            }
+        }
+        return keywords;
     }
 }
