@@ -100,9 +100,9 @@ public class EligibilityService {
         JsonNode coverage = parseCoverage(vendor);
         List<PreconditionResult> results = new ArrayList<>(6);
 
-        results.add(checkProfessionalRegistration(coverage));
+        results.add(checkProfessionalRegistration(coverage, inbound));
         results.add(checkScopeOfPractice(coverage, request.getProfile()));
-        results.add(checkPremisesOperational(coverage));
+        results.add(checkPremisesOperational(coverage, inbound));
         results.add(checkEmploymentBinding(coverage, inbound));
         results.add(checkCapabilityGrade(coverage, request));
         results.add(checkGoodStanding(vendor));
@@ -136,13 +136,13 @@ public class EligibilityService {
     // ── the six preconditions ────────────────────────────────────────────
 
     /** 1 — VARAPI: verified professional registration with an active licence. */
-    private PreconditionResult checkProfessionalRegistration(JsonNode coverage) {
+    private PreconditionResult checkProfessionalRegistration(JsonNode coverage, HttpServletRequest inbound) {
         String providerPublicId = text(coverage, "providerPublicId");
         if (providerPublicId == null) {
             return new PreconditionResult(1, "PROFESSIONAL_REGISTRATION", OUTCOME_FAIL,
                     CODE_PROVIDER_REF_MISSING, "vendor profile carries no VARAPI provider reference");
         }
-        JsonNode standing = varapiClient.getStandingSummary(providerPublicId);
+        JsonNode standing = varapiClient.getStandingSummary(providerPublicId, inbound);
         if (standing == null || standing.isMissingNode() || standing.isNull()) {
             return new PreconditionResult(1, "PROFESSIONAL_REGISTRATION", OUTCOME_UNVERIFIED,
                     CODE_REGISTRY_UNREACHABLE, "VARAPI standing summary unavailable — fail closed");
@@ -172,13 +172,13 @@ public class EligibilityService {
     }
 
     /** 3 — TUSO: verified, currently operational premises of the required type. */
-    private PreconditionResult checkPremisesOperational(JsonNode coverage) {
+    private PreconditionResult checkPremisesOperational(JsonNode coverage, HttpServletRequest inbound) {
         long tusoFacilityId = coverage.path("tusoFacilityId").asLong(-1);
         if (tusoFacilityId <= 0) {
             return new PreconditionResult(3, "PREMISES_OPERATIONAL", OUTCOME_FAIL,
                     CODE_PREMISES_REF_MISSING, "vendor profile carries no TUSO facility reference");
         }
-        JsonNode summary = tusoClient.getFacilityStatusSummary(tusoFacilityId);
+        JsonNode summary = tusoClient.getFacilityStatusSummary(tusoFacilityId, inbound);
         if (summary == null || summary.isMissingNode() || summary.isNull()) {
             return new PreconditionResult(3, "PREMISES_OPERATIONAL", OUTCOME_UNVERIFIED,
                     CODE_PREMISES_UNVERIFIED, "TUSO status summary unavailable — fail closed");

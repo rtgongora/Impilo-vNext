@@ -449,6 +449,12 @@ fullBootServices:
   msika-flow-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+      # OF-A M2 F1: eligibility registry clients (application.yml
+      # msika-flow.integration.{varapi,tuso}-url read ${VARAPI_URL}/${TUSO_URL});
+      # without these the pod falls back to localhost and every eligibility
+      # precondition fail-closes UNVERIFIED.
+      VARAPI_URL: "http://varapi-service:8083"
+      TUSO_URL: "http://tuso-service:8084"
   # TM-B17: Rito consumes clinical.teleconsult.lifecycle (verified interactions → feedback loop);
   # analytics-pipeline consumes the same stream ("§24 metrics from events only").
   rito-quality-safety-service:

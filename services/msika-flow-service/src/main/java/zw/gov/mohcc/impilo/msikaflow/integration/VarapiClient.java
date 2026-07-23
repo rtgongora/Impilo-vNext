@@ -2,39 +2,50 @@ package zw.gov.mohcc.impilo.msikaflow.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
+/**
+ * VARAPI professional-registry client — eligibility precondition 1 (§4.3),
+ * provider-standing checks, and the V009 recognition convenience. Uses the
+ * VashandiClient {@code copyTrustHeaders} idiom (via {@link TusoClient}): the
+ * inbound request's trust headers are forwarded on every call so VARAPI's
+ * TrustContext filter never sees a null tenant (live-caught BUG-1: a bare
+ * RestTemplate sent no headers → registry read failed → the precondition
+ * fail-closed UNVERIFIED for every vendor).
+ *
+ * <p>Graceful degradation is preserved: any failure returns {@code null} so
+ * callers map the outage to UNVERIFIED / fail closed — never a throw.</p>
+ */
 @Service
 public class VarapiClient {
 
     private static final Logger log = LoggerFactory.getLogger(VarapiClient.class);
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final ObjectMapper objectMapper;
-    private final String varapiBaseUrl;
 
     public VarapiClient(ObjectMapper objectMapper,
                         @Value("${msika-flow.integration.varapi-url:http://localhost:8083}") String varapiBaseUrl) {
-        this.restTemplate = new RestTemplate();
         this.objectMapper = objectMapper;
-        this.varapiBaseUrl = varapiBaseUrl;
+        this.restClient = RestClient.builder()
+                .baseUrl(varapiBaseUrl.replaceAll("/$", ""))
+                .build();
     }
 
+    /** Resolves the current request thread's inbound request for trust-header propagation. */
     public JsonNode getStandingSummary(String providerPublicId) {
-        try {
-            String url = varapiBaseUrl + "/v1/internal/providers/" + providerPublicId + "/standing-summary";
-            String response = restTemplate.getForObject(url, String.class);
-            if (response != null) {
-                return objectMapper.readTree(response).path("data");
-            }
-        } catch (Exception e) {
-            log.warn("VARAPI standing-summary failed for {}: {}", providerPublicId, e.getMessage());
-        }
-        return null;
+        return getStandingSummary(providerPublicId, TusoClient.currentRequest());
+    }
+
+    public JsonNode getStandingSummary(String providerPublicId, HttpServletRequest inbound) {
+        return getJson("/v1/internal/providers/" + providerPublicId + "/standing-summary",
+                inbound, "standing-summary " + providerPublicId);
     }
 
     /**
@@ -48,16 +59,25 @@ public class VarapiClient {
         if (healthId == null || healthId.isBlank()) {
             return null;
         }
+        return getJson("/v1/internal/providers/by-health-id/" + healthId.trim() + "/recognition",
+                TusoClient.currentRequest(), "recognition lookup");
+    }
+
+    private JsonNode getJson(String path, HttpServletRequest inbound, String what) {
         try {
-            String url = varapiBaseUrl + "/v1/internal/providers/by-health-id/"
-                    + healthId.trim() + "/recognition";
-            String response = restTemplate.getForObject(url, String.class);
-            if (response != null) {
-                return objectMapper.readTree(response).path("data");
+            ResponseEntity<String> response = restClient.get()
+                    .uri(path)
+                    .headers(h -> TusoClient.copyTrustHeaders(inbound, h))
+                    .retrieve()
+                    .toEntity(String.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn("VARAPI {} failed: HTTP {}", what, response.getStatusCode());
+                return null;
             }
+            return objectMapper.readTree(response.getBody()).path("data");
         } catch (Exception e) {
-            log.warn("VARAPI recognition lookup failed: {}", e.getMessage());
+            log.warn("VARAPI {} failed: {}", what, e.getMessage());
+            return null;
         }
-        return null;
     }
 }

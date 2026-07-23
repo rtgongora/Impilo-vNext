@@ -58,11 +58,11 @@ class EligibilityServiceTest {
         ObjectNode standing = mapper.createObjectNode();
         standing.put("active", true);
         standing.put("hasValidLicense", true);
-        when(varapiClient.getStandingSummary(anyString())).thenReturn(standing);
+        when(varapiClient.getStandingSummary(anyString(), any())).thenReturn(standing);
 
         ObjectNode facility = mapper.createObjectNode();
         facility.put("operational", true);
-        when(tusoClient.getFacilityStatusSummary(anyLong())).thenReturn(facility);
+        when(tusoClient.getFacilityStatusSummary(anyLong(), any())).thenReturn(facility);
 
         when(vashandiClient.hasActiveAssignment(anyString(), anyString(), any()))
                 .thenReturn(Optional.of(Boolean.TRUE));
@@ -109,7 +109,7 @@ class EligibilityServiceTest {
         ObjectNode lapsed = mapper.createObjectNode();
         lapsed.put("active", true);
         lapsed.put("hasValidLicense", false);
-        when(varapiClient.getStandingSummary(anyString())).thenReturn(lapsed);
+        when(varapiClient.getStandingSummary(anyString(), any())).thenReturn(lapsed);
 
         EligibilityService.EligibilityResult result =
                 service.evaluate(vendor(false), request(false), null);
@@ -119,7 +119,7 @@ class EligibilityServiceTest {
 
     @Test
     void p1_varapiUnreachable_isUnverified_andFailsClosed() {
-        when(varapiClient.getStandingSummary(anyString())).thenReturn(null);
+        when(varapiClient.getStandingSummary(anyString(), any())).thenReturn(null);
         EligibilityService.EligibilityResult result =
                 service.evaluate(vendor(false), request(false), null);
         assertFalse(result.eligible());
@@ -141,7 +141,7 @@ class EligibilityServiceTest {
         ObjectNode closed = mapper.createObjectNode();
         closed.put("operational", false);
         closed.put("status", "SUSPENDED");
-        when(tusoClient.getFacilityStatusSummary(anyLong())).thenReturn(closed);
+        when(tusoClient.getFacilityStatusSummary(anyLong(), any())).thenReturn(closed);
 
         EligibilityService.EligibilityResult result =
                 service.evaluate(vendor(false), request(false), null);
@@ -151,7 +151,7 @@ class EligibilityServiceTest {
 
     @Test
     void p3_tusoUnreachable_failsClosed() {
-        when(tusoClient.getFacilityStatusSummary(anyLong())).thenReturn(null);
+        when(tusoClient.getFacilityStatusSummary(anyLong(), any())).thenReturn(null);
         EligibilityService.EligibilityResult result =
                 service.evaluate(vendor(false), request(false), null);
         assertFalse(result.eligible());
