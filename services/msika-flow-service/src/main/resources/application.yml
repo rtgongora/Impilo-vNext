@@ -87,3 +87,15 @@ msika-flow:
     varapi-url: ${VARAPI_URL:http://localhost:8083}
     nhume-url: ${NHUME_URL:http://nhume-service:8210}
     share-slip-url: ${SHARE_SLIP_URL:http://localhost:8104}
+    oros-url: ${OROS_URL:http://oros-service:8089}
+    inventory-url: ${INVENTORY_URL:http://inventory-service:8098}
+    vashandi-url: ${VASHANDI_URL:http://vashandi-workforce-service:8167}
+  marketplace:
+    # OF-B4/OF-B6 RFO windows and TTLs (§9.3/§9.4 timers)
+    offer-window-minutes: ${MSIKA_FLOW_MARKETPLACE_OFFER_WINDOW_MINUTES:120}
+    selection-window-minutes: ${MSIKA_FLOW_MARKETPLACE_SELECTION_WINDOW_MINUTES:120}
+    default-offer-ttl-minutes: ${MSIKA_FLOW_MARKETPLACE_DEFAULT_OFFER_TTL_MINUTES:60}
+    default-fulfillment-window-hours: ${MSIKA_FLOW_MARKETPLACE_DEFAULT_FULFILLMENT_WINDOW_HOURS:24}
+    # OF-B1 version-pin verification against OROS at request creation (fail-closed)
+    verify-order-version: ${MSIKA_FLOW_MARKETPLACE_VERIFY_ORDER_VERSION:true}
+    sweep-interval-ms: ${MSIKA_FLOW_MARKETPLACE_SWEEP_INTERVAL_MS:60000}

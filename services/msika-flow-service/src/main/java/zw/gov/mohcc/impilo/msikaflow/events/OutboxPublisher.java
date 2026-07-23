@@ -88,6 +88,12 @@ public class OutboxPublisher {
             case "REFUND_REQUESTED" -> "msika.flow.refund.requested";
             case "REFUND_COMPLETED" -> "msika.flow.refund.completed";
             case "SUBSTITUTION_APPROVED" -> "msika.flow.order.validated";
+            // OF-B4/OF-B6 marketplace RFO events (Vol II §8.9/§9.3/§9.4)
+            case "REQUEST_PUBLISHED" -> "msika.flow.request.published.v1";
+            case "OFFER_SUBMITTED", "OFFER_WITHDRAWN" -> "msika.flow.request.offered.v1";
+            case "SELECTION_COMMITTED", "SELECTION_FAILED" -> "msika.flow.request.selected.v1";
+            case "REQUEST_CANCELLED" -> "msika.flow.request.cancelled.v1";
+            case "REQUEST_EXPIRED", "REQUEST_FAILED_NO_OFFERS", "OFFER_EXPIRED" -> "msika.flow.request.expired.v1";
             default -> "msika.flow.events";
         };
     }
