@@ -38,6 +38,7 @@ public class TelemonitoringOutboxPublisher extends CompanionOutboxPublisher {
     static final String DEVICE_TOPIC_PREFIX = "telemonitoring.device.";
     static final String READING_TOPIC_PREFIX = "telemonitoring.reading.";
     static final String OBSERVATION_TOPIC_PREFIX = "telemonitoring.observation.";
+    static final String ALERT_TOPIC_PREFIX = "telemonitoring.alert.";
     static final String DEFAULT_TOPIC = "telemonitoring.events";
 
     private final EventOutboxRepository outboxRepository;
@@ -118,6 +119,10 @@ public class TelemonitoringOutboxPublisher extends CompanionOutboxPublisher {
         if (TelemonitoringEventEmitter.AGGREGATE_TELEMETRY_READING.equals(aggregateType)
                 && eventType != null && eventType.endsWith(".v1")
                 && (eventType.startsWith(READING_TOPIC_PREFIX) || eventType.startsWith(OBSERVATION_TOPIC_PREFIX))) {
+            return eventType;
+        }
+        if (TelemonitoringEventEmitter.AGGREGATE_ALERT_EPISODE.equals(aggregateType)
+                && eventType != null && eventType.startsWith(ALERT_TOPIC_PREFIX) && eventType.endsWith(".v1")) {
             return eventType;
         }
         return DEFAULT_TOPIC;

@@ -37,6 +37,9 @@ public class TelemonitoringEventEmitter {
     /** Aggregate type used for telemetry-reading / observation-writer events (OF-B25). */
     public static final String AGGREGATE_TELEMETRY_READING = "TELEMETRY_READING";
 
+    /** Aggregate type used for alert-episode events (OF-B26). */
+    public static final String AGGREGATE_ALERT_EPISODE = "ALERT_EPISODE";
+
     private static final Logger log = LoggerFactory.getLogger(TelemonitoringEventEmitter.class);
 
     private final EventOutboxRepository outboxRepository;
@@ -99,6 +102,25 @@ public class TelemonitoringEventEmitter {
                                      Map<String, Object> payload, UUID tenantId) {
         emit(AGGREGATE_TELEMETRY_READING, readingId.toString(), observationEventType(action),
                 "PATIENT", patientCpid, payload, tenantId);
+    }
+
+    /** Build an alert-episode event type, e.g. {@code alertEventType("opened")} (OF-B26). */
+    public static String alertEventType(String action) {
+        return "telemonitoring.alert." + action + ".v1";
+    }
+
+    /**
+     * Alert-episode event ({@code telemonitoring.alert.{action}.v1}). §14.6 wording law:
+     * callers put ONLY coded fields in the payload (trigger class, metric code, severity,
+     * rung numbers) — never diagnosis text, free-text notes or patient-facing wording.
+     * Subject is the patient CPID when attributed, else the device.
+     */
+    public void emitAlertEvent(String action, UUID episodeId, String patientCpid, String deviceRef,
+                               Map<String, Object> payload, UUID tenantId) {
+        String subjectType = patientCpid != null ? "PATIENT" : "DEVICE";
+        String subjectId = patientCpid != null ? patientCpid : deviceRef;
+        emit(AGGREGATE_ALERT_EPISODE, episodeId.toString(), alertEventType(action),
+                subjectType, subjectId, payload, tenantId);
     }
 
     /** Programme-catalogue governance event ({@code telemonitoring.programme.{action}.v1}). */

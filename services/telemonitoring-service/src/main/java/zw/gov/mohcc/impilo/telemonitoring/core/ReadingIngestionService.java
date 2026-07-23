@@ -26,6 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -80,6 +81,7 @@ public class ReadingIngestionService {
     private final TelemonitoringEventEmitter eventEmitter;
     private final ObjectMapper objectMapper;
     private final TransactionTemplate transactionTemplate;
+    private final List<ReadingCompletionListener> completionListeners;
     private final Counter ingestedCounter;
     private final Counter dedupCounter;
     private final Counter quarantinedCounter;
@@ -90,12 +92,14 @@ public class ReadingIngestionService {
                                    TelemonitoringEventEmitter eventEmitter,
                                    ObjectMapper objectMapper,
                                    PlatformTransactionManager transactionManager,
-                                   MeterRegistry meterRegistry) {
+                                   MeterRegistry meterRegistry,
+                                   List<ReadingCompletionListener> completionListeners) {
         this.readingRepository = readingRepository;
         this.deviceAssignmentService = deviceAssignmentService;
         this.shrWriter = shrWriter;
         this.eventEmitter = eventEmitter;
         this.objectMapper = objectMapper;
+        this.completionListeners = completionListeners;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.ingestedCounter = meterRegistry.counter("telemonitoring.readings.ingested");
         this.dedupCounter = meterRegistry.counter("telemonitoring.readings.deduplicated");
@@ -226,6 +230,17 @@ public class ReadingIngestionService {
         } else {
             // ── Single-writer hand-off (§14.5 step 14) — the writer's own transaction ──
             shrWriter.attemptWrite(persisted);
+        }
+
+        // ── OF-B26 seam (§14.5 steps 15/16): alert evaluation AFTER ingestion completes.
+        // Best-effort: a broken evaluator must never fail an already-ingested reading.
+        for (ReadingCompletionListener listener : completionListeners) {
+            try {
+                listener.onReadingCompleted(persisted);
+            } catch (RuntimeException e) {
+                log.error("Reading-completion listener {} failed for reading {} — ingestion unaffected: {}",
+                        listener.getClass().getSimpleName(), persisted.getId(), e.getMessage());
+            }
         }
         return stored;
     }

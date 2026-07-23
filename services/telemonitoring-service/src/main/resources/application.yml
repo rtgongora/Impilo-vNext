@@ -61,6 +61,16 @@ telemonitoring:
   # now > last_review + cadence. Default every 5 minutes.
   review-sweep:
     interval-ms: ${TELEMONITORING_REVIEW_SWEEP_INTERVAL_MS:300000}
+  # Rung-11+ Daidzai EMS seam (OF-B26, §14.7): POST /internal/v1/daidzai/incidents.
+  # Best-effort push; the durable seam is telemonitoring.alert.escalated.v1.
+  daidzai:
+    base-url: ${DAIDZAI_SERVICE_URL:http://daidzai-service:8392}
+    timeout-ms: 4000
+  # OF-B26 sweeps: device-offline heartbeat (trigger 8, journey #65) every 15 min;
+  # overdue-acknowledgement escalation (§14.6 escalation-on-silence) every minute.
+  alert:
+    offline-sweep-interval-ms: ${TELEMONITORING_ALERT_OFFLINE_SWEEP_INTERVAL_MS:900000}
+    overdue-sweep-interval-ms: ${TELEMONITORING_ALERT_OVERDUE_SWEEP_INTERVAL_MS:60000}
   enrolment:
     # OD-16 interim discriminator: OROS OrderType=OTHER orders whose ziboOrderCode
     # (or any items[].code) starts with this prefix are MONITORING enrolments.

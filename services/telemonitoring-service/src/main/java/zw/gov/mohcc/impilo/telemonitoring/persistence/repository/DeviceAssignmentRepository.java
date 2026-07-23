@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.telemonitoring.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import zw.gov.mohcc.impilo.telemonitoring.domain.DeviceAssignmentStatus;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.entity.DeviceAssignmentEntity;
 
 import java.util.List;
@@ -21,4 +22,7 @@ public interface DeviceAssignmentRepository extends JpaRepository<DeviceAssignme
     List<DeviceAssignmentEntity> findByTenantIdAndPatientCpidOrderByCreatedAtDesc(UUID tenantId, String patientCpid);
 
     List<DeviceAssignmentEntity> findByDeviceRefOrderByCreatedAtDesc(String deviceRef);
+
+    /** OF-B26 device-offline heartbeat sweep population (trigger 8, journey #65). */
+    List<DeviceAssignmentEntity> findByStatus(DeviceAssignmentStatus status);
 }
