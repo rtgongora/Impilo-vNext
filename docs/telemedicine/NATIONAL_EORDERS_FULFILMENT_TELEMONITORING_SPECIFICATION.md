@@ -1279,39 +1279,1101 @@ Every control in this section is evidence-graded in the matrix: the token model 
 
 ## 14. Community Telemonitoring
 
-`[AUTHORING — Wave 2]` Instruction §8 in full: programme profiles; enrolment (clinician-approved plans); monitoring-plan model; CHW workflow (offline-first, scope-safe); the 21-step data pipeline; alert model (multi-signal, levels, dedup/storm control, accountable closure); escalation ladder (repeat→CHW task→virtual review→urgent teleconsult (Volume I seam)→Daidzai/Nhume/Ndila); the six workspaces.
+Community telemonitoring is the platform capability that keeps a clinical loop closed **after** the consultation ends and the patient goes home: prescribed observation of a person's condition, in their own setting, with governed escalation back into care when the readings say so. It is the natural continuation of Volume I's Stage 7 ("Execution, Follow-Up, Transition and Loop Closure") and the clinical consumer of the health-IoT machinery specified in §15.
+
+**Truth-recovery framing (matrix §4).** Today the estate has real telemetry plumbing and real community-health-worker machinery, but **no per-patient remote-monitoring engine** `[ABSENT — R68, OF-G16]`: surveillance-service is a population rule engine only, the inpatient EWS is a ward-escalation flow whose score is client-supplied, and wellness/simba ingests device readings into `wellness_vitals_log` with no alerting. Monitoring-band observations that do reach the SHR today do so through **three ad-hoc writer paths** (experience-bff `FhirPublisher`, offline-edge, butano-direct) `[PARTIAL — R72]`. The CHW substrate, by contrast, is **BUILT**: `pct_households` / `pct_community_visits` with `offline_id` idempotency, community-service CHW assignments, and offline-edge vitals capture with break-glass and a `ButanoFhirClient` `[BUILT — R71]`. This section therefore specifies the missing clinical layer — the **telemonitoring-service** (new, clinical plane; ownership-exhaustion proof in §6) — as a set of contracts over what exists, not a rebuild of it.
+
+**Canonical stances (settled, normative throughout §14–§15):**
+
+1. **telemonitoring-service** (clinical plane, new) owns the `MonitoringPlan`, `ThresholdProfile`, `AlertRule`, `AlertEpisode` lifecycle and the `DeviceAssignmentId` (§5 identifier registry). It consumes the IoT telemetry bus; it **never talks to devices** (R68, R70).
+2. Monitoring plans are **PRESCRIBED**: enrolment is initiated through the OROS order spine following the sovereign-fulfiller pattern already live for BLOOD_BANK→MADI (`OrderType = OTHER` pending decision **OD-16** on a dedicated `MONITORING` type).
+3. Escalation **executes via PCT tasks** — PCT keeps task system-of-record; telemonitoring keeps alert-episode system-of-record (R71).
+4. telemonitoring-service is the **single designated writer** of monitoring-band Observations to BUTANO via fhir-gateway; the wellness path (simba → `wellness_vitals_log`) remains the wellness path and MUST NOT be re-routed (R72, OF-G16).
+5. Device truth is a **three-way split**: asset-registry = physical/calibration truth (`asr_equipment`, `asr_assets`) · iot-ingestion = connectivity/identity truth (`iot.device_registry`) · telemonitoring = clinical-assignment truth (R70, OF-G18).
+6. Readings failing quality or calibration checks are **STAMPED degraded, never silently dropped** (§15.7).
+7. Automated systems MAY **suggest** monitoring plans; they MUST NOT silently enrol a patient or set thresholds — clinician approval is mandatory (§14.2).
+8. A CHW MUST NEVER be forced by an alert to diagnose or act beyond their authorised scope (§14.4, §14.7).
+9. An alert MAY close **only with accountable action**: review + assessment + action + outcome + ownership, or a documented no-action-required reason (§14.6).
+
+### 14.1 Programme model and profile catalogue
+
+A **monitoring programme profile** is a clinically governed template: which observations, at what cadence, with which default thresholds, which escalation ladder, which workforce model and which devices are acceptable. A **monitoring plan** (§14.3) is a per-patient instantiation of a profile, always clinician-approved and always allowed to deviate from the profile's defaults. Profiles are versioned, owned by the clinical-governance function, and referenced (never copied) by plans.
+
+The national profile catalogue at launch MUST cover at least the following. Every profile is `[ABSENT]` as running software today (R68); the catalogue is normative content for OF-B21/OF-B22.
+
+| # | Profile | Typical observation set | Notes |
+|---|---|---|---|
+| 1 | Hypertension | BP, pulse, weight, symptoms | Personalised thresholds mandatory (§14.6 trigger types) |
+| 2 | Diabetes | Glucose (fasting/random), weight, foot-check prompts, symptoms | Adherence signals for insulin cohorts |
+| 3 | Heart failure | Weight (daily), BP, pulse, SpO₂, oedema/symptom diary | Rate-of-change on weight is a first-class trigger |
+| 4 | COPD / chronic respiratory | SpO₂, respiratory rate, symptom diary, rescue-inhaler use | Pairs with home-oxygen profile where applicable |
+| 5 | High-risk pregnancy | BP, weight, urine dip (where kit issued), fetal-movement diary, danger-sign checklist | Escalation ladder biased to urgent teleconsult and facility contact |
+| 6 | Postnatal mother | BP, bleeding/danger-sign checklist, mood screening | Time-boxed programme (e.g. 6 weeks) with automatic review |
+| 7 | Newborn | Weight, feeding, jaundice checklist, temperature | CHW-administered or caregiver-assisted settings dominate |
+| 8 | Child growth / nutrition | Weight, MUAC, height/length, feeding diary | Integrates with community outreach visit machinery (R71) |
+| 9 | HIV treatment support | Adherence signals, symptom diary, appointment adherence | **Where governed** — consent and visibility rules stricter than default; programme participation itself is sensitive data |
+| 10 | TB treatment support | Adherence (incl. video-observed therapy where commissioned), symptom diary, weight | **Where governed** — same heightened-sensitivity regime as HIV |
+| 11 | Medication adherence (general) | Dose-taken confirmations, smart-dispenser events, missed-dose flags | Device class: adherence devices (§15.3) |
+| 12 | Postoperative | Wound photos, temperature, pain score, mobility diary | Time-boxed; wound profile may be attached |
+| 13 | Wound care | Wound photos, measurement, exudate/odour checklist | Image quality flags mandatory (§15.7) |
+| 14 | Rehabilitation | Exercise completion, range-of-motion (device or self-report), pain score | Wearable-fed where devices are graded adequate |
+| 15 | Mental-health follow-up | Structured mood/symptom instruments, check-in cadence, safety-plan prompts | Patient-facing wording rules (§14.6) apply with maximum force; escalation ladder includes trained-responder rungs |
+| 16 | Palliative care | Symptom burden, pain score, caregiver strain, comfort checklist | Alert severity semantics differ: goal is comfort response, not aggressive escalation; plan records goals-of-care context |
+| 17 | Elderly / frailty | Activity, falls (device-detected or reported), weight, cognition prompts | Community-shared and caregiver-assisted settings dominate |
+| 18 | Home oxygen | SpO₂, device runtime/flow telemetry, cylinder/concentrator status | Oxygen equipment is also plant: calibration/maintenance truth stays in asset-registry (§15.5) |
+| 19 | Fever / outbreak follow-up | Temperature, symptom checklist, household-contact prompts | See legal distinction below |
+| 20 | Occupational health | Exposure-linked observation sets per occupational programme | Employer visibility NEVER includes clinical values — aggregate compliance only |
+
+**Community surveillance is legally distinct.** Population surveillance (surveillance-service, notifiable-condition rules) operates under public-health legal bases, not individual consent, and remains a **separate engine** on a separate legal footing. A telemonitoring plan MUST NOT be used as a covert surveillance instrument; where an outbreak profile (#19) feeds population surveillance, the feed is an explicit, documented, PII-governed interface, and the clinical `AlertEpisode` remains distinct from any surveillance alert (§5 collision rule: clinical AlertEpisode ≠ surveillance alert).
+
+**Monitoring settings.** Every plan declares its setting; the setting drives workflow, device class and visibility defaults:
+
+| Setting | Description |
+|---|---|
+| Home self-monitoring | Patient measures and submits (device or manual entry) |
+| Caregiver-assisted | A consented caregiver (MVUMO delegation, Vol I R26) measures/submits on the patient's behalf |
+| CHW-administered | Measurements taken during CHW visits using CHW/programme devices (R71 machinery) |
+| Community monitoring stations | Fixed shared kiosks/stations (clinic porch, community hall); community-shared device class |
+| Outreach-visit monitoring | Scheduled outreach rounds capture readings for enrolled cohorts |
+| Facility-linked | Patient attends a nearby facility for scheduled readings; results ride the same pipeline |
+| Wearable continuous | Continuous/near-continuous device streams, downsampled at the edge |
+| Manual diary | No device: structured self-report only |
+| Hybrid | Any governed combination of the above; the plan records which observation comes from which setting |
+
+**Consumer-wearable reliability caveat (normative).** Consumer wellness wearables and unregulated devices vary widely in accuracy and are graded accordingly (§15.3). Their readings MAY inform trends and prompts but MUST NOT, on their own, trigger the highest alert severities or be presented to clinicians as clinical-grade measurements. The UI MUST always display the trust grade alongside the value `[ties OF-G17]`, and profiles MUST declare the minimum device grade acceptable for each observation type.
+
+### 14.2 Enrolment
+
+Enrolment is a clinical act, executed as an order.
+
+**Initiation.** A monitoring plan is initiated as an OROS order (`OrderType = OTHER` with a `MONITORING` category discriminator pending **OD-16**), from any authorised originating context — teleconsultation response (Vol I Stage 6), in-person encounter, discharge planning, chronic-care review, CHW referral, or a governed automated **suggestion**. The order spine gives enrolment what every other clinical order gets `[BUILT — R41]`: guarded lifecycle, provenance, duplicate detection and event emission. Automated systems (risk models, Nompilo, population analytics) MAY create a *draft suggestion* attached to a patient's record; they MUST NOT create an active plan, set or alter thresholds, or notify the patient of enrolment before clinician approval. The suggesting system and its version are recorded on the plan (§14.3 provenance fields).
+
+**Capture list.** The enrolment flow MUST capture, at minimum:
+
+1. Patient identity (Impilo ID / CPID linkage per the identity contract) and, where relevant, MVUMO caregiver delegation;
+2. Programme profile and profile version;
+3. Clinical indication / diagnosis context (coded where ZIBO terminology exists);
+4. Ordering clinician (with authority validated at order placement — the OF-G1 signing gap applies here exactly as to prescriptions and is closed by OF-B2's signing machinery);
+5. Monitoring setting(s) (§14.1) per observation type;
+6. Observation set, cadence and duration (time-boxed or review-by date — open-ended plans MUST carry a mandatory review date);
+7. Threshold profile: profile defaults, plus per-patient personalisation (personalised baselines, pregnancy-adjusted ranges, palliative comfort bands) — every personalisation records who set it and why;
+8. Device requirements: required device classes, minimum trust grade per observation, whether a device must be issued (which spawns a device order through the §8 pipeline — §15.6);
+9. Consent: monitoring consent captured through the MVUMO journey (Vol I §17 pattern), covering data collection, caregiver/CHW visibility, and any programme-specific sharing; heightened regimes for profiles #9/#10;
+10. Escalation facility and responsible clinical team: every plan MUST name the facility (TUSO-validated) and team/workspace that owns its alerts — an alert with no accountable owner is a specification violation;
+11. CHW assignment where the setting includes CHW administration (community-service assignment machinery `[BUILT — R71]`);
+12. Patient/caregiver education confirmation: how to measure, when to seek help regardless of the platform, and what alerts mean;
+13. Language and communication-channel preferences (feeds §19 notification model).
+
+**Approval.** The plan becomes ACTIVE only on explicit clinician approval of the assembled plan (order activation, §9.1 semantics). Activation emits `telemonitoring.plan.activated.v1` (§18) and generates the initial PCT task set (device issuance, first CHW visit, patient onboarding check-in) where applicable.
+
+### 14.3 The monitoring plan
+
+The `MonitoringPlan` is the clinical aggregate owned by telemonitoring-service `[ABSENT today — R68; normative model for OF-B22]`. FHIR projection: CarePlan + Goal, with Observations referencing the plan (§16).
+
+**Plan fields (minimum normative set, ~20):**
+
+| # | Field | Notes |
+|---|---|---|
+| 1 | `monitoring_plan_id` | Minted by telemonitoring (§5) |
+| 2 | Patient reference | CPID-only in any SHR-bound projection (R25 rule) |
+| 3 | Originating order reference | OROS ClinicalOrderId — the prescribed-plan invariant |
+| 4 | Programme profile + version | Reference, never copy |
+| 5 | Clinical indication | Coded where possible |
+| 6 | Ordering clinician + approval record | Identity, authority context, timestamp; signature per OF-B2 when landed |
+| 7 | Status | Plan lifecycle: DRAFT → PENDING_APPROVAL → ACTIVE → SUSPENDED → COMPLETED → CANCELLED (guarded transitions; §9 discipline applies) |
+| 8 | Monitoring setting(s) | Per §14.1, per observation type |
+| 9 | Observation schedule | Type, cadence, time windows, duration |
+| 10 | `ThresholdProfile` reference + personalisations | Every personalisation: author, reason, timestamp, superseded-by chain |
+| 11 | `AlertRule` set | Active rules with versions (§14.6) |
+| 12 | Escalation ladder binding | Which ladder (§14.7), escalation facility, responsible team |
+| 13 | Device assignments | `DeviceAssignmentId` list (§15.6) |
+| 14 | Consent references | MVUMO pointers; the plan stores pointers, never consent content |
+| 15 | CHW assignment | Where applicable |
+| 16 | Caregiver delegations | MVUMO relationship pointers |
+| 17 | Review date / duration | Mandatory for open-ended plans |
+| 18 | Suggestion provenance | If machine-suggested: system, model/rule version, suggestion timestamp |
+| 19 | Communication preferences | Channel, language |
+| 20 | Audit/version chain | Immutable amendment history — plan changes are versions, not overwrites (mirrors the R43 order-versioning doctrine) |
+
+**Observation data catalogue.** Each profile enumerates its observation types against the canonical observation dictionary (ZIBO-coded where codes exist; the specialty-code gap pattern of Vol I R36 applies — free-text observation types are a transitional state, not a design). The catalogue spans: blood pressure, pulse, SpO₂, respiratory rate, temperature, weight, height/MUAC, glucose, urine dipstick panels, pain score, structured symptom/danger-sign checklists, mood/mental-health instruments, adherence confirmations, wound images and measurements, activity/steps, sleep (wellness-band unless device grade permits), fetal-movement counts, device-technical channels (battery, signal, runtime — which are telemetry, **not** clinical observations, and never enter the SHR).
+
+**Per-observation provenance (retained on every reading, end to end):**
+
+1. Source device identity (`device_id`) and trust grade at time of reading — or explicit `MANUAL_ENTRY`;
+2. Capture method: device-automatic · device-assisted manual · manual self-report · CHW-captured · clinician-verified;
+3. Who physically took/submitted the measurement (patient, caregiver, CHW, station attendant) where knowable;
+4. Original device timestamp AND ingestion timestamp (never conflated; clock-error handling per §15.8);
+5. Monitoring setting and location class (home / station / outreach / facility);
+6. **Quality flag** (§15.7 outcome: VALID · DEGRADED(reason) · INVALID(reason)) — carried into the FHIR Observation, never stripped;
+7. **Connectivity state** at capture: real-time · store-and-forward (with sync lag) · SMS-fallback · offline-batch;
+8. Calibration state of the source device at reading time (projected from asset-registry; §15.5);
+9. Schema version and normalisation pipeline version that processed the reading;
+10. **Correction history**: a corrected reading is a new version linked to the original; the original is never destroyed (multi-writer discipline of Vol I §18);
+11. Explicit marker distinguishing **manual vs device vs clinician-verified** values — clinician verification is an act recorded with identity and timestamp, and only clinician-verified or adequate-grade device readings satisfy profiles that require clinical-grade input.
+
+FHIR projection carries this as Observation + Provenance through the single-writer path (R72): telemonitoring-service → fhir-gateway → BUTANO, CPID-only (R25).
+
+### 14.4 CHW workflow
+
+The CHW lane is the one part of community telemonitoring that is substantially **BUILT** `[R71]`: PCT owns households (`pct_households`) and community visits (`pct_community_visits`) with `offline_id` idempotency; community-service owns CHW assignments; offline-edge provides offline vitals capture, break-glass access, and SHR writes via `ButanoFhirClient`. Telemonitoring composes over this machinery — it MUST NOT duplicate household, visit or assignment truth.
+
+**Workflow capabilities (normative set, ~20).** The CHW workspace (§14.8) MUST support:
+
+1. Assigned-cohort view: enrolled patients in the CHW's catchment, from community-service assignments — never a device-derived list;
+2. Visit worklist: due/overdue monitoring visits materialised as PCT tasks from plan cadence;
+3. Household-centric navigation: patients grouped by `pct_households`, because CHWs walk to households, not to patient IDs;
+4. Per-visit measurement capture against the plan's observation schedule, with device-assisted and manual entry;
+5. Offline-first capture: full function without connectivity; queued with `offline_id` idempotency `[BUILT — R71]`;
+6. **Offline identity confirmation**: at the doorstep without connectivity the CHW confirms identity from cached cohort data (name, photo where consented, household context) and records the confirmation method; ambiguous matches are flagged for **later reconciliation** — the sync pipeline routes flagged captures to a reconciliation queue rather than silently attaching them to the wrong person;
+7. **Duplicate prevention**: re-submission of the same visit/reading is idempotent on `offline_id` (proven pattern, R71); the UI shows pending-sync state so a CHW never re-captures out of uncertainty;
+8. **Household shared devices**: a community-shared device (§15.3) used across a household carries per-reading patient attribution captured at measurement time — the device's `owner_health_id` (possession) is NEVER used to infer the clinical subject `[the exact OF-G18 failure mode]`;
+9. **Multi-patient households**: the capture flow forces explicit patient selection per reading within a household session; two readings seconds apart on the same cuff for two family members must land on two records;
+10. Danger-sign checklists per profile, with immediate on-device guidance for critical findings (§15.8 edge guidance — versioned and governed);
+11. Alert-driven tasking: amber/urgent alerts on the CHW's cohort surface as PCT tasks with structured instructions;
+12. **Scope safety (invariant)**: a CHW task generated from an alert carries *actions within CHW scope* — repeat the measurement, ask the checklist, facilitate contact, arrange transport — and always a one-tap escalation to clinical review. The system MUST NEVER present a CHW with a raw clinical decision ("is this heart failure decompensating?") as their task;
+13. Break-glass emergency access with mandatory justification and audit `[BUILT — R71]`;
+14. Visit outcome recording: completed / patient-absent / refused / relocated — each with follow-up semantics feeding missed-visit alert triggers (§14.6);
+15. Device field duties: swap, battery/fault report, collection for return — raising device-ops tasks (§15.6), not asset-registry edits by the CHW;
+16. Patient/caregiver education prompts and confirmation capture;
+17. Referral creation into the standard PCT referral spine when findings warrant (Vol I Stage 1 — same front door as everything else);
+18. **Role-scoped visibility**: the CHW sees the monitoring band of their assigned cohort — plan observations, checklists, alert instructions — NOT the full SHR; heightened-sensitivity profiles (#9/#10) apply additional visibility rules from the consent capture; visibility derives from the PDP visibility-obligation seam, not client-side hiding;
+19. Sync transparency: what is pending, what synced, what was rejected and why (rejected-reading reconciliation, §15.8);
+20. Supervision hooks: CHW supervisors see visit-completion and data-quality aggregates (programme-operations workspace, §14.8), never a surveillance feed of CHW location.
+
+### 14.5 The data pipeline (21 steps)
+
+The canonical journey of one reading, from skin to closed loop. Steps 1–4 are device/edge (§15.8), 5–10 are iot-ingestion `[BUILT — R69]`, 11–21 are the clinical layer `[ABSENT — R68/OF-G16, normative for OF-B22/OF-B25/OF-B26]`.
+
+| # | Step | Contract |
+|---|---|---|
+| 1 | **Device measurement** | Sensor takes the reading; original device timestamp recorded |
+| 2 | **Gateway/app capture** | Companion app, gateway or station receives it over a §15.2 connectivity pattern |
+| 3 | **Edge validation** | Local plausibility/schema pre-check; encrypted local cache if offline (§15.8) |
+| 4 | **Signed transmission** | Authenticated, integrity-protected submission; batch mode for offline catch-up `[HTTP path BUILT — R69; device-credential strength per §15.4/OD-14]` |
+| 5 | **Ingestion authentication** | iot-ingestion authenticates the submitter and resolves device identity against `iot.device_registry` `[BUILT — R69]`; unknown devices are rejected to quarantine, never auto-registered |
+| 6 | **Schema validation** | Telemetry schema v1/v2 validation; failures land in the DLQ table with reasons `[BUILT — R69]` — a malformed reading is preserved evidence, not discarded noise |
+| 7 | **Normalisation** | Vendor payload → canonical validated telemetry event; units normalised; vendor-specific fields never leak downstream (§15.2 adapter contract) |
+| 8 | **Deduplication** | Idempotency on device + sequence/offline batch identity; retries and re-syncs collapse to one canonical reading |
+| 9 | **Quality and calibration check** | §15.7 dimensions + calibration state from asset-registry projection; outcome **stamped** (VALID/DEGRADED/INVALID) — degraded readings flow onward with their stamp, **never silently dropped** |
+| 10 | **Telemetry bus publication** | Outbox → `impilo.iot.telemetry.reading.ingested.v1` on the dedicated telemetry bus `[BUILT — R69]` |
+| 11 | **Clinical consumption** | telemonitoring-service consumes the bus and associates the reading with a plan via `DeviceAssignmentId` (or manual-entry context); readings with no plan association are retained as unassigned telemetry and MUST NOT generate clinical records |
+| 12 | **Observation creation** | Canonical clinical Observation created under the plan, carrying the full §14.3 provenance list |
+| 13 | **Provenance record** | FHIR Provenance assembled (device, method, pipeline versions, quality flag) |
+| 14 | **SHR write** | Single-writer path: telemonitoring → fhir-gateway → BUTANO, CPID-only `[closes the three-writer sprawl of R72]` |
+| 15 | **Rules evaluation** | AlertRule set evaluated (multi-signal, §14.6); INVALID-stamped readings are excluded from *alerting on the value* but MAY trigger device-quality alerts; DEGRADED readings alert per-rule policy |
+| 16 | **Alert generation** | Threshold/trend/absence breach opens or updates an `AlertEpisode` (dedup and storm control, §14.6); emits `telemonitoring.alert.raised.v1` |
+| 17 | **PCT task creation** | The episode's ladder rung materialises as PCT task(s) — PCT keeps task SoR; the episode references the tasks it spawned |
+| 18 | **Notifications** | Patient/caregiver/CHW/clinician notifications per §19 (PHI-minimised, channel-appropriate, patient-wording rules §14.6) |
+| 19 | **Patient guidance** | Nompilo delivers plan-bound guidance (what this means, what to do now) — explanatory, never diagnostic, never a substitute for the escalation ladder |
+| 20 | **Clinical review and accountable closure** | A human reviews per the ladder; the episode closes only with the §14.6 closure record |
+| 21 | **Follow-up and plan adjustment** | Outcomes feed follow-up scheduling, threshold personalisation (clinician-approved), plan review, and analytics (bronze lake) |
+
+**Invariant: the IoT broker is not a clinical source of truth.** The telemetry bus and the `iot_telemetry_*` tables are transport and evidence. The clinical record is the Observation created in step 12 and written in step 14. No clinical consumer may read raw telemetry as if it were the chart; no dashboard may present bus contents as clinical values. If steps 11–14 fail, the reading is *not in the record* — and that failure is visible and recoverable (per §22 failure doctrine), not silently absorbed.
+
+### 14.6 Alert model
+
+`[ABSENT today — R68/OF-G16; the matrix's anti-pattern sweep records "alerts closing without accountable action: N/A-by-absence — Vol II §14 mandates accountable closure from day one".]`
+
+**Trigger types (multi-signal).** AlertRules MUST support at least:
+
+| # | Trigger | Example |
+|---|---|---|
+| 1 | Absolute threshold | SBP ≥ 180 |
+| 2 | Personalised threshold | ≥ 20 mmHg above this patient's clinician-set baseline |
+| 3 | Trend | Weight rising across 3 consecutive days (heart failure) |
+| 4 | Rate of change | SpO₂ falling ≥ 4 points within 24 h |
+| 5 | Repeat abnormal | Second amber reading within the window despite guided repeat |
+| 6 | Symptom + measurement combination | Danger-sign checklist positive AND temperature elevated |
+| 7 | Missing reading | Scheduled observation not received within tolerance |
+| 8 | Device offline | Assigned device silent beyond its heartbeat tolerance |
+| 9 | Poor data quality | Persistent DEGRADED/INVALID stamps from one device/patient |
+| 10 | Non-adherence pattern | Adherence confirmations missed per programme rule |
+| 11 | Missed visit | CHW visit outcome absent/patient-absent beyond policy |
+| 12 | Failed contact | Notification/contact attempts exhausted without response |
+| 13 | Clinician-defined rule | Free-form rule authored for this patient, versioned and attributed |
+| 14 | Programme-defined rule | Profile-level rule shipped with the profile version |
+
+Triggers 8–9 are **device alerts**, triggers 1–6 are **clinical alerts**, and 7/10–12 are **engagement alerts**; the type is explicit on the episode because the correct responder differs (device ops vs clinical desk vs CHW).
+
+**Severity ladder.** Six levels, each with default response-time expectations and default ladder entry points (profile-overridable): **informational → routine → amber → urgent → critical → emergency**. Consumer-grade (low-trust) device readings MUST NOT alone raise critical/emergency (§14.1 caveat, OF-G17); they may raise amber prompting a verified repeat.
+
+**AlertEpisode record schema (minimum).** `alert_episode_id` (§5) · plan reference · patient reference · trigger type(s) and rule version(s) · contributing readings (with quality stamps) · severity (initial and current, with escalation history) · state (OPEN → ACKNOWLEDGED → IN_PROGRESS → ESCALATED* → RESOLVED/CLOSED, guarded) · current ladder rung · spawned PCT task references · notification log references · acknowledgements (who, when, in what role) · every action taken with actor and timestamp · clinical assessment · outcome classification · closure record · full audit chain. Events: `telemonitoring.alert.raised/acknowledged/escalated/resolved.v1` (§18).
+
+**Dedup, grouping and storm prevention.** One clinical situation = one episode: repeat breaches of the same rule within an open episode attach to it, never spawn siblings. Related rules on the same patient group into the episode (a crashing SpO₂ and a rising pulse are one deterioration, not two queues). Per-patient and per-device rate limits stop a malfunctioning cuff from paging a district; a reading storm from one device collapses into a single device-quality episode. **Deterioration vs device failure is an explicit discrimination step**: before escalating a critical clinical alert, the engine checks device-health signals (battery, signal, quality-stamp history, cross-device corroboration where available) and either annotates confidence or routes a suspected-device-failure branch — which still requires a human decision at amber+; the platform never auto-dismisses a critical value as "probably the device".
+
+**Acknowledgement and overdue escalation.** Every amber+ episode requires acknowledgement by an accountable human within the severity's response window. Unacknowledged episodes escalate automatically: re-notify → notify the responsible team's fallback → escalate a ladder rung → surface on the programme-operations overdue board (§14.8). Escalation-on-silence is itself audited.
+
+**Closure (invariant).** An episode closes ONLY with: (a) reviewer identity and role; (b) clinical assessment of the contributing readings; (c) action taken (or an explicit, reasoned no-action-required); (d) outcome classification; (e) ownership — who is accountable for any follow-on. Bulk-close does not exist. Auto-close exists only for informational-level episodes, and even those record the auto-close rule version as the "reviewer".
+
+**Patient-facing wording rules.** Patient/caregiver notifications: plain language, in the patient's chosen language; say what was observed and what to do next; NEVER deliver a diagnosis, a prognosis, or raw risk scores by notification; never alarm without an action ("contact X", "your CHW will visit today"); mental-health and palliative profiles use profile-specific wording packs reviewed by clinical governance; every patient-facing alert message includes the standing safety line that feeling seriously unwell overrides anything the app says — seek care regardless.
+
+### 14.7 Escalation ladder
+
+The ladder is the governed path from "a number moved" to "a human acted", binding telemonitoring to the rest of the estate. Each plan binds a ladder variant; each rung names its actor, its entry criteria and its exit criteria. Rungs may be skipped downward by severity (an emergency-level episode enters at rung 11+), never silently skipped upward.
+
+| Rung | Action | Actor / seam |
+|---|---|---|
+| 1 | Guided repeat reading | Patient/caregiver, prompted in-app; excludes device error and regression to mean |
+| 2 | In-app guidance | Nompilo plan-bound guidance — explain and instruct, never diagnose |
+| 3 | Caregiver notification | Consented MVUMO delegate notified to check on the patient |
+| 4 | CHW task | PCT task to the assigned CHW: repeat measurement, checklist, facilitate contact — scope-safe per §14.4(12) |
+| 5 | Secure chat | Asynchronous secure messaging between patient/CHW and the monitoring desk |
+| 6 | Scheduled virtual review | Routine virtual review booked via the standard scheduling seam |
+| 7 | **Urgent teleconsultation** | The **Volume I seam**: a durable case is created through the standard front door — Vol I §10 **Stage 1** ("durable case before any media room", R1 `[LIVE]`) — with monitoring provenance attached; the teleconsult then runs Vol I's lifecycle unchanged. Telemonitoring never spins up ad-hoc media sessions outside the case spine |
+| 8 | Facility contact | Named escalation facility (from the plan) contacted; expected-patient notice raised |
+| 9 | Physical assessment | In-person assessment arranged (facility visit or clinician/CHW dispatch) |
+| 10 | Transport request | Non-emergency patient transport arranged |
+| 11 | **Daidzai** | EMS clinical dispatch — the emergency service boundary (Vol I §23); the episode records the EMS mission reference (distinct namespace, §5 collision rule) |
+| 12 | **Nhume** | Urgent logistics where the response is *moving a thing*: oxygen cylinder, emergency medication, replacement device (§12 contract) |
+| 13 | **Ndila** | Geospatial routing/location support for whoever is moving — CHW, transport, EMS |
+| 14 | Emergency services handover | Formal handover to emergency care; structured handover packet from the episode |
+| 15 | Virtual support until handover | The monitoring desk stays engaged — line open, readings streaming where possible — until physical care assumes responsibility; assumption of care is recorded |
+
+**Post-alert outcome.** The episode records what actually happened at whatever rung resolved it: outcome class, receiving facility/clinician where applicable, and linkage to any spawned artefacts (teleconsult case, EMS mission, delivery, appointment). Loop closure follows §14.6 closure rules; unresolved handovers (rung 14–15 without recorded assumption of care) are a named failure mode in §22 and sit on the programme-operations board until resolved.
+
+### 14.8 Workspaces
+
+Six role workspaces `[ABSENT — R68; compose with §20's nine-workspace catalogue]`. All obey the pack's honest-gap doctrine (Vol I R40): no dead buttons, no mock data, deferred capability shown as deferred.
+
+**1. Patient view** (citizen app + web): my active plan(s) in plain language; my readings with trend visuals and plain-language bands (never raw risk scores); submit-a-reading (device-assisted and manual); my alerts and what to do; my device status (battery, sync, "reading didn't count and why" — the DEGRADED stamp made humane); my schedule (readings due, CHW visits, reviews); guidance library per profile; consent view and revocation entry point; help/escalation always one tap away.
+
+**2. Caregiver view**: delegated subset per MVUMO relationship — the patient's monitoring band, capture-on-behalf (attributed to the caregiver, §14.3 provenance), caregiver-directed notifications and tasks; never wider than the delegation scope; revocation immediate.
+
+**3. CHW view** (provider app, offline-first): the §14.4 capability set — cohort, households, visit worklist, capture, danger-sign flows, alert tasks, sync state, reconciliation queue, device field duties, education prompts.
+
+**4. Remote-monitoring clinical desk** (the command workspace, OF-B28): triage board of open episodes across the clinician's panel, sorted by severity and response-window pressure; per-episode drill-down: contributing readings with quality stamps, trend context, plan context, action history; act-from-the-board: acknowledge, guide, chat, order (via OROS spine), open urgent teleconsult (rung 7 — into the Vol I case spine), close with the accountable-closure record; panel management: threshold personalisation (approval-gated), plan amendment, suspend/complete; deterioration-vs-device-failure evidence surfaced explicitly; workload/coverage handover between shifts.
+
+**5. Programme operations**: enrolment funnels, cohort coverage, adherence and missed-visit rates; alert-volume/response-time/overdue boards; ladder-outcome distributions; CHW visit-completion and data-quality aggregates by area; profile performance (which rules fire, which get overridden — feeding profile-version governance); the unresolved-handover board (§14.7). Population views are role-scoped and privacy-governed; operations sees rates, not charts.
+
+**6. Device operations** (bridges to §15): fleet state by lifecycle stage (§15.5); device-alert queue (offline, battery, quality-degradation, calibration-due from asset-registry projection); assignment/return/collection workflows (§15.6); quarantine management; ingestion health (DLQ depth, schema-failure rates — the R69 machinery made visible); firmware/provisioning status per OD-14 policy once landed.
+
+---
 
 ## 15. IoT Architecture
 
-`[AUTHORING — Wave 2]` Instruction §9: the 18-layer reference architecture mapped onto the live estate (iot-ingestion + asset-registry + telemetry bus + bronze lake); connectivity patterns (MQTT as `[ABSENT]` transport addition, HTTP/Kafka live); device categories and trust grading; registry/digital identity; lifecycle states; assignment; data-quality evaluation (stamp, never silently drop); edge/offline; constrained remote commands; IoT security controls.
+The health-IoT architecture is the substrate under §14 and under every other device-emitting domain in the platform (cold chain §12, logistics tracking, facility environment). It composes with — and never duplicates — [`docs/supply-iot-platform/README.md`](../supply-iot-platform/README.md) (supply-side IoT platform), [`docs/assets/asset-device-iot-discovery.md`](../assets/asset-device-iot-discovery.md) (estate discovery), and the device/IoT doctrine of [`docs/doctrine/health-os-doctrine.md`](../doctrine/health-os-doctrine.md) §17.
+
+**Estate truth (matrix §4).** iot-ingestion-service (integration plane) is **real**: a genuine `iot.device_registry` (device identity, trust level, capabilities, lifecycle), HTTP telemetry ingest (`POST /internal/v1/telemetry/ingest` and `/batch`) plus Kafka, schema v1/v2 validation with a DLQ table, and an outbox publishing `impilo.iot.telemetry.reading.ingested.v1` on a dedicated telemetry bus `[BUILT — R69]`. Its trust scoring, however, is a hardcoded heuristic (static 95/80/55/25 grades with fixed operation lists) `[OF-G17]`. asset-registry-service owns physical/maintenance truth (`asr_equipment` with calibration, `asr_assets`). There is **no MQTT broker anywhere in the estate** `[ABSENT]` — MQTT is specified below strictly as a transport *addition*, and this document MUST NOT be read as claiming it exists.
+
+### 15.1 The 18-layer reference architecture
+
+The reference stack, mapped layer-by-layer onto the live estate. The map is the honest inventory: six layers have real code behind them today; the clinical layers are the OF-B22..OF-B26 build.
+
+| # | Layer | Responsibility | Estate mapping | Status |
+|---|---|---|---|---|
+| 1 | Sensor / device | Measure; hold identity material; local safety behaviour | Field devices per §15.3 catalogue | Per-device |
+| 2 | Gateway | Aggregate nearby devices; buffer; forward | Home hubs, station gateways, CHW phone-as-gateway | `[ABSENT]` as managed software; phone-mediated paths exist via apps |
+| 3 | Companion app | Pair, capture, guide the human | Citizen/provider apps; offline-edge capture `[BUILT — R71]` for the CHW lane | `[PARTIAL]` |
+| 4 | Edge processing | Validate, cache, sequence, pre-guide offline (§15.8) | offline-edge service (CHW lane) | `[PARTIAL — R71]` |
+| 5 | Device trust / attestation | Prove the device is what it claims | Heuristic trust levels in `iot.device_registry` | `[PARTIAL — OF-G17]`; real attestation `[PENDING-POLICY — OD-14]` |
+| 6 | Ingestion | Authenticate, accept, DLQ | **iot-ingestion-service**: HTTP ingest + batch, schema v1/v2 validation, DLQ table | `[BUILT — R69]` |
+| 7 | Protocol adapters | Vendor/transport payload → canonical event (§15.2) | Ingestion normalisation seam | `[PARTIAL]` — HTTP-shaped adapters only |
+| 8 | Device registry | Connectivity/digital-identity truth | `iot.device_registry` (§15.4) | `[BUILT — R69]` |
+| 9 | Device management | Provisioning, config, firmware, remote commands (§15.9) | — | `[ABSENT]`; policy prerequisites in OD-14 |
+| 10 | Broker / stream | Durable transport | **Kafka telemetry bus** (dedicated; outbox → `impilo.iot.telemetry.reading.ingested.v1`) `[BUILT — R69]`; **MQTT broker `[ABSENT]`** | Split |
+| 11 | Normalisation | Units, canonical schema, dedup (§14.5 steps 7–8) | Ingestion pipeline | `[PARTIAL]` |
+| 12 | Observation service | Clinical Observation creation with provenance | **telemonitoring-service (new)** — §14.5 steps 11–14 | `[ABSENT — R68]` |
+| 13 | Rules engine | Per-patient AlertRule evaluation (§14.6) | **telemonitoring-service (new)**; distinct from surveillance-service's population engine | `[ABSENT — R68/OF-G16]` |
+| 14 | Care orchestration | Tasks, escalation execution | **PCT** — task SoR | `[BUILT — R71]` |
+| 15 | SHR | Longitudinal record | **BUTANO** via fhir-gateway, CPID-only, single designated writer (R72) | `[BUILT]` (writer consolidation `[PARTIAL — R72]`) |
+| 16 | Ops monitoring | Fleet/pipeline health, DLQ visibility | Device-operations workspace (§14.8-6) + platform observability | `[PARTIAL]` |
+| 17 | Security monitoring | Anomaly, quarantine, incident (§15.10) | security-hardening seam | `[PARTIAL]` |
+| 18 | Analytics | Cohort/programme/device analytics | **Bronze lake** ingestion of telemetry topics | `[BUILT]` |
+
+**No hardcoded broker or cloud (invariant).** No layer may bind to a specific vendor cloud, broker product or hosted endpoint as an architectural assumption. Vendor-cloud integration is one adapter among many at layer 7 (§15.2); the canonical event and the registry are the only contracts the rest of the platform knows.
+
+### 15.2 Connectivity patterns
+
+Devices reach the platform however the setting allows. Every pattern terminates in the same place: a **canonical validated telemetry event** entering layer 6. The pattern used is provenance (connectivity state, §14.3), never a fork in downstream semantics.
+
+| Pattern | Description | Status |
+|---|---|---|
+| BLE → app/gateway | Consumer/clinical device pairs to phone or gateway | Device-side; enters via app/HTTP `[pattern in use]` |
+| USB / wired | Station and facility devices docked to a station client | Enters via station app |
+| NFC tap | Tap-to-transfer for simple devices/cards | `[ABSENT]` as built path; permitted pattern |
+| WiFi direct-to-platform | Device or gateway on local WiFi posting HTTPS | Via HTTPS ingest `[LIVE path]` |
+| Cellular (2G–5G) | SIM-equipped devices/gateways | Via HTTPS ingest |
+| SMS fallback | Structured SMS for constrained settings; SMS gateway acts as a protocol adapter | `[ABSENT]`; adapter-shaped addition |
+| LoRaWAN — where deployed | Long-range low-power (environmental, cold-chain); network server as adapter | `[ABSENT]`; geography/programme-gated |
+| MQTT over TLS | Standard pub/sub device transport terminating in an MQTT adapter that feeds ingestion | **`[ABSENT]` — transport addition; no broker exists in the estate today** |
+| HTTPS ingest | `POST /internal/v1/telemetry/ingest` and `/batch` | **`[BUILT/LIVE — R69]`** — the working spine |
+| FHIR-gateway submission | Integrating systems submitting Observations/Device resources through the gateway contract | Gateway seam `[BUILT]`; monitoring-band writes still route to the single writer (R72) |
+| Vendor cloud pull/push | Platform-to-vendor-cloud adapter where devices only speak to their maker | Adapter-shaped `[ABSENT]`; PENDING vendor agreements |
+| Manual entry | Human-entered values in patient/CHW/clinician apps | `[BUILT — R71 CHW lane]`; stamped MANUAL (§14.3) |
+| Offline batch | Store-and-forward with idempotent batch upload | **Pattern proven** in the CHW lane (`offline_id` idempotency `[BUILT — R71]`) and supported by the batch ingest endpoint |
+
+**Adapter contract (normative).** Every adapter: authenticates its source; maps vendor payloads to the canonical event schema (versioned, v1/v2 validation as built); converts units; preserves original device timestamps; attaches transport provenance; and **never leaks vendor payloads downstream** — raw vendor frames may be retained in ingestion-side evidence storage for debugging, but no consumer beyond layer 7 ever parses a vendor format. A new device brand is a new adapter, never a new pipeline.
+
+### 15.3 Device categories and trust grading
+
+| # | Category | Examples | Notes |
+|---|---|---|---|
+| 1 | Regulated clinical devices | Certified BP monitors, glucometers, pulse oximeters, ECG patches | Highest grade eligible; calibration truth in asset-registry |
+| 2 | Programme-approved devices | Procured/validated for a national programme, below full regulatory certification | Grade set by programme validation evidence |
+| 3 | Consumer wellness devices | Fitness bands, smart scales, wellness apps | **Never clinical-equivalent** (below) |
+| 4 | Patient-owned (BYOD) | Any of the above owned by the patient | Enrolment path per OD-14; grade from the device, ownership from the registry |
+| 5 | Facility-owned | Facility equipment also emitting telemetry | Dual-listed: `asr_equipment` physical truth + registry connectivity truth |
+| 6 | Programme-owned issued devices | Loaned to patients under a plan (§15.6) | Return/collection lifecycle mandatory |
+| 7 | Community-shared | Station kiosks, household-shared cuffs | Per-reading patient attribution mandatory (§14.4-8) |
+| 8 | Wearables | Continuous-signal devices across grades 1–3 | Downsampling/summarisation at edge |
+| 9 | Implanted — future | Implantable monitors | `[PENDING-POLICY]`; out of operational scope until governed |
+| 10 | Environmental | Clinic temperature/humidity/air quality | Never patient-linked |
+| 11 | Cold-chain | Vaccine/blood cold-chain loggers | Consumed by §12 custody events; supply-IoT platform composition |
+| 12 | Logistics trackers | Vehicle/parcel trackers | Nhume seam; location data governed as operational, not clinical |
+| 13 | Adherence devices | Smart pillboxes/dispensers/caps | Feed adherence triggers (§14.6-10) |
+| 14 | Smart lockers | Pickup lockers (§8K/§12) | Custody events, not observations |
+| 15 | Vehicle telemetry | Ambulance/fleet telemetry | Daidzai/Nhume operational plane |
+
+**Trust grading.** Every registry entry carries a trust grade derived from: category, regulatory status, provisioning strength (§15.4), attestation evidence, calibration state (categories with `linked_equipment_id`), and observed data-quality history. Today's implementation is a **hardcoded heuristic** — static 95/80/55/25 scores with fixed operation lists `[PARTIAL — R69/OF-G17]`; the target is evidence-derived grading with real attestation inputs (OF-B25, gated on OD-14). Normative regardless of implementation maturity:
+
+- The **UI MUST communicate trust level** wherever a device-sourced value is shown — patient, CHW, clinical desk alike;
+- **Consumer-device data MUST NEVER be presented as clinical-equivalent** `[ties OF-G17]`: distinct visual treatment, excluded from clinical-grade-required profile slots (§14.1 caveat), never sole grounds for critical/emergency alerts (§14.6);
+- Trust grade is evaluated **at reading time** and stamped into provenance (§14.3-1) — regrading a device never rewrites history.
+
+### 15.4 Registry and digital identity
+
+The **connectivity/digital-identity** truth of every device is `iot.device_registry` in iot-ingestion-service `[BUILT — R69]`. Built columns today: `device_id` (UUID, platform-minted), `external_device_id`, `device_type`, `trust_level`, `owner_health_id`, `linked_equipment_id` (→ asset-registry), `capabilities`, lifecycle state. Two built-schema semantics are load-bearing:
+
+- **`owner_health_id` records POSSESSION, not clinical assignment** `[R70/OF-G18]` — who holds the device, never whose readings these clinically are. Clinical assignment is telemonitoring's `DeviceAssignmentId` (§15.6). Any code path inferring the clinical subject from `owner_health_id` is a defect.
+- **`linked_equipment_id`** is the bridge to physical truth: calibration and maintenance live in `asr_equipment` and are *projected* into ingestion decisions (§14.5 step 9), never copied.
+
+**Registry field set (normative, ~20; built fields marked ✔):**
+
+| # | Field | |
+|---|---|---|
+| 1 | `device_id` (platform UUID — the identity) | ✔ |
+| 2 | `external_device_id` (vendor serial/identifier) | ✔ |
+| 3 | `device_type` | ✔ |
+| 4 | Category (§15.3) | new |
+| 5 | Make / model / hardware revision | new |
+| 6 | Firmware version (+ history) | new |
+| 7 | `capabilities` (observation types, commands, transports) | ✔ |
+| 8 | `trust_level` (+ grading evidence, target) | ✔ heuristic |
+| 9 | Lifecycle state (§15.5) | ✔ |
+| 10 | `owner_health_id` — possession | ✔ |
+| 11 | `linked_equipment_id` → `asr_equipment` | ✔ |
+| 12 | Credential/certificate references (never material in the registry row) | new |
+| 13 | Provisioning record (method, when, by whom) | new |
+| 14 | Attestation evidence | `[PENDING-POLICY — OD-14]` |
+| 15 | Supported schema versions | new |
+| 16 | Transport/adapter binding (§15.2) | new |
+| 17 | Heartbeat expectation + last-seen | new |
+| 18 | Quarantine status + reason (§15.10) | new |
+| 19 | Programme/tenant scoping | new |
+| 20 | Audit chain (every registry mutation attributed) | new |
+
+**Digital identity (normative targets).** Per-device credentials (certificate or scoped token — never a shared fleet secret); secure provisioning ceremonies appropriate to category (factory, facility, CHW-assisted, BYOD self-service with step-up); key rotation without physical recall where the class allows; signed-firmware verification for command-capable classes. All four are **`[PENDING-POLICY — OD-14]`** (attestation authority and BYOD enrolment policy) — specified as targets, claimed nowhere as built. **Identity is never a user-entered serial alone**: a serial number may *initiate* enrolment, but a device becomes ACTIVE only after a platform-verified provisioning step binds `device_id` to credential material. A typed-in serial with no binding ceremony is data entry, not identity.
+
+### 15.5 Lifecycle states
+
+Registry lifecycle `[state field BUILT — R69; the governed machine and its gates are OF-B24]`. Canonical states and per-state contract:
+
+| State | Permitted actions | Data acceptance | Patient impact |
+|---|---|---|---|
+| PROCURED | Register, provision | None | None |
+| REGISTERED | Provision, assign to programme stock | Rejected (unknown-credential quarantine path) | None |
+| PROVISIONED | Assign, test | Test-mode only — flagged, never clinical | None |
+| ASSIGNED | Activate, unassign | Accepted once assignment effective | Plan association begins (§15.6) |
+| ACTIVE | Full operation, commands per §15.9 | Accepted, quality-stamped | Normal monitoring |
+| MAINTENANCE | Service, recalibrate, return-to-active | Accepted but stamped `MAINTENANCE` — excluded from clinical alerting on values | Plan flags reduced coverage; missing-reading tolerance adjusted |
+| CALIBRATION_EXPIRED | Recalibrate, quarantine | **Accepted and stamped `CALIBRATION_EXPIRED` (DEGRADED)** — never trusted silently | telemonitoring rejects for value-alerting `[OF-G18]`; device-ops task raised |
+| QUARANTINED (compromise/anomaly) | Investigate, wipe/re-provision, decommission | **Accepted into evidence store only — never into the clinical pipeline** | Plan alerted to coverage gap; replacement flow (§15.6) |
+| SUSPENDED | Reactivate, return | Rejected with reason | Coverage-gap handling |
+| RETURNED | Inspect, sanitise, re-provision or retire | Rejected | Assignment closed (§15.6 return task) |
+| DECOMMISSIONED | Dispose | Rejected permanently | — |
+| DISPOSED | — (terminal; record retained) | — | — |
+
+**Invariant (closes OF-G18's gate gap):** a compromised or calibration-expired device **MUST NOT silently supply trusted readings**. The pipeline stamps (never drops, §15.7) — and telemonitoring's rules engine excludes such readings from value-based alerting while still surfacing them as device-quality signals (§14.6 trigger 9). The two failure modes this kills: a stale-calibration cuff quietly steering titration, and a compromised device injecting plausible values into escalation decisions.
+
+### 15.6 Assignment
+
+Clinical assignment binds device ↔ patient ↔ plan, and is owned by **telemonitoring-service** as `DeviceAssignmentId` `[ABSENT — R70/OF-G18; OF-B24]` — the third leg of the three-way split (asset-registry physical · iot-ingestion connectivity · telemonitoring clinical).
+
+**Capture at assignment:** device (`device_id` + current trust grade + calibration state — expired calibration blocks assignment), patient, monitoring plan, assignment type (issued-to-patient / caregiver-held / CHW kit / community-shared station), assigner identity and authority, effective period, issuance condition record (state, accessories, battery), patient/caregiver training confirmation, expected-return terms for loaned devices, consent linkage where device data implies new flows.
+
+**Generated artefacts:** the assignment record; registry possession update (`owner_health_id` — possession only); PCT onboarding task (first-reading confirmation); **and, for issued devices, the device order itself rides the §8 order-to-outcome pipeline** — a device issuance is an order (`OrderType = OTHER` / FHIR `DeviceRequest` per §16, `[gateway support ABSENT — R73/OF-G19]`) that may traverse marketplace fulfilment (§11) and Nhume delivery (§12) like any other fulfilable order. Assignment end generates the **return/collection task** through the same pipeline: a collection delivery (Nhume) or CHW collection task (PCT), followed by RETURNED-state inspection (§15.5). Loaned devices that never come back are a stock-integrity signal for programme operations, not a silent write-off.
+
+**Rules.** One device MAY serve many patients only under the community-shared type with per-reading attribution (§14.4-8). A patient MAY hold multiple devices per plan. Overlapping exclusive assignments of one device are rejected. Ending an assignment never deletes history — readings keep their assignment-era provenance forever.
+
+### 15.7 Data quality
+
+Every reading is evaluated at §14.5 step 9 against the quality dimensions and **stamped** with the outcome. The stamp travels with the reading into the Observation, the SHR, alerting decisions and analytics. **Nothing is silently discarded.**
+
+**Evaluation dimensions (normative, ~18):** 1 physiological plausibility (absolute bounds per observation type); 2 patient-context plausibility (age/pregnancy/condition-adjusted bounds from the plan); 3 rate-of-change plausibility vs the patient's own series; 4 device trust grade at reading time; 5 calibration state (asset-registry projection); 6 device self-reported quality/error flags; 7 signal quality where the transport carries it (perfusion index, cuff-fit flags); 8 schema validity (already gated at step 6 — failures in DLQ `[BUILT — R69]`); 9 unit consistency post-normalisation; 10 timestamp sanity (future timestamps, pre-provisioning timestamps, device-clock skew per §15.8); 11 duplicate/replay detection beyond exact dedup (identical-value bursts); 12 sequence integrity for batched uploads; 13 cross-observation consistency (pulse from cuff vs oximeter in the same session); 14 capture-method consistency (a "device" reading from a device with no such capability); 15 geospatial/context sanity where relevant and consented; 16 completeness of required accompanying fields (checklist attached where profile demands); 17 image quality for photo observations (focus, exposure, reference-scale presence); 18 historical device quality (a device trending DEGRADED drags its grade — feeding §14.6 trigger 9 and §15.3 regrading).
+
+**Implausible-reading handling (the permitted set — chosen per rule, per severity; "delete" is not in the set):**
+
+1. **Mark invalid** — stamped INVALID(reason), retained, excluded from value-alerting, visible to the clinical desk as excluded;
+2. **Request repeat** — patient/CHW prompted for a guided repeat (§14.7 rung 1);
+3. **Retain with flags** — stamped DEGRADED(reason), flows onward, alerting per-rule policy (§14.5 step 15);
+4. **Device-support task** — device-ops task raised (§14.8-6) for suspected device fault;
+5. **Manual confirmation** — route to a human (CHW or desk) to verify before the value participates in alerting;
+6. **Escalate if risk** — when even a suspect value would, if true, indicate danger, the deterioration-vs-device-failure discrimination (§14.6) runs and a human sees it: the platform never lets "probably a bad reading" suppress a possible emergency.
+
+### 15.8 Edge and offline operation
+
+Connectivity is a variable, not an assumption. The CHW lane already proves the pattern (offline-edge + `offline_id` idempotency `[BUILT — R71]`); this section generalises the duties to every gateway/app acting as an edge node.
+
+**Gateway/edge duties (normative):** 1 local capture cache with bounded, monitored capacity; 2 strict sequencing so batched uploads reconstruct true order; 3 **original device timestamps preserved** — sync time is separate provenance, never overwrites capture time; 4 **encrypted storage at rest** on the edge node with device-loss wipe posture; 5 retry with backoff and batch upload (§15.2 offline-batch, `[batch endpoint BUILT — R69]`); 6 idempotent submission (offline_id pattern) so retries never duplicate; 7 **pending-sync visibility** to the human — what is captured-not-yet-synced, so nobody re-measures or falsely assumes delivery; 8 **multi-patient safety offline** — per-reading patient attribution enforced at capture (§14.4-8/-9), because offline is exactly when attribution mistakes happen; 9 **clock-error handling** — edge records its clock offset when it syncs; readings from a skewed clock are flagged and re-based with both timestamps retained (§15.7 dimension 10); 10 **restart recovery** — the queue survives app/gateway restart and power loss, resuming without loss or duplication; 11 **rejected-reading reconciliation** — server-side rejections (schema, quarantined device, attribution conflict) return to the edge as a human-visible reconciliation queue (§14.4-19), never a silent drop.
+
+**Edge emergency guidance (invariant).** Edge nodes MAY hold local guidance for offline danger-sign situations (danger-sign checklist → "arrange transport now" while disconnected). All such logic is **versioned and governed**: shipped as signed, versioned guidance packs; the executing version recorded on every invocation; and **explicitly distinguished from central CDS** — edge guidance is conservative first-aid instruction ("this is dangerous, do X, seek care"), never diagnosis, never dose calculation, never a substitute for the escalation ladder, which resumes in full the moment connectivity returns.
+
+### 15.9 Remote commands
+
+Remote device commands are a **constrained catalogue**, not a general channel `[layer 9 ABSENT — §15.1; normative for OF-B24, gated on OD-14 credentials]`.
+
+**Permitted catalogue (exhaustive; anything absent is forbidden):** request-immediate-reading · adjust measurement schedule (within plan bounds) · request device self-test/diagnostics · firmware update (signed only) · configuration update (declared, schema-validated parameters) · locate/beep for lost programme devices · remote lock/quarantine of a compromised device · display a message on message-capable devices (governed content packs only).
+
+**Per-command contract:** commands are **signed** by the platform and verified on-device (OD-14 material); issued only by an **authorised role** whose authority the PDP checks per command class; **capability-validated** against the registry's `capabilities` — commanding a device without the capability is rejected at issue; fully **audited** (who, what, target, parameters, outcome, timestamp — commands are Event-class identifiers per §5); **rollback**-capable where the command class allows (config/firmware keep previous versions and a revert path); and **confirmation-gated** — the device acknowledges, the platform records acknowledgement, and unacknowledged commands time out into device-ops attention, never silent assumed-success.
+
+**Invariant — treatment-delivery exclusion.** Devices that *deliver* treatment (infusion pumps, oxygen concentrator therapy settings, any dosing device) are **NEVER remotely alterable by the monitoring platform**. Telemonitoring observes; it does not treat. Any future remote-therapeutic capability is a separate regulated programme with its own doctrine, its own safety case and its own specification — explicitly out of scope for this volume.
+
+### 15.10 IoT security
+
+Security controls for the device estate, composing with the platform's trust plane (Envoy/TSHEPO) and the security-hardening seam. Normative control set (~24):
+
+**Identity and credentials.** 1 per-device unique credentials — **no shared national default password, ever** (the classic fleet-compromise anti-pattern is named and banned); 2 mutual authentication on every device-platform interaction; 3 credential rotation without physical recall where the class allows; 4 revocation lists honoured at the ingestion seam within minutes; 5 provisioning ceremonies per category (§15.4) with dual control for bulk provisioning.
+
+**Transport and data.** 6 TLS (or equivalent per transport) everywhere — including MQTT-over-TLS if/when that transport lands; 7 **no PHI in topic names, URLs, log lines or device identifiers** — `device_id` is an opaque UUID and topics carry device identity, never patient identity (the patient linkage exists only inside the governed assignment seam, §15.6); 8 payload encryption at rest in edge caches (§15.8) and ingestion evidence stores; 9 signed payloads where the device class supports it; 10 strict schema validation at ingestion with DLQ evidence retention `[BUILT — R69]`.
+
+**Platform posture.** 11 ingestion endpoints network-segmented from clinical services — devices reach ingestion, never clinical planes; 12 rate limiting and per-device quotas at ingestion (also §14.6 storm defence); 13 anomaly detection on telemetry behaviour (volume, timing, value-distribution shifts, impossible mobility) feeding 14 **automated quarantine** — anomalous devices flip to QUARANTINED (§15.5) with human review, their data diverted to evidence-only; 15 replay protection (nonces/sequence windows) at the adapter layer; 16 registry-mutation audit with attribution (§15.4-20); 17 command-channel controls per §15.9 (signing, authority, confirmation).
+
+**Lifecycle and supply chain.** 18 signed firmware and verified boot for command-capable classes `[PENDING-POLICY — OD-14]`; 19 **SBOM** (software bill of materials) required from device/firmware suppliers at procurement, tracked against published CVEs; 20 vulnerability-disclosure and patch-SLA terms in procurement contracts; 21 sanitisation on RETURNED and certified data destruction on DISPOSED (§15.5).
+
+**Response.** 22 device-security **incident-response runbook**: detect → quarantine → assess blast radius (which patients' plans lost coverage or received suspect data) → clinical notification where readings may have influenced decisions → re-provision or retire → post-incident review; 23 security-monitoring visibility in the device-operations workspace (§14.8-6) and the platform SOC seam; 24 periodic fleet security review — credential age, firmware currency, quarantine history — reported through programme governance.
+
+The clinical corollary binds §15 back to §14: a security event on a device is also a **care event** — quarantining a hypertensive patient's only cuff opens a monitoring-coverage gap that the plan surfaces (§15.5 QUARANTINED row) and the escalation machinery treats as a missing-reading condition (§14.6 trigger 7), so the security response and the care response are one governed motion, never two disconnected queues.
 
 ## 16. Data Model and FHIR Mapping
 
-`[AUTHORING — Wave 2]` Instruction §10: canonical entity model per service; FHIR R4 mapping for ordering (MedicationRequest/ServiceRequest/DeviceRequest/SupplyRequest/Task/CarePlan), fulfilment (MedicationDispense/SupplyDelivery/Procedure/DiagnosticReport/Specimen), financial (Coverage/Claim/ClaimResponse/PaymentNotice), monitoring (Device/DeviceMetric/Observation/Provenance); gateway allow-list deltas `[ABSENT]`-tagged; logistics kept out of the SHR unless clinically meaningful.
+**Prime directive (Volume I §12 restated for this domain).** There is **no parallel order-to-fulfilment clinical model**. Each sovereign service maintains its internal aggregate for workflow truth — that is legitimate and canonical. Clinical facts that belong on the longitudinal record MUST reach BUTANO/SHR through the fhir-gateway PEP as FHIR R4 **projections of the internal model**, never as a second source of truth. Internal models are canonical; FHIR is the exchange projection. Where the identity contract and this section disagree on identifier semantics, `identity-trust-contract.md` wins (Volume I §1 precedence rule).
+
+### 16.1 Canonical entity summary per service
+
+| Service | Canonical entities (tables where verified) | Status |
+|---|---|---|
+| **OROS** | Clinical order aggregate + lines (`oros_orders`, `oros_order_items`), 13-status guarded lifecycle, results, SLA timers [R41]; **target**: prescription aggregate + immutable versions + tokens (`oros_prescriptions*`) [R44] | `[BUILT]` spine · `[ABSENT]` prescription aggregate [OF-G3] |
+| **pharmacy-service** | Dispense episodes (`rx_dispense_orders`, `rx_dispense_items`), substitution rules (`rx_substitution_rules`), stock movements (`rx_stock_movements`), pickup proofs (`rx_pickup_proofs`), facility formulary (`rx_formulary`); legacy flat `rx_prescriptions` (deprecation path §17.2) [R46] | `[BUILT]` · legacy `[PARTIAL/INCONSISTENT]` [OF-G3/OF-G4] |
+| **msika + msika-flow** | Catalogue/listings/storefronts/offerings (`msika_*`), vendor profiles (`mf_vendor_profiles`), carts/orders, delivery plans (`mf_delivery_plans`) [R50]; **target**: RFO aggregate (`mf_marketplace_requests`, invitations, `mf_fulfilment_offers`, selections) [R51/R52] | `[LIVE]` transaction plane · `[ABSENT]` RFO [OF-G8/OF-G9] |
+| **inventory-service (DURA)** | Sovereign stock ledger, batch lots (`inv_batch_lots`), reservations (`inv_stock_reservations`), controlled register (V013) [R56/R49] | `[BUILT]` at DURA · marketplace wiring `[ABSENT]` [OF-G12] |
+| **coverage (Ruvimbo)** | Member coverage + benefits (`cv_member_coverage`, `cv_benefit_*`), 14-status authorisations (`cv_authorisations(_lines)`), appeals (`cv_appeals`), 21-status claims (`cv_claims(_lines)`), COB decisions (`cv_cob_decisions`), liability estimates (`cv_liability_estimates`) [R58–R61] | `[BUILT]` (waves proven live [R58]) |
+| **COSTA** | Tariffs, charge/estimate model (per-offer patient-liability input) [R60] | `[BUILT]` engine · selection wiring `[PARTIAL]` [OF-G13] |
+| **MusheX + mushe-wallet** | Payment intents, refunds, settlement/reconciliation (`mushex_payment_intents/*`); wallet escrow tables [R63/R64] | `[LIVE]` intents · escrow-to-PoD `[PARTIAL]` [OF-G13] |
+| **Nhume** | Delivery aggregate (24-status machine), multi-cargo, custody events (`nhume_chain_of_custody_events`), proofs (`nhume_delivery_proofs`), autonomous-mission table (`nhume_autonomous_missions`) [R65/R67] | `[BUILT]` · drones `[CONFIG-ONLY]` [OF-G21] |
+| **iot-ingestion** | Device digital identity (`iot.device_registry`), telemetry store (`iot_telemetry_*`), validation + DLQ [R69] | `[BUILT]` (trust scoring heuristic [OF-G17]) |
+| **asset-registry** | Physical equipment truth (`asr_equipment`), calibration state [R70] | `[BUILT]` · assignment/calibration gate `[ABSENT]` [OF-G18] |
+| **telemonitoring-service (new)** | Monitoring plans, threshold profiles, alert rules, alert episodes, device assignments [R68/R70] | `[ABSENT]` [OF-G16] |
+| **PCT (community)** | Households, community visits with offline idempotency (`pct_households`, `pct_community_visits`) [R71] | `[BUILT]` |
+| **ZIBO** | Terminology; **target**: national medicine-registry artifact type [R62] | `[PARTIAL]` [OF-G14] |
+
+### 16.2 FHIR R4 mapping — Band 1: Clinical ordering
+
+Columns: **Direction** — *projection* (internal model → SHR), *intake* (external → internal), *both*. **Gateway status** — whether the fhir-gateway allow-list `CLINICAL_FHIR_RESOURCE_TYPES` admits the resource type today, with evidence row.
+
+| FHIR resource | Internal SoR | Direction | Gateway status | Notes |
+|---|---|---|---|---|
+| MedicationRequest | OROS prescription **version** (target aggregate) | projection | **Allow-listed** `[BUILT]` (verified in `CLINICAL_FHIR_RESOURCE_TYPES`) — but **no projection exists yet** `[ABSENT]` [R44/OF-G3] | One MedicationRequest per prescription version; supersession via `priorPrescription`; never project the legacy flat `rx_prescriptions` |
+| ServiceRequest | OROS diagnostics order | projection | **Allow-listed + projection BUILT** (OROS→butano) [R41] | The one ordering projection proven on the estate; extend pattern, do not fork it |
+| NutritionOrder | OROS (nutrition order type, §7) | projection | `[ABSENT]` from allow-list [R73/OF-G19] | Add with allow-list delta; low priority relative to dispense band |
+| DeviceRequest | OROS (device/equipment order type) | projection | `[ABSENT]` from allow-list [R73/OF-G19] | Required for home-monitoring device ordering (stage A → §14 enrolment seam) |
+| SupplyRequest | OROS (supply order type) | projection | `[ABSENT]` from allow-list [R73/OF-G19] | Non-clinical consumables stay out of the SHR; only clinically meaningful supply requests project |
+| Task | PCT execution tasks | projection | Target (Volume I TM-B7) | Order-execution tasks (awaiting-dispense, awaiting-collection) — shared model with Volume I §11 |
+| CarePlan | telemonitoring monitoring plan | projection | Target `[ABSENT]` [R68/OF-G16] | One CarePlan per activated MonitoringPlan; Goal per target band; plan versions as CarePlan versions |
+
+### 16.3 FHIR R4 mapping — Band 2: Fulfilment
+
+| FHIR resource | Internal SoR | Direction | Gateway status | Notes |
+|---|---|---|---|---|
+| MedicationDispense | pharmacy `rx_dispense_orders/_items` | projection | **NOT in allow-list; no projection exists anywhere** `[ABSENT]` [R73/OF-G19] | P1: project at dispense completion, linked to the MedicationRequest version via `authorizingPrescription`; partial fills as separate dispense resources |
+| MedicationAdministration | administration record (inpatient/community) | projection | **Allow-listed** `[BUILT]` (verified) | Community-administered doses (CHW-observed) project here, provenance-stamped |
+| MedicationStatement | patient-reported medication truth | intake→SHR | **Allow-listed** `[BUILT]` (verified) | Reconciliation input only — never a substitute for MedicationDispense |
+| SupplyDelivery | Nhume delivery **clinical view** | projection | `[ABSENT]` from allow-list [R73/OF-G19] | Projects only the clinical fact of supply handover (what, when, to whom-as-CPID) — **not** the logistics record (§16.6) |
+| Procedure | performed procedures (OROS service orders) | projection | Target `[PARTIAL]` (Volume I §12.1) | Stage J service-delivery completion artefact for procedure-type orders |
+| DiagnosticReport / Specimen / ImagingStudy | OROS results + PACS plane | projection | **BUILT** (OROS→butano result path [R41]; `oros.result.*` events §18) | The mature fulfilment projection on the estate; ImagingStudy rides the PACS plane |
+| Task | pharmacy/logistics execution status | projection | Target | Mirrors dispense/collection execution for cross-facility visibility |
+
+### 16.4 FHIR R4 mapping — Band 3: Financial
+
+**Rule: internal models are canonical; FHIR financial resources are exchange projections only** — produced for payer/interop exchange, never used as the platform's own financial truth. The Coverage family is **absent from the gateway allow-list today** (verified) — financial projections therefore route through the interop/exchange seam, not the clinical SHR path, until an allow-list decision says otherwise `[PENDING-POLICY]`.
+
+| FHIR resource | Internal SoR | Direction | Gateway status | Notes |
+|---|---|---|---|---|
+| Coverage | Ruvimbo `cv_member_coverage` [R58] | projection | `[ABSENT]` from allow-list (Coverage family absent — verified) | Exchange-only projection for payer interop |
+| CoverageEligibilityRequest / Response | Ruvimbo eligibility v2 engine | both | `[ABSENT]` | Synchronous internal API is canonical (§17.5); FHIR pair generated only at external-payer boundary |
+| Claim / ClaimResponse | Ruvimbo `cv_claims(_lines)` 21-status machine + adjudication [R61] | both | `[ABSENT]` | COB waterfall (`cv_cob_decisions`) stays internal; ClaimResponse intake maps to adjudication statuses |
+| PaymentNotice | MusheX intent status [R63] | projection | `[ABSENT]` | Generated from `mushex.payment.status.changed` terminal states |
+| PaymentReconciliation | MusheX settlement/reconciliation | projection | `[ABSENT]` | Batch projection at settlement close |
+| Invoice | COSTA charge model | projection | `[ABSENT]` | Patient-facing statement projection; COSTA remains pricing truth |
+
+### 16.5 FHIR R4 mapping — Band 4: Monitoring and IoT
+
+| FHIR resource | Internal SoR | Direction | Gateway status | Notes |
+|---|---|---|---|---|
+| Device | iot-ingestion `iot.device_registry` [R69] | projection | Target | Digital identity truth; physical/asset truth stays in asset-registry |
+| DeviceDefinition | device model catalogue (iot + asset registries) | projection | Target | Model/firmware family metadata |
+| DeviceMetric | iot-ingestion channel definitions | projection | Target | Per-measurement-channel calibration + units |
+| Observation | **telemonitoring-service as the single monitoring-band writer** (settled) [R72] | projection | **Allow-listed** `[BUILT]`; single-writer discipline `[PARTIAL]` — today three ad-hoc writer paths (bff FhirPublisher, offline-edge, butano-direct) [OF-G16] | All monitoring-band Observations flow through telemonitoring; wellness keeps its simba path (out of monitoring band) |
+| Provenance | telemonitoring writer pipeline | projection | Target (Volume I §12.1 `[PARTIAL]`) | Every monitoring Observation carries device id, ingest path, data-quality stamp, plan reference |
+| QuestionnaireResponse | CHW visit structured capture (forms-service definitions) | projection | `[PARTIAL]` (Volume I) | forms-service owns definitions; PCT/community owns responses |
+| Goal | monitoring plan target bands | projection | Target `[ABSENT]` [OF-G16] | Paired with CarePlan projection (§16.2) |
+| Communication | clinically relevant monitoring comms (Khuluma) | projection | Target (Volume I TM-G10 seam) | Alert-episode conversation threads that carry clinical content |
+| AuditEvent | audit chain (TSHEPO decision ids + service audit) | projection | Target | CLINICAL-depth audit per Volume I §27; FHIR projection optional export |
+
+### 16.6 Logistics stay out of the SHR
+
+**Normative rule.** Logistics telemetry — courier GPS traces, route progress, dispatch assignments, vehicle telemetry — **MUST NOT be written to the SHR**. Only **clinically meaningful** fulfilment facts project: that a medication was dispensed (MedicationDispense), that a supply was handed over (SupplyDelivery clinical view), that a cold-chain excursion compromised a clinical product (flag on the affected dispense/delivery projection, plus alert path §22). The courier never appears in the clinical record as an actor with clinical meaning; proof-of-handover grades (§12) are custody facts owned by Nhume, referenced — not embodied — by the SHR projection.
+
+**Identifier rule (restated, Volume I contract wins).** Every SHR projection references the subject by **CPID only** — no PII crosses the fhir-gateway (`PiiPreventionInterceptor` enforced `[LIVE]`, Volume I R25). All internal SoR identifiers (§5 registry) appear in FHIR projections as `identifier` values under their governed systems; no bare "OrderId" and no cross-namespace reuse (order ULIDs ≠ delivery UUIDs, verified [matrix §4.1]).
+
+### 16.7 Element ownership (rule per element)
+
+Volume I §12.2 applies verbatim to every entity in §16.1: each data element declares its **owner** (registry SoR) · **single source of truth** · **authoritative identifier** (§5) · **create/update rights** (TSHEPO-gated role) · **versioning** (immutable audit history — mandatory for prescription versions, offers, custody events, alert episodes) · **provenance** (author + origin class + freshness) · **retention** (clinical artefacts follow national record retention; marketplace commercial records follow commercial policy; logistics telemetry is short-retention operational data) · **sensitivity tier** · **offline behaviour class**. Three domain-specific sharpenings:
+
+1. **Projection tables never gain writers.** `mf_reservations` (projection of DURA reservations) and any read-model a BFF composes over MUST be rebuildable from their sovereign source + event stream. A migration that adds business columns to a projection table is an ownership violation.
+2. **Immutable-by-construction sets.** Prescription versions, signed offers, custody events, proofs (pickup + delivery), controlled-register entries and alert-episode transitions are append-only. Corrections are new records that reference what they correct.
+3. **Financial figures have exactly one calculator.** COSTA prices, Ruvimbo decides liability, MusheX moves money (established boundary [R58–R64]). No surface may re-derive an amount client-side; every displayed figure carries the id of the server calculation that produced it.
+
+---
 
 ## 17. API Catalogue
 
-`[AUTHORING — Wave 2]` Per-service API surface for the pipeline (existing endpoints evidence-tagged; net-new endpoints normative): OROS orders/prescriptions/tokens · msika-flow RFO · Ruvimbo eligibility/auth/liability · COSTA estimates · MusheX intents · pharmacy dispense · Nhume deliveries · telemonitoring plans/alerts · iot-ingestion telemetry/devices · BFF composition routes.
+**Doctrine.** Existing endpoints are evidence-tagged; net-new endpoints are normative targets and follow each service's existing path conventions — no parallel path families. **Every POST/PUT mutation carries `Idempotency-Key`** (companion filter pattern, platform-wide `[LIVE]` per Volume I §15) and the v1.1 service-to-service header set where service-originated. All endpoints sit behind Envoy ext_authz → TSHEPO; nothing in this catalogue is reachable without a policy decision.
+
+**Platform requirements (normative, all endpoints — Volume I §15 restated for this domain):**
+
+| Requirement | Rule | Status |
+|---|---|---|
+| Idempotency | `Idempotency-Key` on every mutation; replays return the original result, never a duplicate side-effect (critical at token claim §17.1 and offer selection §17.3) | `[LIVE]` pattern |
+| Concurrency | Optimistic locking on mutable aggregates (orders pre-signing, offers pre-selection, plans); version conflict → 409 with reconciliation guidance | `[PARTIAL]` |
+| Outbox | Every emitting service publishes via its transactional `event_outbox`; direct produce from request threads is prohibited | `[LIVE]` pattern |
+| Correlation | `X-Correlation-ID` propagated end-to-end; causation ids on event chains (order→request→offer→payment→dispense→delivery) | `[LIVE]` / causation `[PARTIAL]` |
+| Pagination | All list endpoints paginate + filter; worklists sort by SLA urgency by default | `[LIVE]` pattern |
+| Errors | Structured codes, no stack traces, no PHI in error bodies; domain codes normative: `PRESCRIPTION_NOT_SIGNED`, `TOKEN_ALREADY_CLAIMED`, `OFFER_NO_LONGER_VALID`, `RESERVATION_UNAVAILABLE`, `SHORTFALL_UNPAID`, `CUSTODY_CHAIN_BROKEN`, `DEVICE_NOT_ASSIGNED`, `PLAN_NOT_ACTIVE` | pattern `[LIVE]`; domain codes land with their endpoints |
+| Authz | Server-side always; the 10-dimension PDP evaluates purpose-of-use per call — a dispenser reads a prescription under `DISPENSING`, never under a general clinical purpose | `[LIVE]` plane |
+
+### 17.1 OROS — order spine + prescription aggregate
+
+| Endpoint | Method | Purpose | Status |
+|---|---|---|---|
+| `/v1/orders` | POST | Create clinical order (lines, provenance, priority) | `[BUILT]` [R41] |
+| `/v1/orders/{id}` | GET | Read order + lifecycle | `[BUILT]` |
+| `/v1/orders` (worklist filters) | GET | Order worklists (by status/facility/target) | `[BUILT]` |
+| `/v1/orders/{id}/route` · status/workflow endpoints | POST | Route + guarded status transitions (13-status machine) | `[BUILT]` [R41] |
+| `/v1/orders/{id}/cancel` | POST | Cancel with reason | `[BUILT]` |
+| `/v1/orders/{id}/results…` | GET/POST | Result availability/release (incl. critical path) | `[BUILT]` |
+| `/v1/orders/{id}/amend` | POST | Amendment as **new immutable version** | `[ABSENT]` [OF-G2] |
+| `/v1/orders/{id}/sign` | POST | Detached JWS signing via tshepo-keys | `[ABSENT]` [OF-G1] |
+| `/v1/prescriptions` | POST | Create prescription aggregate (items, repeats ceiling, validity, controlled flag, indication) | `[ABSENT]` [OF-G3] |
+| `/v1/prescriptions/{id}` | GET | Read prescription + versions | `[ABSENT]` [OF-G3] |
+| `/v1/prescriptions/{id}/sign` | POST | Sign active version (JWS; emits `oros.prescription.signed.v1`) | `[ABSENT]` [OF-G1] |
+| `/v1/prescriptions/{id}/amend` | POST | New version; prior versions immutable | `[ABSENT]` [OF-G2/G3] |
+| `/v1/prescriptions/{id}/cancel` | POST | Cancel with reason; revokes active tokens | `[ABSENT]` |
+| `/v1/prescriptions/{id}/token` | POST | Issue opaque signed-reference token (no clinical payload; server retrieval) | `[ABSENT]` [OF-G6] |
+| `/v1/prescriptions/tokens/{token}/verify` | POST | Server-side verification (dispenser-facing) | `[ABSENT]` [OF-G6] |
+| `/v1/prescriptions/tokens/{token}/claim` | POST | **Atomic single-active claim**; decrements repeats server-side; emits `oros.prescription.claimed.v1` | `[ABSENT]` [OF-G4/G6] |
+
+### 17.2 pharmacy-service — dispensing
+
+| Endpoint | Method | Purpose | Status |
+|---|---|---|---|
+| `/v1/dispense-orders` | GET/POST | Dispense worklist + create dispense episode (Kafka-driven from OROS PHARMACY orders) | `[BUILT]` [R46] |
+| `/v1/dispense-orders/{id}` | GET | Episode detail (batch/expiry, FEFO, items) | `[BUILT]` |
+| `/v1/dispense-orders/{id}/…` (accept/prepare/substitute/partial-fill/complete) | POST | Workflow transitions incl. substitution-rule application and partial fill | `[BUILT]` [R46] |
+| `/v1/dispense-orders/{id}/pickup-proof` | POST | Pickup proof capture (`rx_pickup_proofs`) | `[BUILT]` |
+| `/v1/prescriptions` (legacy) | POST/GET | Legacy flat single-med prescription record | `[PARTIAL/INCONSISTENT]` — **DEPRECATED PATH** [OF-G3] |
+
+> **Deprecation note (normative).** The legacy `POST /v1/prescriptions` on pharmacy-service and its `rx_prescriptions` silo are **frozen**: no new writers, no new fields. The OROS prescription aggregate (§17.1) is the sole target; migration cutover is OD-13. Until cutover, the legacy API remains readable for continuity but MUST NOT be presented on any new surface.
+
+### 17.3 msika-flow — marketplace transaction plane + RFO
+
+| Endpoint | Method | Purpose | Status |
+|---|---|---|---|
+| Catalogue/listing/storefront APIs (msika core) | GET | Regulated catalogue, listings, storefronts, offerings | `[LIVE]` [R50] |
+| Cart + checkout APIs | POST/GET | Cart lifecycle; server-resolved prices | `[LIVE]` [R50] |
+| Market order APIs | POST/GET | Order placement, payment linkage (MusheX), delivery plan (Nhume seam) | `[LIVE]` [R50] |
+| `/v1/marketplace-requests` | POST | Create RFO from an OROS order reference (read-only reference; PII-minimised shape §11) | `[ABSENT]` [OF-G8] |
+| `/v1/marketplace-requests/{id}/invitations` | POST/GET | Invitation issue/list (targeted or governed broadcast — mode per OD-12) | `[ABSENT]` [OF-G8] |
+| `/v1/marketplace-requests/{id}/offers` | POST/GET | Offer submission (provider-side) + listing (patient-side, ranked with reasons) | `[ABSENT]` [OF-G9] |
+| `/v1/offers/{id}/select` | POST | Selection with **revalidation-at-acceptance** (eligibility + stock + price) and race handling | `[ABSENT]` [OF-G9/G11] |
+| `/v1/offers/{id}/withdraw` | POST | Provider withdrawal with reason | `[ABSENT]` |
+
+### 17.4 inventory-service (DURA) — reservation seam
+
+| Endpoint | Method | Purpose | Status |
+|---|---|---|---|
+| Reservation seam (`inv_stock_reservations`) | POST/DELETE | Create/release reservation against the sovereign ledger; TTL = offer TTL | `[BUILT]` at DURA, **unwired from marketplace** — `mf_reservations` is a local placeholder and `InventoryEventConsumer` is a no-op [OF-G12] |
+| Availability query (on-hand − reserved) | GET | Availability truth for offer stock grading | `[PARTIAL]` [R57] |
+| Controlled register (V013) | POST | Controlled-medicine movement audit spine | `[PARTIAL]` — table BUILT, no workflow consumes it [OF-G7] |
+
+### 17.5 coverage (Ruvimbo)
+
+| Endpoint | Method | Purpose | Status |
+|---|---|---|---|
+| Eligibility v2 APIs | POST/GET | Eligibility, benefits, limits, accumulators | `[BUILT]` [R58] |
+| Authorisation APIs | POST/GET | Prior-auth lifecycle (14-status), line-level, appeals | `[BUILT]` [R59] |
+| Liability API | POST | Per-offer shortfall calculation (`cv_liability_estimates`) | `[BUILT]` engine — **not wired into any offer/checkout flow** [OF-G13] |
+| Claims APIs | POST/GET | Claims, line adjudication, COB, remittance | `[BUILT]` [R61] |
+
+### 17.6 COSTA · MusheX · Nhume · iot-ingestion
+
+| Service | Endpoint | Method | Purpose | Status |
+|---|---|---|---|---|
+| COSTA | estimate APIs | POST | Charge/tariff estimate per offer line | `[BUILT]` [R60] |
+| MusheX | intent APIs | POST/GET | Payment intents (intent→PAID, **no two-phase capture** — settled), refunds | `[LIVE]` [R63] |
+| MusheX | reconciliation/settlement | GET | Settlement + reconciliation state | `[LIVE]` [R63] |
+| mushe-wallet | escrow seam | POST | Hold-until-handover escrow (release on Nhume PoD) | `[PARTIAL]` — machinery BUILT for campaigns, not wired to fulfilment PoD [OF-G13/R64] |
+| Nhume | `/internal/v1/nhume/deliveries` | POST/GET | Delivery creation, 24-status tracking, custody events, proofs | `[BUILT]` [R65] |
+| Nhume | fulfilment write-back callback | POST | Status write-back to msika-flow (`mf_delivery_plans`) | `[PARTIAL]` — best-effort, failures swallowed to warnings [OF-G15] |
+| iot-ingestion | `/internal/v1/telemetry/*` | POST | Validated telemetry ingest (schema-validate + DLQ) | `[BUILT]` [R69] |
+| iot-ingestion | device registry APIs | POST/GET | Device digital identity, lifecycle states | `[BUILT]` [R69] |
+
+### 17.7 telemonitoring-service (new — all target)
+
+| Endpoint | Method | Purpose | Status |
+|---|---|---|---|
+| `/v1/monitoring-plans` | POST/GET | Clinician-approved plan creation + worklists | `[ABSENT]` [OF-G16] |
+| `/v1/monitoring-plans/{id}` (activate/update/complete) | POST | Plan lifecycle (emits `telemonitoring.plan.*.v1`) | `[ABSENT]` [OF-G16] |
+| `/v1/monitoring-plans/{id}/assignments` | POST | Device assignment (patient↔device↔plan; calibration-gated) | `[ABSENT]` [OF-G18] |
+| `/v1/threshold-profiles` | POST/GET | Personalised threshold bands + alert rules | `[ABSENT]` [OF-G16] |
+| `/v1/alerts` | GET | Alert-episode worklists (level, dedup state, ownership) | `[ABSENT]` [OF-G16] |
+| `/v1/alerts/{id}/acknowledge` · `/escalate` · `/resolve` | POST | **Accountable closure** — every resolution names actor + action | `[ABSENT]` [OF-G16] |
+
+### 17.8 experience-bff — composition routes (target)
+
+| Route | Purpose | Status |
+|---|---|---|
+| Offer comparison composition | Compose offers + per-offer liability (Ruvimbo) + estimates (COSTA) + stock grades (DURA) into the patient comparison surface | `[ABSENT]` [OF-G10/G13] |
+| Order tracking composition | Compose OROS status + dispense state + Nhume tracking into one patient-visible pipeline view | `[ABSENT]` (per-domain views exist) |
+| Monitoring desks composition | Compose plans, latest readings, alert episodes for clinician/CHW/patient desks | `[ABSENT]` [OF-G16] |
+
+> **BFF doctrine (normative, restated).** The experience-bff **composes, never owns truth** — it has no datasource and must acquire none; every fact on a composition route is fetched from its sovereign service at request time or via its event-fed read models in sovereign services. Any state a composition route appears to "hold" is a bug.
+
+---
 
 ## 18. Event Catalogue
 
-`[AUTHORING — Wave 2]` The ~150 logical events of instruction §14 as a registry table `LogicalName → wire topic`: existing topics grandfathered (oros.order.*, pharmacy.dispense.*, mushex.payment.status.changed, msika.flow.*, nhume legacy set, impilo.iot.*.v1); net-new families `oros.prescription.*.v1` · `msika.flow.request.*.v1` · `inventory.reservation.*.v1` · `telemonitoring.plan.*.v1` · `telemonitoring.alert.*.v1`; naming rule `<domain>.<aggregate>.<action>.v1` for all new topics.
+### 18.1 Naming rule and registry doctrine
+
+1. **Wire rule (all NEW topics):** `<domain>.<aggregate>.<action>.v1`. No exceptions for net-new streams.
+2. **Grandfathering:** existing topics keep their wire names (`oros.order.placed`, `pharmacy.dispense.*`, `mushex.payment.status.changed`, `msika.flow.order.paid`, Nhume's legacy unprefixed set, `impilo.iot.telemetry.reading.ingested.v1`). Renaming a live topic is a migration project (§18.9), never a drive-by.
+3. **Logical vs wire names:** the commissioning instruction's PascalCase event names are **LOGICAL names**. The schema registry carries one row per logical event: `LogicalName → wire topic (+ status-discriminator where carried-as-status)`. Consumers subscribe to wire topics; documentation, analytics definitions (§21) and acceptance criteria (§24) cite logical names.
+4. **Status-carrying streams:** some estates streams carry many logical events as status transitions on one topic (e.g. `mushex.payment.status.changed`). These are legitimate; the registry row records the discriminator value. New designs SHOULD prefer explicit-action topics, but MUST NOT fork an existing status-carrying stream just to satisfy naming aesthetics.
+5. **Envelope:** cross-domain transactional milestones additionally publish to `core.transaction.events` (existing envelope), unchanged.
+6. **Net-new families locked by this volume:** `oros.prescription.{created|signed|amended|cancelled|claimed}.v1` · `msika.flow.request.{published|invited|offered|selected|expired}.v1` · `inventory.reservation.{created|released|consumed|expired}.v1` · `telemonitoring.plan.{activated|updated|completed}.v1` · `telemonitoring.alert.{opened|acknowledged|escalated|resolved}.v1` · `telemonitoring.observation.recorded.v1`.
+
+**Registry row format (normative).** Each schema-registry entry carries:
+
+```
+LogicalName: PrescriptionClaimed
+WireTopic:   oros.prescription.claimed.v1
+Carriage:    explicit | status-carried (discriminator: <field>=<value>)
+Emitter:     oros (outbox)
+Key:         PrescriptionId (partition affinity per aggregate)
+Payload:     versioned schema ref; subject CPID-only; no PII fields permitted
+Envelope:    core.transaction.events milestone? yes|no
+Since:       spec §, backlog epic, first-emitting version
+```
+
+Payload schemas are PII-free by construction (subject as CPID, actors as governed ids); a schema submitted with name/phone/address fields is rejected at registry review — the event plane inherits the SHR's PII discipline.
+
+### 18.2 Band 1 — Clinical orders and prescriptions
+
+| Logical event | Wire topic | Emitter | Status |
+|---|---|---|---|
+| ClinicalOrderCreated (OrderCreated) | `oros.order.placed` (existing, grandfathered) | oros | `[BUILT]` [R41] |
+| OrderValidated | status-carried on `oros.order.status_changed` | oros | `[BUILT]` |
+| OrderActivated | status-carried on `oros.order.status_changed` | oros | `[BUILT]` |
+| OrderRouted | `oros.order.routed` (existing) | oros | `[BUILT]` |
+| OrderCancelled | `oros.order.cancelled` (existing) | oros | `[BUILT]` |
+| OrderExpired | status-carried on `oros.order.status_changed` | oros | `[BUILT]` (expiry sweep per §9.1) |
+| OrderReplaced | status-carried on `oros.order.status_changed` (REPLACED terminal per §9.1 target) | oros | `[ABSENT]` [OF-G2] |
+| OrderAmended | `oros.order.amended.v1` (net-new — existing `oros.order.amended` is **results-only** and keeps its meaning) | oros | `[ABSENT]` [OF-G2] |
+| OrderSigned | rides `oros.prescription.signed.v1` for prescriptions; non-medication signing scope per OD-11 | oros | `[ABSENT]` [OF-G1] |
+| OrderSlaBreached | `oros.sla.breached` (existing) | oros | `[BUILT]` |
+| PrescriptionCreated | `oros.prescription.created.v1` | oros | `[ABSENT]` [OF-G3] |
+| PrescriptionSigned | `oros.prescription.signed.v1` | oros | `[ABSENT]` [OF-G1] |
+| PrescriptionAmended | `oros.prescription.amended.v1` | oros | `[ABSENT]` [OF-G2] |
+| PrescriptionCancelled | `oros.prescription.cancelled.v1` | oros | `[ABSENT]` |
+| PrescriptionExpired | status-carried on `oros.prescription.amended.v1` stream (terminal status; no separate topic — family locked §18.1.6) | oros | `[ABSENT]` |
+| PrescriptionClaimed | `oros.prescription.claimed.v1` | oros | `[ABSENT]` [OF-G4/G6] |
+| PrescriptionTokenIssued / TokenRevoked | status-carried on `oros.prescription.claimed.v1` stream (token lifecycle discriminator) | oros | `[ABSENT]` [OF-G6] |
+| MedicationSafetyWarningRaised | **no topic** — synchronous validation seam outcome, audit-recorded (warnings are decisions-in-flight, not domain facts) | clinical-knowledge/bff | `[PARTIAL]` [OF-G5] |
+| ResultAvailable | `oros.result.available` (existing) + canonical `clinical.oros.result.available` | oros | `[BUILT]` [R41] |
+| ResultReleased | `oros.result.released` (existing) | oros | `[BUILT]` |
+| CriticalResultFlagged | `oros.result.critical` (existing) | oros | `[BUILT]` |
+
+### 18.3 Band 2 — Marketplace
+
+| Logical event | Wire topic | Emitter | Status |
+|---|---|---|---|
+| MarketplaceRequestPublished | `msika.flow.request.published.v1` | msika-flow | `[ABSENT]` [OF-G8] |
+| ProviderInvited | `msika.flow.request.invited.v1` | msika-flow | `[ABSENT]` [OF-G8] |
+| ProviderMatched | status-carried on `msika.flow.request.published.v1` (matching outcome list) | msika-flow | `[ABSENT]` [OF-G8] |
+| FulfilmentOfferSubmitted | `msika.flow.request.offered.v1` | msika-flow | `[ABSENT]` [OF-G9] |
+| FulfilmentOfferUpdated / OfferWithdrawn | status-carried on `msika.flow.request.offered.v1` (offer-state discriminator) | msika-flow | `[ABSENT]` |
+| OfferExpired | status-carried on `msika.flow.request.offered.v1` | msika-flow | `[ABSENT]` [OF-G9] |
+| OfferSelectionFailedRevalidation (OfferRevalidated) | status-carried on `msika.flow.request.selected.v1` (revalidation outcome precedes commitment) | msika-flow | `[ABSENT]` [OF-G9/G11] |
+| OfferSelected | `msika.flow.request.selected.v1` | msika-flow | `[ABSENT]` [OF-G9] |
+| SelectionCommitted | status-carried on `msika.flow.request.selected.v1` (COMMITTED after revalidation + reservation) | msika-flow | `[ABSENT]` |
+| MarketplaceRequestExpired / MarketplaceRequestClosedWithoutOffer | `msika.flow.request.expired.v1` (also carries NO_OFFERS terminal — §22.2) | msika-flow | `[ABSENT]` [OF-G8] |
+| MarketOrderPlaced | existing `msika.flow.order.*` family (grandfathered) | msika-flow | `[LIVE]` [R50] |
+| MarketOrderPaid | `msika.flow.order.paid` (existing) | msika-flow | `[LIVE]` |
+| MarketOrderCancelled | existing `msika.flow.order.*` family | msika-flow | `[BUILT]` |
+| VendorEligibilityRevalidated | no topic — synchronous VARAPI/TUSO check at offer + commit, audit-recorded | msika-flow | `[ABSENT]` [OF-G11] |
+
+### 18.4 Band 3 — Coverage and payment
+
+| Logical event | Wire topic | Emitter | Status |
+|---|---|---|---|
+| EligibilityRequested / EligibilityResolved | no topic — synchronous eligibility v2 API, audit-recorded | coverage | `[BUILT]` [R58] |
+| CoverageResolved / BenefitApplied | existing coverage event set (grandfathered) | coverage | `[BUILT]` |
+| PriorAuthorisationRequested | `coverage.authorisation.status_changed.v1` (net-new status-carrying stream over the 14-status machine) | coverage | `[ABSENT]` (machine BUILT [R59]; stream new) |
+| PriorAuthorisationApproved / PriorAuthorisationPartiallyApproved / PriorAuthorisationRejected / PriorAuthorisationExpired | status-carried on `coverage.authorisation.status_changed.v1` | coverage | `[ABSENT]` |
+| PriorAuthorisationAppealed / AppealResolved | status-carried on `coverage.authorisation.status_changed.v1` (appeal states) | coverage | `[ABSENT]` [R59] |
+| PatientLiabilityCalculated (ShortfallDetermined) | no topic — synchronous liability API per offer (§17.5); result embedded in offer comparison | coverage + costa | `[PARTIAL]` [OF-G13] |
+| PaymentIntentCreated | status-carried on `mushex.payment.status.changed` (existing single status-carrying topic — canonical example of §18.1.4) | mushex | `[LIVE]` [R63] |
+| PaymentAuthorised | status-carried on `mushex.payment.status.changed` (AUTHORIZED — reserved value, no state-machine path targets it today, §10) | mushex | `[PARTIAL]` [R63] |
+| PaymentCaptured (PAID terminal — two-phase capture not built, §10) | status-carried on `mushex.payment.status.changed` | mushex | `[LIVE]` |
+| PaymentFailed | status-carried on `mushex.payment.status.changed` | mushex | `[LIVE]` |
+| PaymentRefunded (RefundInitiated / RefundCompleted) | status-carried on `mushex.payment.status.changed` | mushex | `[LIVE]` |
+| EscrowHeld / EscrowReleased | `mushex.escrow.status_changed.v1` (net-new; wallet escrow → fulfilment PoD wiring) | mushe-wallet | `[PARTIAL]` machinery / `[ABSENT]` stream [OF-G13/R64] |
+| ClaimSubmitted / ClaimAdjudicated / RemittanceReceived | `coverage.claim.status_changed.v1` (net-new status-carrying stream over the 21-status machine) | coverage | `[ABSENT]` (machine BUILT [R61]; stream new) |
+| PaymentReconciled | MusheX settlement path (existing) | mushex | `[LIVE]` [R63] |
+
+### 18.5 Band 4 — Fulfilment (dispense and service delivery)
+
+| Logical event | Wire topic | Emitter | Status |
+|---|---|---|---|
+| FulfilmentAccepted | `pharmacy.dispense.accepted` (existing) | pharmacy | `[BUILT]` [R46] |
+| ClarificationRequested | status-carried on `pharmacy.dispense.*` + prescriber-clarification seam (§22.4) | pharmacy | `[PARTIAL]` |
+| PreparationStarted / OrderReadyForPickup / OrderReadyForDispatch | status-carried on the existing `pharmacy.dispense.*` family | pharmacy | `[BUILT]` |
+| SubstitutionProposed / SubstitutionApproved / SubstitutionRejected | status-carried on `pharmacy.dispense.*` (substitution-rule outcome; prescriber-clarification seam §22.4) | pharmacy | `[BUILT]` rules / `[PARTIAL]` clarification loop |
+| PartialFillRecorded | status-carried on `pharmacy.dispense.*` | pharmacy | `[BUILT]` |
+| MedicationDispensed (DispenseCompleted) | `pharmacy.dispense.*` terminal (existing) | pharmacy | `[BUILT]` |
+| DispenseRejected / DispenseReturnedToQueue | status-carried on `pharmacy.dispense.*` | pharmacy | `[BUILT]` |
+| StockMovementRecorded | `pharmacy.stock.movement.*` (existing) | pharmacy | `[BUILT]` [R46] |
+| OrderPartiallyFulfilled / OrderFullyFulfilled / FulfilmentFailed | status-carried on `oros.order.status_changed` (fulfilment rollup; PARTIALLY/FULLY_FULFILLED are §9.1 target states) | oros | `[PARTIAL]` [OF-G2] |
+| PickupProofCaptured | status-carried on `pharmacy.dispense.*` (`rx_pickup_proofs` write) | pharmacy | `[BUILT]` |
+| StockReserved (ReservationCreated) | `inventory.reservation.created.v1` | inventory (DURA) | `[ABSENT]` wiring [OF-G12] |
+| ReservationReleased | `inventory.reservation.released.v1` | inventory | `[ABSENT]` [OF-G12] |
+| ReservationConsumed | `inventory.reservation.consumed.v1` (at dispense/handover) | inventory | `[ABSENT]` [OF-G12] |
+| ReservationExpired | `inventory.reservation.expired.v1` (TTL = offer TTL) | inventory | `[ABSENT]` [OF-G12] |
+| ControlledRegisterEntryRecorded | net-new controlled-register stream (name fixed at OF-B29 design; rides §18.1 rule) | inventory | `[PARTIAL]` table / `[ABSENT]` stream [OF-G7] |
+| ServicePerformed / ProcedurePerformed | OROS workflow status → `oros.order.status_changed` + Procedure projection (§16.3) | oros + performing service | `[PARTIAL]` |
+| SpecimenCollected | status-carried on OROS diagnostics workflow | oros | `[BUILT]` (diagnostics spine) |
+| DispenseProjectedToShr | fhir-gateway forward of MedicationDispense | pharmacy → fhir-gateway | `[ABSENT]` [OF-G19/R73] |
+
+### 18.6 Band 5 — Delivery and logistics
+
+| Logical event | Wire topic | Emitter | Status |
+|---|---|---|---|
+| DeliveryRequested | API-driven creation today (`/internal/v1/nhume/deliveries`); event target `nhume.delivery.requested.v1` | nhume | `[PARTIAL]` |
+| DeliveryAssigned | `delivery.assigned` — **legacy UNPREFIXED** (grandfathered; see §18.9 flag) | nhume | `[BUILT]` [R65] |
+| CustodyRecorded | `delivery.custody.recorded` — **legacy UNPREFIXED** | nhume | `[BUILT]` [R65] |
+| PackageCollected (CourierPickupCompleted) | custody event (carried on `delivery.custody.recorded`) | nhume | `[BUILT]` |
+| ShipmentInTransit / DeliveryDelayed / DeliveryAttempted (DeliveryStatusChanged) | status-carried across the Nhume 24-status machine's existing event set | nhume | `[BUILT]` |
+| TemperatureExceptionDetected (ColdChainExcursionDetected) | temperature custody event (Nhume custody chain) + IoT seam (§15) | nhume + iot-ingestion | `[PARTIAL]` [OF-B19] |
+| PackageDelivered / ProofOfDeliveryCaptured | custody terminal event + `nhume_delivery_proofs` write | nhume | `[BUILT]` [R65] |
+| DeliveryFailed / DeliveryRescheduled | status-carried (failed-attempt states in the 24-status machine) | nhume | `[BUILT]` |
+| PackageReturned (DeliveryReturned) | status-carried (return leg) | nhume | `[BUILT]` |
+| FulfilmentWriteBackConfirmed | internal callback → `mf_delivery_plans`; **failure path must stop being best-effort** | nhume → msika-flow | `[PARTIAL]` [OF-G15] |
+| DroneMissionStateChanged | `nhume_autonomous_missions` — **no operational stream may be claimed** | nhume | `[CONFIG-ONLY]` [OF-G21] |
+
+### 18.7 Band 6 — Monitoring and IoT
+
+| Logical event | Wire topic | Emitter | Status |
+|---|---|---|---|
+| MonitoringPlanActivated | `telemonitoring.plan.activated.v1` | telemonitoring | `[ABSENT]` [OF-G16] |
+| MonitoringEpisodeEnrolled | status-carried on `telemonitoring.plan.activated.v1` (enrolment accepted → plan activation) | telemonitoring | `[ABSENT]` [OF-G16] |
+| MonitoringPlanUpdated | `telemonitoring.plan.updated.v1` | telemonitoring | `[ABSENT]` |
+| MonitoringEpisodeClosed / MonitoringPlanCompleted | `telemonitoring.plan.completed.v1` | telemonitoring | `[ABSENT]` |
+| MonitoringAlertRaised (AlertOpened) | `telemonitoring.alert.opened.v1` | telemonitoring | `[ABSENT]` [OF-G16] |
+| AlertAcknowledged | `telemonitoring.alert.acknowledged.v1` | telemonitoring | `[ABSENT]` |
+| AlertEscalated | `telemonitoring.alert.escalated.v1` (ladder step in payload — §14 escalation ladder) | telemonitoring | `[ABSENT]` |
+| PatientContactAttempted | status-carried on `telemonitoring.alert.escalated.v1` (ladder rung outcome) | telemonitoring | `[ABSENT]` [OF-G16] |
+| AlertResolved | `telemonitoring.alert.resolved.v1` (**accountable closure**: actor + action mandatory) | telemonitoring | `[ABSENT]` |
+| TeleconsultationInitiatedFromAlert | rides Volume I `telemedicine.session.referral_created.v1` with origin=MONITORING_ALERT (cross-volume seam, §14.7 rung 7) | pct | `[ABSENT]` [OF-G16] |
+| ReadingReceived (TelemetryReadingIngested) | `impilo.iot.telemetry.reading.ingested.v1` (existing, grandfathered) | iot-ingestion | `[BUILT]` [R69] |
+| ObservationRecorded | `telemonitoring.observation.recorded.v1` (single designated SHR writer, §14/§16) | telemonitoring | `[ABSENT]` [OF-G16/R72] |
+| ReadingRejected / ReadingQuarantined / DataQualityStamped | DLQ + quality-stamp on the ingest stream (stamp, never silently drop — §15) | iot-ingestion | `[PARTIAL]` [OF-G17/G18] |
+| DeviceProvisioned / DeviceConnected / DeviceDisconnected (DeviceLifecycleChanged) | device-registry state; event target under §18.1 rule | iot-ingestion | `[PARTIAL]` |
+| DeviceAssigned / DeviceUnassigned | telemonitoring assignment stream (name fixed at OF-B24 design) | telemonitoring | `[ABSENT]` [OF-G18] |
+| DeviceCalibrationExpired / DeviceCompromised / DeviceQuarantined | asset-registry calibration projection → assignment gate | asset-registry + telemonitoring | `[ABSENT]` [OF-G18] |
+| TeleconsultOriginatedOrder (cross-volume seam) | Volume I `telemedicine.session.*` lifecycle + OROS TELECONSULT source | pct + oros | `[BUILT]` (source + duplicate guard [R41]) |
+
+### 18.8 Envelope
+
+Cross-domain transactional milestones (order activated, payment PAID, dispense completed, delivery proven, loop closed) additionally publish to **`core.transaction.events`** (existing envelope) for the national analytics plane — §21 derives from events only.
+
+### 18.9 Migration rule and the Nhume legacy flag
+
+**Dual-emit migration window (normative).** When an existing topic is superseded by a `.v1` name, the emitter MUST dual-emit (old + new) for a bounded, announced window; consumers migrate during the window; the old topic is retired only after consumer-lag evidence shows zero readers. No topic is ever renamed in place.
+
+**Nhume unprefixed-legacy flag.** `delivery.assigned` and `delivery.custody.recorded` violate the `<domain>.` prefix rule. They are **grandfathered** — but any new Nhume stream MUST use `nhume.<aggregate>.<action>.v1`, and the Nhume family is the first candidate for the dual-emit migration when a breaking payload change is next required. Until then, consumers MUST treat the unprefixed names as reserved by Nhume; no other service may emit into unprefixed `delivery.*` names.
+
+---
 
 ## 19. Notification Model and Nompilo Guidance
 
-`[AUTHORING — Wave 2]` Instruction §12: the notification catalogue across the pipeline (Khuluma/notification-service, PHI-minimised) and Nompilo's guidance duties (explain, compare, never commercially biased, never diagnose) — extending the Volume-I-proven guidance-registry pattern.
+### 19.1 Notification catalogue
+
+Delivery split is unchanged from Volume I §16.2 (normative): **Khuluma** owns in-platform conversations/realtime and SHOULD orchestrate journey messaging; **notification-service** executes external channels (SMS/EMAIL/WhatsApp/USSD). **External messages are PHI-minimised**: time, place, action, deep link — never diagnosis, medication names, or sensitive clinical content. A prescription-ready SMS says "your order is ready for collection at [facility]", never what is in it. Every notification defines trigger, recipient, permitted channels, urgency, retry, fallback, acknowledgement requirement, expiry, deep link and audit (Volume I contract applies verbatim). The Volume I OD-3 drift (BFF→notification-service direct vs Khuluma orchestration) applies here unchanged: this catalogue is written against the target orchestration and does not pre-empt OD-3.
+
+Channel-policy legend for the table: **In-app** = Khuluma surface + push; **SMS** = notification-service external channel, PHI-minimised wording mandatory; **ack-required** = unacknowledged notifications escalate per their ladder; safety-critical rows (N25, N27, N30) always define a fallback channel.
+
+| # | Notification | Trigger event (§18) | Audience | Channel policy | Status |
+|---|---|---|---|---|---|
+| N1 | Prescription created/ready | PrescriptionSigned | Patient/caregiver | In-app + SMS (PHI-min) | `[ABSENT]` [OF-G3] |
+| N2 | Pickup token issued | PrescriptionTokenIssued | Patient/caregiver | In-app (token retrieval in-app only; SMS carries deep link, never the token) | `[ABSENT]` [OF-G6] |
+| N3 | Order submitted confirmation | OrderCreated | Patient + prescriber | In-app | `[PARTIAL]` (per-domain confirms exist) |
+| N4 | Offers received / ready to compare | OfferSubmitted (first) + request quorum | Patient/caregiver | In-app + SMS deep link | `[ABSENT]` [OF-G10] |
+| N5 | No offers received | MarketplaceRequestExpired (NO_OFFERS) | Patient + ops | In-app + SMS; ops worklist | `[ABSENT]` [OF-G8] |
+| N6 | Invitation to offer | ProviderInvited | Provider/vendor | In-app + configured channel | `[ABSENT]` [OF-G8] |
+| N7 | Offer selected (win/lose) | OfferSelected | Winning + losing vendors | In-app (losing vendors: minimal, no patient data) | `[ABSENT]` |
+| N8 | Selection confirmed | SelectionCommitted | Patient | In-app | `[ABSENT]` |
+| N9 | Coverage decision available | CoverageResolved | Patient | In-app | `[PARTIAL]` |
+| N10 | Prior-auth approved | PriorAuthApproved | Patient + provider | In-app + SMS | `[ABSENT]` (stream new) |
+| N11 | Prior-auth denied + appeal path | PriorAuthDenied | Patient + provider | In-app (appeal deep link mandatory) | `[ABSENT]` |
+| N12 | Shortfall due / payment requested | LiabilityCalculated → intent created | Patient/payer-of-record | In-app + SMS deep link | `[PARTIAL]` [OF-G13] |
+| N13 | Payment received | PaymentSucceeded | Patient + fulfiller | In-app | `[LIVE]` (msika/mushex path) |
+| N14 | Payment failed + retry path | PaymentFailed | Patient | In-app + SMS | `[LIVE]` |
+| N15 | Refund issued | RefundCompleted | Patient | In-app + SMS | `[BUILT]` |
+| N16 | Preparation started | PreparationStarted | Patient | In-app | `[PARTIAL]` |
+| N17 | Substitution proposed — consent/decline | SubstitutionProposed | Patient (+ prescriber for clarification) | In-app actionable | `[PARTIAL]` |
+| N18 | Ready for pickup | DispenseCompleted (pickup mode) | Patient/caregiver | In-app + SMS (facility + hours, PHI-min) | `[BUILT]` (pharmacy path) |
+| N19 | Pickup reminder / token expiring | token TTL timer | Patient | SMS reminder | `[ABSENT]` (scheduled-send blocked — Volume I TM-G14) |
+| N20 | Courier assigned | DeliveryAssigned | Patient | In-app | `[BUILT]` |
+| N21 | Out for delivery / arriving | DeliveryStatusChanged | Patient | In-app + SMS | `[BUILT]` |
+| N22 | Recipient-verification prompt | courier handover step | Patient/named recipient | In-app (verification challenge; §12 proof grades) | `[PARTIAL]` |
+| N23 | Delivered — proof captured | ProofOfDeliveryCaptured | Patient + fulfiller + escrow release | In-app | `[BUILT]` [OF-G13 escrow leg absent] |
+| N24 | Delivery failed / rescheduled | DeliveryFailed | Patient + dispatcher | In-app + SMS actionable | `[BUILT]` |
+| N25 | Cold-chain issue — do-not-use + replacement path | ColdChainExcursionDetected | Patient + pharmacist + ops | In-app + SMS (safety-critical wording, plain language) | `[PARTIAL]` |
+| N26 | Results available | ResultReleased | Patient + ordering clinician | In-app (never result content in SMS) | `[BUILT]` |
+| N27 | Critical result — urgent contact | CriticalResultFlagged | Ordering clinician (ack-required, escalating) | In-app + SMS + call-tree escalation | `[BUILT]` clinician leg |
+| N28 | Order cancelled / expired | OrderCancelled / OrderExpired | Patient + fulfiller | In-app | `[BUILT]` |
+| N29 | Monitoring reading missed | plan adherence timer | Patient/caregiver → CHW on repeat | In-app + SMS nudge | `[ABSENT]` [OF-G16] |
+| N30 | Monitoring alert opened | AlertOpened | Assigned clinician/CHW (level-dependent) | In-app ack-required; escalate per ladder | `[ABSENT]` [OF-G16] |
+| N31 | Device offline / battery low | device heartbeat gap | Patient + CHW | In-app + SMS | `[ABSENT]` [OF-G18] |
+| N32 | Calibration due / device quarantined | DeviceCalibrationDue | CHW + device ops | In-app worklist | `[ABSENT]` [OF-G18] |
+| N33 | Follow-up due | plan/loop-closure timer (stage N) | Patient + responsible clinician | In-app + SMS | `[PARTIAL]` (Volume I follow-up seam TM-B7) |
+
+> Scheduled/reminder classes (N19, N29, N33) share Volume I's blocker: `NotifyRequest` has no `scheduledAt` (TM-G14). That fix is a cross-volume prerequisite and is not re-scoped here.
+
+### 19.2 Nompilo guidance duties
+
+Extends the guidance-registry pattern proven in Volume I (route-bound seeded items `[LIVE]`, audited sensitive guidance, `never-overrides-judgement` doctrine). Nompilo **explains and orients; it never diagnoses, never prescribes, never selects a provider for the patient, and carries no hidden commercial influence** — ranking explanations shown by Nompilo are exactly the system's audited ranking reasons (§21 fairness ties).
+
+| # | Guidance duty | Bound surface (stage) | Notes |
+|---|---|---|---|
+| G1 | Explain the prescription in plain language (what, why, how to take) | Patient order view (post-B) | Content from prescription data + ZIBO terms; EN/SN/ND readiness |
+| G2 | Explain what happens next in the pipeline | Order tracking | Stage-aware ("your order is with the pharmacy") |
+| G3 | Explain provider-selection criteria honestly | Offer comparison (F) | Names the ranking dimensions and that ranking is audited; no steering |
+| G4 | Explain price, coverage and shortfall | Offer comparison / payment (G–H) | Distinguishes estimate vs approved amount explicitly |
+| G5 | Explain estimate-vs-approval difference | Coverage panes (G) | "This is an estimate until your medical aid confirms" |
+| G6 | Explain generic substitution rights and choices | Substitution prompt (J) | Neutral: therapeutic equivalence, price effect, right to decline |
+| G7 | Explain pickup-vs-delivery trade-offs | Fulfilment choice (K) | Cost, time, cold-chain considerations |
+| G8 | Preparation guidance (fasting, sample, appointment prep) | Diagnostics/procedure orders | Per order type (§7 catalogue) |
+| G9 | Explain recipient verification at handover | Delivery (L) | Why identity is checked; caregiver-collection rules |
+| G10 | Explain delivery status and delays honestly | Tracking (K–L) | Mirrors real Nhume status; no invented precision |
+| G11 | Device pairing and setup guidance | Monitoring enrolment (§14) | Step-by-step with device-model content |
+| G12 | How to take a measurement correctly | CHW + patient monitoring surfaces | Technique guidance per device category |
+| G13 | Prompt a repeat reading on implausible values | Reading capture | "That looks unusual — please measure again"; never interprets clinically |
+| G14 | Explain an alert **without diagnosing** | Alert views | "Your reading is outside the range your clinician set — they have been notified" |
+| G15 | Emergency guidance and handoff | Any stage | Clear escalation to emergency services (Volume I §23 seam); guidance defers immediately |
+| G16 | How to report a problem (Rito) | All fulfilment surfaces | Feedback/complaint/safety-report paths |
+
+Sensitive-guidance items (G6, G14, G15) are **audited** on delivery (who saw what guidance, when) per the Volume I guidance-registry audit pattern.
+
+---
 
 ## 20. Frontend and Mobile Experience
 
-`[AUTHORING — Wave 2]` Instruction §11: the nine role workspaces (prescriber, patient/caregiver, pharmacy/provider, payer, dispatcher, courier, CHW, remote-monitoring clinician, operations) with One-UI/mobile-parity/offline/accessibility requirements and no-decorative-controls rule.
+Nine role workspaces (instruction §11), all inside the One-UI shell — no fragmented portals. Named routes cite what exists today with evidence tags; unnamed surfaces are normative targets.
+
+### 20.1 Prescriber / ordering clinician
+
+**Purpose:** author, validate, sign and track orders from any encounter context (Volume II §1 scope note — teleconsult is one origin, not the owner).
+**Key surfaces:** order composers (existing OROS composer surfaces `[BUILT]` [R41]); prescribe pane with safety warnings `[PARTIAL]` [OF-G5]; signing step `[ABSENT]` [OF-G1]; amendment/clarification worklist (substitution queries from dispensers) `[ABSENT]` [OF-G2]; my-orders tracking with pipeline stage visibility `[PARTIAL]`; critical-result acknowledgement queue `[BUILT]`.
+
+### 20.2 Patient and caregiver
+
+**Purpose:** see, choose, pay, receive and understand — the patient owns the choices (doctrine §4).
+**Key surfaces:** msika storefront/catalogue routes `[LIVE]` [R50]; cart/checkout `[LIVE]`; **offer comparison with explained ranking `[ABSENT]` [OF-G10]**; coverage/shortfall pane `[PARTIAL]` [OF-G13]; payment panes `[LIVE]` [R63]; order tracking composition `[ABSENT]` (§17.8); pickup token surface `[ABSENT]` [OF-G6]; delivery tracking `[BUILT]`; monitoring home surface (my readings, my plan) `[ABSENT]` [OF-G16]; caregiver delegation views ride the MVUMO relationship model (Volume I R26 `[LIVE]`).
+
+### 20.3 Pharmacy / fulfilment service provider
+
+**Purpose:** receive demand, offer, prepare, dispense, hand over.
+**Key surfaces:** dispense worklists `[BUILT]` [R46]; token verification + claim screen `[ABSENT]` [OF-G6]; RFO invitation inbox + offer composer `[ABSENT]` [OF-G8]; substitution/clarification thread `[PARTIAL]`; stock/batch views (FEFO) `[BUILT]`; vendor storefront management `[LIVE]` [R50]; controlled-medicine second-factor handover flow `[ABSENT]` [OF-G7].
+
+### 20.4 Payer / medical-aid operations
+
+**Purpose:** authorisation worklists, adjudication, appeals.
+**Key surfaces:** prior-auth worklists `[BUILT]` [R59]; claims adjudication views `[BUILT]` [R61]; appeals queue `[BUILT]`; formulary management `[ABSENT]` [OF-G14].
+
+### 20.5 Logistics dispatcher
+
+**Purpose:** plan, assign, monitor deliveries; intervene on failure.
+**Key surfaces:** dispatch/tracking routes `[BUILT]` [R65]; exception queue (failed attempts, custody breaks, cold-chain excursions) `[PARTIAL]`; mode/capability matrix administration (drone enablement is governed config, never a live claim `[CONFIG-ONLY]` [OF-G21]).
+
+### 20.6 Courier
+
+**Purpose:** execute assigned deliveries with **minimum-necessary data** — the courier sees pickup point, drop point, handling class (e.g. cold-chain), recipient-verification requirement; **never clinical content** (§12 doctrine).
+**Key surfaces:** courier task list + custody capture `[BUILT]` (courier surfaces per [R65]); proof-of-handover capture with grade enforcement `[BUILT]`; offline-tolerant custody queue `[PARTIAL]`.
+
+### 20.7 Community health worker (CHW)
+
+**Purpose:** household monitoring rounds, guided measurement, offline-first capture.
+**Key surfaces:** community routes + visit capture with offline idempotency `[BUILT]` [R71]; monitoring task list per assigned households `[ABSENT]` [OF-G16]; device assignment/pairing flow `[ABSENT]` [OF-G18]; guided-measurement flow with Nompilo technique guidance (§19.2 G12) `[ABSENT]`; scope-safe alert view (CHW sees task + escalation path, not diagnosis) `[ABSENT]`.
+
+### 20.8 Remote-monitoring clinician
+
+**Purpose:** command view over monitored panels: plans, trends, alert episodes, accountable closure.
+**Key surfaces:** monitoring desks `[ABSENT]` [OF-G16]; alert-episode worklist with ladder state `[ABSENT]`; plan authoring/threshold personalisation `[ABSENT]`; escalate-to-teleconsult seam (Volume I §Stage handoff) `[BUILT]` on the Volume I side.
+
+### 20.9 Operations and oversight
+
+**Purpose:** pipeline health, marketplace fairness, SLA, fraud signals.
+**Key surfaces:** existing ops surfaces (`/ops/*` family, Volume I §24 `[BUILT]`); order-pipeline funnel dashboard `[ABSENT]` (§21); marketplace fairness/concentration monitor `[ABSENT]` [OD-12]; no-offer and SLA-breach worklists `[PARTIAL]` (`oros.sla.breached` exists; marketplace legs absent).
+
+### 20.10 Universal experience requirements (normative, all nine workspaces)
+
+Volume I §14 design principles apply verbatim; restated deltas for this domain:
+
+- **Responsive + full mobile parity** for patient/caregiver, courier and CHW workspaces (these are mobile-primary); provider/ops surfaces follow the parity matrix.
+- **Offline/degraded behaviour** wherever field reality demands it: CHW capture (offline-first, idempotent `[BUILT]` [R71]), courier custody queue, patient tracking views degrade to last-known-state with honest staleness indicators.
+- **Visible state everywhere:** every artefact shows its pipeline stage and what happens next; **no dead-end pages**.
+- **Honest errors + retry:** structured error codes surfaced with actionable copy; a failed payment or failed delivery names its recovery path (§22 rule).
+- **Accessibility:** WCAG-aligned, keyboard-complete, screen-reader labelled; high-contrast; low-literacy plain language.
+- **Language readiness:** English/Shona/Ndebele for all patient-facing content.
+- **Minimum-necessary data per role:** courier minimisation (§20.6), losing-vendor minimisation (§19.1 N7), PII-minimised RFO publication (§11).
+- **No decorative controls:** the pack's no-stubs doctrine (`test:no-stubs` enforced, Volume I R40 `[LIVE]`) — controls awaiting backends use honest disabled/deferred states; nothing fake renders (matrix §4.1 confirms the estate currently honours this: absent machinery shows nothing rather than mocks).
+- **Per-screen contract (Volume I §14 verbatim):** every screen defines primary actions, secondary actions, empty state, loading state, error state, offline state, permission-denied state, mobile adaptation and deep-link behaviour; deep links survive auth (post-login return) and honour zone gating. For this domain the empty states matter doubly — an empty offer-comparison, an empty monitoring desk and an empty dispense worklist each carry stage-aware copy naming why they are empty and what will fill them.
+
+---
 
 ## 21. Analytics, Quality and Market Fairness
 
-`[AUTHORING — Wave 2]` Instruction §13: metric set; Rito capture; fairness monitoring (concentration, ranking transparency, collusion/anomaly detection); rating-integrity safeguards; clinical-safety indicators separated from convenience ratings.
+### 21.1 Events-only derivation (doctrine)
+
+All metrics in this section derive **from the event streams of §18 and the `core.transaction.events` envelope — never by scraping service databases** (Volume I §24/§27 doctrine, proven for the teleconsult plane, applies verbatim). A metric with no emitting event is a specification bug: fix the event catalogue, not the pipeline. Telemetry hygiene rule applies: metrics are counts/durations/status codes keyed by ids — no clinical narratives in the analytics plane.
+
+**Metric definition discipline.** Every metric in §21.2 is registered with: name · formula · contributing logical events (§18 names) · dimensions (geography via ndila zone, order type, urgency, payer, vendor) · owner (the operational duty accountable for acting on it) · refresh cadence. A dashboard tile with no registered definition is a decorative control and fails the no-stubs doctrine (§20.10).
+
+### 21.2 Metric families
+
+| Family | Metrics | Source events (§18) | Status |
+|---|---|---|---|
+| Order funnel | created → validated → signed → published → offered → selected → paid → dispensed → delivered → loop-closed conversion + stage dwell times | Bands 1–5 | `[PARTIAL]` (order + dispense legs measurable today; marketplace legs `[ABSENT]`) |
+| Marketplace liquidity | offers per request, time-to-first-offer, **no-offer rate** by geography/order type, invitation acceptance rate | Band 2 | `[ABSENT]` [OF-G8] |
+| Payer resolution | eligibility latency, PA turnaround by status path, appeal rate + resolution time | Band 3 | `[PARTIAL]` (machines BUILT; streams new) |
+| Payment performance | intent→PAID latency, failure rate by channel, refund latency, reconciliation match rate | `mushex.payment.status.changed` | `[LIVE]`-derivable |
+| Dispense performance | accept→ready time, partial-fill rate, substitution rate, pickup-token expiry rate | Band 4 | `[BUILT]`-derivable |
+| Delivery performance | assign→PoD time, first-attempt success, failed-delivery rate, return rate | Band 5 | `[BUILT]`-derivable |
+| Cold chain | excursion count/severity, product-loss rate, excursion-to-notification latency | ColdChainExcursionDetected | `[PARTIAL]` |
+| Quality + satisfaction | post-fulfilment feedback, complaints, safety reports — **captured via Rito** (Rito owns experience/feedback truth) | Rito events | `[PARTIAL]` |
+| Equity | geographic access (offers + delivery reach by ndila zone), **price variation** for equivalent items, **marketplace concentration** (share per vendor per zone/type) | Bands 2, 5 + COSTA | `[ABSENT]` |
+| Fraud signals | collusion patterns (bid clustering), anomalous prescribing volumes, **duplicate fulfilment** (claim-to-dispense mismatch), **phantom delivery** (PoD without custody chain) | Bands 1, 2, 4, 5 cross-checks | `[ABSENT]` [OF-B29] |
+| Monitoring | adherence (expected vs received readings), alert response time by ladder level, **false-alert rate**, device availability/uptime | Bands 6 | `[ABSENT]` [OF-G16] |
+
+### 21.3 Rating integrity safeguards (normative)
+
+Ratings and reviews ride Rito and feed marketplace ranking (§11) only under these safeguards:
+
+1. **Verified-transaction reviews only** — a rating must reference a completed fulfilment (dispense/PoD event); no fabricated review can enter ranking.
+2. **No sponsored placement, ever** — ranking dimensions are the audited set (§11); any commercial payment for position is prohibited and its absence is auditable.
+3. **Anti-retaliation** — providers cannot see which patient rated them; rating visibility is aggregated with a minimum-volume threshold.
+4. **Complex-patient-refusal detection** — declining hard cases to protect ratings is a named fraud signal: decline patterns correlated with case complexity feed §21.2 fraud metrics and provider-conduct review (VARAPI/council seam).
+5. **Low-volume bias control** — providers below the volume threshold display "insufficient data", not a misleading score; new entrants are not buried by default ranking.
+
+### 21.4 Clinical safety vs convenience (normative separation)
+
+Clinical-safety indicators (dispensing errors, cold-chain product loss, wrong-recipient handovers, monitoring alert misses) are **never blended into convenience ratings** (speed, friendliness, price). They flow to the quality/safety plane (Rito safety reporting + regulatory seams), rendered on ops/oversight surfaces — not as marketplace stars. A provider cannot average away a safety signal with fast deliveries.
+
+### 21.5 Fairness monitoring as an operational duty
+
+Marketplace fairness monitoring — concentration watch, ranking-transparency audit, collusion screening, no-offer equity review — is a **named operational duty** with an owning role and a review cadence, governed by the ranking-fairness policy decided in **OD-12**. It is not a dashboard that nobody owns: §22 escalation paths route fairness breaches to accountable action.
+
+---
 
 ## 22. Failure Modes and Recovery
 
-`[AUTHORING — Wave 2]` Instruction §15: the failure catalogue with per-failure visible status, owner, retry, escalation, patient communication, financial handling, clinical handling, audit, terminal resolution. No silent disappearance.
+**Universal rule (normative).** **No failed transaction silently disappears.** Every failure below has: a visible status on a named surface, an owning role, a retry policy, an escalation path, patient communication where the patient is affected, explicit financial handling, and a terminal resolution. "Swallowed to a warning log" is a specification violation wherever it survives (the one confirmed instance is OF-G15 — its row below mandates the fix).
+
+### 22.1 Authoring and signing
+
+| Failure | Visible status (where) | Owner | Retry | Escalation | Patient comms | Financial | Terminal resolution |
+|---|---|---|---|---|---|---|---|
+| Safety-validation service degraded | Warning banner on prescribe pane ("checks degraded") | Prescriber | Auto-retry validation seam | Clinical-governance if prolonged | None (pre-submission) | None | Order proceeds only with explicit prescriber acknowledgement of degraded checks (honest-degrade pattern `[PARTIAL]` [OF-G5]) |
+| Signing key/JWS service unavailable | Order held UNSIGNED (composer) | Prescriber + platform ops | Bounded auto-retry | Ops page after threshold | None | None | Sign completes late or order cancelled with reason [OF-G1] |
+| Duplicate order detected | Duplicate prompt at submission | Prescriber | n/a | — | None | None | Merge or justify-and-proceed (OROS duplicate guard `[BUILT]` [R41]) |
+| Amendment conflict (concurrent versions) | Version-conflict error on amend | Prescriber | Reload + reapply | — | None | None | New version over latest; prior versions immutable [OF-G2] |
+| Prescription expired before claim | EXPIRED on patient + prescriber views | Prescriber | n/a | Follow-up-due notification | N28/N33 | None | Re-prescribe (new aggregate) or close with reason |
+
+### 22.2 Marketplace
+
+| Failure | Visible status (where) | Owner | Retry | Escalation | Patient comms | Financial | Terminal resolution |
+|---|---|---|---|---|---|---|---|
+| No offers received | NO_OFFERS terminal on request (patient + ops worklist) | Marketplace ops | Republish with widened invitation | Equity review if zone-patterned (§21.2) | N5 with alternatives (direct facility, public fallback) | None taken | Republished, fulfilled via fallback, or cancelled with reason [OF-G8] |
+| All offers expired before selection | Offers-expired state on comparison | Patient (+ ops on repeat) | One-tap re-request | — | In-app prompt | None | New request cycle |
+| Selection race — offer no longer valid | Revalidation-failed at select | msika-flow | Auto re-rank remaining offers | — | Immediate in-app ("offer taken — next options") | No payment taken pre-commit | Alternative selection or re-request [OF-G9] |
+| Vendor fails eligibility at commit | Commit blocked, offer voided | msika-flow + VARAPI/TUSO | n/a | Provider-conduct flag on repeat | In-app re-rank | None | Next offer or re-request [OF-G11] |
+| PII leak in request publication | Publication blocked at shape validation | msika-flow | n/a | Security incident | None (prevented) | None | Fail-closed: request never publishes with over-shape [§11 shape] |
+| RFO service down | Honest deferred state on request surfaces | Platform ops | Service recovery | Ops alert | In-app honest state | None | Requests queue-and-resume; nothing fake renders |
+
+### 22.3 Financial
+
+| Failure | Visible status (where) | Owner | Retry | Escalation | Patient comms | Financial | Terminal resolution |
+|---|---|---|---|---|---|---|---|
+| Eligibility check timeout | UNKNOWN-coverage state on comparison | Coverage ops | Bounded auto-retry | Payer-connectivity alert | Honest "coverage unconfirmed — estimate only" (G5) | Proceed as self-pay-with-later-claim only by explicit patient choice | Coverage resolved late → liability recomputed + refund path if overpaid |
+| Prior-auth stalled pending | PA-PENDING with age (patient + payer worklists) | Payer ops | SLA timer | Escalation at SLA breach | N10/N11 when resolved | No payment demanded on unapproved portion | Approved / denied-with-appeal (appeals `[BUILT]` [R59]) |
+| Prior-auth denied | DENIED + appeal path | Prescriber + patient | n/a | Appeal workflow | N11 (appeal deep link) | Self-pay option or alternative therapy | Appeal resolved or alternative selected |
+| Payment failure | Payment-failed on intent (patient) | Patient (+ mushex ops on pattern) | Patient-initiated retry, alternate channel | Fraud check on repeated failure | N14 | Intent stays unpaid; **no fulfilment proceeds on unpaid mandatory shortfall** | Paid, or order lapses at TTL with notice |
+| Refund failure | Refund-stuck (mushex ops queue) | MusheX ops | Auto-retry to channel | Manual settlement | N15 delayed-notice | Refund liability persists until settled | Refund completed (evidence: settlement record) |
+| Escrow release failure after PoD | Release-stuck (ops queue) | MusheX + marketplace ops | Auto-retry on PoD evidence | Manual release with dual control | None (patient unaffected) | Vendor payout delayed, tracked | Released with audit trail [OF-G13] |
+| Reconciliation mismatch | Recon-exception queue | Finance ops | n/a | Finance escalation | None | Exception held out of settlement | Matched/adjusted with audit |
+
+### 22.4 Fulfilment
+
+| Failure | Visible status (where) | Owner | Retry | Escalation | Patient comms | Financial | Terminal resolution |
+|---|---|---|---|---|---|---|---|
+| Reservation failure at commit (stock gone) | Commit blocked; offer voided | DURA + msika-flow | Re-rank alternatives | Double-sell alarm if ledger disagrees | In-app immediate | No charge pre-commit | Alternative offer/vendor [OF-G12] |
+| Out-of-stock discovered during preparation | Dispense episode BLOCKED-STOCK | Pharmacist | Partial fill or source transfer | Prescriber clarification | N17-class actionable | Charge adjusted to filled quantity | Partial fill + remainder re-routed, or substitution, or cancel+refund |
+| Substitution rejected by patient/prescriber | Substitution-declined on episode | Pharmacist + prescriber | Prescriber clarification thread | — | In-app choice record | Price delta voided | Original sourced elsewhere or order cancelled with refund |
+| Token claim reuse attempt | Claim REJECTED (dispenser screen) + fraud signal | OROS + dispenser | n/a | Fraud queue [§13] | Patient notified of attempted reuse | None | Single-active-claim invariant holds; incident recorded [OF-G6] |
+| Dispense write-back to order fails | Order/dispense state divergence flag (ops) | Pharmacy + OROS | Outbox redelivery | Ops after retry budget | None | None | States reconciled; divergence age is an SLO |
+| Cold-storage prep failure | Episode COLD-CHAIN-HOLD | Pharmacist | Re-prepare from stock | Product-loss report | N25 if patient-visible delay | Loss written off per policy, never billed to patient | Re-prepared or re-sourced |
+
+### 22.5 Logistics
+
+| Failure | Visible status (where) | Owner | Retry | Escalation | Patient comms | Financial | Terminal resolution |
+|---|---|---|---|---|---|---|---|
+| Courier no-show / assignment lapse | Assignment-expired (dispatcher queue) | Dispatcher | Auto-reassign | Courier-performance flag | N21 updated ETA | None | Reassigned + delivered |
+| Failed delivery attempt | FAILED-ATTEMPT (patient + dispatcher) | Dispatcher | Reschedule ladder (bounded attempts) | Convert to pickup after N attempts | N24 actionable | Delivery fee per policy; product not billed twice | Delivered, converted to pickup, or returned |
+| Custody break (chain gap) | CUSTODY-EXCEPTION (dispatcher + ops) | Dispatcher + quality | n/a | Product-integrity review; safety report if clinical risk | N25-class if product unusable | Replacement at platform/vendor cost per fault | Replacement dispatched; incident audited [R65 custody chain] |
+| Cold-chain excursion in transit | EXCURSION on delivery + affected dispense flagged | Dispatcher + pharmacist | n/a | Do-not-use decision by pharmacist | N25 (do-not-use + replacement) | Loss per fault attribution; patient never pays twice | Replacement; excursion metrics (§21.2) |
+| Wrong recipient / verification failure at door | HANDOVER-REFUSED (courier + dispatcher) | Courier + dispatcher | Retry with named recipient | Fraud signal on pattern | N22 re-verification path | No PoD → no escrow release | Delivered to verified recipient or returned |
+| Package lost/damaged | LOST/DAMAGED terminal on delivery | Dispatcher + ops | n/a | Claim/incident process | N24 + replacement notice | Refund/replacement; escrow never released | Replacement order cycle; loss audited |
+| Fulfilment write-back failure (Nhume→msika-flow) | **Divergence queue (ops) — MUST replace today's swallowed warning** | Platform ops | Outbox-grade retry with DLQ | Ops alert at retry exhaustion | None (internal) | None | States reconciled; **best-effort callback is retired** [OF-G15] |
+
+### 22.6 Monitoring and IoT
+
+| Failure | Visible status (where) | Owner | Retry | Escalation | Patient comms | Financial | Terminal resolution |
+|---|---|---|---|---|---|---|---|
+| Device offline / heartbeat lost | DEVICE-OFFLINE on plan (patient + CHW) | CHW + device ops | Patient-side reconnect guidance (G11) | CHW visit task on persistence | N31 | None | Reconnected, replaced, or plan adjusted [OF-G18] |
+| Implausible reading | Reading stamped SUSPECT — **never silently dropped** (§15) | telemonitoring | Repeat-reading prompt (G13) | Clinician review if repeated | In-app prompt | None | Confirmed (repeat) or quarantined with stamp [OF-G17] |
+| Alert storm (threshold flapping) | Deduplicated episode with storm counter | Remote-monitoring clinician | n/a | Threshold-profile review task | None beyond primary alert | None | Thresholds retuned; storm metrics (§21.2 false-alert rate) |
+| Alert unacknowledged past SLA | Ladder auto-escalation (next rung, visible on desk) | Escalation target | n/a | Ladder continues to duty clinician → urgent teleconsult (Vol I seam) → Daidzai | Patient contacted per ladder step | None | Accountable closure recorded — resolution names actor + action [OF-G16] |
+| Telemetry pipeline backlog / DLQ growth | Ingest-lag on device ops surface | Platform ops | Pipeline recovery | Ops alert | None (clinical desks show data-freshness age) | None | Backlog drained; freshness age visible throughout — stale data is labelled, never presented as current |
+
+### 22.7 Offline reconciliation
+
+| Failure | Visible status (where) | Owner | Retry | Escalation | Patient comms | Financial | Terminal resolution |
+|---|---|---|---|---|---|---|---|
+| CHW offline capture conflicts on sync | Conflict queue (CHW app + supervisor) | CHW + supervisor | Idempotent re-submit (`offline_id` `[BUILT]` [R71]) | Supervisor review | None | None | Reconciled record with provenance of both writes |
+| Duplicate offline submission | Deduplicated silently by idempotency key | System | n/a | — | None | None | Single record; duplicate audit-noted |
+| Device clock skew on offline readings | Readings stamped with skew flag | telemonitoring | n/a | Quarantine if skew exceeds tolerance | None | None | Time-corrected with provenance or quarantined — never silently re-timestamped |
+
+---
 
 ## 23. Testing Strategy and Journey Catalogue
 
@@ -1319,7 +2381,106 @@ The runtime-proof doctrine of Volume I §28 applies unchanged (bash rigs + psql 
 
 ## 24. Detailed Acceptance Criteria
 
-`[AUTHORING — Wave 2]` Per-stage "W" acceptance criteria (Volume I §29 pattern), including the instruction's stage-level MUSTs and the §19 constraints as testable assertions.
+Volume I §29 pattern: numbered, testable, each traceable to a §8/§14/§15 MUST and (where a gap exists today) to its matrix reference. Verification rides §23 (runtime-proof doctrine — journeys #41–#70; a green frontend mock is never proof). Criteria marked **(negative)** are §4.9 constraint invariants expressed as tests that MUST fail-closed.
+
+**Stage A — Authoring (W-A):**
+- W-A1. An order cannot be created without a valid subject (CPID), authorised author, and order type from the §7 catalogue.
+- W-A2. Medication authoring runs safety validation; when validation is degraded the prescriber sees an explicit degraded-checks banner and must acknowledge before submission [OF-G5].
+- W-A3. Duplicate-order detection fires on same subject+item+window; proceeding requires recorded justification [R41].
+- W-A4 (negative). No order type absent from §7 can be authored — unknown types are rejected at validation, not downstream.
+
+**Stage B — Signing/activation (W-B):**
+- W-B1. A prescription version is immutable once signed; amendment creates a new version, and every prior version remains retrievable [OF-G1/G2].
+- W-B2. The signature is a detached JWS verifiable against tshepo-keys; a tampered payload fails verification.
+- W-B3 (negative). An unsigned prescription MUST NOT be publishable to the marketplace or claimable by any dispenser.
+- W-B4. Signing emits `oros.prescription.signed.v1` exactly once (idempotent re-sign returns the existing signature).
+
+**Stage C — Marketplace-request creation (W-C):**
+- W-C1. A MarketplaceRequest holds a read-only reference to the OROS order; mutating the order via the request is impossible [OF-G8].
+- W-C2 (negative). Request publication with PII beyond the §11 minimised shape MUST fail-closed at shape validation — verified by attempting an over-shape publish.
+- W-C3 (negative). An EMERGENCY-priority order MUST refuse marketplace publication (emergency is never auctioned — doctrine §4).
+
+**Stage D — Provider eligibility/matching (W-D):**
+- W-D1. Invitations reach only providers passing VARAPI licence + TUSO premises + capability checks at invitation time [OF-G11].
+- W-D2 (negative). A provider with a lapsed licence between invitation and offer MUST be blocked at offer submission (revalidation, not cached trust).
+- W-D3. Controlled-medicine requests are never open-broadcast — invitation mode is restricted per §13 [OF-G7].
+
+**Stage E — Offer/quotation (W-E):**
+- W-E1. Every offer carries price, stock-attestation grade, and fulfilment window; offers without mandatory fields are rejected [OF-G9].
+- W-E2. Offer TTL expiry transitions the offer terminally and releases any linked reservation [OF-G9/G12].
+- W-E3. DURA-derived availability is graded distinctly from vendor attestation on every offer [R57].
+
+**Stage F — Comparison/patient choice (W-F):**
+- W-F1. The comparison surface shows every valid offer with its ranking reasons; the ranking dimensions rendered equal the audited ranking dimensions (no hidden factors) [OF-G10, OD-12].
+- W-F2 (negative). No offer may be pre-selected, defaulted, or visually privileged outside the audited ranking (anti-dark-pattern test).
+- W-F3. Per-offer patient liability (Ruvimbo + COSTA) is displayed before selection, labelled estimate-vs-approved [OF-G13].
+
+**Stage G — Coverage/prior-auth (W-G):**
+- W-G1. Eligibility, benefit and PA outcomes are distinct, individually auditable decisions [R58/R59].
+- W-G2. PA state transitions follow the 14-status machine; an appeal never destroys the denied decision's record.
+- W-G3 (negative). Coverage rules MUST NOT obstruct emergency care on financial status (Volume I absolute, restated §4.9).
+
+**Stage H — Shortfall/payment (W-H):**
+- W-H1. Payment follows the intent→PAID model; no two-phase capture exists anywhere in the flow (settled) [R63].
+- W-H2 (negative). Fulfilment MUST NOT proceed while a mandatory shortfall intent is unpaid; payment success alone MUST NOT mark fulfilment complete (verified clean today — matrix §4.1).
+- W-H3. Escrow (where used) releases only on proof-of-delivery evidence [OF-G13].
+
+**Stage I — Acceptance/reservation/commitment (W-I):**
+- W-I1. Commitment is atomic: revalidation (eligibility + stock + price) and reservation succeed together or the selection fails visibly [OF-G9/G11/G12].
+- W-I2. Reservations exist only in DURA's `inv_stock_reservations`; `mf_reservations` holds projections only — a write path that creates marketplace-local reservation truth is a test failure [OF-G12].
+- W-I3 (negative). Two concurrent selections of the same last-unit stock MUST resolve to exactly one commitment; the loser sees the race outcome honestly.
+- W-I4 (negative). A claim of stock is not fulfilment — no committed-but-unprepared order may render as "ready" (doctrine §4).
+
+**Stage J — Preparation/dispensing (W-J):**
+- W-J1. Dispense episodes derive from OROS PHARMACY orders via events; a dispense with no authorising prescription version reference is rejected [OF-G4].
+- W-J2. Token claim is atomic and single-active; repeats decrement server-side; a second claim on the same token fails and raises a fraud signal [OF-G6].
+- W-J3. Substitution applies only within governed `rx_substitution_rules` plus required consent; the substitution decision is recorded with actor [R46].
+- W-J4. Partial fill produces a correct remainder state and adjusted charge [§22.4].
+- W-J5. Completed dispense projects a MedicationDispense linked to its MedicationRequest version [OF-G19].
+- W-J6 (negative). Controlled medicines MUST NOT dispense without a controlled-register write and second-factor handover [OF-G7].
+
+**Stage K — Pickup/collection/delivery options (W-K):**
+- W-K1. Every fulfilment offers its governed handover modes only (per-type constraints §7); mode selection is recorded.
+- W-K2. Caregiver collection requires a MVUMO delegation relationship, verified at handover (Volume I R26 model).
+- W-K3. Pickup proof capture is mandatory for pickup mode (`rx_pickup_proofs`) [R46].
+
+**Stage L — Logistics/chain of custody (W-L):**
+- W-L1. Every physical movement produces custody events forming an unbroken chain from dispenser to recipient; a gap renders CUSTODY-EXCEPTION, never silence [R65].
+- W-L2 (negative). Proof-of-handover MUST NOT be satisfiable by GPS proximity alone (§12 proof grades).
+- W-L3 (negative). The courier payload MUST NOT contain clinical content — verified by inspecting the courier-task API response shape (§20.6).
+- W-L4. Delivery status write-back to fulfilment retries to a DLQ with ops visibility; a swallowed write-back failure is a test failure [OF-G15].
+- W-L5 (negative). No logistics GPS/telemetry event may reach the SHR (§16.6) — verified against fhir-gateway audit.
+
+**Stage M — Transport modes (W-M):**
+- W-M1. Each mode is enabled by an explicit governed capability matrix (geography + policy); an unlisted mode cannot be assigned.
+- W-M2 (negative). Drone delivery MUST NOT be offered or displayed as operational anywhere while evidence is `[CONFIG-ONLY]` [OF-G21].
+
+**Stage N — Confirmation and loop closure (W-N):**
+- W-N1. Loop closure requires the completion artefact for the order type (§7) plus SHR projection where mandated (§16).
+- W-N2. Closure emits the terminal event and the `core.transaction.events` milestone exactly once.
+- W-N3 (negative). An order with a pending critical result MUST refuse auto-closure — the critical-result acknowledgement chain completes first.
+- W-N4 (negative). Ending the originating encounter (including a Volume I teleconsult) MUST NOT close the pipeline — video-end ≠ pipeline-end (doctrine §4).
+- W-N5. The end-to-end journey (order→offer→coverage→payment→dispense→delivery→SHR) is proven by a cross-pipeline runtime rig, not per-domain proofs alone [OF-G20].
+
+**Telemonitoring (WT):**
+- WT1. A monitoring plan activates only with clinician approval; activation emits `telemonitoring.plan.activated.v1` and projects a CarePlan [OF-G16].
+- WT2. Thresholds are per-patient; changing a threshold profile is versioned and audited.
+- WT3. All monitoring-band Observations reach the SHR via telemonitoring-service only; a write from any of today's three ad-hoc paths into the monitoring band is a test failure [R72/OF-G16].
+- WT4. Every Observation carries Provenance (device, ingest path, quality stamp, plan reference).
+- WT5. Alert episodes deduplicate storms and hold ladder state; each escalation step is a recorded transition [OF-G16].
+- WT6 (negative). An alert MUST NOT close without accountable action — resolution requires actor + action, and "auto-resolve on new normal reading" alone is insufficient at clinical levels.
+- WT7. The CHW alert view is scope-safe: task and escalation path visible, diagnosis withheld (§20.7).
+- WT8 (negative). Unassigned-device readings MUST NOT attach to any patient record — assignment (patient↔device↔plan) is the only binding path [OF-G18].
+
+**IoT (WI):**
+- WI1. Every reading is schema-validated at ingest; invalid payloads land in the DLQ with a reason, never dropped silently [R69].
+- WI2. Data-quality evaluation stamps readings (plausibility, calibration state, clock skew); a stamped-SUSPECT reading renders as suspect on every surface [OF-G17].
+- WI3 (negative). A reading from a quarantined or calibration-overdue device MUST NOT render as clinically current [OF-G18].
+- WI4. Device lifecycle states (registered→assigned→active→quarantined→retired) transition only through governed operations, all audited.
+- WI5. Offline device backlogs upload idempotently; duplicates deduplicate on device+sequence identity.
+- WI6 (negative). Device trust grade MUST derive from the attestation model once OF-B25 lands; the static heuristic (95/80/55/25) is an acknowledged interim and MUST NOT gate clinical presentation by itself [OF-G17].
+
+---
 
 ## 25. Implementation Truth Recovery and Gap Analysis
 
@@ -1368,4 +2529,149 @@ The pack maintains a **single** open-decision register: Volume I §32. Volume II
 
 ## 28. Appendices
 
-`[AUTHORING — Wave 2]` Diagram set: order-to-outcome sequence (A–N) · RFO flow · custody chain · telemonitoring alert ladder · IoT topology. Cross-volume reading guide.
+### Appendix A — Order-to-outcome sequence (stages A–N)
+
+**Narrative.** A prescriber authors and validates an order in any encounter context (A) and signs it, creating an immutable prescription version (B). If the patient elects marketplace fulfilment, a PII-minimised MarketplaceRequest is published (C); eligible providers are matched and invited (D) and submit offers with price, stock grade and window (E). The patient compares offers with explained ranking and per-offer liability (F). Coverage resolves eligibility/benefit/prior-auth (G); any shortfall is paid via a MusheX intent (H). Selection commits atomically — revalidation plus DURA reservation (I). The fulfiller prepares and dispenses against the claimed prescription token (J); the patient chooses pickup or delivery (K); Nhume executes with an unbroken custody chain to a graded proof of handover (L), using only governed transport modes (M). Completion artefacts and SHR projections land, notifications and follow-up fire, finances reconcile, and the loop closes — with critical-result and follow-up guards refusing premature closure (N).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Rx as Prescriber
+    participant OROS
+    participant MF as msika-flow (RFO)
+    participant Pt as Patient
+    participant RUV as Ruvimbo/COSTA
+    participant MX as MusheX
+    participant DURA
+    participant PH as Pharmacy/Fulfiller
+    participant NH as Nhume
+    participant SHR as BUTANO/SHR
+
+    Rx->>OROS: A: author + validate order
+    Rx->>OROS: B: sign (JWS) → prescription version
+    OROS-->>MF: C: publish MarketplaceRequest (PII-minimised)
+    MF->>MF: D: match + invite eligible providers
+    PH-->>MF: E: submit offer (price, stock grade, window)
+    MF-->>Pt: F: ranked comparison (explained)
+    Pt->>RUV: G: coverage / prior-auth / liability per offer
+    Pt->>MX: H: pay shortfall (intent → PAID)
+    Pt->>MF: I: select → revalidate + reserve (DURA)
+    MF->>DURA: I: ReservationCreated
+    MF->>PH: I: commitment
+    PH->>OROS: J: claim token (atomic, repeats decrement)
+    PH->>PH: J: prepare + dispense
+    alt Pickup (K)
+        Pt->>PH: pickup proof captured
+    else Delivery (K–M)
+        PH->>NH: delivery task (minimised payload)
+        NH->>NH: L: custody chain events
+        NH->>Pt: L: graded proof of handover
+        NH-->>MF: L: write-back (retried, never silent)
+    end
+    PH->>SHR: N: MedicationDispense projection
+    OROS->>SHR: N: results / completion artefacts
+    OROS->>OROS: N: loop closure (guards: critical results, follow-up)
+```
+
+### Appendix B — Request-for-offer flow
+
+```mermaid
+flowchart TD
+    A[Signed order\npatient elects marketplace] --> B[Create MarketplaceRequest\nread-only order ref]
+    B --> C{Shape validation\nPII-minimised?}
+    C -- no --> X[Fail closed\nnever published]
+    C -- yes --> D[Publish + invite\nVARAPI/TUSO-eligible providers]
+    D --> E[Offers submitted\nTTL + stock grade]
+    E --> F{Any offers\nbefore expiry?}
+    F -- no --> G[NO_OFFERS terminal\npatient + ops notified\nfallback paths]
+    F -- yes --> H[Ranked comparison\nexplained dimensions + liability]
+    H --> I[Patient selects]
+    I --> J{Revalidate at commit:\neligibility + stock + price}
+    J -- fail --> K[Offer voided\nre-rank remaining]
+    K --> H
+    J -- pass --> L[Atomic commitment\n+ DURA reservation]
+    L --> M[Fulfilment begins\nStage J]
+```
+
+### Appendix C — Chain of custody
+
+```mermaid
+flowchart LR
+    A[Dispense complete\nsealed + labelled] -->|CustodyRecorded| B[Courier collection\nidentity-verified pickup]
+    B -->|CustodyRecorded| C[In transit\ntemperature events if cold-chain]
+    C -->|excursion?| C2{Cold-chain\nexcursion}
+    C2 -- yes --> C3[Pharmacist do-not-use decision\nreplacement path §22.5]
+    C2 -- no --> D[Arrival\nrecipient verification]
+    C3 --> D2[Return leg\ncustody continues]
+    D -->|verified| E[Graded proof of handover\nnever GPS alone]
+    D -->|refused| F[HANDOVER-REFUSED\nretry or return]
+    E --> G[PoD event\nescrow release + write-back]
+    G --> H[Clinical view only\nprojects to SHR §16.6]
+```
+
+### Appendix D — Telemonitoring alert ladder
+
+```mermaid
+flowchart TD
+    A[Reading ingested\nvalidated + quality-stamped] --> B{Threshold\nevaluation}
+    B -- in band --> Z[No action\nadherence metrics]
+    B -- out of band --> C[Repeat-reading prompt\nNompilo G13]
+    C --> D{Confirmed\nout of band?}
+    D -- no --> Z
+    D -- yes --> E[AlertOpened\nlevel per rule, dedup/storm control]
+    E --> F[CHW task /\nassigned clinician ack]
+    F -- ack SLA missed --> G[AlertEscalated\nduty clinician review]
+    G -- unresolved --> H[Urgent teleconsult\nVolume I seam]
+    H -- emergency --> I[Daidzai / Nhume / Ndila\nemergency dispatch]
+    F -- resolved --> J[AlertResolved\naccountable: actor + action]
+    G -- resolved --> J
+    H -- resolved --> J
+```
+
+### Appendix E — IoT topology
+
+```mermaid
+flowchart LR
+    subgraph Home/Community
+        DV[Devices\nBP, glucometer, scale, SpO2...]
+        GW[Gateway / phone app\noffline buffer]
+    end
+    subgraph Ingestion
+        ING[iot-ingestion\nschema validation + DLQ\ndevice registry]
+    end
+    subgraph Platform
+        BUS[(Telemetry bus\nimpilo.iot.telemetry.reading.ingested.v1)]
+        TM[telemonitoring-service\nplans, thresholds, alerts\nSINGLE monitoring-band writer]
+        ASR[asset-registry\nphysical + calibration truth]
+        LAKE[(Bronze lake / analytics)]
+    end
+    subgraph Clinical
+        SHR[BUTANO/SHR\nObservation + Provenance\nCPID only]
+        DESK[Monitoring desks\nclinician / CHW / patient]
+    end
+    DV --> GW --> ING --> BUS
+    BUS --> TM
+    BUS --> LAKE
+    ASR -. calibration projection .-> TM
+    TM --> SHR
+    TM --> DESK
+```
+
+### Appendix F — Cross-volume reading guide
+
+| Question | Where |
+|---|---|
+| How does a teleconsultation run (case, consent, media, completion)? | Volume I §8–§11, §Stage sections |
+| How does clinical advice become an executed order? | **Volume II** §8 (stages A–B), §7 catalogue |
+| Who owns which identifier? | Volume II §5 + `identity-trust-contract.md` (wins on semantics) |
+| How does the fulfilment marketplace work? | **Volume II** §11 (+§8 C–F, I) |
+| Coverage, prior-auth, payment? | **Volume II** §10 (+§17.5–17.6 APIs) |
+| Delivery, custody, cold chain, drones? | **Volume II** §12 (+§22.5 failures) |
+| Remote monitoring and IoT? | **Volume II** §14–§15 (+§16.5, §18.7) |
+| FHIR mappings? | Volume I §12 (telemedicine resources) · **Volume II** §16 (ordering/fulfilment/financial/monitoring bands) |
+| Event naming law? | **Volume II** §18.1 (applies pack-wide going forward); Volume I §16 catalogue grandfathered |
+| Notifications + Nompilo? | Volume I §16.2 contract · **Volume II** §19 catalogue for this domain |
+| What is actually built vs absent? | Shared [traceability matrix](telemedicine-traceability-gap-matrix.md): §1 (R1–R40, TM-G*) + §4 (R41–R74, OF-G*) |
+| What gets built next? | Shared [backlog](telemedicine-implementation-backlog.md) (TM-B* + OF-B1..30) |
+| Test journeys? | Shared [journey catalogue](telemedicine-journey-catalogue.md) (#1–#40 Volume I, #41–#70 Volume II) |
+| Open decisions? | Single register: Volume I §32 (OD-1..10 + OD-11..17 reserved) |
