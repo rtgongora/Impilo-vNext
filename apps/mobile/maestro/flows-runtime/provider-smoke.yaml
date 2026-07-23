@@ -1,0 +1,23 @@
+# Provider minimal smoke: install/launch/login-screen reachability + shell text.
+# Runtime copy for the .dev debug applicationId; Maestro 2.x DSL.
+appId: zw.gov.impilo.provider.dev
+tags:
+  - smoke
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible:
+      id: "login-screen"
+    timeout: 240000
+
+- extendedWaitUntil:
+    visible:
+      id: "login-button"
+    timeout: 240000
+
+- assertVisible: "Impilo Provider"
+- assertVisible: "Clinical workflow management"
+- assertVisible: "Sign in with Impilo"
+- takeScreenshot: provider-login-smoke

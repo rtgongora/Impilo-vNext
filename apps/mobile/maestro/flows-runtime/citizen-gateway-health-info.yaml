@@ -1,0 +1,47 @@
+# Guest public health-information browse/search — anonymous gateway pillar.
+# Runtime copy: .dev appId + Maestro 2.x DSL (extendedWaitUntil requires `visible:`).
+appId: zw.gov.impilo.citizen.dev
+tags:
+  - gateway
+  - public-health
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible:
+      id: "login-screen"
+    timeout: 240000
+
+# "No account needed" → Health info (explicit wait: TCG JS startup is slow;
+# the login-screen assert can pass against a not-yet-hydrated surface)
+- extendedWaitUntil:
+    visible:
+      id: "guest-health-info"
+    timeout: 240000
+- tapOn:
+    id: "guest-health-info"
+- extendedWaitUntil:
+    visible:
+      id: "health-info-screen"
+    timeout: 60000
+
+# Search the public topics
+- tapOn:
+    id: "health-info-search"
+- inputText: ${MAESTRO_HEALTH_QUERY}
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "health-info-search-go"
+    direction: UP
+    timeout: 60000
+- tapOn:
+    id: "health-info-search-go"
+
+# The list renders the governed public disclosure (topic rows).
+- extendedWaitUntil:
+    visible:
+      id: "health-info-screen"
+    timeout: 60000
+- takeScreenshot: health-info-results
