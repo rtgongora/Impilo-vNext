@@ -259,6 +259,8 @@ export const ROUTES: RouteDefinition[] = [
   // Khuluma — Impilo Comms Hub (the comms orchestration umbrella): unified conversations, presence, calls, meetings.
   { path: "/work/comms", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Hub", navLabel: "Khuluma", navZone: "work" },
   { path: "/my/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Messages", navLabel: "Khuluma", navZone: "life" },
+  // OF-B7 — citizen offer-comparison + selection over the msika-flow request-for-offer marketplace.
+  { path: "/my/orders/[requestId]/offers", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Compare Offers", navLabel: "Offers", navZone: "life" },
 
   // â”€â”€ Zone: Queue (Clinical) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/queue", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient Queue", navLabel: "Queue", navZone: "work" },
@@ -983,7 +985,9 @@ export const ROUTES: RouteDefinition[] = [
 // L3 ABIS 1:N scan-to-login (Jul 2026): +1 — /auth/login/scan, the biometric scan-to-login
 // page (capture → 1:N identify → session on a single strong match only). Flag-gated OFF in the
 // BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
-export const EXPECTED_ROUTE_COUNT = 781;
+// OF-B7 patient offer-comparison (Jul 2026): +1 — /my/orders/[requestId]/offers, the citizen
+// comparison/selection surface over msika-flow marketplace requests (§8.6/§11.6 UX contract).
+export const EXPECTED_ROUTE_COUNT = 782;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
