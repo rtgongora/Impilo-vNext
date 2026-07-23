@@ -9,6 +9,7 @@
 | Field | Value |
 |---|---|
 | Title | Impilo Platform vNext — National Telemedicine and Virtual Care Lifecycle: Full Functional, Clinical, UX and Technical Implementation Specification |
+| Volume relationship | **Volume I** of a two-volume co-normative pack. [Volume II](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) covers national e-orders, e-prescription, the fulfilment marketplace, coverage/payment, logistics, community telemonitoring and health IoT — the downstream execution of clinical decisions from **all** encounter types. The pack shares one [traceability matrix](telemedicine-traceability-gap-matrix.md), one [backlog](telemedicine-implementation-backlog.md), one [journey catalogue](telemedicine-journey-catalogue.md) and one open-decision register (§32). |
 | Owner | Impilo vNext Platform Programme (clinical plane: PCT product ownership) |
 | Status | **CANONICAL — NORMATIVE** for telemedicine/virtual-care product, design and engineering work. Implementation-status claims herein are evidence-graded (see §30 pointer and the [traceability matrix](telemedicine-traceability-gap-matrix.md)). |
 | Version | 1.0.0 |
@@ -35,7 +36,7 @@ The platform today has a **runtime-proven spine**: citizen-initiated virtual-car
 
 **Scope.** All synchronous, asynchronous, store-and-forward and hybrid virtual care between providers, between providers and citizens/caregivers, and among multidisciplinary teams; the workspaces and virtual institutions that deliver it; and every integration it requires (identity, trust, consent, clinical record, orders, communications, scheduling, transport, billing, learning, feedback).
 
-**Non-scope.** General (non-clinical) meetings (`MEETING` mode, Khuluma), public broadcasts and live events as products in themselves (`LIVE_EVENT`, Impilo Live/live-service), the learning platform (Fundo) except where clinical sessions intersect teaching/recording, physical EMS operations (Daidzai owns), pharmacy/lab/imaging fulfilment internals (OROS/PACS own), and payer adjudication internals (COSTA/MUSHEX/Ruvimbo own). This document defines *when those systems participate*, not how they work internally.
+**Non-scope.** General (non-clinical) meetings (`MEETING` mode, Khuluma), public broadcasts and live events as products in themselves (`LIVE_EVENT`, Impilo Live/live-service), the learning platform (Fundo) except where clinical sessions intersect teaching/recording, and physical EMS operations (Daidzai owns). Order-to-fulfilment execution — e-orders/e-prescriptions, the fulfilment marketplace, coverage/prior-authorisation and payment resolution, dispensing, pickup/delivery logistics, community telemonitoring and health IoT — is normatively specified in **[Volume II](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md)** of this pack; this volume defines *when those capabilities participate in a teleconsultation*, and §21/§22 state the hand-off seams.
 
 ## 4. Telemedicine Product Doctrine
 
