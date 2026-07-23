@@ -86,10 +86,17 @@ cmd_evidence() {
   local out="$ART/redroid/screenshots"
   mkdir -p "$out"
   for pkg in zw.gov.impilo.citizen.dev zw.gov.impilo.provider.dev; do
+    local app="${pkg%.*}"; app="${app##*.}"   # citizen | provider
     echo "==> launching $pkg"
-    adb -s "$addr" shell monkey -p "$pkg" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
-    sleep 45
-    adb -s "$addr" exec-out screencap -p > "$out/${pkg##*.dev}-launch-$(basename "$pkg" | cut -d. -f4)-$(date -u +%H%M%S 2>/dev/null || echo now).png" || true
+    # NB: `monkey -c LAUNCHER` silently no-ops on redroid — use am start.
+    adb -s "$addr" shell am start -n "$pkg/.MainActivity" >/dev/null 2>&1 || true
+    # wait for the app process, then give React a moment to hydrate
+    local t=0
+    until [ -n "$(adb -s "$addr" shell pidof "$pkg" 2>/dev/null | tr -d '\r\n ')" ] || [ $t -gt 120 ]; do
+      sleep 5; t=$((t+5))
+    done
+    sleep 20
+    adb -s "$addr" exec-out screencap -p > "$out/${app}-launch.png" || true
   done
   ls -la "$out"
 }
