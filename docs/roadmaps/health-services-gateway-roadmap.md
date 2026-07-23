@@ -69,6 +69,18 @@ and the anonymous-on-behalf pattern of `/internal/v1/auth/register`.
 
 ## 3. Waves
 
+> **Public-First breadth track (adopted 2026-07-23, doctrine §13).** Alongside the
+> pillar waves below, the Public-First Access program opens every remaining domain's
+> discovery surface to R0 per the four-question test: PF-W0 doctrine+register (landed),
+> PF-W1 default-tenant unification (prerequisite), PF-W2 regulatory reference +
+> disaster alerts + blood appeals + triage urgency tier, PF-W3 marketplace public
+> browse (satisfies MSIKA-GATE's R0 slice ahead of W6), PF-W4 coverage public compare,
+> PF-W5 wellness + learning public lanes, PF-W6 guest-session affordances ("Continue
+> without signing in", reasoned sign-in prompts). Enumeration of record:
+> [`../registry/public-capability-register.md`](../registry/public-capability-register.md).
+> Gateway W3 keeps ownership of journey-context-across-auth (PD-5 sovereign drafts);
+> the PF track uses client-side continuity only until W3 lands.
+
 ### W0 — Public-lane foundations & program gates (S; serial; 1–2 agent cycles)
 
 - Public-lane ADR (§2) in `docs/architecture/`.

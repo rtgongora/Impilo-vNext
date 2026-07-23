@@ -419,3 +419,108 @@ This doctrine **supersedes nothing**. It inherits and refines:
     [`../architecture/gateway-experience-capability-map.md`](../architecture/gateway-experience-capability-map.md);
     the phased build sequence lives in
     [`../roadmaps/health-services-gateway-roadmap.md`](../roadmaps/health-services-gateway-roadmap.md).
+
+---
+
+## 13. Public-First Access Doctrine
+
+> Browse, learn, assess, discover and verify without signing in. Sign in only when
+> Impilo must remember, personalise, transact or act on behalf of the person — and say
+> why. Requiring sign-in merely to explore would make the platform feel like an internal
+> government system rather than a national health platform.
+
+Adopted 2026-07-23 (PO direction). This section generalises §4/§5 from the gateway
+pillars to **every domain**: sign-in appears at the moment it creates value, never as a
+gate at the front door.
+
+### 13.1 The four-question test
+
+Every citizen-facing function SHALL be assessed with four questions:
+
+1. Does Impilo need to **remember** this beyond the current session?
+2. Is the information being **linked** to a person, household, provider or organisation?
+3. Will the action create a **clinical, financial, legal or regulatory record**?
+4. Does the user **expect to return** and continue from where they stopped?
+
+When the answer to all four is **no**, sign-in is unnecessary and SHALL NOT be demanded.
+When any answer is **yes**, authentication is justified — at that point, not before.
+
+### 13.2 The five access levels
+
+The practical expression of the trust ladder (§4) for product design:
+
+| Level | Name | Used for | Ladder mapping |
+|---|---|---|---|
+| 1 | **Public** | Browse, search, learn, compare, verify, estimate, one-off assessment, find services, view public prices/programmes/requirements | R0 |
+| 2 | **Temporary guest session** | Continuity *within* the current interaction: a marketplace basket, a Nompilo symptom conversation, an unsaved wellness plan, a draft complaint, held selections during comparison or facility search | R0 + client-side continuity artifacts; claim codes; R1 where a verified contact channel adds value (PD-2) |
+| 3 | **Signed-in personal** | Anything stored **against the person or household**: tracking progress, saving preferences and plans, booking, reminders, communication history, tracking applications/orders/complaints, personal eligibility | R2 |
+| 4 | **Verified / higher-trust** | Actions with clinical, legal, financial or regulatory consequence: health-record access, prescriptions, claims, professional/facility applications, acting for a child or dependant, consent to sharing, clinical or regulatory signing | R3–R5; TSHEPO decides when ordinary authentication suffices and when stronger proofing, role verification or consent is required |
+| 5 | **Emergency override** | Seeking emergency help | Never blocked by any rung (§7, §13.5) |
+
+### 13.3 Tracking versus discovery — the wellness template
+
+Wellness makes the rule concrete, and the same split applies to every domain: reading
+guidance, exploring content, using a **one-off** BMI/calorie/hydration/risk calculator,
+viewing screening and immunisation schedules, completing an **anonymous** self-assessment
+and previewing a programme are public. The moment the person wants to **track** (steps,
+weight, blood pressure, glucose, sleep, diaries), set goals, connect a device, receive
+personalised reminders, share with a clinician or add to their longitudinal record —
+that is Level 3, because the information must be stored against them.
+
+Anonymous assessments and calculators SHALL be **compute-only**: evaluated and returned
+without persistence. Nothing is retained unless the person signs in and chooses to save.
+
+### 13.4 The reasoned sign-in prompt
+
+A bare login wall is a doctrine violation. Wherever sign-in becomes necessary
+mid-journey, the interface SHALL (a) explain the value in plain language — e.g. *"Sign
+in to save your progress, personalise your experience and securely continue later"* —
+and (b) offer **"Continue without signing in"** wherever the journey remains eligible.
+Journey context survives the transition (§4.1 law 3).
+
+### 13.5 Emergency, urgency and disaster override
+
+> No person shall be prevented from obtaining urgent guidance, calling for help,
+> reporting danger or locating emergency services because they are not signed in.
+> **Act first, identify progressively, reconcile securely afterward.**
+
+- Emergency journeys lead with *"What is happening? Is anyone in immediate danger?
+  Where are you?"* — never with "Sign in".
+- Available without sign-in (Daidzai, Nompilo, Ndila, Nhume, Khuluma): danger-sign
+  identification, first-aid and stabilisation guidance, emergency calling/messaging,
+  nearest-emergency-facility routing, assistance/ambulance request, permissioned
+  location sharing, incident/outbreak/hazard reporting, national and local health
+  alerts, blood-service and shelter information.
+- **Urgency taxonomy** — Nompilo classifies, always erring toward safety, with a clear
+  escalation route at every tier:
+  - **Emergency**: immediate threat to life, limb or major function → response activated
+    now (call-first, §7).
+  - **Urgency**: needs prompt attention → guided steps, same-day care and facility
+    routing.
+  - **Routine**: normal booking, self-care or planned navigation.
+- Sign-in may be **offered after** the safety action has started — to retrieve
+  allergies/medications/contacts, share records with the receiving team, notify a
+  permitted contact, track dispatch, keep the episode in the record, or support billing
+  and medico-legal documentation — and SHALL never delay guidance, dispatch, calling,
+  location sharing, reporting or routing.
+- For an unconscious or unidentified person, responders create a **temporary emergency
+  identity**, reconciled later through VITO and TSHEPO (health-os §10 temporary
+  identity).
+- During outbreaks and mass-casualty events the platform MAY enter a visible **Disaster
+  Mode**: live alerts and trusted instructions, incident maps, safe-facility and
+  service-disruption status, shelter/evacuation information, family-reunification
+  pathways, blood/medicine/volunteer appeals, hazard reporting and misinformation
+  correction — all public; signed-in users may additionally receive personalised
+  warnings.
+
+### 13.6 Enumeration of record
+
+The per-domain public-versus-signed-in split (SIMBA, MSIKA, Nompilo, TUSO/VARAPI/NDILA,
+RITO, RUVIMBO, FUNDO, KHULUMA, regulatory services, telemedicine, emergency) is
+maintained in
+[`../registry/public-capability-register.md`](../registry/public-capability-register.md)
+— each capability names its owning service, its public lane (per the
+[public-lane security ADR](../architecture/gateway-public-lane-security-adr.md)) and its
+status. Deferred capabilities (Khuluma guest chat, temporary emergency identity,
+SMS/USSD/voice channels, full Disaster Mode, anonymous cost estimation) remain
+doctrine-required and are tracked there.
