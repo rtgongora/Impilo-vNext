@@ -88,8 +88,13 @@ public record ClinicalEvaluationContext(
     ) {
     }
 
-    /** A documented allergy: substance (lower-cased generic/substance) and clinician-recorded severity. */
-    public record Allergy(String substance, String severity) {
+    /** A documented allergy: substance (lower-cased generic/substance), clinician-recorded severity,
+     *  and — when the SoR carries one — the coded allergen reference (OF-B3, code-aware matching). */
+    public record Allergy(String substance, String severity, String code) {
+        /** Compatibility constructor for pre-OF-B3 callers (uncoded allergy). */
+        public Allergy(String substance, String severity) {
+            this(substance, severity, null);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -148,7 +153,10 @@ public record ClinicalEvaluationContext(
                 if (o instanceof Map<?, ?> a) {
                     String substance = str(a.get("substance")).toLowerCase(Locale.ROOT).trim();
                     if (!substance.isBlank()) {
-                        allergies.add(new Allergy(substance, str(a.get("severity")).toUpperCase(Locale.ROOT)));
+                        String code = str(a.get("code")).trim();
+                        allergies.add(new Allergy(substance,
+                                str(a.get("severity")).toUpperCase(Locale.ROOT),
+                                code.isBlank() ? null : code));
                     }
                 } else if (o != null) {
                     String substance = o.toString().toLowerCase(Locale.ROOT).trim();

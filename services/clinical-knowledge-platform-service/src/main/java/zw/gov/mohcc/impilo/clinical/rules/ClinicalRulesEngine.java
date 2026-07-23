@@ -242,7 +242,14 @@ public class ClinicalRulesEngine {
                 if (sub == null || sub.isBlank()) {
                     continue;
                 }
-                if (gen.contains(sub) || sub.contains(gen) && !gen.isBlank() || disp.contains(sub)) {
+                // Code-aware first (OF-B3): a coded allergen matching the line beats substring.
+                boolean codeMatch = a.code() != null && !a.code().isBlank()
+                        && (a.code().equalsIgnoreCase(med.genericName()) || a.code().equalsIgnoreCase(med.displayName()));
+                // Substring fallback — precedence fixed (was: gen.contains(sub) || sub.contains(gen) && !gen.isBlank() || ...,
+                // where && bound tighter than ||, letting a blank generic name slip through the guard).
+                boolean nameMatch = (!gen.isBlank() && (gen.contains(sub) || sub.contains(gen)))
+                        || (!disp.isBlank() && disp.contains(sub));
+                if (codeMatch || nameMatch) {
                     String name = (med.displayName() != null && !med.displayName().isBlank()) ? med.displayName() : med.genericName();
                     out.add(new RuleAlert(
                             "DRUG_ALLERGY_INTERACTION",

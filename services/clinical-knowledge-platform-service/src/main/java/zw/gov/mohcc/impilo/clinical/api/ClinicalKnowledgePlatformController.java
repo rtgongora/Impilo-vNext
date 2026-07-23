@@ -42,6 +42,7 @@ public class ClinicalKnowledgePlatformController {
     private final ClinicalOutboxWriter clinicalOutboxWriter;
     private final CdsInsightService cdsInsightService;
     private final InterpretationEvaluationService interpretationEvaluationService;
+    private final zw.gov.mohcc.impilo.clinical.rules.RuleGovernanceService ruleGovernanceService;
 
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
@@ -54,7 +55,8 @@ public class ClinicalKnowledgePlatformController {
             ClinicalContextEnricher clinicalContextEnricher,
             ClinicalOutboxWriter clinicalOutboxWriter,
             CdsInsightService cdsInsightService,
-            InterpretationEvaluationService interpretationEvaluationService) {
+            InterpretationEvaluationService interpretationEvaluationService,
+            zw.gov.mohcc.impilo.clinical.rules.RuleGovernanceService ruleGovernanceService) {
         this.assistantService = assistantService;
         this.prescribingEvaluationService = prescribingEvaluationService;
         this.pathwaySessionService = pathwaySessionService;
@@ -66,6 +68,7 @@ public class ClinicalKnowledgePlatformController {
         this.clinicalOutboxWriter = clinicalOutboxWriter;
         this.cdsInsightService = cdsInsightService;
         this.interpretationEvaluationService = interpretationEvaluationService;
+        this.ruleGovernanceService = ruleGovernanceService;
     }
 
     @PostMapping("/assistant/ask")
@@ -104,7 +107,10 @@ public class ClinicalKnowledgePlatformController {
     @PostMapping("/rules/evaluate")
     public ResponseEntity<Map<String, Object>> rules(@RequestBody Map<String, Object> body) {
         var ctx = clinicalContextEnricher.enrich(ClinicalEvaluationContext.fromMap(body));
-        var alerts = clinicalRulesEngine.evaluate(ctx).stream().map(RuleAlert::toMap).toList();
+        // OF-B3: deterministic engine output governed by clinical.rule_definitions
+        // (severity/interruptive overrides + effective-window retirement).
+        var alerts = ruleGovernanceService.apply(clinicalRulesEngine.evaluate(ctx))
+                .stream().map(RuleAlert::toMap).toList();
         return ResponseEntity.ok(Map.of("data", Map.of("alerts", alerts)));
     }
 

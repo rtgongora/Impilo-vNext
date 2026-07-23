@@ -101,10 +101,24 @@ public class TeleconsultResponseValidationService {
                 try {
                     JsonNode result = ziboClient.validateCoding(system, code, asString(coded.get("display")));
                     boolean valid = result != null && result.path("valid").asBoolean(false);
-                    boolean systemKnown = result != null && result.path("systemRegistered").asBoolean(true);
+                    // ZIBO's ValidationResultDto carries no systemRegistered flag — an unregistered
+                    // system surfaces as an issue with code "not-found" (OF-B3 fix: the old read of
+                    // a nonexistent field made the unknown-system downgrade dead code).
+                    boolean systemUnregistered = false;
+                    if (result != null && result.path("issues").isArray()) {
+                        for (JsonNode issue : result.path("issues")) {
+                            if ("not-found".equals(issue.path("code").asText())) {
+                                systemUnregistered = true;
+                                break;
+                            }
+                        }
+                    }
                     if (!valid) {
-                        issues.add(new Issue(systemKnown ? "ERROR" : "WARNING", "CODED_DIAGNOSIS_INVALID",
-                                "Coded diagnosis " + code + " is not valid in " + system + "."));
+                        issues.add(systemUnregistered
+                                ? new Issue("WARNING", "TERMINOLOGY_SYSTEM_UNREGISTERED",
+                                        "Code system " + system + " is not registered in ZIBO — coding unverified.")
+                                : new Issue("ERROR", "CODED_DIAGNOSIS_INVALID",
+                                        "Coded diagnosis " + code + " is not valid in " + system + "."));
                     }
                 } catch (Exception e) {
                     log.warn("ZIBO code validation unavailable: {}", e.getMessage());
@@ -152,16 +166,20 @@ public class TeleconsultResponseValidationService {
             } else {
                 try {
                     JsonNode allergies = pctClient.listAllergies(patientCpid);
-                    List<String> substances = allergySubstances(allergies);
+                    List<AllergyRef> refs = allergyRefs(allergies);
                     for (Map<String, Object> p : prescriptions) {
                         String med = asString(p.get("medication"));
-                        if (notBlank(med)) {
-                            for (String sub : substances) {
-                                if (matches(med, sub)) {
-                                    issues.add(new Issue("ERROR", "ALLERGY_CONFLICT",
-                                            "Patient has a recorded allergy to " + sub + " — conflicts with prescribed "
-                                                    + med + "."));
-                                }
+                        String medCode = asString(p.get("code"));
+                        for (AllergyRef ref : refs) {
+                            // Code-aware first (OF-B3: the PCT SoR is coded), then name substring.
+                            boolean codeHit = notBlank(medCode) && notBlank(ref.code())
+                                    && medCode.equalsIgnoreCase(ref.code());
+                            boolean nameHit = notBlank(med) && notBlank(ref.display()) && matches(med, ref.display());
+                            if (codeHit || nameHit) {
+                                issues.add(new Issue("ERROR", "ALLERGY_CONFLICT",
+                                        "Patient has a recorded allergy to " + ref.display()
+                                                + (codeHit ? " [" + ref.code() + "]" : "")
+                                                + " — conflicts with prescribed " + (notBlank(med) ? med : medCode) + "."));
                             }
                         }
                     }
@@ -195,15 +213,24 @@ public class TeleconsultResponseValidationService {
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
-    private List<String> allergySubstances(JsonNode allergies) {
-        List<String> out = new ArrayList<>();
+    /** A recorded allergy reference: display name + coded allergen when the SoR carries one. */
+    record AllergyRef(String display, String code) {}
+
+    private List<AllergyRef> allergyRefs(JsonNode allergies) {
+        List<AllergyRef> out = new ArrayList<>();
         if (allergies == null) return out;
         JsonNode arr = allergies.isArray() ? allergies : allergies.path("items");
         if (arr.isArray()) {
             for (JsonNode a : arr) {
-                for (String f : new String[] {"substance", "allergen", "name", "display", "code"}) {
+                String display = null;
+                for (String f : new String[] {"substance", "allergen", "name", "display"}) {
                     String v = a.path(f).asText(null);
-                    if (v != null && !v.isBlank()) { out.add(v); break; }
+                    if (v != null && !v.isBlank()) { display = v; break; }
+                }
+                String code = a.path("allergen_code").asText(null);
+                if (code == null || code.isBlank()) code = a.path("code").asText(null);
+                if (display != null || (code != null && !code.isBlank())) {
+                    out.add(new AllergyRef(display, code));
                 }
             }
         }
