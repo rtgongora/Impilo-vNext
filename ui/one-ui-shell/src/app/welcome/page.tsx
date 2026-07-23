@@ -75,6 +75,13 @@ const INTENT_PILLARS: Array<{
     access: "open",
   },
   {
+    title: "Registration & licensing",
+    description:
+      "How to register a health professional or license a facility — application routes, requirements, fees and councils. Read freely; sign in to apply.",
+    href: "/welcome/regulatory",
+    access: "open",
+  },
+  {
     title: "Get involved",
     description:
       "Impilo is growing — with you. Share an idea, tell us your experience, or help test what comes next.",

@@ -774,6 +774,23 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    /** Public councils reference (anonymous-safe) — institutional facts only, no PII. */
+    public JsonNode publicCouncils() {
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                java.net.URI.create(baseUrl + "/v1/public/councils"),
+                HttpMethod.GET, anonymousSafeEntity(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Public professional registers for a council (anonymous-safe). */
+    public JsonNode publicCouncilRegisters(String councilCode) {
+        String url = baseUrl + "/v1/public/councils/"
+                + URLEncoder.encode(councilCode, StandardCharsets.UTF_8) + "/registers";
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                java.net.URI.create(url), HttpMethod.GET, anonymousSafeEntity(), JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * Verified providers at a facility (public register facts; anonymous-safe). Varapi owns the
      * gate and returns an empty {@code ApiResponse.data} list for an unknown/empty facility (no

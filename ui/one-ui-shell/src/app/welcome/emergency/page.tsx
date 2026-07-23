@@ -1,6 +1,7 @@
 import { PublicShell } from "@/components/public/PublicShell";
 import { EmergencyExperience } from "@/components/public/emergency/EmergencyExperience";
 import { EmergencyGuidanceCards } from "@/components/public/emergency/EmergencyGuidanceCards";
+import { BloodDonationAppeals } from "@/components/public/emergency/BloodDonationAppeals";
 
 export const metadata = {
   title: "Emergency help — Impilo",
@@ -23,6 +24,7 @@ export default function EmergencyPage() {
     <PublicShell>
       <EmergencyExperience />
       <EmergencyGuidanceCards />
+      <BloodDonationAppeals />
     </PublicShell>
   );
 }

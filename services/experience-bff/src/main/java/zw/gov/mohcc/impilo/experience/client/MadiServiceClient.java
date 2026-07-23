@@ -46,6 +46,15 @@ public class MadiServiceClient {
         return get(builder.toUriString(), "dashboard");
     }
 
+    /**
+     * Public blood-donation appeals (anonymous-safe) — currently PUBLISHED/OPEN drives with
+     * allow-listed fields only (no donor PII). madi's {@code PublicDonationDriveController}
+     * scopes the read to the care plane and returns a raw JSON array.
+     */
+    public JsonNode publicDrives() {
+        return get(baseUrl + "/v1/public/madi/drives", "publicDrives");
+    }
+
     // ── Donors ───────────────────────────────────────────────────────
 
     public JsonNode registerDonor(Map<String, Object> body) {

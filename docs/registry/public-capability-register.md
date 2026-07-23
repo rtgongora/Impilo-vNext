@@ -58,11 +58,11 @@ reference-only fallback (daidzai SOS status).
 |---|---|---|---|
 | Verified emergency numbers, tap-to-call, danger-sign cards | one-ui-shell (config-driven) | `/welcome/emergency` | LIVE |
 | Nompilo guided emergency triage (danger-sign escalation, safe actions) | one-ui-shell deterministic protocol | `/welcome/emergency` | LIVE |
-| Urgency taxonomy in triage outcomes (emergency/urgency/routine) | one-ui-shell | triage-protocol.ts | PLANNED-W2 |
+| Urgency taxonomy in triage outcomes (emergency/urgency/routine) | one-ui-shell | triage-protocol.ts | LIVE (PF-W2) |
 | Anonymous SOS / assistance request + honest status tracking | daidzai-service | `/internal/v1/public/gateway/sos*` | LIVE |
 | Nearest emergency-capable care (GPS/province) | tuso + ndila | find-care lane (`service=EMERGENCY`) | LIVE |
 | Public disaster/incident alerts | daidzai-service | `PublicDisasterAlertsController` (new) | PLANNED-W2 |
-| Blood-donation drives & appeals | madi-service | `PublicDonationDrivesController` (new) | PLANNED-W2 |
+| Blood-donation drives & appeals | madi-service | `/internal/v1/public/gateway/blood/drives` (on `/welcome/emergency`) | LIVE (PF-W2) |
 | Full Disaster Mode surface (maps, shelters, reunification, misinformation control) | daidzai + guidance + ndila | — | DEFERRED |
 | Temporary emergency identity (unconscious/unidentified; VITO/TSHEPO reconcile) | vito + tshepo | — | DEFERRED |
 | SMS/USSD/voice low-bandwidth channels | channels/khuluma | — | DEFERRED |
@@ -138,8 +138,8 @@ reference-only fallback (daidzai SOS status).
 
 | Capability | Owning service | Lane | Status |
 |---|---|---|---|
-| Facility licensing: application types, classifications, fee schedules, rules, stages | tuso-service | `PublicRegulatoryRequirementsController` (new) | PLANNED-W2 |
-| Professional registration: categories, councils, requirements, CPD rules | varapi-service | `PublicRegistrationRequirementsController` (new) | PLANNED-W2 |
+| Facility licensing: application types, classifications, fee schedules, rules | tuso-service | `/internal/v1/public/gateway/regulatory/requirements` + `/welcome/regulatory` | LIVE (PF-W2) |
+| Professional councils + registers | varapi-service | `/internal/v1/public/gateway/regulatory/councils` | LIVE (PF-W2). Cadre/CPD-requirement reference remains DEFERRED (only provider-bound today) |
 | Sign-in trigger: start/manage applications, upload documents, pay fees, decisions, compliance tracking | — | authenticated | LIVE (authenticated) |
 
 ## Support & communication (KHULUMA)

@@ -218,6 +218,18 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Public regulatory reference (anonymous-safe) — facility licensing requirements, fees,
+     * classifications and rules. Tenant-agnostic catalogue data; the anonymous-safe headers
+     * satisfy the trust filter without scoping the reads.
+     */
+    public JsonNode publicRegulatoryRequirements() {
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                java.net.URI.create(baseUrl + "/v1/public/facility-registry"),
+                HttpMethod.GET, anonymousSafeEntity(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Public facility profile (disclosure-limited view; anonymous-safe). */
     public JsonNode publicFacilityProfile(long id) {
         ResponseEntity<JsonNode> response = restTemplate.exchange(
