@@ -220,8 +220,13 @@ public class PrescriptionService {
 
         // Single-active token invariant: revoke the predecessor's token in the same
         // transaction that mints the successor's (§13.2.1 — defeats cross-version reuse).
+        // The flush between them is load-bearing: Hibernate orders INSERTs before
+        // UPDATEs at flush time, so without it the successor's INSERT hits the
+        // single-active partial unique index while the predecessor is still ACTIVE
+        // (caught live by rig J-OO-5 — invisible to mocked unit tests).
         tokenRepository.findByPrescriptionIdAndStatus(prescriptionId, PrescriptionTokenEntity.STATUS_ACTIVE)
                 .ifPresent(t -> revokeToken(t, amendment ? "SUPERSEDED" : "REISSUED"));
+        tokenRepository.flush();
         PrescriptionTokenEntity token = mintToken(rx, head);
 
         publishEvent(prescriptionId, "PRESCRIPTION_SIGNED", versionPayload(rx, head), ctx.tenantId());
