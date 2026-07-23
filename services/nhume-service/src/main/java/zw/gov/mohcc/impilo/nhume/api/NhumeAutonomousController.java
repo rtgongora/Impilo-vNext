@@ -154,6 +154,10 @@ public class NhumeAutonomousController {
         map.put("arrived_at", m.getArrivedAt());
         map.put("completed_at", m.getCompletedAt());
         map.put("simulation_mode", m.isSimulationMode());
+        // OF-B20 §12.9 — corridor linkage + governed-fallback reason (journey #67).
+        // A NOT_FLOWN status is the ONLY honest flight posture on this estate.
+        map.put("corridor_code", m.getCorridorCode());
+        map.put("fallback_reason", m.getFallbackReason());
         map.put("telemetry_json", m.getTelemetryJson());
         map.put("created_at", m.getCreatedAt());
         return map;

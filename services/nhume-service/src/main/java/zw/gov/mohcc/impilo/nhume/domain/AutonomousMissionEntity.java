@@ -36,6 +36,25 @@ public class AutonomousMissionEntity {
     @Column(name = "status", nullable = false, length = 32)
     private String status = "DRAFT";
 
+    /** OF-B20 §12.9 — the governed corridor this mission was planned against. */
+    @Column(name = "corridor_code", length = 64)
+    private String corridorCode;
+
+    /** OF-B20 journey #67 — set when the weather/eligibility gate forced a ROAD fallback. */
+    @Column(name = "fallback_reason", length = 255)
+    private String fallbackReason;
+
+    /**
+     * OF-B20 HONESTY LAW (CONFIG-ONLY — R67/OF-G21): actual flight operations are
+     * outside the estate. No code path may record a mission as having flown —
+     * any attempt to persist a flight-claim status is rejected at the domain
+     * boundary. Missions exist so the capability is governed and auditable and
+     * the ROAD fallback is real; the first honest flight claim requires the
+     * §12.9 evidence pack and a deliberate removal of this guard.
+     */
+    private static final java.util.Set<String> FLIGHT_CLAIM_STATUSES = java.util.Set.of(
+            "FLOWN", "IN_FLIGHT", "AIRBORNE", "LANDED", "FLIGHT_COMPLETED", "FLIGHT_IN_PROGRESS");
+
     @Column(name = "launch_site", length = 255)
     private String launchSite;
 
@@ -86,7 +105,18 @@ public class AutonomousMissionEntity {
     public String getMissionKind() { return missionKind; }
     public void setMissionKind(String v) { this.missionKind = v; }
     public String getStatus() { return status; }
-    public void setStatus(String v) { this.status = v; }
+    public void setStatus(String v) {
+        if (v != null && FLIGHT_CLAIM_STATUSES.contains(v.toUpperCase(java.util.Locale.ROOT))) {
+            throw new IllegalArgumentException("MISSION_FLIGHT_CLAIM_FORBIDDEN: status '" + v
+                    + "' would claim an actual flight. Drone delivery is a governed CONFIG-ONLY"
+                    + " capability (OF-B20/OF-G21/R67) — no code path may record a flown mission.");
+        }
+        this.status = v;
+    }
+    public String getCorridorCode() { return corridorCode; }
+    public void setCorridorCode(String v) { this.corridorCode = v; }
+    public String getFallbackReason() { return fallbackReason; }
+    public void setFallbackReason(String v) { this.fallbackReason = v; }
     public String getLaunchSite() { return launchSite; }
     public void setLaunchSite(String v) { this.launchSite = v; }
     public String getLandingSite() { return landingSite; }

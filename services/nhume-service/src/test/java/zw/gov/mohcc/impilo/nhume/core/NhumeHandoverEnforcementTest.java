@@ -126,7 +126,11 @@ class NhumeHandoverEnforcementTest {
                 mock(DeliveryTrackingEventRepository.class), proofRepo, custodyRepo, exceptionRepo,
                 mock(DeliveryNotificationEventRepository.class), mock(DeliveryAuditEventRepository.class),
                 mock(OutboxEventRepository.class), policyRepo, courierRepo, assetRepo,
-                commsHub, new SimulatedNdilaClient(), mapper, writeBack, biometric);
+                commsHub, new SimulatedNdilaClient(), mapper, writeBack, biometric,
+                new DeliveryModeService(
+                        mock(zw.gov.mohcc.impilo.nhume.repository.ModeCorridorRepository.class),
+                        mock(zw.gov.mohcc.impilo.nhume.repository.AutonomousMissionRepository.class),
+                        mock(DeliveryPackageRepository.class)));
     }
 
     private static DeliveryAssignmentEntity assignmentFor(UUID deliveryId) {
@@ -157,7 +161,7 @@ class NhumeHandoverEnforcementTest {
                 null, "NONE", false, controlled, false, false, false, false, true, false,
                 null, null, null, null, null, null, null, null, null,
                 Map.of("links", Map.of("msikaFlowSelectionRef", "SEL-1")), true,
-                "OTP_MATCH", true);
+                "OTP_MATCH", true, null, null, null);
         DeliveryRequestEntity d = service.createDelivery(
                 UUID.randomUUID(), "national-spine", null, null, req, actor());
         if (maxAttempts != null) {

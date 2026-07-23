@@ -101,6 +101,7 @@ public class NhumeDeliveryService {
     private final ObjectMapper objectMapper;
     private final zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack;
     private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
+    private final DeliveryModeService modeService;
 
     public NhumeDeliveryService(DeliveryRequestRepository deliveryRepo,
                                 DeliveryItemRepository itemRepo,
@@ -121,7 +122,8 @@ public class NhumeDeliveryService {
                                 NdilaClient ndila,
                                 ObjectMapper objectMapper,
                                 zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack,
-                                zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
+                                zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification,
+                                DeliveryModeService modeService) {
         this.deliveryRepo = deliveryRepo;
         this.itemRepo = itemRepo;
         this.packageRepo = packageRepo;
@@ -142,6 +144,7 @@ public class NhumeDeliveryService {
         this.objectMapper = objectMapper;
         this.writeBack = writeBack;
         this.biometricVerification = biometricVerification;
+        this.modeService = modeService;
     }
 
     // ─── Reads ──────────────────────────────────────────────────────────────
@@ -358,9 +361,36 @@ public class NhumeDeliveryService {
                                                 TrustLayerGuard.ActorContext actor) {
         // OF-B18 — a graded delivery may only be signed off DELIVERED against a
         // verified DELIVERY-stage proof that meets the required §12.4 grade.
-        deliveryRepo.findById(deliveryId).ifPresent(this::assertHandoverProven);
+        // OF-B19 — an excursion-flagged cold delivery additionally needs a
+        // recorded pharmacist stability decision (fail-closed, §12.6).
+        deliveryRepo.findById(deliveryId).ifPresent(d -> {
+            assertColdChainReleasable(d);
+            assertHandoverProven(d);
+        });
         return transition(deliveryId, DeliveryStatus.DELIVERED, req, actor,
                 NhumeEvents.DELIVERY_COMPLETED);
+    }
+
+    /**
+     * OF-B19 §12.6 fail-closed cold-chain release gate: while a cold delivery is
+     * EXCURSION_FLAGGED, handover is REFUSED unless a pharmacist stability
+     * decision is on record — and a QUARANTINE decision refuses it permanently
+     * (the cargo is on the RETURNED path, §12.7).
+     */
+    private void assertColdChainReleasable(DeliveryRequestEntity d) {
+        if (!d.isColdChainRequired() || !d.isExcursionFlagged()) {
+            return;
+        }
+        if (d.getStabilityDecision() == null) {
+            throw new IllegalStateException("COLD_CHAIN_STABILITY_DECISION_REQUIRED: delivery "
+                    + d.getDeliveryId() + " is excursion-flagged; a pharmacist stability decision"
+                    + " (USE/QUARANTINE) must be recorded before handover (§12.6, fail-closed)");
+        }
+        if ("QUARANTINE".equals(d.getStabilityDecision())) {
+            throw new IllegalStateException("COLD_CHAIN_QUARANTINED: delivery " + d.getDeliveryId()
+                    + " was quarantined by pharmacist stability decision — handover is forbidden;"
+                    + " the cargo follows the RETURNED/refund path (§12.7)");
+        }
     }
 
     /** Fail-closed DELIVERED gate for graded order classes (OF-B18 §12.4). */
@@ -511,6 +541,48 @@ public class NhumeDeliveryService {
                     assignmentRepo.save(prev);
                 });
 
+        // OF-B20 §12.9 — the governed transport-mode matrix is evaluated ONCE, at
+        // dispatch. DRONE is offered only when a governed corridor is enabled, every
+        // eligibility constraint provably holds AND the weather envelope is CLEAR;
+        // anything else is a recorded ROAD fallback (journey #67). The custody chain
+        // carries the mode decision so it stays unbroken across any mode change.
+        DeliveryModeService.ModeDecision modeDecision = null;
+        if (delivery.getDeliveryMode() == null) {
+            modeDecision = modeService.decideAtDispatch(delivery);
+            delivery.setDeliveryMode(modeDecision.mode());
+            delivery.setModeFallbackReason(modeDecision.fallbackReason());
+            if (modeDecision.droneConsidered()) {
+                boolean drone = DeliveryModeService.MODE_DRONE.equals(modeDecision.mode());
+                ChainOfCustodyEventEntity coc = appendCustody(delivery,
+                        drone ? "MODE_ASSIGNED" : "MODE_FALLBACK",
+                        drone
+                                ? "Mode DRONE planned on corridor " + modeDecision.corridorCode()
+                                        + " — mission " + modeDecision.missionId()
+                                        + " recorded NOT_FLOWN (config-only capability, no flight claim)"
+                                : "Governed fallback to ROAD (" + modeDecision.fallbackReason() + ")"
+                                        + (modeDecision.corridorCode() != null
+                                                ? " on corridor " + modeDecision.corridorCode() : "")
+                                        + (modeDecision.missionId() != null
+                                                ? " — mission " + modeDecision.missionId()
+                                                        + " retained NOT_FLOWN" : ""),
+                        actor);
+                custodyRepo.save(coc);
+                Map<String, Object> modePayload = buildDeliveryStatePayload(delivery);
+                modePayload.put("delivery_mode", modeDecision.mode());
+                modePayload.put("corridor_code", modeDecision.corridorCode());
+                modePayload.put("fallback_reason", modeDecision.fallbackReason());
+                modePayload.put("mission_id",
+                        modeDecision.missionId() != null ? modeDecision.missionId().toString() : null);
+                appendOutboxEvent(drone ? NhumeEvents.DELIVERY_MODE_ASSIGNED
+                                : NhumeEvents.DELIVERY_MODE_FALLBACK,
+                        delivery, delivery.getTenantId(), delivery.getPodId(),
+                        delivery.getCorrelationId() != null ? delivery.getCorrelationId().toString() : null,
+                        "mode-" + delivery.getDeliveryId(), modePayload);
+                recordAudit(delivery, drone ? "delivery.mode.assigned:drone"
+                        : "delivery.mode.fallback:road", actor);
+            }
+        }
+
         DeliveryAssignmentEntity assignment = new DeliveryAssignmentEntity();
         assignment.setAssignmentId(UUID.randomUUID());
         assignment.setDeliveryId(deliveryId);
@@ -522,6 +594,11 @@ public class NhumeDeliveryService {
         String mode = req.modeCategory();
         if (mode == null && req.assetId() != null) {
             mode = assetRepo.findById(req.assetId()).map(FleetAssetEntity::getModeCategory).orElse("OTHER");
+        }
+        // OF-B20 — no explicit mode from the dispatcher: default to the governed
+        // matrix decision recorded on the delivery (DRONE only via the gate).
+        if (mode == null && delivery.getDeliveryMode() != null) {
+            mode = delivery.getDeliveryMode();
         }
         assignment.setModeCategory(orDefault(mode, "OTHER"));
         assignment.setAssignmentKind(orDefault(req.assignmentKind(), "MANUAL"));
@@ -665,6 +742,12 @@ public class NhumeDeliveryService {
                                              TrustLayerGuard.ActorContext actor) {
         DeliveryRequestEntity d = deliveryRepo.findById(deliveryId)
                 .orElseThrow(() -> new DeliveryNotFoundException(deliveryId));
+        // OF-B19 §12.6 — an excursion-flagged cold delivery may not even ATTEMPT a
+        // DELIVERY-stage handover without a recorded stability decision. This is
+        // not a verification failure (no reattempt budget burn) — it is a refusal.
+        if ("DELIVERY".equals(orDefault(req.proofStage(), "DELIVERY"))) {
+            assertColdChainReleasable(d);
+        }
         // Optional live biometric recipient-verification at handover. MATCH → mark the proof
         // biometric-verified; NO_MATCH → reject the handover (nothing persisted); UNAVAILABLE /
         // NO_REFERENCE → fall back to the declared proof method so an outage never blocks delivery.
@@ -835,15 +918,210 @@ public class NhumeDeliveryService {
                 "coc-" + UUID.randomUUID(), payload);
         recordAudit(d, "delivery.custody.recorded", actor);
 
+        // OF-B19 §12.6 — manually-recorded temperature custody events ride the SAME
+        // unsuppressible excursion path as IoT telemetry: a band breach always flags
+        // the delivery, never just logs. (The caller's own custody row already exists,
+        // so the dedicated TEMPERATURE_EXCURSION row is skipped only when the caller
+        // itself recorded one.)
         if (req.temperatureC() != null && d.isColdChainRequired()
-                && (req.temperatureC().doubleValue() > 8.0 || req.temperatureC().doubleValue() < 2.0)) {
-            DeliveryExceptionEntity ex = raiseException(deliveryId, "COLD_CHAIN_BREACH", "CRITICAL",
-                    "Cold-chain breach detected (" + req.temperatureC() + "°C)", actor);
-            appendOutboxEvent(NhumeEvents.DELIVERY_COLD_CHAIN_BREACH, d, d.getTenantId(),
-                    d.getPodId(), null, "coc-breach-" + UUID.randomUUID(),
-                    Map.of("exception_id", ex.getExceptionId().toString(),
-                            "temperature_c", req.temperatureC()));
+                && isOutOfBand(d, req.temperatureC())) {
+            flagExcursion(d, req.temperatureC(), req.deviceUsed(), "MANUAL_CUSTODY",
+                    actor, !"TEMPERATURE_EXCURSION".equals(req.eventKind()));
         }
+        return coc;
+    }
+
+    // ─── Cold chain (OF-B19 §12.6) ──────────────────────────────────────────
+
+    /**
+     * Periodic cold-chain telemetry: append a TEMPERATURE_READING custody event
+     * and evaluate the cargo stability band. A breach is UNSUPPRESSIBLE — it is
+     * always written to the custody chain, always raises a CRITICAL exception,
+     * always flags the delivery, and always emits the excursion event; repeated
+     * breaches each append their own excursion evidence.
+     */
+    @Transactional
+    public ChainOfCustodyEventEntity recordTemperatureReading(UUID deliveryId, String sensorRef,
+                                                              java.math.BigDecimal temperatureC,
+                                                              OffsetDateTime recordedAt, String source,
+                                                              TrustLayerGuard.ActorContext actor) {
+        DeliveryRequestEntity d = deliveryRepo.findById(deliveryId)
+                .orElseThrow(() -> new DeliveryNotFoundException(deliveryId));
+        ChainOfCustodyEventEntity coc = appendCustody(d, "TEMPERATURE_READING",
+                "Periodic sensor reading via " + orDefault(source, "IOT_BUS")
+                        + (recordedAt != null ? " at " + recordedAt : ""),
+                actor);
+        coc.setTemperatureC(temperatureC);
+        coc.setDeviceUsed(sensorRef);
+        custodyRepo.save(coc);
+
+        if (d.isColdChainRequired() && temperatureC != null && isOutOfBand(d, temperatureC)) {
+            flagExcursion(d, temperatureC, sensorRef, orDefault(source, "IOT_BUS"), actor, true);
+        }
+        return coc;
+    }
+
+    /**
+     * OF-B19 — pharmacist stability decision on an excursion-flagged cold
+     * delivery. {@code USE} (excursion within the product's stability budget)
+     * unblocks handover; {@code QUARANTINE} routes the cargo onto the
+     * §12.7 RETURNED path, which fires the existing msika-flow selection
+     * write-back (refund seam). The decision is append-only: one decision per
+     * excursion episode, corrections are ops compensating acts.
+     */
+    @Transactional
+    public DeliveryRequestEntity recordStabilityDecision(UUID deliveryId, String decision,
+                                                         String notes,
+                                                         TrustLayerGuard.ActorContext actor) {
+        DeliveryRequestEntity d = deliveryRepo.findById(deliveryId)
+                .orElseThrow(() -> new DeliveryNotFoundException(deliveryId));
+        if (!d.isColdChainRequired()) {
+            throw new IllegalStateException("STABILITY_DECISION_NOT_APPLICABLE: delivery "
+                    + deliveryId + " is not a cold-chain delivery");
+        }
+        if (!d.isExcursionFlagged()) {
+            throw new IllegalStateException("STABILITY_DECISION_WITHOUT_EXCURSION: delivery "
+                    + deliveryId + " has no temperature excursion to decide on");
+        }
+        if (d.getStabilityDecision() != null) {
+            throw new IllegalStateException("STABILITY_DECISION_ALREADY_RECORDED: delivery "
+                    + deliveryId + " already carries decision " + d.getStabilityDecision());
+        }
+        String normalized = decision == null ? "" : decision.trim().toUpperCase(Locale.ROOT);
+        if (!"USE".equals(normalized) && !"QUARANTINE".equals(normalized)) {
+            throw new IllegalArgumentException(
+                    "STABILITY_DECISION_INVALID: decision must be USE or QUARANTINE");
+        }
+        OffsetDateTime now = OffsetDateTime.now();
+        d.setStabilityDecision(normalized);
+        d.setStabilityDecisionBy(actor != null ? actor.actorId() : null);
+        d.setStabilityDecisionAt(now);
+        d.setStabilityDecisionNotes(notes);
+        d.setUpdatedAt(now);
+        deliveryRepo.save(d);
+
+        ChainOfCustodyEventEntity coc = appendCustody(d, "STABILITY_DECISION",
+                "Pharmacist stability decision: " + normalized
+                        + (notes != null && !notes.isBlank() ? " — " + notes : ""), actor);
+        custodyRepo.save(coc);
+
+        Map<String, Object> payload = buildDeliveryStatePayload(d);
+        payload.put("stability_decision", normalized);
+        payload.put("decided_by", d.getStabilityDecisionBy());
+        payload.put("notes", notes);
+        appendOutboxEvent(NhumeEvents.DELIVERY_STABILITY_DECISION, d, d.getTenantId(), d.getPodId(),
+                d.getCorrelationId() != null ? d.getCorrelationId().toString() : null,
+                "stability-" + d.getDeliveryId(), payload);
+        recordAudit(d, "delivery.coldchain.stability_decision:" + normalized.toLowerCase(Locale.ROOT), actor);
+        dispatchNotification(d, "COLD_CHAIN_STABILITY_" + normalized,
+                "nhume.delivery.cold_chain_stability", channelForRecipient(d));
+
+        if ("QUARANTINE".equals(normalized)) {
+            ChainOfCustodyEventEntity ret = appendCustody(d, "RETURN_INITIATED",
+                    "Cold-chain quarantine — cargo returning to sender per §12.7", actor);
+            custodyRepo.save(ret);
+            routeQuarantineToReturn(d, actor);
+        }
+        return deliveryRepo.findById(deliveryId).orElse(d);
+    }
+
+    /**
+     * QUARANTINE → RETURNED, honouring the 24-status machine: transition
+     * directly where legal, via FAILED where not; a state that reaches neither
+     * raises an ops exception instead of silently stranding quarantined cargo.
+     * The RETURNED transition fires the existing OF-B17 selection write-back
+     * (msika-flow refund seam) — no second refund path is created here.
+     */
+    private void routeQuarantineToReturn(DeliveryRequestEntity d, TrustLayerGuard.ActorContext actor) {
+        String reason = "Cold-chain excursion quarantined by pharmacist stability decision";
+        DeliveryStatus current = parseStatus(d.getStatus());
+        if (DeliveryStatus.canTransition(current, DeliveryStatus.RETURNED)) {
+            transition(d.getDeliveryId(), DeliveryStatus.RETURNED,
+                    new StatusChangeRequest(reason, null), actor, NhumeEvents.DELIVERY_RETURN_COMPLETED);
+            return;
+        }
+        if (DeliveryStatus.canTransition(current, DeliveryStatus.FAILED)) {
+            transition(d.getDeliveryId(), DeliveryStatus.FAILED,
+                    new StatusChangeRequest(reason, null), actor, NhumeEvents.DELIVERY_FAILED);
+            transition(d.getDeliveryId(), DeliveryStatus.RETURNED,
+                    new StatusChangeRequest(reason, null), actor, NhumeEvents.DELIVERY_RETURN_COMPLETED);
+            return;
+        }
+        raiseException(d.getDeliveryId(), "COLD_CHAIN_QUARANTINE_UNROUTED", "CRITICAL",
+                "Quarantined cold cargo could not be routed to RETURNED from status "
+                        + d.getStatus() + " — manual ops routing required", actor);
+    }
+
+    /** Band check against the cargo profile; NULL band falls back to the 2–8 °C default. */
+    private boolean isOutOfBand(DeliveryRequestEntity d, java.math.BigDecimal temperatureC) {
+        double min = d.getColdMinC() != null ? d.getColdMinC().doubleValue() : 2.0;
+        double max = d.getColdMaxC() != null ? d.getColdMaxC().doubleValue() : 8.0;
+        double t = temperatureC.doubleValue();
+        return t < min || t > max;
+    }
+
+    /**
+     * The UNSUPPRESSIBLE excursion write: custody evidence + delivery flag +
+     * CRITICAL exception + events, every time a breach is observed. There is no
+     * code path that observes a breach without writing this evidence (T24 —
+     * cold-chain falsification — is countered by never offering suppression).
+     */
+    private void flagExcursion(DeliveryRequestEntity d, java.math.BigDecimal temperatureC,
+                               String sensorRef, String source,
+                               TrustLayerGuard.ActorContext actor, boolean appendCustodyEvidence) {
+        if (appendCustodyEvidence) {
+            ChainOfCustodyEventEntity coc = appendCustody(d, "TEMPERATURE_EXCURSION",
+                    "Stability band breach: " + temperatureC + "°C outside ["
+                            + (d.getColdMinC() != null ? d.getColdMinC() : "2.00") + ", "
+                            + (d.getColdMaxC() != null ? d.getColdMaxC() : "8.00") + "]°C via "
+                            + source, actor);
+            coc.setTemperatureC(temperatureC);
+            coc.setDeviceUsed(sensorRef);
+            coc.setExceptionFlags(toJson(List.of("TEMPERATURE_EXCURSION")));
+            custodyRepo.save(coc);
+        }
+        boolean firstExcursion = !d.isExcursionFlagged();
+        d.setExcursionFlagged(true);
+        d.setUpdatedAt(OffsetDateTime.now());
+        deliveryRepo.save(d);
+
+        DeliveryExceptionEntity ex = raiseException(d.getDeliveryId(), "COLD_CHAIN_EXCURSION",
+                "CRITICAL", "Cold-chain excursion (" + temperatureC + "°C, source " + source
+                        + ") — handover blocked pending pharmacist stability decision", actor);
+        Map<String, Object> payload = buildDeliveryStatePayload(d);
+        payload.put("temperature_c", temperatureC);
+        payload.put("sensor_device_ref", sensorRef);
+        payload.put("source", source);
+        payload.put("first_excursion", firstExcursion);
+        payload.put("exception_id", ex.getExceptionId().toString());
+        appendOutboxEvent(NhumeEvents.DELIVERY_TEMPERATURE_EXCURSION, d, d.getTenantId(), d.getPodId(),
+                d.getCorrelationId() != null ? d.getCorrelationId().toString() : null,
+                "excursion-" + UUID.randomUUID(), payload);
+        // Legacy event retained for pre-OF-B19 subscribers of the breach signal.
+        appendOutboxEvent(NhumeEvents.DELIVERY_COLD_CHAIN_BREACH, d, d.getTenantId(), d.getPodId(),
+                null, "coc-breach-" + UUID.randomUUID(),
+                Map.of("exception_id", ex.getExceptionId().toString(),
+                        "temperature_c", temperatureC));
+        recordAudit(d, "delivery.coldchain.excursion_flagged", actor);
+        if (firstExcursion) {
+            dispatchNotification(d, "COLD_CHAIN_EXCURSION",
+                    "nhume.delivery.cold_chain_excursion", channelForRecipient(d));
+        }
+    }
+
+    /** Append-only custody row with the shared sequence/actor conventions (not yet saved twice-safe). */
+    private ChainOfCustodyEventEntity appendCustody(DeliveryRequestEntity d, String eventKind,
+                                                    String notes, TrustLayerGuard.ActorContext actor) {
+        ChainOfCustodyEventEntity coc = new ChainOfCustodyEventEntity();
+        coc.setCocId(UUID.randomUUID());
+        coc.setDeliveryId(d.getDeliveryId());
+        coc.setSequenceNo(custodyRepo.findByDeliveryIdOrderBySequenceNoAsc(d.getDeliveryId()).size() + 1);
+        coc.setEventKind(eventKind);
+        coc.setCustodyHolder("COURIER");
+        coc.setHandoverNotes(notes);
+        coc.setActorId(actor != null ? actor.actorId() : "iot-telemetry-bus");
+        coc.setActorType(actor != null ? actor.actorType() : "SYSTEM");
+        custodyRepo.save(coc);
         return coc;
     }
 
@@ -965,6 +1243,12 @@ public class NhumeDeliveryService {
         if (req.consentRequired() != null) d.setConsentRequired(req.consentRequired());
         d.setIdentityVerification(orDefault(req.identityVerification(), "NONE"));
         if (req.coldChainRequired() != null) d.setColdChainRequired(req.coldChainRequired());
+        // OF-B19 §12.6 — sensor binding + cargo-specific stability band.
+        if (req.sensorDeviceRef() != null && !req.sensorDeviceRef().isBlank()) {
+            d.setSensorDeviceRef(req.sensorDeviceRef());
+        }
+        if (req.coldMinC() != null) d.setColdMinC(req.coldMinC());
+        if (req.coldMaxC() != null) d.setColdMaxC(req.coldMaxC());
         if (req.controlledItem() != null) d.setControlledItem(req.controlledItem());
         if (req.fragile() != null) d.setFragile(req.fragile());
         if (req.hazardous() != null) d.setHazardous(req.hazardous());

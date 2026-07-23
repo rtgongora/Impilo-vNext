@@ -20,6 +20,16 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+  # OF-B19 — nhume's first Kafka consumer (cold-chain telemetry). Preview/prod
+  # deployments must inject KAFKA_BOOTSTRAP_SERVERS; where no broker exists the
+  # listener can be held down with NHUME_COLDCHAIN_TELEMETRY_ENABLED=false.
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${KAFKA_BOOTSTRAP:localhost:9092}}
+    consumer:
+      group-id: nhume-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 nhume:
   # Drop-off / pickup write-backs to the services that own the cargo truth
@@ -27,6 +37,10 @@ nhume:
   writeback:
     # Msika Flow (marketplace orchestration) dispatch-status write-back.
     msika-flow-base-url: ${NHUME_WRITEBACK_MSIKA_FLOW_BASE_URL:http://msika-flow-service:8100}
+  coldchain:
+    # OF-B19 — cold-chain telemetry listener (telemetry.iot.device.reading).
+    # false = listener stays down (e.g. broker-less local runs).
+    telemetry-enabled: ${NHUME_COLDCHAIN_TELEMETRY_ENABLED:true}
 
 impilo:
   companion:
@@ -48,6 +62,7 @@ impilo:
     # Autonomous delivery providers (drone / UAV / AGV / robot / smart locker).
     autonomous:
       simulation-enabled: ${NHUME_AUTONOMOUS_SIM:true}
+
     # Webhook signature secret for partner couriers.
     webhooks:
       # Injected from Secret impilo-app-secrets (NHUME_WEBHOOK_SECRET) in preview/prod;

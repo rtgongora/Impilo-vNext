@@ -141,6 +141,42 @@ public class DeliveryRequestEntity {
     @Column(name = "cold_chain_required", nullable = false)
     private boolean coldChainRequired;
 
+    /** OF-B19 §12.6 — telemetry sensor (iot-ingestion DeviceId) sealed with the cargo. */
+    @Column(name = "sensor_device_ref", length = 128)
+    private String sensorDeviceRef;
+
+    /** OF-B19 — cargo-specific stability band (°C); NULL falls back to the 2–8 °C default. */
+    @Column(name = "cold_min_c", precision = 6, scale = 2)
+    private java.math.BigDecimal coldMinC;
+
+    @Column(name = "cold_max_c", precision = 6, scale = 2)
+    private java.math.BigDecimal coldMaxC;
+
+    /** OF-B19 — UNSUPPRESSIBLE excursion marker; only a stability decision resolves it. */
+    @Column(name = "excursion_flagged", nullable = false)
+    private boolean excursionFlagged;
+
+    /** OF-B19 — pharmacist stability decision: USE (within budget) or QUARANTINE (→ RETURNED). */
+    @Column(name = "stability_decision", length = 16)
+    private String stabilityDecision;
+
+    @Column(name = "stability_decision_by", length = 255)
+    private String stabilityDecisionBy;
+
+    @Column(name = "stability_decision_at")
+    private OffsetDateTime stabilityDecisionAt;
+
+    @Column(name = "stability_decision_notes", columnDefinition = "TEXT")
+    private String stabilityDecisionNotes;
+
+    /** OF-B20 §12.9 — mode decided at dispatch (ROAD default; DRONE only via the governed gate). */
+    @Column(name = "delivery_mode", length = 32)
+    private String deliveryMode;
+
+    /** OF-B20 — coded reason when the governed gate fell back to ROAD (journey #67). */
+    @Column(name = "mode_fallback_reason", length = 255)
+    private String modeFallbackReason;
+
     @Column(name = "controlled_item", nullable = false)
     private boolean controlledItem;
 
@@ -345,6 +381,26 @@ public class DeliveryRequestEntity {
     public void setIdentityVerification(String v) { this.identityVerification = v; }
     public boolean isColdChainRequired() { return coldChainRequired; }
     public void setColdChainRequired(boolean v) { this.coldChainRequired = v; }
+    public String getSensorDeviceRef() { return sensorDeviceRef; }
+    public void setSensorDeviceRef(String v) { this.sensorDeviceRef = v; }
+    public java.math.BigDecimal getColdMinC() { return coldMinC; }
+    public void setColdMinC(java.math.BigDecimal v) { this.coldMinC = v; }
+    public java.math.BigDecimal getColdMaxC() { return coldMaxC; }
+    public void setColdMaxC(java.math.BigDecimal v) { this.coldMaxC = v; }
+    public boolean isExcursionFlagged() { return excursionFlagged; }
+    public void setExcursionFlagged(boolean v) { this.excursionFlagged = v; }
+    public String getStabilityDecision() { return stabilityDecision; }
+    public void setStabilityDecision(String v) { this.stabilityDecision = v; }
+    public String getStabilityDecisionBy() { return stabilityDecisionBy; }
+    public void setStabilityDecisionBy(String v) { this.stabilityDecisionBy = v; }
+    public OffsetDateTime getStabilityDecisionAt() { return stabilityDecisionAt; }
+    public void setStabilityDecisionAt(OffsetDateTime v) { this.stabilityDecisionAt = v; }
+    public String getStabilityDecisionNotes() { return stabilityDecisionNotes; }
+    public void setStabilityDecisionNotes(String v) { this.stabilityDecisionNotes = v; }
+    public String getDeliveryMode() { return deliveryMode; }
+    public void setDeliveryMode(String v) { this.deliveryMode = v; }
+    public String getModeFallbackReason() { return modeFallbackReason; }
+    public void setModeFallbackReason(String v) { this.modeFallbackReason = v; }
     public boolean isControlledItem() { return controlledItem; }
     public void setControlledItem(boolean v) { this.controlledItem = v; }
     public boolean isFragile() { return fragile; }

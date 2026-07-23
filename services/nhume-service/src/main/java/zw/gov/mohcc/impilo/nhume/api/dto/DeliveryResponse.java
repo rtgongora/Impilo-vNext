@@ -30,6 +30,13 @@ public record DeliveryResponse(
         @JsonProperty("sla_id") String slaId,
         @JsonProperty("sla_due_at") OffsetDateTime slaDueAt,
         @JsonProperty("cold_chain_required") boolean coldChainRequired,
+        // OF-B19 §12.6 — cold-chain telemetry + excursion truth (never hidden).
+        @JsonProperty("sensor_device_ref") String sensorDeviceRef,
+        @JsonProperty("excursion_flagged") boolean excursionFlagged,
+        @JsonProperty("stability_decision") String stabilityDecision,
+        // OF-B20 §12.9 — governed mode decision (DRONE only via the gate; fallback is coded).
+        @JsonProperty("delivery_mode") String deliveryMode,
+        @JsonProperty("mode_fallback_reason") String modeFallbackReason,
         @JsonProperty("controlled_item") boolean controlledItem,
         @JsonProperty("chain_of_custody_required") boolean chainOfCustodyRequired,
         @JsonProperty("is_demo") boolean demo,

@@ -37,6 +37,17 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
     List<DeliveryRequestEntity> findSlaBreached(@Param("tenantId") UUID tenantId,
                                                 @Param("now") OffsetDateTime now);
 
+    /**
+     * OF-B19 §12.6 — the cold deliveries an IoT temperature reading applies to:
+     * bound to the sensor, cold-chain, and currently in a leg where the cargo is
+     * physically moving (custody with courier). Terminal / pre-pickup states are
+     * excluded — the vendor-side fridge is the vendor's own custody problem.
+     */
+    @Query("SELECT d FROM DeliveryRequestEntity d WHERE d.sensorDeviceRef = :sensorRef"
+            + " AND d.coldChainRequired = TRUE"
+            + " AND d.status IN ('PICKED_UP','IN_TRANSIT','AT_DESTINATION','DELIVERY_ATTEMPTED')")
+    List<DeliveryRequestEntity> findActiveColdChainBySensor(@Param("sensorRef") String sensorRef);
+
     long countByTenantIdAndStatus(UUID tenantId, String status);
 
     long countByTenantId(UUID tenantId);

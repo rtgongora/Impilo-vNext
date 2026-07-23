@@ -38,6 +38,16 @@ public final class NhumeEvents {
     public static final String DELIVERY_ROUTE_DEVIATION = "nhume.delivery.route_deviation.v1";
     public static final String DELIVERY_PROOF_CAPTURED = "nhume.delivery.proof_captured.v1";
 
+    // OF-B19 §12.6 — cold-chain IoT closed loop (excursions are unsuppressible).
+    // Periodic TEMPERATURE_READINGs are custody-chain rows only (no outbox spam);
+    // excursions always emit.
+    public static final String DELIVERY_TEMPERATURE_EXCURSION = "nhume.delivery.temperature_excursion.v1";
+    public static final String DELIVERY_STABILITY_DECISION   = "nhume.delivery.stability_decision.v1";
+
+    // OF-B20 §12.9 — governed transport-mode decision at dispatch (journey #67).
+    public static final String DELIVERY_MODE_ASSIGNED  = "nhume.delivery.mode_assigned.v1";
+    public static final String DELIVERY_MODE_FALLBACK  = "nhume.delivery.mode_fallback.v1";
+
     public static final String FLEET_ASSET_LOCATION_UPDATED = "nhume.fleet.asset_location_updated.v1";
 
     public static final String AUTONOMOUS_MISSION_CREATED  = "nhume.autonomous.mission_created.v1";

@@ -86,6 +86,8 @@ class NhumeDeliveryServiceTest {
     private FleetAssetRepository assetRepo;
     private CommsHubClient commsHub;
     private NdilaClient ndila;
+    private zw.gov.mohcc.impilo.nhume.repository.ModeCorridorRepository corridorRepo;
+    private zw.gov.mohcc.impilo.nhume.repository.AutonomousMissionRepository missionRepo;
     private NhumeDeliveryService service;
     private zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack;
     private zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
@@ -151,6 +153,10 @@ class NhumeDeliveryServiceTest {
         assetRepo = mock(FleetAssetRepository.class);
         commsHub = mock(CommsHubClient.class);
         ndila = new SimulatedNdilaClient();
+        corridorRepo = mock(zw.gov.mohcc.impilo.nhume.repository.ModeCorridorRepository.class);
+        missionRepo = mock(zw.gov.mohcc.impilo.nhume.repository.AutonomousMissionRepository.class);
+        when(missionRepo.save(any(zw.gov.mohcc.impilo.nhume.domain.AutonomousMissionEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
         biometricVerification = mock(zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.class);
 
         when(deliveryRepo.save(any(DeliveryRequestEntity.class)))
@@ -196,7 +202,8 @@ class NhumeDeliveryServiceTest {
         service = new NhumeDeliveryService(deliveryRepo, itemRepo, packageRepo, assignmentRepo,
                 statusEventRepo, trackingRepo, proofRepo, custodyRepo, exceptionRepo,
                 notificationRepo, auditRepo, outboxRepo, policyRepo, courierRepo, assetRepo,
-                commsHub, ndila, mapper, writeBack, biometricVerification);
+                commsHub, ndila, mapper, writeBack, biometricVerification,
+                new DeliveryModeService(corridorRepo, missionRepo, packageRepo));
     }
 
     @Test
@@ -479,6 +486,60 @@ class NhumeDeliveryServiceTest {
         assertThat(all.get(1).getSupersededAt()).isNotNull();
     }
 
+    /**
+     * OF-B20 §12.9 / journey #67 — dispatch-time governed fallback: a matched
+     * drone corridor with a non-CLEAR weather envelope falls back to ROAD with
+     * the reason recorded on the delivery, a MODE_FALLBACK custody event keeps
+     * the chain unbroken, and the planned mission is retained NOT_FLOWN.
+     */
+    @Test
+    void assign_weatherGatedCorridor_recordsGovernedFallbackWithCustodyContinuity() {
+        zw.gov.mohcc.impilo.nhume.domain.ModeCorridorEntity corridor =
+                new zw.gov.mohcc.impilo.nhume.domain.ModeCorridorEntity();
+        corridor.setCorridorId(UUID.randomUUID());
+        corridor.setTenantId(tenantId);
+        corridor.setCorridorCode("HRE-NORTH-1");
+        corridor.setMode("DRONE");
+        corridor.setEnabled(true);
+        corridor.setWeatherStatus("BLOCKED"); // no weight/distance limits → weather decides
+        when(corridorRepo.findByTenantIdAndModeAndEnabledTrueOrderByCorridorCodeAsc(tenantId, "DRONE"))
+                .thenReturn(List.of(corridor));
+
+        DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
+                baseRequestBuilder(true), actorCtx());
+        service.approve(d.getDeliveryId(), new StatusChangeRequest("ok", null), actorCtx());
+        DriverCourierProfileEntity c1 = newCourier();
+        DeliveryAssignmentEntity assignment = service.assign(d.getDeliveryId(),
+                new AssignDeliveryRequest(c1.getCourierId(), null, null, null,
+                        null, "MANUAL", null), actorCtx(), "k-mode");
+
+        DeliveryRequestEntity updated = store.get(d.getDeliveryId());
+        assertThat(updated.getDeliveryMode()).isEqualTo("ROAD");
+        assertThat(updated.getModeFallbackReason()).isEqualTo("WEATHER_GATE_FAILED:BLOCKED");
+        assertThat(assignment.getModeCategory()).isEqualTo("ROAD");
+
+        // Custody continuity: the mode change is a chain event.
+        ArgumentCaptor<ChainOfCustodyEventEntity> custodyCaptor =
+                ArgumentCaptor.forClass(ChainOfCustodyEventEntity.class);
+        verify(custodyRepo, atLeastOnce()).save(custodyCaptor.capture());
+        assertThat(custodyCaptor.getAllValues())
+                .anyMatch(c -> "MODE_FALLBACK".equals(c.getEventKind())
+                        && c.getHandoverNotes().contains("WEATHER_GATE_FAILED:BLOCKED"));
+
+        // Mission retained, never claimed flown.
+        ArgumentCaptor<zw.gov.mohcc.impilo.nhume.domain.AutonomousMissionEntity> missionCaptor =
+                ArgumentCaptor.forClass(zw.gov.mohcc.impilo.nhume.domain.AutonomousMissionEntity.class);
+        verify(missionRepo).save(missionCaptor.capture());
+        assertThat(missionCaptor.getValue().getStatus()).isEqualTo("NOT_FLOWN");
+        assertThat(missionCaptor.getValue().getFallbackReason()).isEqualTo("WEATHER_GATE_FAILED:BLOCKED");
+
+        // Outbox carries the governed-fallback event.
+        ArgumentCaptor<OutboxEventEntity> outboxCaptor = ArgumentCaptor.forClass(OutboxEventEntity.class);
+        verify(outboxRepo, atLeastOnce()).save(outboxCaptor.capture());
+        assertThat(outboxCaptor.getAllValues())
+                .anyMatch(e -> NhumeEvents.DELIVERY_MODE_FALLBACK.equals(e.getEventType()));
+    }
+
     @Test
     void outboxEvents_emitNhumeTopics() {
         DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
@@ -514,7 +575,7 @@ class NhumeDeliveryServiceTest {
                 true, "OTP", false, false, false, false, false, false, false, false,
                 null, null, null, null, null,
                 List.of("MOTORCYCLE", "BICYCLE"), null, null,
-                "demo", Map.of("test", true), submit, null, null);
+                "demo", Map.of("test", true), submit, null, null, null, null, null);
     }
 
     /** Msika Flow marketplace order dispatched via Nhume. */
@@ -533,7 +594,7 @@ class NhumeDeliveryServiceTest {
                 base.chainOfCustodyRequired(), base.returnRequired(), base.requiredBy(),
                 base.pickupWindowStart(), base.pickupWindowEnd(), base.deliveryWindowStart(),
                 base.deliveryWindowEnd(), base.allowedModes(), base.policyId(), base.slaId(),
-                base.notes(), base.metadata(), true, null, null);
+                base.notes(), base.metadata(), true, null, null, null, null, null);
     }
 
     private CreateDeliveryRequest coldChainRequest() {
@@ -551,7 +612,7 @@ class NhumeDeliveryServiceTest {
                 base.returnRequired(), base.requiredBy(), base.pickupWindowStart(),
                 base.pickupWindowEnd(), base.deliveryWindowStart(), base.deliveryWindowEnd(),
                 base.allowedModes(), base.policyId(), base.slaId(), base.notes(),
-                base.metadata(), false, null, null);
+                base.metadata(), false, null, null, null, null, null);
     }
 
     private TrustLayerGuard.ActorContext actorCtx() {

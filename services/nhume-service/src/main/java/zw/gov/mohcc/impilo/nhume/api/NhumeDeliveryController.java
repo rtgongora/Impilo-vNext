@@ -310,6 +310,23 @@ public class NhumeDeliveryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toProof(p));
     }
 
+    /**
+     * OF-B19 §12.6 — pharmacist stability decision (USE / QUARANTINE) on an
+     * excursion-flagged cold delivery. QUARANTINE routes the cargo onto the
+     * §12.7 RETURNED path (refund seam). Fail-closed: without a decision the
+     * handover of a flagged cold delivery stays refused.
+     */
+    @PostMapping({"/api/v1/nhume/deliveries/{id}/cold-chain/stability-decision",
+            "/internal/v1/nhume/deliveries/{id}/cold-chain/stability-decision"})
+    public ResponseEntity<?> stabilityDecision(@PathVariable UUID id,
+                                                @Valid @RequestBody zw.gov.mohcc.impilo.nhume.api.dto.StabilityDecisionRequest request,
+                                                HttpServletRequest http) {
+        TrustLayerGuard.ActorContext actor = capture(http, "delivery.coldchain.stability_decision");
+        DeliveryRequestEntity d = service.recordStabilityDecision(
+                id, request.decision(), request.notes(), actor);
+        return ResponseEntity.ok(toResponse(d));
+    }
+
     @PostMapping({"/api/v1/nhume/deliveries/{id}/custody",
             "/internal/v1/nhume/deliveries/{id}/custody"})
     public ResponseEntity<?> custody(@PathVariable UUID id,
@@ -370,7 +387,10 @@ public class NhumeDeliveryController {
                 d.getRecipientPhone(), d.getRequestingFacilityId(),
                 d.getTelehealthSessionRef(), d.getMarketplaceOrderRef(),
                 d.getPolicyId(), d.getSlaId(), d.getSlaDueAt(),
-                d.isColdChainRequired(), d.isControlledItem(),
+                d.isColdChainRequired(),
+                d.getSensorDeviceRef(), d.isExcursionFlagged(), d.getStabilityDecision(),
+                d.getDeliveryMode(), d.getModeFallbackReason(),
+                d.isControlledItem(),
                 d.isChainOfCustodyRequired(), d.isDemo(),
                 d.getCreatedAt(), d.getUpdatedAt(), d.getSubmittedAt(),
                 d.getDeliveredAt(), d.getFailedAt(),

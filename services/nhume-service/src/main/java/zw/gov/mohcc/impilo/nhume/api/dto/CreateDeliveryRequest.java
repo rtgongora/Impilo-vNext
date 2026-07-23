@@ -59,7 +59,12 @@ public record CreateDeliveryRequest(
         // OF-B18 §12.4 — per-order-class handover contract (both optional; NULL keeps
         // the legacy ungraded behaviour so existing callers are unaffected).
         @JsonProperty("required_pod_grade") String requiredPodGrade,
-        @JsonProperty("named_recipient_required") Boolean namedRecipientRequired
+        @JsonProperty("named_recipient_required") Boolean namedRecipientRequired,
+        // OF-B19 §12.6 — cold-chain telemetry binding: the sealed sensor DeviceId and
+        // the cargo-specific stability band (°C). NULL band = 2–8 °C default.
+        @JsonProperty("sensor_device_ref") String sensorDeviceRef,
+        @JsonProperty("cold_min_c") java.math.BigDecimal coldMinC,
+        @JsonProperty("cold_max_c") java.math.BigDecimal coldMaxC
 ) {
 
     public record LocationDto(
