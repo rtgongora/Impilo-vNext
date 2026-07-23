@@ -34,6 +34,9 @@ public class TelemonitoringEventEmitter {
     /** Aggregate type used for programme-catalogue governance events (OF-B21). */
     public static final String AGGREGATE_MONITORING_PROGRAMME = "MONITORING_PROGRAMME";
 
+    /** Aggregate type used for telemetry-reading / observation-writer events (OF-B25). */
+    public static final String AGGREGATE_TELEMETRY_READING = "TELEMETRY_READING";
+
     private static final Logger log = LoggerFactory.getLogger(TelemonitoringEventEmitter.class);
 
     private final EventOutboxRepository outboxRepository;
@@ -68,6 +71,33 @@ public class TelemonitoringEventEmitter {
     public void emitDeviceEvent(String action, UUID assignmentId, String patientCpid,
                                 Map<String, Object> payload, UUID tenantId) {
         emit(AGGREGATE_DEVICE_ASSIGNMENT, assignmentId.toString(), deviceEventType(action),
+                "PATIENT", patientCpid, payload, tenantId);
+    }
+
+    /** Build a reading pipeline event type, e.g. {@code readingEventType("quarantined")} (OF-B25). */
+    public static String readingEventType(String action) {
+        return "telemonitoring.reading." + action + ".v1";
+    }
+
+    /** Build an observation-writer event type, e.g. {@code observationEventType("recorded")} (OF-B25). */
+    public static String observationEventType(String action) {
+        return "telemonitoring.observation." + action + ".v1";
+    }
+
+    /**
+     * Reading pipeline event ({@code telemonitoring.reading.{action}.v1}). Subject is the
+     * DEVICE, never a patient — quarantined readings carry no patient attribution (#62).
+     */
+    public void emitReadingEvent(String action, UUID readingId, String deviceRef,
+                                 Map<String, Object> payload, UUID tenantId) {
+        emit(AGGREGATE_TELEMETRY_READING, readingId.toString(), readingEventType(action),
+                "DEVICE", deviceRef, payload, tenantId);
+    }
+
+    /** Observation-writer event ({@code telemonitoring.observation.{action}.v1}), patient-subject. */
+    public void emitObservationEvent(String action, UUID readingId, String patientCpid,
+                                     Map<String, Object> payload, UUID tenantId) {
+        emit(AGGREGATE_TELEMETRY_READING, readingId.toString(), observationEventType(action),
                 "PATIENT", patientCpid, payload, tenantId);
     }
 

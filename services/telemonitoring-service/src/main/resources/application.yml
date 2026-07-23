@@ -67,6 +67,19 @@ telemonitoring:
     # The programme code is the remainder after the prefix, e.g.
     # TM-MON-HYPERTENSION -> programme HYPERTENSION.
     order-code-prefix: ${TELEMONITORING_ENROLMENT_ORDER_CODE_PREFIX:TM-MON}
+  integration:
+    # Single designated SHR writer seam (OF-B25, §14.5 step 14):
+    # telemonitoring -> fhir-gateway POST /internal/v1/gateway/forward -> BUTANO.
+    fhir-gateway-url: ${FHIR_GATEWAY_URL:http://fhir-gateway-service:8091}
+  shr:
+    # Bounded write-retry ledger (honesty law): after this many failed forward
+    # attempts a reading parks EXHAUSTED — visible, never silently absorbed.
+    max-write-attempts: ${TELEMONITORING_SHR_MAX_WRITE_ATTEMPTS:5}
+    retry-sweep-interval-ms: ${TELEMONITORING_SHR_RETRY_SWEEP_INTERVAL_MS:60000}
+    # Optional metric_code -> "system|code|display" overrides for the Observation
+    # coding map (MetricCodeRegistry); unknown metrics fall back to the honest
+    # local code system rather than a guessed LOINC code.
+    metric-codes: {}
 
 management:
   endpoints:
