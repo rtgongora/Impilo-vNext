@@ -112,6 +112,8 @@ Telemedicine **IS NOT** (each is a standing MUST NOT):
 | `appointmentId` | Transaction id (booking) | Scheduling surfaces | Linked on the case (V032). |
 | Room name | Infrastructure id | Media plane | `impilo-telemedicine-<referralId>` — MUST NOT embed PII (UUID-only satisfies this). |
 
+**Volume II identifier registry.** The order-to-fulfilment and telemonitoring identifier classes (PrescriptionId/PrescriptionVersionId, MarketplaceRequestId/FulfilmentOfferId, DuraReservationId, DispenseEpisodeId, DeliveryTaskId, MonitoringPlanId/AlertEpisodeId/DeviceAssignmentId and the rest of the ~40-identifier set) are governed by [Volume II §5](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md), which extends — never forks — this vocabulary and its collision rules.
+
 The corrected entry rule (supersedes the old "patient must have a Health ID" statement): **a patient MUST be safely resolved to a CPID via the Identity Trust Core before clinical documentation; the public experience uses the Impilo ID plus demographic confirmation; internal identifiers MUST NOT be surfaced in routine UI; and emergency/unidentified pathways MUST exist** (§Stage 1).
 
 ## 6. Architectural Positioning
@@ -858,6 +860,8 @@ Participant: `WAITING → ADMITTED → CONNECTED → LEFT`, `WAITING → DENIED`
 | CarePlan / Goal | Care-plan updates | `[PARTIAL]` |
 | Provenance / AuditEvent | Authorship + modality provenance on every artefact; audit | `[PARTIAL]` (audit events exist; FHIR Provenance projection target) |
 
+**Fulfilment and monitoring band resources.** The downstream resource evaluations — MedicationRequest *versioning* + `authorizingPrescription`-linked MedicationDispense, SupplyRequest/SupplyDelivery, DeviceRequest/Device/DeviceMetric, Specimen, monitoring-band Observation + Provenance quality stamps, and CarePlan/Goal for monitoring plans — are normative in [Volume II §16](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md), including its band model (clinical band in SHR; financial and logistics bands explicitly **out** of SHR). This table remains authoritative for the teleconsult-band resources above.
+
 ### 12.2 Element ownership (rule per element)
 
 For each data element the spec's rule is: **owner** (registry SoR) · **source of truth** (single) · **authoritative identifier** (§5 table) · **create/update rights** (TSHEPO-gated role) · **versioning** (immutable audit history) · **provenance** (class + author + freshness) · **retention** (policy-configurable; clinical artefacts follow national record retention) · **sensitivity** (visibility tiers) · **offline behaviour** (§19 class). The [traceability matrix](telemedicine-traceability-gap-matrix.md) carries the full element-by-element table.
@@ -882,9 +886,14 @@ Binding ownership (verbatim registry constraints in brackets):
 | **VASHANDI** | Employment, posting, shift, roster | Imply authority from registration alone | Assignment/duty checks; on-call (pending) |
 | **TUSO** | Facility/service/workspace/capability; (target) virtual-institution substrate per HO-2 | Free-string facility typing for routing | Routing, context |
 | **BUTANO/SHR (+ fhir-gateway PEP)** | Longitudinal clinical truth; enforcement | Accept PII; be silently overwritten (concurrency + provenance rules §18) | All clinical reads/writes |
-| **OROS** | Clinical orders + fulfilment | — | Stage 5/6 orders (wiring TM-G4) |
+| **OROS** | Clinical order + prescription aggregate spine (order lifecycle, versions, signing, results return). Order-to-fulfilment life after placement is normative in [Volume II §8](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) | Duplicate marketplace/payment/logistics state into the clinical order | Stage 5/6 orders; every downstream fulfilment pipeline (Vol II) |
+| **MSIKA + msika-flow** | Marketplace catalogue/vendors; request-for-offer layer (requests, invitations, offers, selections — Vol II §11) | Become clinical SoR; expose patient identity in broadcasts | Fulfilment-pathway selection (Vol II Stages C–F) |
+| **DURA** | Single stock-reservation ledger + controlled register (Vol II §9.4) | — | Offer commitment, dispense stock effects |
+| **pharmacy-service** | Dispense episodes (batch/FEFO/substitution/pickup proof — Vol II §8.10) | Author prescriptions (frozen legacy path, OD-13) | Medication fulfilment |
+| **telemonitoring-service** *(target — Vol II §14)* | MonitoringPlan/ThresholdProfile/AlertEpisode lifecycle; single designated writer of monitoring-band Observations | Duplicate surveillance or wellness domains | RPM enrolment → alert ladder → rung-6/7 entry into this volume's front door |
+| **iot-ingestion + asset-registry** | Device connectivity identity + telemetry ingest (Vol II §15); physical asset/calibration truth | Own clinical assignment (telemonitoring's) | Device-sourced observations, calibration gates |
 | **ZIBO** | Terminology (`impilo-clinical-priority`, booking codes, procedure codes; specialty CodeSystem pending TM-G7) | — | All coded fields |
-| **Ndila / Nhume** | Location/routing; dispatch/transport | — | Physical conversion, transfer, ambulance |
+| **Ndila / Nhume** | Location/routing; dispatch/delivery/transport incl. chain-of-custody + proof-of-delivery (Vol II §12) | Write to the SHR (logistics band stays out — Vol II §16.6) | Physical conversion, transfer, ambulance; order fulfilment delivery legs |
 | **Daidzai** | Emergency/EMS orchestration (orchestrates, does NOT own PCT/Butano/Khuluma/Rito domains) | — | Emergency escalation |
 | **Rito** | Feedback, complaints, experience, safety reporting, mortality-review ownership | — | Post-closure feedback; safety incidents; quality loops |
 | **COSTA / MUSHEX / Ruvimbo** | Costing/billing; payments; coverage/authorisation | Obstruct emergency care on financial status (absolute) | Completion billing `[LIVE]`; coverage rules must be explicit + auditable |
@@ -949,7 +958,7 @@ Binding ownership (verbatim registry constraints in brackets):
 | ParticipantJoined/Disconnected | `impilo.rtc.participant.{joined,left}.v1` | rtc |
 | NetworkDegraded | quality telemetry (`participant_stats`) — **event target** | — |
 | ClinicalResponseSubmitted | `telemedicine.session.response_submitted` | lifecycle |
-| OrderPlaced / TaskAssigned | **target** (OROS/Task wiring) | — |
+| OrderPlaced / TaskAssigned | `oros.order.placed` with `TELECONSULT` source + case linkage; PCT task lifecycle (TM-B7 landed) — full order/fulfilment families in [Volume II §18](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) | oros / lifecycle |
 | ResponseAcknowledged / FollowUpScheduled / FollowUpOverdue | **target** | — |
 | CaseEscalated / CareTransferred | **target** | — |
 | CompletionNoteSubmitted / CaseClosed | `.completed` + `TELECONSULT_COMPLETED` | lifecycle + `clinical.teleconsult.value` + `core.transaction.events` |
@@ -965,6 +974,10 @@ Delivery split (normative): **Khuluma** owns in-platform conversations/realtime/
 Every notification defines: trigger · recipient · permitted channels · urgency · PHI sensitivity · purpose · retry · fallback channel · acknowledgement requirement · escalation · expiry · deep link · audit. **External messages MUST NOT carry diagnosis, HIV status, mental-health detail, reproductive-health detail or other sensitive clinical content** — time, place, action and deep link only.
 
 Catalogue (keys where they exist): referral submitted (referrer confirm, in-app) · case assigned/accepted (`TELECONSULT_*` via BFF) · more info requested (actionable) · appointment scheduled/changed (booking V009/V010) · pre-session + device-check reminder (**blocked by NotifyRequest lacking `scheduledAt` → TM-G14**) · provider delayed / patient delayed · waiting-room update (`rtc.telemedicine.patient-waiting`) · clinician ready (`rtc.telemedicine.session-ready`) · missed appointment / failed call · async response available · order/action available · follow-up due · critical action overdue · closure · feedback request (Rito). Registration script: `register-session-notification-templates.sh`.
+
+### 16.3 Cross-domain event families (Volume II)
+
+The order-to-fulfilment and telemonitoring event families — `oros.prescription.*.v1`, `msika.flow.request.*.v1`, `inventory.reservation.*.v1`, `mushex.payment.status.changed` (+ escrow), `pharmacy.dispense.*` / `pharmacy.stock.movement.*`, Nhume's delivery/custody set, `telemonitoring.{plan,alert,observation}.*.v1` and `impilo.iot.telemetry.*` — are catalogued normatively in [Volume II §18](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) (logical→wire mapping, grandfathering rule, ~150 events). Two seam contracts bind the volumes: orders leaving a teleconsult carry `TELECONSULT` provenance into the Vol II pipeline (§21 bridge), and monitoring alerts re-enter this volume via `telemedicine.session.referral_created` with `origin=MONITORING_ALERT` (Vol II §14.6, journey #60). New topics on either side follow the same wire rule (`<domain>.<aggregate>.<action>.v1`); neither volume renames the other's live topics.
 
 ## 17. Trust, Consent, Privacy and Security
 
@@ -994,13 +1007,15 @@ The platform MUST: never silently overwrite safety-critical information; use opt
 
 Covered normatively in Stage 3; contract summary: booking-service owns appointments (`TELECONSULT` type, ZIBO booking codes); PCT owns queue materialisation + SLA breach events; routing decision classes recorded; unbuilt routing types fail closed (501); no-provider-available → monitored exception queue (target); SLA values are configurable policy pending national ratification — **this document invents no clinical SLA numbers**.
 
-## 21. Orders, Tasks and Results
+## 21. Orders, Tasks and Results — the bridge to Volume II
 
-Orders placed in/after a teleconsult MUST: enter OROS with `TELECONSULT` request source + case linkage (TM-G4); flow normal fulfilment/acknowledgement/result-return; return results to the case's awaiting-results posture; require acknowledgement for critical results with escalation on timeout (§16 catalogue); prevent duplicates (§18). Tasks MUST carry owner + due + state, feed the Awaiting-Local-Action worklists, and escalate on overdue (TM-B7). Medication orders traverse pharmacy fulfilment with teleconsult provenance.
+This section is the **seam between the volumes**. Volume I owns order life *inside* the teleconsult: authoring in Stage 6, `TELECONSULT` request source + case linkage on entry to OROS (TM-G4/TM-B7), the case's awaiting-results posture, mandatory acknowledgement of critical results with escalation on timeout (§16 catalogue), duplicate prevention (§18), and tasks (owner + due + state, Awaiting-Local-Action worklists, overdue escalation — TM-B7).
+
+Everything **after placement** — signing and versioning, prescription aggregate, fulfilment-pathway selection and the request-for-offer marketplace, coverage/prior-auth/payment, stock reservation, dispensing, delivery and chain-of-custody, results logistics, and telemonitoring enrolment — is normative in [Volume II §8](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) (pipeline Stages A–N; a teleconsult order enters at Stage A with its provenance intact). The contract at the seam: the Vol II pipeline MUST return results and fulfilment-completion facts to the originating case's posture here, and MUST NOT require the teleconsult case to track marketplace/payment/logistics state — the case sees clinical outcomes only. Journeys #41 and #57 prove the seam end-to-end.
 
 ## 22. Follow-Up, Monitoring and Loop Closure
 
-Follow-up is a **first-class recurrent loop**: a follow-up commitment (timeframe + mode + owner) is captured in Stage 6, tracked in Stage 7 (`FOLLOW_UP_DUE`), executed as a linked case (type 12/22, chain via origin refs/EpisodeOfCare), and can recur indefinitely. Monitoring reviews (type 13) are scheduled instances of the same loop fed by observation intake `[ABSENT — RPM]`. Loop closure back to the referrer (completion note visible at origin; "Returned from teleconsult" surfaced in the EHR chart `[LIVE]`) is mandatory. Overdue follow-up escalates to the owner and ops (TM-B7).
+Follow-up is a **first-class recurrent loop**: a follow-up commitment (timeframe + mode + owner) is captured in Stage 6, tracked in Stage 7 (`FOLLOW_UP_DUE`), executed as a linked case (type 12/22, chain via origin refs/EpisodeOfCare), and can recur indefinitely. Monitoring reviews (type 13) are scheduled instances of the same loop fed by observation intake — the remote-patient-monitoring engine (plans, thresholds, alert ladder, device assignment) is normative in [Volume II §14](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) `[ABSENT — OF-G16/OF-B22]`; its rung-6/7 escalations re-enter this volume's Stage 1 front door with `origin=MONITORING_ALERT` (journey #60). Loop closure back to the referrer (completion note visible at origin; "Returned from teleconsult" surfaced in the EHR chart `[LIVE]`) is mandatory. Overdue follow-up escalates to the owner and ops (TM-B7).
 
 ## 23. Emergency Escalation and Conversion to Physical Care
 
@@ -1015,7 +1030,9 @@ Telemedicine MUST NOT trap an emergency in a virtual workflow. The **Emergency a
 | Failure of escalation | Documented failed-escalation record + alternative path + ops alert — never silent | PCT, ops |
 | After the event | Guardian/caregiver notification; break-glass review; post-event review (Rito; mortality review under Rito ownership) | MVUMO/TSHEPO, Rito |
 
-Emergency break-glass: `PurposeOfUse.BREAK_GLASS`/`EMERGENCY`, MVUMO `GOVERNANCE_BREAK_GLASS` L4 acknowledgement, `breakGlassReason` + approver captured (BFF `[LIVE]`), mandatory review. **Financial status MUST NOT obstruct emergency care** (absolute; binds COSTA/MUSHEX/Ruvimbo participation).
+Emergency break-glass: `PurposeOfUse.BREAK_GLASS`/`EMERGENCY`, MVUMO `GOVERNANCE_BREAK_GLASS` L4 acknowledgement, `breakGlassReason` + approver captured (BFF `[LIVE]`), mandatory review. **Financial status MUST NOT obstruct emergency care** (absolute; binds COSTA/MUSHEX/Ruvimbo participation — restated for fulfilment as Vol II CC-set: emergency is never auctioned, never payment-blocked).
+
+Telemonitoring emergency escalations (Vol II §14.6 ladder rungs 11+, journey #61) enter **this same pathway** — same Daidzai orchestration, same handover discipline, same "resolved only after recorded assumption of care" rule; the alert episode remains open until this section's obligations complete.
 
 ---
 
@@ -1023,7 +1040,7 @@ Emergency break-glass: `PurposeOfUse.BREAK_GLASS`/`EMERGENCY`, MVUMO `GOVERNANCE
 
 **Metric set (operational + clinical).** Requests; demand by service/geography; time-to-route; time-to-first-review; time-to-acceptance; time-to-consultation; consultation duration; response turnaround; queue aging; abandonment; no-show; reassignment; decline reasons; escalations; transfers; order completion; follow-up completion; closure delay; dropped-call rate; reconnect success; audio-only fallback rate; failed notifications; patient experience; provider experience; safety incidents; complaints; outcome distribution; **equity of access** (geography, language, connectivity class); low-bandwidth performance; service availability. Surfaces today: `/ops/sla`, `/ops/rtc-health`, `/ops/specialty-workbench`, `/telemedicine/analytics`, `participant_stats` `[BUILT]`; per-session failure drill-down `[PARTIAL]`.
 
-**Telemetry hygiene (MUST).** No protected clinical content in telemetry or application logs — metrics are counts/durations/status codes keyed by ids, never narratives. **Rito integration**: feedback requests at closure, complaints, safety reporting, quality-improvement loops (Rito owns experience + mortality-review) `[PARTIAL]`.
+**Telemetry hygiene (MUST).** No protected clinical content in telemetry or application logs — metrics are counts/durations/status codes keyed by ids, never narratives. **Rito integration**: feedback requests at closure, complaints, safety reporting, quality-improvement loops (Rito owns experience + mortality-review) `[PARTIAL]`. Order-pipeline funnel metrics, marketplace fairness/concentration monitoring and no-offer equity review are owned by [Volume II §21](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md) and share this section's telemetry-hygiene rules.
 
 ## 25. Accessibility, Language and Inclusion
 
@@ -1054,19 +1071,19 @@ Golden signals per service (BFF teleconsult routes, PCT lifecycle, rtc-gateway s
 
 ## 28. Testing Strategy and Journey Catalogue
 
-The full 40-journey catalogue with persona/preconditions/steps/expected UI/states/APIs/events/SHR writes/audit/notifications/failure criteria lives in [`telemedicine-journey-catalogue.md`](telemedicine-journey-catalogue.md). Test pyramid (all mandatory classes): unit; state-machine; policy; API contract; event contract; integration; persistence; restart recovery; concurrency; offline reconciliation; WebRTC/media (real browsers, fake devices); TURN fallback; low-bandwidth simulation; mobile; accessibility; browser; load; failover; security; privacy; clinical-safety; end-to-end. **A green frontend mock is not proof of a working telemedicine journey** — journey proof requires runtime evidence against the live estate (the established `scripts/runtime-proof/*` + Playwright pattern with psql/API assertions).
+The pack's single journey catalogue — #1–#40 for this volume, #41–#70 for Volume II (order-to-outcome, fulfilment, telemonitoring; Vol II §23) — with persona/preconditions/steps/expected UI/states/APIs/events/SHR writes/audit/notifications/failure criteria lives in [`telemedicine-journey-catalogue.md`](telemedicine-journey-catalogue.md). Test pyramid (all mandatory classes): unit; state-machine; policy; API contract; event contract; integration; persistence; restart recovery; concurrency; offline reconciliation; WebRTC/media (real browsers, fake devices); TURN fallback; low-bandwidth simulation; mobile; accessibility; browser; load; failover; security; privacy; clinical-safety; end-to-end. **A green frontend mock is not proof of a working telemedicine journey** — journey proof requires runtime evidence against the live estate (the established `scripts/runtime-proof/*` + Playwright pattern with psql/API assertions).
 
 ## 29. Detailed Acceptance Criteria
 
-Stage-level acceptance criteria are embedded in each stage's **W** section; journey-level criteria in the catalogue; state-machine criteria in §11.3 rows; the traceability matrix binds each requirement to its verification.
+Stage-level acceptance criteria are embedded in each stage's **W** section; journey-level criteria in the catalogue; state-machine criteria in §11.3 rows; the traceability matrix binds each requirement to its verification. Volume II's acceptance criteria live in its own per-section **W** blocks and [Vol II §24](NATIONAL_EORDERS_FULFILMENT_TELEMONITORING_SPECIFICATION.md).
 
 ## 30. Implementation Gap Analysis
 
-Maintained as a living document: [`telemedicine-traceability-gap-matrix.md`](telemedicine-traceability-gap-matrix.md) (requirement → source → decision → owner → surface → API → table → event → FHIR → tests → status → gap → priority → remediation).
+Maintained as a living document: [`telemedicine-traceability-gap-matrix.md`](telemedicine-traceability-gap-matrix.md) (requirement → source → decision → owner → surface → API → table → event → FHIR → tests → status → gap → priority → remediation). One matrix serves both volumes: rows R1–R40 + gaps TM-G* for this volume; rows R41–R74 + gaps OF-G1..21 for Volume II (its §4).
 
 ## 31. Prioritised Implementation Backlog
 
-Maintained as a living document: [`telemedicine-implementation-backlog.md`](telemedicine-implementation-backlog.md) (20 epics, per-item problem/outcome/owner/dependencies/acceptance/tests/migration/risk/priority/national-blocker flag).
+Maintained as a living document: [`telemedicine-implementation-backlog.md`](telemedicine-implementation-backlog.md) — **50 epics across two volumes** (per-item problem/outcome/owner/dependencies/acceptance/tests/migration/risk/priority/national-blocker flag): TM-B1..TM-B20 for this volume (all 20 cores implemented, waves A–D 2026-07-22/23) and OF-B1..OF-B30 for Volume II (not started; sequencing waves OF-A..OF-D).
 
 ## 32. Open Decisions and Explicit Assumptions
 
@@ -1081,7 +1098,14 @@ Maintained as a living document: [`telemedicine-implementation-backlog.md`](tele
 | OD-7 | Virtual-hospital regulatory model (operating authority, jurisdiction, diaspora privileges — HO-2/HO-4) | Config-only substrate; fail-closed |
 | OD-8 | Guardianship export mapping (MVUMO Relationship → FHIR RelatedPerson) for interoperability | Internal model authoritative; export optional |
 | OD-9 | Recording retention periods and patient access to recordings | Policy-configurable; artifact owner PCT |
-| OD-10 | Session-chat clinical persistence rule (which chat content becomes record, mechanism) | Template `SESSION` persistence; TM-G10 target |
+| OD-10 | Session-chat clinical persistence rule (which chat content becomes record, mechanism) | **DECIDED (PO 2026-07-22): persist the full session transcript to the case** — implemented (B5-1) |
+| OD-11 | E-prescription legal signature model: countersignature rules and non-medication (LAB/IMAGING) signing scope | Detached JWS via tshepo-keys specified (Vol II §8.2/§13); nothing signed today; scope fail-closed to medication until decided |
+| OD-12 | Marketplace offer-ranking fairness policy and broadcast mode (open vs invited-panel) | Closed ranked-because taxonomy + clinical-dominance rule normative (Vol II §11.5); fairness monitoring a named duty (Vol II §21) |
+| OD-13 | Legacy `rx_prescriptions` migration cutover to the OROS prescription aggregate | Legacy silo frozen (no new writers/fields), readable for continuity; OROS aggregate sole authoring target |
+| OD-14 | IoT device attestation authority and BYOD enrolment policy | Heuristic trust grades remain, honestly labelled; credential/attestation/firmware items specified as targets, claimed nowhere as built (Vol II §15) |
+| OD-15 | Controlled-substance chain-of-custody policy (token TTL, handover factors, register detail) | Never open-broadcast; second-factor handover; mandatory DURA controlled-register write (Vol II §13.4) |
+| OD-16 | Dedicated `MONITORING` OrderType vs riding `OTHER` | `OTHER` + monitoring category discriminator on the OROS spine (Vol II §14.2) |
+| OD-17 | Vendor-without-DURA attested-stock tolerance | `REPORTED`-grade offers permitted within policy tolerance; ranking prefers higher stock-truth grades (Vol II §8.5/§11.5) |
 
 **Explicit assumptions.** A1: FHIR R4 remains the ratified interoperability baseline. A2: LiveKit remains the media implementation (provider-neutral abstraction retained). A3: The uploaded source documents contain no requirement contradicting the commissioning brief's distillation (see §1 source-recovery note). A4: Single-tenant national deployment posture for v1 scale statements.
 
@@ -1107,10 +1131,10 @@ Maintained as a living document: [`telemedicine-implementation-backlog.md`](tele
 §11.3 is the normative table; the machine-readable transition set ships with the state-machine implementation (TM-B1).
 
 ### Appendix C — FHIR resource mapping
-§12.1 is the normative table.
+§12.1 is the normative table for the teleconsult band; Volume II §16 for the fulfilment/monitoring bands.
 
 ### Appendix D — Event catalogue
-§16.1 is the normative catalogue (verbatim current names).
+§16.1 is the normative catalogue (verbatim current names); §16.3 points to Volume II §18 for the order-to-fulfilment and telemonitoring families.
 
 ### Appendix E — Notification catalogue
 §16.2 is the normative catalogue.
@@ -1261,7 +1285,7 @@ sequenceDiagram
 §14 route inventory is normative; per-screen state contracts (empty/loading/error/offline/denied/mobile/deep-link) accompany each route's implementation and are asserted by the shell gates (`test:routes`, `test:no-stubs`).
 
 ### Appendix J — End-to-end journey matrix
-[`telemedicine-journey-catalogue.md`](telemedicine-journey-catalogue.md).
+[`telemedicine-journey-catalogue.md`](telemedicine-journey-catalogue.md) — #1–#40 (this volume) + #41–#70 (Volume II).
 
 ---
 
