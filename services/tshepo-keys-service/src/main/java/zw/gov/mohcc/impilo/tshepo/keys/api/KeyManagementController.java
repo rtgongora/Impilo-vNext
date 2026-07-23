@@ -31,13 +31,16 @@ public class KeyManagementController {
     private final SigningKeyRepository signingKeyRepository;
     private final KeyRotationService keyRotationService;
     private final JwksService jwksService;
+    private final zw.gov.mohcc.impilo.tshepo.keys.core.Ed25519SigningService signingService;
 
     public KeyManagementController(SigningKeyRepository signingKeyRepository,
                                     KeyRotationService keyRotationService,
-                                    JwksService jwksService) {
+                                    JwksService jwksService,
+                                    zw.gov.mohcc.impilo.tshepo.keys.core.Ed25519SigningService signingService) {
         this.signingKeyRepository = signingKeyRepository;
         this.keyRotationService = keyRotationService;
         this.jwksService = jwksService;
+        this.signingService = signingService;
     }
 
     /**
@@ -65,6 +68,38 @@ public class KeyManagementController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /** Request body for purpose-scoped key provisioning. */
+    public record ProvisionKeyRequest(UUID tenantId, String purpose) {}
+
+    /**
+     * POST /v1/keys/provision — Idempotently provision a purpose-scoped signing key.
+     *
+     * <p>The purpose-scoped lookup is fail-closed by design ({@code getActiveKeyForPurpose}
+     * never auto-generates non-GENERAL keys) — until now there was NO provisioning path to
+     * satisfy it (OF-B2 gap). Unlike {@code /rotate}, provisioning never retires existing
+     * keys: if an ACTIVE key already exists for the purpose it is returned unchanged.</p>
+     */
+    @PostMapping("/provision")
+    public ResponseEntity<SigningKeyResponse> provisionKey(@Valid @RequestBody ProvisionKeyRequest request) {
+        zw.gov.mohcc.impilo.tshepo.keys.core.KeyPurpose purpose =
+                zw.gov.mohcc.impilo.tshepo.keys.core.KeyPurpose.fromString(request.purpose());
+        // Guard the fromString GENERAL fallback: a typo'd purpose must not silently provision GENERAL.
+        if (request.purpose() != null && !request.purpose().isBlank()
+                && !purpose.name().equalsIgnoreCase(request.purpose().trim())) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<SigningKeyEntity> existing =
+                signingKeyRepository.findActiveKeysByTenantAndPurpose(request.tenantId(), purpose.name());
+        if (!existing.isEmpty()) {
+            return ResponseEntity.ok(toResponse(existing.get(0)));
+        }
+        SigningKeyEntity key = signingService.generateKeyPair(request.tenantId());
+        key.setPurpose(purpose.name());
+        key = signingKeyRepository.save(key);
+        jwksService.invalidateCache();
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(key));
     }
 
     /**
