@@ -38,7 +38,7 @@ public class RitoServiceClient {
     // The public lane has no caller trust context (Envoy strips it), so headers are
     // synthesized here exactly like DaidzaiServiceClient.createPublicSosRequest.
     private static final String PUBLIC_API = "/v1/public/rito/cases";
-    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
+    private static final String PUBLIC_DEFAULT_TENANT = zw.gov.mohcc.impilo.experience.config.PublicTenants.REGISTRY_PLANE; // registry plane — see PublicTenants
 
     public JsonNode createPublicCase(Map<String, Object> body, String serviceAccountBearer) {
         return publicExchange(HttpMethod.POST, baseUrl + PUBLIC_API, body, serviceAccountBearer);

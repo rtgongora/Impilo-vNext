@@ -10,14 +10,29 @@ guarded by `scripts/guard/check-public-lane.sh`.
 Status vocabulary: **LIVE** (lane deployed and proven) · **PLANNED-Wn** (this program's
 wave) · **DEFERRED** (doctrine-required, own program).
 
-Last updated: 2026-07-23 (program start).
+Last updated: 2026-07-23 (PF-W1 tenancy formalized).
+
+## Tenancy model (PF-W1)
+
+The 2026-07-23 discovery sweep found the estate's two "default tenant" UUIDs are a
+deliberate **plane boundary**, not a bug: a **registry/reference/identity plane**
+(`…0000-0000-…0001` — TUSO facility master, VARAPI providers, NDILA locations, TSHEPO
+authz policy) and a **care/transaction plane** (`…4000-8000-…0001` — coverage, costing,
+PCT, OROS, pharmacy, MSIKA flow, DAIDZAI, SIMBA, learning content). Each public lane
+declares the plane holding the rows it reads (centralized in
+`experience-bff .../config/PublicTenants.java`); most discovery reads are registry-plane,
+care-content reads are care-plane, and a few services are internally split (VARAPI:
+providers=registry, councils/licenses=care). Collapsing the planes into one tenant would
+re-key live authorization and every registry consumer — out of scope here, its own future
+program if ever pursued. Cross-plane reads that cannot know the plane keep a service-side
+reference-only fallback (daidzai SOS status).
 
 ## Cross-domain foundations
 
 | Capability | Owning service | Lane | Status |
 |---|---|---|---|
 | Public web shell (`/welcome/**`) with Back/Home continuity | one-ui-shell | PublicShell + middleware PUBLIC_PREFIXES | LIVE |
-| Anonymous trust-header synthesis + forced public tenant | experience-bff | `PublicGatewayAnonymousDefaultsFilter` | LIVE (tenant unification: PLANNED-W1) |
+| Anonymous trust-header synthesis + plane-aware public tenant | experience-bff | `PublicGatewayAnonymousDefaultsFilter` + `PublicTenants` | LIVE |
 | Service advisories (public banner) | guidance-service | `/internal/v1/public/gateway/advisory/*` | LIVE |
 | Citizen service-status board | observability-service | `/internal/v1/public/gateway/service-status` | LIVE |
 | Street map tiles (public MVT) | ndila-service | `/internal/v1/public/gateway/map/tiles/*` | LIVE |

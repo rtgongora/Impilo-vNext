@@ -759,7 +759,7 @@ public class VarapiServiceClient {
 
     // ── Public gateway lane (anonymous-safe) ──────────────────────────────────
 
-    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
+    private static final String PUBLIC_DEFAULT_TENANT = zw.gov.mohcc.impilo.experience.config.PublicTenants.REGISTRY_PLANE; // registry plane — see PublicTenants
 
     /**
      * Public practitioner register verification (disclosure-limited register

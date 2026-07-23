@@ -177,7 +177,9 @@ public class TusoServiceClient {
         String url = baseUrl + "/v1/public/facilities/credential-scan";
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.set("Content-Type", "application/json");
-        headers.set("X-Tenant-ID", "00000000-0000-4000-8000-000000000001");
+        // Facility certificates are issued/stored care-plane (unlike the registry-plane
+        // facility master used by search/verify) — see PublicTenants.
+        headers.set("X-Tenant-ID", zw.gov.mohcc.impilo.experience.config.PublicTenants.CARE_PLANE);
         headers.set("X-Actor-ID", "public-gateway");
         headers.set("X-Actor-Type", "SYSTEM");
         headers.set("X-Purpose-Of-Use", "PUBLIC_ACCESS");
@@ -251,7 +253,7 @@ public class TusoServiceClient {
         }
     }
 
-    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
+    private static final String PUBLIC_DEFAULT_TENANT = zw.gov.mohcc.impilo.experience.config.PublicTenants.REGISTRY_PLANE; // registry plane — see PublicTenants
 
     /**
      * Downstream registries reject requests missing the mandatory trust headers (400).

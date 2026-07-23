@@ -40,11 +40,10 @@ public class DaidzaiServiceClient {
         this.baseUrl = endpoints.daidzaiBaseUrl();
     }
 
-    // Canonical golden tenant (matches TusoServiceClient / PatientSafetyPublicController and
-    // what daidzai actually stores on anonymous intake). The previous value
-    // (00000000-0000-0000-0000-000000000001) never matched a stored row, so the public
-    // status lane 404'd on every reference — live-caught 2026-07-20.
-    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-4000-8000-000000000001";
+    // Emergencies are care-plane data (daidzai stores anonymous SOS intake under CARE_PLANE).
+    // A registry-plane tenant here never matched a stored row and 404'd every status lookup —
+    // live-caught 2026-07-20. See PublicTenants for the plane model.
+    private static final String PUBLIC_DEFAULT_TENANT = zw.gov.mohcc.impilo.experience.config.PublicTenants.CARE_PLANE;
 
     // ── Emergency requests (SOS) ─────────────────────────────────────
     public JsonNode createRequest(Map<String, Object> body) {

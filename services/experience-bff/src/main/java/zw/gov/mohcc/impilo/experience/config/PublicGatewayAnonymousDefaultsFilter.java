@@ -46,17 +46,16 @@ import java.util.UUID;
 public class PublicGatewayAnonymousDefaultsFilter extends OncePerRequestFilter {
 
     /**
-     * Public default tenant for anonymous GET lanes. NOTE the estate currently runs TWO
-     * "default tenant" UUIDs: this one (which the TUSO facility master's 1,775 rows live
-     * under, so public find-care depends on it) and the golden …-4000-8000-…001 tenant
-     * (which anonymous WRITES store under, because the browser api-client's tenant passes
-     * through untouched on POST). Cross-lane reads that must survive the split (e.g. the
-     * public SOS status lookup) fall back to reference-only resolution service-side —
-     * see daidzai EmergencyService.findRequestByReference. Unifying the two default
-     * tenants is a platform-level cleanup tracked in the remediation report.
+     * Default tenant stamped on anonymous GET lanes that do not otherwise assert one.
+     * This is the REGISTRY plane ({@link PublicTenants#REGISTRY_PLANE}): most discovery
+     * reads (facilities, practitioners, map, participation, ops status) live there.
+     * Care-plane public reads (emergency status, marketplace, coverage, wellness,
+     * learning) assert {@link PublicTenants#CARE_PLANE} at their own BFF client, and
+     * cross-plane reads that cannot know the plane keep a service-side reference-only
+     * fallback (daidzai). See {@link PublicTenants} for the full plane model.
      */
-    static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
-    static final String PUBLIC_POD = "national-spine";
+    static final String PUBLIC_DEFAULT_TENANT = PublicTenants.REGISTRY_PLANE;
+    static final String PUBLIC_POD = PublicTenants.PUBLIC_POD;
 
     /** The one anonymous WRITE lane that must tolerate a headerless {@code sendBeacon} POST. */
     static final String CLIENT_TELEMETRY_PATH = "/internal/v1/public/gateway/client-telemetry";

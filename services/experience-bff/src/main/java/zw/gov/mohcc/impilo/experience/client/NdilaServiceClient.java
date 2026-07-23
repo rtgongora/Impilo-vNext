@@ -76,7 +76,7 @@ public class NdilaServiceClient {
      */
     private org.springframework.http.HttpEntity<Void> anonymousSafeEntity() {
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.set("X-Tenant-ID", "00000000-0000-0000-0000-000000000001");
+        headers.set("X-Tenant-ID", zw.gov.mohcc.impilo.experience.config.PublicTenants.REGISTRY_PLANE); // registry plane
         headers.set("X-Pod-ID", "national-spine");
         headers.set("X-Actor-ID", "public-gateway");
         headers.set("X-Actor-Type", "SYSTEM");
