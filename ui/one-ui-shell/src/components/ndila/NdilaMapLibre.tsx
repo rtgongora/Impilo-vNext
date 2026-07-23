@@ -194,7 +194,7 @@ function ensureZimbabweAdminLayers(map: MapLibreMap) {
     layout: {
       "text-field": ["get", "name"],
       "text-size": 11,
-      "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+      "text-font": ["Noto Sans Regular"],
     },
     paint: { "text-color": "#1e293b", "text-halo-color": "#f8fafc", "text-halo-width": 1.4 },
   });
@@ -205,7 +205,7 @@ function ensureZimbabweAdminLayers(map: MapLibreMap) {
     layout: {
       "text-field": ["get", "name"],
       "text-size": ["match", ["get", "kind"], "city", 12, 10],
-      "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+      "text-font": ["Noto Sans Bold"],
       "text-offset": [0, 0.8],
     },
     paint: { "text-color": "#0f172a", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
@@ -255,7 +255,7 @@ function ensureClusterLayers(map: MapLibreMap, markers: NdilaGeoMarker[]) {
       layout: {
         "text-field": ["get", "point_count_abbreviated"],
         "text-size": 12,
-        "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+        "text-font": ["Noto Sans Bold"],
       },
       paint: { "text-color": "#ffffff" },
     });

@@ -38,6 +38,18 @@ const STREETS_SOURCE = "ndila-streets";
 /** Self-hosted glyph endpoint (shell public assets — sovereign, no CDN). */
 export const NDILA_GLYPHS_URL = "/map/glyphs/{fontstack}/{range}.pbf";
 
+/**
+ * MapLibre does not resolve root-relative tile/glyph templates against the page
+ * origin (they silently never fetch) — absolutize them in the browser. SSR keeps
+ * the relative form; the style is only consumed client-side.
+ */
+function absolutize(url: string): string {
+  if (typeof window !== "undefined" && url.startsWith("/")) {
+    return window.location.origin + url;
+  }
+  return url;
+}
+
 /** OpenMapTiles carries transliterated names; prefer Latin, fall back to local. */
 const NAME_FIELD: ExpressionSpecification = ["coalesce", ["get", "name:latin"], ["get", "name"]];
 
@@ -262,13 +274,11 @@ export function buildNdilaMapStyle(
   if (includeRaster && isVectorTileTemplate(vectorTemplate)) {
     return {
       version: 8,
-      // Self-hosted glyphs enable text labels; declared only on this branch so
-      // the raster and blank fallback styles never depend on the glyph assets.
-      glyphs: NDILA_GLYPHS_URL,
+      glyphs: absolutize(NDILA_GLYPHS_URL),
       sources: {
         [STREETS_SOURCE]: {
           type: "vector",
-          tiles: [vectorTemplate!],
+          tiles: [absolutize(vectorTemplate!)],
           // tilemaker/OpenMapTiles pyramids top out at z14; MapLibre overzooms beyond.
           maxzoom: 14,
           attribution: tileConfig?.attribution,
@@ -282,10 +292,14 @@ export function buildNdilaMapStyle(
   if (includeRaster && isRasterTileTemplate(template)) {
     return {
       version: 8,
+      // Glyphs are declared on every branch: the shared Zimbabwe admin overlay
+      // adds symbol (label) layers in every mode, and a style without "glyphs"
+      // hard-errors on addLayer — the live blank-map failure of 2026-07-23.
+      glyphs: absolutize(NDILA_GLYPHS_URL),
       sources: {
         "ndila-raster": {
           type: "raster",
-          tiles: [template!],
+          tiles: [absolutize(template!)],
           tileSize: 256,
           maxzoom: tileConfig?.maxZoom ?? 18,
           attribution: tileConfig?.attribution,
@@ -297,6 +311,7 @@ export function buildNdilaMapStyle(
 
   return {
     version: 8,
+    glyphs: absolutize(NDILA_GLYPHS_URL),
     sources: {},
     layers: [{ id: "ndila-background", type: "background", paint: { "background-color": "#c7d9ea" } }],
   };
