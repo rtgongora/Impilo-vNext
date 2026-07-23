@@ -48,6 +48,36 @@ public class MonitoringProgrammeEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
+    // ── Governance (OF-B21, V002): versioned metadata, effective windows, retire-not-delete ──
+
+    @Column(name = "version", nullable = false)
+    private int version = 1;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", nullable = false, columnDefinition = "jsonb")
+    private String metadata = "{}";
+
+    @Column(name = "effective_from")
+    private OffsetDateTime effectiveFrom;
+
+    @Column(name = "effective_to")
+    private OffsetDateTime effectiveTo;
+
+    @Column(name = "retired", nullable = false)
+    private boolean retired = false;
+
+    @Column(name = "retired_at")
+    private OffsetDateTime retiredAt;
+
+    @Column(name = "retired_by", length = 128)
+    private String retiredBy;
+
+    @Column(name = "retired_reason", length = 512)
+    private String retiredReason;
+
+    @Column(name = "updated_by", length = 128)
+    private String updatedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -80,6 +110,24 @@ public class MonitoringProgrammeEntity {
     public void setDefaultThresholds(String defaultThresholds) { this.defaultThresholds = defaultThresholds; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
+    public String getMetadata() { return metadata; }
+    public void setMetadata(String metadata) { this.metadata = metadata; }
+    public OffsetDateTime getEffectiveFrom() { return effectiveFrom; }
+    public void setEffectiveFrom(OffsetDateTime effectiveFrom) { this.effectiveFrom = effectiveFrom; }
+    public OffsetDateTime getEffectiveTo() { return effectiveTo; }
+    public void setEffectiveTo(OffsetDateTime effectiveTo) { this.effectiveTo = effectiveTo; }
+    public boolean isRetired() { return retired; }
+    public void setRetired(boolean retired) { this.retired = retired; }
+    public OffsetDateTime getRetiredAt() { return retiredAt; }
+    public void setRetiredAt(OffsetDateTime retiredAt) { this.retiredAt = retiredAt; }
+    public String getRetiredBy() { return retiredBy; }
+    public void setRetiredBy(String retiredBy) { this.retiredBy = retiredBy; }
+    public String getRetiredReason() { return retiredReason; }
+    public void setRetiredReason(String retiredReason) { this.retiredReason = retiredReason; }
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }

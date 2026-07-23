@@ -24,13 +24,26 @@ public final class MonitoringPlanDtos {
             String careTeamJson,
             String initialThresholdsJson,
             String suggestedBy,
-            String suggestedSystemVersion) {
+            String suggestedSystemVersion,
+            String consentReference,
+            String consentStatus) {
     }
 
     public record LifecycleRequest(String reason, String actor) {
     }
 
     public record ApproveRequest(String approvedBy) {
+    }
+
+    /** MVUMO consent POINTER sync — reference + journey state only, never consent content. */
+    public record ConsentPointerRequest(
+            String consentReference,
+            @NotBlank String consentStatus,
+            String actor) {
+    }
+
+    /** Records a completed clinical review — re-arms the review-cadence timer. */
+    public record RecordReviewRequest(String reviewedBy) {
     }
 
     public record AmendThresholdsRequest(
@@ -59,6 +72,11 @@ public final class MonitoringPlanDtos {
             OffsetDateTime reviewDueAt,
             String careTeamJson,
             String lifecycleReason,
+            String consentReference,
+            String consentStatus,
+            OffsetDateTime consentUpdatedAt,
+            OffsetDateTime lastReviewAt,
+            OffsetDateTime reviewDueNotifiedAt,
             OffsetDateTime createdAt,
             OffsetDateTime updatedAt) {
 
@@ -69,7 +87,11 @@ public final class MonitoringPlanDtos {
                     plan.getMonitoringSetting(), plan.getSuggestedBy(), plan.getSuggestedSystemVersion(),
                     plan.getApprovedBy(), plan.getApprovedAt(), plan.getStartAt(), plan.getEndAt(),
                     plan.getReviewCadence(), plan.getReviewDueAt(), plan.getCareTeam(),
-                    plan.getLifecycleReason(), plan.getCreatedAt(), plan.getUpdatedAt());
+                    plan.getLifecycleReason(),
+                    plan.getConsentReference(),
+                    plan.getConsentStatus() != null ? plan.getConsentStatus().name() : null,
+                    plan.getConsentUpdatedAt(), plan.getLastReviewAt(), plan.getReviewDueNotifiedAt(),
+                    plan.getCreatedAt(), plan.getUpdatedAt());
         }
     }
 
@@ -99,12 +121,57 @@ public final class MonitoringPlanDtos {
             String description,
             String conditionCode,
             String defaultThresholdsJson,
-            boolean active) {
+            boolean active,
+            int version,
+            String metadataJson,
+            OffsetDateTime effectiveFrom,
+            OffsetDateTime effectiveTo,
+            boolean retired,
+            OffsetDateTime retiredAt,
+            String retiredBy,
+            String retiredReason,
+            String updatedBy) {
 
         public static ProgrammeResponse from(MonitoringProgrammeEntity programme) {
             return new ProgrammeResponse(
                     programme.getId(), programme.getCode(), programme.getName(), programme.getDescription(),
-                    programme.getConditionCode(), programme.getDefaultThresholds(), programme.isActive());
+                    programme.getConditionCode(), programme.getDefaultThresholds(), programme.isActive(),
+                    programme.getVersion(), programme.getMetadata(),
+                    programme.getEffectiveFrom(), programme.getEffectiveTo(),
+                    programme.isRetired(), programme.getRetiredAt(), programme.getRetiredBy(),
+                    programme.getRetiredReason(), programme.getUpdatedBy());
         }
+    }
+
+    // ── Programme governance (OF-B21) ──
+
+    public record CreateProgrammeRequest(
+            @NotBlank String code,
+            @NotBlank String name,
+            String description,
+            String conditionCode,
+            String defaultThresholdsJson,
+            String metadataJson,
+            OffsetDateTime effectiveFrom,
+            OffsetDateTime effectiveTo,
+            String actor) {
+    }
+
+    public record UpdateProgrammeRequest(
+            String name,
+            String description,
+            String conditionCode,
+            String defaultThresholdsJson,
+            String metadataJson,
+            OffsetDateTime effectiveFrom,
+            OffsetDateTime effectiveTo,
+            Boolean active,
+            String actor) {
+    }
+
+    /** Retire never deletes: reason-bound deactivation with the row retained forever. */
+    public record RetireProgrammeRequest(
+            @NotBlank String reason,
+            String actor) {
     }
 }

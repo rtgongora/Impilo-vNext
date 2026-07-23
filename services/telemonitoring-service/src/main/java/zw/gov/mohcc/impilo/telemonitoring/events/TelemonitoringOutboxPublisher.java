@@ -34,6 +34,8 @@ public class TelemonitoringOutboxPublisher extends CompanionOutboxPublisher {
     private static final Logger log = LoggerFactory.getLogger(TelemonitoringOutboxPublisher.class);
 
     static final String PLAN_TOPIC_PREFIX = "telemonitoring.plan.";
+    static final String PROGRAMME_TOPIC_PREFIX = "telemonitoring.programme.";
+    static final String DEVICE_TOPIC_PREFIX = "telemonitoring.device.";
     static final String DEFAULT_TOPIC = "telemonitoring.events";
 
     private final EventOutboxRepository outboxRepository;
@@ -93,12 +95,22 @@ public class TelemonitoringOutboxPublisher extends CompanionOutboxPublisher {
 
     /**
      * Routing convention (unit-tested): plan lifecycle events publish on the topic named
-     * by their own event type ({@code telemonitoring.plan.{action}.v1}); everything else
-     * publishes on {@code telemonitoring.events}.
+     * by their own event type ({@code telemonitoring.plan.{action}.v1}), programme
+     * governance events likewise ({@code telemonitoring.programme.{action}.v1}),
+     * device-assignment events likewise ({@code telemonitoring.device.{action}.v1},
+     * OF-B24); everything else publishes on {@code telemonitoring.events}.
      */
     static String resolveTopic(String aggregateType, String eventType) {
         if (TelemonitoringEventEmitter.AGGREGATE_MONITORING_PLAN.equals(aggregateType)
                 && eventType != null && eventType.startsWith(PLAN_TOPIC_PREFIX) && eventType.endsWith(".v1")) {
+            return eventType;
+        }
+        if (TelemonitoringEventEmitter.AGGREGATE_MONITORING_PROGRAMME.equals(aggregateType)
+                && eventType != null && eventType.startsWith(PROGRAMME_TOPIC_PREFIX) && eventType.endsWith(".v1")) {
+            return eventType;
+        }
+        if (TelemonitoringEventEmitter.AGGREGATE_DEVICE_ASSIGNMENT.equals(aggregateType)
+                && eventType != null && eventType.startsWith(DEVICE_TOPIC_PREFIX) && eventType.endsWith(".v1")) {
             return eventType;
         }
         return DEFAULT_TOPIC;

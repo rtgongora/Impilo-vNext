@@ -52,6 +52,15 @@ telemonitoring:
   outbox:
     poll-interval-ms: 2000
   emit-mode: ${TELEMONITORING_EMIT_MODE:DUAL}
+  # PCT generic task lane (POST /v1/tasks) — CHW/care-team tasks on plan activation (OF-B21).
+  # Best-effort push; the durable seam is telemonitoring.plan.task_requested.v1.
+  pct:
+    base-url: ${PCT_SERVICE_URL:http://pct-service:8088}
+    timeout-ms: 4000
+  # Review-cadence sweep (OF-B21): emits telemonitoring.plan.review_due.v1 when
+  # now > last_review + cadence. Default every 5 minutes.
+  review-sweep:
+    interval-ms: ${TELEMONITORING_REVIEW_SWEEP_INTERVAL_MS:300000}
   enrolment:
     # OD-16 interim discriminator: OROS OrderType=OTHER orders whose ziboOrderCode
     # (or any items[].code) starts with this prefix are MONITORING enrolments.

@@ -28,6 +28,12 @@ public class TelemonitoringEventEmitter {
     /** Aggregate type used for all monitoring-plan events. */
     public static final String AGGREGATE_MONITORING_PLAN = "MONITORING_PLAN";
 
+    /** Aggregate type used for all device-assignment events (OF-B24). */
+    public static final String AGGREGATE_DEVICE_ASSIGNMENT = "DEVICE_ASSIGNMENT";
+
+    /** Aggregate type used for programme-catalogue governance events (OF-B21). */
+    public static final String AGGREGATE_MONITORING_PROGRAMME = "MONITORING_PROGRAMME";
+
     private static final Logger log = LoggerFactory.getLogger(TelemonitoringEventEmitter.class);
 
     private final EventOutboxRepository outboxRepository;
@@ -43,10 +49,33 @@ public class TelemonitoringEventEmitter {
         return "telemonitoring.plan." + action + ".v1";
     }
 
+    /** Build a programme governance event type, e.g. {@code programmeEventType("retired")}. */
+    public static String programmeEventType(String action) {
+        return "telemonitoring.programme." + action + ".v1";
+    }
+
     public void emitPlanEvent(String action, UUID planId, String patientCpid,
                               Map<String, Object> payload, UUID tenantId) {
         emit(AGGREGATE_MONITORING_PLAN, planId.toString(), planEventType(action),
                 "PATIENT", patientCpid, payload, tenantId);
+    }
+
+    /** Build a device-assignment event type, e.g. {@code deviceEventType("assigned")} (OF-B24). */
+    public static String deviceEventType(String action) {
+        return "telemonitoring.device." + action + ".v1";
+    }
+
+    public void emitDeviceEvent(String action, UUID assignmentId, String patientCpid,
+                                Map<String, Object> payload, UUID tenantId) {
+        emit(AGGREGATE_DEVICE_ASSIGNMENT, assignmentId.toString(), deviceEventType(action),
+                "PATIENT", patientCpid, payload, tenantId);
+    }
+
+    /** Programme-catalogue governance event ({@code telemonitoring.programme.{action}.v1}). */
+    public void emitProgrammeEvent(String action, String programmeCode,
+                                   Map<String, Object> payload, UUID tenantId) {
+        emit(AGGREGATE_MONITORING_PROGRAMME, programmeCode, programmeEventType(action),
+                "PROGRAMME", programmeCode, payload, tenantId);
     }
 
     public void emit(String aggregateType, String aggregateId, String eventType,

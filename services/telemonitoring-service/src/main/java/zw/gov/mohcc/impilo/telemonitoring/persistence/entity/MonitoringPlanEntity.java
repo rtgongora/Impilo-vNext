@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import zw.gov.mohcc.impilo.telemonitoring.domain.ConsentStatus;
 import zw.gov.mohcc.impilo.telemonitoring.domain.PlanStatus;
 
 import java.time.OffsetDateTime;
@@ -81,6 +82,26 @@ public class MonitoringPlanEntity {
     @Column(name = "review_due_at")
     private OffsetDateTime reviewDueAt;
 
+    // ── OF-B21 (V002): MVUMO consent pointers — pointers ONLY, consent journey is MVUMO's ──
+
+    @Column(name = "consent_reference", length = 128)
+    private String consentReference;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "consent_status", nullable = false, length = 32)
+    private ConsentStatus consentStatus = ConsentStatus.UNVERIFIED;
+
+    @Column(name = "consent_updated_at")
+    private OffsetDateTime consentUpdatedAt;
+
+    // ── OF-B21 (V002): review-cadence timer groundwork ──
+
+    @Column(name = "last_review_at")
+    private OffsetDateTime lastReviewAt;
+
+    @Column(name = "review_due_notified_at")
+    private OffsetDateTime reviewDueNotifiedAt;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "care_team", nullable = false, columnDefinition = "jsonb")
     private String careTeam = "{}";
@@ -143,6 +164,16 @@ public class MonitoringPlanEntity {
     public void setReviewCadence(String reviewCadence) { this.reviewCadence = reviewCadence; }
     public OffsetDateTime getReviewDueAt() { return reviewDueAt; }
     public void setReviewDueAt(OffsetDateTime reviewDueAt) { this.reviewDueAt = reviewDueAt; }
+    public String getConsentReference() { return consentReference; }
+    public void setConsentReference(String consentReference) { this.consentReference = consentReference; }
+    public ConsentStatus getConsentStatus() { return consentStatus; }
+    public void setConsentStatus(ConsentStatus consentStatus) { this.consentStatus = consentStatus; }
+    public OffsetDateTime getConsentUpdatedAt() { return consentUpdatedAt; }
+    public void setConsentUpdatedAt(OffsetDateTime consentUpdatedAt) { this.consentUpdatedAt = consentUpdatedAt; }
+    public OffsetDateTime getLastReviewAt() { return lastReviewAt; }
+    public void setLastReviewAt(OffsetDateTime lastReviewAt) { this.lastReviewAt = lastReviewAt; }
+    public OffsetDateTime getReviewDueNotifiedAt() { return reviewDueNotifiedAt; }
+    public void setReviewDueNotifiedAt(OffsetDateTime reviewDueNotifiedAt) { this.reviewDueNotifiedAt = reviewDueNotifiedAt; }
     public String getCareTeam() { return careTeam; }
     public void setCareTeam(String careTeam) { this.careTeam = careTeam; }
     public String getLifecycleReason() { return lifecycleReason; }

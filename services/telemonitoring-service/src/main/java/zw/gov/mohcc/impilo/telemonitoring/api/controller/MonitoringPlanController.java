@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.telemonitoring.api.dto.MonitoringPlanDtos.AmendThresholdsRequest;
 import zw.gov.mohcc.impilo.telemonitoring.api.dto.MonitoringPlanDtos.ApproveRequest;
+import zw.gov.mohcc.impilo.telemonitoring.api.dto.MonitoringPlanDtos.ConsentPointerRequest;
 import zw.gov.mohcc.impilo.telemonitoring.api.dto.MonitoringPlanDtos.CreatePlanRequest;
 import zw.gov.mohcc.impilo.telemonitoring.api.dto.MonitoringPlanDtos.LifecycleRequest;
+import zw.gov.mohcc.impilo.telemonitoring.api.dto.MonitoringPlanDtos.RecordReviewRequest;
 import zw.gov.mohcc.impilo.telemonitoring.api.dto.MonitoringPlanDtos.PlanResponse;
 import zw.gov.mohcc.impilo.telemonitoring.api.dto.MonitoringPlanDtos.ThresholdProfileResponse;
 import zw.gov.mohcc.impilo.telemonitoring.core.MonitoringPlanService;
@@ -55,7 +57,9 @@ public class MonitoringPlanController {
                 request.initialThresholdsJson(),
                 request.suggestedBy(),
                 request.suggestedSystemVersion(),
-                actorId), true);
+                actorId,
+                request.consentReference(),
+                request.consentStatus()), true);
         return ResponseEntity.status(HttpStatus.CREATED).body(PlanResponse.from(plan));
     }
 
@@ -113,6 +117,28 @@ public class MonitoringPlanController {
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody LifecycleRequest request) {
         return PlanResponse.from(planService.cancel(planId, request.reason(), actor(request, actorId)));
+    }
+
+    /** MVUMO consent POINTER sync (OF-B21) — the consent journey itself stays in MVUMO. */
+    @PostMapping("/{planId}/consent")
+    public PlanResponse recordConsent(
+            @PathVariable UUID planId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @Valid @RequestBody ConsentPointerRequest request) {
+        String actor = request.actor() != null && !request.actor().isBlank() ? request.actor() : actorId;
+        return PlanResponse.from(planService.recordConsentPointer(
+                planId, request.consentReference(), request.consentStatus(), actor));
+    }
+
+    /** Record a completed clinical review — re-arms the review-cadence timer (OF-B21). */
+    @PostMapping("/{planId}/reviews")
+    public PlanResponse recordReview(
+            @PathVariable UUID planId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) RecordReviewRequest request) {
+        String reviewedBy = request != null && request.reviewedBy() != null && !request.reviewedBy().isBlank()
+                ? request.reviewedBy() : actorId;
+        return PlanResponse.from(planService.recordReview(planId, reviewedBy));
     }
 
     @PostMapping("/{planId}/threshold-profiles")

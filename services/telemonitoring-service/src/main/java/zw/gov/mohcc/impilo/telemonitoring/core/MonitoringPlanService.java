@@ -1,12 +1,16 @@
 package zw.gov.mohcc.impilo.telemonitoring.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.telemonitoring.domain.ConsentStatus;
 import zw.gov.mohcc.impilo.telemonitoring.domain.PlanStatus;
 import zw.gov.mohcc.impilo.telemonitoring.events.TelemonitoringEventEmitter;
+import zw.gov.mohcc.impilo.telemonitoring.integration.PctTaskClient;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.entity.MonitoringPlanEntity;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.entity.MonitoringProgrammeEntity;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.entity.ThresholdProfileEntity;
@@ -14,9 +18,11 @@ import zw.gov.mohcc.impilo.telemonitoring.persistence.repository.MonitoringPlanR
 import zw.gov.mohcc.impilo.telemonitoring.persistence.repository.MonitoringProgrammeRepository;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.repository.ThresholdProfileRepository;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,15 +53,21 @@ public class MonitoringPlanService {
     private final MonitoringProgrammeRepository programmeRepository;
     private final ThresholdProfileRepository thresholdRepository;
     private final TelemonitoringEventEmitter eventEmitter;
+    private final PctTaskClient pctTaskClient;
+    private final ObjectMapper objectMapper;
 
     public MonitoringPlanService(MonitoringPlanRepository planRepository,
                                  MonitoringProgrammeRepository programmeRepository,
                                  ThresholdProfileRepository thresholdRepository,
-                                 TelemonitoringEventEmitter eventEmitter) {
+                                 TelemonitoringEventEmitter eventEmitter,
+                                 PctTaskClient pctTaskClient,
+                                 ObjectMapper objectMapper) {
         this.planRepository = planRepository;
         this.programmeRepository = programmeRepository;
         this.thresholdRepository = thresholdRepository;
         this.eventEmitter = eventEmitter;
+        this.pctTaskClient = pctTaskClient;
+        this.objectMapper = objectMapper;
     }
 
     // ── Commands ──
@@ -72,7 +84,19 @@ public class MonitoringPlanService {
             String initialThresholdsJson,
             String suggestedBy,
             String suggestedSystemVersion,
-            String createdBy) {
+            String createdBy,
+            String consentReference,
+            String consentStatus) {
+
+        /** Backwards-compatible constructor (pre-OF-B21 callers — consent pointers absent → UNVERIFIED). */
+        public CreatePlanCommand(UUID tenantId, String patientCpid, String programmeCode, String orosOrderId,
+                                 String clinicalIndication, String monitoringSetting, String reviewCadence,
+                                 String careTeamJson, String initialThresholdsJson, String suggestedBy,
+                                 String suggestedSystemVersion, String createdBy) {
+            this(tenantId, patientCpid, programmeCode, orosOrderId, clinicalIndication, monitoringSetting,
+                    reviewCadence, careTeamJson, initialThresholdsJson, suggestedBy, suggestedSystemVersion,
+                    createdBy, null, null);
+        }
     }
 
     public record AmendThresholdsCommand(
@@ -129,6 +153,17 @@ public class MonitoringPlanService {
             plan.setSuggestedSystemVersion(cmd.suggestedSystemVersion());
             plan.setSuggestedAt(OffsetDateTime.now());
         }
+        // MVUMO consent POINTERS only (§14.2 item 9) — absent stays honest UNVERIFIED.
+        plan.setConsentReference(cmd.consentReference());
+        try {
+            plan.setConsentStatus(ConsentStatus.parse(cmd.consentStatus()));
+        } catch (IllegalArgumentException e) {
+            throw new TelemonitoringDomainException("TM_INVALID_CONSENT_STATUS", 400,
+                    "Unknown consent status: " + cmd.consentStatus());
+        }
+        if (cmd.consentReference() != null || (cmd.consentStatus() != null && !cmd.consentStatus().isBlank())) {
+            plan.setConsentUpdatedAt(OffsetDateTime.now());
+        }
         plan.setCreatedBy(cmd.createdBy());
         plan = planRepository.save(plan);
 
@@ -158,6 +193,18 @@ public class MonitoringPlanService {
      * as two audited guarded transitions in one call. Automated suggestions MUST NOT
      * self-activate: the approver must be an identified actor distinct from the
      * suggesting system.
+     *
+     * <p>OF-B21 activation side-effects:</p>
+     * <ul>
+     *   <li><b>Consent gate (fail-closed on refusal only)</b> — activation refuses when the
+     *       MVUMO consent pointer is an explicit REFUSED/REVOKED. Absent consent is honest
+     *       UNVERIFIED: activation proceeds with that state recorded on the event.</li>
+     *   <li><b>CHW/care-team task</b> — when the plan's care_team carries a CHW binding
+     *       ({@code chwId}), a first-monitoring-visit task is requested: the durable
+     *       {@code telemonitoring.plan.task_requested.v1} outbox event is written in this
+     *       transaction and PCT's generic task lane ({@code POST /v1/tasks}) is pushed
+     *       best-effort — a degraded PCT never rolls back a clinician's activation.</li>
+     * </ul>
      */
     @Transactional
     public MonitoringPlanEntity approve(UUID planId, String approvedBy) {
@@ -167,6 +214,18 @@ public class MonitoringPlanService {
             throw new TelemonitoringDomainException("TM_SELF_APPROVAL_FORBIDDEN", 422,
                     "Automated suggestions must not self-activate: approver '" + approvedBy
                             + "' is the suggesting system. Clinician approval is mandatory (§14.2).");
+        }
+        // Consent gate — fail closed ONLY on explicit refusal (§14.2 posture).
+        ConsentStatus consent = plan.getConsentStatus() != null ? plan.getConsentStatus() : ConsentStatus.UNVERIFIED;
+        if (consent.blocksActivation()) {
+            throw new TelemonitoringDomainException("TM_CONSENT_REFUSED", 422,
+                    "Monitoring consent is " + consent + " (MVUMO ref: "
+                            + (plan.getConsentReference() != null ? plan.getConsentReference() : "none")
+                            + ") — activation refused. Resolve the consent journey in MVUMO first.");
+        }
+        if (consent == ConsentStatus.UNVERIFIED || consent == ConsentStatus.PENDING) {
+            log.warn("Plan {} activating with consent status {} — recorded honestly, not upgraded (§14.2)",
+                    plan.getId(), consent);
         }
         if (plan.getStatus() == PlanStatus.DRAFT) {
             transition(plan, PlanStatus.PENDING_APPROVAL, "Submitted for approval by " + approvedBy);
@@ -181,8 +240,214 @@ public class MonitoringPlanService {
 
         Map<String, Object> payload = basePayload(plan);
         payload.put("approvedBy", approvedBy);
+        payload.put("consentStatus", consent.name());
+        payload.put("consentReference", plan.getConsentReference());
         eventEmitter.emitPlanEvent("activated", plan.getId(), plan.getPatientCpid(), payload, plan.getTenantId());
+
+        requestChwTaskIfBound(plan, approvedBy);
         return plan;
+    }
+
+    /**
+     * Side-effect (a): materialise the §14.2 "initial PCT task set" for the assigned CHW
+     * when the care team carries a CHW binding. The outbox event is the durable seam; the
+     * synchronous PCT push is the immediate delivery attempt whose outcome is recorded on
+     * the event ({@code dispatchedToPct}).
+     */
+    private void requestChwTaskIfBound(MonitoringPlanEntity plan, String requestedBy) {
+        JsonNode careTeam = parseCareTeam(plan);
+        if (careTeam == null) {
+            return;
+        }
+        String chwId = firstText(careTeam, "chwId", "chw_id");
+        if (chwId == null && careTeam.hasNonNull("chw") && careTeam.get("chw").isObject()) {
+            chwId = firstText(careTeam.get("chw"), "id", "chwId");
+        }
+        if (chwId == null || chwId.isBlank()) {
+            return; // no CHW binding — no CHW task (facility-linked / self-monitoring settings)
+        }
+        UUID workspaceId = null;
+        String workspaceRaw = firstText(careTeam, "chwWorkspaceId", "workspaceId");
+        if (workspaceRaw != null) {
+            try {
+                workspaceId = UUID.fromString(workspaceRaw);
+            } catch (IllegalArgumentException e) {
+                log.warn("Plan {} care_team workspace id '{}' is not a UUID — task raised without workspace",
+                        plan.getId(), workspaceRaw);
+            }
+        }
+        String taskType = "MONITORING_ONBOARDING_VISIT";
+        String notes = "First monitoring visit for plan " + plan.getId()
+                + " (programme " + plan.getProgrammeCode() + ", patient " + plan.getPatientCpid() + ")";
+
+        boolean dispatched = pctTaskClient.createTask(
+                plan.getTenantId(), taskType, chwId, "CHW", workspaceId, null, notes);
+
+        Map<String, Object> payload = basePayload(plan);
+        payload.put("taskType", taskType);
+        payload.put("assigneeId", chwId);
+        payload.put("assigneeRole", "CHW");
+        payload.put("workspaceId", workspaceId != null ? workspaceId.toString() : null);
+        payload.put("requestedBy", requestedBy);
+        payload.put("dispatchedToPct", dispatched);
+        eventEmitter.emitPlanEvent("task_requested", plan.getId(), plan.getPatientCpid(),
+                payload, plan.getTenantId());
+    }
+
+    private JsonNode parseCareTeam(MonitoringPlanEntity plan) {
+        String json = plan.getCareTeam();
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(json);
+            return node != null && node.isObject() ? node : null;
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            log.warn("Plan {} care_team is not parseable JSON — CHW task seam skipped: {}",
+                    plan.getId(), e.getMessage());
+            return null;
+        }
+    }
+
+    private static String firstText(JsonNode node, String... fields) {
+        for (String field : fields) {
+            JsonNode value = node.get(field);
+            if (value != null && !value.isNull() && !value.asText().isBlank()) {
+                return value.asText();
+            }
+        }
+        return null;
+    }
+
+    // ── Consent pointer sync (MVUMO owns the journey; we hold pointers only) ──
+
+    /**
+     * Record/refresh the MVUMO consent pointer on a plan (§14.2 item 9). Pointers only —
+     * never consent content. A pointer moving to REFUSED/REVOKED does not auto-suspend an
+     * ACTIVE plan (that is a clinician's reason-bound decision) but is recorded and
+     * emitted for the responsible team to act on.
+     */
+    @Transactional
+    public MonitoringPlanEntity recordConsentPointer(UUID planId, String consentReference,
+                                                     String consentStatus, String actor) {
+        MonitoringPlanEntity plan = load(planId);
+        if (plan.getStatus().isTerminal()) {
+            throw new TelemonitoringDomainException("TM_PLAN_TERMINAL", 409,
+                    "Consent pointers cannot be updated on a " + plan.getStatus() + " plan");
+        }
+        ConsentStatus status;
+        try {
+            status = ConsentStatus.parse(consentStatus);
+        } catch (IllegalArgumentException e) {
+            throw new TelemonitoringDomainException("TM_INVALID_CONSENT_STATUS", 400,
+                    "Unknown consent status: " + consentStatus);
+        }
+        plan.setConsentReference(consentReference);
+        plan.setConsentStatus(status);
+        plan.setConsentUpdatedAt(OffsetDateTime.now());
+        plan = planRepository.save(plan);
+        if (status.blocksActivation() && plan.getStatus() == PlanStatus.ACTIVE) {
+            log.warn("ACTIVE plan {} consent pointer moved to {} — clinician review required (no auto-suspend)",
+                    plan.getId(), status);
+        }
+        Map<String, Object> payload = basePayload(plan);
+        payload.put("consentReference", consentReference);
+        payload.put("consentStatus", status.name());
+        payload.put("actor", actor);
+        eventEmitter.emitPlanEvent("consent_updated", plan.getId(), plan.getPatientCpid(),
+                payload, plan.getTenantId());
+        return plan;
+    }
+
+    // ── Review cadence (OF-B21 side-effect (c): timer groundwork) ──
+
+    /**
+     * Record a completed clinical review: re-arms the cadence timer
+     * ({@code last_review_at = now}, due-notification cleared).
+     */
+    @Transactional
+    public MonitoringPlanEntity recordReview(UUID planId, String reviewedBy) {
+        MonitoringPlanEntity plan = load(planId);
+        requireText(reviewedBy, "reviewedBy (clinician identity) is required to record a review");
+        if (plan.getStatus() != PlanStatus.ACTIVE && plan.getStatus() != PlanStatus.SUSPENDED) {
+            throw new TelemonitoringDomainException("TM_INVALID_TRANSITION", 409,
+                    "Reviews can only be recorded on ACTIVE or SUSPENDED plans (current: " + plan.getStatus() + ")");
+        }
+        plan.setLastReviewAt(OffsetDateTime.now());
+        plan.setReviewDueNotifiedAt(null);
+        plan = planRepository.save(plan);
+        Map<String, Object> payload = basePayload(plan);
+        payload.put("reviewedBy", reviewedBy);
+        payload.put("lastReviewAt", plan.getLastReviewAt().toString());
+        eventEmitter.emitPlanEvent("review_recorded", plan.getId(), plan.getPatientCpid(),
+                payload, plan.getTenantId());
+        return plan;
+    }
+
+    /**
+     * Cadence sweep: emit {@code telemonitoring.plan.review_due.v1} for every ACTIVE plan
+     * whose review is overdue — {@code now > (last_review_at ?? start_at) + cadence}.
+     * One signal per overdue period: {@code review_due_notified_at} de-duplicates until a
+     * review is recorded (which clears it). Returns the number of events emitted.
+     */
+    @Transactional
+    public int sweepReviewsDue(OffsetDateTime now) {
+        int emitted = 0;
+        for (MonitoringPlanEntity plan : planRepository.findByStatusAndReviewCadenceIsNotNull(PlanStatus.ACTIVE)) {
+            Duration cadence = parseCadence(plan.getReviewCadence());
+            if (cadence == null) {
+                log.debug("Plan {} cadence '{}' not parseable — skipped by review sweep",
+                        plan.getId(), plan.getReviewCadence());
+                continue;
+            }
+            OffsetDateTime lastReview = plan.getLastReviewAt() != null ? plan.getLastReviewAt()
+                    : plan.getStartAt() != null ? plan.getStartAt()
+                    : plan.getApprovedAt() != null ? plan.getApprovedAt()
+                    : plan.getCreatedAt();
+            if (lastReview == null || !now.isAfter(lastReview.plus(cadence))) {
+                continue;
+            }
+            if (plan.getReviewDueNotifiedAt() != null && plan.getReviewDueNotifiedAt().isAfter(lastReview)) {
+                continue; // already signalled for this overdue period
+            }
+            plan.setReviewDueNotifiedAt(now);
+            planRepository.save(plan);
+            Map<String, Object> payload = basePayload(plan);
+            payload.put("reviewCadence", plan.getReviewCadence());
+            payload.put("lastReviewAt", lastReview.toString());
+            payload.put("dueSince", lastReview.plus(cadence).toString());
+            eventEmitter.emitPlanEvent("review_due", plan.getId(), plan.getPatientCpid(),
+                    payload, plan.getTenantId());
+            emitted++;
+        }
+        return emitted;
+    }
+
+    /**
+     * Cadence vocabulary (V001: "e.g. DAILY / WEEKLY / MONTHLY") plus ISO-8601 durations
+     * ({@code P7D}). Unknown cadences return null and are skipped — never guessed.
+     */
+    static Duration parseCadence(String cadence) {
+        if (cadence == null || cadence.isBlank()) {
+            return null;
+        }
+        String value = cadence.trim().toUpperCase(Locale.ROOT);
+        switch (value) {
+            case "DAILY": return Duration.ofDays(1);
+            case "WEEKLY": return Duration.ofDays(7);
+            case "FORTNIGHTLY": return Duration.ofDays(14);
+            case "MONTHLY": return Duration.ofDays(30);
+            case "QUARTERLY": return Duration.ofDays(90);
+            default:
+                if (value.startsWith("P")) {
+                    try {
+                        return Duration.parse(value); // Duration.parse handles PnD / PTnH forms
+                    } catch (java.time.format.DateTimeParseException e) {
+                        return null;
+                    }
+                }
+                return null;
+        }
     }
 
     @Transactional
