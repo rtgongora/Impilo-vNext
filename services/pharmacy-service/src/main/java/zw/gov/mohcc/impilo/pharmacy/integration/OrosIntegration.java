@@ -171,6 +171,44 @@ public class OrosIntegration {
     }
 
     /**
+     * M3 BUG-2 (lazy half of the OF-B12 carriage fix): fetch the
+     * {@code prescriptionClaimId} external reference from the OROS order.
+     * Ordering reality — the {@code oros.order.placed} event may be consumed
+     * BEFORE msika-flow's commitment stamps the claim id onto the order, so
+     * episodes can be created unbound; {@code DispenseEngineImpl.completeDispense}
+     * calls this to re-fetch and bind late. Empty on unreachable/absent —
+     * the caller keeps the honest unbound state.
+     */
+    public java.util.Optional<UUID> fetchPrescriptionClaimId(String orosOrderId) {
+        try {
+            String url = baseUrl + "/v1/orders/" + orosOrderId + "/external-refs";
+            HttpHeaders headers = buildTrustHeaders();
+            org.springframework.http.ResponseEntity<com.fasterxml.jackson.databind.JsonNode> response =
+                    restTemplate.exchange(url, org.springframework.http.HttpMethod.GET,
+                            new HttpEntity<>(headers), com.fasterxml.jackson.databind.JsonNode.class);
+            com.fasterxml.jackson.databind.JsonNode body = response.getBody();
+            if (body == null) {
+                return java.util.Optional.empty();
+            }
+            com.fasterxml.jackson.databind.JsonNode refs =
+                    body.hasNonNull("data") ? body.get("data") : body;
+            com.fasterxml.jackson.databind.JsonNode claim = refs.get("prescriptionClaimId");
+            if (claim == null || claim.isNull() || claim.asText().isBlank()) {
+                return java.util.Optional.empty();
+            }
+            return java.util.Optional.of(UUID.fromString(claim.asText().trim()));
+        } catch (IllegalArgumentException e) {
+            log.warn("Malformed prescriptionClaimId external ref on OROS order {}: {}",
+                    orosOrderId, e.getMessage());
+            return java.util.Optional.empty();
+        } catch (RestClientException e) {
+            log.warn("OROS unavailable for external-refs fetch, orosOrderId={}: {}",
+                    orosOrderId, e.getMessage());
+            return java.util.Optional.empty();
+        }
+    }
+
+    /**
      * Build HTTP headers with trust context for inter-service communication.
      */
     private HttpHeaders buildTrustHeaders() {

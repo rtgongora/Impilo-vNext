@@ -88,7 +88,16 @@ public class CoverageClient {
             body.put("standardCharge", standardCharge);
             ResponseEntity<String> response = restClient.post()
                     .uri("/internal/v1/coverage/liability-estimates")
-                    .headers(h -> copyTrustHeaders(inbound, h))
+                    .headers(h -> {
+                        copyTrustHeaders(inbound, h);
+                        // M3 BUG-4: coverage's v1.1 IdempotencyFilter hard-requires
+                        // Idempotency-Key on POST /internal/v1/** — without it every
+                        // liability call 400'd, the 4xx was misread as REFUSED and
+                        // every payer-covered offer misreported NOT_COVERED.
+                        // Deterministic per logical call: a retry of the same
+                        // estimate replays; a different charge is a new key.
+                        setIdempotencyKey(h, liabilityIdempotencyKey(coverageId, benefitCode, standardCharge));
+                    })
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
@@ -194,14 +203,30 @@ public class CoverageClient {
             }
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("coverageId", coverageId.toString());
-            body.put("authType", "MARKETPLACE_FULFILMENT");
+            // M3 fix-run finding: coverage OWNS the auth-type vocabulary
+            // (AuthorisationService.AUTH_TYPES) and refused the invented
+            // "MARKETPLACE_FULFILMENT" with 400 Unknown auth_type — the §8.7.5
+            // minimum-necessary auto-submit never landed a row. The flow is a
+            // PRIOR authorisation; the coded benefit lines carry the specifics.
+            body.put("authType", "PRIOR");
             body.put("lines", lines);
 
+            // M3 BUG-4 (same family as liability): both PA POSTs hit the v1.1
+            // idempotency filter — deterministic keys per logical submission.
+            // The key is derived from the EXACT serialized body (fix-run 2
+            // finding: a key over codes+amounts only collided with 409
+            // IDENTITY_CONFLICT when any other body field changed) — same
+            // bytes replay, different bytes are a new logical call.
+            String bodyJson = objectMapper.writeValueAsString(body);
+            String createKey = paSubmissionIdempotencyKey(coverageId, bodyJson);
             ResponseEntity<String> created = restClient.post()
                     .uri("/internal/v1/coverage/authorisations")
-                    .headers(h -> copyTrustHeaders(inbound, h))
+                    .headers(h -> {
+                        copyTrustHeaders(inbound, h);
+                        setIdempotencyKey(h, createKey);
+                    })
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(body)
+                    .body(bodyJson)
                     .retrieve()
                     .toEntity(String.class);
             if (!created.getStatusCode().is2xxSuccessful() || created.getBody() == null) {
@@ -214,7 +239,10 @@ public class CoverageClient {
             }
             ResponseEntity<String> submitted = restClient.post()
                     .uri("/internal/v1/coverage/authorisations/{id}/submit", id)
-                    .headers(h -> copyTrustHeaders(inbound, h))
+                    .headers(h -> {
+                        copyTrustHeaders(inbound, h);
+                        setIdempotencyKey(h, "msika-flow-pa-submit:" + id);
+                    })
                     .retrieve()
                     .toEntity(String.class);
             if (!submitted.getStatusCode().is2xxSuccessful()) {
@@ -233,6 +261,47 @@ public class CoverageClient {
         return (v.isNumber() || v.isTextual()) ? new BigDecimal(v.asText()) : null;
     }
 
+    /**
+     * Deterministic idempotency key for one logical liability estimate:
+     * same coverage/benefit/charge → same key (the filter replays the stored
+     * estimate on a retry — same body, same hash); a changed charge is a NEW
+     * logical call and gets a new key, never a 409 IDENTITY_CONFLICT.
+     * Package-visible for the contract unit test.
+     */
+    static String liabilityIdempotencyKey(UUID coverageId, String benefitCode, BigDecimal standardCharge) {
+        return "msika-flow-liability:" + coverageId + ":" + benefitCode + ":"
+                + (standardCharge != null ? standardCharge.stripTrailingZeros().toPlainString() : "0");
+    }
+
+    /**
+     * Deterministic key for one logical PA submission: SHA-256 over the exact
+     * request body — identical bytes replay through the filter; ANY body
+     * change (codes, amounts, authType, …) is a new logical call and can
+     * never 409 IDENTITY_CONFLICT against an older stored submission.
+     */
+    static String paSubmissionIdempotencyKey(UUID coverageId, String bodyJson) {
+        return "msika-flow-pa:" + coverageId + ":" + sha256Hex(bodyJson);
+    }
+
+    private static String sha256Hex(String input) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                sb.append(Character.forDigit((b >> 4) & 0xF, 16)).append(Character.forDigit(b & 0xF, 16));
+            }
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 unavailable", e);
+        }
+    }
+
+    private static void setIdempotencyKey(HttpHeaders target, String key) {
+        target.set("Idempotency-Key", key);
+        target.set("X-Idempotency-Key", key);
+    }
+
     private static void copyTrustHeaders(HttpServletRequest inbound, HttpHeaders target) {
         if (inbound != null) {
             copyIfPresent(inbound, target, TrustHeaderExtractor.H_TENANT_ID);
@@ -246,6 +315,11 @@ public class CoverageClient {
         String pod = inbound != null ? inbound.getHeader("X-Pod-ID") : null;
         target.add("X-Pod-ID", pod != null && !pod.isBlank() ? pod : "national-spine");
         target.add("X-Request-ID", java.util.UUID.randomUUID().toString());
+        // Coverage endpoints are /internal/v1/** — the V11HeaderFilter hard-requires
+        // X-Correlation-ID; synthesize one when the inbound hop carried none.
+        if (!target.containsKey("X-Correlation-ID")) {
+            target.add("X-Correlation-ID", java.util.UUID.randomUUID().toString());
+        }
         target.add("x-envoy-internal", "true");
     }
 

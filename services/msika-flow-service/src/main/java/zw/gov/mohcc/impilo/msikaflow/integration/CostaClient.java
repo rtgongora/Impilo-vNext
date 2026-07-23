@@ -107,6 +107,10 @@ public class CostaClient {
         }
     }
 
+    // M3 BUG-4 check: COSTA's /costa/v1/estimate is NOT a v1.1 /internal/v1/**
+    // path, so the tech-companion IdempotencyFilter does not apply — no
+    // Idempotency-Key is required on this hop (verified against
+    // V11HeaderFilter.isV11Path). CoverageClient carries the fix.
     private static void copyTrustHeaders(HttpServletRequest inbound, HttpHeaders target) {
         if (inbound != null) {
             copyIfPresent(inbound, target, TrustHeaderExtractor.H_TENANT_ID);

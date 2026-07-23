@@ -63,15 +63,51 @@ public class PaymentEventConsumer {
                 return;
             }
 
-            paymentService.handlePaymentCallback(mushexPaymentIntentId, status, actorId);
+            // M3 BUG-7 — route by intent identity, each path with its OWN error
+            // isolation. The marketplace resume runs FIRST: a marketplace
+            // selection intent has no legacy mf_settlements row, so the legacy
+            // cart path throws "Settlement not found" — that legacy-side failure
+            // must never swallow the resume (it used to discard the whole event,
+            // stranding every paid selection in AWAITING_PAYMENT until the TTL
+            // sweep killed it with PAYMENT_TIMEOUT).
+            //
             // OF-B10 — a held marketplace selection (AWAITING_PAYMENT) resumes
             // its guarded steps 9–12 on PAID, or compensates on terminal failure.
             // CC-2: the event itself never sets fulfilment state — the commitment
             // sequence (state machines + §13.4 gate) does.
-            commitmentService.onPaymentStatusChanged(mushexPaymentIntentId, status)
-                    .ifPresent(result -> log.info(
-                            "Marketplace selection {} resumed from payment event: outcome={}",
-                            result.selection().getSelectionId(), result.outcomeCode()));
+            boolean marketplaceHandled = false;
+            try {
+                marketplaceHandled = commitmentService
+                        .onPaymentStatusChanged(mushexPaymentIntentId, status)
+                        .map(result -> {
+                            log.info("Marketplace selection {} resumed from payment event: outcome={}",
+                                    result.selection().getSelectionId(), result.outcomeCode());
+                            return true;
+                        })
+                        .orElse(false);
+            } catch (Exception e) {
+                log.error("Marketplace payment resume failed for intent {} status {}: {}",
+                        mushexPaymentIntentId, status, e.getMessage(), e);
+            }
+
+            // Legacy cart settlement path — isolated: an intent that maps to no
+            // legacy settlement (marketplace-only intents) is a routine
+            // routing miss, not an error; any other legacy failure is logged
+            // without affecting the marketplace outcome above.
+            try {
+                paymentService.handlePaymentCallback(mushexPaymentIntentId, status, actorId);
+            } catch (IllegalArgumentException e) {
+                if (marketplaceHandled) {
+                    log.debug("No legacy settlement for intent {} (marketplace selection handled): {}",
+                            mushexPaymentIntentId, e.getMessage());
+                } else {
+                    log.warn("Payment event matched neither legacy settlement nor held marketplace selection: intent={} status={}: {}",
+                            mushexPaymentIntentId, status, e.getMessage());
+                }
+            } catch (Exception e) {
+                log.error("Legacy payment callback failed for intent {} status {}: {}",
+                        mushexPaymentIntentId, status, e.getMessage(), e);
+            }
             log.info("Processed payment event: mushexId={} status={}", mushexPaymentIntentId, status);
 
         } catch (Exception e) {

@@ -461,6 +461,33 @@ public class OrderController {
                 .body(ApiResponse.ok(OrderSummaryDto.from(successor), correlationId));
     }
 
+    /** Narrow M3 BUG-2 body: one allowlisted external-ref key + value. */
+    public record ExternalRefRequest(
+            @jakarta.validation.constraints.NotBlank String key,
+            @jakarta.validation.constraints.NotBlank String value) {}
+
+    /**
+     * M3 BUG-2 — OF-B12 carriage producer: record one allowlisted external
+     * reference ({@code prescriptionClaimId}) on the order (merge-into-jsonb,
+     * idempotent on replay, 409 on a conflicting value). Called by msika-flow
+     * after the successful commitment step-6 prescription claim.
+     */
+    @PostMapping("/{orderId}/external-refs")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> recordExternalRef(
+            @PathVariable String orderId, @Valid @RequestBody ExternalRefRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        lifecycleService.recordExternalRef(orderId, request.key(), request.value());
+        return ResponseEntity.ok(ApiResponse.ok(lifecycleService.externalRefs(orderId), correlationId));
+    }
+
+    /** External references recorded on the order (empty map when none). */
+    @GetMapping("/{orderId}/external-refs")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> externalRefs(
+            @PathVariable String orderId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(lifecycleService.externalRefs(orderId), correlationId));
+    }
+
     /** Governance error-marking — terminal, pre-fulfilment only (§9.1 T9). */
     @PostMapping("/{orderId}/error-mark")
     public ResponseEntity<ApiResponse<OrderSummaryDto>> errorMarkOrder(

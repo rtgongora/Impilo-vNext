@@ -49,6 +49,16 @@ public class PickupProofEntity {
     @Column(name = "device_fingerprint")
     private String deviceFingerprint;
 
+    /**
+     * M3 BUG-5 — the freshly generated plaintext credential (OTP / QR token /
+     * SMS reference), carried in memory from {@code createProof} to the
+     * creation response ONLY. {@code @Transient}: NEVER persisted (the old
+     * deviceFingerprint stash was a managed column, so dirty-checking flushed
+     * the plaintext to the database at commit); only the HMAC hash is stored.
+     */
+    @Transient
+    private String oneTimeCredential;
+
     // ── OF-B16 collector identity + verification grade (§8.11.3, §12.4) ──
     /** The identity of the person who physically collected (may differ from actor). */
     @Column(name = "collector_identity")
@@ -106,6 +116,9 @@ public class PickupProofEntity {
 
     public String getDeviceFingerprint() { return deviceFingerprint; }
     public void setDeviceFingerprint(String deviceFingerprint) { this.deviceFingerprint = deviceFingerprint; }
+
+    public String getOneTimeCredential() { return oneTimeCredential; }
+    public void setOneTimeCredential(String oneTimeCredential) { this.oneTimeCredential = oneTimeCredential; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }

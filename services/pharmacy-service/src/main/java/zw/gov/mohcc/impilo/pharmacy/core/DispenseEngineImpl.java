@@ -289,6 +289,20 @@ public class DispenseEngineImpl implements DispenseEngine {
         order.setCompletedBy(ctx.actorId());
         order.setCompletedAt(OffsetDateTime.now());
 
+        // M3 BUG-2 (lazy bind): an episode spawned from oros.order.placed BEFORE
+        // msika-flow's commitment stamped externalRefs.prescriptionClaimId is
+        // created unbound — re-fetch the order's external refs from OROS now
+        // and bind late if the claim id has since been recorded (belt and
+        // braces with the msika-flow producer write; both honest).
+        if (order.getPrescriptionClaimId() == null && order.getOrosOrderId() != null) {
+            Optional<UUID> lateClaim = orosIntegration.fetchPrescriptionClaimId(order.getOrosOrderId());
+            if (lateClaim.isPresent()) {
+                log.info("Late claim bind: episode {} picked up claim {} from OROS external refs",
+                        orderId, lateClaim.get());
+                order.setPrescriptionClaimId(lateClaim.get());
+            }
+        }
+
         // OF-B12 §13.3.1: on episode completion, bind the episode reference onto
         // the OROS prescription claim. A failed bind is recorded honestly
         // (claim_bound_at stays null) and surfaces as a coded anomaly event —

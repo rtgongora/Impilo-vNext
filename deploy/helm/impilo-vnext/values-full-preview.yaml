@@ -455,6 +455,14 @@ fullBootServices:
       # precondition fail-closes UNVERIFIED.
       VARAPI_URL: "http://varapi-service:8083"
       TUSO_URL: "http://tuso-service:8084"
+      # OF-B M3 CFG-1: money-stack clients (application.yml
+      # msika-flow.integration.mushex-url reads ${MUSHEX_URL}; CostaClient/
+      # CoverageClient @Value defaults msika-flow.integration.costa-url /
+      # coverage-url point at localhost:8101/8140) — without these, commitment
+      # steps 7–8 (financials + payment) are dead on the estate.
+      MUSHEX_URL: "http://mushex-service:8102"
+      MSIKAFLOW_INTEGRATION_COSTAURL: "http://costing-engine-service:8101"
+      MSIKAFLOW_INTEGRATION_COVERAGEURL: "http://coverage-service:8140"
   # TM-B17: Rito consumes clinical.teleconsult.lifecycle (verified interactions → feedback loop);
   # analytics-pipeline consumes the same stream ("§24 metrics from events only").
   rito-quality-safety-service:
@@ -486,6 +494,11 @@ fullBootServices:
   pharmacy-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+      # OF-B M3 CFG-2: OrosIntegration @Value default
+      # pharmacy.integration.oros.base-url is localhost:8089 — without this the
+      # §13.3.1 claim bind-episode / §9.2 claim release / M3 lazy external-refs
+      # re-fetch can never reach OROS.
+      PHARMACY_INTEGRATION_OROS_BASEURL: "http://oros-service:8089"
   learning-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"

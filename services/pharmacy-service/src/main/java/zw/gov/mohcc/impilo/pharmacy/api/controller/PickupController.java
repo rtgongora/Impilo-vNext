@@ -52,8 +52,11 @@ public class PickupController {
         log.info("Pickup proof created: orderId={}, method={}, proofId={}",
                 id, request.method(), proof.getProofId());
 
+        // M3 BUG-5: surface the freshly generated plaintext credential ONCE as
+        // oneTimeCredential (creation response only; only the HMAC hash is
+        // stored; reads/claims map through PickupProofDto.from and never carry it).
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(PickupProofDto.from(proof), correlationId));
+                .body(ApiResponse.ok(PickupProofDto.created(proof, proof.getOneTimeCredential()), correlationId));
     }
 
     /**

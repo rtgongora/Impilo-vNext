@@ -153,7 +153,7 @@ class DispenseClaimLinkageTest {
     }
 
     @Test
-    @DisplayName("no-claim episode never calls the bind seam")
+    @DisplayName("no-claim episode never calls the bind seam (lazy re-fetch finds nothing)")
     void noClaimNoBind() {
         DispenseOrderEntity order = order(DispenseStatus.READY, null);
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -161,10 +161,52 @@ class DispenseClaimLinkageTest {
                 .thenReturn(List.of());
         when(clarificationRepository.existsByDispenseOrderIdAndStatus(
                 order.getOrderId(), ClarificationStatus.PENDING)).thenReturn(false);
+        when(orosIntegration.fetchPrescriptionClaimId(order.getOrosOrderId()))
+                .thenReturn(Optional.empty());
 
         engine.completeDispense(order.getOrderId());
 
         verify(orosIntegration, never()).bindClaimEpisode(any(), any());
+    }
+
+    @Test
+    @DisplayName("M3 BUG-2 lazy bind: unbound episode re-fetches the claim id from OROS "
+            + "external refs at completion and binds it")
+    void lazyBindReFetchesClaimFromExternalRefs() {
+        // Ordering reality: oros.order.placed was consumed BEFORE msika-flow's
+        // commitment stamped externalRefs.prescriptionClaimId → the episode was
+        // created unbound. completeDispense must re-fetch and bind late.
+        DispenseOrderEntity order = order(DispenseStatus.READY, null);
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(itemRepository.findByDispenseOrderIdOrderByCreatedAtAsc(order.getOrderId()))
+                .thenReturn(List.of(pickedItem(order.getOrderId())));
+        when(clarificationRepository.existsByDispenseOrderIdAndStatus(
+                order.getOrderId(), ClarificationStatus.PENDING)).thenReturn(false);
+        when(orosIntegration.fetchPrescriptionClaimId(order.getOrosOrderId()))
+                .thenReturn(Optional.of(CLAIM_ID));
+        when(orosIntegration.bindClaimEpisode(CLAIM_ID, order.getOrderId().toString())).thenReturn(true);
+
+        DispenseOrderEntity completed = engine.completeDispense(order.getOrderId());
+
+        assertThat(completed.getPrescriptionClaimId()).isEqualTo(CLAIM_ID);
+        assertThat(completed.getClaimBoundAt()).isNotNull();
+        verify(orosIntegration).bindClaimEpisode(CLAIM_ID, order.getOrderId().toString());
+    }
+
+    @Test
+    @DisplayName("M3 BUG-2 lazy bind: an episode already carrying a claim never re-fetches")
+    void boundEpisodeNeverReFetches() {
+        DispenseOrderEntity order = order(DispenseStatus.READY, CLAIM_ID);
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(itemRepository.findByDispenseOrderIdOrderByCreatedAtAsc(order.getOrderId()))
+                .thenReturn(List.of());
+        when(clarificationRepository.existsByDispenseOrderIdAndStatus(
+                order.getOrderId(), ClarificationStatus.PENDING)).thenReturn(false);
+        when(orosIntegration.bindClaimEpisode(eq(CLAIM_ID), any())).thenReturn(true);
+
+        engine.completeDispense(order.getOrderId());
+
+        verify(orosIntegration, never()).fetchPrescriptionClaimId(any());
     }
 
     @Test

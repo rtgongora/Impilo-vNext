@@ -150,7 +150,7 @@ public class OrderStateMachine {
         // OF-B1: the placed content is version 1 of the immutable aggregate.
         versionWriter.snapshot(order, "Order placed", ctx.actorId());
 
-        publishEvent("ORDER", orderId, "ORDER_PLACED", order, ctx.tenantId());
+        publishEvent("ORDER", orderId, "ORDER_PLACED", orderPlacedPayload(order), ctx.tenantId());
 
         log.info("Order placed: orderId={}, type={}, facility={}", orderId, type, facilityId);
         return order;
@@ -322,7 +322,10 @@ public class OrderStateMachine {
         }
 
         String eventType = "ORDER_" + newStatus.name();
-        publishEvent("ORDER", order.getOrderId(), eventType, order, ctx.tenantId());
+        // M3 BUG-3: ORDER_PLACED (any emission path) carries the items array —
+        // same enriched shape as direct placement.
+        Object payload = newStatus == OrderStatus.PLACED ? orderPlacedPayload(order) : order;
+        publishEvent("ORDER", order.getOrderId(), eventType, payload, ctx.tenantId());
 
         log.info("Order transitioned: orderId={}, {} -> {}", order.getOrderId(), current, newStatus);
         return order;
@@ -386,6 +389,33 @@ public class OrderStateMachine {
      */
     public Set<OrderStatus> getAllowedTransitions(OrderStatus current) {
         return TRANSITIONS.getOrDefault(current, Set.of());
+    }
+
+    /**
+     * M3 BUG-3 — the {@code oros.order.placed} payload used to be the bare
+     * serialized {@link OrderEntity}, which has NO items collection; the
+     * pharmacy {@code OrosConsumer} contract expects an {@code items[]} array,
+     * so every consumer-spawned dispense episode had zero items. ADDITIVE fix:
+     * all existing OrderEntity fields are preserved verbatim (Map merge of the
+     * entity's own serialization) PLUS an {@code items} array of
+     * code/displayName/quantity/instructions — existing consumers are
+     * unaffected. Package-visible for the payload-contract test.
+     */
+    Map<String, Object> orderPlacedPayload(OrderEntity order) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> payload =
+                objectMapper.convertValue(order, LinkedHashMap.class);
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (OrderItemEntity item : orderItemRepository.findByOrderId(order.getOrderId())) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("code", item.getCode());
+            m.put("displayName", item.getDisplayName());
+            m.put("quantity", item.getQuantity());
+            m.put("instructions", item.getInstructions());
+            items.add(m);
+        }
+        payload.put("items", items);
+        return payload;
     }
 
     /**

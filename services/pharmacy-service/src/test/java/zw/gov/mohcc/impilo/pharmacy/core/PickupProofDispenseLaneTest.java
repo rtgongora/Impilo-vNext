@@ -161,7 +161,10 @@ class PickupProofDispenseLaneTest {
             PickupProofEntity proof = service.createProof(
                     ORDER_ID, PickupMethod.SMS_REFERENCE, null, "Jane Moyo");
 
-            String reference = proof.getDeviceFingerprint(); // one-time stash
+            // M3 BUG-5: the one-time credential rides the @Transient field
+            // (never the persisted deviceFingerprint column).
+            String reference = proof.getOneTimeCredential();
+            assertThat(proof.getDeviceFingerprint()).isNull();
             assertThat(reference).hasSize(8).doesNotContain("0", "O", "1", "I", "L");
             assertThat(proof.getSmsReferenceHash())
                     .isEqualTo(hmacService.computeLookupHash(reference))

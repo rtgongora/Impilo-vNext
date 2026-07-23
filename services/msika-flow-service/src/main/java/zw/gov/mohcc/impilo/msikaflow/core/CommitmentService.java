@@ -312,6 +312,17 @@ public class CommitmentService {
             }
             selection.setPrescriptionClaimId(claim.get().claimId());
             steps.pass(6, "PRESCRIPTION_CLAIM", null, "claimId=" + claim.get().claimId());
+            // M3 BUG-2 — OF-B12 carriage: stamp the claim id onto the OROS
+            // order's externalRefs so the oros.order.placed→pharmacy consumer
+            // flow can bind claim→episode. Best-effort by design: the pharmacy
+            // side ALSO lazily re-fetches external refs at completeDispense
+            // (the order event may already have been consumed before this
+            // commitment ran), so a failed write here never blocks commitment.
+            if (request.getOrosOrderId() != null && !orosClient.recordExternalRef(
+                    request.getOrosOrderId(), "prescriptionClaimId", claim.get().claimId(), inbound)) {
+                log.warn("OF-B12 carriage write failed: order {} claim {} — pharmacy lazy bind remains",
+                        request.getOrosOrderId(), claim.get().claimId());
+            }
         } else if (request.getProfile() == MarketplaceProfile.DIAGNOSTICS) {
             // OF-B13: diagnostics fulfil the OROS order directly — no
             // prescription, no claim; results route on the LIVE OROS spine.

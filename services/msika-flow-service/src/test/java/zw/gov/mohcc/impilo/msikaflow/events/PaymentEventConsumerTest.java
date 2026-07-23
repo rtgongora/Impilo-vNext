@@ -75,4 +75,48 @@ class PaymentEventConsumerTest {
         consumer.onPaymentStatusChanged("{\"intentId\":\"mpi-11\",\"status\":\"PAID\"}");
         verify(paymentService).handlePaymentCallback("mpi-11", "PAID", "SYSTEM");
     }
+
+    // ── M3 BUG-7 — path isolation, both orders ──────────────────────────
+
+    @Test
+    void legacySettlementNotFound_neverSwallowsTheMarketplaceResume() {
+        // Marketplace selection intents have NO legacy mf_settlements row — the
+        // legacy path throws; the marketplace resume must still run (this was
+        // the live-proof blocker: every paid selection stranded AWAITING_PAYMENT).
+        doThrow(new IllegalArgumentException("Settlement not found for MUSHEX ID: mpi-12"))
+                .when(paymentService).handlePaymentCallback("mpi-12", "PAID", "SYSTEM");
+
+        consumer.onPaymentStatusChanged("{\"intentId\":\"mpi-12\",\"status\":\"PAID\"}");
+
+        verify(commitmentService).onPaymentStatusChanged("mpi-12", "PAID");
+    }
+
+    @Test
+    void marketplaceResumeRunsFirst_andLegacyStillRunsAfterIt() {
+        consumer.onPaymentStatusChanged("{\"intentId\":\"mpi-13\",\"status\":\"PAID\"}");
+
+        var order = inOrder(commitmentService, paymentService);
+        order.verify(commitmentService).onPaymentStatusChanged("mpi-13", "PAID");
+        order.verify(paymentService).handlePaymentCallback("mpi-13", "PAID", "SYSTEM");
+    }
+
+    @Test
+    void marketplaceResumeFailure_neverSwallowsTheLegacyPath() {
+        when(commitmentService.onPaymentStatusChanged("mpi-14", "PAID"))
+                .thenThrow(new IllegalStateException("marketplace boom"));
+
+        consumer.onPaymentStatusChanged("{\"intentId\":\"mpi-14\",\"status\":\"PAID\"}");
+
+        verify(paymentService).handlePaymentCallback("mpi-14", "PAID", "SYSTEM");
+    }
+
+    @Test
+    void legacyUnexpectedFailure_isIsolatedToo() {
+        doThrow(new RuntimeException("legacy db down"))
+                .when(paymentService).handlePaymentCallback("mpi-15", "FAILED", "SYSTEM");
+
+        // never propagates to the Kafka listener
+        consumer.onPaymentStatusChanged("{\"intentId\":\"mpi-15\",\"status\":\"FAILED\"}");
+        verify(commitmentService).onPaymentStatusChanged("mpi-15", "FAILED");
+    }
 }

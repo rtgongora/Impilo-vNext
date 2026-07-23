@@ -17,7 +17,9 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -235,6 +237,91 @@ public class OrderLifecycleService {
         }
         order.setLifecycleReason(reason);
         return stateMachine.transition(order, OrderStatus.ENTERED_IN_ERROR);
+    }
+
+    /**
+     * M3 BUG-2 — the OF-B12 claim-carriage producer lane. Keys writable through
+     * the narrow {@code POST /v1/orders/{orderId}/external-refs} endpoint;
+     * everything else is refused (external_refs also carries the T7
+     * replaces/replacedBy links, which must never be caller-writable).
+     */
+    private static final Set<String> EXTERNAL_REF_ALLOWLIST = Set.of("prescriptionClaimId");
+
+    /**
+     * M3 BUG-2 — record one allowlisted external reference on an order
+     * (merge-into-jsonb). Idempotent: re-recording the same key=value is a
+     * no-op; a DIFFERENT value for an already-recorded key is a 409 conflict
+     * (a claim id never legitimately changes). msika-flow's CommitmentService
+     * calls this after the successful step-6 prescription claim so the
+     * {@code oros.order.placed}→pharmacy consumer flow (and the pharmacy lazy
+     * re-fetch) can bind the claim onto the dispense episode.
+     */
+    @Transactional
+    public OrderEntity recordExternalRef(String orderId, String key, String value) {
+        TrustContext ctx = TrustContextHolder.require();
+        OrderEntity order = stateMachine.getOrder(orderId);
+        if (key == null || !EXTERNAL_REF_ALLOWLIST.contains(key)) {
+            throw new OrosDomainException("EXTERNAL_REF_KEY_NOT_ALLOWED", 400,
+                    "External-ref key not allowed — writable keys: " + EXTERNAL_REF_ALLOWLIST);
+        }
+        if (value == null || value.isBlank()) {
+            throw new OrosDomainException("EXTERNAL_REF_VALUE_REQUIRED", 400,
+                    "External-ref value is required.");
+        }
+        String existing = readRef(order.getExternalRefs(), key);
+        if (value.equals(existing)) {
+            return order; // idempotent replay — nothing to do
+        }
+        if (existing != null) {
+            throw new OrosDomainException("EXTERNAL_REF_CONFLICT", 409,
+                    "Order " + orderId + " already carries " + key
+                            + " with a different value — refusing silent overwrite.");
+        }
+        order.setExternalRefs(mergeRef(order.getExternalRefs(), key, value));
+        order = orderRepository.save(order);
+
+        ObjectNode payload = objectMapper.createObjectNode();
+        payload.put("orderId", orderId);
+        payload.put("key", key);
+        payload.put("value", value);
+        stateMachine.publishOrderEvent(orderId, "ORDER_EXTERNAL_REF_RECORDED", payload, ctx.tenantId());
+
+        log.info("Order external ref recorded: orderId={} key={}", orderId, key);
+        return order;
+    }
+
+    /** Parsed external_refs document for an order (empty map when none). Tenant-scoped. */
+    public Map<String, String> externalRefs(String orderId) {
+        OrderEntity order = stateMachine.getOrder(orderId);
+        Map<String, String> out = new LinkedHashMap<>();
+        String json = order.getExternalRefs();
+        if (json == null || json.isBlank()) {
+            return out;
+        }
+        try {
+            var node = objectMapper.readTree(json);
+            node.fieldNames().forEachRemaining(name -> {
+                var v = node.get(name);
+                if (v != null && v.isValueNode()) {
+                    out.put(name, v.asText());
+                }
+            });
+        } catch (Exception e) {
+            log.warn("Unparseable external_refs on order {}: {}", orderId, e.getMessage());
+        }
+        return out;
+    }
+
+    private String readRef(String externalRefsJson, String key) {
+        if (externalRefsJson == null || externalRefsJson.isBlank()) {
+            return null;
+        }
+        try {
+            var v = objectMapper.readTree(externalRefsJson).get(key);
+            return v != null && !v.isNull() ? v.asText() : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /** Version history for an order, newest first, tenant-scoped. */

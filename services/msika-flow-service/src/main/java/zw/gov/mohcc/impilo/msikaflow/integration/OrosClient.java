@@ -145,6 +145,34 @@ public class OrosClient {
         }
     }
 
+    /**
+     * M3 BUG-2 — OF-B12 carriage producer: after the successful step-6 claim,
+     * write {@code externalRefs.prescriptionClaimId} onto the OROS order via
+     * the narrow allowlisted endpoint so the {@code oros.order.placed} →
+     * pharmacy consumer flow (and the pharmacy lazy re-fetch) can bind the
+     * claim onto the dispense episode. Best-effort: failure is logged and
+     * surfaced as {@code false} — the commitment stands (the pharmacy-side
+     * lazy bind is the belt to this braces).
+     */
+    public boolean recordExternalRef(String orderId, String key, String value, HttpServletRequest inbound) {
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("key", key);
+            body.put("value", value);
+            ResponseEntity<String> response = restClient.post()
+                    .uri("/v1/orders/{orderId}/external-refs", orderId)
+                    .headers(h -> copyTrustHeaders(inbound, h, "external-ref:" + orderId + ":" + key + ":" + value))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toEntity(String.class);
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            log.warn("OROS external-ref record failed for order {} ({}): {}", orderId, key, e.getMessage());
+            return false;
+        }
+    }
+
     private static void copyTrustHeaders(HttpServletRequest inbound, HttpHeaders target, String idempotencySeed) {
         if (inbound != null) {
             copyIfPresent(inbound, target, TrustHeaderExtractor.H_TENANT_ID);

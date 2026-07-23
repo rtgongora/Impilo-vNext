@@ -133,9 +133,13 @@ public class PickupProofServiceImpl implements PickupProofService {
         log.info("Pickup proof created: proofId={}, orderId={}, method={}, expiresAt={}",
                 proof.getProofId(), orderId, method, proof.getExpiresAt());
 
-        // Return the proof with the plaintext credential stashed in deviceFingerprint
-        // (the only time the plain credential is accessible; callers read it from here)
-        proof.setDeviceFingerprint(plainCredential);
+        // M3 BUG-5: carry the plaintext credential ONCE, in-memory only, on the
+        // @Transient oneTimeCredential field — the creation response surfaces
+        // it (PickupProofDto.created) and nothing else ever can. The previous
+        // stash used the PERSISTED deviceFingerprint column, which (a) was
+        // dropped by every DTO mapping — credential undeliverable — and
+        // (b) leaked the plaintext to the database at commit via dirty-checking.
+        proof.setOneTimeCredential(plainCredential);
         return proof;
     }
 

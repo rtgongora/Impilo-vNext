@@ -172,14 +172,7 @@ public class NhumeClient {
                         h.set("Idempotency-Key", "msika-flow-selection-dispatch:" + spec.selectionId());
                         h.set("X-Idempotency-Key", "msika-flow-selection-dispatch:" + spec.selectionId());
                         if (inbound == null) {
-                            // Service-originated (retry sweep) call: synthesize the v1.1 set.
-                            h.set("X-Tenant-ID", spec.tenantId().toString());
-                            h.set("X-Pod-ID", "national-spine");
-                            h.set("X-Request-ID", java.util.UUID.randomUUID().toString());
-                            h.set("X-Actor-ID", "msika-flow-service");
-                            h.set("X-Actor-Type", "SYSTEM");
-                            h.set("X-Purpose-Of-Use", "LOGISTICS");
-                            h.set("x-envoy-internal", "true");
+                            applyServiceOriginatedHeaders(h, spec.tenantId());
                         }
                     })
                     .contentType(MediaType.APPLICATION_JSON)
@@ -281,6 +274,27 @@ public class NhumeClient {
         metadata.put("links", links);
         body.put("metadata", metadata);
         return body;
+    }
+
+    /**
+     * M3 BUG-10 — the FULL v1.1 hard-required set for service-originated
+     * (inbound == null) calls: payment-resumed commitments and the
+     * {@code FulfilmentDispatchService.retryFailedDispatches} sweep run without
+     * a servlet request. The previous block omitted {@code X-Correlation-ID},
+     * so Nhume's V11HeaderFilter 400'd (MISSING_REQUIRED_HEADER) every
+     * payment-resumed / retried dispatch — DELIVERY commitments that went
+     * AWAITING_PAYMENT→PAID were permanently undeliverable. Package-visible for
+     * the header-contract unit test.
+     */
+    static void applyServiceOriginatedHeaders(HttpHeaders h, java.util.UUID tenantId) {
+        h.set("X-Tenant-ID", tenantId.toString());
+        h.set("X-Pod-ID", "national-spine");
+        h.set("X-Request-ID", java.util.UUID.randomUUID().toString());
+        h.set("X-Correlation-ID", java.util.UUID.randomUUID().toString());
+        h.set("X-Actor-ID", "msika-flow-service");
+        h.set("X-Actor-Type", "SYSTEM");
+        h.set("X-Purpose-Of-Use", "LOGISTICS");
+        h.set("x-envoy-internal", "true");
     }
 
     /**

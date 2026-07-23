@@ -117,6 +117,11 @@ echo
 [[ ! " ${FAILED_SERVICES[*]} " =~ " pct "    ]] && apply_seed pct    "$SEED_DIR/07-seed-pct.sql"    "PCT (Patient Care Tracker)"
 [[ ! " ${FAILED_SERVICES[*]} " =~ " oros "   ]] && apply_seed oros   "$SEED_DIR/08-seed-oros.sql"   "OROS (Orders & Results)"
 
+# OF-B M3 wave-close seeds (idempotent; best-effort — these DBs may not exist
+# on a partial estate, hence no health-gate entry):
+apply_seed nhume "$SEED_DIR/22-seed-nhume-proof-courier.sql" "NHUME (preview courier profile)" || true
+apply_seed credential_verification "$SEED_DIR/23-seed-credential-facility-payee.sql" "CREDENTIAL-VERIFICATION (facility payee)" || true
+
 echo
 if [[ ${#FAILED_SERVICES[@]} -eq 0 ]]; then
   log_ok "All seed data applied successfully"
