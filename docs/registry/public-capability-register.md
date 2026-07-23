@@ -107,8 +107,8 @@ reference-only fallback (daidzai SOS status).
 
 | Capability | Owning service | Lane | Status |
 |---|---|---|---|
-| Compare payers, schemes, products, plan versions | coverage-service | `PublicPlanCatalogController` (new) | PLANNED-W4 |
-| Public benefits + tariff views (approved fields) | coverage-service | same lane | PLANNED-W4 |
+| Compare plans + benefits | coverage-service | `/internal/v1/public/gateway/coverage/plans[+/{id}/benefits]` + `/welcome/coverage` | LIVE (PF-W4) |
+| Public benefits (plan-level, approved fields) | coverage-service | `.../coverage/plans/{id}/benefits` | LIVE (PF-W4) |
 | Provider-network search | coverage-service | same lane | PLANNED-W4 |
 | Benefit-terminology explainers + financing education | guidance-service | education category | PLANNED-W4 (content) |
 | Anonymous cost estimator | costing/coverage | — | DEFERRED (cost-estimator seam open) |
@@ -119,9 +119,9 @@ reference-only fallback (daidzai SOS status).
 | Capability | Owning service | Lane | Status |
 |---|---|---|---|
 | Health education by life stage/condition | guidance-service | education lane | LIVE |
-| Screening & immunisation schedule definitions | simba-service | `PublicWellnessController` (new) | PLANNED-W5 |
-| One-off compute-only calculators (BMI, calorie, hydration, risk) | simba-service | same lane (anonymous compute, nothing retained) | PLANNED-W5 |
-| Anonymous self-assessments | simba-service | same lane | PLANNED-W5 |
+| Screening & immunisation schedule definitions | simba-service | `/internal/v1/public/gateway/wellness/screening-programmes` + `/welcome/wellness` | LIVE (PF-W5) |
+| One-off compute-only calculators (BMI, blood pressure) | simba-service | `POST /internal/v1/public/gateway/wellness/calculate` (STATELESS, nothing retained) | LIVE (PF-W5) |
+| Anonymous self-assessments (compute-only) | simba-service | same calculate lane (extensible) | LIVE (PF-W5, BMI/BP; more kinds extensible) |
 | Programme previews | simba-service | same lane | PLANNED-W5 |
 | Unsaved wellness plan (guest session, save-on-sign-in) | one-ui-shell | sessionStorage | PLANNED-W5 |
 | Sign-in trigger: tracking (steps/weight/BP/glucose/sleep), diaries, goals, devices, personalised reminders, provider sharing, longitudinal record | — | authenticated `/wellness/*` | LIVE (authenticated) |
@@ -130,7 +130,7 @@ reference-only fallback (daidzai SOS status).
 
 | Capability | Owning service | Lane | Status |
 |---|---|---|---|
-| Public course catalog + course structure | learning-service | `PublicCourseCatalogController` (new) | PLANNED-W5 |
+| Public course catalog | learning-service | `/internal/v1/public/gateway/learning/catalog[+/{code}]` + `/welcome/learning` | LIVE (PF-W5). Course structure/assessments remain sign-in |
 | Certificate verification | credential-verification-service | `/v1/public/verify/{token}` | LIVE |
 | Sign-in trigger: enrolment, progress, assessed learning, certificates, CPD credits | — | authenticated `/learning/*` | LIVE (authenticated) |
 

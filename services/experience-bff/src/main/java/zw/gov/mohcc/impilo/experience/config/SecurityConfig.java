@@ -432,6 +432,11 @@ public class SecurityConfig {
                     // forced off and the honesty gate labels the answer source; response carries
                     // a standing not-a-diagnosis disclaimer. No storage on the BFF.
                     .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/guidance/ask").permitAll()
+                    // Anonymous WRITE exception (PF-W5, doctrine §13.3): one-off wellness
+                    // calculator (BMI/BP). COMPUTE-ONLY and STATELESS — the downstream simba
+                    // PublicWellnessController persists nothing (no repository/entity touched);
+                    // inputs are validated. Not covered by the GET gateway/** permitAll.
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/wellness/calculate").permitAll()
                     // Anonymous WRITE exception: Nompilo service-advisory impression/dismissal
                     // analytics. Payload is allow-listed to advisoryId + event + an opaque anon
                     // dismissal key (no PII); the shell resolves advisories as DATA, never hard-coded.

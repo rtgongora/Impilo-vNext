@@ -46,6 +46,16 @@ public class SimbaServiceClient {
         this.objectMapper = objectMapper;
     }
 
+    /** Public wellness screening-programme definitions (anonymous-safe, care-plane). Raw array. */
+    public JsonNode publicScreeningProgrammes() {
+        return restTemplate.getForEntity(baseUrl + "/v1/public/wellness/screening-programmes", JsonNode.class).getBody();
+    }
+
+    /** Public compute-only wellness calculator (anonymous, STATELESS — persists nothing). */
+    public JsonNode publicWellnessCalculate(java.util.Map<String, Object> body) {
+        return restTemplate.postForEntity(baseUrl + "/v1/public/wellness/calculate", body, JsonNode.class).getBody();
+    }
+
     public JsonNode getWellnessProfile(String cpid) {
         String url = baseUrl + "/internal/v1/wellness/profiles/" + cpid;
         log.info("SIMBA: getWellnessProfile operation [cpid={}]", cpid);

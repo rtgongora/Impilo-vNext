@@ -35,6 +35,19 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    /** Public plan catalogue (anonymous-safe) — ACTIVE plans, allow-listed, care-plane. Raw array. */
+    public JsonNode publicCoveragePlans() {
+        return restTemplate.getForEntity(baseUrl + "/v1/public/coverage/plans", JsonNode.class).getBody();
+    }
+
+    /** Public benefits for a plan version (anonymous-safe) — plan-level, no member data. Raw array. */
+    public JsonNode publicPlanBenefits(String planVersionId) {
+        String url = baseUrl + "/v1/public/coverage/plans/"
+                + org.springframework.web.util.UriUtils.encodePathSegment(planVersionId, java.nio.charset.StandardCharsets.UTF_8)
+                + "/benefits";
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
     public JsonNode listPlansForMember(String memberCpid) {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/plans")
                 .queryParam("member_cpid", memberCpid)

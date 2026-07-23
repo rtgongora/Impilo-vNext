@@ -35,6 +35,20 @@ public class LearningServiceClient {
         return props.isConfigured();
     }
 
+    /** Public course catalogue (anonymous-safe, care-plane). Returns the service {data:{limit,items}}. */
+    public JsonNode publicCourseCatalog(org.springframework.util.MultiValueMap<String, String> params) {
+        String url = UriComponentsBuilder.fromHttpUrl(trim(props.getBaseUrl()) + "/v1/public/learning/catalog")
+                .queryParams(params).toUriString();
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
+    /** One public course by code (anonymous-safe). Returns the service {data:{course}} or 404. */
+    public JsonNode publicCourse(String code) {
+        String url = trim(props.getBaseUrl()) + "/v1/public/learning/catalog/"
+                + org.springframework.web.util.UriUtils.encodePathSegment(code, java.nio.charset.StandardCharsets.UTF_8);
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
     public JsonNode getWorkflowContext(
             String appCode, String routeRef, String workflowCode, String roles, String subjectType, String subjectId) {
         if (!props.isConfigured()) {

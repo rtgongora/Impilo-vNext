@@ -90,10 +90,24 @@ const INTENT_PILLARS: Array<{
   },
   {
     title: "Health cover & payments",
-    description: "Check your cover, view bills and receipts, and pay for care.",
-    href: "/auth/login?returnTo=%2Fcoverage",
-    access: "sign-in",
-    intent: { pillar: "cover-and-payments", goal: "view-coverage", dest: "/coverage" },
+    description:
+      "Compare medical-aid and insurance plans and their benefits. Sign in only for your own cover, bills and claims.",
+    href: "/welcome/coverage",
+    access: "open",
+  },
+  {
+    title: "Wellness",
+    description:
+      "Screening and prevention schedules and one-off health checks (BMI, blood pressure). Sign in only to track progress.",
+    href: "/welcome/wellness",
+    access: "open",
+  },
+  {
+    title: "Learning",
+    description:
+      "Free citizen health courses, caregiver education and first aid. Sign in only for certificates and CPD.",
+    href: "/welcome/learning",
+    access: "open",
   },
   {
     title: "Applications & licensing",
