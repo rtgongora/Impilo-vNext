@@ -401,12 +401,41 @@ public class FacilityService {
         if (serviceToken == null || serviceToken.isBlank()) {
             return searchFacilities(tenantId, query, filters, pageable);
         }
+        // A comma-separated token list expresses a related-service family (e.g. "MATERNITY,ANTENATAL").
+        List<String> tokens = java.util.Arrays.stream(serviceToken.split(","))
+                .map(String::trim).filter(s -> !s.isBlank()).toList();
+        return searchFacilitiesByServices(tenantId, query, tokens, filters, pageable);
+    }
 
-        String token = serviceToken.trim().toLowerCase();
-        List<Long> facilityIds = capabilityRepository.findFacilityIdsByActiveServiceToken(tenantId, token);
+    /**
+     * Service-aware search across a related-service token family: a facility appears if it carries an
+     * ACTIVE capability matching ANY of the tokens. This is what stops "Maternity" and "Antenatal
+     * care" from returning disjoint result sets — the orchestrator expands one to the family and both
+     * find the same maternal-health facilities. If no facility matches, an empty page is returned
+     * (never a broad fallback).
+     */
+    @Transactional(readOnly = true)
+    public Page<FacilityEntity> searchFacilitiesByServices(UUID tenantId, String query,
+                                                           List<String> serviceTokens,
+                                                           FacilitySearchFilters filters,
+                                                           Pageable pageable) {
+        if (serviceTokens == null || serviceTokens.isEmpty()) {
+            return searchFacilities(tenantId, query, filters, pageable);
+        }
+
+        List<String> tokens = serviceTokens.stream()
+                .filter(t -> t != null && !t.isBlank())
+                .map(t -> t.trim().toLowerCase())
+                .distinct()
+                .toList();
+        if (tokens.isEmpty()) {
+            return searchFacilities(tenantId, query, filters, pageable);
+        }
+
+        List<Long> facilityIds = capabilityRepository.findFacilityIdsByActiveServiceTokens(tenantId, tokens);
         if (facilityIds.isEmpty()) {
-            log.debug("No facilities carry an active capability matching service token '{}' for tenant {}",
-                    token, tenantId);
+            log.debug("No facilities carry an active capability matching service tokens {} for tenant {}",
+                    tokens, tenantId);
             return Page.empty(pageable);
         }
 
@@ -416,8 +445,8 @@ public class FacilityService {
         String province = filters != null ? filters.province() : null;
         String nameQuery = (query != null && !query.isBlank()) ? query.trim() : null;
 
-        log.debug("Service-aware search for tenant {}: token='{}' matched {} facilities, filters type={}, status={}, district={}, province={}",
-                tenantId, token, facilityIds.size(), type, status, district, province);
+        log.debug("Service-aware search for tenant {}: tokens={} matched {} facilities, filters type={}, status={}, district={}, province={}",
+                tenantId, tokens, facilityIds.size(), type, status, district, province);
         return facilityRepository.findByIdInAndFilters(
                 tenantId, facilityIds, nameQuery, type, status, district, province, pageable);
     }
