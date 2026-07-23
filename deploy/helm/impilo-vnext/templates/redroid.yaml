@@ -1,0 +1,120 @@
+{{- if .Values.redroid.enabled }}
+# redroid — Android 13 as a container: the standing mobile-runtime fixture.
+#
+# Purpose: an adb-connectable, Maestro-drivable Android "device" that runs as
+# ordinary preview infrastructure (like redis/kafka), replacing the emulator
+# lane that this estate cannot host (no KVM on the Xen guests; TCG software
+# emulation collapses a full Android framework — see
+# docs/mobile/MOBILE_RECOVERY_REPORT.md §15).
+#
+# SECURITY NOTE — first privileged workload in this chart, deliberate and
+# preview-scoped: redroid needs the host binder driver (/dev/binder*) and
+# mounts its own devtmpfs/cgroup views. The host must have the binder_linux
+# module loaded (operator one-time step — see
+# docs/runbooks/redroid-android-sandbox-runbook.md). Single-node preview
+# cluster only; NOT production-portable as-is. Revisit in the
+# preview→prod auth-hardening wave before any promotion.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redroid-data
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.redroid.storageSize | default "8Gi" }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redroid
+  namespace: {{ .Release.Namespace }}
+spec:
+  strategy:
+    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redroid
+  template:
+    metadata:
+      labels:
+        app: redroid
+    spec:
+      {{- if .Values.redroid.hostAliases }}
+      hostAliases:
+        {{- toYaml .Values.redroid.hostAliases | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: redroid
+          image: "{{ .Values.redroid.image.repository }}:{{ .Values.redroid.image.tag }}"
+          imagePullPolicy: {{ .Values.redroid.image.pullPolicy | default "IfNotPresent" }}
+          securityContext:
+            privileged: true
+            # Numeric IDs are load-bearing: the Android rootfs symlinks /etc
+            # into /system, and containerd's user-name resolution walks it and
+            # fails with "path escapes from parent". Numeric uid/gid skip the
+            # passwd/group parse entirely.
+            runAsUser: 0
+            runAsGroup: 0
+          # Console handling is THE k8s-vs-docker difference for redroid:
+          # docker keeps a detached pty open (`docker run -dt` boots fine),
+          # but the k3s CRI shim closes the pty when no stream is attached and
+          # init gets SIGHUP (exit 129 within ~1s). Fix: no tty at all — exec
+          # init with stdio on /dev/null so there is no console to lose.
+          # Android logs to kmsg; use `adb logcat` / redroid-runtime.sh.
+          command: ["/system/bin/sh", "-c"]
+          args:
+            # In-container SwiftShader rendering: no host GPU dependency and
+            # `adb exec-out screencap` returns real pixels (unlike the qemu
+            # emulator readback path, which is broken without KVM).
+            - >-
+              exec /init qemu=1 androidboot.hardware=redroid
+              androidboot.redroid_gpu_mode=guest
+              androidboot.redroid_width={{ .Values.redroid.width | default 1080 }}
+              androidboot.redroid_height={{ .Values.redroid.height | default 2340 }}
+              androidboot.redroid_dpi={{ .Values.redroid.dpi | default 440 }}
+              </dev/null >/dev/null 2>&1
+          ports:
+            - containerPort: 5555
+              name: adb
+          volumeMounts:
+            - name: redroid-data
+              mountPath: /data
+          readinessProbe:
+            tcpSocket:
+              port: 5555
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 5555
+            # Android cold boot in-container: allow a generous first window.
+            initialDelaySeconds: 300
+            periodSeconds: 30
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.redroid.resources | nindent 12 }}
+      volumes:
+        - name: redroid-data
+          persistentVolumeClaim:
+            claimName: redroid-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redroid
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: redroid
+  ports:
+    - name: adb
+      port: 5555
+      targetPort: adb
+      protocol: TCP
+{{- end }}

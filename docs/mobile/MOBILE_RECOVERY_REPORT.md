@@ -131,10 +131,10 @@ During diagnosis, an invalid `pm.dexopt.install=skip` property (set by this miss
 5. Decide the applicationId strategy for preview distribution (`.dev` bake vs prebuild variants) before any wider APK handout.
 6. CI lane: GitHub-hosted runner job building both APKs per release branch (the local scripts are directly reusable).
 
-## 17. Proposed permanent mobile preview lane
+## 17. Permanent mobile preview lane (adopted: redroid)
 
 - **Build:** `pnpm mobile:build` on this host (or CI) per merge to the canonical branch → versioned `artifacts/mobile/<sha>/` with checksums + metadata (already automated).
-- **Runtime:** VM 218 with KVM + the existing bootstrap script as the standing emulator/Maestro executor; this VM remains the build + static-gate host.
+- **Runtime (the fixture): redroid — Android-in-container, docker-managed on the LB host.** `scripts/mobile/redroid-docker-fixture.sh start` → container `impilo-redroid`, adb `127.0.0.1:15555`, `--restart unless-stopped` permanence, volume-persistent `/data`; driven by `scripts/mobile/redroid-runtime.sh` / `pnpm mobile:verify:runtime`. No KVM needed (host binderfs; one-time `modprobe binder_linux`). **Proven 2026-07-23:** both preview APKs installed in <1s and rendered real-pixel screenshots (`artifacts/mobile/<sha>/redroid/screenshots/`) — the same APKs that took minutes-to-impossible on TCG emulation. The k8s chart variant exists but is disabled pending a k3s CRI compatibility pass (findings in the runbook); VM 218 demoted to secondary fallback.
 - **Evidence:** each lane run stores APKs, logcat, Maestro output, screenshots into the same artifact layout; recovery-report deltas instead of full rewrites.
 - **Distribution:** internal QR/download page for the preview APKs once the auth edge route lands (no production keystore in git — release signing stays operator-held, route documented in `docs/mobile/android-internal-install.md`).
 

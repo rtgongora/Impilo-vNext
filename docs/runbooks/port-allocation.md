@@ -20,6 +20,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | 9200 | `matcher-engine` (biometric matching engine — core infra, behind the abis-service adapter) |
 | 9090 | Prometheus (host map in observability stack) — **not** TSHEPO gRPC |
 | 10000 / 9901 | Envoy |
+| 15555 (loopback) | redroid adb — `impilo-redroid` docker fixture, Android-in-container mobile runtime (see `redroid-android-sandbox-runbook.md`); 5555 reserved for the future k8s ClusterIP variant |
 | 3000–3006 | UI apps (see `CLAUDE.md`; **3000** = One UI Shell / merged Experience) |
 
 **TSHEPO Authz gRPC** uses **9090** *inside* `tshepo-authz-service` only (separate from host Prometheus when both run on one machine — use profiles or different hosts).

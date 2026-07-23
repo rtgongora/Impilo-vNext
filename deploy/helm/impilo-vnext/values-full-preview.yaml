@@ -253,6 +253,45 @@ ndilaStreetStack:
       cpu: 500m
       memory: 512Mi
 
+# redroid — Android-in-container mobile runtime fixture (adb :5555 internal).
+# Image mirrored to the local registry (docker.io direct pull is unreliable
+# from this VM): docker pull redroid/redroid:13.0.0-latest && docker tag …
+# 127.0.0.1:5000/redroid/redroid:13.0.0 && docker push.
+# Host prerequisite: binder_linux module loaded (see
+# docs/runbooks/redroid-android-sandbox-runbook.md).
+redroid:
+  # DISABLED pending k3s/containerd compatibility: the image boots perfectly
+  # under docker on this host, but the k3s CRI kills Android init at/after
+  # exec (pty-close SIGHUP with tty, exit 255 without). The STANDING fixture
+  # runs docker-managed instead: scripts/mobile/redroid-docker-fixture.sh
+  # (adb on 127.0.0.1:15555). Findings + future k8s pass:
+  # docs/runbooks/redroid-android-sandbox-runbook.md.
+  enabled: false
+  storageSize: 8Gi
+  width: 1080
+  height: 2340
+  dpi: 440
+  # Preview hairpin: the pod must reach impilo.mohcc.gov.zw via the internal
+  # LB address (public IP is not hairpin-routable from inside the estate).
+  hostAliases:
+    - ip: "10.50.1.67"
+      hostnames:
+        - impilo.mohcc.gov.zw
+  image:
+    repository: 127.0.0.1:5000/redroid/redroid
+    # -k3s = symlink-rewritten variant produced by
+    # scripts/mobile/fix-redroid-image-for-containerd.sh (upstream image's
+    # absolute rootfs symlinks break containerd: "path escapes from parent").
+    tag: "13.0.0-k3s"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "2"
+      memory: 3Gi
+    limits:
+      cpu: "4"
+      memory: 6Gi
+
 hapiFhir:
   enabled: true
   image:

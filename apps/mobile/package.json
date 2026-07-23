@@ -12,6 +12,7 @@
     "mobile:lint": "pnpm --filter @impilo/citizen-app lint && pnpm --filter @impilo/provider-app lint",
     "mobile:typecheck": "pnpm --filter @impilo/citizen-app type-check && pnpm --filter @impilo/provider-app type-check",
     "mobile:test": "pnpm --filter @impilo/citizen-app test && pnpm --filter @impilo/provider-app test && pnpm --filter @impilo/mobile-registry test",
+    "mobile:verify:runtime": "bash ../../scripts/mobile/redroid-runtime.sh all",
     "mobile:build": "bash ../../scripts/mobile/build-apks.sh all",
     "mobile:build:impilo": "bash ../../scripts/mobile/build-apks.sh citizen",
     "mobile:build:provider": "bash ../../scripts/mobile/build-apks.sh provider",

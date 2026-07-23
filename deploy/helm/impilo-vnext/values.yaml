@@ -37,3 +37,13 @@ experienceBff:
 oneUiShell:
   enabled: true
   replicaCount: 1
+
+# Android-in-container runtime (preview infra); off in the minimal slice.
+redroid:
+  enabled: false
+  image:
+    repository: 127.0.0.1:5000/redroid/redroid
+    tag: "13.0.0"
+  resources:
+    requests: { cpu: "2", memory: 3Gi }
+    limits: { cpu: "4", memory: 6Gi }
