@@ -120,6 +120,15 @@ public class MarketplaceRequestEntity {
     @Column(name = "delivery_details_json", columnDefinition = "jsonb")
     private String deliveryDetailsJson;
 
+    /**
+     * OF-B13 — DIAGNOSTICS capability requirement: the patient wants the
+     * specimen collected at home (phlebotomy home-collection). Also carried in
+     * the published snapshot's {@code capabilityFlags} (§11.8 allow-listed — a
+     * capability flag, never an address).
+     */
+    @Column(name = "home_collection_requested", nullable = false)
+    private boolean homeCollectionRequested;
+
     @Column(name = "requested_by", length = 128)
     private String requestedBy;
 
@@ -199,6 +208,9 @@ public class MarketplaceRequestEntity {
 
     public String getDeliveryDetailsJson() { return deliveryDetailsJson; }
     public void setDeliveryDetailsJson(String deliveryDetailsJson) { this.deliveryDetailsJson = deliveryDetailsJson; }
+
+    public boolean isHomeCollectionRequested() { return homeCollectionRequested; }
+    public void setHomeCollectionRequested(boolean homeCollectionRequested) { this.homeCollectionRequested = homeCollectionRequested; }
 
     public String getRequestedBy() { return requestedBy; }
     public void setRequestedBy(String requestedBy) { this.requestedBy = requestedBy; }

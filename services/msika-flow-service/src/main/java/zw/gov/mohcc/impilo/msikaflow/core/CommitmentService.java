@@ -20,10 +20,13 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -125,11 +128,24 @@ public class CommitmentService {
     @Transactional
     public CommitResult commit(String requestId, String offerId, UUID tenantId, String actorId,
                                String idempotencyKey, HttpServletRequest inbound) {
+        return commit(requestId, offerId, tenantId, actorId, idempotencyKey, null, inbound);
+    }
+
+    /**
+     * OF-B14 overload — {@code splitGroupId} marks this commitment as a member
+     * of a patient-chosen offer combination ({@link SplitSelectionCoordinator});
+     * NULL for single-offer selections. Members run the SAME §8.9 sequence with
+     * per-member compensation isolation — a member failure compensates only its
+     * own holds/claim/payment, never a sibling's.
+     */
+    @Transactional
+    public CommitResult commit(String requestId, String offerId, UUID tenantId, String actorId,
+                               String idempotencyKey, String splitGroupId, HttpServletRequest inbound) {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new IllegalArgumentException("Idempotency-Key is required for selection (RC-1)");
         }
 
-        // ── Step 1/2: RC-1 — idempotent replay + single-active-selection ──
+        // ── Step 1/2: RC-1 — idempotent replay + per-line-coverage constraint ──
         Optional<SelectionEntity> replay =
                 selectionRepository.findFirstByTenantIdAndIdempotencyKey(tenantId, idempotencyKey);
         if (replay.isPresent()) {
@@ -142,13 +158,7 @@ public class CommitmentService {
             return new CommitResult(existing, existing.getStatus() == SelectionStatus.COMMITTED,
                     replayOutcome, true);
         }
-        boolean liveSelectionExists = selectionRepository.findByRequestId(requestId).stream()
-                .anyMatch(s -> s.getStatus() != SelectionStatus.FAILED
-                        && s.getStatus() != SelectionStatus.CANCELLED);
-        if (liveSelectionExists) {
-            throw new IllegalStateException(
-                    "SELECTION_EXISTS: request " + requestId + " already has an active selection (RC-1)");
-        }
+        assertNoActiveLineOverlap(requestId, offerId);
 
         MarketplaceRequestEntity request = requestRepository.findByRequestIdAndTenantId(requestId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Marketplace request not found: " + requestId));
@@ -169,7 +179,9 @@ public class CommitmentService {
         selection.setOfferId(offerId);
         selection.setStatus(SelectionStatus.SELECTED);
         selection.setIdempotencyKey(idempotencyKey);
-        steps.pass(1, "PATIENT_CONFIRMS_SELECTION", null, "actor=" + actorId);
+        selection.setSplitGroupId(splitGroupId);
+        steps.pass(1, "PATIENT_CONFIRMS_SELECTION", null, "actor=" + actorId
+                + (splitGroupId != null ? " splitGroup=" + splitGroupId : ""));
         steps.pass(2, "COMMITMENT_TX_OPENED", null, "selectionId=" + selection.getSelectionId());
         selection.setStepLogJson(steps.toJson(objectMapper));
         selectionRepository.save(selection);
@@ -229,46 +241,60 @@ public class CommitmentService {
         steps.pass(4, "ELIGIBILITY_RECHECK", null, null);
 
         // ── Step 5: DURA conditional reserve — fail-close (RC-3) ──
+        // OF-B13: DIAGNOSTICS profiles have no physical stock — the step is
+        // honestly recorded as a vendor service-capacity promise (no DURA hold,
+        // no fabricated reservation); actual specimen/result flow stays on the
+        // LIVE OROS diagnostics spine.
         List<FulfillmentOfferLineEntity> lines = offerLineRepository.findByOfferId(offerId);
-        Optional<EligibilityService.DuraSource> duraSource = eligibilityService.duraSource(vendor);
-        if (duraSource.isEmpty()) {
-            steps.fail(5, "DURA_RESERVATION", CODE_STOCK_SOURCE_UNVERIFIED,
-                    "vendor has no DURA facility/store refs — no reservation, no commitment");
-            return failSelection(selection, request, offer, steps, CODE_STOCK_SOURCE_UNVERIFIED, true, inbound);
-        }
-        long windowHours = offer.getFulfillmentWindowHours() != null && offer.getFulfillmentWindowHours() > 0
-                ? offer.getFulfillmentWindowHours() : defaultFulfillmentWindowHours;
-        OffsetDateTime reservationExpiry = now.plusHours(windowHours);
         List<InventoryClient.DuraReservation> reserved = new ArrayList<>();
-        for (FulfillmentOfferLineEntity line : lines) {
-            Optional<InventoryClient.DuraReservation> hold = inventoryClient.reserve(
-                    duraSource.get().facilityId(), duraSource.get().storeId(), line.getItemCode(),
-                    line.getQuantity(), null, "MARKETPLACE_SELECTION", selection.getSelectionId(),
-                    "marketplace commitment " + selection.getSelectionId(), reservationExpiry, inbound);
-            if (hold.isEmpty()) {
-                // RC-3: conditional reserve failed — release partial holds, grade drops to REPORTED.
-                releaseReservations(reserved, inbound);
-                line.setStockGrade(StockGrade.REPORTED);
-                offerLineRepository.save(line);
-                steps.fail(5, "DURA_RESERVATION", CODE_STOCK_UNAVAILABLE,
-                        "item=" + line.getItemCode() + " qty=" + line.getQuantity());
-                return failSelection(selection, request, offer, steps, CODE_STOCK_UNAVAILABLE, true, inbound);
+        if (request.getProfile() == MarketplaceProfile.DIAGNOSTICS) {
+            steps.skip(5, "DURA_RESERVATION",
+                    "DIAGNOSTICS profile — no physical stock to reserve; vendor service-capacity "
+                            + "promise stands (window " + (offer.getFulfillmentWindowHours() != null
+                                    ? offer.getFulfillmentWindowHours() + "h" : defaultFulfillmentWindowHours + "h (default)")
+                            + (offer.isHomeCollection() ? "; home specimen collection "
+                                    + offer.getCollectionWindowStart() + ".." + offer.getCollectionWindowEnd() : "")
+                            + ")");
+        } else {
+            Optional<EligibilityService.DuraSource> duraSource = eligibilityService.duraSource(vendor);
+            if (duraSource.isEmpty()) {
+                steps.fail(5, "DURA_RESERVATION", CODE_STOCK_SOURCE_UNVERIFIED,
+                        "vendor has no DURA facility/store refs — no reservation, no commitment");
+                return failSelection(selection, request, offer, steps, CODE_STOCK_SOURCE_UNVERIFIED, true, inbound);
             }
-            reserved.add(hold.get());
-            line.setDuraReservationRef(hold.get().reservationId().toString());
-            offerLineRepository.save(line);
-            writeProjection(tenantId, request, selection, line, hold.get(), reservationExpiry);
+            long windowHours = offer.getFulfillmentWindowHours() != null && offer.getFulfillmentWindowHours() > 0
+                    ? offer.getFulfillmentWindowHours() : defaultFulfillmentWindowHours;
+            OffsetDateTime reservationExpiry = now.plusHours(windowHours);
+            for (FulfillmentOfferLineEntity line : lines) {
+                Optional<InventoryClient.DuraReservation> hold = inventoryClient.reserve(
+                        duraSource.get().facilityId(), duraSource.get().storeId(), line.getItemCode(),
+                        line.getQuantity(), null, "MARKETPLACE_SELECTION", selection.getSelectionId(),
+                        "marketplace commitment " + selection.getSelectionId(), reservationExpiry, inbound);
+                if (hold.isEmpty()) {
+                    // RC-3: conditional reserve failed — release partial holds, grade drops to REPORTED.
+                    releaseReservations(reserved, inbound);
+                    line.setStockGrade(StockGrade.REPORTED);
+                    offerLineRepository.save(line);
+                    steps.fail(5, "DURA_RESERVATION", CODE_STOCK_UNAVAILABLE,
+                            "item=" + line.getItemCode() + " qty=" + line.getQuantity());
+                    return failSelection(selection, request, offer, steps, CODE_STOCK_UNAVAILABLE, true, inbound);
+                }
+                reserved.add(hold.get());
+                line.setDuraReservationRef(hold.get().reservationId().toString());
+                offerLineRepository.save(line);
+                writeProjection(tenantId, request, selection, line, hold.get(), reservationExpiry);
+            }
+            // §9.4 binding TTL semantics: from SELECTED onward, offer TTL = reservation TTL.
+            OffsetDateTime boundExpiry = reserved.stream()
+                    .map(InventoryClient.DuraReservation::expiresAt)
+                    .filter(java.util.Objects::nonNull)
+                    .min(Comparator.naturalOrder())
+                    .orElse(reservationExpiry);
+            offer.setTtlExpiresAt(boundExpiry);
+            offerRepository.save(offer);
+            steps.pass(5, "DURA_RESERVATION", null,
+                    "lines=" + reserved.size() + " reservationTtl=" + boundExpiry);
         }
-        // §9.4 binding TTL semantics: from SELECTED onward, offer TTL = reservation TTL.
-        OffsetDateTime boundExpiry = reserved.stream()
-                .map(InventoryClient.DuraReservation::expiresAt)
-                .filter(java.util.Objects::nonNull)
-                .min(Comparator.naturalOrder())
-                .orElse(reservationExpiry);
-        offer.setTtlExpiresAt(boundExpiry);
-        offerRepository.save(offer);
-        steps.pass(5, "DURA_RESERVATION", null,
-                "lines=" + reserved.size() + " reservationTtl=" + boundExpiry);
 
         // ── Step 6: prescription claim (RC-7, medication profiles with a token) ──
         if (request.getProfile() == MarketplaceProfile.MEDICATION
@@ -286,6 +312,12 @@ public class CommitmentService {
             }
             selection.setPrescriptionClaimId(claim.get().claimId());
             steps.pass(6, "PRESCRIPTION_CLAIM", null, "claimId=" + claim.get().claimId());
+        } else if (request.getProfile() == MarketplaceProfile.DIAGNOSTICS) {
+            // OF-B13: diagnostics fulfil the OROS order directly — no
+            // prescription, no claim; results route on the LIVE OROS spine.
+            steps.skip(6, "PRESCRIPTION_CLAIM",
+                    "DIAGNOSTICS profile — no prescription to claim; OROS order "
+                            + request.getOrosOrderId() + " remains the diagnostics spine truth");
         } else {
             steps.skip(6, "PRESCRIPTION_CLAIM", "no prescription token / non-medication profile");
         }
@@ -516,24 +548,80 @@ public class CommitmentService {
         // ── Step 9: commitment record written ──
         selection.setStatus(SelectionStatus.COMMITTED);
         selection.setCommittedAt(OffsetDateTime.now());
-        steps.pass(10, "COMMITMENT_RECORDED", null, null);
+        // OF-B13 seam: the OROS order ref rides the commitment so downstream
+        // specimen/result flow routes on the LIVE OROS spine — no new result
+        // machinery in the marketplace.
+        selection.setOrosOrderId(request.getOrosOrderId());
+        String expectationDetail = "orosOrderId=" + request.getOrosOrderId();
+        if (request.getProfile() == MarketplaceProfile.DIAGNOSTICS) {
+            String collectionMode = offer.isHomeCollection() ? "HOME_COLLECTION" : "WALK_IN";
+            selection.setCollectionMode(collectionMode);
+            selection.setCollectionWindowStart(offer.getCollectionWindowStart());
+            selection.setCollectionWindowEnd(offer.getCollectionWindowEnd());
+            expectationDetail += " collectionMode=" + collectionMode
+                    + (offer.getCollectionWindowStart() != null
+                            ? " collectionWindow=" + offer.getCollectionWindowStart()
+                                    + ".." + offer.getCollectionWindowEnd() : "");
+        }
+        steps.pass(10, "COMMITMENT_RECORDED", null, expectationDetail);
         OfferStateMachine.assertTransition(offer.getStatus(), OfferStatus.COMMITTED);
         offer.setStatus(OfferStatus.COMMITTED);
         offerRepository.save(offer);
-        MarketplaceRequestStateMachine.assertTransition(
-                request.getStatus(), MarketplaceRequestStatus.COMMITTED);
-        request.setStatus(MarketplaceRequestStatus.COMMITTED);
-        requestRepository.save(request);
 
-        // ── Step 10: losing offers released ──
+        // OF-B14 — the request rolls to COMMITTED only when every published
+        // line is covered by a COMMITTED selection. A split member covering a
+        // subset returns the request to the honest OFFERS_AVAILABLE posture so
+        // the remaining lines stay live (§8.6.4 — members already committed
+        // STAND regardless of what happens to their siblings).
+        Set<String> requestRefs = requestLineRefs(request);
+        Set<String> committedRefs = committedCoverage(request, selection, lines);
+        boolean fullyCovered = requestRefs.isEmpty() || committedRefs.containsAll(requestRefs);
+        if (fullyCovered) {
+            MarketplaceRequestStateMachine.assertTransition(
+                    request.getStatus(), MarketplaceRequestStatus.COMMITTED);
+            request.setStatus(MarketplaceRequestStatus.COMMITTED);
+            requestRepository.save(request);
+        } else {
+            if (request.getStatus() == MarketplaceRequestStatus.SELECTION_PENDING) {
+                MarketplaceRequestStateMachine.assertTransition(
+                        request.getStatus(), MarketplaceRequestStatus.OFFERS_AVAILABLE);
+                request.setStatus(MarketplaceRequestStatus.OFFERS_AVAILABLE);
+                requestRepository.save(request);
+            }
+            publishPartialCommitmentEvent(request, selection, requestRefs, committedRefs);
+        }
+
+        // ── Step 10: losing offers released — ONLY offers overlapping the
+        // committed coverage; disjoint offers stay ACTIVE for split composition
+        // (OF-B14). Once the request is fully covered, every remaining ACTIVE
+        // offer is released (the round is closed).
+        Set<String> committedOfferRefs = new HashSet<>();
+        for (FulfillmentOfferLineEntity line : lines) {
+            if (line.getRequestLineRef() != null) {
+                committedOfferRefs.add(line.getRequestLineRef());
+            }
+        }
+        int releasedCount = 0;
+        int keptActive = 0;
         for (FulfillmentOfferEntity other : offerRepository.findByRequestId(request.getRequestId())) {
-            if (!other.getOfferId().equals(offer.getOfferId()) && other.getStatus() == OfferStatus.ACTIVE) {
+            if (other.getOfferId().equals(offer.getOfferId()) || other.getStatus() != OfferStatus.ACTIVE) {
+                continue;
+            }
+            Set<String> otherRefs = lineRefsOfOffer(other.getOfferId());
+            boolean overlaps = otherRefs.isEmpty()
+                    || otherRefs.stream().anyMatch(committedOfferRefs::contains);
+            if (fullyCovered || overlaps) {
                 other.setStatus(OfferStatus.NOT_SELECTED);
                 other.setStatusReason("ANOTHER_OFFER_COMMITTED");
                 offerRepository.save(other);
+                releasedCount++;
+            } else {
+                keptActive++;
             }
         }
-        steps.pass(11, "LOSING_OFFERS_RELEASED", null, null);
+        steps.pass(11, "LOSING_OFFERS_RELEASED", null,
+                "released=" + releasedCount
+                        + (keptActive > 0 ? " keptActiveDisjoint=" + keptActive + " (split posture)" : ""));
 
         // ── Step 11: fulfilment dispatch (OF-B17, RC-8 — idempotent on selectionId) ──
         // Dispatch failure NEVER rolls back the commitment: the order stands with a
@@ -557,6 +645,125 @@ public class CommitmentService {
         log.info("Selection committed: selection={} request={} offer={} vendor={}",
                 selection.getSelectionId(), request.getRequestId(), offer.getOfferId(), offer.getVendorId());
         return new CommitResult(selection, true, CODE_COMMITTED, false);
+    }
+
+    // ── OF-B14 per-line-coverage plumbing ────────────────────────────────
+
+    /**
+     * RC-1 extended (OF-B14): the single-active-selection invariant is
+     * per-LINE-coverage — no two live (non-FAILED/CANCELLED) selections may
+     * cover the same published request line. A full-coverage offer therefore
+     * still conflicts with any live selection (the Wave OF-A behaviour) while
+     * disjoint split members pass. This invariant spans two tables and is not
+     * expressible as a partial index, so code + the
+     * {@code uq_mf_selection_offer_active} index (same offer twice) carry it.
+     * Unresolvable coverage blocks conservatively — fail-closed, never a
+     * silent double-sell.
+     */
+    private void assertNoActiveLineOverlap(String requestId, String offerId) {
+        List<SelectionEntity> live = selectionRepository.findByRequestId(requestId).stream()
+                .filter(s -> s.getStatus() != SelectionStatus.FAILED
+                        && s.getStatus() != SelectionStatus.CANCELLED)
+                .toList();
+        if (live.isEmpty()) {
+            return;
+        }
+        Set<String> candidateRefs = lineRefsOfOffer(offerId);
+        for (SelectionEntity s : live) {
+            if (s.getOfferId() == null || s.getOfferId().equals(offerId)) {
+                throw new IllegalStateException("SELECTION_EXISTS: request " + requestId
+                        + " already has an active selection for this offer coverage (RC-1)");
+            }
+            Set<String> otherRefs = lineRefsOfOffer(s.getOfferId());
+            if (candidateRefs.isEmpty() || otherRefs.isEmpty()
+                    || otherRefs.stream().anyMatch(candidateRefs::contains)) {
+                throw new IllegalStateException("SELECTION_EXISTS: request " + requestId
+                        + " has an active selection covering the same line(s) (RC-1 per-line, OF-B14)");
+            }
+        }
+    }
+
+    private Set<String> lineRefsOfOffer(String offerId) {
+        Set<String> refs = new HashSet<>();
+        for (FulfillmentOfferLineEntity line : offerLineRepository.findByOfferId(offerId)) {
+            if (line.getRequestLineRef() != null) {
+                refs.add(line.getRequestLineRef());
+            }
+        }
+        return refs;
+    }
+
+    /** Published-snapshot line refs — the request-side coverage truth. */
+    private Set<String> requestLineRefs(MarketplaceRequestEntity request) {
+        Set<String> refs = new HashSet<>();
+        try {
+            com.fasterxml.jackson.databind.JsonNode snapshot =
+                    objectMapper.readTree(request.getPublishedLinesJson());
+            for (com.fasterxml.jackson.databind.JsonNode line : snapshot.path("lines")) {
+                String ref = line.path("lineRef").asText(null);
+                if (ref != null && !ref.isBlank()) {
+                    refs.add(ref);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Unparseable snapshot for request {}: {}", request.getRequestId(), e.getMessage());
+        }
+        return refs;
+    }
+
+    /**
+     * Union of line refs covered by COMMITTED selections on this request —
+     * the just-committed selection's lines plus every previously committed
+     * sibling's (split members commit serially).
+     */
+    private Set<String> committedCoverage(MarketplaceRequestEntity request, SelectionEntity current,
+                                          List<FulfillmentOfferLineEntity> currentLines) {
+        Set<String> covered = new HashSet<>();
+        for (FulfillmentOfferLineEntity line : currentLines) {
+            if (line.getRequestLineRef() != null) {
+                covered.add(line.getRequestLineRef());
+            }
+        }
+        for (SelectionEntity s : selectionRepository.findByRequestId(request.getRequestId())) {
+            if (s.getStatus() == SelectionStatus.COMMITTED
+                    && !Objects.equals(s.getSelectionId(), current.getSelectionId())
+                    && s.getOfferId() != null) {
+                covered.addAll(lineRefsOfOffer(s.getOfferId()));
+            }
+        }
+        return covered;
+    }
+
+    /**
+     * OF-B14 — honest partial posture event: a member committed but the
+     * request's lines are not yet fully covered. PII-free: refs and ids only.
+     */
+    private void publishPartialCommitmentEvent(MarketplaceRequestEntity request, SelectionEntity selection,
+                                               Set<String> requestRefs, Set<String> committedRefs) {
+        try {
+            Set<String> uncovered = new HashSet<>(requestRefs);
+            uncovered.removeAll(committedRefs);
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("requestId", request.getRequestId());
+            payload.put("tenantId", request.getTenantId().toString());
+            payload.put("status", request.getStatus().name());
+            payload.put("committedSelectionId", selection.getSelectionId());
+            if (selection.getSplitGroupId() != null) {
+                payload.put("splitGroupId", selection.getSplitGroupId());
+            }
+            payload.put("coveredLineRefs", committedRefs.stream().sorted().toList());
+            payload.put("uncoveredLineRefs", uncovered.stream().sorted().toList());
+            EventOutboxEntity outbox = new EventOutboxEntity();
+            outbox.setAggregateType("MarketplaceRequest");
+            outbox.setAggregateId(request.getRequestId());
+            outbox.setEventType("REQUEST_PARTIALLY_COMMITTED");
+            outbox.setPayload(objectMapper.writeValueAsString(payload));
+            outbox.setTenantId(request.getTenantId());
+            outboxRepository.save(outbox);
+        } catch (Exception e) {
+            log.error("Failed to write REQUEST_PARTIALLY_COMMITTED event for request {}: {}",
+                    request.getRequestId(), e.getMessage());
+        }
     }
 
     // ── failure + compensation plumbing ──────────────────────────────────
@@ -711,6 +918,23 @@ public class CommitmentService {
             payload.put("tenantId", selection.getTenantId().toString());
             payload.put("status", selection.getStatus().name());
             payload.put("outcomeCode", code);
+            payload.put("profile", request.getProfile() != null ? request.getProfile().name() : null);
+            // OF-B14 — split members carry their group id on every event.
+            if (selection.getSplitGroupId() != null) {
+                payload.put("splitGroupId", selection.getSplitGroupId());
+            }
+            // OF-B13 — the OROS spine seam + collection expectation.
+            if (selection.getOrosOrderId() != null) {
+                payload.put("orosOrderId", selection.getOrosOrderId());
+            }
+            if (selection.getCollectionMode() != null) {
+                payload.put("collectionMode", selection.getCollectionMode());
+                if (selection.getCollectionWindowStart() != null) {
+                    payload.put("collectionWindowStart", selection.getCollectionWindowStart().toString());
+                    payload.put("collectionWindowEnd", selection.getCollectionWindowEnd() != null
+                            ? selection.getCollectionWindowEnd().toString() : null);
+                }
+            }
             payload.put("priceTotal", offer.getPriceTotal() != null ? offer.getPriceTotal().toPlainString() : null);
             payload.put("currency", offer.getCurrency());
             // OF-B9/OF-B10 — the financial posture rides every selection event

@@ -28,4 +28,7 @@ public interface SelectionRepository extends JpaRepository<SelectionEntity, Stri
 
     /** OF-B17 — Nhume delivery id → selection (write-back cross-check). */
     Optional<SelectionEntity> findFirstByDispatchRef(String dispatchRef);
+
+    /** OF-B14 — all members of one split combination (§8.6.4). */
+    List<SelectionEntity> findBySplitGroupId(String splitGroupId);
 }

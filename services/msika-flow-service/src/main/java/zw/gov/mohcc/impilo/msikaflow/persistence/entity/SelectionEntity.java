@@ -13,10 +13,14 @@ import java.util.UUID;
  * A patient's selection of one offer and its commitment record (OF-B6/OF-B11,
  * Vol II §11.7/§8.9 — {@code mf_selections}).
  *
- * <p>RC-1: at most one non-FAILED selection per request (partial unique index
- * in Postgres, re-enforced in code for H2); retries are idempotent on
- * ({@code tenantId}, {@code idempotencyKey}). {@code stepLogJson} is the
- * append-only §8.9 twelve-step commitment log.</p>
+ * <p>RC-1 (extended by OF-B14): no two live (non-FAILED/CANCELLED) selections
+ * may cover the same published request line — enforced in code
+ * ({@code CommitmentService.assertNoActiveLineOverlap}; the two-table invariant
+ * is not expressible as a partial index) plus the
+ * {@code uq_mf_selection_offer_active} partial unique index (one live selection
+ * per request+offer). Retries are idempotent on ({@code tenantId},
+ * {@code idempotencyKey}). {@code stepLogJson} is the append-only §8.9
+ * twelve-step commitment log.</p>
  */
 @Entity
 @Table(name = "mf_selections")
@@ -41,6 +45,33 @@ public class SelectionEntity {
 
     @Column(name = "idempotency_key", nullable = false, length = 128)
     private String idempotencyKey;
+
+    /**
+     * OF-B14 — the split group this selection belongs to when the patient
+     * committed a COMBINATION of offers (§8.6.4). NULL for single-offer
+     * selections; all members of one combination share the id.
+     */
+    @Column(name = "split_group_id", length = 26)
+    private String splitGroupId;
+
+    /**
+     * OF-B13 seam — the OROS order this commitment fulfils, stamped at
+     * commitment so specimen/result flow routes on the LIVE OROS spine (no
+     * marketplace result machinery). Mirrors the request's pin for direct
+     * downstream lookup.
+     */
+    @Column(name = "oros_order_id", length = 64)
+    private String orosOrderId;
+
+    /** OF-B13 — HOME_COLLECTION | WALK_IN fulfilment expectation (DIAGNOSTICS profile). */
+    @Column(name = "collection_mode", length = 24)
+    private String collectionMode;
+
+    @Column(name = "collection_window_start")
+    private OffsetDateTime collectionWindowStart;
+
+    @Column(name = "collection_window_end")
+    private OffsetDateTime collectionWindowEnd;
 
     /** OROS prescription claim id (commitment step 6, medication profiles). */
     @Column(name = "prescription_claim_id", length = 64)
@@ -154,6 +185,21 @@ public class SelectionEntity {
 
     public String getIdempotencyKey() { return idempotencyKey; }
     public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+
+    public String getSplitGroupId() { return splitGroupId; }
+    public void setSplitGroupId(String splitGroupId) { this.splitGroupId = splitGroupId; }
+
+    public String getOrosOrderId() { return orosOrderId; }
+    public void setOrosOrderId(String orosOrderId) { this.orosOrderId = orosOrderId; }
+
+    public String getCollectionMode() { return collectionMode; }
+    public void setCollectionMode(String collectionMode) { this.collectionMode = collectionMode; }
+
+    public OffsetDateTime getCollectionWindowStart() { return collectionWindowStart; }
+    public void setCollectionWindowStart(OffsetDateTime collectionWindowStart) { this.collectionWindowStart = collectionWindowStart; }
+
+    public OffsetDateTime getCollectionWindowEnd() { return collectionWindowEnd; }
+    public void setCollectionWindowEnd(OffsetDateTime collectionWindowEnd) { this.collectionWindowEnd = collectionWindowEnd; }
 
     public String getPrescriptionClaimId() { return prescriptionClaimId; }
     public void setPrescriptionClaimId(String prescriptionClaimId) { this.prescriptionClaimId = prescriptionClaimId; }

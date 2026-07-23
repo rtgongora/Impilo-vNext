@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.msikaflow.core.CommitmentService;
 import zw.gov.mohcc.impilo.msikaflow.core.MarketplaceRequestService;
 import zw.gov.mohcc.impilo.msikaflow.core.OfferFinancialsService;
 import zw.gov.mohcc.impilo.msikaflow.core.PublishedSnapshotBuilder;
+import zw.gov.mohcc.impilo.msikaflow.core.SplitSelectionCoordinator;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.FulfillmentOfferEntity;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.FulfillmentOfferLineEntity;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.MarketplaceRequestEntity;
@@ -36,15 +37,18 @@ public class MarketplaceRequestController {
 
     private final MarketplaceRequestService requestService;
     private final CommitmentService commitmentService;
+    private final SplitSelectionCoordinator splitSelectionCoordinator;
     private final OfferFinancialsService offerFinancialsService;
     private final ObjectMapper objectMapper;
 
     public MarketplaceRequestController(MarketplaceRequestService requestService,
                                         CommitmentService commitmentService,
+                                        SplitSelectionCoordinator splitSelectionCoordinator,
                                         OfferFinancialsService offerFinancialsService,
                                         ObjectMapper objectMapper) {
         this.requestService = requestService;
         this.commitmentService = commitmentService;
+        this.splitSelectionCoordinator = splitSelectionCoordinator;
         this.offerFinancialsService = offerFinancialsService;
         this.objectMapper = objectMapper;
     }
@@ -60,14 +64,15 @@ public class MarketplaceRequestController {
                 .map(l -> new PublishedSnapshotBuilder.RequestLine(
                         l.lineRef(), l.itemCode(), l.codingSystem(), l.quantity(), l.unit(),
                         l.controlled(), l.coldChain(),
-                        l.substitutionAllowed() == null || l.substitutionAllowed()))
+                        l.substitutionAllowed() == null || l.substitutionAllowed(),
+                        l.modality()))
                 .toList();
         MarketplaceRequestEntity request = requestService.createFromOrder(tenantId, actorId,
                 new MarketplaceRequestService.CreateCommand(
                         dto.orosOrderId(), dto.orosOrderVersionId(), dto.profile(),
                         dto.publicationMode(), dto.coarseZone(), dto.urgency(), lines,
                         dto.invitedVendorIds(), dto.prescriptionToken(),
-                        dto.fundingMode(), dto.coverageId()),
+                        dto.fundingMode(), dto.coverageId(), dto.homeCollectionRequested()),
                 http);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(view(request), TrustHeaderExtractor.correlationId(http)));
@@ -118,7 +123,8 @@ public class MarketplaceRequestController {
                 .toList();
         FulfillmentOfferEntity offer = requestService.submitOffer(requestId, tenantId,
                 new MarketplaceRequestService.SubmitOfferCommand(dto.vendorId(), dto.priceTotal(),
-                        dto.currency(), dto.fulfillmentWindowHours(), dto.ttlMinutes(), lines),
+                        dto.currency(), dto.fulfillmentWindowHours(), dto.ttlMinutes(), lines,
+                        dto.homeCollection(), dto.collectionWindowStart(), dto.collectionWindowEnd()),
                 http);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(
                 offerView(offer, List.of(), null), TrustHeaderExtractor.correlationId(http)));
@@ -145,7 +151,8 @@ public class MarketplaceRequestController {
                 .map(r -> offerView(r.offer(), r.lines(), r.rankedBecause(),
                         r.financials() != null
                                 ? parse(offerFinancialsService.toJson(r.financials()))
-                                : null))
+                                : null,
+                        r.uncoveredLineRefs()))
                 .toList();
         return ResponseEntity.ok(ApiResponse.ok(views, TrustHeaderExtractor.correlationId(http)));
     }
@@ -165,6 +172,29 @@ public class MarketplaceRequestController {
         HttpStatus status = !result.replayed() && result.committed() ? HttpStatus.CREATED : HttpStatus.OK;
         return ResponseEntity.status(status).body(ApiResponse.ok(
                 selectionView(result), TrustHeaderExtractor.correlationId(http)));
+    }
+
+    /**
+     * OF-B14 — commit a patient-chosen COMBINATION of offers (§8.6.4,
+     * journey #45). Members commit serially with per-member compensation
+     * isolation; already-committed members STAND on a sibling failure and the
+     * honest {@code PARTIAL_COMMIT} rollup is returned — never an invented
+     * cross-vendor rollback.
+     */
+    @PostMapping("/{requestId}/select-split")
+    public ResponseEntity<ApiResponse<SplitSelectionView>> selectSplit(
+            @PathVariable String requestId, @Valid @RequestBody SelectSplitDto dto,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            HttpServletRequest http) {
+        UUID tenantId = TrustHeaderExtractor.tenantId(http);
+        String actorId = TrustHeaderExtractor.actorId(http);
+        SplitSelectionCoordinator.SplitResult result = splitSelectionCoordinator.selectSplit(
+                requestId, dto.offerIds(), tenantId, actorId, idempotencyKey, http);
+        boolean freshFullCommit = SplitSelectionCoordinator.OUTCOME_COMMITTED.equals(result.outcome())
+                && result.members().stream().noneMatch(SplitSelectionCoordinator.MemberResult::replayed);
+        HttpStatus status = freshFullCommit ? HttpStatus.CREATED : HttpStatus.OK;
+        return ResponseEntity.status(status).body(ApiResponse.ok(
+                splitView(requestId, result), TrustHeaderExtractor.correlationId(http)));
     }
 
     // ── view mapping ─────────────────────────────────────────────────────
@@ -187,11 +217,12 @@ public class MarketplaceRequestController {
 
     private OfferView offerView(FulfillmentOfferEntity offer, List<FulfillmentOfferLineEntity> lines,
                                 List<String> rankedBecause) {
-        return offerView(offer, lines, rankedBecause, null);
+        return offerView(offer, lines, rankedBecause, null, null);
     }
 
     private OfferView offerView(FulfillmentOfferEntity offer, List<FulfillmentOfferLineEntity> lines,
-                                List<String> rankedBecause, JsonNode financials) {
+                                List<String> rankedBecause, JsonNode financials,
+                                List<String> uncoveredLineRefs) {
         List<OfferLineView> lineViews = lines.stream()
                 .map(l -> new OfferLineView(l.getOfferLineId(), l.getRequestLineRef(), l.getItemCode(),
                         l.getQuantity(), l.getUnitPrice(), l.getStockGrade().name(),
@@ -200,7 +231,9 @@ public class MarketplaceRequestController {
         return new OfferView(offer.getOfferId(), offer.getRequestId(), offer.getVendorId(),
                 offer.getStatus().name(), offer.getStatusReason(), offer.getPriceTotal(),
                 offer.getCurrency(), offer.getFulfillmentWindowHours(), offer.getTtlExpiresAt(),
-                lineViews, rankedBecause, financials);
+                lineViews, rankedBecause, financials,
+                offer.isHomeCollection(), offer.getCollectionWindowStart(),
+                offer.getCollectionWindowEnd(), uncoveredLineRefs);
     }
 
     private SelectionView selectionView(CommitmentService.CommitResult result) {
@@ -209,7 +242,21 @@ public class MarketplaceRequestController {
                 s.getStatus().name(), result.outcomeCode(), result.committed(), result.replayed(),
                 s.getPrescriptionClaimId(), s.getCommittedAt(), parse(s.getStepLogJson()),
                 parse(s.getFinancialJson()), s.getPaymentIntentId(), s.getPaymentStatus(),
-                s.getShortfallAmount(), s.getShortfallCurrency(), s.getPaStatus(), s.getPaReference());
+                s.getShortfallAmount(), s.getShortfallCurrency(), s.getPaStatus(), s.getPaReference(),
+                s.getSplitGroupId(), s.getOrosOrderId(), s.getCollectionMode(),
+                s.getCollectionWindowStart(), s.getCollectionWindowEnd());
+    }
+
+    private SplitSelectionView splitView(String requestId, SplitSelectionCoordinator.SplitResult result) {
+        List<SplitMemberView> members = result.members().stream()
+                .map(m -> new SplitMemberView(m.offerId(), m.selectionId(), m.status(),
+                        m.outcomeCode(), m.committed(), m.replayed()))
+                .toList();
+        SplitSelectionCoordinator.Coverage c = result.coverage();
+        return new SplitSelectionView(result.splitGroupId(), requestId, result.outcome(),
+                new SplitCoverageView(c.complete(), c.coveredLineRefs(),
+                        c.uncoveredLineRefs(), c.underSuppliedLineRefs()),
+                members);
     }
 
     private JsonNode parse(String json) {

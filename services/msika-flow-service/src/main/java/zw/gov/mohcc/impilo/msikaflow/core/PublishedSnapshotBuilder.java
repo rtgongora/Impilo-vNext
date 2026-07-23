@@ -18,7 +18,13 @@ import java.util.List;
  */
 public final class PublishedSnapshotBuilder {
 
-    /** One coded, PII-free request line (the §8.3 allow-list). */
+    /**
+     * One coded, PII-free request line (the §8.3 allow-list).
+     *
+     * <p>{@code modality} (OF-B13) is the coded imaging modality / procedure
+     * class for DIAGNOSTICS lines (e.g. {@code XR}, {@code US}, {@code CT}) —
+     * a capability flag per §11.8, never clinical narrative.</p>
+     */
     public record RequestLine(
             String lineRef,
             String itemCode,
@@ -27,14 +33,35 @@ public final class PublishedSnapshotBuilder {
             String unit,
             boolean controlled,
             boolean coldChain,
-            boolean substitutionAllowed
-    ) {}
+            boolean substitutionAllowed,
+            String modality
+    ) {
+        /** Pre-OF-B13 shape (no modality) — kept so existing call sites stand. */
+        public RequestLine(String lineRef, String itemCode, String codingSystem, int quantity,
+                           String unit, boolean controlled, boolean coldChain,
+                           boolean substitutionAllowed) {
+            this(lineRef, itemCode, codingSystem, quantity, unit, controlled, coldChain,
+                    substitutionAllowed, null);
+        }
+    }
 
     private PublishedSnapshotBuilder() {}
 
     /** Builds the snapshot from typed, already-coded lines (the create-API path). */
     public static String build(ObjectMapper mapper, String profile, String coarseZone,
                                String urgency, List<RequestLine> lines) {
+        return build(mapper, profile, coarseZone, urgency, lines, false);
+    }
+
+    /**
+     * OF-B13 overload — adds the §11.8-allow-listed request capability flags
+     * block ({@code capabilityFlags.phlebotomyHomeCollection}) for DIAGNOSTICS
+     * requests wanting home specimen collection. A capability requirement only
+     * — never an address, never coordinates.
+     */
+    public static String build(ObjectMapper mapper, String profile, String coarseZone,
+                               String urgency, List<RequestLine> lines,
+                               boolean phlebotomyHomeCollection) {
         ObjectNode root = mapper.createObjectNode();
         root.put("profile", profile);
         if (coarseZone != null && !coarseZone.isBlank()) {
@@ -42,6 +69,9 @@ public final class PublishedSnapshotBuilder {
         }
         if (urgency != null && !urgency.isBlank()) {
             root.put("urgency", urgency);
+        }
+        if (phlebotomyHomeCollection) {
+            root.putObject("capabilityFlags").put("phlebotomyHomeCollection", true);
         }
         ArrayNode out = root.putArray("lines");
         for (RequestLine line : lines) {
@@ -87,7 +117,8 @@ public final class PublishedSnapshotBuilder {
                         line.path("controlled").asBoolean(false),
                         line.path("coldChain").asBoolean(false),
                         line.path("substitutionAllowed").asBoolean(
-                                line.path("substitutionPermitted").asBoolean(true)));
+                                line.path("substitutionPermitted").asBoolean(true)),
+                        firstNonBlank(line, "modality", "imagingModality"));
                 out.add(minimisedLine(mapper, minimised));
             }
         }
@@ -108,6 +139,10 @@ public final class PublishedSnapshotBuilder {
         node.put("controlled", line.controlled());
         node.put("coldChain", line.coldChain());
         node.put("substitutionAllowed", line.substitutionAllowed());
+        if (line.modality() != null && !line.modality().isBlank()) {
+            // OF-B13: coded imaging modality — an allow-listed capability flag.
+            node.put("modality", line.modality());
+        }
         return node;
     }
 

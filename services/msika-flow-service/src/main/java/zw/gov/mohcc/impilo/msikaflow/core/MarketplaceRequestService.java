@@ -101,8 +101,20 @@ public class MarketplaceRequestService {
             /* OF-B8/OF-B9 (§10.3): NULL => SELF_PAY, fail-closed */
             FundingMode fundingMode,
             /* Ruvimbo member-coverage ref; required for PAYER_COVERED */
-            UUID coverageId
-    ) {}
+            UUID coverageId,
+            /* OF-B13 — DIAGNOSTICS only: phlebotomy home-collection required (§11.8 capability flag) */
+            Boolean homeCollectionRequested
+    ) {
+        /** Pre-OF-B13 shape — kept so existing call sites stand. */
+        public CreateCommand(String orosOrderId, String orosOrderVersionId, MarketplaceProfile profile,
+                             PublicationMode publicationMode, String coarseZone, String urgency,
+                             List<PublishedSnapshotBuilder.RequestLine> lines,
+                             List<String> invitedVendorIds, String prescriptionToken,
+                             FundingMode fundingMode, UUID coverageId) {
+            this(orosOrderId, orosOrderVersionId, profile, publicationMode, coarseZone, urgency,
+                    lines, invitedVendorIds, prescriptionToken, fundingMode, coverageId, null);
+        }
+    }
 
     @Transactional
     public MarketplaceRequestEntity createFromOrder(UUID tenantId, String actorId,
@@ -143,6 +155,12 @@ public class MarketplaceRequestService {
             throw new IllegalArgumentException(
                     "COVERAGE_REF_REQUIRED: PAYER_COVERED requires a Ruvimbo coverageId");
         }
+        boolean homeCollectionRequested = Boolean.TRUE.equals(cmd.homeCollectionRequested());
+        if (homeCollectionRequested && cmd.profile() != MarketplaceProfile.DIAGNOSTICS) {
+            // OF-B13: home specimen collection is a diagnostics capability.
+            throw new IllegalArgumentException(
+                    "HOME_COLLECTION_PROFILE_MISMATCH: home-collection applies to DIAGNOSTICS requests only");
+        }
 
         // OF-B1 version pin — verified against OROS, fail-closed on an unreachable order plane.
         if (verifyOrderVersion) {
@@ -169,8 +187,10 @@ public class MarketplaceRequestService {
         request.setControlled(controlled);
         request.setCoarseZone(cmd.coarseZone());
         request.setUrgency(cmd.urgency());
+        request.setHomeCollectionRequested(homeCollectionRequested);
         request.setPublishedLinesJson(PublishedSnapshotBuilder.build(objectMapper,
-                cmd.profile().name(), cmd.coarseZone(), cmd.urgency(), cmd.lines()));
+                cmd.profile().name(), cmd.coarseZone(), cmd.urgency(), cmd.lines(),
+                homeCollectionRequested));
         request.setInvitedVendorIds(JsonSupport.toJsonSafe(objectMapper, cmd.invitedVendorIds(), null));
         request.setPrescriptionToken(cmd.prescriptionToken());
         request.setFundingMode(cmd.fundingMode());
@@ -288,7 +308,19 @@ public class MarketplaceRequestService {
 
     public record SubmitOfferCommand(String vendorId, BigDecimal priceTotal, String currency,
                                      Integer fulfillmentWindowHours, Long ttlMinutes,
-                                     List<OfferLineCommand> lines) {}
+                                     List<OfferLineCommand> lines,
+                                     /* OF-B13 — DIAGNOSTICS only: home specimen collection with a window */
+                                     Boolean homeCollection,
+                                     OffsetDateTime collectionWindowStart,
+                                     OffsetDateTime collectionWindowEnd) {
+        /** Pre-OF-B13 shape — kept so existing call sites stand. */
+        public SubmitOfferCommand(String vendorId, BigDecimal priceTotal, String currency,
+                                  Integer fulfillmentWindowHours, Long ttlMinutes,
+                                  List<OfferLineCommand> lines) {
+            this(vendorId, priceTotal, currency, fulfillmentWindowHours, ttlMinutes, lines,
+                    null, null, null);
+        }
+    }
 
     @Transactional
     public FulfillmentOfferEntity submitOffer(String requestId, UUID tenantId,
@@ -309,6 +341,20 @@ public class MarketplaceRequestService {
         }
         if (cmd.priceTotal() == null || cmd.priceTotal().signum() < 0) {
             throw new IllegalArgumentException("priceTotal must be non-negative");
+        }
+        boolean homeCollection = Boolean.TRUE.equals(cmd.homeCollection());
+        if (homeCollection) {
+            // OF-B13: home specimen collection is a DIAGNOSTICS offer variant and
+            // MUST carry a concrete collection window (§8.5 scheduled-service).
+            if (request.getProfile() != MarketplaceProfile.DIAGNOSTICS) {
+                throw new IllegalArgumentException(
+                        "HOME_COLLECTION_PROFILE_MISMATCH: home-collection offers apply to DIAGNOSTICS requests only");
+            }
+            if (cmd.collectionWindowStart() == null || cmd.collectionWindowEnd() == null
+                    || !cmd.collectionWindowStart().isBefore(cmd.collectionWindowEnd())) {
+                throw new IllegalArgumentException(
+                        "COLLECTION_WINDOW_REQUIRED: a home-collection offer must declare a collection window (start < end)");
+            }
         }
         MarketplaceInvitationEntity invitation = invitationRepository
                 .findFirstByRequestIdAndVendorId(requestId, cmd.vendorId())
@@ -344,6 +390,11 @@ public class MarketplaceRequestService {
         offer.setFulfillmentWindowHours(cmd.fulfillmentWindowHours());
         offer.setTtlExpiresAt(now.plusMinutes(
                 cmd.ttlMinutes() != null && cmd.ttlMinutes() > 0 ? cmd.ttlMinutes() : defaultOfferTtlMinutes));
+        offer.setHomeCollection(homeCollection);
+        if (homeCollection) {
+            offer.setCollectionWindowStart(cmd.collectionWindowStart());
+            offer.setCollectionWindowEnd(cmd.collectionWindowEnd());
+        }
         offer.setEligibilitySnapshotJson(eligibilityService.toSnapshotJson(eligibility));
         offer.setSubmittedAt(now);
         offerRepository.save(offer);
@@ -359,7 +410,7 @@ public class MarketplaceRequestService {
             line.setQuantity(lineCmd.quantity());
             line.setUnitPrice(lineCmd.unitPrice());
             line.setSubstitutionProposed(lineCmd.substitutionProposed());
-            line.setStockGrade(gradeLine(duraSource, lineCmd, inbound));
+            line.setStockGrade(gradeLine(request.getProfile(), duraSource, lineCmd, inbound));
             offerLineRepository.save(line);
         }
 
@@ -391,9 +442,17 @@ public class MarketplaceRequestService {
      * §8E stock-truth grading: VERIFIED only when DURA answered and
      * available (on-hand − reserved) covers the quantity; any failure or a
      * vendor without a DURA source degrades honestly to REPORTED.
+     *
+     * <p>OF-B13: DIAGNOSTICS lines are service capacity, not physical stock —
+     * they grade {@code REPORTED} (vendor-attested) always; a DURA ledger
+     * lookup for a test/procedure code would be a fabricated verification.</p>
      */
-    private StockGrade gradeLine(Optional<EligibilityService.DuraSource> duraSource,
+    private StockGrade gradeLine(MarketplaceProfile profile,
+                                 Optional<EligibilityService.DuraSource> duraSource,
                                  OfferLineCommand line, HttpServletRequest inbound) {
+        if (profile == MarketplaceProfile.DIAGNOSTICS) {
+            return StockGrade.REPORTED;
+        }
         if (duraSource.isEmpty()) {
             return StockGrade.REPORTED;
         }
@@ -422,9 +481,15 @@ public class MarketplaceRequestService {
 
     // ── comparison view (basic ranked-because set + OF-B9 financial block) ──
 
+    /**
+     * OF-B14 — {@code uncoveredLineRefs} is the honest partial-fulfilment
+     * posture (§8.6.1: "which lines are missing"): request lines this offer
+     * does not cover at the requested quantity. Empty for a full offer.
+     */
     public record RankedOffer(FulfillmentOfferEntity offer, List<FulfillmentOfferLineEntity> lines,
                               List<String> rankedBecause,
-                              OfferFinancialsService.FinancialBlock financials) {}
+                              OfferFinancialsService.FinancialBlock financials,
+                              List<String> uncoveredLineRefs) {}
 
     /**
      * §8.6/§8.7 comparison listing. Each ranked offer carries its OF-B9
@@ -442,7 +507,7 @@ public class MarketplaceRequestService {
         if (active.isEmpty()) {
             return List.of();
         }
-        Set<String> requestLineRefs = requestLineRefs(request);
+        Map<String, Integer> requestedQuantities = requestLineQuantities(request);
         BigDecimal cheapest = active.stream()
                 .map(FulfillmentOfferEntity::getPriceTotal)
                 .min(Comparator.naturalOrder())
@@ -451,6 +516,7 @@ public class MarketplaceRequestService {
         List<RankedOffer> ranked = new ArrayList<>();
         for (FulfillmentOfferEntity offer : active) {
             List<FulfillmentOfferLineEntity> lines = offerLineRepository.findByOfferId(offer.getOfferId());
+            List<String> uncovered = uncoveredLineRefs(lines, requestedQuantities);
             List<String> labels = new ArrayList<>();
             labels.add("SUITABLE"); // passed the eligibility gate — the base label
             if (cheapest != null && offer.getPriceTotal().compareTo(cheapest) == 0) {
@@ -459,12 +525,12 @@ public class MarketplaceRequestService {
             if (isNearest(offer, request, tenantId)) {
                 labels.add("NEAREST");
             }
-            if (coversAllLines(lines, requestLineRefs)) {
+            if (coversAllLines(lines, requestedQuantities, uncovered)) {
                 labels.add("COMPLETE");
             }
             OfferFinancialsService.FinancialBlock financials =
                     offerFinancialsService.compute(request, offer, lines, inbound);
-            ranked.add(new RankedOffer(offer, lines, labels, financials));
+            ranked.add(new RankedOffer(offer, lines, labels, financials, uncovered));
         }
         // Declared default sort: clinical completeness first, then price — never price alone (§4.5).
         ranked.sort(Comparator
@@ -480,30 +546,53 @@ public class MarketplaceRequestService {
                 .orElse(false);
     }
 
-    private boolean coversAllLines(List<FulfillmentOfferLineEntity> lines, Set<String> requestLineRefs) {
-        if (requestLineRefs.isEmpty()) {
+    /**
+     * OF-B14 — quantity-aware COMPLETE (§8.6.2: "all lines, no substitution"):
+     * an offer covering every line ref but at a PARTIAL quantity is honestly
+     * not COMPLETE.
+     */
+    private boolean coversAllLines(List<FulfillmentOfferLineEntity> lines,
+                                   Map<String, Integer> requestedQuantities,
+                                   List<String> uncovered) {
+        if (requestedQuantities.isEmpty()) {
             return false;
         }
-        Set<String> offered = new HashSet<>();
-        boolean substituted = false;
-        for (FulfillmentOfferLineEntity line : lines) {
-            offered.add(line.getRequestLineRef());
-            substituted |= line.isSubstitutionProposed();
-        }
-        return !substituted && offered.containsAll(requestLineRefs);
+        boolean substituted = lines.stream().anyMatch(FulfillmentOfferLineEntity::isSubstitutionProposed);
+        return !substituted && uncovered.isEmpty();
     }
 
-    private Set<String> requestLineRefs(MarketplaceRequestEntity request) {
-        Set<String> refs = new HashSet<>();
+    /**
+     * Request lines this offer misses — either absent entirely or offered at
+     * less than the requested quantity (partial-quantity posture, §8.5.1).
+     */
+    private List<String> uncoveredLineRefs(List<FulfillmentOfferLineEntity> lines,
+                                           Map<String, Integer> requestedQuantities) {
+        Map<String, Integer> offered = new HashMap<>();
+        for (FulfillmentOfferLineEntity line : lines) {
+            offered.merge(line.getRequestLineRef(), line.getQuantity(), Integer::sum);
+        }
+        List<String> uncovered = new ArrayList<>();
+        for (Map.Entry<String, Integer> requested : requestedQuantities.entrySet()) {
+            Integer qty = offered.get(requested.getKey());
+            if (qty == null || qty < requested.getValue()) {
+                uncovered.add(requested.getKey());
+            }
+        }
+        return uncovered;
+    }
+
+    /** Published-snapshot line refs → requested quantities (the request-side truth). */
+    Map<String, Integer> requestLineQuantities(MarketplaceRequestEntity request) {
+        Map<String, Integer> quantities = new LinkedHashMap<>();
         try {
             JsonNode snapshot = objectMapper.readTree(request.getPublishedLinesJson());
             for (JsonNode line : snapshot.path("lines")) {
-                refs.add(line.path("lineRef").asText());
+                quantities.put(line.path("lineRef").asText(), line.path("quantity").asInt(1));
             }
         } catch (Exception e) {
             log.warn("Unparseable snapshot for request {}: {}", request.getRequestId(), e.getMessage());
         }
-        return refs;
+        return quantities;
     }
 
     // ── cancel ───────────────────────────────────────────────────────────

@@ -59,6 +59,20 @@ public class FulfillmentOfferEntity {
     @Column(name = "ttl_expires_at")
     private OffsetDateTime ttlExpiresAt;
 
+    /**
+     * OF-B13 — the vendor offers home specimen collection (DIAGNOSTICS profile
+     * only; §8.5 offer-variant "scheduled-service"). When true a concrete
+     * collection window is mandatory.
+     */
+    @Column(name = "home_collection", nullable = false)
+    private boolean homeCollection;
+
+    @Column(name = "collection_window_start")
+    private OffsetDateTime collectionWindowStart;
+
+    @Column(name = "collection_window_end")
+    private OffsetDateTime collectionWindowEnd;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "eligibility_snapshot_json", columnDefinition = "jsonb")
     private String eligibilitySnapshotJson;
@@ -115,6 +129,15 @@ public class FulfillmentOfferEntity {
 
     public OffsetDateTime getTtlExpiresAt() { return ttlExpiresAt; }
     public void setTtlExpiresAt(OffsetDateTime ttlExpiresAt) { this.ttlExpiresAt = ttlExpiresAt; }
+
+    public boolean isHomeCollection() { return homeCollection; }
+    public void setHomeCollection(boolean homeCollection) { this.homeCollection = homeCollection; }
+
+    public OffsetDateTime getCollectionWindowStart() { return collectionWindowStart; }
+    public void setCollectionWindowStart(OffsetDateTime collectionWindowStart) { this.collectionWindowStart = collectionWindowStart; }
+
+    public OffsetDateTime getCollectionWindowEnd() { return collectionWindowEnd; }
+    public void setCollectionWindowEnd(OffsetDateTime collectionWindowEnd) { this.collectionWindowEnd = collectionWindowEnd; }
 
     public String getEligibilitySnapshotJson() { return eligibilitySnapshotJson; }
     public void setEligibilitySnapshotJson(String eligibilitySnapshotJson) { this.eligibilitySnapshotJson = eligibilitySnapshotJson; }
