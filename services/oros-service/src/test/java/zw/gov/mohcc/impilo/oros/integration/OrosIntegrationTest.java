@@ -72,7 +72,11 @@ class OrosIntegrationTest {
         objectMapper = OrosTestObjectMapper.create();
 
         stateMachine = new OrderStateMachine(
-                orderRepository, orderItemRepository, outboxRepository, objectMapper);
+                orderRepository, orderItemRepository, outboxRepository, objectMapper,
+                new OrderVersionWriter(
+                        org.mockito.Mockito.mock(
+                                zw.gov.mohcc.impilo.oros.persistence.repository.OrderVersionRepository.class),
+                        orderItemRepository, objectMapper));
 
         workstepEngine = new WorkstepEngine(
                 workstepRepository, outboxRepository, objectMapper);

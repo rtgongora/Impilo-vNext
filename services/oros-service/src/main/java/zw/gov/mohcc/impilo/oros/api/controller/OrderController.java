@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.oros.api.dto.AmendOrderRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.CancelRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.ImagingTransitionRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.LinkStudyRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.NoteRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderItemDto;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderSummaryDto;
+import zw.gov.mohcc.impilo.oros.api.dto.OrderVersionDto;
 import zw.gov.mohcc.impilo.oros.api.dto.PlaceOrderRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.PrintableRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.RouteDto;
@@ -62,6 +64,7 @@ public class OrderController {
     private final RoutingEngine routingEngine;
     private final WorkstepEngine workstepEngine;
     private final SlaService slaService;
+    private final OrderLifecycleService lifecycleService;
 
     public OrderController(OrderStateMachine stateMachine,
                            OrderSubmissionService submissionService,
@@ -71,7 +74,8 @@ public class OrderController {
                            zw.gov.mohcc.impilo.oros.integration.dicom.MwlPublisherRouter mwlPublisherRouter,
                            RoutingEngine routingEngine,
                            WorkstepEngine workstepEngine,
-                           SlaService slaService) {
+                           SlaService slaService,
+                           OrderLifecycleService lifecycleService) {
         this.stateMachine = stateMachine;
         this.submissionService = submissionService;
         this.imagingWorkflowService = imagingWorkflowService;
@@ -81,6 +85,7 @@ public class OrderController {
         this.routingEngine = routingEngine;
         this.workstepEngine = workstepEngine;
         this.slaService = slaService;
+        this.lifecycleService = lifecycleService;
     }
 
     /**
@@ -394,6 +399,74 @@ public class OrderController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
         OrderEntity order = stateMachine.cancelOrder(orderId, request.reason());
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    // ── OF-B1 lifecycle: versioning, amend, hold/resume, revoke, replace, error-mark ──
+
+    /** Amend a placed order: content changes become a new immutable version (§9.1). */
+    @PostMapping("/{orderId}/amend")
+    public ResponseEntity<ApiResponse<OrderVersionDto>> amendOrder(
+            @PathVariable String orderId,
+            @Valid @RequestBody AmendOrderRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        var version = lifecycleService.amend(orderId, new OrderLifecycleService.AmendRequest(
+                request.clinicalNotes(), request.ziboOrderCode(), request.encounterRef(),
+                request.safetyJson(), toItemData(request.items()), request.reason()));
+        return ResponseEntity.ok(ApiResponse.ok(OrderVersionDto.from(version), correlationId));
+    }
+
+    /** Version history for an order, newest first. */
+    @GetMapping("/{orderId}/versions")
+    public ResponseEntity<ApiResponse<List<OrderVersionDto>>> orderVersions(@PathVariable String orderId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        List<OrderVersionDto> versions = lifecycleService.versions(orderId).stream()
+                .map(OrderVersionDto::from).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok(versions, correlationId));
+    }
+
+    /** Apply a hold with a coded reason (§9.1 T4). */
+    @PostMapping("/{orderId}/hold")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> holdOrder(
+            @PathVariable String orderId, @Valid @RequestBody CancelRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        OrderEntity order = lifecycleService.hold(orderId, request.reason());
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /** Release a hold, resuming the pre-hold state (§9.1 T5). */
+    @PostMapping("/{orderId}/resume")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> resumeOrder(@PathVariable String orderId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        OrderEntity order = lifecycleService.resume(orderId);
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /** Clinical revocation — terminal (§9.1 T6). */
+    @PostMapping("/{orderId}/revoke")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> revokeOrder(
+            @PathVariable String orderId, @Valid @RequestBody CancelRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        OrderEntity order = lifecycleService.revoke(orderId, request.reason());
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /** Replace with a successor order; predecessor becomes terminal REPLACED (§9.1 T7). */
+    @PostMapping("/{orderId}/replace")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> replaceOrder(
+            @PathVariable String orderId, @Valid @RequestBody CancelRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        OrderEntity successor = lifecycleService.replace(orderId, request.reason());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(OrderSummaryDto.from(successor), correlationId));
+    }
+
+    /** Governance error-marking — terminal, pre-fulfilment only (§9.1 T9). */
+    @PostMapping("/{orderId}/error-mark")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> errorMarkOrder(
+            @PathVariable String orderId, @Valid @RequestBody CancelRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        OrderEntity order = lifecycleService.markEnteredInError(orderId, request.reason());
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 

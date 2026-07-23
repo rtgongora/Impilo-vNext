@@ -33,12 +33,25 @@ public class OrderStateMachine {
 
     private static final Logger log = LoggerFactory.getLogger(OrderStateMachine.class);
 
+    // Volume II §9.1: the live 13-status machine plus the OF-B1 target additions
+    // (PENDING_SIGNATURE, ON_HOLD, REVOKED, REPLACED, EXPIRED, ENTERED_IN_ERROR).
+    // Every pre-existing edge is unchanged — the additions are strictly additive (T1–T9).
     private static final Map<OrderStatus, Set<OrderStatus>> TRANSITIONS = Map.ofEntries(
-            Map.entry(OrderStatus.DRAFT, Set.of(OrderStatus.PLACED, OrderStatus.CANCELLED)),
-            Map.entry(OrderStatus.PLACED, Set.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED, OrderStatus.CANCELLED)),
-            Map.entry(OrderStatus.ACCEPTED, Set.of(OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED)),
-            Map.entry(OrderStatus.SCHEDULED, Set.of(OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED)),
-            Map.entry(OrderStatus.IN_PROGRESS, Set.of(OrderStatus.PARTIAL_RESULT, OrderStatus.RESULT_AVAILABLE, OrderStatus.FAILED, OrderStatus.CANCELLED)),
+            Map.entry(OrderStatus.DRAFT, Set.of(OrderStatus.PLACED, OrderStatus.CANCELLED,
+                    OrderStatus.PENDING_SIGNATURE, OrderStatus.ENTERED_IN_ERROR)),                    // T1, T9
+            Map.entry(OrderStatus.PENDING_SIGNATURE, Set.of(OrderStatus.PLACED, OrderStatus.DRAFT,
+                    OrderStatus.CANCELLED, OrderStatus.ENTERED_IN_ERROR)),                             // T2, T3
+            Map.entry(OrderStatus.PLACED, Set.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED, OrderStatus.CANCELLED,
+                    OrderStatus.ON_HOLD, OrderStatus.REVOKED, OrderStatus.REPLACED,
+                    OrderStatus.EXPIRED, OrderStatus.ENTERED_IN_ERROR)),                               // T4, T6, T7, T8, T9
+            Map.entry(OrderStatus.ACCEPTED, Set.of(OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED,
+                    OrderStatus.ON_HOLD, OrderStatus.ENTERED_IN_ERROR)),                               // T4, T9
+            Map.entry(OrderStatus.SCHEDULED, Set.of(OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED,
+                    OrderStatus.ENTERED_IN_ERROR)),                                                    // T9
+            Map.entry(OrderStatus.IN_PROGRESS, Set.of(OrderStatus.PARTIAL_RESULT, OrderStatus.RESULT_AVAILABLE,
+                    OrderStatus.FAILED, OrderStatus.CANCELLED, OrderStatus.ON_HOLD)),                  // T4
+            Map.entry(OrderStatus.ON_HOLD, Set.of(OrderStatus.PLACED, OrderStatus.ACCEPTED,
+                    OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED)),                                  // T5 (resume to prior)
             Map.entry(OrderStatus.PARTIAL_RESULT, Set.of(OrderStatus.RESULT_AVAILABLE, OrderStatus.FAILED)),
             Map.entry(OrderStatus.RESULT_AVAILABLE, Set.of(OrderStatus.REVIEWED)),
             Map.entry(OrderStatus.REVIEWED, Set.of(OrderStatus.RELEASED)),
@@ -46,22 +59,29 @@ public class OrderStateMachine {
             Map.entry(OrderStatus.COMPLETED, Set.of()),
             Map.entry(OrderStatus.CANCELLED, Set.of()),
             Map.entry(OrderStatus.REJECTED, Set.of()),
-            Map.entry(OrderStatus.FAILED, Set.of(OrderStatus.IN_PROGRESS))
+            Map.entry(OrderStatus.FAILED, Set.of(OrderStatus.IN_PROGRESS)),
+            Map.entry(OrderStatus.REVOKED, Set.of()),
+            Map.entry(OrderStatus.REPLACED, Set.of()),
+            Map.entry(OrderStatus.EXPIRED, Set.of()),
+            Map.entry(OrderStatus.ENTERED_IN_ERROR, Set.of())
     );
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final OrderVersionWriter versionWriter;
 
     public OrderStateMachine(OrderRepository orderRepository,
                              OrderItemRepository orderItemRepository,
                              EventOutboxRepository outboxRepository,
-                             ObjectMapper objectMapper) {
+                             ObjectMapper objectMapper,
+                             OrderVersionWriter versionWriter) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.versionWriter = versionWriter;
     }
 
     /**
@@ -126,6 +146,9 @@ public class OrderStateMachine {
         order = orderRepository.save(order);
 
         persistItems(orderId, items);
+
+        // OF-B1: the placed content is version 1 of the immutable aggregate.
+        versionWriter.snapshot(order, "Order placed", ctx.actorId());
 
         publishEvent("ORDER", orderId, "ORDER_PLACED", order, ctx.tenantId());
 
@@ -207,7 +230,8 @@ public class OrderStateMachine {
 
     /** Terminal order states — excluded from the duplicate-order active-set check. */
     private static final Set<OrderStatus> TERMINAL_STATUSES = EnumSet.of(
-            OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.FAILED);
+            OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.FAILED,
+            OrderStatus.REVOKED, OrderStatus.REPLACED, OrderStatus.EXPIRED, OrderStatus.ENTERED_IN_ERROR);
 
     /**
      * Update an existing {@code DRAFT} order. Replaces its items wholesale.
@@ -291,6 +315,12 @@ public class OrderStateMachine {
         order.setStatus(newStatus);
         order = orderRepository.save(order);
 
+        // OF-B1: a draft reaching PLACED (submit path, or signed activation via
+        // PENDING_SIGNATURE) gets its version-1 snapshot if placement didn't create one.
+        if (newStatus == OrderStatus.PLACED && !versionWriter.hasVersions(order.getOrderId())) {
+            versionWriter.snapshot(order, "Order placed", ctx.actorId());
+        }
+
         String eventType = "ORDER_" + newStatus.name();
         publishEvent("ORDER", order.getOrderId(), eventType, order, ctx.tenantId());
 
@@ -356,6 +386,14 @@ public class OrderStateMachine {
      */
     public Set<OrderStatus> getAllowedTransitions(OrderStatus current) {
         return TRANSITIONS.getOrDefault(current, Set.of());
+    }
+
+    /**
+     * Publish an order-scoped domain event to the outbox on behalf of a collaborating
+     * service (OF-B1: {@link OrderLifecycleService} amend/replace events).
+     */
+    void publishOrderEvent(String orderId, String eventType, Object payload, UUID tenantId) {
+        publishEvent("ORDER", orderId, eventType, payload, tenantId);
     }
 
     private void publishEvent(String aggregateType, String aggregateId,

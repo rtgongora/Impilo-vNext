@@ -148,11 +148,18 @@ public class OutboxPublisher {
                  "ORDER_ACCEPTED", "ORDER_SCHEDULED", "ORDER_IN_PROGRESS",
                  "ORDER_PARTIAL_RESULT", "ORDER_RESULT_AVAILABLE",
                  "ORDER_REVIEWED", "ORDER_RELEASED", "ORDER_COMPLETED",
-                 "ORDER_REJECTED", "ORDER_FAILED" -> "oros.order.status_changed";
+                 "ORDER_REJECTED", "ORDER_FAILED",
+                 // OF-B1 lifecycle additions (§9.1 targets) ride the status stream
+                 "ORDER_PENDING_SIGNATURE", "ORDER_ON_HOLD", "ORDER_REVOKED",
+                 "ORDER_EXPIRED", "ORDER_ENTERED_IN_ERROR" -> "oros.order.status_changed";
 
             case "ORDER_ROUTED", "ROUTE_RETRY" -> "oros.order.routed";
 
             case "ORDER_CANCELLED" -> "oros.order.cancelled";
+
+            // OF-B1 net-new families (Vol II §18 wire rule <domain>.<aggregate>.<action>.v1)
+            case "ORDER_AMENDED" -> "oros.order.amended.v1";
+            case "ORDER_REPLACED" -> "oros.order.replaced.v1";
 
             case "WORKSTEP_CHANGED", "WORKSTEP_STARTED", "WORKSTEP_COMPLETED" ->
                     "oros.workstep.changed";

@@ -52,7 +52,11 @@ class OrderSubmissionServiceTest {
     void setUp() {
         ObjectMapper objectMapper = OrosTestObjectMapper.create();
         OrderStateMachine stateMachine = new OrderStateMachine(
-                orderRepository, orderItemRepository, outboxRepository, objectMapper);
+                orderRepository, orderItemRepository, outboxRepository, objectMapper,
+                new OrderVersionWriter(
+                        org.mockito.Mockito.mock(
+                                zw.gov.mohcc.impilo.oros.persistence.repository.OrderVersionRepository.class),
+                        orderItemRepository, objectMapper));
         ImagingWorkflowService imagingWorkflowService = new ImagingWorkflowService(
                 orderRepository, orderItemRepository, outboxRepository, objectMapper,
                 org.mockito.Mockito.mock(zw.gov.mohcc.impilo.oros.integration.ButanoIntegration.class));

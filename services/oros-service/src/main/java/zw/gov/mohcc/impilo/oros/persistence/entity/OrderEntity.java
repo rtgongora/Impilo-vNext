@@ -121,6 +121,16 @@ public class OrderEntity {
     @Column(name = "external_order_ref", length = 128)
     private String externalOrderRef;
 
+    // ── OF-B1 lifecycle additions (V016) ─────────────────────────────────
+    /** State to resume to when the current ON_HOLD is released (§9.1 T5). */
+    @Column(name = "hold_prior_status", length = 30)
+    private String holdPriorStatus;
+
+    /** Coded reason for the most recent lifecycle action (hold/revoke/replace/error-mark/amend).
+     *  Full history lives in the outbox events and version rows — never in clinical_notes. */
+    @Column(name = "lifecycle_reason", length = 512)
+    private String lifecycleReason;
+
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
@@ -166,6 +176,12 @@ public class OrderEntity {
 
     public OffsetDateTime getPlacedAt() { return placedAt; }
     public void setPlacedAt(OffsetDateTime placedAt) { this.placedAt = placedAt; }
+
+    public String getHoldPriorStatus() { return holdPriorStatus; }
+    public void setHoldPriorStatus(String holdPriorStatus) { this.holdPriorStatus = holdPriorStatus; }
+
+    public String getLifecycleReason() { return lifecycleReason; }
+    public void setLifecycleReason(String lifecycleReason) { this.lifecycleReason = lifecycleReason; }
 
     public UUID getWorkspaceId() { return workspaceId; }
     public void setWorkspaceId(UUID workspaceId) { this.workspaceId = workspaceId; }
