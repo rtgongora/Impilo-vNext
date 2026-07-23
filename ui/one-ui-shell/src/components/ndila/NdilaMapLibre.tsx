@@ -49,6 +49,11 @@ export interface NdilaMapLibreProps {
   clusterMarkers?: boolean;
   flyToCenter?: boolean;
   className?: string;
+  /**
+   * Plain-map click → coordinate (e.g. drop/adjust a location pin). Fires for clicks on
+   * the base map; cluster clicks keep their zoom-in behaviour.
+   */
+  onMapClick?: (coordinate: NdilaMapCoordinate) => void;
 }
 
 const MARKER_COLORS: Record<string, string> = {
@@ -308,6 +313,7 @@ export function NdilaMapLibre({
   clusterMarkers = false,
   flyToCenter = true,
   className,
+  onMapClick,
 }: NdilaMapLibreProps) {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -319,6 +325,8 @@ export function NdilaMapLibre({
   const clusterRef = useRef(clusterMarkers);
   const adminRef = useRef(showZimbabweAdmin);
   const handlersRegistered = useRef(false);
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
 
   const [layerMode, setLayerMode] = useState<NdilaMapLayerMode>("admin");
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -431,6 +439,14 @@ export function NdilaMapLibre({
         fitZimbabweBounds(map, false);
       }
       paintOverlay();
+    });
+    // Pin-drop support: forward base-map clicks as coordinates. Ref-routed so the
+    // consumer's latest handler wins without re-creating the map.
+    map.on("click", (event) => {
+      onMapClickRef.current?.({
+        latitude: event.lngLat.lat,
+        longitude: event.lngLat.lng,
+      });
     });
     map.on("styledata", () => {
       if (map.isStyleLoaded()) paintOverlay();

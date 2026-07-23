@@ -90,6 +90,7 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/gateway/client-telemetry` (POST) | observability client-events ingest via `ClientTelemetryIntakeService` → `ObservabilityServiceClient.postClientEvents` | W5 | **anonymous WRITE** (`gateway-client-telemetry`); client-side request-outcome batch; abuse note below |
 | `/internal/v1/public/gateway/map/tiles/{z}/{x}/{y}.mvt` (GET) | ndila `PublicStreetTileController` (self-hosted Martin street stack) via `PublicGatewayMapBffController` | W6 | read-only binary MVT street-tile passthrough for the citizen find-care map; PII-free by construction (national basemap street geometry only — no facility or person data on this path); tiles are high-frequency cacheable map assets, so the lane is unmetered like the other find-care reads (`Cache-Control: public, max-age=604800` keeps fetch volume honest); z validated 0–15 and x/y within `2^z` bounds (400 otherwise); 204 = genuinely empty tile passthrough, 502 = street stack disabled/unreachable (never a fabricated tile — the map's admin-boundary base layers keep rendering); gzip `Content-Encoding` preserved on the untouched upstream bytes; covered by the `/internal/v1/public/` Envoy prefix + the `GET /internal/v1/public/gateway/**` permitAll (no new Envoy route, no new SecurityConfig line) |
 | `/internal/v1/wallet/bill-contributions/{shareToken}` (GET only) | mushe bill-contribution view via `CitizenCardController` | W4 | fundraiser share-link read (claim-token pattern, unguessable token); read-only, donations require sign-in |
+| `/internal/v1/public/gateway/guidance/ask` (POST) | guidance `PublicGuidanceController.ask` via `PublicGuidanceAskService` | W7 | **anonymous WRITE** (single-turn Nompilo grounded Q&A on public surfaces, primarily the emergency journey); abuse note below |
 
 **Anonymous-write abuse note — `POST /internal/v1/public/gateway/sos`:** rate-limited
 per-IP (5 / 600s fixed window) and globally (60 / 60s), both in Redis mirroring the
@@ -99,6 +100,18 @@ reaches daidzai; free-text fields are length-capped (description 2000, location 
 The rate-limiter fails **open** (unlike OTP) — a life-safety request is never dropped
 because Redis is down. Daidzai captures the request as `PUBLIC_ANONYMOUS` and holds it
 `AWAITING_CALLBACK`: dispatch is gated until a dispatcher verifies the callback (PD-3).
+
+**Anonymous-write abuse note — `POST /internal/v1/public/gateway/guidance/ask`:**
+rate-limited per-IP (10 / 300s) and globally (120 / 60s) in Redis; the question is
+trimmed, control-characters stripped and capped at 500 chars (capped again in the
+guidance service). This lane reaches an LLM, so it is a cost/abuse surface rather than
+a write to a system of record: nothing is stored on the BFF, personalization is FORCED
+OFF downstream (fixed anonymous principal, national-spine content tenant), the
+downstream honesty gate labels every answer (`llm`/`retrieval`/`none` — no fabricated
+answers), the response is allow-listed (answer/answerSource/confidence/source TITLES
+only — never URLs or internal names) and always carries a standing not-a-diagnosis
+disclaimer. The limiter fails **open** with a warning: the surrounding journey is the
+emergency page, and the question cap + honesty gate bound the blast radius.
 
 **Anonymous-write abuse note — `POST /internal/v1/public/gateway/feedback`:**
 rate-limited per-IP (3 / 600s) and globally (30 / 60s) in Redis; case types are

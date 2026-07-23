@@ -31,7 +31,9 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { EMERGENCY_CONTACTS, ZW_PROVINCES } from "@/config/emergency";
+import { EmergencyLocationMapPicker } from "./EmergencyLocationMapPicker";
 import { NearbyEmergencyCare } from "./NearbyEmergencyCare";
+import { NompiloAskInline } from "./NompiloAskInline";
 import { SosStatusTimeline } from "./SosStatusTimeline";
 import {
   assessDanger,
@@ -109,6 +111,7 @@ export function EmergencyTriagePanel() {
   const [facilityDraft, setFacilityDraft] = useState("");
   const [locating, setLocating] = useState(false);
   const [locateNote, setLocateNote] = useState("");
+  const [showMapPicker, setShowMapPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [receipt, setReceipt] = useState<SosReceipt | null>(null);
@@ -324,6 +327,9 @@ export function EmergencyTriagePanel() {
         </div>
 
         <NearbyEmergencyCare lat={answers.lat} lng={answers.lng} province={answers.province} />
+
+        {/* Free-text side questions while waiting for the callback. */}
+        <NompiloAskInline className="mt-3" />
 
         <div className="mt-4 flex flex-wrap gap-3">
           {receipt.requestReference && (
@@ -569,6 +575,24 @@ export function EmergencyTriagePanel() {
                 {answers.lat !== undefined ? "Location shared ✓" : "Share my device location"}
               </button>
               {locateNote && <p className="text-xs text-slate-600">{locateNote}</p>}
+              <button
+                type="button"
+                data-testid="triage-map-toggle"
+                onClick={() => setShowMapPicker((v) => !v)}
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-emerald-400 hover:bg-emerald-50"
+              >
+                {showMapPicker ? "Hide the map" : "Point on a map instead"}
+              </button>
+              {showMapPicker && (
+                <EmergencyLocationMapPicker
+                  lat={answers.lat}
+                  lng={answers.lng}
+                  onPick={(c) => {
+                    setAnswers((prev) => ({ ...prev, lat: c.latitude, lng: c.longitude }));
+                    setLocateNote("Pin location captured.");
+                  }}
+                />
+              )}
               <input
                 type="text"
                 data-testid="triage-location-text"

@@ -133,6 +133,18 @@ public class GuidanceServiceClient {
     }
 
     /**
+     * Anonymous grounded Q&A via the guidance service's {@code PublicGuidanceController}
+     * (public-lane ADR: service-side Public* endpoint, allow-listed response, personalization
+     * forced off downstream). Honesty gate is downstream ({@code answerSource: llm|retrieval|none}).
+     */
+    public JsonNode publicAsk(String question) {
+        String url = baseUrl + "/v1/public/guidance/ask";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, Map.of("question", question), JsonNode.class);
+        return response.getBody();
+    }
+
+    /**
      * Published public education topics (safe fields only). Optional category filter and optional
      * free-text query — a non-blank {@code q} runs the PUBLISHED-only title/summary search downstream.
      */

@@ -167,6 +167,59 @@ public class PublicGuidanceController {
         return m;
     }
 
+    // ── Anonymous grounded Q&A (public Nompilo ask lane) ──────────────────────────
+
+    /** Question bounds: enough for a real question, never an unbounded anonymous payload. */
+    static final int MAX_QUESTION_CHARS = 500;
+
+    static final String PUBLIC_ASK_DISCLAIMER =
+            "Nompilo gives general health guidance, not a diagnosis or personal medical advice. "
+                    + "If this is an emergency, call the emergency numbers or go to the nearest "
+                    + "health facility now.";
+
+    /**
+     * POST /v1/public/guidance/ask — anonymous, grounded, honesty-gated Q&A.
+     *
+     * <p>Public*Controller rules hold: personalization is FORCED OFF, the actor is the fixed
+     * anonymous principal (no caller identity is read or stored), and the response is an
+     * allow-listed subset of {@link GuidanceService#ask}: the grounded answer text, the
+     * answer source ({@code llm} / {@code retrieval} / {@code none} — the honesty gate),
+     * confidence, source titles (never URLs), and a standing not-a-diagnosis disclaimer.
+     * Rate limiting lives on the BFF gateway lane in front of this.</p>
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/ask")
+    public ResponseEntity<Map<String, Object>> ask(
+            @org.springframework.web.bind.annotation.RequestBody Map<String, Object> body) {
+        Object raw = body == null ? null : body.get("question");
+        String question = raw == null ? "" : String.valueOf(raw).trim();
+        if (question.length() < 3) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "QUESTION_REQUIRED", "message", "Ask a short question.")));
+        }
+        if (question.length() > MAX_QUESTION_CHARS) {
+            question = question.substring(0, MAX_QUESTION_CHARS);
+        }
+
+        Map<String, Object> result =
+                guidanceService.ask(PUBLIC_TENANT, "public-anonymous", question, false);
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("answer", result.get("response"));
+        out.put("answerSource", result.get("answerSource"));
+        out.put("confidence", result.get("confidence"));
+        Object sources = result.get("sources");
+        if (sources instanceof List<?> list) {
+            out.put("sources", list.stream()
+                    .filter(s -> s instanceof Map<?, ?>)
+                    .map(s -> ((Map<?, ?>) s).get("title"))
+                    .filter(t -> t != null && !String.valueOf(t).isBlank())
+                    .map(String::valueOf)
+                    .toList());
+        }
+        out.put("disclaimer", PUBLIC_ASK_DISCLAIMER);
+        return ResponseEntity.ok(out);
+    }
+
     /**
      * Allow-listed article read: the topic fields plus the plain-language body and the
      * last-updated date (freshness cue). Source/sourceUrl/tenant/relevance never leak.

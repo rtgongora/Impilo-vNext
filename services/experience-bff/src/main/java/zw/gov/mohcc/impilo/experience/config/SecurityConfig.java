@@ -426,6 +426,12 @@ public class SecurityConfig {
                     // (per-IP + global rate windows, allow-listed case types, body caps) enforced
                     // in PublicFeedbackIntakeService; status reads are claim-code-gated.
                     .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/feedback").permitAll()
+                    // Anonymous WRITE exception: single-turn Nompilo grounded Q&A on public
+                    // surfaces (emergency journey). Rate-limited (per-IP + global windows) and
+                    // question-capped in PublicGuidanceAskService; downstream personalization is
+                    // forced off and the honesty gate labels the answer source; response carries
+                    // a standing not-a-diagnosis disclaimer. No storage on the BFF.
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/guidance/ask").permitAll()
                     // Anonymous WRITE exception: Nompilo service-advisory impression/dismissal
                     // analytics. Payload is allow-listed to advisoryId + event + an opaque anon
                     // dismissal key (no PII); the shell resolves advisories as DATA, never hard-coded.
