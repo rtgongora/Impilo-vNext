@@ -83,6 +83,56 @@ public class AdvisoryResolveService {
                 .collect(Collectors.toList());
     }
 
+    /** Valid public notice categories (V017). */
+    private static final Set<String> NOTICE_CATEGORIES = Set.of(
+            "SERVICE_STATUS", "PUBLIC_HEALTH_CAMPAIGN", "SAFETY_RECALL",
+            "REGULATORY_NOTICE", "DISASTER_ALERT", "PROCUREMENT_NOTICE");
+
+    /**
+     * Public Notices &amp; Bulletins archive (V017): PUBLISHED, in-window, public-audience
+     * notices, optionally filtered by category and province, newest first, paginated. Reuses
+     * the advisory targeting match so a notice may still be geo-scoped. Allow-listed view
+     * (adds category + a citizen-facing "publishedAt"); no authoring internals, no PII.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> listNotices(String category, String province, int page, int size) {
+        String cat = (category == null || category.isBlank()) ? null
+                : category.trim().toUpperCase(Locale.ROOT);
+        if (cat != null && !NOTICE_CATEGORIES.contains(cat)) {
+            cat = null; // unknown category → unfiltered, never an error oracle
+        }
+        OffsetDateTime now = OffsetDateTime.now();
+        AdvisoryContext ctx = new AdvisoryContext(
+                "national-spine", "public", null, null, province, null, null, null, null, now);
+        List<ServiceAdvisoryEntity> all = advisoryRepo.findActiveNotices("national-spine", cat, now)
+                .stream()
+                .filter(a -> matches(a, ctx))
+                .toList();
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        int safePage = Math.max(page, 0);
+        int from = Math.min(safePage * safeSize, all.size());
+        int to = Math.min(from + safeSize, all.size());
+        List<Map<String, Object>> items = all.subList(from, to).stream()
+                .map(this::toNoticeView)
+                .collect(Collectors.toList());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("notices", items);
+        out.put("total", all.size());
+        out.put("page", safePage);
+        out.put("size", safeSize);
+        return out;
+    }
+
+    /** Allow-listed public notice view — the advisory fields plus category and publishedAt. */
+    private Map<String, Object> toNoticeView(ServiceAdvisoryEntity a) {
+        Map<String, Object> m = toView(a);
+        m.put("category", a.getCategory());
+        m.put("publishedAt", a.getStartsAt() == null
+                ? (a.getUpdatedAt() == null ? null : a.getUpdatedAt().toString())
+                : a.getStartsAt().toString());
+        return m;
+    }
+
     // ── targeting match ──────────────────────────────────────────────────────────────
 
     private boolean matches(ServiceAdvisoryEntity a, AdvisoryContext ctx) {

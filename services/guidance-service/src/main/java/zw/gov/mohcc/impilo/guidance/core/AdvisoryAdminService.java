@@ -32,6 +32,20 @@ public class AdvisoryAdminService {
     private static final Set<String> APPROVAL_REQUIRED =
             Set.of("EMERGENCY_ALERT", "IMPORTANT_DISRUPTION");
 
+    /**
+     * Notice categories that require an approver before PUBLISHED regardless of severity —
+     * the legal guardrail for enforcement/recall notices (V017). A regulatory or safety-recall
+     * notice reaches the public archive only when a named authority has approved it; there is
+     * no path from internal disciplinary/case data to the public lane.
+     */
+    private static final Set<String> APPROVAL_REQUIRED_CATEGORIES =
+            Set.of("REGULATORY_NOTICE", "SAFETY_RECALL");
+
+    /** Valid notice categories (V017). */
+    private static final Set<String> NOTICE_CATEGORIES = Set.of(
+            "SERVICE_STATUS", "PUBLIC_HEALTH_CAMPAIGN", "SAFETY_RECALL",
+            "REGULATORY_NOTICE", "DISASTER_ALERT", "PROCUREMENT_NOTICE");
+
     private final ServiceAdvisoryRepository repo;
     private final ObjectMapper objectMapper;
 
@@ -116,10 +130,14 @@ public class AdvisoryAdminService {
             throw new AdvisoryValidationException("ILLEGAL_TRANSITION",
                     "Only a DRAFT or SCHEDULED advisory can be published.");
         }
-        if (APPROVAL_REQUIRED.contains(a.getSeverity())
-                && (a.getApprovedBy() == null || a.getApprovedBy().isBlank())) {
+        boolean needsApproval = APPROVAL_REQUIRED.contains(a.getSeverity())
+                || APPROVAL_REQUIRED_CATEGORIES.contains(a.getCategory());
+        if (needsApproval && (a.getApprovedBy() == null || a.getApprovedBy().isBlank())) {
+            String reason = APPROVAL_REQUIRED_CATEGORIES.contains(a.getCategory())
+                    ? a.getCategory() + " notices"
+                    : a.getSeverity() + " advisories";
             throw new AdvisoryValidationException("APPROVAL_REQUIRED",
-                    a.getSeverity() + " advisories must be approved before they can be published.");
+                    reason + " must be approved before they can be published.");
         }
         return transitionTo(a, "PUBLISHED");
     }
@@ -185,6 +203,15 @@ public class AdvisoryAdminService {
                 throw new AdvisoryValidationException("BODY_REQUIRED", "body is required.");
             }
             if (text != null) a.setBody(text);
+        }
+        if (b.containsKey("category")) {
+            String category = upper(str(b, "category"));
+            if (category != null) {
+                if (!NOTICE_CATEGORIES.contains(category)) {
+                    throw new AdvisoryValidationException("INVALID_CATEGORY", "Unknown category: " + category);
+                }
+                a.setCategory(category);
+            }
         }
         if (creating || b.containsKey("severity")) {
             String severity = upper(str(b, "severity"));
@@ -258,6 +285,7 @@ public class AdvisoryAdminService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", a.getId().toString());
         m.put("tenantId", a.getTenantId());
+        m.put("category", a.getCategory());
         m.put("title", a.getTitle());
         m.put("body", a.getBody());
         m.put("severity", a.getSeverity());

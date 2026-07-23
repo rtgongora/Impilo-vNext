@@ -44,10 +44,31 @@ public class PublicGuidanceController {
     private final GatewayEscalationExplainerRepository explainerRepository;
     private final GuidanceService guidanceService;
 
+    private final zw.gov.mohcc.impilo.guidance.core.AdvisoryResolveService advisoryResolveService;
+
     public PublicGuidanceController(GatewayEscalationExplainerRepository explainerRepository,
-                                    GuidanceService guidanceService) {
+                                    GuidanceService guidanceService,
+                                    zw.gov.mohcc.impilo.guidance.core.AdvisoryResolveService advisoryResolveService) {
         this.explainerRepository = explainerRepository;
         this.guidanceService = guidanceService;
+        this.advisoryResolveService = advisoryResolveService;
+    }
+
+    /**
+     * Public Notices &amp; Bulletins archive (V017) — a browsable list of PUBLISHED,
+     * in-window, public-audience notices (campaigns, safety recalls, disaster alerts,
+     * regulatory notices, procurement notices, service status), optionally filtered by
+     * category and province. Allow-listed fields only (no authoring internals, no PII);
+     * an unknown category is treated as unfiltered rather than an error.
+     */
+    @GetMapping("/notices")
+    public ResponseEntity<Map<String, Object>> notices(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size) {
+        return ResponseEntity.ok(Map.of("data",
+                advisoryResolveService.listNotices(category, province, page, size)));
     }
 
     @GetMapping("/explain-steps")

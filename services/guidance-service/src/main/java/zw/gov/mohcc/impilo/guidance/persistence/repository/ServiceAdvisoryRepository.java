@@ -23,4 +23,17 @@ public interface ServiceAdvisoryRepository extends JpaRepository<ServiceAdvisory
             + "AND (a.startsAt IS NULL OR a.startsAt <= :now) "
             + "AND (a.expiresAt IS NULL OR a.expiresAt >= :now)")
     List<ServiceAdvisoryEntity> findActive(@Param("tenantId") String tenantId, @Param("now") OffsetDateTime now);
+
+    /**
+     * Public notices archive read path (V017): PUBLISHED, in-window notices, optionally
+     * filtered by category, newest first. Audience targeting is matched in the service layer.
+     */
+    @Query("SELECT a FROM ServiceAdvisoryEntity a WHERE a.tenantId = :tenantId AND a.status = 'PUBLISHED' "
+            + "AND (:category IS NULL OR a.category = :category) "
+            + "AND (a.startsAt IS NULL OR a.startsAt <= :now) "
+            + "AND (a.expiresAt IS NULL OR a.expiresAt >= :now) "
+            + "ORDER BY a.startsAt DESC NULLS LAST, a.updatedAt DESC")
+    List<ServiceAdvisoryEntity> findActiveNotices(@Param("tenantId") String tenantId,
+                                                  @Param("category") String category,
+                                                  @Param("now") OffsetDateTime now);
 }

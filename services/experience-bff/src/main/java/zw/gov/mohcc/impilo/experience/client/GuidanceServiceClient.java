@@ -201,6 +201,19 @@ public class GuidanceServiceClient {
         return response.getBody();
     }
 
+    /**
+     * Public Notices &amp; Bulletins archive (V017) via the guidance service's
+     * {@code PublicGuidanceController} (allow-listed, public-audience notices only).
+     */
+    public JsonNode listPublicNotices(String category, String province, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/guidance/notices")
+                .queryParam("page", page).queryParam("size", size);
+        addIfPresent(builder, "category", category);
+        addIfPresent(builder, "province", province);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
+        return response.getBody();
+    }
+
     /** Record an advisory impression (VIEW | DISMISS | FEEDBACK) — opaque anon key, no PII. */
     public JsonNode recordAdvisoryImpression(Map<String, Object> request) {
         String url = baseUrl + "/internal/v1/guidance/advisory/impression";

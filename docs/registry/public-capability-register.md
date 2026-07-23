@@ -37,6 +37,7 @@ reference-only fallback (daidzai SOS status).
 | Citizen service-status board | observability-service | `/internal/v1/public/gateway/service-status` | LIVE |
 | Street map tiles (public MVT) | ndila-service | `/internal/v1/public/gateway/map/tiles/*` | LIVE |
 | Anonymous client telemetry | experience-bff | `/internal/v1/public/gateway/client-telemetry` | LIVE |
+| **Notices & Bulletins archive** (campaigns, safety/recalls, disaster alerts, regulatory notices, procurement) | guidance-service (generalized advisory engine) | `/internal/v1/public/gateway/notices` + `/welcome/notices` | LIVE (PF-W2) |
 | "Continue without signing in" + reasoned sign-in prompt components | one-ui-shell | shared public components | PLANNED-W6 |
 
 ## Find health services (TUSO / VARAPI / NDILA / NHUME)

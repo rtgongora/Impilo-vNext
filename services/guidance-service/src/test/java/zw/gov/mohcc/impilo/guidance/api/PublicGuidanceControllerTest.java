@@ -26,8 +26,26 @@ class PublicGuidanceControllerTest {
     @Mock
     private GuidanceService guidanceService;
 
+    @Mock
+    private zw.gov.mohcc.impilo.guidance.core.AdvisoryResolveService advisoryResolveService;
+
     @InjectMocks
     private PublicGuidanceController controller;
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void noticesDelegatesToTheResolveServiceAndWrapsInData() {
+        when(advisoryResolveService.listNotices("SAFETY_RECALL", "Harare", 0, 20))
+                .thenReturn(Map.of("notices", List.of(Map.of("title", "Recall")), "total", 1));
+
+        var response = controller.notices("SAFETY_RECALL", "Harare", 0, 20);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertThat(body).containsKey("data");
+        Map<String, Object> data = (Map<String, Object>) body.get("data");
+        assertThat(data.get("total")).isEqualTo(1);
+    }
 
     private static GatewayEscalationExplainerEntity explainer(String stepKey) {
         GatewayEscalationExplainerEntity e = new GatewayEscalationExplainerEntity();

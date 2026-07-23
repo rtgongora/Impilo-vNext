@@ -68,6 +68,13 @@ const INTENT_PILLARS: Array<{
     access: "open",
   },
   {
+    title: "Notices & bulletins",
+    description:
+      "Official public notices — health campaigns, product and safety recalls, disaster alerts, regulatory notices and procurement opportunities.",
+    href: "/welcome/notices",
+    access: "open",
+  },
+  {
     title: "Get involved",
     description:
       "Impilo is growing — with you. Share an idea, tell us your experience, or help test what comes next.",

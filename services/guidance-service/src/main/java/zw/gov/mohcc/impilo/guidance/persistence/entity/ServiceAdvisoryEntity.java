@@ -26,6 +26,14 @@ public class ServiceAdvisoryEntity {
     @Column(nullable = false, length = 512) private String title;
     @Column(nullable = false, columnDefinition = "TEXT") private String body;
 
+    /**
+     * Notice category (V017 Notices &amp; Bulletins). SERVICE_STATUS | PUBLIC_HEALTH_CAMPAIGN
+     * | SAFETY_RECALL | REGULATORY_NOTICE | DISASTER_ALERT | PROCUREMENT_NOTICE. Legacy
+     * service advisories default to SERVICE_STATUS. SAFETY_RECALL and REGULATORY_NOTICE
+     * additionally require {@code approvedBy} before PUBLISHED (admin service).
+     */
+    @Column(nullable = false, length = 32) private String category = "SERVICE_STATUS";
+
     /** INFORMATIONAL | SERVICE_NOTICE | IMPORTANT_DISRUPTION | EMERGENCY_ALERT */
     @Column(nullable = false, length = 32) private String severity;
     /** MODAL | BANNER | BUBBLE | INLINE | EMERGENCY */
@@ -65,6 +73,8 @@ public class ServiceAdvisoryEntity {
     public void setTitle(String title) { this.title = title; }
     public String getBody() { return body; }
     public void setBody(String body) { this.body = body; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
     public String getSeverity() { return severity; }
     public void setSeverity(String severity) { this.severity = severity; }
     public String getVariant() { return variant; }
