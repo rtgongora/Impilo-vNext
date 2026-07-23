@@ -533,6 +533,12 @@ export function NdilaMapLibre({
       <div
         ref={containerRef}
         className="absolute inset-0"
+        // Inline because maplibre-gl.css sets `.maplibregl-map { position: relative }`,
+        // which beats the Tailwind `absolute` by cascade order — the container then
+        // collapses to zero height, the canvas is sized from stale bounds and overflows
+        // the shell, and pointer hit-testing on the map breaks (pin-drop clicks landed
+        // on the shell). An inline style always wins.
+        style={{ position: "absolute", inset: 0 }}
         data-testid="ndila-maplibre-canvas"
         aria-label="Interactive Ndila map"
       />
