@@ -42,6 +42,12 @@ class OutboxPublisherTest {
     }
 
     @Test
+    void routeTopic_anomalyDetected_mapsToVersionedTopic() {
+        // OF-B29 Wave OF-D — every finding emits on the versioned anomaly stream.
+        assertEquals("msika.flow.anomaly.detected.v1", OutboxPublisher.routeTopic("ANOMALY_DETECTED"));
+    }
+
+    @Test
     void routeTopic_unknownEvent_fallsBackToGeneric() {
         assertEquals("msika.flow.events", OutboxPublisher.routeTopic("SOME_UNKNOWN_EVENT"));
     }

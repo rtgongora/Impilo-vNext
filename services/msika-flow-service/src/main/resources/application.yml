@@ -99,3 +99,19 @@ msika-flow:
     # OF-B1 version-pin verification against OROS at request creation (fail-closed)
     verify-order-version: ${MSIKA_FLOW_MARKETPLACE_VERIFY_ORDER_VERSION:true}
     sweep-interval-ms: ${MSIKA_FLOW_MARKETPLACE_SWEEP_INTERVAL_MS:60000}
+  analytics:
+    # OF-B29 Wave OF-D — anomaly + fairness sweep thresholds (§13.3/§13.7/§21).
+    # Deterministic rule + threshold monitors; findings dedup so re-runs are safe.
+    sweep-interval-ms: ${MSIKA_FLOW_ANALYTICS_SWEEP_INTERVAL_MS:300000}
+    claim-ttl-hours: ${MSIKA_FLOW_ANALYTICS_CLAIM_TTL_HOURS:72}
+    stall-window-hours: ${MSIKA_FLOW_ANALYTICS_STALL_WINDOW_HOURS:48}
+    repeat-win-threshold: ${MSIKA_FLOW_ANALYTICS_REPEAT_WIN_THRESHOLD:3}
+    repeat-window-hours: ${MSIKA_FLOW_ANALYTICS_REPEAT_WINDOW_HOURS:24}
+    reservation-grace-minutes: ${MSIKA_FLOW_ANALYTICS_RESERVATION_GRACE_MINUTES:60}
+    concentration-window-hours: ${MSIKA_FLOW_ANALYTICS_CONCENTRATION_WINDOW_HOURS:168}
+    concentration-threshold: ${MSIKA_FLOW_ANALYTICS_CONCENTRATION_THRESHOLD:0.50}
+    concentration-min-volume: ${MSIKA_FLOW_ANALYTICS_CONCENTRATION_MIN_VOLUME:10}
+    ranking-audit-lookback-hours: ${MSIKA_FLOW_ANALYTICS_RANKING_AUDIT_LOOKBACK_HOURS:72}
+    no-offer-rate-threshold: ${MSIKA_FLOW_ANALYTICS_NO_OFFER_RATE_THRESHOLD:0.50}
+    no-offer-min-requests: ${MSIKA_FLOW_ANALYTICS_NO_OFFER_MIN_REQUESTS:5}
+    no-offer-window-hours: ${MSIKA_FLOW_ANALYTICS_NO_OFFER_WINDOW_HOURS:168}

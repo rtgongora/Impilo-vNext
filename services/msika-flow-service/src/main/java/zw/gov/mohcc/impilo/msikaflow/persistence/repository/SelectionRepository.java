@@ -31,4 +31,10 @@ public interface SelectionRepository extends JpaRepository<SelectionEntity, Stri
 
     /** OF-B14 — all members of one split combination (§8.6.4). */
     List<SelectionEntity> findBySplitGroupId(String splitGroupId);
+
+    /** OF-B29 — anomaly sweep input: commitments older than the monitor cutoff. */
+    List<SelectionEntity> findByStatusAndCommittedAtBefore(SelectionStatus status, java.time.OffsetDateTime cutoff);
+
+    /** OF-B29 — fairness-window input: commitments inside the observation window. */
+    List<SelectionEntity> findByStatusAndCommittedAtAfter(SelectionStatus status, java.time.OffsetDateTime cutoff);
 }

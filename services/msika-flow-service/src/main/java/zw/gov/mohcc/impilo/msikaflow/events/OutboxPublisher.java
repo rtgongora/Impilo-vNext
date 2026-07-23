@@ -94,6 +94,8 @@ public class OutboxPublisher {
             case "SELECTION_COMMITTED", "SELECTION_FAILED" -> "msika.flow.request.selected.v1";
             case "REQUEST_CANCELLED" -> "msika.flow.request.cancelled.v1";
             case "REQUEST_EXPIRED", "REQUEST_FAILED_NO_OFFERS", "OFFER_EXPIRED" -> "msika.flow.request.expired.v1";
+            // OF-B29 Wave OF-D — anomaly + fairness findings (coded, PII-free; §13.7/§21)
+            case "ANOMALY_DETECTED" -> "msika.flow.anomaly.detected.v1";
             default -> "msika.flow.events";
         };
     }

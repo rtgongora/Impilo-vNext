@@ -81,11 +81,42 @@ public class CoverageClient {
      */
     public EstimateResult estimateLiability(UUID coverageId, String benefitCode,
                                             BigDecimal standardCharge, HttpServletRequest inbound) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("coverageId", coverageId.toString());
+        body.put("benefitCode", benefitCode);
+        body.put("standardCharge", standardCharge);
+        return postEstimate(coverageId, body, benefitCode,
+                liabilityIdempotencyKey(coverageId, benefitCode, standardCharge), inbound);
+    }
+
+    /**
+     * OF-B8 medication path — the line is ATC-coded against the ZIBO national
+     * registry, so the ATC code goes over the seam as {@code medicationCode}
+     * and Ruvimbo resolves the plan benefit THROUGH its payer formulary
+     * ({@code cv_formulary}): the returned {@code benefitCode} is the MAPPED
+     * plan benefit (or the honest non-covered posture when the medication has
+     * no active/covered listing). This replaces the documented interim where
+     * the raw item code was passed as the benefit code.
+     */
+    public EstimateResult estimateMedicationLiability(UUID coverageId, String medicationCode,
+                                                      String codingSystem, BigDecimal standardCharge,
+                                                      HttpServletRequest inbound) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("coverageId", coverageId.toString());
+        body.put("medicationCode", medicationCode);
+        if (codingSystem != null && !codingSystem.isBlank()) {
+            body.put("codingSystem", codingSystem);
+        }
+        body.put("standardCharge", standardCharge);
+        return postEstimate(coverageId, body, medicationCode,
+                medicationLiabilityIdempotencyKey(coverageId, medicationCode, codingSystem, standardCharge),
+                inbound);
+    }
+
+    private EstimateResult postEstimate(UUID coverageId, Map<String, Object> body,
+                                        String fallbackCode, String idempotencyKey,
+                                        HttpServletRequest inbound) {
         try {
-            Map<String, Object> body = new LinkedHashMap<>();
-            body.put("coverageId", coverageId.toString());
-            body.put("benefitCode", benefitCode);
-            body.put("standardCharge", standardCharge);
             ResponseEntity<String> response = restClient.post()
                     .uri("/internal/v1/coverage/liability-estimates")
                     .headers(h -> {
@@ -96,7 +127,7 @@ public class CoverageClient {
                         // every payer-covered offer misreported NOT_COVERED.
                         // Deterministic per logical call: a retry of the same
                         // estimate replays; a different charge is a new key.
-                        setIdempotencyKey(h, liabilityIdempotencyKey(coverageId, benefitCode, standardCharge));
+                        setIdempotencyKey(h, idempotencyKey);
                     })
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
@@ -115,7 +146,7 @@ public class CoverageClient {
             return new EstimateResult(Outcome.OK, new LiabilityEstimate(
                     UUID.fromString(id),
                     node.path("memberCpid").asText(null),
-                    node.path("benefitCode").asText(benefitCode),
+                    node.path("benefitCode").asText(fallbackCode),
                     decimal(node, "standardCharge"),
                     decimal(node, "payerEstimate"),
                     decimal(node, "patientResponsibility"),
@@ -271,6 +302,20 @@ public class CoverageClient {
     static String liabilityIdempotencyKey(UUID coverageId, String benefitCode, BigDecimal standardCharge) {
         return "msika-flow-liability:" + coverageId + ":" + benefitCode + ":"
                 + (standardCharge != null ? standardCharge.stripTrailingZeros().toPlainString() : "0");
+    }
+
+    /**
+     * OF-B8 — deterministic key for one logical MEDICATION estimate. Distinct
+     * prefix + the coding system keep it disjoint from the benefit-code key
+     * family (same code string through both paths must never collide into a
+     * 409 IDENTITY_CONFLICT replay of the other body shape).
+     * Package-visible for the contract unit test.
+     */
+    static String medicationLiabilityIdempotencyKey(UUID coverageId, String medicationCode,
+                                                    String codingSystem, BigDecimal standardCharge) {
+        return "msika-flow-liability-med:" + coverageId + ":" + medicationCode + ":"
+                + (codingSystem != null && !codingSystem.isBlank() ? codingSystem : "http://www.whocc.no/atc")
+                + ":" + (standardCharge != null ? standardCharge.stripTrailingZeros().toPlainString() : "0");
     }
 
     /**

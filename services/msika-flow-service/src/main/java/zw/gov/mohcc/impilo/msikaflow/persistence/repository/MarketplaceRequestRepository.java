@@ -23,4 +23,10 @@ public interface MarketplaceRequestRepository extends JpaRepository<MarketplaceR
 
     List<MarketplaceRequestEntity> findByStatusInAndSelectionWindowEndsAtBefore(
             Collection<MarketplaceRequestStatus> statuses, OffsetDateTime cutoff);
+
+    /** OF-B29 — ranking-snapshot capture input (live comparison requests, all tenants). */
+    List<MarketplaceRequestEntity> findByStatusIn(Collection<MarketplaceRequestStatus> statuses);
+
+    /** OF-B29 — no-offer-equity window input (§21: zone-grouped rates over recent requests). */
+    List<MarketplaceRequestEntity> findByCreatedAtAfter(OffsetDateTime cutoff);
 }
