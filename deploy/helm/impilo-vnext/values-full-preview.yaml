@@ -443,6 +443,12 @@ fullBootServices:
   oros-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  # OF-B11: msika-flow's InventoryEventConsumer mirrors DURA reservation events into the
+  # mf_reservations projection and fail-closes SELECTED offers on reservation expiry —
+  # silent listeners would silently break the §9.4 TTL fail-close contract.
+  msika-flow-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
   # TM-B17: Rito consumes clinical.teleconsult.lifecycle (verified interactions → feedback loop);
   # analytics-pipeline consumes the same stream ("§24 metrics from events only").
   rito-quality-safety-service:
