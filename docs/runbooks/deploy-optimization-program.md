@@ -136,6 +136,31 @@ while the follow-up check raced a navigation transition. Eighteen other journeys
 Opportunity: retain the result of every ready-vs-auth race and make the branch decision
 from that result. The corrected suite passed all 19 journeys in an isolated rerun.
 
+### Put the real Helm preflight in the quality pipeline
+
+The 27-gate local pipeline passed its fullboot artifact, wave, inventory, and runtime
+checks, but the subsequent `fullboot.sh prepare` found that newly wave-enabled ABIS had
+no BFF mapping or documented exclusion. Helm lint invokes the BFF coverage generator;
+the nominal fullboot CI set did not exercise that same path.
+
+Opportunity: make `fullboot.sh prepare` (or its exact non-mutating chart-integrity,
+preflight, and server-side dry-run constituents) a blocking pipeline phase. This avoids
+an expensive whole-pipeline rerun after a defect that deterministic Helm lint could
+have found near the start.
+
+### Replace serial tar imports with registry-native pulls
+
+The privileged helper spent roughly 16 minutes serially running `docker save` and
+`ctr images import` for the required spine. Its first pass reported successful imports
+but six early image refs were absent at final verification, while 16 later/already
+present refs survived.
+
+Opportunity: prefer digest-pinned registry pulls from the k3s runtime, with bounded
+parallelism, per-ref verification, and one targeted retry. If archive import remains
+necessary, use a single multi-image archive or content-addressed batches and verify
+each ref immediately. Never require pre-import when the registry is reachable and the
+Helm release is already digest-pinned.
+
 ### #2 — Edge in a stable namespace  *(priority dropped: #1 already preserves the edge on routine deploys; this only matters for `FULL_BOOT_CLEAN_REBUILD=1`)*
 Move `impilo-mohcc-gov-zw-tls`, the `.gov.zw` IngressRoutes, `acme-host-nginx`, and
 `public-website` into a never-wiped `impilo-edge` namespace; route cross-namespace to

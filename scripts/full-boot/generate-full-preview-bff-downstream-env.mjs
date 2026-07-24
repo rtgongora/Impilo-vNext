@@ -129,6 +129,8 @@ const SERVICE_ENV = [
  * Each must have a documented reason (supporting component, alias, or infra path).
  */
 const BFF_DOWNSTREAM_EXCLUDED = {
+  "abis-service":
+    "Internal biometric custody and matching adapter; consumed by vito-service only. The BFF reaches identity capabilities through VITO_BASE_URL.",
   "wellness-service":
     "Deprecated SoR; wellness runtime absorbed by simba-service. BFF uses SIMBA_BASE_URL (wellness-base-url alias in application.yml).",
 };
