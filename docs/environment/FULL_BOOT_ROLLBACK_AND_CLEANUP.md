@@ -1,6 +1,22 @@
 # Full Boot Rollback and Cleanup
 
-Use this when a full-boot attempt in **`impilo-full-preview`** must be torn down without affecting the **slice** in **`impilo-preview`**.
+Use this when a full-boot attempt in **`impilo-full-preview`** must be recovered
+without affecting the **slice** in **`impilo-preview`**.
+
+> **Data-safety correction (2026-07):** do not uninstall this release or delete
+> its namespace during routine recovery. The preview estate is data-bearing and
+> uses k3s `local-path` volumes. The default recovery path is an in-place Helm
+> upgrade or rollback. `scripts/operator/fullboot.sh` is the only supported
+> clean-rebuild entry point; it preserves PVCs by default and requires both
+> `FULL_BOOT_WIPE_DATA=1` and the typed wipe phrase before a namespace deletion.
+
+Before any recovery:
+
+```bash
+NAMESPACE=impilo-full-preview bash scripts/full-boot/retain-data-volumes.sh
+NAMESPACE=impilo-full-preview bash scripts/full-boot/verify-persistence.sh
+NAMESPACE=impilo-full-preview bash scripts/full-boot/create-predeploy-backup.sh
+```
 
 ## Inspect full boot namespace
 
@@ -10,28 +26,30 @@ kubectl get events -n impilo-full-preview --sort-by=.lastTimestamp | tail -50
 kubectl get pods -n impilo-full-preview -o wide
 ```
 
-## Uninstall Helm release (preferred rollback)
+## In-place Helm rollback (preferred)
 
 ```bash
-helm uninstall impilo-full-preview -n impilo-full-preview
+helm history impilo-full-preview -n impilo-full-preview
+helm rollback impilo-full-preview <known-good-revision> \
+  -n impilo-full-preview --wait --timeout 60m
 ```
 
-This removes chart-managed workloads in `impilo-full-preview` only. It does **not** modify `impilo-preview`.
+This preserves the namespace, PVCs, TLS edge, secrets, and unchanged workloads.
+After rollback, rerun the persistence, runtime-image-truth, smoke, and public-edge
+gates.
 
-## Delete namespace (full cleanup)
+## Data-preserving clean rebuild (exception only)
 
-Only when you need a completely empty full-boot namespace:
+If an in-place recovery is impossible, use the guarded operator path:
 
 ```bash
-helm uninstall impilo-full-preview -n impilo-full-preview 2>/dev/null || true
-kubectl delete namespace impilo-full-preview
+export FULL_BOOT_CLEAN_REBUILD=1
+bash scripts/operator/fullboot.sh deploy
 ```
 
-Wait until gone:
-
-```bash
-kubectl get namespace impilo-full-preview
-```
+This removes workloads but keeps the namespace and data PVCs. Never run
+`kubectl delete namespace impilo-full-preview` manually. A true data wipe is a
+separate disaster-recovery decision, not a deployment or rollback technique.
 
 ## k3s image helper (optional rollback)
 
@@ -78,6 +96,7 @@ NS=impilo-full-preview bash scripts/dev/verify-full-boot-k3s-images.sh preview
 
 ## What NOT to do
 
+- Do **not** `helm uninstall impilo-full-preview` or delete its namespace manually.
 - Do **not** `helm uninstall impilo-preview` or delete `impilo-preview` namespace.
 - Do **not** change Traefik ingress in `impilo-preview` when testing full boot.
 - Do **not** use production secrets or patient data in rollback/debug commands.

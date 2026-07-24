@@ -39,6 +39,21 @@ check_pvc_bound() {
   fi
 }
 
+check_optional_pvc_bound() {
+  local pvc="$1" phase
+  if ! kubectl -n "$NS" get pvc "$pvc" >/dev/null 2>&1; then
+    printf 'SKIP  optional PVC %-18s absent\n' "$pvc"
+    return
+  fi
+  phase="$(kubectl -n "$NS" get pvc "$pvc" -o jsonpath='{.status.phase}' 2>/dev/null || true)"
+  if [ "$phase" = "Bound" ]; then
+    printf 'OK    optional PVC %-18s Bound\n' "$pvc"
+  else
+    printf 'FAIL  optional PVC %-18s phase=%s (expected Bound)\n' "$pvc" "${phase:-missing}"
+    fail=1
+  fi
+}
+
 echo "=== estate persistence post-deploy check (ns=$NS) ==="
 check_deploy_pvc postgres data            postgres-data
 check_deploy_pvc keycloak data            keycloak-data
@@ -49,6 +64,7 @@ check_deploy_pvc orthanc  orthanc-storage orthanc-data
 for pvc in postgres-data keycloak-data minio-data kafka-data orthanc-data postgres-backups; do
   check_pvc_bound "$pvc"
 done
+check_optional_pvc_bound redroid-data
 
 if kubectl -n "$NS" get cronjob postgres-backup >/dev/null 2>&1; then
   echo "OK    CronJob postgres-backup present"

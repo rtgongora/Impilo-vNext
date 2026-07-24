@@ -11,7 +11,7 @@
 # =============================================================================
 set -uo pipefail
 NS="${NAMESPACE:-impilo-full-preview}"
-PVCS="postgres-data keycloak-data minio-data kafka-data orthanc-data postgres-backups ndila-martin-data"
+PVCS="postgres-data keycloak-data minio-data kafka-data orthanc-data postgres-backups ndila-martin-data redroid-data"
 
 rc=0
 for pvc in $PVCS; do

@@ -42,6 +42,17 @@ under `IMPILO_STRICT_JAR_FRESHNESS=1`. The jar-runtime path also keeps its mtime
 rollout. Idempotent no-ops in-place; full restore after a clean rebuild. The one
 root-only step is printed: `sudo /usr/local/bin/sync-mohcc-gov-tls.sh`.
 
+### #8 — Blocking pre-deploy backup + complete PV retention
+
+Every existing preview estate now creates and proves a fresh `pg_dumpall` backup
+before Helm changes anything. Failure to create or complete the backup blocks the
+deploy. The evidence is written under `reports/full-boot/predeploy-evidence/`.
+
+`retain-data-volumes.sh` covers every Kubernetes data PVC, including the later-added
+`redroid-data`, and `verify-persistence.sh` validates it when present. Routine deploy
+remains in-place; no namespace deletion or Helm uninstall is permitted as a rollback
+shortcut.
+
 ## Remaining (need a real deploy/CI cycle to land safely — do NOT commit untested)
 
 ### #2 — Edge in a stable namespace  *(priority dropped: #1 already preserves the edge on routine deploys; this only matters for `FULL_BOOT_CLEAN_REBUILD=1`)*

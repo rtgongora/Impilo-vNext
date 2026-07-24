@@ -156,7 +156,7 @@ fb_import_images_flow() {
 # preserves these by DEFAULT; destroying them requires the explicit FULL_BOOT_WIPE_DATA
 # path below. The PVC templates also carry helm.sh/resource-policy=keep so 'helm
 # uninstall' alone can never delete them.
-FB_DATA_PVCS="postgres-data keycloak-data minio-data kafka-data orthanc-data postgres-backups ndila-martin-data"
+FB_DATA_PVCS="postgres-data keycloak-data minio-data kafka-data orthanc-data postgres-backups ndila-martin-data redroid-data"
 FB_WIPE_PHRASE="WIPE ALL IMPILO PREVIEW DATA"
 
 fb_cleanup_full_boot_namespace() {
@@ -236,6 +236,10 @@ fb_run_deploy_if_authorized() {
   # IngressRoutes and running pods) untouched — no full teardown, no estate-wide
   # downtime. Opt into a destructive clean-room rebuild (wipe + redeploy from zero)
   # only when you genuinely need a clean slate, via FULL_BOOT_CLEAN_REBUILD=1.
+  echo "--- Fresh pre-deploy PostgreSQL backup (blocking) ---"
+  NAMESPACE="$IMPILO_FULLBOOT_NS" bash scripts/full-boot/create-predeploy-backup.sh
+  export FULL_BOOT_PREDEPLOY_BACKUP_DONE=1
+
   if [[ "${FULL_BOOT_CLEAN_REBUILD:-0}" == "1" ]]; then
     echo "--- CLEAN REBUILD (FULL_BOOT_CLEAN_REBUILD=1): rebuilding workloads in $IMPILO_FULLBOOT_NS ---"
     echo "    DATA IS PRESERVED by default (postgres/keycloak/minio/kafka/orthanc/backup PVCs kept)."

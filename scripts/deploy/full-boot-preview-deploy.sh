@@ -420,6 +420,11 @@ kubectl create namespace "$NAMESPACE" 2>/dev/null || true
 
 # Out-of-band app secrets must exist before Helm --wait schedules secretKeyRef pods.
 # fullboot.sh deploy wipes this namespace first, so bootstrap here (after create), not before deploy.
+if [[ "${FULL_BOOT_PREDEPLOY_BACKUP_DONE:-0}" != "1" ]]; then
+  echo "--- Fresh pre-deploy PostgreSQL backup (blocking when an estate exists) ---"
+  NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/full-boot/create-predeploy-backup.sh"
+fi
+
 echo "--- Bootstrap out-of-band secrets ($NAMESPACE/impilo-app-secrets) ---"
 NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/secrets/bootstrap-secrets.sh"
 
