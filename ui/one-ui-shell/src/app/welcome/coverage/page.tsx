@@ -1,5 +1,6 @@
 import { PublicShell } from "@/components/public/PublicShell";
 import { PublicCoverageCompare } from "@/components/public/PublicCoverageCompare";
+import { ReasonedSignInPrompt } from "@/components/public/ReasonedSignInPrompt";
 
 export const metadata = {
   title: "Health cover — Impilo",
@@ -22,6 +23,13 @@ export default function CoveragePage() {
       <div className="mt-8">
         <PublicCoverageCompare />
       </div>
+      <ReasonedSignInPrompt
+        pillar="cover-and-payments"
+        goal="view-membership"
+        destination="/ruvimbo/member"
+        publicReturn="/welcome/coverage"
+        reason="Sign in only to view membership, personal eligibility, authorisations or claims. Those details are private and linked to you."
+      />
     </PublicShell>
   );
 }

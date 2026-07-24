@@ -10,7 +10,7 @@ guarded by `scripts/guard/check-public-lane.sh`.
 Status vocabulary: **LIVE** (lane deployed and proven) · **PLANNED-Wn** (this program's
 wave) · **DEFERRED** (doctrine-required, own program).
 
-Last updated: 2026-07-23 (PF-W1 tenancy formalized).
+Last updated: 2026-07-24 (PF-W6 access-choice conformance complete).
 
 ## Tenancy model (PF-W1)
 
@@ -38,7 +38,7 @@ reference-only fallback (daidzai SOS status).
 | Street map tiles (public MVT) | ndila-service | `/internal/v1/public/gateway/map/tiles/*` | LIVE |
 | Anonymous client telemetry | experience-bff | `/internal/v1/public/gateway/client-telemetry` | LIVE |
 | **Notices & Bulletins archive** (campaigns, safety/recalls, disaster alerts, regulatory notices, procurement) | guidance-service (generalized advisory engine) | `/internal/v1/public/gateway/notices` + `/welcome/notices` | LIVE (PF-W2) |
-| "Continue without signing in" + reasoned sign-in prompt components | one-ui-shell | shared public components | PLANNED-W6 |
+| "Continue without signing in" + reasoned sign-in prompt components | one-ui-shell | shared `ContinueWithoutSignIn` + `ReasonedSignInPrompt`, intent-preserving on regulatory, marketplace, coverage, wellness and learning lanes | LIVE (PF-W6) |
 
 ## Find health services (TUSO / VARAPI / NDILA / NHUME)
 

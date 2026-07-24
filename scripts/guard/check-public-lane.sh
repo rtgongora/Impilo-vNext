@@ -75,10 +75,6 @@ fi
 if [[ ! -f "$DICT" ]]; then
   guard_fail "naming dictionary $DICT missing" || FAILED=1
 else
-  TERMS=$(python3 -c "
-import yaml
-d = yaml.safe_load(open('$DICT'))
-print('|'.join(t['internal'] for t in d['terms']))")
   SURFACES=$(python3 -c "
 import yaml, glob
 d = yaml.safe_load(open('$DICT'))
@@ -88,9 +84,14 @@ for g in d.get('scan_surfaces', []):
 print('\n'.join(f for f in files if not f.endswith(('.png','.svg','.ico'))))")
   HITS=""
   if [[ -n "$SURFACES" ]]; then
-    # Whole-word, case-insensitive; comments/identifiers on public surfaces count too —
-    # public code should not need internal names at all.
-    HITS=$(echo "$SURFACES" | xargs -r grep -inE "\b(${TERMS})\b" 2>/dev/null | grep -vi "gateway-public-naming" || true)
+    # Scan source that can render or become a public URL. Implementation comments,
+    # identifiers and module import paths are not citizen-visible and must not create
+    # false failures; executable strings and JSX text remain strict.
+    SCAN_RC=0
+    HITS=$(python3 scripts/guard/check-public-naming.py "$DICT") || SCAN_RC=$?
+    if [[ "$SCAN_RC" -gt 1 ]]; then
+      guard_fail "public naming scanner failed (exit=$SCAN_RC)" || FAILED=1
+    fi
   fi
   if [[ -n "$HITS" ]]; then
     soft_fail "internal service names on public surfaces:
@@ -98,6 +99,35 @@ $HITS"
   else
     guard_pass "public surfaces clean of internal service names ($(echo "$SURFACES" | grep -c . || true) files scanned)"
   fi
+fi
+
+# ── 4. PF-W6 access-choice affordances ─────────────────────────────────────
+AFFORDANCE_PAGES=(
+  ui/one-ui-shell/src/app/welcome/regulatory/page.tsx
+  ui/one-ui-shell/src/app/welcome/marketplace/page.tsx
+  ui/one-ui-shell/src/app/welcome/coverage/page.tsx
+  ui/one-ui-shell/src/app/welcome/wellness/page.tsx
+  ui/one-ui-shell/src/app/welcome/learning/page.tsx
+)
+AFFORDANCE_MISSING=()
+for page in "${AFFORDANCE_PAGES[@]}"; do
+  if [[ ! -f "$page" ]] || ! grep -q "ReasonedSignInPrompt" "$page"; then
+    AFFORDANCE_MISSING+=("$page")
+  fi
+done
+if [[ ! -f ui/one-ui-shell/src/components/public/ContinueWithoutSignIn.tsx ]] \
+  || ! grep -q "Continue without signing in" \
+    ui/one-ui-shell/src/components/public/ContinueWithoutSignIn.tsx; then
+  AFFORDANCE_MISSING+=("shared ContinueWithoutSignIn component")
+fi
+if [[ ! -f ui/one-ui-shell/src/components/public/ReasonedSignInPrompt.tsx ]] \
+  || ! grep -q "IntentLink" ui/one-ui-shell/src/components/public/ReasonedSignInPrompt.tsx; then
+  AFFORDANCE_MISSING+=("shared reasoned sign-in + intent component")
+fi
+if [[ "${#AFFORDANCE_MISSING[@]}" -gt 0 ]]; then
+  soft_fail "PF-W6 access choices missing: ${AFFORDANCE_MISSING[*]}"
+else
+  guard_pass "PF-W6 reasoned sign-in + continue-without affordances present on all new public lanes"
 fi
 
 if [[ "$FAILED" == "1" ]]; then

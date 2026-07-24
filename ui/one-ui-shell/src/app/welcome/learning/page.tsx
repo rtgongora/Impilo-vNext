@@ -1,5 +1,6 @@
 import { PublicShell } from "@/components/public/PublicShell";
 import { PublicLearningCatalog } from "@/components/public/PublicLearningCatalog";
+import { ReasonedSignInPrompt } from "@/components/public/ReasonedSignInPrompt";
 
 export const metadata = {
   title: "Learning — Impilo",
@@ -23,6 +24,13 @@ export default function LearningPage() {
       <div className="mt-8">
         <PublicLearningCatalog />
       </div>
+      <ReasonedSignInPrompt
+        pillar="health-information"
+        goal="track-learning"
+        destination="/learning"
+        publicReturn="/welcome/learning"
+        reason="Sign in only when you want to enrol, track progress, complete assessed learning, earn a certificate or record CPD."
+      />
     </PublicShell>
   );
 }

@@ -1,5 +1,6 @@
 import { PublicShell } from "@/components/public/PublicShell";
 import { PublicWellnessExplorer } from "@/components/public/PublicWellnessExplorer";
+import { ReasonedSignInPrompt } from "@/components/public/ReasonedSignInPrompt";
 
 export const metadata = {
   title: "Wellness — Impilo",
@@ -23,6 +24,13 @@ export default function WellnessPage() {
       <div className="mt-8">
         <PublicWellnessExplorer />
       </div>
+      <ReasonedSignInPrompt
+        pillar="my-health"
+        goal="save-wellness-progress"
+        destination="/wellness"
+        publicReturn="/welcome/wellness"
+        reason="Sign in only when you want Impilo to save your checks, track progress, set goals, connect a device or share with a care team."
+      />
     </PublicShell>
   );
 }

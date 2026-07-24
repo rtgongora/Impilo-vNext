@@ -80,6 +80,13 @@ and the anonymous-on-behalf pattern of `/internal/v1/auth/register`.
 > [`../registry/public-capability-register.md`](../registry/public-capability-register.md).
 > Gateway W3 keeps ownership of journey-context-across-auth (PD-5 sovereign drafts);
 > the PF track uses client-side continuity only until W3 lands.
+>
+> **PF-W6 status (2026-07-24): LANDED.** Shared continue-without and reasoned
+> sign-in components are wired across every PF-W2–W5 public surface. Sign-in
+> choices create a semantic intent at click time and preserve the public return
+> path. Component tests prove both the public-path guard and post-login intent;
+> the strict public-lane guard now includes the affordance audit and scans only
+> source that can render or form a public URL (not comments/import wiring).
 
 ### W0 — Public-lane foundations & program gates (S; serial; 1–2 agent cycles)
 

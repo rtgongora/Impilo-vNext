@@ -1,5 +1,6 @@
 import { PublicShell } from "@/components/public/PublicShell";
 import { PublicRegulatoryExplorer } from "@/components/public/PublicRegulatoryExplorer";
+import { ReasonedSignInPrompt } from "@/components/public/ReasonedSignInPrompt";
 
 export const metadata = {
   title: "Registration & licensing — Impilo",
@@ -24,6 +25,13 @@ export default function RegulatoryPage() {
       <div className="mt-8">
         <PublicRegulatoryExplorer />
       </div>
+      <ReasonedSignInPrompt
+        pillar="applications-licensing"
+        goal="start-regulatory-application"
+        destination="/professional/regulatory"
+        publicReturn="/welcome/regulatory"
+        reason="Sign in only when you start or manage an application. Applications create formal regulatory records linked to you or your organisation."
+      />
     </PublicShell>
   );
 }

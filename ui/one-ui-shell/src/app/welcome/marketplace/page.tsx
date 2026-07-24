@@ -1,5 +1,6 @@
 import { PublicShell } from "@/components/public/PublicShell";
 import { PublicMarketplaceBrowse } from "@/components/public/PublicMarketplaceBrowse";
+import { ReasonedSignInPrompt } from "@/components/public/ReasonedSignInPrompt";
 
 export const metadata = {
   title: "Health products & suppliers — Impilo",
@@ -24,6 +25,13 @@ export default function MarketplacePage() {
       <div className="mt-8">
         <PublicMarketplaceBrowse />
       </div>
+      <ReasonedSignInPrompt
+        pillar="products-suppliers"
+        goal="place-order"
+        destination="/my/orders"
+        publicReturn="/welcome/marketplace"
+        reason="Sign in only when you are ready to place an order, pay, submit a prescription or track delivery. Those actions create a secure record linked to you."
+      />
     </PublicShell>
   );
 }
