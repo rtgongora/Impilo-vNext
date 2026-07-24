@@ -40,11 +40,11 @@ test.describe("Preview sandbox persistence proofs", () => {
       .getByTestId("module-workspace-hero")
       .or(page.getByRole("heading", { name: /Enterprise resources/i }));
     // Wait for either the authenticated shell or an auth redirect before deciding.
-    await Promise.race([
-      ready.first().waitFor({ state: "visible", timeout: 30_000 }),
-      login.waitFor({ state: "visible", timeout: 30_000 }),
-    ]).catch(() => undefined);
-    test.skip(await isPreviewLoginScreen(page), "Preview redirected to login");
+    const settled = await Promise.race([
+      ready.first().waitFor({ state: "visible", timeout: 30_000 }).then(() => "ready" as const),
+      login.waitFor({ state: "visible", timeout: 30_000 }).then(() => "login" as const),
+    ]).catch(() => "unknown" as const);
+    test.skip(settled === "login" || await isPreviewLoginScreen(page), "Preview redirected to login");
     await expect(ready.first()).toBeVisible({ timeout: 5_000 });
   }
 

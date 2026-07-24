@@ -55,6 +55,87 @@ shortcut.
 
 ## Remaining (need a real deploy/CI cycle to land safely — do NOT commit untested)
 
+## 2026-07-24 authorized fullboot observations
+
+These are measured opportunities from the first non-destructive, digest-pinned full
+estate cycle. Keep them as work items until each change has its own regression proof.
+
+### Avoid duplicate UI production builds
+
+The local quality pipeline runs `next build`, then the image build runs the same
+production compilation again inside Docker. For the 693-route shell, the first build
+spent several minutes compiling, prerendering, and collecting traces while the image
+builder could not safely share the same output directory.
+
+Opportunity: make the pipeline produce a content-addressed standalone UI artifact
+(`source commit + lockfile hash + strict UI bundle hash`) and let the Docker image stage
+copy that artifact. The image build must verify the artifact metadata before reuse and
+fall back to a clean build on any mismatch.
+
+### Generate the contract matrix once per workspace state
+
+`run-api-contract-checks.sh` computes the contract implementation matrix, then the
+advisory implementation check computes it again. Each scan is CPU-bound across the full
+repository and took minutes in this cycle.
+
+Opportunity: generate the matrix once to a temporary, commit-keyed artifact and pass it
+to both checks. Invalidate it when controller sources, OpenAPI files, the service
+registry, or completeness scripts change.
+
+### Make changed-service detection independent of unrelated dirty files
+
+`changed-services-since.sh` intentionally includes working-tree changes. On this VM an
+unrelated dirty `services/oros-service/id_file` therefore added `oros-service` to a
+commit-to-commit rebuild calculation even though the deployed delta only changed the
+shell.
+
+Opportunity: add an explicit `--committed-only <base> <head>` mode for release builds.
+Keep the current dirty-aware mode as the default for developer builds. The release mode
+must fail if a changed tracked runtime source is outside the selected commit range
+rather than silently incorporating it.
+
+### Make detached SSH jobs detach completely
+
+The current `nohup ... &` launch returned control on the VM, but the initiating SSH
+client remained open until its local timeout. The job itself continued correctly, yet
+the timeout looked like a failed launch and required a second status check.
+
+Opportunity: provide a checked-in job launcher that closes inherited descriptors,
+writes PID/log/exit files atomically, and returns only after proving the child is alive.
+Expose a matching status command so operators never infer job state from an SSH exit.
+
+### Preserve unchanged image digests during incremental releases
+
+Only `one-ui-shell` runtime source changed after the full-estate image batch. Rebuilding
+all application images solely to stamp the new repository commit would waste hours and
+disk. Runtime truth already enforces target/registry/pod digest alignment and reports
+OCI source revision separately.
+
+Opportunity: publish a release manifest containing each service digest plus its own
+source commit and input hash. Permit mixed source commits only when the changed-service
+classifier proves the service inputs are unchanged. This makes incremental provenance
+explicit instead of relying on a global release commit.
+
+### Separate discovery output from the developer working tree
+
+Fullboot discovery and product-truth checks rewrite many tracked generated reports.
+That obscures the small implementation delta and can contaminate later changed-service
+classification.
+
+Opportunity: default CI/deploy discovery output to an ignored, run-scoped directory,
+then promote canonical generated documents in a distinct reviewed commit. Gates that
+test drift should compare generated output without rewriting tracked files in place.
+
+### Make browser auth outcomes deterministic
+
+The persistence suite waited for either the enterprise shell or login, discarded which
+one won, and then performed a second instantaneous login check. Under concurrent build
+load this produced one false failure: the captured page was visibly the login screen,
+while the follow-up check raced a navigation transition. Eighteen other journeys passed.
+
+Opportunity: retain the result of every ready-vs-auth race and make the branch decision
+from that result. The corrected suite passed all 19 journeys in an isolated rerun.
+
 ### #2 — Edge in a stable namespace  *(priority dropped: #1 already preserves the edge on routine deploys; this only matters for `FULL_BOOT_CLEAN_REBUILD=1`)*
 Move `impilo-mohcc-gov-zw-tls`, the `.gov.zw` IngressRoutes, `acme-host-nginx`, and
 `public-website` into a never-wiped `impilo-edge` namespace; route cross-namespace to
