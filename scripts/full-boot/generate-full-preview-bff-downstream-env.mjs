@@ -34,6 +34,7 @@ const SERVICE_ENV = [
   ["MADI_SERVICE_BASE_URL", "madi-service"],
   ["LIVE_BASE_URL", "live-service"],
   ["IOT_INGESTION_BASE_URL", "iot-ingestion-service"],
+  ["TELEMONITORING_BASE_URL", "telemonitoring-service"],
   ["RTC_GATEWAY_BASE_URL", "rtc-gateway-service"],
   ["ANALYTICS_PIPELINE_BASE_URL", "analytics-pipeline-service"],
   ["VITO_BASE_URL", "vito-service"],

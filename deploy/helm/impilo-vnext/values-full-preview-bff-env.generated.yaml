@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs
-# Downstream env vars: 107
+# Downstream env vars: 108
 experienceBff:
   env:
     FHIR_BASE_URL: http://hapi-fhir:8090/fhir
@@ -28,6 +28,7 @@ experienceBff:
     MADI_SERVICE_BASE_URL: http://madi-service:8300
     LIVE_BASE_URL: http://live-service:8380
     IOT_INGESTION_BASE_URL: http://iot-ingestion-service:8330
+    TELEMONITORING_BASE_URL: http://telemonitoring-service:8394
     RTC_GATEWAY_BASE_URL: http://rtc-gateway-service:8196
     ANALYTICS_PIPELINE_BASE_URL: http://analytics-pipeline-service:8365
     VITO_BASE_URL: http://vito-service:8082
