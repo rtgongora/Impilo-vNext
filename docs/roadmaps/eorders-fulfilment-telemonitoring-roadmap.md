@@ -21,8 +21,8 @@ interim postures so no wave blocks on a pending decision.
 | **M1 — Trust spine live** | Signed, versioned, token-claimable prescriptions + order lifecycle on the estate | Wave OF-A deployed + journeys #50/#51 legs green live | ✅ DONE 2026-07-23 (live trust-spine proof 11/11; local rig 36/36) |
 | **M2 — Marketplace live** | RFO round → offer → commitment with real stock reservation, fail-closed eligibility | Journeys #41 (to reservation), #48, #49, #52 green live | ✅ DONE 2026-07-23 (live proof 28/28 @ `8353d93e1`) |
 | **M3 — Money + dispense closed** | Coverage/liability/payment wired into selection; dispense bound to claims; pickup/delivery | Wave OF-B; journeys #42–#47, #53–#57, #68–#70 | ✅ DONE 2026-07-23 (gate 81/0 @ `9fcb42f2f`, shims removed; ten live-caught bugs incl. three Blockers — payment-resume swallow, headerless service-originated dispatch, coverage misreporting NOT_COVERED — all fixed + re-proven; honest not-run: #55/#57/#70) |
-| **M4 — Telemonitoring live** | Plans, thresholds, device readings, alert ladder, CHW workflow | Wave OF-C; journeys #58–#66 | 🔶 CURRENT |
-| **M5 — Governance close** | Cold-chain/drone lanes honest, fairness analytics, full-suite rig | Wave OF-D; #43, #67, full #41–#70 | ⬜ |
+| **M4 — Telemonitoring live** | Plans, thresholds, device readings, alert ladder, CHW workflow | Wave OF-C; journeys #58–#66 | ✅ CLOSED — 33/0/0 live proof |
+| **M5 — Governance close** | Cold-chain/drone lanes honest, fairness analytics, full-suite rig | Wave OF-D; #43, #67, full #41–#70 | 🔶 CURRENT |
 
 ---
 
@@ -84,6 +84,13 @@ the #41 SHR MedicationDispense projection leg rides OF-G19; #55 (offline dispens
 - Fix-run extras: coverage auth-type vocabulary (invented `MARKETPLACE_FULFILMENT` → owned `PRIOR`); PA idempotency-key collision. Ops/seed gaps made durable: proof courier + facility payee credential seeds wired into `scripts/seed-data.sh`.
 
 ## Wave OF-C — telemonitoring (M4 — CURRENT)
+
+> **Closed 2026-07-23.** The confirming live-estate run completed
+> `PASS=33 FAIL=0 BLOCKED=0` across #58–#66, BFF proxy and shell route. The gate
+> caught and closed the JSONB binding defect, missing Kubernetes Service and
+> preview-auth mismatch before the final run. Reproducible rig:
+> `scripts/runtime-proof/telemonitoring-journeys.sh`; evidence:
+> `reports/journeys/ofc-m4-live-proof-20260723/summary.txt`.
 
 Strictly ordered start: **OF-B22** (new clinical-plane `telemonitoring-service` skeleton + plan
 engine) first, then **OF-B21 / OF-B24 / OF-B25** in parallel (programme model; device

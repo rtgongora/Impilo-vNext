@@ -1,0 +1,41 @@
+OF-C M4 LIVE PROOF
+Executed: 2026-07-23 against impilo-full-preview
+Code baseline: telemonitoring through 50af5e056; remediation 2a0865f72 + 8029a96d4
+Evidence source: /tmp/ofc-m4-evidence (preserved by takeover backup)
+Result: PASS=33 FAIL=0 BLOCKED=0
+
+PASS #58a — OROS order placed (01KY88Z9Y0ZRKGA80FFCMC011G)
+PASS #58b — enrolment consumer created DRAFT plan 6759a1cd-8dbe-496e-9ae7-fded4860b3c3 (programme=HYPERTENSION, orosOrderId bound)
+PASS #58c — approval without approver REFUSED 400 TM_INVALID_REQUEST
+PASS #58d — clinician approval → ACTIVE (approvedBy=DR-OFC-M4)
+PASS #58e — activation events durable + REAL PCT task raised (pct_tasks MONITORING_ONBOARDING_VISIT, dispatchedToPct=true)
+PASS #58f — device registered in iot-ingestion registry (0d6c2f83-c285-4179-896c-4e10bb15ebc7)
+PASS #58g — bogus device assignment REFUSED 422 DEVICE_UNVERIFIED (fail-closed)
+PASS #58h — verified device assigned under ACTIVE plan (b2788c19-566a-43c5-b3d8-769ca12ec987)
+PASS #58i — activation without training REFUSED 422 TM_TRAINING_NOT_CONFIRMED
+PASS #58j — training confirmed → assignment ACTIVE
+PASS #59a — reading rode iot API → outbox → kafka → tm_readings VALID, plan-bound (718513f8-7d38-45ee-b69c-cb1a14187dfa)
+PASS #59b — HONEST write-failure path: state=RETRYING + observation.write_failed.v1 emitted, shr_ref unset (RETRYING|-|CONSENT_DENIED: consent=DENY)
+PASS #60a — amber breach → episode OPEN/AMBER + alert.opened.v1 (94207836-382e-4515-bad1-4c9a420c44b8)
+PASS #60b — acknowledged within window by NURSE-OFC-M4
+PASS #60c — rung 6 → REAL pct_referrals row (client_offline_id=MONITORING_ALERT:94207836-382e-4515-bad1-4c9a420c44b8)
+PASS #60d — rung 6 REPLAY → still exactly 1 referral (dedup held)
+PASS #60e — closure without the four fields REFUSED 422 TM_ALERT_CLOSURE_INCOMPLETE
+PASS #60f — accountable closure with all four fields → RESOLVED
+PASS #61a — repeat red breaches → severity climbed to EMERGENCY (trigger=REPEAT_ABNORMAL, rung=11)
+PASS #61b — REAL Daidzai incident created (82430079-11db-4a94-976e-66e612b79ce9) + rung 11 recorded
+PASS #61c — EMERGENCY resolve without assumption-of-care REFUSED 422
+PASS #61d — assumption of care recorded (EMS-CREW-7)
+PASS #61e — resolve after assumption-of-care → RESOLVED
+PASS #62a — unassigned device → QUARANTINED NO_ASSIGNMENT, NULL patient/plan, NOT_ELIGIBLE, quarantined.v1, no value-alert
+PASS #62b — payload subject ≠ assignment subject → QUARANTINED SUBJECT_MISMATCH, NULL attribution (via direct bus publish — iot API carries no subject claim)
+PASS #63a — lapsed calibration stamps readings DEGRADED_VALID (posture DEGRADED in quality stamp)
+PASS #63b — degraded red-band breaches CAPPED at AMBER (severity_ceiling_applied=true) across open+attach
+PASS #64 — same reading injected twice → ONE tm_readings row, ≤1 observation forward (dedup no-op)
+PASS #66 — HONEST BLOCKER CONFIRMED: registry trust=CONSUMER does NOT ride the bus payload; reading stamped trustLevel=UNGRADED exactly as ReadingIngestionService documents (OD-14 pending) — no AMBER trust-gating possible from the bus today
+PASS #BFF — /internal/v1/telemonitoring/alert-episodes proxied 200 and contains proof episode 94207836-382e-4515-bad1-4c9a420c44b8
+PASS #SHELL — /work/telemonitoring routes 307 (auth redirect, route exists)
+PASS #65a — offline sweep opened DEVICE_OFFLINE episode e00add1a-645f-4d05-8fa4-cd471052969c + rung-4 CHW task requested (pct MONITORING_ALERT_FOLLOWUP=1)
+PASS #65b — repeat sweep: STILL one DEVICE_OFFLINE episode, no extra CHW task (rate limit held)
+
+TOTALS: PASS=33 FAIL=0 BLOCKED=0
