@@ -26,6 +26,7 @@ waves:
     name: optional-trust
     plane: trust
     services:
+      - abis-service
       - identity-assurance-service
       - mvumo-service
       - tshepo-offline-service

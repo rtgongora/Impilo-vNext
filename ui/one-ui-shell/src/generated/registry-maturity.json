@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-20T16:20:04.521Z",
+  "generatedAt": "2026-07-24T10:50:59.396Z",
   "services": {
     "ai-model-registry-service": "unknown-or-partial",
     "analytics-pipeline-service": "unknown-or-partial",
@@ -71,6 +71,7 @@
     "reporting-service": "unknown-or-partial",
     "rito-quality-safety-service": "wired",
     "participation-service": "unknown-or-partial",
+    "telemonitoring-service": "wired",
     "rtc-gateway-service": "unknown-or-partial",
     "rules-service": "unknown-or-partial",
     "scheduling-service": "unknown-or-partial",

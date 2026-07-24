@@ -10,21 +10,19 @@ export interface RuvimboActionItem {
   href?: string;
   onClick?: () => void;
   icon?: ReactNode;
-  /** Honest availability signal, mirroring the public gateway grammar. */
-  access?: "open" | "sign-in" | "coming";
+  /** Availability signal, mirroring the public gateway grammar. */
+  access?: "open" | "sign-in";
 }
 
 const ACCESS_BADGE: Record<NonNullable<RuvimboActionItem["access"]>, { label: string; cls: string }> = {
   open: { label: "Ready", cls: "bg-emerald-50 text-emerald-700" },
   "sign-in": { label: "Needs sign-in", cls: "bg-slate-100 text-slate-600" },
-  coming: { label: "Coming soon", cls: "bg-amber-50 text-amber-700" },
 };
 
 /**
  * The "What would you like to do?" action grid — exposes the real breadth of a Ruvimbo
  * workspace as a grid of task launchers, so the surface reads as a place to act rather
- * than a stack of database tables. Every tile routes to a real destination; unfinished
- * destinations are marked "Coming soon" honestly rather than hidden or faked.
+ * than a stack of database tables. Every tile routes to a real destination.
  */
 export function RuvimboActionGrid({
   title = "What would you like to do?",
@@ -41,7 +39,6 @@ export function RuvimboActionGrid({
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {actions.map((a) => {
           const badge = a.access ? ACCESS_BADGE[a.access] : null;
-          const isComing = a.access === "coming";
           const inner: ReactNode = (
             <>
               <div className="flex items-start justify-between gap-2">
@@ -62,10 +59,9 @@ export function RuvimboActionGrid({
               ) : null}
             </>
           );
-          const cls = `group block rounded-xl border border-border bg-card p-4 shadow-sm transition ${
-            isComing ? "opacity-70" : "hover:border-violet-300 hover:shadow"
-          }`;
-          if (isComing || (!a.href && !a.onClick)) {
+          const cls =
+            "group block rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-violet-300 hover:shadow";
+          if (!a.href && !a.onClick) {
             return (
               <div key={a.title} className={cls} aria-disabled>
                 {inner}

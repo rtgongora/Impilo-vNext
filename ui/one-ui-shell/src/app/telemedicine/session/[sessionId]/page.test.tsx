@@ -33,6 +33,14 @@ vi.mock("@/hooks/useAuthStore", () => ({
   useAuthStore: () => ({ user: { id: "user-1", displayName: "Dr. Moyo", email: "moyo@example.com" } }),
 }));
 
+vi.mock("@/hooks/queries/useSummary", () => ({
+  usePatientSummary: () => ({ data: undefined, isLoading: false, isError: false }),
+}));
+
+vi.mock("@/components/intelligent/NompiloContextualGuidance", () => ({
+  NompiloContextualGuidance: () => <div data-testid="mock-nompilo-guidance" />,
+}));
+
 vi.mock("@/lib/api-client", () => ({
   apiClient: {
     get,
@@ -102,6 +110,9 @@ vi.mock("@/hooks/queries/useTelemedicine", () => ({
     refetch: vi.fn(),
   }),
   useReferralLifecycleAction: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+  useReferralTasks: () => ({ data: { data: [] }, isLoading: false, isError: false }),
+  useCreateReferralTask: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  usePlaceReferralOrder: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 describe("TelemedicineSessionPage", () => {

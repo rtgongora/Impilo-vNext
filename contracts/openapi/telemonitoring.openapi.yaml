@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: Impilo Telemonitoring Service API
+  version: 1.0.0
+  description: |
+    Contract for monitoring programmes, patient monitoring plans, device
+    assignments, readings, and alert-episode escalation. Device connectivity
+    remains owned by iot-ingestion-service and clinical task execution remains
+    owned by pct-service.
+servers:
+  - url: http://localhost:8394
+    description: Local service
+security:
+  - bearerAuth: []
+tags:
+  - name: Generated-From-Handler
+    description: Operations synchronized from Spring MVC handlers.
+paths:
+  /v1/monitoring-plans:
+    get:
+      operationId: telemonitoring_list_monitoring_plans
+      tags:
+        - Generated-From-Handler
+      summary: List monitoring plans
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: telemonitoring_create_monitoring_plan
+      tags:
+        - Generated-From-Handler
+      summary: Create a monitoring plan
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-programmes:
+    get:
+      operationId: telemonitoring_list_monitoring_programmes
+      tags:
+        - Generated-From-Handler
+      summary: List monitoring programmes
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: telemonitoring_create_monitoring_programme
+      tags:
+        - Generated-From-Handler
+      summary: Create a monitoring programme
+      responses:
+        '200':
+          description: Success
+  /v1/alert-episodes:
+    get:
+      operationId: telemonitoring_get__v1_alert_episodes
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/alert-episodes/{episodeId}:
+    get:
+      operationId: telemonitoring_get__v1_alert_episodes_episodeId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/alert-episodes/{episodeId}/acknowledge:
+    post:
+      operationId: telemonitoring_post__v1_alert_episodes_episodeId_acknowledge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/alert-episodes/{episodeId}/start:
+    post:
+      operationId: telemonitoring_post__v1_alert_episodes_episodeId_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/alert-episodes/{episodeId}/ladder-steps:
+    post:
+      operationId: telemonitoring_post__v1_alert_episodes_episodeId_ladder_steps
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/alert-episodes/{episodeId}/assumption-of-care:
+    post:
+      operationId: telemonitoring_post__v1_alert_episodes_episodeId_assumption_of_care
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/alert-episodes/{episodeId}/resolve:
+    post:
+      operationId: telemonitoring_post__v1_alert_episodes_episodeId_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/device-assignments:
+    post:
+      operationId: telemonitoring_post__v1_device_assignments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: telemonitoring_get__v1_device_assignments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/device-assignments/{assignmentId}:
+    get:
+      operationId: telemonitoring_get__v1_device_assignments_assignmentId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/device-assignments/{assignmentId}/activate:
+    post:
+      operationId: telemonitoring_post__v1_device_assignments_assignmentId_activate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/device-assignments/{assignmentId}/suspend:
+    post:
+      operationId: telemonitoring_post__v1_device_assignments_assignmentId_suspend
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/device-assignments/{assignmentId}/resume:
+    post:
+      operationId: telemonitoring_post__v1_device_assignments_assignmentId_resume
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/device-assignments/{assignmentId}/return:
+    post:
+      operationId: telemonitoring_post__v1_device_assignments_assignmentId_return
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/device-assignments/{assignmentId}/lost:
+    post:
+      operationId: telemonitoring_post__v1_device_assignments_assignmentId_lost
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/device-assignments/by-device/{deviceRef}:
+    get:
+      operationId: telemonitoring_get__internal_v1_device_assignments_by_device_deviceRef_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}:
+    get:
+      operationId: telemonitoring_get__planId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}/approve:
+    post:
+      operationId: telemonitoring_post__planId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}/suspend:
+    post:
+      operationId: telemonitoring_post__planId_suspend
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}/resume:
+    post:
+      operationId: telemonitoring_post__planId_resume
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}/complete:
+    post:
+      operationId: telemonitoring_post__planId_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}/cancel:
+    post:
+      operationId: telemonitoring_post__planId_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}/consent:
+    post:
+      operationId: telemonitoring_post__planId_consent
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}/reviews:
+    post:
+      operationId: telemonitoring_post__planId_reviews
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-plans/{planId}/threshold-profiles:
+    post:
+      operationId: telemonitoring_post__planId_threshold_profiles
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: telemonitoring_get__planId_threshold_profiles
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-programmes/{code}:
+    get:
+      operationId: telemonitoring_get__code_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: telemonitoring_put__code_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /v1/monitoring-programmes/{code}/retire:
+    post:
+      operationId: telemonitoring_post__code_retire
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/readings/by-plan/{planId}:
+    get:
+      operationId: telemonitoring_get__by_plan_planId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/readings/by-device/{deviceRef}:
+    get:
+      operationId: telemonitoring_get__by_device_deviceRef_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from telemonitoring-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas: {}

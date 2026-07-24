@@ -55,14 +55,13 @@ describe("/work/telemedicine/operations", () => {
     ).toBeInTheDocument();
   });
 
-  it("declares the per-session failure diagnostics gap instead of faking a table", () => {
+  it("offers the real per-session diagnostics lookup without faking failure rows", () => {
     get.mockResolvedValue({ data: null });
     renderWithQuery(<TelemedicineOperationsPage />);
 
-    expect(
-      screen.getByText(/per-session failure diagnostics not yet queryable/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/impilo\.rtc\.\*/)).toBeInTheDocument();
+    expect(screen.getByTestId("session-diagnostics-lookup")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/session \/ referral id/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /diagnose/i })).toBeDisabled();
     // No fabricated failure rows exist
     expect(screen.queryByText(/ICE failure/i)).not.toBeInTheDocument();
   });

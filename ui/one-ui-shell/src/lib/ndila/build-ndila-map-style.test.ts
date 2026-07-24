@@ -64,7 +64,7 @@ describe("buildNdilaMapStyle", () => {
       provider: "OSM_OSRM",
     });
     // Symbol layers hard-require a style glyphs endpoint — the committed Noto Sans PBFs.
-    expect(style.glyphs).toBe("/map/glyphs/{fontstack}/{range}.pbf");
+    expect(style.glyphs).toBe("http://localhost:3000/map/glyphs/{fontstack}/{range}.pbf");
     const symbolLayers = style.layers?.filter((l) => l.type === "symbol") ?? [];
     expect(symbolLayers.length).toBeGreaterThan(0);
     expect(symbolLayers.some((l) => l.id === "ndila-street-place-city")).toBe(true);
@@ -72,17 +72,18 @@ describe("buildNdilaMapStyle", () => {
     expect(symbolLayers.some((l) => l.id === "ndila-street-water-name")).toBe(true);
   });
 
-  it("keeps the fallback styles glyph-free (no tileConfig, raster)", () => {
-    // The admin-boundary fallback must never depend on the glyph assets.
+  it("keeps self-hosted glyphs available for shared admin labels in fallback styles", () => {
+    // Shared Zimbabwe admin overlays add symbol layers after style creation, so
+    // every style branch must provide the sovereign glyph endpoint.
     const blank = buildNdilaMapStyle(null);
-    expect(blank.glyphs).toBeUndefined();
+    expect(blank.glyphs).toBe("http://localhost:3000/map/glyphs/{fontstack}/{range}.pbf");
     expect(blank.layers?.some((l) => l.type === "symbol")).toBe(false);
 
     const raster = buildNdilaMapStyle({
       tileUrlTemplate: "/internal/v1/ndila/tiles/{z}/{x}/{y}.png",
       provider: "PREVIEW_SOVEREIGN",
     });
-    expect(raster.glyphs).toBeUndefined();
+    expect(raster.glyphs).toBe("http://localhost:3000/map/glyphs/{fontstack}/{range}.pbf");
     expect(raster.layers?.some((l) => l.type === "symbol")).toBe(false);
   });
 

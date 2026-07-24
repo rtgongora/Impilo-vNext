@@ -32,6 +32,10 @@ vi.mock("@/hooks/useAuthStore", () => ({
 
 vi.mock("@/lib/api-client", () => ({ apiClient: { get } }));
 
+vi.mock("@/components/intelligent/NompiloContextualGuidance", () => ({
+  NompiloContextualGuidance: () => <div data-testid="mock-nompilo-guidance" />,
+}));
+
 vi.mock("@/components/telemedicine/patient/PatientWaitingRoom", () => ({
   PatientWaitingRoom: ({
     onAdmitted,
