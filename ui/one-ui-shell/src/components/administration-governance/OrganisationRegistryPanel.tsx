@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin-governance/api/organisationsApi";
 import { isActionResponse, isPendingBackend } from "@/lib/admin-governance/api/client";
 import type { AdminGovernanceActionResponse, LookupEnvelope, OrganisationRecord } from "@/lib/admin-governance/types";
+import { useUploadOrganizationLogo } from "@/hooks/queries/useOrgOnboarding";
 
 function orgId(record: OrganisationRecord): string {
   return record.organisationId ?? record.id ?? "";
@@ -35,6 +36,7 @@ export function OrganisationRegistryPanel() {
     registrationNumber: "",
   });
   const [actionResult, setActionResult] = useState<AdminGovernanceActionResponse | null>(null);
+  const logoUpload = useUploadOrganizationLogo();
 
   useEffect(() => {
     async function load() {
@@ -73,6 +75,15 @@ export function OrganisationRegistryPanel() {
     if (!selectedOrgId) return;
     const result = await verifyOrganisation(selectedOrgId);
     setActionResult(result);
+  }
+
+  async function handleLogo(file: File) {
+    if (!selectedOrgId) return;
+    try {
+      await logoUpload.mutateAsync({ organizationId: selectedOrgId, file });
+    } catch {
+      // Mutation state renders the fail-closed user message below.
+    }
   }
 
   return (
@@ -148,6 +159,28 @@ export function OrganisationRegistryPanel() {
               >
                 Verify organisation
               </button>
+              <label className="mt-3 block text-xs font-medium text-foreground">
+                Organisation logo
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  disabled={logoUpload.isPending}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void handleLogo(file);
+                  }}
+                  className="mt-1 block w-full text-xs"
+                />
+              </label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                PNG, JPEG, or WebP, up to 2 MB. Stored in the sovereign document store.
+              </p>
+              {logoUpload.isSuccess ? (
+                <p role="status" className="mt-2 text-xs text-success-foreground">Logo uploaded.</p>
+              ) : null}
+              {logoUpload.isError ? (
+                <p role="alert" className="mt-2 text-xs text-danger-foreground">Logo upload failed. No branding change was saved.</p>
+              ) : null}
             </div>
           ) : null}
         </>

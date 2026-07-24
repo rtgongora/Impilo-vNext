@@ -20,6 +20,9 @@ public interface OrganizationRepository extends JpaRepository<OrganizationEntity
 
     Optional<OrganizationEntity> findBySourceAndSourceRef(String source, String sourceRef);
 
+    Optional<OrganizationEntity> findByTenantIdAndSourceAndSourceRef(
+            UUID tenantId, String source, String sourceRef);
+
     List<OrganizationEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
 
     List<OrganizationEntity> findByTenantIdAndStatusOrderByCreatedAtDesc(UUID tenantId, String status);

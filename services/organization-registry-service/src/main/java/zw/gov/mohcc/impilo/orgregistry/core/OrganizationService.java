@@ -98,6 +98,37 @@ public class OrganizationService {
                 .orElseThrow(() -> new IllegalArgumentException("organization not found: " + id));
     }
 
+    /**
+     * Resolve either this registry's canonical id or the source id of a WGV mirror.
+     * Both paths remain tenant-scoped.
+     */
+    public OrganizationEntity getByCanonicalOrSourceId(UUID tenantId, UUID id) {
+        return organizationRepository.findByTenantIdAndId(tenantId, id)
+                .or(() -> organizationRepository.findByTenantIdAndSourceAndSourceRef(
+                        tenantId, WgvMirrorService.SOURCE_WGV_MIRROR, id.toString()))
+                .orElseThrow(() -> new IllegalArgumentException("organization not found: " + id));
+    }
+
+    @Transactional
+    public OrganizationEntity updateLogo(UUID tenantId, UUID organizationId, String logoObjectId,
+                                         String updatedBy) throws Exception {
+        if (logoObjectId == null || logoObjectId.isBlank()) {
+            throw new IllegalArgumentException("logoObjectId is required");
+        }
+        UUID.fromString(logoObjectId.trim());
+        OrganizationEntity org = getByCanonicalOrSourceId(tenantId, organizationId);
+        org.setLogoObjectId(logoObjectId.trim());
+        OrganizationEntity saved = organizationRepository.save(org);
+        outboxWriter.publish(tenantId, "ORGANIZATION", saved.getId().toString(),
+                "organization", "logo_updated",
+                "org-registry:organization:logo-updated:" + saved.getId() + ":" + System.nanoTime(),
+                Map.of(
+                        "organizationId", saved.getId().toString(),
+                        "logoObjectId", saved.getLogoObjectId(),
+                        "updatedBy", updatedBy == null ? "system" : updatedBy));
+        return saved;
+    }
+
     @Transactional
     public AuthorizedRepresentativeEntity addRepresentative(UUID tenantId, UUID organizationId,
                                                             OrgRegistryDtos.AddRepresentativeRequest request,

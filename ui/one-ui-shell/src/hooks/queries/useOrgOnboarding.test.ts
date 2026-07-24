@@ -4,6 +4,7 @@ vi.mock("@/lib/api-client", () => ({
   apiClient: {
     get: vi.fn(() => Promise.resolve({ data: {} })),
     post: vi.fn(() => Promise.resolve({ data: {} })),
+    postForm: vi.fn(() => Promise.resolve({ data: {} })),
   },
 }));
 
@@ -13,11 +14,13 @@ import {
   createOrganization,
   fetchRepresentatives,
   submitVerification,
+  uploadOrganizationLogo,
   verifyOrganization,
 } from "./useOrgOnboarding";
 
 const get = apiClient.get as unknown as ReturnType<typeof vi.fn>;
 const post = apiClient.post as unknown as ReturnType<typeof vi.fn>;
+const postForm = apiClient.postForm as unknown as ReturnType<typeof vi.fn>;
 
 describe("useOrgOnboarding network helpers", () => {
   beforeEach(() => {
@@ -62,5 +65,17 @@ describe("useOrgOnboarding network helpers", () => {
   it("lists representatives", () => {
     void fetchRepresentatives("org-1");
     expect(get).toHaveBeenCalledWith("/internal/v1/organizations/org-1/representatives");
+  });
+
+  it("uploads an organization logo as multipart data", () => {
+    const file = new File(["logo"], "logo.png", { type: "image/png" });
+    void uploadOrganizationLogo("org-1", file);
+
+    expect(postForm).toHaveBeenCalledWith(
+      "/internal/v1/organizations/org-1/logo",
+      expect.any(FormData),
+    );
+    const form = postForm.mock.calls[0]?.[1] as FormData;
+    expect(form.get("file")).toBe(file);
   });
 });

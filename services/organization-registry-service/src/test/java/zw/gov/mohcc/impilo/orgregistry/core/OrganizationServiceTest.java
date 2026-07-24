@@ -174,4 +174,34 @@ class OrganizationServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already exists");
     }
+
+    @Test
+    void updateLogo_resolvesWgvSourceIdWithinTenantAndStoresOnlyObjectReference() throws Exception {
+        UUID wgvId = UUID.randomUUID();
+        UUID objectId = UUID.randomUUID();
+        OrganizationEntity mirror = new OrganizationEntity();
+        mirror.setId(UUID.randomUUID());
+        mirror.setTenantId(tenant);
+        mirror.setSource(WgvMirrorService.SOURCE_WGV_MIRROR);
+        mirror.setSourceRef(wgvId.toString());
+
+        when(organizationRepository.findByTenantIdAndId(tenant, wgvId)).thenReturn(Optional.empty());
+        when(organizationRepository.findByTenantIdAndSourceAndSourceRef(
+                tenant, WgvMirrorService.SOURCE_WGV_MIRROR, wgvId.toString()))
+                .thenReturn(Optional.of(mirror));
+        when(organizationRepository.save(mirror)).thenReturn(mirror);
+
+        OrganizationEntity updated =
+                service.updateLogo(tenant, wgvId, objectId.toString(), "org-admin");
+
+        assertThat(updated.getLogoObjectId()).isEqualTo(objectId.toString());
+        verify(outboxWriter).publish(any(), anyString(), anyString(), anyString(),
+                org.mockito.ArgumentMatchers.eq("logo_updated"), anyString(), any());
+    }
+
+    @Test
+    void updateLogo_rejectsNonUuidObjectReferenceBeforeMutation() {
+        assertThatThrownBy(() -> service.updateLogo(tenant, UUID.randomUUID(), "not-an-object-id", "actor"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

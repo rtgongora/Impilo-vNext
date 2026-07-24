@@ -71,6 +71,11 @@ public class OrganizationRegistryServiceClient {
         return postForJson(trimSlash(baseUrl) + "/v1/organizations/" + organizationId + "/verify", body);
     }
 
+    public JsonNode updateLogo(String organizationId, Object body) {
+        return exchangeJson(HttpMethod.PUT,
+                trimSlash(baseUrl) + "/v1/organizations/" + organizationId + "/logo", body);
+    }
+
     public JsonNode listAffiliations(String organizationId) {
         return getForJson(trimSlash(baseUrl) + "/v1/organizations/" + organizationId + "/affiliations");
     }
@@ -97,22 +102,26 @@ public class OrganizationRegistryServiceClient {
     }
 
     private JsonNode postForJson(String url, Object body) {
+        return exchangeJson(HttpMethod.POST, url, body);
+    }
+
+    private JsonNode exchangeJson(HttpMethod method, String url, Object body) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             String json = body == null ? "{}" : (body instanceof String s ? s : objectMapper.writeValueAsString(body));
             HttpEntity<String> entity = new HttpEntity<>(json, headers);
-            ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.POST, entity, JsonNode.class);
+            ResponseEntity<JsonNode> response = restTemplate.exchange(url, method, entity, JsonNode.class);
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                log.warn("Organization registry POST {} failed: {}", url, response.getStatusCode());
-                throw new IllegalStateException("organization-registry POST failed: " + response.getStatusCode());
+                log.warn("Organization registry {} {} failed: {}", method, url, response.getStatusCode());
+                throw new IllegalStateException("organization-registry " + method + " failed: " + response.getStatusCode());
             }
             return response.getBody();
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
-            log.warn("Organization registry POST {} error: {}", url, e.getMessage());
-            throw new IllegalStateException("organization-registry POST error: " + e.getMessage(), e);
+            log.warn("Organization registry {} {} error: {}", method, url, e.getMessage());
+            throw new IllegalStateException("organization-registry " + method + " error: " + e.getMessage(), e);
         }
     }
 

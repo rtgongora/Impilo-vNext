@@ -34,6 +34,10 @@ public final class OrgRegistryDtos {
     public record VerifyOrganizationRequest(List<UUID> verifiedRepresentativeIds) {
     }
 
+    /** Attach an already stored document-service image object as the organisation logo. */
+    public record UpdateOrganizationLogoRequest(String logoObjectId) {
+    }
+
     /** Create a regulatory appointment (ROM-W1) — lands PENDING_VERIFICATION. */
     public record CreateAppointmentRequest(
             String personHealthId,

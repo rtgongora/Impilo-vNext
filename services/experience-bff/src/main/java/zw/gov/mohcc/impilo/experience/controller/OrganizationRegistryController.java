@@ -4,11 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,9 +28,42 @@ public class OrganizationRegistryController {
     private static final Logger log = LoggerFactory.getLogger(OrganizationRegistryController.class);
 
     private final OrganizationRegistryServiceClient client;
+    private final DocumentServiceClient documents;
 
-    public OrganizationRegistryController(OrganizationRegistryServiceClient client) {
+    public OrganizationRegistryController(OrganizationRegistryServiceClient client,
+                                          DocumentServiceClient documents) {
         this.client = client;
+        this.documents = documents;
+    }
+
+    @PostMapping(value = "/{id}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Object>> uploadLogo(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id,
+            @RequestPart("file") MultipartFile file) {
+        try {
+            if (file.isEmpty() || file.getSize() > 2 * 1024 * 1024) {
+                return invalidLogo("Logo must be a non-empty image no larger than 2 MB",
+                        requestId, correlationId);
+            }
+            String mime = file.getContentType();
+            if (!java.util.Set.of("image/png", "image/jpeg", "image/webp").contains(mime)) {
+                return invalidLogo("Logo must be PNG, JPEG, or WebP", requestId, correlationId);
+            }
+            JsonNode stored = documents.uploadObject(
+                    file.getBytes(), file.getOriginalFilename(), mime,
+                    Map.of("purpose", "organization-logo", "organizationId", id));
+            String objectId = objectId(stored);
+            if (objectId == null) {
+                throw new IllegalStateException("document-service did not return an object id");
+            }
+            return ok(requestId, correlationId,
+                    client.updateLogo(id, Map.of("logoObjectId", objectId)));
+        } catch (IOException | RuntimeException e) {
+            log.warn("organization logo upload failed: {}", e.getMessage());
+            return upstreamFailure(e.getMessage(), requestId, correlationId);
+        }
     }
 
     @GetMapping
@@ -199,5 +236,19 @@ public class OrganizationRegistryController {
                 "error", Map.of("code", "ORGANIZATION_REGISTRY_UNAVAILABLE",
                         "message", message == null ? "organization-registry unavailable" : message),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private static ResponseEntity<Map<String, Object>> invalidLogo(
+            String message, String requestId, String correlationId) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", Map.of("code", "INVALID_ORGANIZATION_LOGO", "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private static String objectId(JsonNode stored) {
+        if (stored == null) return null;
+        if (stored.hasNonNull("objectId")) return stored.get("objectId").asText();
+        if (stored.hasNonNull("id")) return stored.get("id").asText();
+        return null;
     }
 }

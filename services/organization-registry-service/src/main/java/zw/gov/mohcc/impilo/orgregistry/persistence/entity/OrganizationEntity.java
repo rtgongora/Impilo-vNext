@@ -54,6 +54,10 @@ public class OrganizationEntity {
     @Column(length = 255)
     private String sourceRef;
 
+    /** Opaque document-service object id for the organisation's current logo. */
+    @Column(length = 255)
+    private String logoObjectId;
+
     @Column(length = 128)
     private String verifiedBy;
 

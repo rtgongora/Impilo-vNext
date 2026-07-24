@@ -28,6 +28,7 @@ export interface Organization {
   orgType?: string;
   status?: string;
   countryOperationRef?: string;
+  logoObjectId?: string;
   [key: string]: unknown;
 }
 
@@ -103,6 +104,15 @@ export function verifyOrganization(vars: VerifyOrganizationVars) {
   );
 }
 
+export function uploadOrganizationLogo(organizationId: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return apiClient.postForm<OrgRegistryEnvelope<Organization>>(
+    `${ORGANIZATIONS_BASE}/${organizationId}/logo`,
+    form,
+  );
+}
+
 // ── Query hooks ────────────────────────────────────────────────────────────
 
 export function useOrganization(id: string | undefined) {
@@ -151,6 +161,17 @@ export function useVerifyOrganization() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: verifyOrganization,
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ["org-onboarding", "organization", vars.organizationId] });
+    },
+  });
+}
+
+export function useUploadOrganizationLogo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ organizationId, file }: { organizationId: string; file: File }) =>
+      uploadOrganizationLogo(organizationId, file),
     onSuccess: (_res, vars) => {
       void qc.invalidateQueries({ queryKey: ["org-onboarding", "organization", vars.organizationId] });
     },

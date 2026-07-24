@@ -35,7 +35,14 @@ public class OrganizationController {
 
     @GetMapping("/{id}")
     public OrganizationEntity get(@PathVariable UUID id) {
-        return organizationService.get(tenantId(), id);
+        return organizationService.getByCanonicalOrSourceId(tenantId(), id);
+    }
+
+    @PutMapping("/{id}/logo")
+    public OrganizationEntity updateLogo(
+            @PathVariable UUID id,
+            @RequestBody OrgRegistryDtos.UpdateOrganizationLogoRequest request) throws Exception {
+        return organizationService.updateLogo(tenantId(), id, request.logoObjectId(), actorId());
     }
 
     @PostMapping("/{id}/representatives")
