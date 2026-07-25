@@ -1,87 +1,76 @@
 "use client";
 
 /**
- * AuthLayout — Split-screen authentication layout with Impilo branding.
- * Layout variant: "auth" (used by /auth/* routes)
+ * AuthLayout — Immersive Trust Scene layout integrated into the shared Impilo shell.
  *
- * Structure:
- *   [Left panel: Afro-futurist hero (hidden on mobile)]
- *   [Right panel: Auth form content + compact mobile hero]
+ * Implements the doctrine:
+ * "Sign-in is not a wall between public Impilo and vNext.
+ * It is a temporary trust conversation inside the same living Impilo experience."
  */
 
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { Shield } from "lucide-react";
-import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
-import { AuthHeroAfroFuturistBackground } from "@/components/auth/AuthHeroAfroFuturistBackground";
-import { AuthHeroContent } from "@/components/auth/AuthHeroContent";
-import { AuthHeroWatermark } from "@/components/auth/AuthHeroWatermark";
+import { PublicHeader } from "@/components/public/PublicHeader";
+import { PublicFooter } from "@/components/public/PublicFooter";
+import { EmergencyHelpButton } from "@/components/public/EmergencyHelpButton";
+import { JourneyContextPanel } from "@/components/auth/JourneyContextPanel";
 
-export function AuthLayout({ children, width = "md" }: { children: ReactNode; width?: "md" | "xl" }) {
+export function AuthLayout({
+  children,
+  returnTo = null,
+}: {
+  children: ReactNode;
+  returnTo?: string | null;
+  width?: "md" | "xl";
+}) {
   return (
-    <div className="min-h-screen flex bg-background-deep">
-      {/* Left Panel — Afro-futurist hero (desktop / large tablet landscape) */}
-      <div className="relative hidden overflow-hidden lg:flex lg:w-1/2 xl:w-[52%]">
-        <AuthHeroAfroFuturistBackground />
+    <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 selection:bg-emerald-500 selection:text-white" data-testid="auth-trust-scene">
+      {/* Shared Responsive Public Header (Emergency, Language, Accessibility, Logo) */}
+      <PublicHeader />
 
-        <div className="relative z-10 flex w-full flex-col justify-between p-10 text-white xl:p-12">
-          <AuthHeroWatermark />
-          <div data-testid="auth-desktop-hero-logo">
-            <ImpiloBrandLogo variant="hero" tone="white" />
-            <p className="mt-2 text-sm text-white/75">Health Operating System</p>
+      {/* Main Trust Canvas */}
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-[90rem] mx-auto w-full flex items-center justify-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          {/* Left Column (Desktop): Saved Journey Context Panel */}
+          <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center">
+            <JourneyContextPanel returnTo={returnTo} />
           </div>
 
-          <AuthHeroContent variant="desktop" />
+          {/* Right Column: Interactive Authentication Surface */}
+          <div className="lg:col-span-6 xl:col-span-5 flex flex-col justify-center">
+            <div className="rounded-[2rem] border border-slate-200/90 bg-white p-6 sm:p-8 shadow-2xl text-slate-900">
+              {children}
+            </div>
 
-          <p className="text-xs text-white/60">Impilo Health Operating System</p>
-        </div>
-      </div>
-
-      {/* Right Panel — Auth Content */}
-      <div className="flex flex-1 flex-col items-center justify-center p-4 sm:p-6 lg:p-10 xl:p-12 impilo-african-print bg-[color:var(--background)]">
-        <div className={width === "xl" ? "w-full max-w-xl" : "w-full max-w-md"}>
-          {/* Mobile / tablet hero strip */}
-          <div
-            className="relative mb-6 overflow-hidden rounded-2xl border border-[color:var(--border-soft)] lg:hidden"
-            data-testid="auth-mobile-hero-logo"
-          >
-            <div className="relative min-h-[11rem] sm:min-h-[12rem]">
-              <AuthHeroAfroFuturistBackground />
-              <AuthHeroWatermark compact />
-              <div className="relative z-10 flex flex-col gap-4 p-5 sm:p-6">
-                <div className="flex justify-center">
-                  <ImpiloBrandLogo variant="hero" tone="white" />
-                </div>
-                <AuthHeroContent variant="compact" />
-              </div>
+            <div className="mt-4 space-y-2 text-center text-xs text-slate-400">
+              <p className="flex items-center justify-center gap-1.5 font-medium">
+                <Shield className="h-3.5 w-3.5 text-emerald-400" />
+                Protected by Impilo Trust Layer & TSHEPO Policy Engine
+              </p>
+              <p className="flex items-center justify-center gap-3">
+                <Link href="/privacy" className="hover:text-slate-200 underline">
+                  Privacy Policy
+                </Link>
+                <span>&middot;</span>
+                <Link href="/terms" className="hover:text-slate-200 underline">
+                  Terms of Use
+                </Link>
+                <span>&middot;</span>
+                <Link href="/account-deletion" className="hover:text-slate-200 underline">
+                  Account Deletion
+                </Link>
+              </p>
             </div>
           </div>
-
-          <div className="rounded-xl border border-[color:var(--border-strong)] bg-card p-6 shadow-impilo-floating sm:p-8">
-            {children}
-          </div>
-
-          <div className="mt-4 space-y-2 text-center">
-            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-              <Shield className="h-3 w-3" />
-              Secure authentication powered by Impilo Trust Layer
-            </p>
-            <p className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-              <Link href="/privacy" className="transition-colors hover:text-foreground">
-                Privacy Policy
-              </Link>
-              <span>&middot;</span>
-              <Link href="/terms" className="transition-colors hover:text-foreground">
-                Terms of Use
-              </Link>
-              <span>&middot;</span>
-              <Link href="/account-deletion" className="transition-colors hover:text-foreground">
-                Account Deletion
-              </Link>
-            </p>
-          </div>
         </div>
-      </div>
+      </main>
+
+      {/* Emergency Help floating button remains accessible */}
+      <EmergencyHelpButton />
+
+      {/* Shared Public Footer */}
+      <PublicFooter />
     </div>
   );
 }

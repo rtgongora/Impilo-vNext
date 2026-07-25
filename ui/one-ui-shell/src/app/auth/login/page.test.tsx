@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import LoginPage from "./page";
 
@@ -47,47 +47,41 @@ vi.mock("@/lib/api-client", () => ({
   },
 }));
 
-describe("LoginPage", () => {
-  it("renders the sign-in form with email and password fields", () => {
+describe("LoginPage — Progressive Auth Scene", () => {
+  it("renders Step 1 identifier input and Express Entry Intent Selector", () => {
     render(<LoginPage />);
 
-    expect(screen.getByText("Welcome back")).toBeInTheDocument();
-    expect(screen.getByText("Sign in to continue to Impilo")).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email or phone/i)).toBeInTheDocument();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+    expect(screen.getByText("Sign in to Impilo")).toBeInTheDocument();
+    expect(screen.getByTestId("express-intent-selector")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email, phone number, or Impilo ID/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Continue/i })).toBeInTheDocument();
   });
 
-  it("shows alternate sign-in methods and registration link", () => {
+  it("progresses to Step 2 credential resolution upon identifier submission", () => {
     render(<LoginPage />);
 
-    expect(screen.getByText("Other sign-in methods")).toBeInTheDocument();
-    // The workforce entrance is a permanent, prominent action (PJ5, D-P4).
-    expect(
-      screen.getByRole("link", { name: /Health Provider Login — Work now/i }),
-    ).toHaveAttribute("href", "/auth/login/provider-id");
-    // L1 passkey sign-in (real flow, replaces the biometric stub — cbf8869de).
-    expect(screen.getByRole("link", { name: /Sign in with a passkey/i })).toHaveAttribute(
+    const input = screen.getByLabelText(/Email, phone number, or Impilo ID/i);
+    fireEvent.change(input, { target: { value: "mapfumo@mohcc.gov.zw" } });
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Forgot password/i })).toHaveAttribute(
       "href",
-      "/auth/login/biometric",
+      "/auth/forgot-password",
     );
-    // L3 ABIS scan-to-login — a distinct path from device passkeys (a91cff9ae).
-    expect(screen.getByRole("link", { name: /Sign in with your fingerprint/i })).toHaveAttribute(
-      "href",
-      "/auth/login/scan",
-    );
+  });
+
+  it("shows registration and guest continuation options", () => {
+    render(<LoginPage />);
+
     expect(screen.getByRole("link", { name: /Create an account/i })).toHaveAttribute(
       "href",
       "/auth/register/contact",
     );
-  });
-
-  it("shows forgot password link", () => {
-    render(<LoginPage />);
-
-    expect(screen.getByRole("link", { name: /Forgot password/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Continue as guest/i })).toHaveAttribute(
       "href",
-      "/auth/forgot-password",
+      "/home",
     );
   });
 });
