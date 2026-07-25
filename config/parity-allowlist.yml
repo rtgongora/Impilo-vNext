@@ -45,6 +45,30 @@ exceptions:
     remediation: Retire this entry if the pillar badge copy stops using "Coming soon".
     issue: parity-welcome-coming-soon
 
+  - path: ui/one-ui-shell/src/app/about/page.tsx
+    capability: Public programme information
+    reason: >-
+      Static public information surface. It deliberately renders governed
+      Ministry and platform-orientation copy through the shared PublicShell and
+      has no transactional API or personal-data dependency.
+    review_date: 2026-10-01
+    owner: experience-shell
+    class: static_public_information
+    remediation: Remove this entry if /about gains live operational content.
+    issue: parity-public-about-static
+
+  - path: ui/one-ui-shell/src/app/contact/page.tsx
+    capability: Public contact and support orientation
+    reason: >-
+      Static official contact information plus links into the live feedback,
+      participation and service-status lanes. The page itself performs no
+      transaction and therefore does not require a page-local API hook.
+    review_date: 2026-10-01
+    owner: experience-shell
+    class: static_public_information
+    remediation: Remove this entry if /contact gains a page-local transaction.
+    issue: parity-public-contact-static
+
 legacy_advisory_gaps:
   - capability: ZIBO terminology admin
     note: Separate zibo-web app; web shell link only — mobile n/a
