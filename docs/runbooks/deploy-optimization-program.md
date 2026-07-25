@@ -185,3 +185,13 @@ diverged branch (`adaptive-layout-remediation` vs `main`, split Jan 2025). Fold 
 `npm build → docker build (Dockerfile now committed) → push → repin` into CI, and
 resolve the branch divergence, so new website content can't silently freeze again.
 See [[public-tls-ingress-architecture]] (WEBSITE DEPLOY DRIFT).
+
+
+### Measured evidence from fe0ba72d9 authorized in-place deploy
+
+- Selective BFF/shell build and import avoided rebuilding 98 unchanged images;
+- The canonical pipeline generates the contract implementation matrix twice;
+- OCI-index registry probes must accept/resolve OCI indexes instead of assuming Docker-v2 manifests;
+- Narrow imports are much faster than a full required-spine import;
+- Selective OCI import can lose the expected :preview containerd tag reference even when the index import reports success, forcing a second privileged checkpoint;
+- Detached launchers must record exit codes and survive SSH disconnects.
