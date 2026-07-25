@@ -1,12 +1,22 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { PublicLanding } from "@/components/public/PublicLanding";
+
+export const metadata = {
+  title: "Impilo — Zimbabwe's National Health Operating System",
+  description:
+    "How can Impilo help you today? Find care, get emergency help, access public services and progressively unlock protected health and professional work.",
+};
 
 /**
- * Root entry. Authenticated users go to their dashboard; everyone else lands on the
- * public L0 welcome page (G-CZO-02) — Impilo no longer bounces guests straight into the
- * auth gate. Session presence is the same exp_has_session cookie the middleware checks.
+ * One Impilo entry point.
+ *
+ * Guests receive the complete need-first public living canvas at the canonical
+ * root. Existing sessions continue to their authorised context without a second
+ * product boundary or a duplicate public website.
  */
 export default function RootPage() {
   const hasSession = cookies().get("exp_has_session")?.value === "1";
-  redirect(hasSession ? "/home" : "/welcome");
+  if (hasSession) redirect("/home");
+  return <PublicLanding />;
 }

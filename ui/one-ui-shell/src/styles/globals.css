@@ -380,4 +380,40 @@
   .learning-module-shell > .space-y-5 > .impilo-surface-card:first-child p {
     @apply mt-1 max-w-5xl text-sm leading-5;
   }
+
+  /**
+   * Public living-canvas primitives. Container queries let the launcher adapt to
+   * the space it receives in a split view, drawer or full-width page instead of
+   * assuming the viewport width.
+   */
+  .public-living-canvas,
+  .public-service-launcher {
+    container-type: inline-size;
+  }
+
+  .public-service-launcher {
+    grid-template-columns: 1fr;
+  }
+
+  @container (min-width: 34rem) {
+    .public-service-launcher {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @container (min-width: 68rem) {
+    .public-service-launcher {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .public-living-canvas *,
+    .public-service-launcher * {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
 }

@@ -53,6 +53,19 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      { source: "/services", destination: "/#services", permanent: true },
+      { source: "/solutions", destination: "/#services", permanent: true },
+      { source: "/features", destination: "/#services", permanent: true },
+      { source: "/resources", destination: "/welcome/health-info", permanent: true },
+      { source: "/docs", destination: "/welcome/health-info", permanent: true },
+      { source: "/training", destination: "/welcome/learning", permanent: true },
+      { source: "/apps", destination: "/download", permanent: true },
+      { source: "/community", destination: "/get-involved", permanent: true },
+      { source: "/technical", destination: "/about#how-impilo-works", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

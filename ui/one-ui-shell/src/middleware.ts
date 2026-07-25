@@ -11,6 +11,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const PUBLIC_PREFIXES = [
   "/welcome", // public L0 landing, find-care, emergency, accessibility (G-CZO-02)
+  "/about",
+  "/contact",
+  "/services",   // legacy public URLs redirect into the unified living canvas
+  "/solutions",
+  "/features",
+  "/resources",
+  "/docs",
+  "/training",
+  "/apps",
+  "/community",
+  "/technical",
   "/auth",
   "/kiosk",
   "/verify",
@@ -27,6 +38,7 @@ export const PUBLIC_PREFIXES = [
                    // 307-redirects them to /auth/login and the public map renders blank.
   "/map",          // public map assets (self-hosted glyph PBFs for street labels) — same
                    // anonymous-lane rule as /geo; a 307 here means label-less maps.
+  "/.well-known",  // mobile universal-link association files
   "/_next",
   "/api",
   "/internal",

@@ -16,7 +16,7 @@ import { ServiceAdvisoryBanner } from "@/components/advisory/ServiceAdvisoryBann
  */
 export function PublicShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen overflow-x-clip bg-[linear-gradient(180deg,#f8fafc_0%,#f0fdf4_52%,#f8fafc_100%)] text-slate-900">
       {/* a11y (C8): keyboard/SR users jump past the chrome to the main landmark. */}
       <SkipToContent targetId="main-content" />
 
@@ -32,7 +32,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
       */}
       <ServiceAdvisoryBanner />
 
-      <main id="main-content" className="mx-auto max-w-5xl px-4 py-8">
+      <main id="main-content" className="mx-auto max-w-[90rem] px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:px-8">
         {children}
       </main>
 

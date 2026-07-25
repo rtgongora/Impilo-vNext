@@ -1,7 +1,9 @@
-# Impilo public gateway website at impilo.mohcc.gov.zw (edge split).
-# The website owns the PUBLIC paths; vNext keeps everything else — including
-# /auth/* (the "Log in for work" handoff), /learning (Fundo) and all app routes.
-# Priority sits between the UI catch-all (1) and the BFF surfaces (100000).
+# Legacy public-site static compatibility service.
+#
+# User-visible public routes, including "/", now belong to one-ui-shell so Impilo
+# presents one coherent public-to-authenticated experience. This deployment remains
+# temporarily only for the mobile universal-link association files under
+# /.well-known; it no longer owns any page, navigation or visual asset route.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,18 +53,9 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      # Public marketing/informational paths served by the website. NOT claimed
-      # (→ vNext): /learning (Fundo), /get-involved + /community (the REAL vNext
-      # participation feature), /download (vNext get-app page). /apps + /.well-known
-      # ARE the website's (app-discovery surface + universal-link association files).
-      match: >-
-        Host(`impilo.mohcc.gov.zw`) && (Path(`/`) || PathPrefix(`/about`) ||
-        PathPrefix(`/services`) || PathPrefix(`/solutions`) ||
-        PathPrefix(`/features`) || PathPrefix(`/resources`) ||
-        PathPrefix(`/docs`) || PathPrefix(`/training`) ||
-        PathPrefix(`/apps`) || PathPrefix(`/.well-known`) ||
-        PathPrefix(`/technical`) || PathPrefix(`/contact`) ||
-        PathPrefix(`/assets`) || Path(`/logo.png`))
+      # Static mobile association files only. Every human-facing route falls
+      # through to the one-ui-shell catch-all.
+      match: Host(`impilo.mohcc.gov.zw`) && PathPrefix(`/.well-known`)
       priority: 50000
       services:
         - name: public-website

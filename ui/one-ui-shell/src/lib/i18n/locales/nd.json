@@ -151,6 +151,10 @@
       "choose": "Khetha ulimi"
     },
     "welcome": {
+      "eyebrow": "UMnyango Wezempilakahle Lokunakekelwa Kwabantwana",
+      "needFirstTitle": "Impilo ingakunceda ngani lamuhla?",
+      "needFirstIntro": "Thola ukunakekelwa, sebenzisa amasevisi, uthole ulwazi oluthembekileyo, uphathe impilo yakho kumbe usebenze ngokuphepha kuhlelo lwezempilakahle lweZimbabwe.",
+      "nompiloPrompt": "Buza loba yini ngempilo yakho, amasevisi kumbe usizo.",
       "signIn": "Ngena",
       "createAccount": "Bhalisa"
     },

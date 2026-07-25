@@ -1,80 +1,103 @@
 "use client";
 
 import Link from "next/link";
-import { Home, Phone } from "lucide-react";
+import {
+  BookOpenCheck,
+  HeartHandshake,
+  Home,
+  MapPin,
+  Phone,
+  Smartphone,
+  UsersRound,
+} from "lucide-react";
 import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { PublicAccessibilityMenu } from "./PublicAccessibilityMenu";
+import { PublicKhulumaIndicator } from "./PublicKhulumaIndicator";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n/useI18n";
 
+const PUBLIC_NAV = [
+  { label: "Impilo Home", href: "/", icon: Home },
+  { label: "Health Services", href: "/#services", icon: HeartHandshake },
+  { label: "Find", href: "/welcome/find-care", icon: MapPin },
+  { label: "Health Information", href: "/welcome/health-info", icon: BookOpenCheck },
+  { label: "Get Involved", href: "/get-involved", icon: UsersRound },
+  { label: "Download", href: "/download", icon: Smartphone },
+] as const;
+
 /**
- * Client chrome island for the public L0 header (C8 i18n). Renders the OFFICIAL
- * Impilo wordmark (never a CSS-drawn approximation) and keeps the three anchors
- * a stranded visitor always needs — Find care, Emergency, and home — reachable
- * from every public page, alongside accessibility, language and account actions.
- * Hydration-safe: English on SSR + first paint, stored locale after mount.
+ * Shared responsive public shell header. Public discovery and protected account
+ * entry live in the same navigation; no link hands the person to a second product.
  */
 export function PublicHeader() {
   const { t } = useI18n();
 
   return (
-    <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-        {/*
-          The public marketing site (impilo.mohcc.gov.zw/, a separate deployment) is the
-          landing page. A plain <a> forces a full navigation so Traefik routes "/" to the
-          website; a Next <Link> would client-route into the shell's own root, which
-          redirects guests straight back to /welcome (a loop).
-        */}
-        <a
+    <header className="sticky top-0 z-[9000] border-b border-slate-200/90 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+      <div className="mx-auto flex max-w-[90rem] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <Link
           href="/"
-          aria-label="Impilo — back to home"
-          className="flex items-center focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+          aria-label="Impilo — home"
+          className="flex shrink-0 items-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
         >
-          <ImpiloBrandLogo variant="full" tone="brand" size={30} />
-          <span className="ml-2 hidden text-sm font-normal text-slate-500 md:inline">
+          <ImpiloBrandLogo variant="full" tone="brand" size={32} />
+          <span className="ml-2 hidden text-xs font-medium text-slate-500 2xl:inline">
             {t("public.chrome.healthOs")}
           </span>
-        </a>
+        </Link>
 
-        <nav className="flex flex-wrap items-center gap-1.5 text-sm" aria-label="Public">
-          <a
-            href="/"
-            data-testid="public-back-to-home"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-          >
-            <Home className="h-4 w-4" aria-hidden />
-            {t("public.chrome.backToHome")}
-          </a>
-          <Link
-            href="/welcome/find-care"
-            className="hidden rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:inline-block"
-          >
-            {t("public.chrome.findCare")}
-          </Link>
-          <PublicAccessibilityMenu />
-          <LanguageSwitcher />
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex" aria-label="Public">
+          {PUBLIC_NAV.map(({ label, href }) => (
+            <Link
+              key={href}
+              href={href}
+              className="inline-flex min-h-10 items-center rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 xl:px-3"
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <PublicKhulumaIndicator />
+          <span className="hidden sm:inline-flex">
+            <PublicAccessibilityMenu />
+          </span>
+          <span className="hidden md:inline-flex">
+            <LanguageSwitcher />
+          </span>
           <Link
             href="/auth/login"
-            className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            className="inline-flex min-h-10 items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
           >
             {t("public.chrome.signIn")}
           </Link>
           <Link
-            href="/auth/register/contact"
-            className="rounded-md bg-emerald-600 px-3 py-1.5 font-medium text-white hover:bg-emerald-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-          >
-            {t("public.chrome.createAccount")}
-          </Link>
-          <Link
             href="/welcome/emergency"
-            className="inline-flex items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 font-semibold text-red-700 hover:bg-red-100 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-bold text-red-800 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
           >
-            <Phone className="h-3.5 w-3.5" aria-hidden />
-            {t("public.chrome.emergency")}
+            <Phone className="h-4 w-4" aria-hidden />
+            <span className="hidden sm:inline">{t("public.chrome.emergency")}</span>
+            <span className="sm:hidden">Help</span>
           </Link>
-        </nav>
+        </div>
       </div>
+
+      <nav
+        className="mx-auto grid max-w-[90rem] grid-cols-3 gap-1 border-t border-slate-100 px-3 py-1.5 sm:grid-cols-6 sm:px-6 lg:hidden"
+        aria-label="Public mobile"
+      >
+        {PUBLIC_NAV.map(({ label, href, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="inline-flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 text-center text-[11px] font-semibold leading-tight text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 sm:text-xs"
+          >
+            <Icon className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">{label.replace("Impilo ", "")}</span>
+          </Link>
+        ))}
+      </nav>
     </header>
   );
 }

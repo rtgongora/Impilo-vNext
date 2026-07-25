@@ -1,7 +1,19 @@
 import Link from "next/link";
 
 export function safePublicHref(href: string): string {
-  return href === "/welcome" || href.startsWith("/welcome/") ? href : "/welcome";
+  const safePrefixes = [
+    "/welcome",
+    "/verify",
+    "/get-involved",
+    "/status",
+    "/download",
+    "/about",
+    "/contact",
+  ];
+  if (href === "/") return "/";
+  return safePrefixes.some((prefix) => href === prefix || href.startsWith(`${prefix}/`))
+    ? href
+    : "/";
 }
 
 export function ContinueWithoutSignIn({

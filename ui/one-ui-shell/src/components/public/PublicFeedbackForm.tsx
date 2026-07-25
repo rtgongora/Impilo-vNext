@@ -10,6 +10,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
+import { KhulumaJourneyUpdate } from "./KhulumaJourneyUpdate";
 
 interface FeedbackReceipt {
   caseReference?: string;
@@ -86,6 +87,13 @@ export function PublicFeedbackForm() {
         >
           Check a report&apos;s status →
         </Link>
+        <KhulumaJourneyUpdate
+          reference={receipt.caseReference}
+          statusHref="/welcome/report/status"
+        >
+          Your acknowledgement and later case status are available from the public status route
+          using the claim code above. Signing in is optional for this guest journey.
+        </KhulumaJourneyUpdate>
       </div>
     );
   }

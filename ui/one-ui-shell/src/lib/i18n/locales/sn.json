@@ -151,6 +151,10 @@
       "choose": "Sarudza mutauro"
     },
     "welcome": {
+      "eyebrow": "Bazi rezveUtano nekuchengetwa kweVana",
+      "needFirstTitle": "Impilo ingakubatsirei nhasi?",
+      "needFirstIntro": "Tsvaga rubatsiro, shandisa masevhisi, wana ruzivo rwakavimbika, uye gadzirisa nyaya dzeutano kana basa zvakachengeteka muhurongwa hweutano hweZimbabwe.",
+      "nompiloPrompt": "Bvunza nezveutano hwako, masevhisi kana rubatsiro.",
       "signIn": "Pinda",
       "createAccount": "Nyoresa"
     },

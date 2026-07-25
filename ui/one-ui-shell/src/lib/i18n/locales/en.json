@@ -164,6 +164,9 @@
     },
     "welcome": {
       "eyebrow": "Ministry of Health & Child Care",
+      "needFirstTitle": "How can Impilo help you today?",
+      "needFirstIntro": "Find care, access services, get trusted information, manage your health or work securely across Zimbabwe's health system.",
+      "nompiloPrompt": "Ask anything about your health, services or support.",
       "title": "Your health, connected and protected.",
       "intro": "Impilo is Zimbabwe's national Health Operating System. Create an account to request an Impilo ID, receive care, view your records, and manage who can see them — with strong privacy and your consent at every step.",
       "createAccount": "Create an account",

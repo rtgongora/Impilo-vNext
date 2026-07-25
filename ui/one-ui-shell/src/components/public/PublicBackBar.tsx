@@ -21,19 +21,25 @@ export function PublicBackBar() {
   const { t } = useI18n();
 
   // Only sub-pages need the strip; the front door is the origin.
-  if (!pathname || pathname === "/welcome" || pathname === "/welcome/") return null;
+  if (
+    !pathname ||
+    pathname === "/" ||
+    pathname === "/welcome" ||
+    pathname === "/welcome/"
+  )
+    return null;
 
   function goBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
     } else {
-      router.push("/welcome");
+      router.push("/");
     }
   }
 
   return (
     <div className="border-b border-slate-200 bg-white/70">
-      <div className="mx-auto flex max-w-5xl items-center gap-1 px-4 py-1.5 text-sm">
+      <div className="mx-auto flex max-w-[90rem] items-center gap-1 px-4 py-1.5 text-sm sm:px-6 lg:px-8">
         <button
           type="button"
           onClick={goBack}
@@ -44,7 +50,7 @@ export function PublicBackBar() {
           {t("public.chrome.back")}
         </button>
         <Link
-          href="/welcome"
+          href="/"
           data-testid="public-home"
           className="inline-flex min-h-[40px] items-center gap-1.5 rounded-md px-2.5 py-1.5 font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
         >

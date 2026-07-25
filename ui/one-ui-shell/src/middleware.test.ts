@@ -14,6 +14,21 @@ describe("isPublicPath (G-CZO-02 public L0 entry)", () => {
     expect(isPublicPath("/")).toBe(true);
   });
 
+  it("keeps unified public information, participation and professional entry open", () => {
+    for (const path of [
+      "/about",
+      "/contact",
+      "/get-involved",
+      "/download",
+      "/provider/get-access",
+      "/services",
+      "/technical",
+      "/.well-known/assetlinks.json",
+    ]) {
+      expect(isPublicPath(path)).toBe(true);
+    }
+  });
+
   it("keeps authenticated surfaces gated", () => {
     expect(isPublicPath("/home")).toBe(false);
     expect(isPublicPath("/citizen/health-id/request")).toBe(false);

@@ -14,9 +14,9 @@ describe("public access choices", () => {
 
   it("keeps continue-without links inside the public gateway", () => {
     expect(safePublicHref("/welcome/wellness")).toBe("/welcome/wellness");
-    expect(safePublicHref("/admin")).toBe("/welcome");
+    expect(safePublicHref("/admin")).toBe("/");
     render(<ContinueWithoutSignIn href="/admin" />);
-    expect(screen.getByTestId("continue-without-sign-in")).toHaveAttribute("href", "/welcome");
+    expect(screen.getByTestId("continue-without-sign-in")).toHaveAttribute("href", "/");
   });
 
   it("explains sign-in and preserves the public intent", () => {
