@@ -360,13 +360,14 @@ async function attemptRefresh(): Promise<boolean> {
 /**
  * Clear auth state and redirect to login.
  */
-const AUTH_BYPASS_PREFIXES = ["/auth", "/consent", "/privacy", "/terms", "/share"];
+const AUTH_BYPASS_PREFIXES = ["/", "/welcome", "/auth", "/consent", "/privacy", "/terms", "/share", "/get-involved", "/status", "/download", "/verify", "/kiosk"];
 
 function handleAuthFailure(): void {
   if (typeof window !== "undefined") {
-    const isOnBypassPath = AUTH_BYPASS_PREFIXES.some((p) =>
-      window.location.pathname.startsWith(p)
-    );
+    const pathname = window.location.pathname;
+    const isOnBypassPath =
+      pathname === "/" ||
+      AUTH_BYPASS_PREFIXES.some((p) => p !== "/" && pathname.startsWith(p));
     if (isOnBypassPath) return;
 
     const store = useAuthStore.getState();

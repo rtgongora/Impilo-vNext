@@ -31,6 +31,8 @@ export { ROLE_GROUPS, matchesRequiredRole };
 
 /** Paths that bypass the consent gate (legal pages, consent page itself, auth). */
 const CONSENT_EXEMPT_PREFIXES = [
+  "/",
+  "/welcome",
   "/auth",
   "/consent",
   "/privacy",

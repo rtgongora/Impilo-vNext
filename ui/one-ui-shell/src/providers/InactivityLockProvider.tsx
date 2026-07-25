@@ -30,7 +30,7 @@ const LOGOUT_TIMEOUT_MINUTES = 15;
 const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"] as const;
 
 /** Paths exempt from inactivity lock (public routes). */
-const EXEMPT_PREFIXES = ["/auth", "/privacy", "/terms", "/consent", "/account-deletion", "/kiosk"];
+const EXEMPT_PREFIXES = ["/", "/welcome", "/auth", "/privacy", "/terms", "/consent", "/account-deletion", "/kiosk"];
 
 export function InactivityLockProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
