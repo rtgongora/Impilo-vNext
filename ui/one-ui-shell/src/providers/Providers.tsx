@@ -32,8 +32,8 @@ import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 
 function StoreHydrator({ children }: { children: ReactNode }) {
-  const [hydrated, setHydrated] = useState(false);
-  const { setAuth, hydrateSession } = useAuthStore();
+  const [, setHydrated] = useState(false);
+  const { setAuth, clearAuth } = useAuthStore();
   const { setFacility } = useFacilityStore();
   const { setWorkspace } = useWorkspaceStore();
   const { startShift } = useShiftStore();
@@ -47,20 +47,19 @@ function StoreHydrator({ children }: { children: ReactNode }) {
       const expiresAt = sessionStorage.getItem("exp:expires_at");
       let hasAuthenticatedSession = false;
 
-      const hasSessionCookie = document.cookie.includes("exp_has_session=1");
+      // Only hydrate session if a token exists and is valid
+      const isExpired = expiresAt ? new Date(expiresAt).getTime() - 60000 < Date.now() : false;
 
-      if (userStr && (token || hasSessionCookie)) {
+      if (userStr && token && !isExpired) {
         const user = JSON.parse(userStr);
-        if (token) {
-          setAuth(user, token, null, expiresAt);
-        } else {
-          hydrateSession(user, null, expiresAt);
-        }
+        setAuth(user, token, null, expiresAt);
         useOperationalContextStore.getState().ensureDefaultFromUser(user);
         useConsentStore.getState().hydrate(user.id);
         usePrivacyDisplayStore.getState().hydrate();
         hasAuthenticatedSession = true;
       } else {
+        // Clear stale unauthenticated session leftovers to prevent 401 redirect loops
+        clearAuth();
         resetExperienceContinuity();
       }
 
@@ -77,19 +76,11 @@ function StoreHydrator({ children }: { children: ReactNode }) {
         }
       }
     } catch {
-      // Silently ignore parse errors in stored state
+      clearAuth();
     }
 
     setHydrated(true);
-  }, [setAuth, hydrateSession, setFacility, setWorkspace, startShift]);
-
-  if (!hydrated) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-muted-foreground text-sm">Loading...</div>
-      </div>
-    );
-  }
+  }, [setAuth, clearAuth, setFacility, setWorkspace, startShift]);
 
   return (
     <>
@@ -113,8 +104,6 @@ export function Providers({ children }: { children: ReactNode }) {
   );
 
   return (
-    // TierProvider (Future-Realism §6): resolves the device/preference tier and mirrors tier-*/
-    // low-blur onto <html> so glass/motion enhancements degrade to the accessible baseline.
     <TierProvider>
       <QueryClientProvider client={queryClient}>
         <StoreHydrator>
