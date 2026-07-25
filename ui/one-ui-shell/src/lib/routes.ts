@@ -62,6 +62,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/context-chooser", zone: "auth", layout: "auth", sidebar: "main", guard: "auth", pageTitle: "Choose Work Context", navLabel: "Context Chooser" },
 
   // ── Zone: Public L0 (guest entry, no login — G-CZO-02) ──────────────
+  { path: "/", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Welcome to Impilo", navLabel: "Welcome" },
   { path: "/welcome", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Welcome to Impilo", navLabel: "Welcome" },
   { path: "/welcome/find-care", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Find Care", navLabel: "Find Care" },
   { path: "/welcome/emergency", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Emergency & Public Health", navLabel: "Emergency" },
@@ -170,7 +171,6 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/kiosk", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Self Check-In", navLabel: "Kiosk" },
 
   // â”€â”€ Zone: Home â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  { path: "/", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Home", navLabel: "Home", navZone: "life" },
   { path: "/home", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Home", navLabel: "Home", navZone: "life" },
   { path: "/home/notifications", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Notifications", navLabel: "Notifications", navZone: "life" },
   { path: "/home/profile", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Profile", navLabel: "Profile", navZone: "life" },
