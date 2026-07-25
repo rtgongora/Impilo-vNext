@@ -1,6 +1,5 @@
-export const dynamic = 'force-dynamic';
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+export const dynamic = "force-dynamic";
+
 import { PublicLanding } from "@/components/public/PublicLanding";
 
 export const metadata = {
@@ -12,12 +11,9 @@ export const metadata = {
 /**
  * One Impilo entry point.
  *
- * Guests receive the complete need-first public living canvas at the canonical
- * root. Existing sessions continue to their authorised context without a second
- * product boundary or a duplicate public website.
+ * Serves the need-first public living canvas at the canonical root `/`.
+ * Guests and returning users can freely explore public services or enter protected work.
  */
 export default function RootPage() {
-  const hasSession = cookies().get("exp_has_session")?.value === "1";
-  if (hasSession) redirect("/home");
   return <PublicLanding />;
 }
