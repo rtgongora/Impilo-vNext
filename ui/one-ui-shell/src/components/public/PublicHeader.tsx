@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import {
+  BadgeCheck,
   BookOpenCheck,
   HeartHandshake,
-  Home,
-  MapPin,
   Phone,
   Smartphone,
   UsersRound,
@@ -16,13 +15,14 @@ import { PublicKhulumaIndicator } from "./PublicKhulumaIndicator";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n/useI18n";
 
+// Short, plain-language public navigation (landing concept §4/§13). Rarer
+// destinations live inside the journeys they belong to, not the top bar.
 const PUBLIC_NAV = [
-  { label: "Impilo Home", href: "/", icon: Home },
-  { label: "Health Services", href: "/#services", icon: HeartHandshake },
-  { label: "Find", href: "/welcome/find-care", icon: MapPin },
-  { label: "Health Information", href: "/welcome/health-info", icon: BookOpenCheck },
-  { label: "Get Involved", href: "/get-involved", icon: UsersRound },
-  { label: "Download", href: "/download", icon: Smartphone },
+  { label: "Care", href: "/welcome/find-care", icon: HeartHandshake },
+  { label: "Find", href: "/verify/practitioner", icon: BadgeCheck },
+  { label: "Learn", href: "/welcome/health-info", icon: BookOpenCheck },
+  { label: "Get involved", href: "/get-involved", icon: UsersRound },
+  { label: "Get app", href: "/download", icon: Smartphone },
 ] as const;
 
 /**
@@ -38,11 +38,11 @@ export function PublicHeader() {
         <Link
           href="/"
           aria-label="Impilo — home"
-          className="flex shrink-0 items-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+          className="flex shrink-0 flex-col justify-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
         >
           <ImpiloBrandLogo variant="full" tone="brand" size={32} />
-          <span className="ml-2 hidden text-xs font-medium text-slate-500 2xl:inline">
-            {t("public.chrome.healthOs")}
+          <span className="mt-0.5 hidden text-[11px] font-medium leading-none text-slate-500 sm:block">
+            One Health OS. For everyone.
           </span>
         </Link>
 
