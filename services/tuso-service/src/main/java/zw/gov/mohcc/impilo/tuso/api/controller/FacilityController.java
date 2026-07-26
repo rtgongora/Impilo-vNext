@@ -516,7 +516,11 @@ public class FacilityController {
                 pack.hasValidCoordinates(),
                 pack.missingFacilityCode(),
                 pack.locationContext(),
-                pack.bedCapacity()
+                pack.bedCapacity(),
+                // HAR W5 — the internal list is what the mobile citizen app reads. Without this it
+                // renders an HPA-listed facility exactly like an operating one, address and phone
+                // included, with nothing to say the services are unconfirmed.
+                entity.getRegulatoryStatus() != null ? entity.getRegulatoryStatus().name() : null
         );
     }
 }
