@@ -83,6 +83,16 @@ impilo:
     allow-anonymous: false
   auth:
     fallback-enabled: ${AUTH_FALLBACK_ENABLED:false}
+    # Service workload credential (preview==prod auth wave, stage 2 slice 1): the BFF's own
+    # client_credentials token, attached to downstream calls that carry no inbound user token.
+    # Secret intentionally defaults to empty — absent secret degrades to "no token" with a
+    # SERVICE_TOKEN_MINT_FAILED WARN, it never breaks preview.
+    service-token:
+      enabled: ${IMPILO_S2S_SERVICE_TOKEN_ENABLED:true}
+      token-uri: ${IMPILO_S2S_SERVICE_TOKEN_URI:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/token}
+      client-id: ${KEYCLOAK_BACKEND_CLIENT_ID:impilo-backend}
+      client-secret: ${KEYCLOAK_BACKEND_SECRET:}
+      scope: ${IMPILO_S2S_SERVICE_TOKEN_SCOPE:}
   scheduling:
     display-timezone: ${IMPILO_SCHEDULING_DISPLAY_TIMEZONE:Africa/Harare}
     reminders:

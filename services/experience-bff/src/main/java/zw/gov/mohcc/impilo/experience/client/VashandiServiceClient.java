@@ -20,7 +20,7 @@ import java.util.Map;
 
 /**
  * HTTP client for Vashandi operational workforce service ({@code /v1/internal/vashandi/**}).
- * Trust headers are forwarded by {@link ServiceClientConfig#trustHeaderForwardingInterceptor()}.
+ * Trust headers are forwarded by {@code ServiceClientConfig#trustHeaderForwardingInterceptor}.
  */
 @Component
 public class VashandiServiceClient {
