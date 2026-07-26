@@ -225,6 +225,27 @@ public class HpaRegulatoryOperationsController {
 
     // ---- PIC nominations -----------------------------------------------------
 
+    /**
+     * HAR W3 — the registry-wide PIC nomination queue.
+     *
+     * <p>Until now nominations could only be listed one facility or one practitioner at a time, so
+     * the 6,180 the HPA seed produced were invisible in practice: no registrar was going to open
+     * 5,509 facility pages to find them. Paged and filterable by state and province.</p>
+     */
+    @GetMapping("/pic-nominations")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<PicNominationService.QueueRow>>> picQueue(
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String province,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        TrustContext ctx = TrustContextHolder.require();
+        int bounded = Math.min(Math.max(size, 1), 200);
+        return ResponseEntity.ok(ApiResponse.ok(
+                picNominationService.searchQueue(state, province,
+                        org.springframework.data.domain.PageRequest.of(Math.max(page, 0), bounded)),
+                corr(ctx)));
+    }
+
     @PostMapping("/pic-nominations")
     public ResponseEntity<ApiResponse<PicNominationEntity>> nominate(
             @RequestBody PicNominationService.NominateRequest request) {

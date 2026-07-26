@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.varapi.api.dto.BulkPreloadRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.BulkPreloadResponse;
 import zw.gov.mohcc.impilo.varapi.api.dto.ClaimProfileRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.ClaimProfileResponse;
+import zw.gov.mohcc.impilo.varapi.core.HpaPractitionerClaimService;
 import zw.gov.mohcc.impilo.varapi.core.ProviderBootstrapService;
 
 import java.util.Map;
@@ -36,9 +37,12 @@ public class ProviderBootstrapController {
     private static final Logger log = LoggerFactory.getLogger(ProviderBootstrapController.class);
 
     private final ProviderBootstrapService bootstrapService;
+    private final HpaPractitionerClaimService hpaClaimService;
 
-    public ProviderBootstrapController(ProviderBootstrapService bootstrapService) {
+    public ProviderBootstrapController(ProviderBootstrapService bootstrapService,
+                                       HpaPractitionerClaimService hpaClaimService) {
         this.bootstrapService = bootstrapService;
+        this.hpaClaimService = hpaClaimService;
     }
 
     /** Bulk-preload a roster of PRELOADED provider skeletons; each yields a one-time claim token. */
@@ -79,6 +83,28 @@ public class ProviderBootstrapController {
         ClaimProfileResponse response = bootstrapService.claimProfile(
                 request.claimToken(), request.claimantHealthId(), request.assuranceOutcome());
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * HAR W3 — claim an HPA-listed profile by council registration number.
+     *
+     * <p>The 4,241 practitioners HPA listed as practitioners-in-charge hold no claim token: the
+     * import had no contact channel for them, so {@link #claim} is unreachable for exactly the
+     * people the register is about. This records a request for a human decision instead — it binds
+     * nothing, and returns the same acknowledgement whether or not the number resolves, so the
+     * endpoint cannot be used to discover which registration numbers exist.</p>
+     *
+     * <p>Both branches do identical work (submit + save), so the response time carries no signal
+     * either; no artificial floor is needed here, unlike the read-only resolve lane.</p>
+     */
+    @PostMapping("/claim/by-registration-number")
+    public ResponseEntity<HpaPractitionerClaimService.ClaimAcknowledgement> claimByRegistrationNumber(
+            @RequestBody Map<String, String> body) {
+        TrustContextHolder.require();
+        String registrationNumber = body == null ? null : body.get("registrationNumber");
+        String councilCode = body == null ? null : body.get("councilCode");
+        return ResponseEntity.ok(
+                hpaClaimService.claimByRegistrationNumber(registrationNumber, councilCode));
     }
 
     // ── Failure mapping (service throws plain exceptions; map to HTTP) ─────────

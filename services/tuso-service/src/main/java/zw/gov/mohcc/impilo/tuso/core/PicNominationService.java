@@ -2,6 +2,8 @@ package zw.gov.mohcc.impilo.tuso.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -358,6 +360,110 @@ public class PicNominationService {
     @Transactional(readOnly = true)
     public List<PicNominationEntity> listForPractitioner(String providerPublicId) {
         return nominationRepository.findByProviderPublicIdOrderByNominatedAtDesc(providerPublicId);
+    }
+
+    /**
+     * HAR W3 — the registry-wide nomination queue, with the facility context a registrar needs to
+     * act on a row.
+     *
+     * <p>Facilities are loaded in one batch, not per row: the queue spans 5,509 facilities and a
+     * per-row lookup would be the same N+1 that makes the control tower unusable.</p>
+     */
+    @Transactional(readOnly = true)
+    public Page<QueueRow> searchQueue(String state, String province, Pageable pageable) {
+        TrustContext ctx = TrustContextHolder.require();
+        Page<PicNominationEntity> page = nominationRepository.searchQueue(
+                ctx.tenantId(),
+                state != null && !state.isBlank() ? state.trim() : null,
+                province != null && !province.isBlank() ? province.trim() : null,
+                pageable);
+        Map<Long, FacilityEntity> facilities = facilityRepository
+                .findAllById(page.getContent().stream().map(PicNominationEntity::getFacilityId).distinct().toList())
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(FacilityEntity::getId, f -> f));
+        return page.map(n -> {
+            FacilityEntity facility = facilities.get(n.getFacilityId());
+            return new QueueRow(n,
+                    facility != null ? facility.getFacilityCode() : null,
+                    facility != null ? facility.getName() : null,
+                    facility != null ? facility.getProvince() : null,
+                    facility != null && facility.getRegulatoryStatus() != null
+                            ? facility.getRegulatoryStatus().name() : null);
+        });
+    }
+
+    /** A nomination plus enough facility context to be actionable in a registry-wide queue. */
+    public record QueueRow(PicNominationEntity nomination, String facilityCode, String facilityName,
+                           String province, String facilityRegulatoryStatus) {}
+
+    /**
+     * HAR W3 — re-run eligibility for the nominations a provider left parked when they claim their
+     * profile.
+     *
+     * <p>The HPA seed produced 6,180 nominations that stopped at {@code ELIGIBILITY_CHECKED}
+     * because VARAPI (correctly) assessed an unclaimed, preloaded profile as ineligible: a person
+     * who has never used the platform cannot accept an appointment. That is the machine working,
+     * not a bug — so nothing here fabricates authority. When the person actually claims the
+     * profile, the input to that assessment changes, and the nomination deserves a fresh answer
+     * rather than sitting parked forever on a stale verdict.</p>
+     *
+     * <p>The only transition this can make is {@code ELIGIBILITY_CHECKED →
+     * PRACTITIONER_ACCEPTANCE_PENDING} — the practitioner still has to accept, and the regulator
+     * still has to review, before any assignment exists. A still-ineligible assessment leaves the
+     * nomination exactly where it was.</p>
+     *
+     * @return the number of nominations that advanced.
+     */
+    @Transactional
+    public int reassessAfterClaim(TrustContext ctx, String providerPublicId) {
+        if (providerPublicId == null || providerPublicId.isBlank()) {
+            return 0;
+        }
+        List<PicNominationEntity> parked = nominationRepository.findByProviderPublicIdAndStateIn(
+                providerPublicId.trim(), List.of("ELIGIBILITY_CHECKED"));
+        int advanced = 0;
+        for (PicNominationEntity nomination : parked) {
+            if (!nomination.getTenantId().equals(ctx.tenantId())) {
+                continue; // tenant isolation — a claim in one tenant never moves another's queue
+            }
+            Map<String, Object> assessment = varapiClient.requestEligibilityAssessment(
+                    nomination.getProviderPublicId(),
+                    String.valueOf(nomination.getFacilityId()),
+                    nomination.getFacilityUnitId() != null ? String.valueOf(nomination.getFacilityUnitId()) : null,
+                    "PIC_NOMINATION",
+                    nomination.getTenantId().toString());
+            String result = stringOr(assessment.get("result"), "UNKNOWN");
+            nomination.setEligibilitySnapshot(assessment);
+            nomination.setEligibilityResult(result);
+            nomination.setEligibilitySnapshotRef(stringOr(assessment.get("snapshotId"), null));
+            if (nomination.getImpiloHealthId() == null) {
+                nomination.setImpiloHealthId(uuidOrNull(assessment.get("impiloHealthId")));
+            }
+            if (!"INELIGIBLE".equals(result)) {
+                nomination.setState("PRACTITIONER_ACCEPTANCE_PENDING");
+                advanced++;
+            }
+            nomination.setUpdatedBy(ctx.actorId());
+            nominationRepository.save(nomination);
+
+            audit(ctx, nomination.getFacilityId(), "PIC_ELIGIBILITY_REASSESSED", nomination.getNominationId(),
+                    Map.of("providerPublicId", nomination.getProviderPublicId(),
+                            "eligibilityResult", result,
+                            "state", nomination.getState(),
+                            "trigger", "PROVIDER_CLAIMED"));
+            if ("PRACTITIONER_ACCEPTANCE_PENDING".equals(nomination.getState())) {
+                publishEvent(ctx, nomination.getFacilityId(), "tuso.facility.pic.acceptance_pending", Map.of(
+                        "nominationId", nomination.getNominationId().toString(),
+                        "facilityId", nomination.getFacilityId(),
+                        "providerPublicId", nomination.getProviderPublicId(),
+                        "eligibilityResult", result));
+            }
+        }
+        if (!parked.isEmpty()) {
+            log.info("PIC re-assessment after claim: provider={} parked={} advanced={}",
+                    providerPublicId, parked.size(), advanced);
+        }
+        return advanced;
     }
 
     // ---- helpers ---------------------------------------------------------

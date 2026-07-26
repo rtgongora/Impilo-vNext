@@ -206,7 +206,10 @@ export function WelcomeHero() {
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
       <div className="relative z-10 grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
         {/* Left: need-first intent + inline Nompilo guidance */}
-        <div className="relative z-10 flex flex-col justify-center p-6 sm:p-9 lg:p-12">
+        {/* min-w-0: grid children default to min-width:auto and refuse to shrink below
+            their content, which clipped the hero text on narrow screens (the section's
+            overflow-hidden hid the symptom instead of scrolling). */}
+        <div className="relative z-10 flex min-w-0 flex-col justify-center p-6 sm:p-9 lg:p-12">
           <p className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-100 backdrop-blur-sm">
             <ShieldCheck className="h-4 w-4" aria-hidden />
             {t("public.welcome.eyebrow")}
@@ -405,7 +408,7 @@ export function WelcomeHero() {
         </div>
 
         {/* Right: unified Get Health Services discovery (care, medicines, wellness — honest, real). */}
-        <div className="p-3 sm:p-5 lg:p-6 lg:pl-0">
+        <div className="min-w-0 p-3 sm:p-5 lg:p-6 lg:pl-0">
           <HeroDiscoverySurface />
         </div>
       </div>
