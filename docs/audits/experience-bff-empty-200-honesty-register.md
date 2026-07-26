@@ -170,10 +170,25 @@ so citizens do not see an error for the correct answer.
 
 ### UI test baseline
 
-Full suite: 598/602 files pass. The 4 failing files — `routes.test.ts`,
-`hpa-admin-review-golden-thread.test.ts`, `WelcomeHero.test.tsx`, `Providers.test.tsx` — are
-pre-existing: they reproduce identically with these changes stashed, and none of them exercise a
-file touched by this work.
+Full suite: **602/602 files, 2445/2445 tests**. Four files were failing before this work started
+(verified by reproducing them with the changes stashed); all four are now fixed and none were
+related to the empty-200 defect:
+
+- `routes.test.ts` and `hpa-admin-review-golden-thread.test.ts` both asserted the route-registry
+  count. `9eed27590` added `/ehr/[patientId]/paediatrics` without bumping `EXPECTED_ROUTE_COUNT`.
+  The canary was doing its job, so the count was bumped and the delta noted rather than the
+  assertion loosened.
+- `Providers.test.tsx` described the cookie-only hydration path that `a2a2e75de` deliberately
+  removed (it could resurrect a stale identity), and hardcoded an `expires_at` that has since
+  passed — so it had quietly become an assertion that a valid session hydrates while actually
+  exercising the rejection path. Expiry is now relative to now.
+- `WelcomeHero.test.tsx` used a pre-redesign link label and bare `getByRole("search")` /
+  `getByRole("searchbox")` queries that became ambiguous when a second search landmark was added.
+
+None of the four was catching a defect; each described behaviour that had been deliberately
+replaced. Worth noting for anyone reading a green suite as proof: three of them lived outside the
+`src/app/ehr` / `src/components` paths, so a scoped test run reported clean while they were
+failing.
 
 ## What the test suite was proving
 
