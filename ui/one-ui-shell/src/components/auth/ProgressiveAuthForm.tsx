@@ -343,16 +343,20 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
 
           {showDevAccounts && (
             <div className="mt-2.5 grid grid-cols-2 gap-1.5 text-xs">
+              {/* These MUST match the seeded preview realm
+                  (deploy/helm/impilo-vnext/files/realm-impilo-preview.json).
+                  The previous list (mapfumo/chienda/zenda @mohcc.gov.zw, "test123") did not
+                  exist in that realm, so every quick-login could only ever 401. */}
               {[
-                { email: "mapfumo@mohcc.gov.zw", label: "Dr Mapfumo", desc: "Clinician & Facility Admin" },
-                { email: "chienda@mohcc.gov.zw", label: "Sr Chienda", desc: "Nurse Operator" },
-                { email: "zenda@mohcc.gov.zw", label: "Pharmacist", desc: "Pharmacy Manager" },
-                { email: "tatenda.moyo@example.com", label: "Citizen", desc: "Citizen PHR" },
+                { email: "citizen.moyo", password: "Vashandi@2024!", label: "Citizen", desc: "Citizen · PHR" },
+                { email: "vashandi.worker", password: "Vashandi@2024!", label: "Health worker", desc: "Nurse · Clinician" },
+                { email: "vashandi.facility", password: "Vashandi@2024!", label: "Facility admin", desc: "Facility admin · Clinician" },
+                { email: "superadmin", password: "Impilo@2024!", label: "Super admin", desc: "System admin · Developer" },
               ].map((acct) => (
                 <button
                   key={acct.email}
                   type="button"
-                  onClick={() => handleQuickLogin(acct.email, "test123")}
+                  onClick={() => handleQuickLogin(acct.email, acct.password)}
                   className="text-left rounded-lg border border-amber-200 bg-amber-50/60 p-2 hover:bg-amber-100/80 transition-colors"
                 >
                   <p className="font-bold text-amber-900 text-[11px]">{acct.label}</p>
