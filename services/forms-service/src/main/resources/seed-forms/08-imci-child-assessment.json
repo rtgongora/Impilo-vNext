@@ -1,7 +1,7 @@
 {
   "formKey": "impilo.child.imci.v1",
   "name": "Child Health (IMNCI) Assessment",
-  "description": "IMNCI-compatible under-five assessment: general danger signs, the main symptom branches, nutrition and anaemia, immunisation status, and classification kept separate from diagnosis. Field ids match the fact keys of the paediatric danger-sign engine so answers can be evaluated without remapping. ENGINEERING SEED — requires MoHCC ratification against the Zimbabwe national IMNCI adaptation before clinical use.",
+  "description": "IMNCI-compatible under-five assessment: general danger signs, the main symptom branches, nutrition and anaemia, immunisation status, and classification kept separate from diagnosis. Field ids match the fact keys of the paediatric danger-sign engine so answers can be evaluated without remapping. ENGINEERING SEED — requires MoHCC ratification against the Zimbabwe national IMNCI adaptation before clinical use. Capture covers every input the IMNCI classification tables evaluate, so a classification is never blocked by a question the form cannot ask.",
   "formType": "PROGRAMME_VISIT",
   "careSettings": [
     "OUTPATIENT",
@@ -340,6 +340,20 @@
             "kind": "body_map",
             "bodyMapInstrument": "respiratory",
             "description": "Mark auscultation and percussion findings by zone."
+          },
+          {
+            "id": "difficultBreathing",
+            "linkId": "difficultBreathing",
+            "label": "Difficult breathing",
+            "kind": "clinical_assertion",
+            "description": "Screens the cough/breathing table alongside cough — a child can have laboured breathing without a cough."
+          },
+          {
+            "id": "chestIndrawing",
+            "linkId": "chestIndrawing",
+            "label": "Lower chest wall indrawing",
+            "kind": "exam_finding",
+            "description": "Look with the chest uncovered while the child is calm. This single sign separates severe pneumonia from a cold, and it is the one the classification engine will not proceed without: a chest that was never examined is not a chest without indrawing."
           }
         ]
       },
@@ -387,6 +401,63 @@
             "linkId": "drinkingEagerly",
             "label": "Drinking eagerly, thirsty",
             "kind": "clinical_assertion"
+          },
+          {
+            "id": "drinkingPattern",
+            "linkId": "drinkingPattern",
+            "label": "How the child drinks",
+            "kind": "coded",
+            "description": "Offer fluid and watch. Two of the four dehydration signs concern drinking, and they point opposite ways.",
+            "options": [
+              {
+                "code": "DRINKS_NORMALLY",
+                "display": "Drinks normally"
+              },
+              {
+                "code": "DRINKS_EAGERLY_THIRSTY",
+                "display": "Drinks eagerly, thirsty"
+              },
+              {
+                "code": "NOT_ABLE_TO_DRINK_OR_DRINKING_POORLY",
+                "display": "Not able to drink or drinking poorly"
+              },
+              {
+                "code": "NOT_ASSESSED",
+                "display": "Not assessed"
+              }
+            ]
+          },
+          {
+            "id": "skinPinch",
+            "linkId": "skinPinch",
+            "label": "Skin pinch",
+            "kind": "coded",
+            "description": "Pinch the skin of the abdomen for one second and release.",
+            "options": [
+              {
+                "code": "NORMAL",
+                "display": "Goes back immediately"
+              },
+              {
+                "code": "SLOW",
+                "display": "Goes back slowly (under 2 seconds)"
+              },
+              {
+                "code": "VERY_SLOW",
+                "display": "Goes back very slowly (over 2 seconds)"
+              },
+              {
+                "code": "NOT_ASSESSED",
+                "display": "Not assessed"
+              }
+            ]
+          },
+          {
+            "id": "restlessIrritable",
+            "linkId": "restlessIrritable",
+            "label": "Restless or irritable",
+            "kind": "exam_finding",
+            "description": "One of the two signs that distinguishes some dehydration from none."
           }
         ]
       },
@@ -469,6 +540,72 @@
             "linkId": "measlesEyeOrMouthSigns",
             "label": "Red eyes or mouth ulcers",
             "kind": "clinical_assertion"
+          },
+          {
+            "id": "feverByHistory",
+            "linkId": "feverByHistory",
+            "label": "Fever reported by the carer",
+            "kind": "clinical_assertion",
+            "description": "Screens the fever tables. A reported fever counts even when the child is not hot now."
+          },
+          {
+            "id": "feelsHot",
+            "linkId": "feelsHot",
+            "label": "Feels hot to touch",
+            "kind": "exam_finding",
+            "description": "The assessment for a clinic with no working thermometer; the classification treats a measured temperature as optional for exactly this reason."
+          },
+          {
+            "id": "bulgingFontanelle",
+            "linkId": "bulgingFontanelle",
+            "label": "Bulging fontanelle",
+            "kind": "exam_finding",
+            "description": "Assess with the infant calm and upright. A sign of very severe febrile disease in a child whose fontanelle is still open."
+          },
+          {
+            "id": "measlesWithinThreeMonths",
+            "linkId": "measlesWithinThreeMonths",
+            "label": "Measles within the last three months",
+            "kind": "clinical_assertion",
+            "description": "Opens the measles complications table even when the rash has gone, because the complications outlast it."
+          },
+          {
+            "id": "cornealClouding",
+            "linkId": "cornealClouding",
+            "label": "Clouding of the cornea",
+            "kind": "exam_finding",
+            "description": "Sight-threatening. Needs vitamin A and urgent referral the same day."
+          },
+          {
+            "id": "mouthUlcers",
+            "linkId": "mouthUlcers",
+            "label": "Mouth ulcers",
+            "kind": "coded",
+            "description": "Depth decides the classification: deep or extensive ulcers are severe complicated measles, shallow ones are treated here.",
+            "options": [
+              {
+                "code": "ABSENT",
+                "display": "None"
+              },
+              {
+                "code": "PRESENT_NOT_DEEP",
+                "display": "Present, not deep or extensive"
+              },
+              {
+                "code": "DEEP_OR_EXTENSIVE",
+                "display": "Deep or extensive"
+              },
+              {
+                "code": "NOT_ASSESSED",
+                "display": "Not assessed"
+              }
+            ]
+          },
+          {
+            "id": "pusDrainingFromEye",
+            "linkId": "pusDrainingFromEye",
+            "label": "Pus draining from the eye",
+            "kind": "exam_finding"
           }
         ]
       },

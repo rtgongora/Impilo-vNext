@@ -1,0 +1,398 @@
+{
+  "formKey": "impilo.young-infant.imci.v1",
+  "name": "Sick young infant assessment (birth up to 2 months)",
+  "description": "WHO IMNCI assess-and-classify for the sick young infant. A separate form from the 2-months-to-5-years assessment because the signs are different, not merely the thresholds: at this age serious illness is few-signed and non-specific, poor feeding alone means possible serious bacterial infection, and a low temperature is as ominous as a high one. Capture covers every input the young-infant classification tables evaluate.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": [
+    "OUTPATIENT",
+    "COMMUNITY",
+    "OUTREACH",
+    "INPATIENT"
+  ],
+  "careStages": [
+    "ASSESSMENT",
+    "CONSULTATION"
+  ],
+  "specialties": [
+    "PAEDIATRICS",
+    "NEONATOLOGY",
+    "NURSING",
+    "GENERAL"
+  ],
+  "encounterTypes": [
+    "CHILD_HEALTH",
+    "IMCI",
+    "OPD",
+    "NEWBORN"
+  ],
+  "encounterContexts": [
+    "outpatient",
+    "community",
+    "inpatient"
+  ],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": [
+    "NURSE",
+    "MIDWIFE",
+    "CLINICAL_OFFICER",
+    "PHYSICIAN",
+    "COMMUNITY"
+  ],
+  "minAgeMonths": 0,
+  "maxAgeMonths": 2,
+  "sexApplicability": "ALL",
+  "programmeApplicability": [
+    "IMCI",
+    "CHILD_HEALTH",
+    "NEWBORN"
+  ],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO IMNCI — sick young infant age up to 2 months (engineering seed)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {
+        "linkId": "vitals.temperature",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8310-5",
+          "display": "Body temperature"
+        },
+        "unit": "Cel"
+      },
+      {
+        "linkId": "vitals.respiratoryRate",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "9279-1",
+          "display": "Respiratory rate"
+        },
+        "unit": "/min"
+      },
+      {
+        "linkId": "weightKg",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "29463-7",
+          "display": "Body weight"
+        },
+        "unit": "kg"
+      }
+    ]
+  },
+  "definition": {
+    "sections": [
+      {
+        "id": "psbi",
+        "title": "Signs of possible serious bacterial infection",
+        "description": "Assess every one. At this age any single sign here means urgent referral, and the classification will not clear an infant whose signs were never looked for.",
+        "fields": [
+          {
+            "id": "feeding",
+            "linkId": "feeding",
+            "label": "Feeding",
+            "kind": "coded",
+            "description": "Ask the mother and watch a feed. Poor feeding on its own is enough to classify possible serious bacterial infection.",
+            "options": [
+              {
+                "code": "GOOD",
+                "display": "Feeding well"
+              },
+              {
+                "code": "POOR",
+                "display": "Feeding poorly"
+              },
+              {
+                "code": "NONE",
+                "display": "Not feeding at all"
+              },
+              {
+                "code": "NOT_ASSESSED",
+                "display": "Not assessed"
+              }
+            ]
+          },
+          {
+            "id": "convulsions",
+            "linkId": "convulsions",
+            "label": "Convulsions",
+            "kind": "exam_finding",
+            "description": "Now or during this illness."
+          },
+          {
+            "id": "movesOnlyWhenStimulated",
+            "linkId": "movesOnlyWhenStimulated",
+            "label": "Moves only when stimulated",
+            "kind": "exam_finding",
+            "description": "Watch the infant undisturbed first. Reduced movement is the young infant's equivalent of altered consciousness."
+          },
+          {
+            "id": "severeChestIndrawing",
+            "linkId": "severeChestIndrawing",
+            "label": "Severe chest indrawing",
+            "kind": "exam_finding",
+            "description": "Deep and easily visible with the chest uncovered, in a calm infant."
+          },
+          {
+            "id": "vitals.temperature",
+            "linkId": "vitals.temperature",
+            "label": "Temperature",
+            "kind": "quantity",
+            "description": "Both directions matter: 37.5 and above, or below 35.5.",
+            "options": "Cel"
+          },
+          {
+            "id": "vitals.respiratoryRate",
+            "linkId": "vitals.respiratoryRate",
+            "label": "Respiratory rate",
+            "kind": "quantity",
+            "description": "Count for a full minute. The young-infant threshold is 60, not 40.",
+            "options": "/min"
+          },
+          {
+            "id": "bulgingFontanelle",
+            "linkId": "bulgingFontanelle",
+            "label": "Bulging fontanelle",
+            "kind": "exam_finding",
+            "description": "Assess with the infant calm and upright."
+          },
+          {
+            "id": "umbilicus",
+            "linkId": "umbilicus",
+            "label": "Umbilicus",
+            "kind": "coded",
+            "description": "Redness spreading to the abdominal skin is systemic; confined redness or pus is a local infection treated here.",
+            "options": [
+              {
+                "code": "NORMAL",
+                "display": "Normal"
+              },
+              {
+                "code": "RED_OR_DRAINING_PUS",
+                "display": "Red or draining pus"
+              },
+              {
+                "code": "REDNESS_EXTENDING_TO_SKIN",
+                "display": "Redness extending to the skin"
+              },
+              {
+                "code": "NOT_ASSESSED",
+                "display": "Not assessed"
+              }
+            ]
+          },
+          {
+            "id": "skinPustules",
+            "linkId": "skinPustules",
+            "label": "Skin pustules",
+            "kind": "exam_finding",
+            "description": "Many or severe pustules are treated as a systemic infection."
+          }
+        ]
+      },
+      {
+        "id": "jaundice",
+        "title": "Jaundice",
+        "description": "Three separate findings each make jaundice severe, for different reasons.",
+        "fields": [
+          {
+            "id": "jaundice",
+            "linkId": "jaundice",
+            "label": "Jaundice present",
+            "kind": "exam_finding",
+            "description": "Look at the skin and sclerae in daylight."
+          },
+          {
+            "id": "jaundiceOnsetAgeHours",
+            "linkId": "jaundiceOnsetAgeHours",
+            "label": "Age in hours when jaundice appeared",
+            "kind": "quantity",
+            "description": "Onset within 24 hours of birth is always severe, whatever the depth of colour.",
+            "options": "h"
+          },
+          {
+            "id": "palmsSolesYellow",
+            "linkId": "palmsSolesYellow",
+            "label": "Palms or soles yellow",
+            "kind": "exam_finding",
+            "description": "Yellow palms or soles means severe jaundice at any age."
+          }
+        ]
+      },
+      {
+        "id": "diarrhoea",
+        "title": "Diarrhoea",
+        "fields": [
+          {
+            "id": "diarrhoea",
+            "linkId": "diarrhoea",
+            "label": "Diarrhoea",
+            "kind": "clinical_assertion",
+            "description": "Screens the dehydration table."
+          },
+          {
+            "id": "sunkenEyes",
+            "linkId": "sunkenEyes",
+            "label": "Sunken eyes",
+            "kind": "exam_finding"
+          },
+          {
+            "id": "skinPinch",
+            "linkId": "skinPinch",
+            "label": "Skin pinch",
+            "kind": "coded",
+            "description": "Pinch the abdominal skin for one second and release.",
+            "options": [
+              {
+                "code": "NORMAL",
+                "display": "Goes back immediately"
+              },
+              {
+                "code": "SLOW",
+                "display": "Goes back slowly"
+              },
+              {
+                "code": "VERY_SLOW",
+                "display": "Goes back very slowly"
+              },
+              {
+                "code": "NOT_ASSESSED",
+                "display": "Not assessed"
+              }
+            ]
+          },
+          {
+            "id": "restlessIrritable",
+            "linkId": "restlessIrritable",
+            "label": "Restless or irritable",
+            "kind": "exam_finding"
+          }
+        ]
+      },
+      {
+        "id": "feeding",
+        "title": "Feeding and weight",
+        "description": "A low weight for age in a young infant is a feeding problem until proven otherwise. The infant must be weighed: nothing can be dosed without a weight, and the classification will not clear an infant who was never weighed.",
+        "fields": [
+          {
+            "id": "weightKg",
+            "linkId": "weightKg",
+            "label": "Weight",
+            "kind": "quantity",
+            "options": "kg"
+          },
+          {
+            "id": "weightForAgeZ",
+            "linkId": "weightForAgeZ",
+            "label": "Weight-for-age z-score",
+            "kind": "quantity",
+            "description": "Stamped by the growth registry at the time of measurement; shown here for the assessment."
+          },
+          {
+            "id": "attachment",
+            "linkId": "attachment",
+            "label": "Attachment at the breast",
+            "kind": "coded",
+            "description": "Observe a full feed rather than asking.",
+            "options": [
+              {
+                "code": "GOOD",
+                "display": "Well attached"
+              },
+              {
+                "code": "NOT_WELL_ATTACHED",
+                "display": "Not well attached"
+              },
+              {
+                "code": "NOT_ATTACHED",
+                "display": "Not attached"
+              },
+              {
+                "code": "NOT_ASSESSED",
+                "display": "Not assessed"
+              }
+            ]
+          },
+          {
+            "id": "sucklingEffective",
+            "linkId": "sucklingEffective",
+            "label": "Suckling",
+            "kind": "coded",
+            "options": [
+              {
+                "code": "EFFECTIVE",
+                "display": "Suckling effectively"
+              },
+              {
+                "code": "NOT_EFFECTIVE",
+                "display": "Not suckling effectively"
+              },
+              {
+                "code": "NOT_ASSESSED",
+                "display": "Not assessed"
+              }
+            ]
+          },
+          {
+            "id": "feedsPer24Hours",
+            "linkId": "feedsPer24Hours",
+            "label": "Breastfeeds in 24 hours",
+            "kind": "quantity",
+            "description": "Fewer than eight is a feeding problem."
+          },
+          {
+            "id": "receivesOtherFoodsOrDrinks",
+            "linkId": "receivesOtherFoodsOrDrinks",
+            "label": "Receives other foods or drinks",
+            "kind": "clinical_assertion",
+            "description": "Anything other than breast milk before six months."
+          },
+          {
+            "id": "oralThrush",
+            "linkId": "oralThrush",
+            "label": "Oral thrush",
+            "kind": "exam_finding",
+            "description": "A common and treatable cause of poor feeding."
+          }
+        ]
+      },
+      {
+        "id": "classify",
+        "title": "Classification and plan",
+        "description": "The classification is a management category, not a diagnosis. Record any working diagnosis separately.",
+        "fields": [
+          {
+            "id": "guidelineClassification",
+            "linkId": "guidelineClassification",
+            "label": "Guideline classification",
+            "kind": "coded_multi",
+            "description": "As returned by the young-infant assess-and-classify tables."
+          },
+          {
+            "id": "workingDiagnosis",
+            "linkId": "workingDiagnosis",
+            "label": "Working diagnosis",
+            "kind": "text",
+            "description": "Optional and separate. A classification groups conditions needing the same immediate action; recording it as a diagnosis would assert something no clinician stated."
+          },
+          {
+            "id": "treatmentGiven",
+            "linkId": "treatmentGiven",
+            "label": "Treatment given before referral",
+            "kind": "text"
+          }
+        ]
+      }
+    ]
+  }
+}
