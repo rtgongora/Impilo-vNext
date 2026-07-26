@@ -78,8 +78,7 @@ class PolicyConditionKeyContractTest {
             "require_docket_assignment",
             "deny_when_not_docketed",
             "require_escalation_grant",
-            "deny_operational_lanes",
-            "allowed_jurisdictions");
+            "deny_operational_lanes");
 
     @Test
     void everyConditionKeySeededIsOneTheEngineImplements() throws IOException {
@@ -137,6 +136,23 @@ class PolicyConditionKeyContractTest {
                         rule so its conditions say what it actually enforces.
 
                         %s""", fresh.size(), String.join("\n  ", fresh))
+                .isEmpty();
+
+        // Force the ratchet. Without this the list only ever grows stale: a key that has since
+        // been implemented sits here implying a defect that no longer exists, and the next reader
+        // cannot tell the live entries from the historical ones. allowed_jurisdictions was exactly
+        // that — listed as unimplemented, then implemented in RB-2c, and nothing made anyone
+        // remove it.
+        Set<String> seededKeys = new TreeSet<>();
+        for (String violation : violations) {
+            seededKeys.add(violation.substring(violation.lastIndexOf("-> ") + 3));
+        }
+        Set<String> stale = new TreeSet<>(BASELINE);
+        stale.removeAll(seededKeys);
+        assertThat(stale)
+                .withFailMessage("These baseline entries no longer violate — either the key is now "
+                                 + "implemented or the rule was rewritten. Delete them so the list "
+                                 + "keeps shrinking:%n  %s", String.join("\n  ", stale))
                 .isEmpty();
     }
 
