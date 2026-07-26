@@ -104,6 +104,8 @@ export function Providers({ children }: { children: ReactNode }) {
   );
 
   return (
+    // TierProvider (Future-Realism §6): resolves the device/preference tier and mirrors tier-*/
+    // low-blur onto <html> so glass/motion enhancements degrade to the accessible baseline.
     <TierProvider>
       <QueryClientProvider client={queryClient}>
         <StoreHydrator>
