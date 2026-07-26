@@ -21,6 +21,7 @@ import { useI18n } from "@/lib/i18n/useI18n";
 import { IntentLink } from "./IntentLink";
 import { HeroDiscoverySurface } from "./HeroDiscoverySurface";
 import { ReturningUserCard } from "./ReturningUserCard";
+import { ResumeJourneyCard } from "./ResumeJourneyCard";
 
 interface GuidanceAnswer {
   answer?: string;
@@ -278,6 +279,9 @@ export function WelcomeHero() {
 
           {/* Returning-user greeting (only when a masked opt-in hint exists). */}
           <ReturningUserCard />
+
+          {/* Honest journey continuity — real persisted care search, never a fabricated feed. */}
+          <ResumeJourneyCard />
 
           {/* Inline Nompilo public guidance (kept beside the live care surface, never over it). */}
           {hasResponse && (
