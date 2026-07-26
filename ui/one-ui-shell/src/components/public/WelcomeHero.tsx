@@ -212,7 +212,7 @@ export function WelcomeHero() {
       {/* 38/62 split: intent and continuity left, service discovery right. Both zones start
           at the same top edge and run to the same depth — the right side must never begin
           halfway down the viewport. */}
-      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 lg:h-[min(44rem,calc(100vh-4.6rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-6">
+      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 xl:h-[min(44rem,calc(100vh-4.6rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-6">
         {/* Left: need-first intent + inline Nompilo guidance */}
         {/* min-w-0: grid children default to min-width:auto and refuse to shrink below
             their content, which clipped the hero text on narrow screens (the section's
