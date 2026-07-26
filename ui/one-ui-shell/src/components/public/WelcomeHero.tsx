@@ -199,12 +199,13 @@ export function WelcomeHero() {
 
   return (
     <section
-      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-emerald-100/80 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/70 shadow-[0_24px_70px_-40px_rgba(6,78,59,.5)]"
+      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-teal-200/70 bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100/85 shadow-[0_28px_80px_-36px_rgba(6,95,70,.55)]"
       aria-labelledby="living-canvas-title"
     >
-      {/* Soft teal-green glow — calm depth, decorative only. */}
-      <div aria-hidden className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-teal-200/35 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-emerald-200/40 blur-3xl" />
+      {/* Teal-green aqua glow — deeper decorative depth. */}
+      <div aria-hidden className="pointer-events-none absolute -right-24 -top-28 h-96 w-96 rounded-full bg-teal-300/50 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute right-1/3 -top-20 h-72 w-72 rounded-full bg-cyan-300/40 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -left-20 bottom-0 h-80 w-80 rounded-full bg-emerald-300/50 blur-3xl" />
       <div className="relative z-10 grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
         {/* Left: need-first intent + inline Nompilo guidance */}
         <div className="relative z-10 flex flex-col justify-center p-6 sm:p-9 lg:p-12">
