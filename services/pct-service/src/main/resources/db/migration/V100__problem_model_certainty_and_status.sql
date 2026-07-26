@@ -35,8 +35,33 @@
 -- 1. Kind ---------------------------------------------------------------------
 -- Widen the existing axis rather than introduce a second one. Two columns meaning "what sort of
 -- problem is this" would be the same duplication this migration exists to remove.
-UPDATE pct_problems SET category = 'RISK_FACTOR'        WHERE category = 'RISK';
+UPDATE pct_problems SET category = 'RISK_FACTOR'         WHERE category = 'RISK';
 UPDATE pct_problems SET category = 'SOCIAL_CIRCUMSTANCE' WHERE category = 'SOCIAL';
+
+-- The column had no CHECK before this migration and the service accepted any string, so what is
+-- actually in it is not limited to the four values the code documented. The experience layer has
+-- been sending ENCOUNTER_DIAGNOSIS, PROBLEM_LIST and CHRONIC from the conditions form — a third
+-- axis again, conflated into the same column: the first two are FHIR's "is this a visit diagnosis
+-- or a standing problem", which the encounter_id linkage already answers, and CHRONIC is a
+-- chronicity attribute rather than a kind. All three describe a DIAGNOSIS.
+UPDATE pct_problems SET category = 'DIAGNOSIS'
+    WHERE category IN ('ENCOUNTER_DIAGNOSIS', 'PROBLEM_LIST', 'CHRONIC');
+
+-- Anything still outside the vocabulary is mapped to DIAGNOSIS rather than left to fail the CHECK.
+-- A migration that aborts on an unexpected value takes the whole service down on deploy, and this
+-- column has been a free-text field in practice. DIAGNOSIS is the pre-existing default, so this
+-- preserves what the row already meant to every reader it has ever had. The display text is never
+-- touched, so no clinical content is lost — only the classification is normalised.
+UPDATE pct_problems SET category = 'DIAGNOSIS'
+    WHERE category IS NULL OR category NOT IN (
+        'DIAGNOSIS', 'SYMPTOM', 'SYNDROME', 'GUIDELINE_CLASSIFICATION',
+        'RISK_FACTOR', 'FUNCTIONAL_CONSEQUENCE', 'SOCIAL_CIRCUMSTANCE');
+
+-- Same reasoning for status: it also had no CHECK, so it is not safe to assume only the three
+-- documented values are present.
+UPDATE pct_problems SET clinical_status = 'ACTIVE'
+    WHERE clinical_status IS NULL OR clinical_status NOT IN (
+        'ACTIVE', 'RECURRENCE', 'RELAPSE', 'REMISSION', 'INACTIVE', 'RESOLVED');
 
 ALTER TABLE pct_problems
     ADD CONSTRAINT pct_problems_category_check CHECK (category IN (

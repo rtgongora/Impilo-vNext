@@ -53,6 +53,7 @@
         <module>../libs/security-baseline</module>
         <module>../libs/paediatric-domain</module>
         <module>../libs/reproductive-domain</module>
+        <module>../libs/burn-domain</module>
         <module>shared-core</module>
         <module>tshepo-service</module>
         <module>vito-service</module>

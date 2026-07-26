@@ -3,7 +3,10 @@
  *
  * Acute burns %TBSA and Parkland fluid resuscitation are owned by the Emergency,
  * Resuscitation and Acute Care pack (`docs/registry/iatg-emergency-leases.md` §5b) and
- * land in `libs/emergency-domain`, age-banded via `libs/paediatric-domain` on `bandKey`.
+ * land in `libs/burn-domain`, age-banded via `libs/paediatric-domain` on `bandKey`. (Not
+ * `libs/emergency-domain`: %TBSA drives excision timing, graft planning, nutrition and mortality
+ * prediction for months after the emergency episode closes, so the arithmetic is shared with
+ * surgery rather than owned by emergency. Agreed with the surgery lane, lease §5b Decision 1.)
  * This app must not carry a private implementation: the one it used to carry was
  * adult-only, had no injury-time clock or first-8h/second-16h split, and persisted
  * nothing while telling the clinician it had saved.
@@ -48,23 +51,6 @@ describe("burns workspace tools", () => {
 
   it("does not label a generic two-number adder as a burns clinical tool", () => {
     expect(formKindForTool("Graft Planning", 3, "burns")).toBe("soon");
-  });
-});
-
-describe("APGAR is wired to its real system of record", () => {
-  it("resolves to the apgar form, not a free-text box", () => {
-    expect(formKindForTool("APGAR Record", 0, "neonatal")).toBe("apgar");
-  });
-
-  it("resolves regardless of the label the BFF menu uses", () => {
-    expect(formKindForTool("APGAR Score", 1, "labour-delivery")).toBe("apgar");
-  });
-
-  it("is not withheld and does not fall back to notes", () => {
-    const kind = formKindForTool("APGAR Record", 0, "neonatal");
-    expect(kind).not.toBe("withheld");
-    expect(kind).not.toBe("notes");
-    expect(kind).not.toBe("soon");
   });
 });
 

@@ -64,6 +64,26 @@ Consequences that are not optional:
   And note the structural shortcut: sessions in this tree **share one `.git`**, so a peer's commits
   are already in your `HEAD` — no fetch is needed at all to push, and `git push` is a fast-forward.
   Both hazards confirmed independently by the RMNP lane.
+- **When ff-only genuinely fails, MERGE — do not rebase, and do not stash.** "If ff-only fails,
+  stop" is insufficient guidance and this pack hit the case: a peer committed locally, then
+  recommitted the same work and pushed it, stranding their original commit underneath mine. The
+  branch was 2 ahead / 1 behind with two commits carrying **identical patch-ids**.
+
+  `git rebase` is the textbook answer and is wrong here: it demands a clean worktree, and on a
+  shared tree the worktree always holds someone else's uncommitted work, so `--autostash` would
+  capture a peer's edits into your stash. Merge needs no clean tree, rewrites nothing and destroys
+  nothing; a merge commit on a six-session branch is honest rather than noisy.
+
+  Before pushing a merge, prove the peer's change was not doubled:
+
+  ```
+  git show <local> | git patch-id --stable      # compare against the remote twin
+  git diff origin/$(git branch --show-current) -- <their files> --stat   # must be EMPTY
+  git diff --name-only origin/$(git branch --show-current)..HEAD         # must list ONLY your files
+  ```
+
+  The duplicate commit stays in history with the same message twice. That is cosmetic; the tree is
+  what matters, and the third command is the one that proves it.
 
 ## 2. Lane ownership
 
@@ -80,7 +100,8 @@ Consequences that are not optional:
 | `services/mental-health-service/**` — **NEW service, port 8397** | See §4. |
 | `services/experience-bff/**` — emergency controllers only | |
 | `ui/one-ui-shell/src/{app/clinical/emergency,features/emergency,lib/offline}/**` | |
-| `libs/emergency-domain/**` — **NEW library** | |
+| `libs/emergency-domain/**` and `libs/burn-domain/**` — **NEW libraries** | `burn-domain` is shared with surgery by design (§5b Decision 1). |
+| `apps/mobile/provider-app/src/screens/provider/SpecialtyWorkspacePanel.tsx` — burns and resuscitation tools only | Nobody else claims mobile this wave; the trauma lease held it and that programme is closed. |
 | `scripts/runtime-proof/emergency-*.sh`, `scripts/guard/check-emergency-*.sh`, `check-no-ts-clinical-logic.sh`, `check-identity-repoint-coverage.sh` | |
 | `docs/clinical/emergency-domain-pack/**`, `docs/clinical-governance/emergency/**` | |
 
@@ -267,19 +288,84 @@ that only sees the patient later.
 | Burn-centre referral and transfer criteria | **Emergency** — `emergency_handover(TO_FACILITY)` + disposition CHECKs | A disposition decision, and the acceptance handshake applies unchanged. |
 | Definitive burn management — excision, grafting, dressings, nutrition, rehabilitation, scar care | **Surgery / plastics** | Not emergency care. Invoked, not rebuilt. Surgery has not claimed burns in its ADR, lease or standards baseline, so this needs confirming with that lane. |
 
-`episode_class` already carries `BURNS`. Content placement: the burns **arithmetic** lands in W1 with
-the rest of `libs/emergency-domain`; burns **rules** land in tranche 10 (environmental — shared with
-smoke inhalation, electrical and lightning injury) and tranche 12 (the trauma/surgical invocation
+`episode_class` already carries `BURNS`. Burns **rules** land in tranche 10 (environmental — shared
+with smoke inhalation, electrical and lightning injury) and tranche 12 (the trauma/surgical invocation
 set). Weight-banded and TBSA-banded thresholds must use RMNP's `bandKey` rather than overloading
 `ageDays` (§5a).
 
-**Verified state today: burns is absent from the estate except one decorative line.**
-`MobileProviderExtendedController` advertises a burns workspace offering "Lund-Browder Chart",
-"Fluid Calculator" and "Parkland Formula" — and a repo-wide grep for `tbsa|parkland|lund.browder`
-returns *only that line*. The mobile provider app consumes it
-(`apps/mobile/provider-app/src/services/queueService.ts:192`), so a clinician can select burns and tap
-toward three tools that do not exist. Tracked as `task_40846f47`; the burns tools themselves are this
-pack's to deliver.
+### Decision 1 — the arithmetic lives in `libs/burn-domain`, not `libs/emergency-domain`
+
+Accepting the surgery lane's refinement, because the argument is right: %TBSA is not only a
+resuscitation input. It drives excision timing, graft planning, nutrition requirement and mortality
+prediction for months after the emergency episode closes, so putting it in an emergency library would
+make surgery depend on an emergency lib for the whole course of care.
+
+**`libs/burn-domain`** — framework-free (Jackson only, no Spring, no I/O), depending on
+`libs/paediatric-domain` for age banding, following the `paediatric-domain` / `reproductive-domain`
+pattern: age-adjusted **Lund–Browder** and rule-of-nines TBSA, depth classification, **injury-clocked
+Parkland** (total, first-half and second-half windows measured from time of burn), and mortality
+scores. Emergency builds it in W1 because emergency needs it now; surgery consumes it rather than
+reimplementing. **One Parkland in the estate** matters more than which directory holds it.
+
+Registered in `services/pom.xml` and in the `libraries:` block of `services-registry.yaml` — that
+block currently omits `paediatric-domain` and `reproductive-domain` too, and all three are backfilled
+in one write (cleared with the RMNP lane).
+
+### Decision 2 — one serial `pct.burn_assessment`, owned by PCT
+
+The surgery lane proposed one series owned by `surgery-service`, first entry written during
+resuscitation, and asked this pack to decide. **Ruling: exactly one series, and PCT owns it.**
+
+Their requirement — one series, no parallel acute copy — is the right requirement, and burn depth
+declaring over 48–72 hours with %TBSA revised long after the emergency episode closes is exactly why.
+But the owner cannot be `surgery-service`:
+
+- **The first entry is written during emergency resuscitation, routinely at a facility with no
+  surgical service deployed.** If the series lived in `surgery-service`, recording a TBSA at a
+  district hospital would depend on a service that may not be there — violating §20's rule that
+  immediate care is never suppressed because an external service is unavailable.
+- **CC-2 forbids a component owning person-level longitudinal clinical truth.** A measurement series
+  spanning months is precisely that. The established precedent is PCT's own serial-measurement tables:
+  `pct.growth_measurements` (V053) and `pct.pct_labour_observations` (V056). A burn assessment is
+  structurally identical — a serial structured clinical measurement, written by whichever service is
+  in front of the patient at the time.
+
+So: **`pct.burn_assessment`** (emergency block, pct V2xx), a serial time series carrying the region
+map, depth per region, computed %TBSA, the assessment clock and a revision reason. Emergency writes
+the first entry; surgery writes subsequent entries and its management records reference them. Neither
+pack holds a parallel copy.
+
+Note this does **not** contradict HP4 ("findings are coded observations, no syndrome-specific
+columns"). HP4 forbids syndrome-specific columns *on the emergency episode*, to stop the pack becoming
+a mega-form. A shared serial measurement table owned by PCT and written by two packs across months is
+the V053/V056 pattern, not an episode field.
+
+### Lund–Browder chart
+
+The surgery lane's body-map inventory builds "burn and scar map" in their **S16**, which is late in
+their programme; this pack needs it now. So emergency builds the chart, they register it in their map
+inventory and extend rather than replace. The shell already has a `src/features/body-map` module to
+build on.
+
+### Verified state today: burns had shipped, and it was wrong
+
+My first grep was scoped to `services/ ui/ libs/` and missed `apps/` — the surgery lane caught it.
+There were **two live calculators**, both defective, now withdrawn in `697a7924b`:
+
+- `ParklandForm` computed `4 × kg × %TBSA` and rendered a single 24-hour volume — **no injury clock,
+  no first-half/second-half split**. The `time_target_basis` concern was not a future risk, it was a
+  shipped defect that under-resuscitates the late-presenting patient.
+- `RuleOf9Form` used fixed **adult** proportions in an app that treats children, under-estimating a
+  paediatric burn and therefore the fluid volume derived from it.
+- Neither persisted. `RuleOf9Form` raised `Alert("Saved", "TBSA X% recorded locally")` and wrote
+  nothing — a clinician told the assessment was recorded had no reason to write it down.
+
+The arithmetic and `RULE9_REGIONS` are **deleted**, not disabled, so a future edit cannot re-route to
+them. Had this not been caught, the estate would have had **three** Parkland implementations.
+
+Two menus also advertise burns tools and disagree with each other: the BFF offers 10 specialties × 3
+tools, and `apps/mobile/provider-app/src/data/specialtyWorkspaces.ts` offers **18 specialties × 6 =
+108 tool labels**, almost none implemented. Tracked as `task_40846f47` and `task_4d5f394f`.
 
 ## 5a. Inherited engineering constraints (from the RMNP lane, 2026-07-26)
 
@@ -306,6 +392,153 @@ Also confirmed by RMNP and worth restating: `pct` sets `validate-on-migrate: fal
 (`services/pct-service/src/main/resources/application.yml:31`), which hides a Flyway *validate*
 failure **without** making a lower-versioned migration apply — so the schema diverges from what the
 code expects and nothing says so.
+
+## 5d. Estate band convention, and what peer lanes committed
+
+**One band per lane, adopted estate-wide 2026-07-26:** Adult Medicine **V100s** · Emergency
+**V200s** · Surgery/Procedures **V300s**. New services keep V001+. The surgery lane adopted the
+band after verifying the reasoning and **released its earlier adjacent claims** — `inpatient`
+V067–V080, `oros` V018–V024, `ckp` V007–V020, `tuso` V044–V049 and the rest are free for any lane.
+
+The surgery lane's sharper statement of why adjacency fails, worth keeping: *a reservation is a
+claim about the future written in a namespace anyone may extend. Adjacency puts the claim exactly
+where the next incremental writer will land, so the claim and the collision occupy the same address
+by construction.* Three deaths in an hour reads like bad luck; it is the design.
+
+| Lane | Committed blocks |
+|---|---|
+| **Adult Medicine** | `pct` V100–V129 · `ckp` V051–V080 · `inpatient` V111–V130 · `zibo` V035–V049 · `oros` V050–V069 · `butano` V010–V029 · `telemonitoring` V010–V029 |
+| **Surgery / Procedures** | V300–V329 in every co-edited service; `procedures-service` and `surgery-service` V001+ |
+| **Emergency (this pack)** | V2xx per §3 |
+
+**STANDING RULE: read the lease files, not the announcement messages.** My own messages to peers
+carried block numbers that were stale against this file, and two of them (`inpatient` V067–V094,
+`ckp` V010–V029) would have landed straight on top of surgery had anyone acted on them. The
+committed lease is the only source of truth; a message is a draft. Adopted as a rule by the Adult
+Medicine lane too.
+
+## 5e. The emergency↔medicine handover contract (frozen with Adult Medicine)
+
+Their medical episode links to `pct.emergency_episode` via `emergency_episode_id` and is a
+different object: an emergency episode is **one presentation**, a medical episode is the arc of a
+problem across contacts, facilities and years (FHIR `EpisodeOfCare`, not `Encounter`). No rival
+episode, no rival acuity.
+
+**Acuity and severity are different axes and neither derives from the other.**
+`pct_problems.severity` (their V060) is a property of the *disease* — moderate persistent asthma,
+Child-Pugh B cirrhosis. IITT priority is a property of the *arrival*. **IITT stops at the door.**
+Carrying an acuity forward as a severity is precisely how a triage score becomes a permanent
+clinical label, so this pack never writes one from the other.
+
+Their four commitments, which this pack builds against:
+1. **Accept is idempotent on `pct_admission_id`** — a retried acceptance creates neither a second
+   admission nor a second acceptance.
+2. **The clinical record does not restart at the door** — problems raised in emergency stay the
+   *same* `pct_problems` rows; they take ownership via `responsible_service`, never by re-recording
+   the diagnosis. An internal handover is exactly where re-clerking would fork one disease in two.
+3. **Certainty travels, and is usually not CONFIRMED** — a problem raised in emergency is typically
+   `SUSPECTED` or `WORKING`. A `WORKING` diagnosis silently promoted to `CONFIRMED` by an admission
+   handshake is a diagnosis nobody made.
+4. **No timeout discharges responsibility** — a patient nobody has accepted is emergency's patient.
+
+**The link column is fact, not assumption — `pct` V101 has landed.**
+`pct_medical_episodes.emergency_episode_id UUID NULL`, with a composite partial index
+`idx_pct_medical_episodes_emergency (tenant_id, emergency_episode_id) WHERE emergency_episode_id IS
+NOT NULL`. Verified on disk. **No foreign key, deliberately** — `pct.emergency_episode` does not
+exist yet and a hard constraint would couple the two lanes' deploy order in both directions. It is a
+documented soft reference, validated in application code until V200 lands.
+
+**Decision when V200 lands: promote it to a real FK with `ON DELETE RESTRICT`.** Both tables live in
+the `pct` schema and the same service, so there is no cross-service coupling to trade away, and a
+dangling `emergency_episode_id` is precisely the orphan this pack's CC-5 discipline exists to reject.
+`RESTRICT` not `CASCADE`, consistent with the standing rule that nothing cascades into or out of the
+emergency episode. Merging is safe under an FK because a merged episode is marked `MERGED` and never
+deleted. The constraint is contingent on this pack's table, so this pack writes it — but
+`pct_medical_episodes` belongs to the Adult Medicine lane, so it goes in under a handoff rather than
+unilaterally.
+
+Two enforced behaviours on their side that this pack's handover must respect:
+- **Closing a medical episode requires an explicit reason and will not default one.** `COMPLETED`,
+  `DIED`, `TRANSFERRED`, `LOST_TO_FOLLOW_UP`, `PATIENT_DECLINED` all leave status `FINISHED`;
+  defaulting to `COMPLETED` would record a good outcome for a patient who was lost and every outcome
+  indicator would inherit it. If an emergency disposition ever closes a medical episode it must say
+  which — and the same discipline applies in reverse to this pack's own disposition outcomes.
+- **Attaching a problem requires one that already exists and belongs to the same patient.** The
+  service refuses to create a problem implicitly, because that would be a second write path into the
+  problem list bypassing the duplicate guard. This is the mechanical reason behind
+  "references, not content", and it is now enforced rather than agreed — a handover carrying free
+  text would be rejected.
+
+**What the handover row must carry, and nothing more:** `emergency_episode_id`, `subject_cpid`,
+`journey_id`, the problems raised **as `pct_problems` ids rather than free text**, the disposition,
+and the requesting clinician.
+
+**⚠ Will break ED writes if unheeded — their V100 closed the `pct_problems` vocabularies and
+RENAMED two values:** `RISK` → `RISK_FACTOR`, `SOCIAL` → `SOCIAL_CIRCUMSTANCE`. Closed sets:
+`category` (DIAGNOSIS · SYMPTOM · SYNDROME · GUIDELINE_CLASSIFICATION · RISK_FACTOR ·
+FUNCTIONAL_CONSEQUENCE · SOCIAL_CIRCUMSTANCE), `diagnostic_certainty` (SUSPECTED · DIFFERENTIAL ·
+WORKING · CONFIRMED · REFUTED, or null), `clinical_status` (ACTIVE · RECURRENCE · RELAPSE ·
+REMISSION · INACTIVE · RESOLVED). An out-of-set value returns 400 naming the allowed set. **And
+adding a problem already open on the patient now returns 409** carrying the existing problem and two
+resolutions — a caller treating 409 as failure will drop the write.
+
+## 5f. STANDING RULE: a hardened server does not survive a careless client
+
+Adult Medicine's most valuable finding, and it hit this pack twice. Their `PatientBanner` read "no
+conditions" for every patient in the estate **even though the BFF had already been hardened to
+502** — the client destructured only `data` and fell through to `?? []`, so the server-side honesty
+fix bought nothing.
+
+The same pattern was live on two emergency surfaces, fixed in `d4b37c810`:
+- **the ED trackboard** rendered "No active ED visits." on a failed read — telling a coordinator the
+  department is empty, which is the one claim on that screen that stops someone looking;
+- **the emergency patient view's medication list** rendered "None active." on a failed read, one
+  line below an allergy query that already captured `isError` correctly.
+
+So: **every `useQuery` on an emergency surface must destructure `isError`, and every empty state
+must distinguish "none recorded" from "could not be read".** Guard candidates for W15. And the
+regression test must be **mutation-proved** — revert the guard, watch it fail — because this is the
+layer where the previous fix was silently undone. Still unaudited and owned by this pack: vitals and
+the ED-specific queries on `ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx`.
+
+The `intVal()`-returns-0 defect in `EdTriageDiscriminatorEngine` (§7) is the same family one layer
+down: **absence rendering as a reassuring value.** The reassuring default is the one that stops
+someone looking.
+
+## 5g. Mobile findings inherited from the burns withdrawal
+
+From the session that landed `19429a2a7` (adopted onto canonical in `3cb08e4b9`):
+- **The two specialty menus were never connected.** `fetchSpecialtyWorkspaces()` returns
+  `unknown[]` and is not wired to the panel, which renders only the local list. So the BFF's
+  10 × 3 and mobile's 18 × 6 = 108 labels have always been independent, and both are wrong.
+- **`formKindForTool` routes index 3 of *every* workspace to a generic two-number adder** — so
+  "Heart Failure Assessment" and "Sickle Cell Crisis Protocol" labelled an arbitrary sum as a
+  clinical result. The burns fix stopped it for burns only.
+- **`NotesForm` fakes its save** the same way `RuleOf9Form` did.
+- Generalised lesson: **a grep for clinical formula names under-reports**, because implementations
+  are named after the component (`ParklandForm`), not the formula. Grep the arithmetic too
+  (`4 \* kg`, `* weight *`). This is why §5b's original "burns is absent" claim was wrong.
+
+## 5h. Coordinator rulings taken into scope
+
+**Definition of done, all remaining waves.** A slice is done only when **UI + BFF + contract/API +
+backend are all wired** — no orphan endpoints, no UI over demo fixtures. And **every new
+service→service call must carry its own `client_credentials` token** (the mvumo
+`ClientCredentialsTokenProvider` / pct `ServiceTokenProvider` pattern). **Trust headers are not
+authentication**, and a unit test that mocks the client mocks away the 401 — so an S2S call proven
+only by a mocked-client test is not proven. This binds every cross-service call this pack adds:
+PCT→daidzai continuum-link and adopt, PCT→CKP triage and pathway evaluation, PCT→madi MHP
+activation, PCT→inpatient activation, and the emergency→mental-health handover. A coordinated S2S
+token wave is building the BFF-side minting seam; this pack consumes it rather than minting its own.
+
+**Mobile specialty-workspace slice.** The coordinator's sweep found 66 of 108 labels attach clinical
+instrument names to a fake adder or a non-persisting notes box; the burns session does the mechanical
+withdrawal and per-lane replacements go through **forms-service governed definitions**. This pack's
+slice: **GCS, NIHSS, RASS/ICU sedation**, plus **PHQ-9, GAD-7 and Safety Plan as forms-service
+questionnaires now, with interpretation deferred to `mental-health-service` (8397)**. The split
+matters — capturing a PHQ-9 score is a form; acting on item 9 is a clinical decision that needs the
+service, so shipping the questionnaire without the interpretation is honest only while the deferral
+is stated on the surface.
 
 ## 6. Defects fixed in W0 that other lanes depend on
 

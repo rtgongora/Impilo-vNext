@@ -140,6 +140,110 @@ It is PCT-anchored per care-continuum doctrine CC-5, references
 `inpatient.procedure_episode` for each operation, and consumes `procedures-service` for the
 catalogue. It is **not** a second theatre workflow and must never create one.
 
+### 5a. AMENDMENT 2026-07-26 — CC-2 narrows `surgery-service`
+
+Decision 5 as originally written would have violated CC-2. Found by verifying a doctrine citation
+the emergency lane made about a different question (who owns a serial burn assessment); the
+citation was correct, and checking it showed it lands harder here than there.
+
+**CC-2 verbatim, on what a component MUST NOT own:**
+
+> person-level longitudinal clinical registries (problems, care plans, allergies, growth,
+> immunisation doses, birth/death summaries) — these are PCT's
+>
+> the clinical **decision** that opens or closes a phase of care — the admission handshake is the
+> model: PCT owns the admission decision, inpatient owns the physical census
+
+Four items in decision 5 fall on the wrong side of that, and PCT already has the structures:
+`pct_problems` carries `diagnostic_certainty`, severity (V060), `last_recurrence_at`, `evidence`,
+`review_date` and — decisively — **`responsible_service`**. `pct_care_plans` and
+`pct_care_plan_goals` exist. Building `surgical_condition`, a surveillance plan, an outcome
+registry and a decision-to-operate record inside `surgery-service` would have been four duplicate
+person-level registries, which is exactly what this ADR's own guardrails forbid.
+
+**Corrected split.**
+
+`surgery-service` **MUST NOT own** — these are PCT's, and surgery attaches to them:
+
+| Concept | PCT owner | How surgery participates |
+|---|---|---|
+| Surgical condition, diagnosis, certainty, severity, staging, recurrence | `pct_problems` | writes with `responsible_service = surgery`; staging as problem attributes |
+| Surveillance plan | `pct_care_plans` + `pct_care_plan_goals` | proposes and executes; does not own |
+| The decision that opens or closes a phase of care | PCT, per the admission-handshake model | owns the surgical *reasoning* and the options considered; PCT records the decision |
+| Functional outcome, patient-reported outcome | PCT person-level | contributes measurements |
+| Serial burn assessment | `pct.burn_assessment` (emergency lane, pct V2xx) | writes through it; no parallel acute copy |
+
+`surgery-service` **MAY own** — operational and phase truth of surgical care:
+
+surgical episode as a *management course record* that **attaches to** PCT journeys and never
+contains them · structured surgical assessment content · operative indication and the
+non-operative options weighed · prehabilitation and optimisation execution · planned-versus-
+performed reconciliation · complication pathway **instances** as workflow, with the resulting
+problem landing in `pct_problems` · waiting-list clinical revalidation state · the fifteen
+specialty extensions, their indications, operative content, templates and maps.
+
+**The component test — one question per CC-2 prohibition.**
+
+An earlier draft of this amendment stated the test as a single line: "does it reference journeys
+and person-level facts, or hold them?" The emergency lane's review found that this tests two of
+CC-2's four prohibitions and silently skips the others — and that the skipped one is the breach
+this amendment exists to fix. A service can reference every journey correctly, hold no registry,
+and still usurp the decision to operate. The single line would have passed the design that
+breached doctrine.
+
+So the test is four questions, one per prohibition, asked in order, with no generous readings:
+
+| # | Question | CC-2 prohibition | Remedy when the answer is wrong |
+|---|---|---|---|
+| 1 | **Attachment, not containment** — does it *reference* care journeys, or contain them? | containment of the continuum or any care journey | carry a resolvable PCT anchor (CC-5) |
+| 2 | **Contribution, not registry** — does it *contribute to* person-level longitudinal facts, or hold its own copy? | person-level longitudinal clinical registries | write into PCT's registry with `responsible_service` |
+| 3 | **Execution, not decision** — does it *execute* a decision PCT owns, or make the decision that opens or closes a phase of care? | the clinical decision that opens or closes a phase | the admission-handshake model: PCT decides, the component executes |
+| 4 | **Stamping, not spine** — does it *stamp* a correlation id, or claim to be the spine others stamp? | cross-phase correlation authority | stamp; a spine requires explicit delegation |
+
+The decomposition is the emergency lane's. Questions 1 and 2 are split rather than read together —
+their version folds them, generously — because the *remedies differ*: an unanchored episode is
+fixed with a reference, a duplicate registry is fixed by writing into PCT's. Different mechanics,
+different evidence at review. My own breach had both causes and only one is caught by a generous
+reading of question 1.
+
+Question 4 needs stating because `daidzai` looks like a breach and is not: CC-4 makes its trauma
+spine an explicit *delegation*, which is the exception that proves the rule needs asking.
+
+Applying it to this ADR: `surgery-service` answers **reference · contribute · execute · stamp**.
+CC-5 requires every clinical episode to carry a resolvable PCT anchor, which presumes components
+may own clinical episodes — `inpatient` owns `procedure_episode`, `daidzai` owns the trauma spine
+under delegation — so a surgical episode is legitimate on question 1. The amendment above is what
+makes it legitimate on questions 2 and 3.
+
+### 5b. Fail-safe extends to the client
+
+`procedures-service` sits on the readiness and competence path and must fail safe — decision 1's
+consequences already say an unavailable service blocks rather than allows. The emergency lane's
+review adds the corollary, from a live defect in this estate: **a hardened server does not survive
+a careless client.** A patient banner rendered "no conditions" for every patient in the estate
+while the BFF was returning 502, because the client destructured `data` and fell through to
+`?? []`; an ED trackboard rendered "No active ED visits" on a failed read, telling a coordinator
+the department was empty.
+
+The same shape is waiting in this programme, and it is worse here because the surfaces gate what a
+clinician may do:
+
+- an unreadable **catalogue** is not an empty catalogue — a specialty menu that renders nothing on
+  a failed read silently removes capability;
+- an unreadable **readiness verdict** is not a clear readiness — absence of blockers must never be
+  rendered from absence of data;
+- an unreadable **privilege** is not an absent privilege, and must not read as permission.
+
+Every consumer of a `procedures-service` read distinguishes *empty*, *unknown* and *unavailable*,
+and renders the third as a failure, never as the first. This is a delivery requirement for P1 and
+P4, verified by mutation rather than asserted.
+
+This narrows the service substantially and improves it. It also changes S1 from "build a surgical
+disease model" to "extend PCT's problem and care-plan model with surgical semantics, and own the
+surgical management record" — which is the same shape the paediatric pack took, where growth,
+immunisation and newborn records are PCT-owned person-level registries and the pack owns the
+decision support and the workflow.
+
 ### 6. Boundary statement
 
 | Domain | Owns |
@@ -192,3 +296,7 @@ theatre and trauma programmes. This ADR does not disturb it.
   neither becomes a second patient, provider, facility, terminology, payment or consent truth.
 - Financial state must never masquerade as clinical cancellation, and must never delay emergency
   surgery.
+- Every component added by this programme answers the four questions in §5a — **reference,
+  contribute, execute, stamp** — and the answers are evidence at design review, not assertions.
+- Every consumer of a `procedures-service` read distinguishes empty, unknown and unavailable
+  (§5b). A failed read never renders as an empty result.

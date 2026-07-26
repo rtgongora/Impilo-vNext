@@ -48,7 +48,7 @@ export function HeroContinuity() {
             href="/auth/login?returnTo=%2Fhome"
             className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500"
           >
-            Continue
+            My Impilo
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
           <Link
@@ -90,7 +90,7 @@ export function HeroContinuity() {
           href="/auth/login?returnTo=%2Fhome"
           className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500"
         >
-          Sign in
+          My Impilo
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </Link>
         <Link

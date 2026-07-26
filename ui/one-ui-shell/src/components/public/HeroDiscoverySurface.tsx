@@ -411,7 +411,7 @@ export function HeroDiscoverySurface() {
   return (
     <section
       aria-label="Get health services"
-      className="flex h-full min-h-[32rem] flex-col overflow-hidden rounded-[1.6rem] border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
+      className="flex h-full min-h-[32rem] flex-col overflow-hidden rounded-[1.6rem] lg:min-h-0 border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
     >
       {/* Header + Map/List toggle */}
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pt-4 pb-3 sm:px-5">
@@ -582,7 +582,7 @@ export function HeroDiscoverySurface() {
               of it — the map resolved to 28px at 390 and 105px at 768, a strip of
               nothing. The floor makes the surface grow instead of crushing the map.
             */}
-            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200 lg:min-h-[20rem]">
+            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200 lg:min-h-[9rem] xl:min-h-[13rem]">
               <FindCareMap
                 results={[]}
                 geoMarkers={geoMarkers}

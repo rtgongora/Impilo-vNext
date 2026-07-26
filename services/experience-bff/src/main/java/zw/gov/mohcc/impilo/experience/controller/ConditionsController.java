@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
@@ -8,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
@@ -43,6 +46,8 @@ public class ConditionsController {
 
     private static final Logger log = LoggerFactory.getLogger(ConditionsController.class);
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     /**
      * Code systems whose codes may be surfaced to the UI as {@code icdCode}. A SNOMED or local
      * code shown in a field labelled ICD is a mislabelled code, and a mislabelled code is how a
@@ -56,18 +61,34 @@ public class ConditionsController {
         this.pctClient = pctClient;
     }
 
+    /**
+     * The create payload, accepting both spellings of every field.
+     *
+     * <p>The aliases are not cosmetic. The web client posts camelCase ({@code patientId},
+     * {@code conditionName}) and this record declared only snake_case, with no naming strategy
+     * configured on either side and no key transformation in the api-client — so Jackson bound
+     * every field to null and {@code @Valid} rejected the request as a 400 before it ever reached
+     * pct-service. That is a second, independent break in the same vertical as the wrong endpoint
+     * path: the write path could not have worked even once the path was fixed.</p>
+     *
+     * <p>Both spellings are accepted rather than one chosen, because the web client and the mobile
+     * client do not agree with each other and breaking either to tidy the contract would trade one
+     * dead write path for another.</p>
+     */
     public record CreateConditionRequest(
-            @NotBlank String patient_id,
-            String encounter_id,
-            String journey_id,
-            @NotBlank String condition_name,
-            String icd_code,
+            @JsonAlias("patientId") @NotBlank String patient_id,
+            @JsonAlias("encounterId") String encounter_id,
+            @JsonAlias("journeyId") String journey_id,
+            @JsonAlias("conditionName") @NotBlank String condition_name,
+            @JsonAlias("icdCode") String icd_code,
             String category,
-            String clinical_status,
+            @JsonAlias("clinicalStatus") String clinical_status,
             String severity,
-            LocalDate onset_date,
-            String recorded_by,
-            String notes
+            @JsonAlias({"diagnosticCertainty"}) String diagnostic_certainty,
+            @JsonAlias("onsetDate") LocalDate onset_date,
+            @JsonAlias("recordedBy") String recorded_by,
+            String notes,
+            @JsonAlias("duplicateResolution") String duplicate_resolution
     ) {}
 
     @GetMapping
@@ -113,6 +134,13 @@ public class ConditionsController {
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "data", toConditionResource(created),
                     "meta", meta(requestId, correlationId)));
+        } catch (HttpClientErrorException.Conflict conflict) {
+            // Not a failure — a question. PCT found this problem already on the patient's list and
+            // is asking whether it is the same one returning or a distinct one. Flattening it to a
+            // 502 would tell the clinician the write broke and lose the problem they need to see.
+            log.info("PCT reported a duplicate problem for patient={}", request.patient_id());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(duplicateBody(conflict, requestId, correlationId));
         } catch (Exception e) {
             // A write that failed must never return 2xx. The clinician has to know the diagnosis
             // they just recorded is not on the record, while they are still in front of the patient.
@@ -153,6 +181,35 @@ public class ConditionsController {
         return Map.of("request_id", requestId, "correlation_id", correlationId);
     }
 
+    /**
+     * Re-presents PCT's duplicate report in the experience layer's vocabulary, so the UI can show
+     * the clinician the problem already on the list and the two answers available.
+     */
+    private static Map<String, Object> duplicateBody(
+            HttpClientErrorException conflict, String requestId, String correlationId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", "condition_already_on_list");
+        JsonNode upstream = null;
+        try {
+            upstream = MAPPER.readTree(conflict.getResponseBodyAsString());
+        } catch (Exception ignored) {
+            // Fall through to the generic message rather than failing the response.
+        }
+        body.put("message", upstream != null && upstream.hasNonNull("message")
+                ? upstream.get("message").asText()
+                : "This condition is already on the patient's list.");
+        if (upstream != null && upstream.has("existing")) {
+            body.put("existing", toConditionResource(upstream.get("existing")));
+        }
+        body.put("resolutions", List.of(
+                Map.of("duplicate_resolution", "SAME_PROBLEM_RETURNING",
+                        "effect", "Marks the existing condition as having recurred. No new entry is created."),
+                Map.of("duplicate_resolution", "DISTINCT_PROBLEM",
+                        "effect", "Records this as a separate condition alongside the existing one.")));
+        body.put("meta", meta(requestId, correlationId));
+        return body;
+    }
+
     // ── Translation: experience vocabulary ⇄ PCT problem record ─────────────────
 
     /**
@@ -173,8 +230,10 @@ public class ConditionsController {
         body.put("category", r.category());
         body.put("clinical_status", r.clinical_status() != null ? r.clinical_status() : "ACTIVE");
         body.put("severity", r.severity());
+        body.put("diagnostic_certainty", r.diagnostic_certainty());
         body.put("onset_date", r.onset_date() != null ? r.onset_date().toString() : null);
         body.put("notes", r.notes());
+        body.put("duplicate_resolution", r.duplicate_resolution());
         return body;
     }
 
@@ -209,6 +268,7 @@ public class ConditionsController {
         attrs.put("category", text(p, "category"));
         attrs.put("clinicalStatus", text(p, "clinical_status"));
         attrs.put("severity", text(p, "severity"));
+        attrs.put("diagnosticCertainty", text(p, "diagnostic_certainty"));
         attrs.put("onsetDate", text(p, "onset_date"));
         attrs.put("recordedBy", text(p, "recorded_by"));
         attrs.put("resolvedAt", text(p, "resolved_at"));

@@ -85,46 +85,55 @@ beyond an anchor read.
 
 ## 3. Reserved migration blocks
 
-Heads verified at `09b28436e`. **Reserve before writing; announce if a block needs extending.**
+Adjacent reservation does not survive on this tree. **This programme owns the `V300`–`V329` band
+in every service it co-edits.** New services of its own start at `V001`.
 
-| Service | Head today | Reserved for this programme |
+### Why a distant band rather than a range above the head
+
+Three ranges died under their owners in a single hour on 2026-07-26: this programme's `tuso`
+V042–V048 (V042 and V043 had already landed, one of them in this programme's own anchor commit),
+the emergency lane's `pct` V070–V099 (V100 landed 84 seconds before they measured), and the older
+`inpatient` V037–V064 block. The failure is structural, not careless: a head is a measurement, and
+on a tree with five-plus concurrent writers the measurement is stale before the reservation is
+written down.
+
+Numeric distance fixes what adjacency cannot. Nothing incremental reaches V300, so the band cannot
+be overtaken by a lane reserving just above a head; ownership is legible from the version alone;
+and Flyway sorts by version with gaps costing nothing. Verified 2026-07-26: the highest migration
+anywhere in the repository is `pct` V100, and no V2xx or V3xx exists.
+
+| Band | Owner |
+|---|---|
+| `V2xx` (V200–V229) | Emergency / Resuscitation / Acute Care pack |
+| **`V300`–`V329`** | **this programme** |
+
+| Service | Head at adoption | Reserved for this programme |
 |---|---|---|
 | `procedures-service` | — | V001–V030 (new service) |
 | `surgery-service` | — | V001–V030 (new service) |
-| `inpatient-service` | V066 | **V067–V080** |
-| `oros-service` | V017 | V018–V024 |
-| `scheduling-service` | V003 | V004–V010 |
-| `referral-service` | V002 | V003–V006 |
-| `mvumo-service` | V008 | V009–V014 |
-| `clinical-knowledge-platform-service` | V006 | V007–V020 |
-| `zibo-service` | V007 | V008–V014 |
-| `tuso-service` | **V043** | **V044–V049** |
-| `inventory-service` | V014 | V015–V020 |
-| `varapi-service` | V038 | V039–V042 |
-| `vashandi-workforce-service` | V008 | V009–V012 |
-| `reporting-service` | V003 | V004–V008 |
-| `costing-engine-service` | V024 | V025–V028 |
-| `tshepo-authz-service` | V047 | V048–V056 |
-| `notification-service` | V017 | V018–V020 |
-| `coverage-service` | V020 | V021–V024 |
+| `inpatient-service` | V066 | **V300–V329** |
+| `oros-service` | V017 | V300–V329 |
+| `scheduling-service` | V003 | V300–V329 |
+| `referral-service` | V002 | V300–V329 |
+| `mvumo-service` | V008 | V300–V329 |
+| `clinical-knowledge-platform-service` | V006 | V300–V329 |
+| `zibo-service` | V007 | V300–V329 |
+| `tuso-service` | V043 | V300–V329 |
+| `inventory-service` | V014 | V300–V329 |
+| `varapi-service` | V038 | V300–V329 |
+| `vashandi-workforce-service` | V008 | V300–V329 |
+| `reporting-service` | V003 | V300–V329 |
+| `costing-engine-service` | V024 | V300–V329 |
+| `tshepo-authz-service` | V047 | V300–V329 |
+| `notification-service` | V017 | V300–V329 |
+| `coverage-service` | V020 | V300–V329 |
+| `pct-service` | V100 | **none — this programme writes nothing in pct** |
 
-Note on `inpatient-service`: trauma's historical block was V035–V064 and the theatre programme
-took V065–V066. V037–V064 are **dead space** — verified empty, the files jump V036 to V065 — but
-stay unclaimed to preserve the historical record. This programme starts at **V067** and stops at
-V080; the emergency lane holds V081–V110.
+The earlier adjacent claims (`inpatient` V067–V080, `oros` V018–V024, `ckp` V007–V020, `tuso`
+V044–V049 and the rest) are **released**. Any lane that wants them may take them.
 
-**Two corrections found on 2026-07-26 when the emergency lane opened its lease:**
-
-- **`tuso-service` V042–V048 was never mine to claim.** V042 (`emonc_signal_function_readiness`)
-  and V043 (`readiness_assessment_programme`) had already landed from the facility-readiness lane
-  — V043 in `09b28436e`, this programme's own anchor commit — so the range collided from birth.
-  Corrected to **V044–V049**, which is what is actually free below the emergency lane's V050.
-  The lesson is that a head measured on a busy shared tree is a snapshot, not a reservation:
-  re-check immediately before writing, not only when opening a lease.
-- **`pct-service` head is V100, not V057.** This programme reserves **nothing** in pct — it reads
-  a care-continuum anchor and writes nothing — so nothing is affected, but the stale figure is
-  corrected rather than left to mislead. Note the numbering there is not contiguous (V058 absent,
-  a gap from V061 to V099, V060 flagged by the emergency lane as an untracked exception).
+`inpatient` V037–V064 remains dead space — verified empty, the files jump V036 to V065 — and stays
+unclaimed to preserve the historical record.
 
 ## 3b. Cross-programme contract with the emergency lane (agreed 2026-07-26)
 
@@ -153,7 +162,18 @@ Accepted in full. Recorded here so it binds the waves that implement it.
    decision-making from that point. No surgical CDS content will be built on the eleven
    `V005__ed_emergency_pathways.sql` UUIDs until the emergency lane's W4 repair lands — eight
    have zero `pathway_steps` and four cite the wrong source section.
-4. **Standards traceability.** Both packs write governed content into CKP, and the coverage guard
+4. **Site and side is a sequencing constraint, not a note.** The emergency lane has sequenced its
+   procedures-invocation wave **after this programme's P4**, and holds that a lateralised
+   emergency procedure may not ship with laterality as free text. Their framing is sharper than
+   mine and is recorded here because it should drive P4's design: elective surgery has a consent
+   form, a marked limb and a scheduled Time Out. Chest drain, needle and tube thoracostomy,
+   central and arterial line, thoracotomy, joint reduction, escharotomy and burr hole are done at
+   the bedside, at speed, often on an unidentified patient, by a lone clinician with no second
+   checker and no marking step. **P4's structured site and side must therefore work without a
+   second checker and without a marking step** — a design constraint, not a nice-to-have. This
+   programme flags before merging into `inpatient-service` so the emergency lane can re-run
+   against the real field rather than building a parallel one.
+5. **Standards traceability.** Both packs write governed content into CKP, and the coverage guard
    now reads **per-domain** registers at `docs/clinical-governance/<domain>/coverage-exclusions.json`
    rather than only the rmnp file. Content only counts as covering a standard when it carries
    `dakRef` plus `adaptation`; a rule with neither leaves its standard sitting at `UNCOVERED` and

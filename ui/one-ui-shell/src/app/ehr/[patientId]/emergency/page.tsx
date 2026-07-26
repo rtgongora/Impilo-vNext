@@ -40,7 +40,7 @@ export default function EmergencyPatientViewPage() {
     queryFn: () => apiClient.get(`/internal/v1/conditions?patient_id=${patientId}`),
     enabled: !!patientId,
   });
-  const { data: medsData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: medsData, isError: medsUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["prescriptions", { patientId, emergency: true }],
     queryFn: () => apiClient.get(`/internal/v1/pharmacy/prescriptions?patient_id=${patientId}`),
     enabled: !!patientId,
@@ -183,7 +183,18 @@ export default function EmergencyPatientViewPage() {
                   Medications
                 </h2>
                 <ul className="mt-2 space-y-1 text-sm text-foreground">
-                  {activeMeds.length === 0 && <li className="text-muted-foreground">None active.</li>}
+                  {medsUnavailable ? (
+                    /* Same rule as allergies one panel up: on an emergency view the medication
+                       list drives immediate prescribing decisions, so "none active" must never be
+                       said on the strength of a failed read. These two facts sat side by side with
+                       opposite honesty until now. */
+                    <li className="font-medium text-red-700">
+                      Medication record unavailable — not a statement that there are none. Check
+                      another source before prescribing.
+                    </li>
+                  ) : (
+                    activeMeds.length === 0 && <li className="text-muted-foreground">None active.</li>
+                  )}
                   {activeMeds.slice(0, 8).map((m) => (
                     <li key={m.id}>{String(m.attributes.medicationName ?? m.attributes.name ?? m.id)}</li>
                   ))}

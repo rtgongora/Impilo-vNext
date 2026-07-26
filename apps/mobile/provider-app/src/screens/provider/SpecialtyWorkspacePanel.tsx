@@ -12,15 +12,13 @@ import {
 } from "react-native";
 import type { SpecialtyWorkspaceDef } from "../../data/specialtyWorkspaces";
 import { DictationAssistButton, colors } from "@impilo/mobile-design-system";
-import { useEncounterStore } from "../../stores/encounterStore";
-import { recordApgar } from "../../services/inpatientService";
 
 type Props = {
   workspace: SpecialtyWorkspaceDef;
   onBack: () => void;
 };
 
-type ToolFormKind = "apgar" | "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withheld";
+type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withheld";
 
 /**
  * Burns arithmetic is withheld from this app.
@@ -67,7 +65,6 @@ const NO_GENERIC_CALCULATOR_WORKSPACES = new Set(["burns"]);
 export function formKindForTool(toolName: string, index: number, workspaceId: string): ToolFormKind {
   const t = toolName.toLowerCase();
   if (WITHHELD_BURNS_ARITHMETIC.some((token) => t.includes(token))) return "withheld";
-  if (t.includes("apgar")) return "apgar";
   if (index >= 4) return "soon";
   if (t.includes("bsa")) return "bsa";
   if (t.includes("kt/v") || t.includes("ktv")) return "ktv";
@@ -123,7 +120,7 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
               <Text style={styles.toolTitle}>{tool}</Text>
               <Text style={[styles.toolHint, kind === "withheld" && styles.toolHintWithheld]}>
                 {kind === "withheld"
-                  ? "Unavailable — calculator withdrawn"
+                  ? "In development — Emergency pack W1"
                   : kind === "soon"
                     ? "Coming soon overview"
                     : "Tap for workspace form"}
@@ -188,9 +185,14 @@ function ToolModalBody({
             output.
           </Text>
           <Text style={styles.modalDesc}>
-            A governed, age-banded burns calculation that persists against the emergency episode is
-            being delivered by the Emergency, Resuscitation and Acute Care pack. This workspace will
-            use that one rather than keep a private copy.
+            <Text style={styles.emphasis}>In development — Emergency, Resuscitation and Acute Care
+            pack, wave W1.</Text> The governed calculation now exists: age-banded Lund–Browder and
+            injury-clocked Parkland, in the shared <Text style={styles.emphasis}>burn-domain</Text>
+            library, with the age bands verified to sum to 100% of body surface. What is not yet
+            built is this screen&apos;s connection to it and the write to the patient&apos;s burn
+            assessment, so the calculation is deliberately not offered here until entering a value
+            also records it. This workspace will use the shared calculation rather than keep a
+            private copy.
           </Text>
         </ScrollView>
         <TouchableOpacity style={styles.primaryBtn} onPress={onClose}>
@@ -217,7 +219,6 @@ function ToolModalBody({
       <Text style={styles.modalTitle}>{toolName}</Text>
       <Text style={styles.modalMeta}>{workspaceName}</Text>
       <ScrollView style={{ maxHeight: 360 }}>
-        {kind === "apgar" && <ApgarForm />}
         {kind === "bsa" && <BsaForm />}
         {kind === "ktv" && <KtVForm />}
         {kind === "checklist" && <ChecklistForm />}
@@ -228,133 +229,6 @@ function ToolModalBody({
         <Text style={styles.secondaryBtnText}>Close</Text>
       </TouchableOpacity>
     </>
-  );
-}
-
-/**
- * APGAR — the first specialty tool wired to its real system of record.
- *
- * The backing already existed and only this panel was faking it: `recordApgar`
- * (services/inpatientService.ts) → BFF `POST /internal/v1/apgar` → inpatient-service
- * `ApgarScoreEntity`. This form submits the five components and the minute mark against
- * the active encounter; it does not compute or send a total, because the entity stores
- * components and deriving a score is not this layer's job.
- *
- * The displayed total is the plain sum of five integers the clinician just entered, shown
- * without interpretation — no normal/depressed banding, no advice. Classification stays
- * server-side.
- *
- * Two honesty rules this form holds to, both learned from the burns calculators:
- *  - it will not submit without a PCT anchor (an active encounter), because a clinical
- *    record with no resolvable encounter is not a record;
- *  - it reports only what the server confirmed. A failed write says so and keeps the
- *    values on screen; it never renders a success it did not receive.
- */
-const APGAR_COMPONENTS: { key: "appearance" | "pulse" | "grimace" | "activity" | "respiration"; label: string }[] = [
-  { key: "appearance", label: "Appearance (colour)" },
-  { key: "pulse", label: "Pulse (heart rate)" },
-  { key: "grimace", label: "Grimace (reflex irritability)" },
-  { key: "activity", label: "Activity (muscle tone)" },
-  { key: "respiration", label: "Respiration (effort)" },
-];
-
-const APGAR_MINUTES = [1, 5, 10];
-
-function ApgarForm() {
-  const { activeEncounter } = useEncounterStore();
-  const [minuteMark, setMinuteMark] = useState(1);
-  const [scores, setScores] = useState<Record<string, number>>({});
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const complete = APGAR_COMPONENTS.every((c) => scores[c.key] != null);
-  const total = APGAR_COMPONENTS.reduce((s, c) => s + (scores[c.key] ?? 0), 0);
-
-  async function submit() {
-    if (!activeEncounter || !complete) return;
-    setSaving(true);
-    setError(null);
-    setSaved(null);
-    try {
-      const created = await recordApgar({
-        subjectCpid: activeEncounter.patientId,
-        encounterId: activeEncounter.id,
-        minuteMark,
-        appearance: scores.appearance,
-        pulse: scores.pulse,
-        grimace: scores.grimace,
-        activity: scores.activity,
-        respiration: scores.respiration,
-      });
-      setSaved(created?.id ?? "recorded");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not record the APGAR score. It has not been saved.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <View style={styles.formBlock}>
-      <Text style={styles.formLabel}>APGAR Record</Text>
-
-      {activeEncounter ? (
-        <Text style={styles.anchorNote}>Recording against the active encounter ({activeEncounter.patientId})</Text>
-      ) : (
-        <Text style={styles.anchorWarn}>
-          No active encounter. Open a patient&apos;s encounter first — an APGAR score has to attach to one to be
-          recorded.
-        </Text>
-      )}
-
-      <Text style={styles.inputLabel}>Minute mark</Text>
-      <View style={styles.chipRow}>
-        {APGAR_MINUTES.map((m) => (
-          <TouchableOpacity
-            key={m}
-            style={[styles.choiceChip, minuteMark === m && styles.choiceChipOn]}
-            onPress={() => setMinuteMark(m)}
-          >
-            <Text style={[styles.choiceChipText, minuteMark === m && styles.choiceChipTextOn]}>{m} min</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {APGAR_COMPONENTS.map((c) => (
-        <View key={c.key}>
-          <Text style={styles.inputLabel}>{c.label}</Text>
-          <View style={styles.chipRow}>
-            {[0, 1, 2].map((v) => (
-              <TouchableOpacity
-                key={v}
-                testID={`apgar-${c.key}-${v}`}
-                style={[styles.choiceChip, scores[c.key] === v && styles.choiceChipOn]}
-                onPress={() => setScores((p) => ({ ...p, [c.key]: v }))}
-              >
-                <Text style={[styles.choiceChipText, scores[c.key] === v && styles.choiceChipTextOn]}>{v}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      ))}
-
-      <Text style={styles.result}>
-        {complete ? `Total ${total} / 10 (sum of the five components)` : "Score all five components"}
-      </Text>
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {saved && <Text style={styles.savedText}>Recorded against this encounter at {minuteMark} min.</Text>}
-
-      <TouchableOpacity
-        testID="apgar-submit"
-        style={[styles.primaryBtn, (!activeEncounter || !complete || saving) && styles.primaryBtnDisabled]}
-        disabled={!activeEncounter || !complete || saving}
-        onPress={submit}
-      >
-        <Text style={styles.primaryBtnText}>{saving ? "Recording…" : "Record APGAR"}</Text>
-      </TouchableOpacity>
-    </View>
   );
 }
 
@@ -542,32 +416,7 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   switchLabel: { flex: 1, fontSize: 13, color: colors.gray[700] },
   result: { fontSize: 14, fontWeight: "600", color: "#009739" },
-  anchorNote: { fontSize: 12, color: colors.gray[600], fontStyle: "italic" },
-  anchorWarn: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#92400E",
-    backgroundColor: "#FEF3C7",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  choiceChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    backgroundColor: colors.gray[100],
-    borderWidth: 1,
-    borderColor: colors.gray[300],
-  },
-  choiceChipOn: { backgroundColor: "#DBEAFE", borderColor: "#2563EB" },
-  choiceChipText: { fontSize: 13, fontWeight: "600", color: colors.gray[700] },
-  choiceChipTextOn: { color: "#1D4ED8" },
-  errorText: { fontSize: 13, fontWeight: "600", color: "#B91C1C" },
-  savedText: { fontSize: 13, fontWeight: "600", color: "#047857" },
   primaryBtn: { backgroundColor: "#2563EB", borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: 4 },
-  primaryBtnDisabled: { backgroundColor: colors.gray[300] },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
   secondaryBtn: { paddingVertical: 10, alignItems: "center" },
   secondaryBtnText: { color: "#2563EB", fontWeight: "600", fontSize: 15 },

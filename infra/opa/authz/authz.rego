@@ -12,9 +12,16 @@ package impilo.authz
 import rego.v1
 
 # Purposes the platform recognises (mirrors PurposeOfUse). Unknown purpose => deny.
+#
+# REGULATORY_DUTY is the purpose the org-scoped regulatory work session already mints
+# (WorkContextController.startRegulatorySession, live since ROM-W2) and the one the ROM policy
+# rows in tshepo-authz V045/V047 are written against. It was missing from this set: with opaMode
+# at ENFORCE every regulatory request in the estate would have denied with INVALID_PURPOSE —
+# an outage sitting behind a feature flag rather than a bug anyone had seen.
 valid_purpose := {
 	"TREATMENT", "OPERATIONS", "RESEARCH", "PUBLIC_HEALTH",
 	"EMERGENCY", "BREAK_GLASS", "SYSTEM", "PAYMENT",
+	"REGULATORY_DUTY",
 }
 
 # ── Deny reasons (a set; empty => the gate allows) ──────────────────────────

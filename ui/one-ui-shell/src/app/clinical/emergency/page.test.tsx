@@ -64,8 +64,15 @@ vi.mock("@/hooks/useFacilityStore", () => ({
     selector({ facility: { id: "facility-1", name: "Test Hospital" } }),
 }));
 
+const mockUseEdVisits = vi.fn(() => ({
+  data: [] as unknown[],
+  refetch: vi.fn(),
+  isLoading: false,
+  isError: false,
+}));
+
 vi.mock("@/hooks/queries/useEdVisit", () => ({
-  useEdVisits: () => ({ data: [], refetch: vi.fn(), isLoading: false, isError: false }),
+  useEdVisits: () => mockUseEdVisits(),
   useOpenEdVisit: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
 }));
 
@@ -74,7 +81,67 @@ function stubMutation() {
 }
 
 describe("EmergencyDepartmentPage", () => {
+  /**
+   * A trackboard that could not be read is not an empty department.
+   *
+   * The query destructured only `data: edVisits = []`, so a failed read rendered "No active ED
+   * visits." — the strongest possible false reassurance on this screen, because an empty board is
+   * the one claim that stops a coordinator looking. The BFF was already hardened to 502 for this
+   * route; the client turned it straight back into an empty list, so the server-side fix bought
+   * nothing. This layer is where the previous fix was undone.
+   *
+   * Mutation-proof: revert `isError` to a bare `data` destructure and this test fails.
+   */
+  it("says the trackboard is unavailable rather than showing an empty department", () => {
+    mockUseEdVisits.mockReturnValue({
+      data: [],
+      refetch: vi.fn(),
+      isLoading: false,
+      isError: true,
+    });
+    mockUseEmergencyActivations.mockReturnValue({
+      data: { data: [] },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    mockUseActivateEmergency.mockReturnValue(stubMutation());
+    mockUseLogEmergencyAction.mockReturnValue(stubMutation());
+    mockUseEndEmergency.mockReturnValue(stubMutation());
+
+    render(<EmergencyDepartmentPage />);
+
+    expect(screen.getByTestId("ed-visits-unavailable")).toBeInTheDocument();
+    expect(screen.getByText(/this is not an empty department/i)).toBeInTheDocument();
+    // The false-reassurance string must be absent, not merely accompanied by a warning.
+    expect(screen.queryByText("No active ED visits.")).not.toBeInTheDocument();
+  });
+
+  it("still distinguishes a genuinely empty trackboard from an unreadable one", () => {
+    mockUseEdVisits.mockReturnValue({
+      data: [],
+      refetch: vi.fn(),
+      isLoading: false,
+      isError: false,
+    });
+    mockUseEmergencyActivations.mockReturnValue({
+      data: { data: [] },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    mockUseActivateEmergency.mockReturnValue(stubMutation());
+    mockUseLogEmergencyAction.mockReturnValue(stubMutation());
+    mockUseEndEmergency.mockReturnValue(stubMutation());
+
+    render(<EmergencyDepartmentPage />);
+
+    expect(screen.getByText("No active ED visits.")).toBeInTheDocument();
+    expect(screen.queryByTestId("ed-visits-unavailable")).not.toBeInTheDocument();
+  });
+
   it("renders bounded ED shell with triage and queue handoffs", () => {
+    mockUseEdVisits.mockReturnValue({ data: [], refetch: vi.fn(), isLoading: false, isError: false });
     mockUseEmergencyActivations.mockReturnValue({
       data: { data: [] },
       isLoading: false,

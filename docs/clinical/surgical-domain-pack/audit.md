@@ -172,8 +172,16 @@ end-to-end.
 
 ## 5. Consequences for the plan
 
-1. **S1 (episode + condition model) is the keystone.** Sections 3, 8, 15, 16, 18 and 23 all need
-   a surgical episode to attach to. Nothing downstream is honest without it.
+1. **S1 is the keystone, but it is not "build a surgical disease model".** Sections 3, 8, 15, 16,
+   18 and 23 all need a surgical episode to attach to — but CC-2 forbids a component owning
+   person-level longitudinal clinical registries, and PCT already holds the ones surgery needs:
+   `pct_problems` (with `diagnostic_certainty`, severity, `last_recurrence_at`, `evidence` and
+   `responsible_service`) and `pct_care_plans` with goals. So the surgical condition, the
+   surveillance plan, the outcomes and the decision that opens a phase of care are PCT's, and S1
+   extends them with surgical semantics while owning the surgical *management* record. See the
+   [ADR amendment](../../architecture/adr/ADR-SURGERY-AND-PROCEDURES-SERVICE-BOUNDARIES.md).
+   This narrows the service and removes four duplicate registries the first draft would have
+   built.
 2. **§12's "repair missing links" is not repair work** — it is construction on the clinic side.
    The theatre end of every link already exists. This is genuinely reassuring: the hard,
    safety-critical half is done and proven.

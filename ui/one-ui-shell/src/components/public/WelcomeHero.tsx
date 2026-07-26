@@ -212,7 +212,7 @@ export function WelcomeHero() {
       {/* 38/62 split: intent and continuity left, service discovery right. Both zones start
           at the same top edge and run to the same depth — the right side must never begin
           halfway down the viewport. */}
-      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 lg:min-h-[min(44rem,calc(100vh-5rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-8">
+      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 lg:h-[min(44rem,calc(100vh-4.6rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-6">
         {/* Left: need-first intent + inline Nompilo guidance */}
         {/* min-w-0: grid children default to min-width:auto and refuse to shrink below
             their content, which clipped the hero text on narrow screens (the section's
@@ -228,7 +228,7 @@ export function WelcomeHero() {
             id="living-canvas-title"
             // Smaller than the earlier concept: still the loudest thing on the canvas,
             // but no longer consuming the vertical space the discovery surface needs.
-            className="mt-5 max-w-xl text-[clamp(1.6rem,2.5vw,2.35rem)] font-extrabold leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_1px_40px_rgba(45,212,191,.25)]"
+            className="mt-4 max-w-xl text-[clamp(1.5rem,2.2vw,2.1rem)] font-extrabold leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_1px_40px_rgba(45,212,191,.25)]"
           >
             {t("public.welcome.needFirstTitle")}
           </h1>
@@ -272,7 +272,7 @@ export function WelcomeHero() {
           </form>
 
           <div className="mt-3 flex flex-wrap gap-2" aria-label="Example questions">
-            {QUICK_PROMPTS.map((prompt) => (
+            {QUICK_PROMPTS.slice(0, 3).map((prompt) => (
               <button
                 key={prompt}
                 type="button"
@@ -392,33 +392,6 @@ export function WelcomeHero() {
             </Link>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-            <Link
-              href="/verify/practitioner"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-teal-200 hover:text-white"
-            >
-              <Building2 className="h-4 w-4" aria-hidden />
-              Find or verify
-            </Link>
-            <IntentLink
-              pillar="my-health"
-              goal="open-my-impilo"
-              dest="/home"
-              from="/"
-              href="/auth/login?returnTo=%2Fhome"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-100 hover:text-white"
-            >
-              <UserRound className="h-4 w-4" aria-hidden />
-              My Impilo
-            </IntentLink>
-            <Link
-              href="/provider/get-access"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-100 hover:text-white"
-            >
-              <BriefcaseMedical className="h-4 w-4" aria-hidden />
-              Work on Impilo
-            </Link>
-          </div>
         </div>
 
         {/* Right: unified Get Health Services discovery (care, medicines, wellness — honest, real). */}

@@ -16,6 +16,16 @@ test_deny_unknown_purpose if {
 	"INVALID_PURPOSE" in d.deny_reasons
 }
 
+# RB-1: the org-scoped regulatory work session has minted purpose REGULATORY_DUTY since ROM-W2,
+# and the ROM policy rows (tshepo-authz V045/V047) are written against it — but it was absent from
+# valid_purpose. Under opaMode=ENFORCE every regulatory request in the estate would have denied
+# with INVALID_PURPOSE. This test is the tripwire so it cannot silently fall out again.
+test_allow_regulatory_duty_purpose if {
+	d := authz.decision with input as {"actor_id": "a", "purpose": "REGULATORY_DUTY", "loa": 3, "assurance_loa": 3}
+	d.allow == true
+	not "INVALID_PURPOSE" in d.deny_reasons
+}
+
 test_deny_below_min_loa if {
 	d := authz.decision with input as {"actor_id": "a", "purpose": "TREATMENT", "loa": 1, "min_loa": 3, "assurance_loa": 1}
 	d.allow == false

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.pct.core.clinical.DuplicateProblemException;
 import zw.gov.mohcc.impilo.pct.core.clinical.ProblemService;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ProblemEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -37,6 +38,26 @@ public class ProblemController {
         List<Map<String, Object>> out = problemService.list(subjectCpid, clinicalStatus)
                 .stream().map(this::toMap).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.ok(out, TrustContextHolder.require().correlationId().toString()));
+    }
+
+    /**
+     * Reports a suspected duplicate as 409, carrying the problem already on the list and the two
+     * answers the caller can give. It is a question, not a refusal: the clinician is the only one
+     * who can say whether this is the same disease returning or a genuinely distinct problem.
+     */
+    @ExceptionHandler(DuplicateProblemException.class)
+    public ResponseEntity<Map<String, Object>> duplicate(DuplicateProblemException e) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", "problem_already_on_list");
+        body.put("message", e.getMessage());
+        body.put("existing", toMap(e.getExisting()));
+        body.put("resolutions", List.of(
+                Map.of("duplicate_resolution", "SAME_PROBLEM_RETURNING",
+                        "effect", "Moves the existing problem to RECURRENCE. No new entry is created."),
+                Map.of("duplicate_resolution", "DISTINCT_PROBLEM",
+                        "effect", "Records this as a separate problem alongside the existing one.")));
+        body.put("correlation_id", TrustContextHolder.require().correlationId().toString());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @PostMapping
