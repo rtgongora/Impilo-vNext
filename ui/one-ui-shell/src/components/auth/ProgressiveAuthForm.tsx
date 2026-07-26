@@ -347,11 +347,13 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
                   (deploy/helm/impilo-vnext/files/realm-impilo-preview.json).
                   The previous list (mapfumo/chienda/zenda @mohcc.gov.zw, "test123") did not
                   exist in that realm, so every quick-login could only ever 401. */}
-              {/* citizen.moyo is deliberately ABSENT: its Keycloak credentials carry a
-                  `password-history` entry, meaning the password was rotated to a value
-                  no longer documented in the seed file — it 401s like the old entries did.
-                  Re-add it only once someone deliberately resets it to a known value. */}
+              {/* citizen.moyo's password is NOT the seed value in realm-impilo-preview.json.
+                  It was rotated, and the realm's passwordHistory(5) policy now permanently
+                  refuses the documented `Vashandi@2024!` — so the file cannot be made true
+                  for this account. `Vashandi@2026!` is the working value (verified: 200,
+                  actorType CITIZEN). See docs/runbooks/keycloak-auth-outage-runbook.md §8. */}
               {[
+                { email: "citizen.moyo", password: "Vashandi@2026!", label: "Citizen", desc: "Citizen · PHR" },
                 { email: "vashandi.worker", password: "Vashandi@2024!", label: "Health worker", desc: "Nurse · Clinician" },
                 { email: "vashandi.facility", password: "Vashandi@2024!", label: "Facility admin", desc: "Facility admin · Clinician" },
                 { email: "superadmin", password: "Impilo@2024!", label: "Super admin", desc: "System admin · Developer" },
