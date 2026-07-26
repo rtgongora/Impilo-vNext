@@ -233,19 +233,38 @@ public class ServiceClientConfig {
     }
 
     /**
-     * All-null service endpoints for unit tests — the record compact constructor applies localhost defaults
-     * (including {@code workforceGovernanceBaseUrl}).
+     * A closed, privileged port. Nothing can be listening on it, so a call fails immediately with
+     * connection-refused instead of reaching a real service.
+     */
+    public static final String UNREACHABLE_TEST_ENDPOINT = "http://127.0.0.1:1";
+
+    /**
+     * Service endpoints for unit tests, every one of them unreachable.
+     *
+     * <p>This used to pass all nulls, which let the record's compact constructor apply the
+     * <em>local development</em> defaults — PCT on 8088, OROS on 8089, inventory-service on 8098.
+     * A unit test built on this helper therefore reached the developer's loopback for real
+     * whenever a stub missed an overload, and its result depended on what happened to be
+     * listening: a service started by hand, a {@code kubectl port-forward}, another project's
+     * server. That made assertions about a downstream being unavailable true by luck rather than
+     * by construction, and it is one half of why the experience-bff suite failed three different
+     * ways on three identical runs (the other half was the Spring integration contexts — see
+     * {@code ClosedLoopbackDownstreamsEnvironmentPostProcessor}).</p>
+     *
+     * <p>Tests that want a downstream to answer should stub it explicitly, with
+     * {@code MockRestServiceServer} or WireMock, not by hoping the port is free.</p>
      */
     public static ServiceEndpoints testServiceEndpoints() {
+        String u = UNREACHABLE_TEST_ENDPOINT;
         return new ServiceEndpoints(
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u
         );
     }
 

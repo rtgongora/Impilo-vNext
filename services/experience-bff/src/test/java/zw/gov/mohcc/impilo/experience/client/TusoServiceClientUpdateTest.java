@@ -22,7 +22,10 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
  */
 class TusoServiceClientUpdateTest {
 
-    private static final String BASE = "http://localhost:8084/v1/internal/facilities";
+    // What this test is about is the path and the verb, not the host. It takes the host from the
+    // same helper the client is built from, so it cannot drift and does not name a live dev port.
+    private static final String BASE =
+            ServiceClientConfig.UNREACHABLE_TEST_ENDPOINT + "/v1/internal/facilities";
 
     private TusoServiceClient client(RestTemplate rt) {
         return new TusoServiceClient(rt, ServiceClientConfig.testServiceEndpoints());
