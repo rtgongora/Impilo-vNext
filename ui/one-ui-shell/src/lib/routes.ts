@@ -1018,7 +1018,8 @@ export const ROUTES: RouteDefinition[] = [
 // monitoring home with §14.6 patient-wording law).
 // Khuluma first-class communication front door (Jul 2026): +7 role-aware hub routes.
 // Ruvimbo canonical product face (Jul 2026): +6 role-aware financing routes. Total 798.
-export const EXPECTED_ROUTE_COUNT = 798;
+// Paediatric workspace (26 Jul 2026): +1 — /ehr/[patientId]/paediatrics. Total 799.
+export const EXPECTED_ROUTE_COUNT = 799;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
