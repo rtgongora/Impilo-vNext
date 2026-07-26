@@ -3,7 +3,7 @@
 Status: **built, test-green, not yet deployed.** Content ratification: `ENGINEERING_SEED`
 pending MoHCC, matching every other content pack in this programme.
 
-Lease and migration reservation: [`docs/registry/iatg-paediatric-leases.md`](../../registry/iatg-paediatric-leases.md).
+Lease and migration reservation: [`docs/registry/iatg-paediatrics-leases.md`](../../registry/iatg-paediatrics-leases.md).
 
 ## Why this exists
 

@@ -662,4 +662,4 @@ plotted.
 
 Content is `ENGINEERING_SEED` pending MoHCC, and carries a CC BY-NC-ND licence whose
 attribution obligations travel through the API to the screen. Migration band `V400`–`V429`
-is reserved in [`docs/registry/iatg-paediatric-leases.md`](../../registry/iatg-paediatric-leases.md).
+is reserved in [`docs/registry/iatg-paediatrics-leases.md`](../../registry/iatg-paediatrics-leases.md).
