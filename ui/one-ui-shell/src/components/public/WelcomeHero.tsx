@@ -199,30 +199,33 @@ export function WelcomeHero() {
 
   return (
     <section
-      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-teal-200/70 bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100/85 shadow-[0_28px_80px_-36px_rgba(6,95,70,.55)]"
+      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,#04211c_0%,#062f2b_38%,#053c40_70%,#04252e_100%)] shadow-[0_40px_110px_-40px_rgba(2,30,26,.85)]"
       aria-labelledby="living-canvas-title"
     >
-      {/* Teal-green aqua glow — deeper decorative depth. */}
-      <div aria-hidden className="pointer-events-none absolute -right-24 -top-28 h-96 w-96 rounded-full bg-teal-300/50 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute right-1/3 -top-20 h-72 w-72 rounded-full bg-cyan-300/40 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -left-20 bottom-0 h-80 w-80 rounded-full bg-emerald-300/50 blur-3xl" />
+      {/* Backlighting — aurora orbs behind the glass, the light the frost refracts. */}
+      <div aria-hidden className="pointer-events-none absolute -right-24 -top-32 h-[30rem] w-[30rem] rounded-full bg-teal-400/35 blur-[110px]" />
+      <div aria-hidden className="pointer-events-none absolute right-1/4 -top-24 h-80 w-80 rounded-full bg-cyan-300/30 blur-[100px]" />
+      <div aria-hidden className="pointer-events-none absolute -left-24 bottom-[-6rem] h-[26rem] w-[26rem] rounded-full bg-emerald-400/35 blur-[110px]" />
+      <div aria-hidden className="pointer-events-none absolute left-1/3 bottom-0 h-64 w-64 rounded-full bg-teal-300/20 blur-[90px]" />
+      {/* Hairline top highlight — the sleek edge where the light catches. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
       <div className="relative z-10 grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
         {/* Left: need-first intent + inline Nompilo guidance */}
         <div className="relative z-10 flex flex-col justify-center p-6 sm:p-9 lg:p-12">
-          <p className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-800">
+          <p className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-100 backdrop-blur-sm">
             <ShieldCheck className="h-4 w-4" aria-hidden />
             {t("public.welcome.eyebrow")}
           </p>
           <h1
             id="living-canvas-title"
-            className="mt-5 max-w-3xl text-[clamp(2.15rem,5vw,4rem)] font-extrabold leading-[1.03] tracking-[-0.035em] text-slate-950"
+            className="mt-5 max-w-3xl text-[clamp(2.15rem,5vw,4rem)] font-extrabold leading-[1.03] tracking-[-0.035em] text-white [text-shadow:0_1px_40px_rgba(45,212,191,.25)]"
           >
             {t("public.welcome.needFirstTitle")}
           </h1>
-          <p className="mt-4 max-w-2xl text-[clamp(1rem,1.6vw,1.15rem)] leading-7 text-slate-600">
+          <p className="mt-4 max-w-2xl text-[clamp(1rem,1.6vw,1.15rem)] leading-7 text-emerald-50/85">
             {t("public.welcome.needFirstIntro")}
           </p>
-          <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-emerald-800">
+          <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-teal-200">
             <ShieldCheck className="h-4 w-4" aria-hidden />
             Many services are available without signing in.
           </p>
@@ -233,10 +236,10 @@ export function WelcomeHero() {
             aria-label="Ask Nompilo about health, services or support"
             className="mt-7"
           >
-            <label htmlFor="public-nompilo-intent" className="text-sm font-semibold text-slate-900">
+            <label htmlFor="public-nompilo-intent" className="text-sm font-semibold text-white">
               Ask Nompilo
             </label>
-            <div className="mt-2 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-white p-2 shadow-lg shadow-emerald-950/5 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20">
+            <div className="mt-2 flex items-center gap-2 rounded-2xl border border-white/25 bg-white/95 p-2 shadow-[0_18px_50px_-18px_rgba(0,0,0,.6)] focus-within:border-teal-300 focus-within:ring-2 focus-within:ring-teal-300/30">
               <Sparkles className="ml-2 h-5 w-5 shrink-0 text-violet-600" aria-hidden />
               <input
                 id="public-nompilo-intent"
@@ -268,7 +271,7 @@ export function WelcomeHero() {
                 key={prompt}
                 type="button"
                 onClick={() => void askNompilo(prompt)}
-                className="min-h-9 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-xs font-medium text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+                className="min-h-9 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-left text-xs font-medium text-emerald-50 backdrop-blur-sm hover:border-teal-300/60 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
               >
                 {prompt}
               </button>
@@ -363,14 +366,14 @@ export function WelcomeHero() {
             </Link>
             <Link
               href="/welcome/emergency"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-800 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-red-400/60 bg-red-500/90 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950"
             >
               <Siren className="h-4 w-4" aria-hidden />
               Emergency
             </Link>
             <Link
               href="/welcome/report"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-emerald-50 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
             >
               <MessageSquareHeart className="h-4 w-4" aria-hidden />
               Give feedback
@@ -380,7 +383,7 @@ export function WelcomeHero() {
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
             <Link
               href="/verify/practitioner"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-800 hover:text-emerald-950"
+              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-teal-200 hover:text-white"
             >
               <Building2 className="h-4 w-4" aria-hidden />
               Find or verify
@@ -391,14 +394,14 @@ export function WelcomeHero() {
               dest="/home"
               from="/"
               href="/auth/login?returnTo=%2Fhome"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-slate-700 hover:text-slate-950"
+              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-100 hover:text-white"
             >
               <UserRound className="h-4 w-4" aria-hidden />
               My Impilo
             </IntentLink>
             <Link
               href="/provider/get-access"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-slate-700 hover:text-slate-950"
+              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-100 hover:text-white"
             >
               <BriefcaseMedical className="h-4 w-4" aria-hidden />
               Work on Impilo
