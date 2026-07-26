@@ -312,6 +312,7 @@ fullBootServices:
       KEYCLOAK_ISSUER: ''
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ''
       PCT_INTEGRATION_TUSO_BASE_URL: http://tuso-service:8084
+      PCT_INTEGRATION_CLINICAL_KNOWLEDGE_BASE_URL: http://clinical-knowledge-platform-service:8270
   pharmacy-elmis-adapter:
     enabled: true
     port: 8099

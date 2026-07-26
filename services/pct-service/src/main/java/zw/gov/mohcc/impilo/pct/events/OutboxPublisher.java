@@ -182,6 +182,13 @@ public class OutboxPublisher {
             case "pct.observation.recorded" -> "pct.observation.recorded";
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
+            // Nutrition programme lifecycle. Tracing gets its own topic because it is acted on by a
+            // different team from the one that recorded the review — a community health worker doing
+            // a home visit, not the nurse at the clinic — and often on a different day.
+            case "IMAM_EPISODE_ENROLLED", "IMAM_EPISODE_CLOSED" -> "pct.imam.episode.updated";
+            case "IMAM_VISIT_RECORDED" -> "pct.imam.visit.recorded";
+            case "IMAM_TRACING_REQUIRED" -> "pct.imam.tracing.required";
+
             // Virtual-pool substrate: TUSO consumes pool.materialized to flip
             // ACTIVATION_REQUESTED -> ACTIVE; comms plane consumes sla.breached.
             case "POOL_MATERIALIZED" -> "pct.telemedicine.pool.materialized";

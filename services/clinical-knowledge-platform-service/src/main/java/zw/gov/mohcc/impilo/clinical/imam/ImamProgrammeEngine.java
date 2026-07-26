@@ -64,8 +64,12 @@ public final class ImamProgrammeEngine {
             List<String> criteriaMet,
             List<String> missingInputs,
             Integer reviewIntervalDays,
+            Integer attendanceGraceDays,
+            Integer traceAfterMissedVisits,
+            Integer defaulterMissedVisits,
             String therapeuticFood,
             String rationale,
+            String contentPackId,
             String contentVersion,
             String approvalStatus,
             String note) {
@@ -81,14 +85,10 @@ public final class ImamProgrammeEngine {
         // second opinion about the same child that could disagree with the one on the chart.
         ImamProgrammeContent.Programme byClassification = content.forClassification(facts.classification());
         if (byClassification != null) {
-            return new Eligibility(true, null, true, byClassification.code(), byClassification.name(),
-                    "IMNCI_CLASSIFICATION",
+            return admitted(content, byClassification, "IMNCI_CLASSIFICATION",
                     "Admitted on the IMNCI classification " + facts.classification().trim().toUpperCase(Locale.ROOT)
                             + ", which this programme treats.",
-                    List.of("IMNCI_CLASSIFICATION"), List.of(),
-                    byClassification.reviewIntervalDays(),
-                    byClassification.therapeuticFood() == null ? null : byClassification.therapeuticFood().productCode(),
-                    byClassification.treats(), version, approval, seedNote);
+                    List.of(), seedNote);
         }
 
         Oedema oedema = Oedema.of(facts.oedema());
@@ -118,7 +118,8 @@ public final class ImamProgrammeEngine {
                     : "No nutritional measurement was supplied: acute malnutrition cannot be ruled in or out "
                       + "from an unmeasured child.";
             return new Eligibility(false, reason, false, null, null, null, null,
-                    List.of(), missing, null, null, null, version, approval, seedNote);
+                    List.of(), missing, null, null, null, null, null, null,
+                    content.packId(), version, approval, seedNote);
         }
 
         for (ImamProgrammeContent.Programme programme : content.programmes()) {
@@ -132,19 +133,34 @@ public final class ImamProgrammeEngine {
                 if (criterion.requiresComplication() && !complicationPresent(facts)) {
                     continue;
                 }
-                return new Eligibility(true, null, true, programme.code(), programme.name(),
-                        criterion.code(), criterion.description(),
-                        List.of(criterion.code()), missing,
-                        programme.reviewIntervalDays(),
-                        programme.therapeuticFood() == null ? null : programme.therapeuticFood().productCode(),
-                        programme.treats(), version, approval, seedNote);
+                return admitted(content, programme, criterion.code(), criterion.description(), missing, seedNote);
             }
         }
 
         return new Eligibility(true, null, false, null, null, null, null,
-                List.of(), missing, null, null,
+                List.of(), missing, null, null, null, null, null,
                 "No admission criterion for a nutrition programme is met on the measurements supplied.",
-                version, approval, seedNote);
+                content.packId(), version, approval, seedNote);
+    }
+
+    /**
+     * The schedule and the defaulter definition travel with the admission decision, because the
+     * enrolling service stores them on the episode: a child is held to the rules they were admitted
+     * under, and the tracing worklist can then be one indexed query rather than one network call per
+     * open episode.
+     */
+    private static Eligibility admitted(ImamProgrammeContent content, ImamProgrammeContent.Programme programme,
+                                        String criterionCode, String criterionDescription,
+                                        List<String> missing, String seedNote) {
+        return new Eligibility(true, null, true, programme.code(), programme.name(),
+                criterionCode, criterionDescription,
+                List.of(criterionCode), missing,
+                programme.reviewIntervalDays(),
+                programme.attendanceGraceDays(),
+                programme.traceAfterMissedVisits(),
+                programme.defaulterMissedVisits(),
+                programme.therapeuticFood() == null ? null : programme.therapeuticFood().productCode(),
+                programme.treats(), content.packId(), content.version(), content.approvalStatus(), seedNote);
     }
 
     /**

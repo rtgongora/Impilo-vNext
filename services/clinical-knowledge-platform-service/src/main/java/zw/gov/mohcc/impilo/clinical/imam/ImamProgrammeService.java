@@ -248,8 +248,12 @@ public class ImamProgrammeService {
         m.put("criteria_met", e.criteriaMet());
         m.put("missing_inputs", e.missingInputs());
         m.put("review_interval_days", e.reviewIntervalDays());
+        m.put("attendance_grace_days", e.attendanceGraceDays());
+        m.put("trace_after_missed_visits", e.traceAfterMissedVisits());
+        m.put("defaulter_missed_visits", e.defaulterMissedVisits());
         m.put("therapeutic_food", e.therapeuticFood());
         m.put("rationale", e.rationale());
+        m.put("content_pack_id", e.contentPackId());
         m.put("content_version", e.contentVersion());
         m.put("approval_status", e.approvalStatus());
         m.put("note", e.note());
