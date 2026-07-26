@@ -51,6 +51,7 @@
         <!-- Build order: libs first, then shared-core, then services -->
         <module>../libs/shared-kernel-java</module>
         <module>../libs/security-baseline</module>
+        <module>../libs/paediatric-domain</module>
         <module>shared-core</module>
         <module>tshepo-service</module>
         <module>vito-service</module>
@@ -365,6 +366,13 @@
             <dependency>
                 <groupId>zw.gov.mohcc.impilo</groupId>
                 <artifactId>shared-kernel-java</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Paediatric domain: age routing + WHO growth standards -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>paediatric-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
