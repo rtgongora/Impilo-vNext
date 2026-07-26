@@ -19,6 +19,7 @@ CHECKS=(
   check-care-continuum-doctrine.sh
   check-imnci-capture-coverage.sh
   check-dak-traceability.sh
+  check-rmnp-capture-coverage.sh
   check-butano-data-durability.sh
 )
 

@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+# RMNP capture coverage guard.
+#
+# A clinical rule evaluates named facts. A form is what a clinician actually fills in. When a rule
+# needs a fact no form can capture, the rule can never fire — it sits in the content looking
+# implemented while the finding it depends on is never recorded, and the failure is silent from both
+# ends: the form looks complete and the engine looks complete. Nothing errors, nothing warns, and
+# the alert simply never comes.
+#
+# The paediatric equivalent of this guard found two genuinely unfireable rules the first time it
+# ran. This one exists before the reproductive rule content does, deliberately, so that the content
+# cannot be written without the capture arriving in the same change.
+#
+# It walks every predicate shape the evaluator understands, including the ones added for this
+# domain: bandKey, appliesWhen, atLeast/of, and optionalCriterion.
+set -euo pipefail
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+cd "$REPO_PATH"
+
+CONTENT_DIR=services/clinical-knowledge-platform-service/src/main/resources/clinical
+FORMS_DIR=services/forms-service/src/main/resources/seed-forms
+
+echo "=== RMNP capture coverage guard ==="
+
+python3 - "$CONTENT_DIR" "$FORMS_DIR" <<'PY'
+import json
+import pathlib
+import sys
+
+content_dir = pathlib.Path(sys.argv[1])
+forms_dir = pathlib.Path(sys.argv[2])
+
+# Which rule packs are checked against which forms. A pack with no paired form would be checked
+# against nothing and would pass vacuously, so pairing is declared rather than inferred.
+PAIRINGS = {
+    "rmnp-anc-danger-signs.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
+    "rmnp-anc-classification-tables.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
+    "rmnp-anc-routine-actions.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
+    "rmnp-obstetric-danger-signs.json": ["14-labour-admission-and-monitoring.json"],
+    "rmnp-pnc-maternal-danger-signs.json": ["16-pnc-maternal-contact.json"],
+    "rmnp-pnc-newborn-danger-signs.json": ["17-pnc-newborn-contact.json",
+                                           "12-imci-young-infant-assessment.json"],
+    "rmnp-smbp-escalation.json": ["20-smbp-home-readings.json"],
+    "rmnp-spr-rules.json": ["18-family-planning-eligibility.json"],
+    "rmnp-mec-matrix.json": ["18-family-planning-eligibility.json"],
+    "rmnp-reproductive-intention.json": ["18-family-planning-eligibility.json"],
+}
+
+# Facts an engine computes and injects rather than a clinician entering. Deliberately tight: parity
+# and previousCaesarean ARE captured on a form and must not be waved in here, because "the engine
+# knows it" is exactly the excuse that would hide a genuine capture gap.
+DERIVED = {
+    "ageDays", "ageMonths", "ageYears",
+    "gestationalAgeDays", "gestationalAgeWeeks",
+    "hoursSinceBirth", "daysSinceBirth", "postpartumDay",
+    "minutesSinceOpen", "minutesSinceLastReassessment",
+    "stepsCompleted", "stepsOverdue",
+    "pregnant", "pluralityDerived",
+}
+DERIVED_PREFIXES = ("minutesSinceLastObservationOf.", "smbp.")
+
+
+def load(path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        print(f"FAIL: could not parse {path}: {exc}")
+        raise SystemExit(1)
+
+
+def captured_link_ids(form_doc):
+    """Every linkId a clinician can fill in on this form."""
+    out = set()
+    definition = form_doc.get("definition", form_doc)
+    for section in definition.get("sections", []):
+        for field in section.get("fields", []):
+            link = field.get("linkId")
+            if link:
+                out.add(link)
+                # A nested fact path is satisfied by its parent field: a form capturing "vitals"
+                # as a group satisfies "vitals.systolicBp".
+                out.add(link.split(".")[0])
+    return out
+
+
+def walk_inputs(node, found):
+    """Every fact an engine would look up, across all predicate shapes."""
+    if isinstance(node, dict):
+        for key in ("input", "finding"):
+            value = node.get(key)
+            if isinstance(value, str):
+                found.add(value)
+        # bands may score against a scale other than ageDays
+        band_key = node.get("bandKey")
+        if isinstance(band_key, str):
+            found.add(band_key)
+        for value in node.values():
+            walk_inputs(value, found)
+    elif isinstance(node, list):
+        for item in node:
+            walk_inputs(item, found)
+
+
+def rule_inputs(pack):
+    """Declared requiredInputs plus everything the logic actually reads.
+
+    Both, because they fail differently: a requiredInput nobody reads is dead weight, and a fact the
+    logic reads without declaring it is invisible to the "what could not be assessed" report.
+    """
+    found = set()
+    for collection in ("rules", "tables", "conditions", "signals", "services", "bundles"):
+        for item in pack.get(collection, []) or []:
+            for declared in item.get("requiredInputs", []) or []:
+                found.add(declared)
+            for key in ("logic", "appliesWhen", "trigger", "openWhile", "closeWhen", "abandonWhen"):
+                if key in item:
+                    walk_inputs(item[key], found)
+            for tier in item.get("tiers", []) or []:
+                walk_inputs(tier.get("logic"), found)
+    return found
+
+
+def is_derived(fact):
+    return fact in DERIVED or any(fact.startswith(p) for p in DERIVED_PREFIXES)
+
+
+rmnp_packs = sorted(content_dir.glob("rmnp-*.json"))
+if not rmnp_packs:
+    print("  no RMNP rule packs yet — nothing to check.")
+    print("  This guard is wired ahead of the content on purpose: the first pack that lands is")
+    print("  checked on the commit that lands it, not on some later cleanup pass.")
+    raise SystemExit(0)
+
+failed = False
+for pack_path in rmnp_packs:
+    pack = load(pack_path)
+    forms = PAIRINGS.get(pack_path.name)
+    if forms is None:
+        print(f"FAIL: {pack_path.name} is not paired with any form in this guard.")
+        print("      An unpaired pack is checked against nothing and passes vacuously, which is")
+        print("      indistinguishable from being correct. Add it to PAIRINGS.")
+        failed = True
+        continue
+
+    captured = set()
+    missing_forms = []
+    for form_name in forms:
+        form_path = forms_dir / form_name
+        if not form_path.exists():
+            missing_forms.append(form_name)
+            continue
+        captured |= captured_link_ids(load(form_path))
+
+    if missing_forms:
+        print(f"FAIL: {pack_path.name} is paired with form(s) that do not exist: "
+              f"{', '.join(missing_forms)}")
+        failed = True
+
+    needed = {f for f in rule_inputs(pack) if not is_derived(f)}
+    uncapturable = sorted(f for f in needed
+                          if f not in captured and f.split(".")[0] not in captured)
+
+    if uncapturable:
+        print(f"FAIL: {pack_path.name} reads {len(uncapturable)} fact(s) no paired form captures.")
+        print("      These rules cannot fire in practice — the finding is never recorded, and")
+        print("      nothing about the form or the engine says so.")
+        for fact in uncapturable[:20]:
+            print(f"        - {fact}")
+        if len(uncapturable) > 20:
+            print(f"        ... and {len(uncapturable) - 20} more")
+        print(f"      Paired forms: {', '.join(forms)}")
+        failed = True
+    else:
+        print(f"  OK  {pack_path.name}: {len(needed)} fact(s), all capturable")
+
+raise SystemExit(1 if failed else 0)
+PY
+STATUS=$?
+
+if [[ $STATUS -eq 0 ]]; then
+  echo "RMNP capture coverage guard: OK"
+else
+  echo "RMNP capture coverage guard: FAILED"
+fi
+exit $STATUS
