@@ -23,8 +23,8 @@ export default function ActiveShiftPage() {
   const endShiftMutation = useEndShift();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const { data: shiftData, isLoading: shiftLoading } = useCurrentShift(user?.id ?? "");
-  const { data: queueData } = useQueueEntries({ status: "IN_PROGRESS" });
+  const { data: shiftData, isLoading: shiftLoading, isError: shiftUnavailable } = useCurrentShift(user?.id ?? "");
+  const { data: queueData, isError: queueUnavailable } = useQueueEntries({ status: "IN_PROGRESS" });
 
   const currentShift = shiftData?.data ?? null;
   const activeEncounters = queueData?.data ?? [];
@@ -110,9 +110,21 @@ export default function ActiveShiftPage() {
                 <div>
                   <dt className="text-muted-foreground">Status</dt>
                   <dd className="mt-0.5">
-                    <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-green-100 text-green-700">
-                      {currentShift?.attributes.status || "ACTIVE"}
-                    </span>
+                    {/* The green ACTIVE pill asserts that TUSO holds this shift open. The local
+                        shift store is client state and proves nothing about the server, so when
+                        the shift read fails the status is unknown, not ACTIVE. */}
+                    {shiftUnavailable ? (
+                      <span
+                        className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-yellow-100 text-yellow-800"
+                        title="The shift service could not be reached. This shift may not be registered upstream."
+                      >
+                        STATUS UNAVAILABLE
+                      </span>
+                    ) : (
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-green-100 text-green-700">
+                        {currentShift?.attributes.status || "ACTIVE"}
+                      </span>
+                    )}
                   </dd>
                 </div>
               </dl>
@@ -123,8 +135,10 @@ export default function ActiveShiftPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-card rounded-lg border border-border p-5 text-center">
               <Users className="w-8 h-8 text-impilo-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{activeEncounters.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">Encounters In Progress</p>
+              <p className="text-2xl font-bold text-foreground">{queueUnavailable ? "—" : activeEncounters.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {queueUnavailable ? "Encounters in progress — unknown" : "Encounters In Progress"}
+              </p>
             </div>
             <div className="bg-card rounded-lg border border-border p-5 text-center">
               <Activity className="w-8 h-8 text-green-500 mx-auto mb-2" />
@@ -140,10 +154,14 @@ export default function ActiveShiftPage() {
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-warning-foreground">End this shift?</p>
+                  {/* "This will end your current shift" is the all-clear a clinician hands over
+                      on. If the in-progress queue could not be read, we cannot give it. */}
                   <p className="text-xs text-warning-foreground mt-1">
-                    {activeEncounters.length > 0
-                      ? `You have ${activeEncounters.length} encounter(s) in progress. Consider completing or handing over before ending.`
-                      : "This will end your current shift."}
+                    {queueUnavailable
+                      ? "The in-progress encounter list could not be read, so this shift cannot be confirmed clear. Encounters may still be open — check before handing over."
+                      : activeEncounters.length > 0
+                        ? `You have ${activeEncounters.length} encounter(s) in progress. Consider completing or handing over before ending.`
+                        : "This will end your current shift."}
                   </p>
                   <div className="flex gap-2 mt-3">
                     <button

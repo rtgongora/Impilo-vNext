@@ -17,6 +17,12 @@ export function OfflineClinicalQueueOrchestrationPanel() {
   const depth = Number(queueQ.data?.queue_depth ?? 0);
   const source = String(queueQ.data?.source ?? "unknown");
   const pending = pendingQ.data ?? [];
+  // "0 queued item(s) · 0 pending reconcile batch(es)" is the signal a clinician uses to decide
+  // that nothing captured offline is still waiting to reach the record. A failed read produces
+  // the identical line, which is the one case where it is definitely wrong to trust it.
+  const queueUnavailable = queueQ.isError;
+  const pendingUnavailable = pendingQ.isError;
+  const anyUnavailable = queueUnavailable || pendingUnavailable;
 
   return (
     <section
@@ -34,7 +40,9 @@ export function OfflineClinicalQueueOrchestrationPanel() {
               ? "Facility context required to probe offline reconciliation queue"
               : queueQ.isLoading
                 ? "Loading TSHEPO offline pack snapshot…"
-                : `${depth} queued item(s) · ${pending.length} pending reconcile batch(es) · source ${source}`}
+                : anyUnavailable
+                  ? "Offline queue depth could not be read — unknown, not zero. Work captured offline may still be unreconciled."
+                  : `${depth} queued item(s) · ${pending.length} pending reconcile batch(es) · source ${source}`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -75,6 +83,11 @@ export function OfflineClinicalQueueOrchestrationPanel() {
             );
           })}
         </ul>
+      )}
+      {reconcile.isError && (
+        <p className="mt-3 rounded border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-medium text-red-700">
+          Reconcile did not run. The pending batches are unchanged — nothing was submitted.
+        </p>
       )}
       {(queueQ.isLoading || pendingQ.isLoading) && facility && (
         <div className="mt-2 flex items-center gap-2 text-xs text-warning-foreground">
