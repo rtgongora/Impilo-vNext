@@ -74,6 +74,7 @@ section; the EDLIZ 2025 PDF with SHA-256 provenance. None of it was rebuilt.
 | **V106** `pct_structured_history` | Social, family, functional, past procedures, advance directives. |
 | `OrosMedicationIntegration` | The current medicine list, over the S2S `client_credentials` seam. |
 | **V107** `pct_medication_reconciliations` | The comparison event and its findings. |
+| **V108** | `emergency_episode_id` promoted from a soft reference to a real FK, once the emergency lane's V200 landed. `RESTRICT`, `NOT VALID` then `VALIDATE`. Proven on the live schema: applies, validates, and refuses a dangling reference. |
 
 ---
 
@@ -150,12 +151,13 @@ negative `pct_problem_links_no_self_link` refusal; `probe rows left: 0/0`.
 
 | Suite | Tests | Status |
 |---|---|---|
-| `pct-service` | 478 | green except one foreign failure (below) |
+| `pct-service` | 482 | green |
 | `experience-bff` | 1235 | green |
 | `one-ui-shell` | 2498 (609 files) | green |
 
-**Known foreign failure:** `GrowthServiceTest.scoresPretermInfantAgainstCorrectedAge` — the
-paediatric lane has a corrected-age change in flight. Not this pack's; flagged, not fixed.
+`GrowthServiceTest.scoresPretermInfantAgainstCorrectedAge` was red across three runs during this
+work — the paediatric lane's corrected-age change in flight. Flagged, never touched, and fixed by
+its owner. pct-service closes with a clean suite.
 
 ---
 
@@ -185,9 +187,12 @@ repository remains a single UI file.
 **Clinical content requiring ratification.** Every vocabulary, threshold and cut-off shipped is an
 engineering seed. Correctly structured, tested and traceable — but not national protocol.
 
+**Nothing is owed to another lane.** The emergency-episode FK — the one cross-pack item this pack
+carried — is closed at V108.
+
 **Migration numbering on a shared tree.** pct **V104/V105 are permanently retired** (applied under
 one name by the IMAM lane, then renamed to V400/V401 — applied-then-renamed is never reusable). This
-pack's block is **V100–V129 excluding V104–V105**; next free is **V108**.
+pack's block is **V100–V129 excluding V104–V105**; next free is **V109**.
 
 **Five sessions share one working tree.** `/home/robert/Impilo-vNext` is a symlink to the same repo.
 Path-scoped commits always; `git pull --ff-only`, and on failure **merge, never rebase** — rebase
