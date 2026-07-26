@@ -37,12 +37,26 @@ export function PatientJourneyContextPanel({
   const workspace = useWorkspaceStore((s) => s.workspace);
   const { shift } = useShiftStore();
 
-  const { data: queueData } = useQueueEntries({ facilityId: facility?.id });
-  const { data: encountersData } = useEncounters(patientId);
-  const { data: referralsData } = useReferrals(patientId);
-  const { data: teleData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
-  const { data: admissionsData } = useAdmissions(patientId);
-  const { data: labData } = useLabOrders(patientId);
+  const { data: queueData, isError: queueUnavailable } = useQueueEntries({ facilityId: facility?.id });
+  const { data: encountersData, isError: encountersUnavailable } = useEncounters(patientId);
+  const { data: referralsData, isError: referralsUnavailable } = useReferrals(patientId);
+  const { data: teleData, isError: teleUnavailable } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
+  const { data: admissionsData, isError: admissionsUnavailable } = useAdmissions(patientId);
+  const { data: labData, isError: labsUnavailable } = useLabOrders(patientId);
+
+  // The empty state below claims to be "an honest empty state — not a simulated journey". That
+  // claim only holds when all six sources answered. If any of them failed, the same panel asserts
+  // that the patient has no queue row, no open encounter, no referral, no teleconsult, no
+  // admission and no outstanding lab work — six findings manufactured from an outage.
+  const unavailableSources = [
+    queueUnavailable ? "queue" : null,
+    encountersUnavailable ? "encounters" : null,
+    referralsUnavailable ? "referrals" : null,
+    teleUnavailable ? "telemedicine" : null,
+    admissionsUnavailable ? "admissions" : null,
+    labsUnavailable ? "lab orders" : null,
+  ].filter((s): s is string => s !== null);
+  const anySourceUnavailable = unavailableSources.length > 0;
 
   const queueRows = useMemo(() => {
     const all = queueData?.data ?? [];
@@ -114,6 +128,14 @@ export function PatientJourneyContextPanel({
             Queue {queueWait}
           </span>
         )}
+        {anySourceUnavailable && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700 border border-red-200"
+            title={`Could not read: ${unavailableSources.join(", ")}. The suggested next action is based on an incomplete picture.`}
+          >
+            Journey incomplete
+          </span>
+        )}
         <Link href={nextAction.href} className="ml-auto inline-flex items-center gap-1 font-medium text-primary hover:text-impilo-800">
           {nextAction.label}
           <ArrowRight className="h-3 w-3" />
@@ -143,11 +165,21 @@ export function PatientJourneyContextPanel({
         </div>
       </div>
 
-      {!hasAnySignal ? (
-        <p className="mt-4 rounded-lg border border-dashed border-border bg-card/80 px-3 py-3 text-sm text-muted-foreground">
-          No active queue row, open encounter, referrals, teleconsults, admission, or outstanding lab work surfaced for this patient in the
-          current facility context. This is an honest empty state — not a simulated journey.
+      {anySourceUnavailable && (
+        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm font-medium text-red-700">
+          Could not read: {unavailableSources.join(", ")}. This panel is therefore incomplete — an
+          open encounter, referral, teleconsult, admission or outstanding lab order may exist that
+          is not shown, and the suggested next action is based on a partial picture.
         </p>
+      )}
+
+      {!hasAnySignal ? (
+        anySourceUnavailable ? null : (
+          <p className="mt-4 rounded-lg border border-dashed border-border bg-card/80 px-3 py-3 text-sm text-muted-foreground">
+            No active queue row, open encounter, referrals, teleconsults, admission, or outstanding lab work surfaced for this patient in the
+            current facility context. This is an honest empty state — not a simulated journey.
+          </p>
+        )
       ) : (
         <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-xl border border-white/70 bg-card/90 p-3">
@@ -169,6 +201,8 @@ export function PatientJourneyContextPanel({
                     </Link>
                   </div>
                 </>
+              ) : encountersUnavailable ? (
+                <span className="text-red-700">Encounter list unavailable</span>
               ) : (
                 <span className="text-muted-foreground">No active encounter</span>
               )}
@@ -181,7 +215,9 @@ export function PatientJourneyContextPanel({
               Queue / SLA
             </dt>
             <dd className="mt-1 text-sm text-foreground">
-              {queueRows.length === 0 ? (
+              {queueUnavailable ? (
+                <span className="text-red-700">Queue unavailable</span>
+              ) : queueRows.length === 0 ? (
                 <span className="text-muted-foreground">Not on facility queue</span>
               ) : (
                 <>
@@ -207,7 +243,9 @@ export function PatientJourneyContextPanel({
               Referrals / tasks
             </dt>
             <dd className="mt-1 text-sm text-foreground">
-              {openReferrals.length === 0 ? (
+              {referralsUnavailable ? (
+                <span className="text-red-700">Referrals unavailable</span>
+              ) : openReferrals.length === 0 ? (
                 <span className="text-muted-foreground">No open referrals</span>
               ) : (
                 <>
@@ -228,7 +266,9 @@ export function PatientJourneyContextPanel({
               Telemedicine
             </dt>
             <dd className="mt-1 text-sm text-foreground">
-              {openTele.length === 0 ? (
+              {teleUnavailable ? (
+                <span className="text-red-700">Telemedicine unavailable</span>
+              ) : openTele.length === 0 ? (
                 <span className="text-muted-foreground">No scheduled or live sessions</span>
               ) : (
                 <>
@@ -246,7 +286,9 @@ export function PatientJourneyContextPanel({
           <div className="rounded-xl border border-white/70 bg-card/90 p-3">
             <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Admission</dt>
             <dd className="mt-1 text-sm text-foreground">
-              {activeAdmission ? (
+              {admissionsUnavailable ? (
+                <span className="text-red-700">Admissions unavailable</span>
+              ) : activeAdmission ? (
                 <>
                   <span className="font-medium">Admitted</span>
                   <div className="mt-2">
@@ -264,7 +306,13 @@ export function PatientJourneyContextPanel({
           <div className="rounded-xl border border-white/70 bg-card/90 p-3">
             <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">OROS labs (chart)</dt>
             <dd className="mt-1 text-sm text-foreground">
-              <span className="font-medium">{pendingLabs.length}</span> orders in-flight or awaiting review
+              {labsUnavailable ? (
+                <span className="text-red-700">Lab orders unavailable</span>
+              ) : (
+                <>
+                  <span className="font-medium">{pendingLabs.length}</span> orders in-flight or awaiting review
+                </>
+              )}
               <div className="mt-2">
                 <Link href={`/ehr/${patientId}/orders`} className="text-xs font-medium text-primary hover:text-impilo-800">
                   Orders &amp; results
