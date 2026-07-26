@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# WHO DAK traceability guard.
+# Clinical standards traceability guard (WHO DAK artefacts plus hand-declared baselines).
 #
 # Asserts that this repository can still answer, for every clinical rule it ships in the
 # reproductive/maternal domain, which WHO recommendation it came from and what was changed — and
@@ -67,10 +67,12 @@ if not MATRIX.exists():
     sys.exit(1)
 
 matrix = json.loads(MATRIX.read_text(encoding="utf-8"))
-published = {row["dakId"] for row in matrix["rows"]}
+published = {row["standardId"] for row in matrix["rows"]}
+# Standards declared by hand carry no dakId; both spellings resolve.
+published |= {row["dakId"] for row in matrix["rows"] if row.get("dakId")}
 
 # 4. Nothing published may be undecided.
-uncovered = [r["dakId"] for r in matrix["rows"] if r["status"] == "UNCOVERED"]
+uncovered = [r["standardId"] for r in matrix["rows"] if r["status"] == "UNCOVERED"]
 if uncovered:
     print(f"FAIL: {len(uncovered)} published DAK artefact(s) are neither implemented nor excluded.")
     print("      A table nobody decided about is the failure this guard exists to catch.")

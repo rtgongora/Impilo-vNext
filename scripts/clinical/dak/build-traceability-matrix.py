@@ -49,8 +49,18 @@ EXCLUSION_DECISIONS = {"DEFERRED", "REJECTED", "OUT_OF_SCOPE", "COVERED_ELSEWHER
 # ── what WHO published ─────────────────────────────────────────────────────────
 
 
-def published_artefacts() -> dict[str, dict]:
-    """Every decision table, schedule and indicator id WHO published, and where it came from."""
+def external_standards() -> dict[str, dict]:
+    """Standards published outside this repository that our content is expected to trace to.
+
+    Two families of source, deliberately unified. WHO SMART DAK artefacts are extracted mechanically
+    from vendored spreadsheets. Other clinical standards — the emergency and acute-care baseline,
+    EDLIZ, national policy — have no DAK and never will; they are declared by hand in
+    ``docs/clinical-governance/*/standards-baseline.json``.
+
+    They share a generator because they need the same question answered: what did the standard
+    contain that we have not implemented and have not decided about. Two matrices would give two
+    answers to that, and the whole point of the artefact is that there is one.
+    """
     artefacts: dict[str, dict] = {}
     for pack in sorted(p for p in DAK_ROOT.iterdir() if (p / "extracted").is_dir()):
         for filename, kind, key in (
@@ -71,6 +81,11 @@ def published_artefacts() -> dict[str, dict]:
                 sheet_level_title = len(ids) > 1
                 for artefact_id in ids:
                     artefacts.setdefault(artefact_id, {
+                        "standardId": artefact_id,
+                        "family": "WHO_DAK",
+                        # Retained under the old name as well: the DAK matrix is already committed
+                        # and reviewed, and silently renaming its primary key would make the diff
+                        # unreadable at exactly the review where it matters.
                         "dakId": artefact_id,
                         "pack": pack.name,
                         "kind": kind,
@@ -86,6 +101,61 @@ def published_artefacts() -> dict[str, dict]:
                         "sourceFile": entry.get("sourceFile"),
                     })
     return artefacts
+
+
+def declared_standards() -> tuple[dict[str, dict], list[str]]:
+    """Standards declared by hand, for domains WHO has published no DAK for.
+
+    Emergency and acute care is the case that forced this: there is no WHO SMART DAK for
+    resuscitation, so that pack applies the DAK *structure* to a baseline assembled from other
+    authorities. Those standards cannot be extracted from anything — they are asserted, with a
+    citation — but they need identical coverage discipline, because "we never implemented the
+    airway section" fails silently in exactly the same way.
+
+    Each domain owns its own baseline file. Only the machinery is shared.
+    """
+    artefacts: dict[str, dict] = {}
+    problems: list[str] = []
+    governance = REPO_ROOT / "docs" / "clinical-governance"
+    if not governance.is_dir():
+        return artefacts, problems
+    for baseline in sorted(governance.glob("*/standards-baseline.json")):
+        try:
+            payload = json.loads(baseline.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            problems.append(f"{baseline.relative_to(REPO_ROOT)}: not valid JSON ({exc})")
+            continue
+        for entry in payload.get("standards", []):
+            standard_id = entry.get("standardId")
+            if not standard_id:
+                problems.append(f"{baseline.relative_to(REPO_ROOT)}: a standard has no standardId")
+                continue
+            if not entry.get("family"):
+                problems.append(f"{baseline.relative_to(REPO_ROOT)}: {standard_id} declares no family")
+            if not (entry.get("sourceCitation") or "").strip():
+                # A hand-declared standard with no citation is an assertion wearing the costume of
+                # a standard. The extracted ones carry their provenance implicitly; these cannot.
+                problems.append(
+                    f"{baseline.relative_to(REPO_ROOT)}: {standard_id} cites no source. A declared "
+                    f"standard with no citation is an assertion, not a standard.")
+            if standard_id in artefacts:
+                problems.append(f"{standard_id} is declared in more than one baseline file")
+                continue
+            artefacts[standard_id] = {
+                "standardId": standard_id,
+                "family": entry.get("family"),
+                "dakId": None,
+                "pack": payload.get("domain") or baseline.parent.name,
+                "kind": entry.get("kind") or "STANDARD",
+                "sheet": None,
+                "title": entry.get("title"),
+                "hitPolicy": None,
+                "titleIsSheetLevel": False,
+                "publishedRows": None,
+                "sourceFile": str(baseline.relative_to(REPO_ROOT)),
+                "sourceCitation": entry.get("sourceCitation"),
+            }
+    return artefacts, problems
 
 
 def published_elements() -> set[str]:
@@ -134,7 +204,7 @@ def shipped_artefacts() -> tuple[list[dict], list[str]]:
                 "code": code,
                 "file": str(path.relative_to(REPO_ROOT)),
                 "packId": payload.get("packId") or payload.get("formKey"),
-                "dakId": dak_ref.get("id"),
+                "dakId": dak_ref.get("id") or dak_ref.get("standardId"),
                 "row": dak_ref.get("row"),
                 "dakVersion": dak_ref.get("dakVersion"),
                 "sourceHash": dak_ref.get("sourceHash"),
@@ -157,8 +227,11 @@ def exclusions() -> dict[str, dict]:
 
 
 def build() -> tuple[dict, list[str]]:
-    published = published_artefacts()
+    published = external_standards()
+    declared, declared_problems = declared_standards()
+    published.update(declared)
     shipped, problems = shipped_artefacts()
+    problems.extend(declared_problems)
     excluded = exclusions()
 
     by_dak: dict[str, list[dict]] = defaultdict(list)
@@ -205,8 +278,14 @@ def build() -> tuple[dict, list[str]]:
     for row in rows:
         counts[row["status"]] += 1
 
+    family_counts: dict[str, int] = defaultdict(int)
+    for row in rows:
+        family_counts[row.get("family") or "UNDECLARED"] += 1
+
     matrix = {
-        "generatedFrom": "docs/reference/who-dak/*/extracted",
+        "generatedFrom": ["docs/reference/who-dak/*/extracted",
+                          "docs/clinical-governance/*/standards-baseline.json"],
+        "familyCounts": dict(sorted(family_counts.items())),
         "publishedArtefacts": len(rows),
         "publishedDataElements": len(published_elements()),
         "shippedCitations": len(shipped),
@@ -218,17 +297,20 @@ def build() -> tuple[dict, list[str]]:
 
 def render_markdown(matrix: dict) -> str:
     lines = [
-        "# WHO DAK traceability matrix",
+        "# Clinical standards traceability matrix",
         "",
         "**Generated — do not edit by hand.** Rebuild with",
         "`python3 scripts/clinical/dak/build-traceability-matrix.py`.",
         "",
-        "One row per artefact WHO published. `SHIPPED` means an Impilo rule cites it; every other",
+        "One row per artefact an external standard published — WHO SMART DAK artefacts extracted",
+        "from vendored spreadsheets, plus standards declared by hand for domains WHO has published",
+        "no DAK for. `SHIPPED` means an Impilo rule cites it; every other",
         "status is a recorded decision in `dak-coverage-exclusions.json`. `UNCOVERED` means nobody",
         "has decided yet, and the guard fails on it — a table nobody looked at is the failure this",
         "matrix exists to make visible.",
         "",
         f"- Published artefacts: **{matrix['publishedArtefacts']}**",
+        f"- Families: " + ", ".join(f"`{f}` ({n})" for f, n in sorted(matrix['familyCounts'].items())),
         f"- Published data elements: **{matrix['publishedDataElements']}**",
         f"- Shipped citations: **{matrix['shippedCitations']}**",
         "",
@@ -239,8 +321,8 @@ def render_markdown(matrix: dict) -> str:
         lines.append(f"| `{status}` | {count} |")
     lines += [
         "",
-        "| DAK id | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for row in matrix["rows"]:
         implemented = ", ".join(f"`{i['code']}`" for i in row["implementations"]) or "—"
@@ -250,7 +332,8 @@ def render_markdown(matrix: dict) -> str:
         if row.get("titleIsSheetLevel"):
             title = f"(tab-level) {title}"
         lines.append(
-            f"| `{row['dakId']}` | {row['kind']} | {row['hitPolicy'] or '—'} | {title} | "
+            f"| `{row['standardId']}` | {row.get('family') or '—'} | {row['kind']} | "
+            f"{row['hitPolicy'] or '—'} | {title} | "
             f"`{row['status']}` | {implemented} | {adaptation} | {note[:120]} |"
         )
     return "\n".join(lines) + "\n"
