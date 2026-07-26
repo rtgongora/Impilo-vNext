@@ -20,6 +20,7 @@ import { apiClient } from "@/lib/api-client";
 import { useI18n } from "@/lib/i18n/useI18n";
 import { IntentLink } from "./IntentLink";
 import { HeroDiscoverySurface } from "./HeroDiscoverySurface";
+import { ReturningUserCard } from "./ReturningUserCard";
 
 interface GuidanceAnswer {
   answer?: string;
@@ -272,6 +273,9 @@ export function WelcomeHero() {
               </button>
             ))}
           </div>
+
+          {/* Returning-user greeting (only when a masked opt-in hint exists). */}
+          <ReturningUserCard />
 
           {/* Inline Nompilo public guidance (kept beside the live care surface, never over it). */}
           {hasResponse && (

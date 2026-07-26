@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import { MinimalLayout } from "@/components/MinimalLayout";
 import { useLogout } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { clearReturnHint } from "@/lib/return-hint";
 
 export default function LogoutPage() {
   const router = useRouter();
@@ -31,6 +32,8 @@ export default function LogoutPage() {
         if (typeof window !== "undefined") {
           sessionStorage.clear();
         }
+        // Explicit logout forgets the "remember me on this device" hint.
+        clearReturnHint();
 
         router.replace("/auth/login");
       },
