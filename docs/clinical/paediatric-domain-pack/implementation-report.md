@@ -261,15 +261,25 @@ copies an explicit list of coded fields, so a producer that later began leaking 
 birth or national identifier could still not write one into the shared record; a test feeds a
 deliberately contaminated payload through and asserts none of it survives.
 
-**Honest status of the last hop.** PCT is deployed and live-proven. The BUTANO consumer is built
-and unit-proven (11 boundary tests) but the Kafka hop has **not** been demonstrated end to end,
-for an environment reason rather than a code one: `SPRING_KAFKA_LISTENER_AUTO_STARTUP=false` is the
-estate default and `butano-service` is not in the opt-in list, so no BUTANO consumer has ever run
-on preview — not identity, consent, imaging or observations. The shared record currently holds one
-Patient resource and nothing else, which is the visible consequence. Enabling BUTANO's listeners is
-a one-line opt-in following the pattern already documented in `values-full-preview.yaml`, but it
-starts identity, consent and imaging consumption across the estate, so it is a deployment decision
-rather than something this lane should switch on unilaterally.
+**The hop is proven end to end.** A PCT observation now travels outbox → Kafka → BUTANO and reads
+back out of `/fhir/Observation` as a FHIR Observation with a CPID-only subject reference, its value
+and unit intact, `dataAbsentReason: not-assessed` on the observation that had no value, and no
+personal identifiers anywhere in the resource.
+
+Getting there required enabling BUTANO's Kafka listeners, which had never run. `butano-service` was
+absent from the listener opt-in list while the estate default is `auto-startup=false`, so none of
+its consumers had ever started — not the identity consumer that creates the FHIR Patients every
+other resource references, not consent revocation, not imaging. The shared record held one Patient
+resource and nothing else: a shared record that had never been written to. It is now in the opt-in
+block alongside oros, msika-flow, telemonitoring and rito, with the same one-line rollback.
+
+Proving the hop immediately caught a defect nothing else could have. Java renders a zero-second
+timestamp as `2026-07-26T13:00Z`, FHIR's `DateTimeType` requires seconds and rejected it, so every
+observation recorded on the minute was archived **with no effective time at all** — logged as a
+warning nobody was reading while the archival itself reported success. An untimed observation
+cannot be ordered against the others, so a clinician at the next facility cannot tell whether a
+temperature was taken before or after treatment. Timestamps are now normalised through
+`OffsetDateTime`, which also makes this hold for producers other than PCT.
 
 Proving the vertical also caught a real integration bug: `OutboxPublisher.routeTopic` had no case
 for `pct.observation.recorded`, so it fell through to the `pct.events` catch-all while BUTANO
