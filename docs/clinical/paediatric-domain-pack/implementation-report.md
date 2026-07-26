@@ -128,7 +128,7 @@ every age from birth and asserts a band exists.
 | Definition-of-Done journey | Status |
 |---|---|
 | **2. Sick newborn (10-day-old, poor feeding, hypothermia)** | **Backend complete.** The danger-sign engine raises possible serious bacterial infection with referral required and non-overridable; neonatal dose restrictions apply; the birth record and neonatal admission exist. No UI. |
-| **1. Sick 14-month-old (fever, cough, poor feeding)** | **Partial.** Danger signs, age-banded vitals, growth with z-scores and faltering, and safe dose calculation all work. Missing: IMNCI classification (assess-and-classify tables), immunisation forecast, Dura stock check, Khuluma caregiver instructions, UI. |
+| **1. Sick 14-month-old (fever, cough, poor feeding)** | **Backend complete and live-proven.** Danger signs, age-banded vitals, growth with z-scores and faltering, safe dose calculation, and now the IMNCI assess-and-classify tables. Proven on the estate: chest indrawing with a positive malaria test, MUAC 11.9 and some palmar pallor returns severe pneumonia (pink), malaria, moderate acute malnutrition and anaemia, with an urgent-referral disposition and a severity-ordered treatment plan. Missing: immunisation forecast, Dura stock check, Khuluma caregiver instructions, UI. |
 | **3. Growth monitoring visit** | **Partial.** Measurement capture, WHO scoring, faltering detection and IMAM eligibility signalling work. Missing: the "what is due today" composition, the plotted chart, IMAM referral creation. |
 | **4. Paediatric surgical emergency** | **Not started.** Existing theatre and inpatient spines are reusable; the surgical-abdomen pathway and paediatric surgical clerking are not built. |
 | **5. Confidential adolescent visit** | **Not started.** The TSHEPO `SPECIALLY_PROTECTED` sensitivity class exists but has never been assigned; caregiver-context gating is designed, not built. |
@@ -223,9 +223,20 @@ done. Remaining: the paediatric workspace with sticky child context and a "what 
 panel; the plotted WHO growth chart; the reusable body-map framework; the paediatric BFF
 controllers.
 
-**Wave 4 — integrated under-five care.** IMNCI and PSBI classification tables; growth intelligence
-in the knowledge platform; the ZW EPI schedule as a governed Zibo artifact and the forecast engine;
-`pct_observations` and the BUTANO Observation/Immunization write path; deepened form content.
+**Wave 4 — integrated under-five care.** The IMNCI assess-and-classify tables are **done and
+live-proven** (nine tables, `POST /internal/v1/clinical/paediatric/imnci/classify`). Remaining:
+young-infant PSBI classification tables; growth intelligence in the knowledge platform; the ZW EPI
+schedule as a governed Zibo artifact and the forecast engine; `pct_observations` and the BUTANO
+Observation/Immunization write path; deepened form content.
+
+The classification engine introduced one concept worth knowing about before extending the content.
+`optionalCriterion` marks a branch whose unknown value is treated as not-met rather than blocking,
+and it exists because some criteria depend on equipment a facility may not have — weight-for-height
+needs a height board, and fever needs a thermometer. Without it, every nutrition classification and
+every fever screen at a rural clinic would read as incomplete, and a safety flag that fires on
+every child is worse than no flag: it teaches people to dismiss the one that matters. The waiver
+never hides the gap — waived criteria are reported on the result. **It must only ever be applied to
+a criterion that is an additional route to a finding, never the sole way to exclude one.**
 
 **Wave 5+.** Paediatric surgery, nutrition/IMAM episodes end to end, the adolescent confidential
 pathway, the remaining body-map instruments, quality and surveillance analytics.
