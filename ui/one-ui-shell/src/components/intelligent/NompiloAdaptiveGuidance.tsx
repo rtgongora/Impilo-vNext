@@ -24,18 +24,26 @@ export function NompiloAdaptiveGuidance({
   const [expanded, setExpanded] = useState(true);
   const [dismissed, setDismissed] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Stage 2 -> 3: Reading period auto-collapse into pill after 8s if not hovered/focused.
   useEffect(() => {
-    if (!expanded || dismissed || hovered) return;
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+
+  // Stage 2 -> 3: reading-period auto-collapse into pill after 8s, but NEVER while the user is
+  // hovering, keyboard-focused inside it, or has requested reduced motion (a11y doctrine).
+  useEffect(() => {
+    if (!expanded || dismissed || hovered || focused || reducedMotion) return;
     timerRef.current = setTimeout(() => {
       setExpanded(false);
     }, 8000);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [expanded, dismissed, hovered]);
+  }, [expanded, dismissed, hovered, focused, reducedMotion]);
 
   if (dismissed) return null;
 
@@ -59,6 +67,10 @@ export function NompiloAdaptiveGuidance({
       data-testid="nompilo-guidance-card"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocused(false);
+      }}
       className="mt-4 rounded-2xl border border-violet-200 bg-violet-50/80 p-4 shadow-sm"
     >
       <div className="flex items-start justify-between gap-3">
