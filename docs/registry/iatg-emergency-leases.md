@@ -80,7 +80,8 @@ Consequences that are not optional:
 | `services/mental-health-service/**` — **NEW service, port 8397** | See §4. |
 | `services/experience-bff/**` — emergency controllers only | |
 | `ui/one-ui-shell/src/{app/clinical/emergency,features/emergency,lib/offline}/**` | |
-| `libs/emergency-domain/**` — **NEW library** | |
+| `libs/emergency-domain/**` and `libs/burn-domain/**` — **NEW libraries** |
+| `apps/mobile/provider-app/src/screens/provider/SpecialtyWorkspacePanel.tsx` — burns and resuscitation tools only | Nobody else claims mobile this wave; the trauma lease held it and that programme is closed. | |
 | `scripts/runtime-proof/emergency-*.sh`, `scripts/guard/check-emergency-*.sh`, `check-no-ts-clinical-logic.sh`, `check-identity-repoint-coverage.sh` | |
 | `docs/clinical/emergency-domain-pack/**`, `docs/clinical-governance/emergency/**` | |
 
@@ -267,19 +268,84 @@ that only sees the patient later.
 | Burn-centre referral and transfer criteria | **Emergency** — `emergency_handover(TO_FACILITY)` + disposition CHECKs | A disposition decision, and the acceptance handshake applies unchanged. |
 | Definitive burn management — excision, grafting, dressings, nutrition, rehabilitation, scar care | **Surgery / plastics** | Not emergency care. Invoked, not rebuilt. Surgery has not claimed burns in its ADR, lease or standards baseline, so this needs confirming with that lane. |
 
-`episode_class` already carries `BURNS`. Content placement: the burns **arithmetic** lands in W1 with
-the rest of `libs/emergency-domain`; burns **rules** land in tranche 10 (environmental — shared with
-smoke inhalation, electrical and lightning injury) and tranche 12 (the trauma/surgical invocation
+`episode_class` already carries `BURNS`. Burns **rules** land in tranche 10 (environmental — shared
+with smoke inhalation, electrical and lightning injury) and tranche 12 (the trauma/surgical invocation
 set). Weight-banded and TBSA-banded thresholds must use RMNP's `bandKey` rather than overloading
 `ageDays` (§5a).
 
-**Verified state today: burns is absent from the estate except one decorative line.**
-`MobileProviderExtendedController` advertises a burns workspace offering "Lund-Browder Chart",
-"Fluid Calculator" and "Parkland Formula" — and a repo-wide grep for `tbsa|parkland|lund.browder`
-returns *only that line*. The mobile provider app consumes it
-(`apps/mobile/provider-app/src/services/queueService.ts:192`), so a clinician can select burns and tap
-toward three tools that do not exist. Tracked as `task_40846f47`; the burns tools themselves are this
-pack's to deliver.
+### Decision 1 — the arithmetic lives in `libs/burn-domain`, not `libs/emergency-domain`
+
+Accepting the surgery lane's refinement, because the argument is right: %TBSA is not only a
+resuscitation input. It drives excision timing, graft planning, nutrition requirement and mortality
+prediction for months after the emergency episode closes, so putting it in an emergency library would
+make surgery depend on an emergency lib for the whole course of care.
+
+**`libs/burn-domain`** — framework-free (Jackson only, no Spring, no I/O), depending on
+`libs/paediatric-domain` for age banding, following the `paediatric-domain` / `reproductive-domain`
+pattern: age-adjusted **Lund–Browder** and rule-of-nines TBSA, depth classification, **injury-clocked
+Parkland** (total, first-half and second-half windows measured from time of burn), and mortality
+scores. Emergency builds it in W1 because emergency needs it now; surgery consumes it rather than
+reimplementing. **One Parkland in the estate** matters more than which directory holds it.
+
+Registered in `services/pom.xml` and in the `libraries:` block of `services-registry.yaml` — that
+block currently omits `paediatric-domain` and `reproductive-domain` too, and all three are backfilled
+in one write (cleared with the RMNP lane).
+
+### Decision 2 — one serial `pct.burn_assessment`, owned by PCT
+
+The surgery lane proposed one series owned by `surgery-service`, first entry written during
+resuscitation, and asked this pack to decide. **Ruling: exactly one series, and PCT owns it.**
+
+Their requirement — one series, no parallel acute copy — is the right requirement, and burn depth
+declaring over 48–72 hours with %TBSA revised long after the emergency episode closes is exactly why.
+But the owner cannot be `surgery-service`:
+
+- **The first entry is written during emergency resuscitation, routinely at a facility with no
+  surgical service deployed.** If the series lived in `surgery-service`, recording a TBSA at a
+  district hospital would depend on a service that may not be there — violating §20's rule that
+  immediate care is never suppressed because an external service is unavailable.
+- **CC-2 forbids a component owning person-level longitudinal clinical truth.** A measurement series
+  spanning months is precisely that. The established precedent is PCT's own serial-measurement tables:
+  `pct.growth_measurements` (V053) and `pct.pct_labour_observations` (V056). A burn assessment is
+  structurally identical — a serial structured clinical measurement, written by whichever service is
+  in front of the patient at the time.
+
+So: **`pct.burn_assessment`** (emergency block, pct V2xx), a serial time series carrying the region
+map, depth per region, computed %TBSA, the assessment clock and a revision reason. Emergency writes
+the first entry; surgery writes subsequent entries and its management records reference them. Neither
+pack holds a parallel copy.
+
+Note this does **not** contradict HP4 ("findings are coded observations, no syndrome-specific
+columns"). HP4 forbids syndrome-specific columns *on the emergency episode*, to stop the pack becoming
+a mega-form. A shared serial measurement table owned by PCT and written by two packs across months is
+the V053/V056 pattern, not an episode field.
+
+### Lund–Browder chart
+
+The surgery lane's body-map inventory builds "burn and scar map" in their **S16**, which is late in
+their programme; this pack needs it now. So emergency builds the chart, they register it in their map
+inventory and extend rather than replace. The shell already has a `src/features/body-map` module to
+build on.
+
+### Verified state today: burns had shipped, and it was wrong
+
+My first grep was scoped to `services/ ui/ libs/` and missed `apps/` — the surgery lane caught it.
+There were **two live calculators**, both defective, now withdrawn in `697a7924b`:
+
+- `ParklandForm` computed `4 × kg × %TBSA` and rendered a single 24-hour volume — **no injury clock,
+  no first-half/second-half split**. The `time_target_basis` concern was not a future risk, it was a
+  shipped defect that under-resuscitates the late-presenting patient.
+- `RuleOf9Form` used fixed **adult** proportions in an app that treats children, under-estimating a
+  paediatric burn and therefore the fluid volume derived from it.
+- Neither persisted. `RuleOf9Form` raised `Alert("Saved", "TBSA X% recorded locally")` and wrote
+  nothing — a clinician told the assessment was recorded had no reason to write it down.
+
+The arithmetic and `RULE9_REGIONS` are **deleted**, not disabled, so a future edit cannot re-route to
+them. Had this not been caught, the estate would have had **three** Parkland implementations.
+
+Two menus also advertise burns tools and disagree with each other: the BFF offers 10 specialties × 3
+tools, and `apps/mobile/provider-app/src/data/specialtyWorkspaces.ts` offers **18 specialties × 6 =
+108 tool labels**, almost none implemented. Tracked as `task_40846f47` and `task_4d5f394f`.
 
 ## 5a. Inherited engineering constraints (from the RMNP lane, 2026-07-26)
 
