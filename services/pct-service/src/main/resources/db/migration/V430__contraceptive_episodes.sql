@@ -1,18 +1,19 @@
 -- Contraceptive method use: episodes, and the acts that start, sustain and end them.
 --
--- WHY V430 AND NOT V062. This lane holds a lease on pct V058-V069 and V062 was free. It is not used,
--- because the highest version applied on the preview estate is 401 and pct sets neither
--- `out-of-order: true` nor an equivalent override, while `validate-on-migrate: false` means a
--- migration that is skipped for being out of order neither applies nor fails: the service starts,
--- reports healthy, and the tables are simply absent. That is not a hypothetical — it happened to
--- V058/V059 of this same pack on 2026-07-26 and needed a cross-lane repair.
+-- WHY V430 AND NOT V062, which this lane's original lease held and which was free: V430-V459 is
+-- RMNP's registered band under the per-programme band convention, and every RMNP migration from here
+-- takes a number in it. V062-V069 is abandoned dead space.
 --
--- The estate does show a version-106 migration applying after 401, so out-of-order application is
--- evidently happening somewhere; the mechanism is not in the chart, the pod environment or the
--- service configuration, and an unexplained behaviour is not a foundation. The asymmetry decides it:
--- numbering above the current maximum costs nothing if the concern was unfounded, and using a low
--- number costs a silently absent schema if it was not. RMNP claims V430-V459 for everything after
--- this point; V062-V069 of the original lease is left as dead space deliberately.
+-- The band convention only works because `spring.flyway.out-of-order: true` is set in this service's
+-- application.yml — bands mean a lane routinely adds a migration numerically below one another lane
+-- has already applied, and Flyway's default silently refuses those. With `validate-on-migrate: false`
+-- it does not even complain; it just never runs them, and the service boots green with the table
+-- missing. That is how V058 and V059 of this same pack were lost on 2026-07-26, before the flag was
+-- turned on later that day.
+--
+-- Recorded because the first draft of this header got it wrong: it asserted the flag was NOT set,
+-- which was true when the estate was probed and false by the time the file was written. The number
+-- is right either way, but the reason it is right is the band convention, not a config gap.
 --
 -- Two tables, because a method is used over time and the acts that punctuate that use are separate
 -- events. Collapsing them would make an injection given late indistinguishable from one given on

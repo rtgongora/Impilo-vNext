@@ -30,8 +30,8 @@ spring:
     baseline-on-migrate: true
     validate-on-migrate: false
     # pct-service is written by six programmes at once, and each holds a reserved *band* of
-    # migration numbers (RMNP V058-V069, Emergency V070-V099 + V200s, Adult Medicine V100-V129,
-    # Surgery V300-V329, Paediatrics V400-V429 — see docs/registry/iatg-*-leases.md). Bands mean
+    # migration numbers (Emergency V070-V099 + V200s, Adult Medicine V100-V129, Surgery V300-V329,
+    # Paediatrics V400-V429, RMNP V430-V459 — see docs/registry/iatg-*-leases.md). Bands mean
     # a lane routinely adds a migration numerically BELOW one another lane has already applied.
     #
     # Flyway's default refuses those as out of order. With validate-on-migrate off it does not

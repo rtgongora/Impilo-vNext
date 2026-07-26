@@ -41,35 +41,39 @@ Heads verified on disk immediately before publishing this file.
 
 ### 2c. Why RMNP abandoned V062–V069 and moved to V430–V459
 
-**The remaining low numbers in this lease are dead space. Do not use them, and check whether your own
-lease has the same problem.**
+**V062–V069 is abandoned dead space. Every RMNP migration from V430 takes a number in V430–V459.**
 
-pct's highest applied version on the preview estate is **401**. `application.yml` sets
-`validate-on-migrate: false` and does **not** set `out-of-order`, and Flyway's default is to
-*silently ignore* a pending migration whose version is below the highest applied one. Ignored means
-exactly that: it does not apply, it does not fail, the service starts, the health check is green, and
-the table is absent. That is not theoretical — V058 and V059 of this pack were skipped that way on
-2026-07-26 and needed a cross-lane repair to recover.
+RMNP's band is registered as **V430–V459**, alongside Paediatrics/IMAM V400–V429, Emergency
+V070–V099 + V200s, Adult Medicine V100–V129 and Surgery V300–V329. Contraception landed as **V430**.
 
-An honest complication, recorded rather than tidied away: the estate **does** show
-`V106__structured_history` applying at 18:43 after `V401` applied at 18:19, on this same database.
-Out-of-order application is therefore happening somewhere, and the mechanism is not in
-`values-full-preview.yaml` (the only `SPRING_FLYWAY_OUT_OF_ORDER: "true"` there is scoped to
-`tshepo-authz-service`), not in the pct pod's environment, and not in the service configuration.
-**Nobody has explained it, so nobody should build on it.**
+The band convention works only because `spring.flyway.out-of-order: true` is set in **pct's own
+`application.yml`** (landed 2026-07-26 ~18:29). Bands mean a lane routinely adds a migration
+numerically below one another lane has already applied, and Flyway's default silently refuses exactly
+those. With `validate-on-migrate: false` it does not even complain — it never runs them, and the
+service boots green with the table missing. That is how V058 and V059 of this pack were lost earlier
+the same day, before the flag was turned on.
 
-The asymmetry settles it without needing the explanation. Numbering above the current maximum costs
-nothing if the concern turns out to be unfounded; numbering below it costs a silently absent schema
-if it does not, and that failure is invisible at every layer that would normally report it.
+**A correction worth keeping, because the reasoning is reusable.** This section originally asserted
+that pct did *not* set `out-of-order`, and treated a `V106` that applied after `V401` as an
+unexplained anomaly that nobody should build on. The flag *was* set — in the service configuration
+inside the jar, not in `values-full-preview.yaml`, which is where the search stopped. So the V106
+observation was the flag working as designed, not an anomaly.
 
-Two consequences for other lanes:
+Two things survive the correction, and one does not:
 
-1. **If you hold a lease below 401 and have not yet applied it, treat it as unsafe** and move above
-   the current maximum. IMAM has V400–V429 (paediatrics); RMNP takes V430–V459.
-2. `V107__medication_reconciliation.sql` and `V108__medical_episode_emergency_fk.sql` are on disk,
-   unapplied, and below 401. They may be fine — they may simply not have been deployed yet — but
-   whoever owns them should confirm against `flyway_schema_history` on the target rather than against
-   a green service.
+- **Survives:** the number. V430 is right under the band convention regardless.
+- **Survives:** the reasoning that got there. Declining to build on a behaviour nobody could explain
+  was correct as a decision procedure even though the premise was wrong, and the cost asymmetry
+  argument still holds for any lane weighing the same choice.
+- **Does not survive:** "check whether your own sub-401 lease is unsafe." With out-of-order on, a
+  correctly-banded low number applies fine. `V107__medication_reconciliation.sql` is known-pending
+  and applies cleanly on the next rollout. `V108__medical_episode_emergency_fk.sql` no longer
+  exists — withdrawn and re-landed as `V201` in Emergency's band; the on-disk scan that flagged it
+  crossed with the withdrawal.
+
+**The durable lesson is where to look, not what was found.** A Flyway setting can live in the service
+jar, in Helm values, or in the pod environment, and a search that covers two of the three returns a
+confident wrong answer. Check `application.yml` in the service before concluding a flag is unset.
 
 ### 2a. pct V060 is not ours, and it is not committed
 
