@@ -49,4 +49,17 @@ public interface ImamEpisodeRepository extends JpaRepository<ImamEpisodeEntity, 
             """)
     List<ImamEpisodeEntity> findActive(@Param("tenantId") UUID tenantId,
                                        @Param("facilityId") UUID facilityId);
+
+    /**
+     * Every tenant's overdue episodes, for the tracing sweep. Deliberately not tenant-scoped: the
+     * sweep runs without a request and therefore without a tenant, and a per-tenant loop would need
+     * a list of tenants that nothing maintains.
+     */
+    @Query("""
+            SELECT e FROM ImamEpisodeEntity e
+            WHERE e.status = 'ACTIVE'
+              AND (e.nextReviewDue IS NULL OR e.nextReviewDue < :asOf)
+            ORDER BY e.nextReviewDue ASC NULLS FIRST
+            """)
+    List<ImamEpisodeEntity> findAllOverdue(@Param("asOf") LocalDate asOf);
 }

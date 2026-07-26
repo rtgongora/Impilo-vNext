@@ -261,6 +261,22 @@ class ImamProgrammeServiceTest {
     // --- ration ------------------------------------------------------------------------------------------
 
     @Test
+    void aChildWhoHasStoppedAttendingIsNotGivenARationInstructionInsteadOfATrace() {
+        // Caught by reading a live worklist: "Issue 21 sachets of RUTF" appeared on the row of a
+        // defaulting child. It reads as a task to complete, and the task that matters for a child
+        // who has stopped coming is finding them.
+        var p = service.progress("OTP", LocalDate.parse("2026-06-01"), "ABSENT",
+                List.of(visit("2026-06-08", 11.0, "ABSENT", 8.0)), LocalDate.parse("2026-06-26"));
+
+        assertThat(p.attendanceStatus()).isEqualTo("DEFAULTER");
+        assertThat(String.join(" ", p.actions())).doesNotContain("Issue ");
+        assertThat(String.join(" ", p.actions())).contains("defaulter definition");
+        // The ration is still reported as a value — a caller may need it — it is simply not an
+        // instruction for today.
+        assertThat(p.recommendedSachetsPerWeek()).isEqualByComparingTo("21");
+    }
+
+    @Test
     void theWeeklyRationIsDerivedFromTheChildsCurrentWeight() {
         var p = service.progress("OTP", LocalDate.parse("2026-06-01"), "ABSENT",
                 List.of(visit("2026-06-08", 11.0, "ABSENT", 8.0)), LocalDate.parse("2026-06-09"));

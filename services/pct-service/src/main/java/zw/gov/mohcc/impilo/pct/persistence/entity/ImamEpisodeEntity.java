@@ -113,6 +113,17 @@ public class ImamEpisodeEntity {
     @Column(name = "last_contact_on")
     private LocalDate lastContactOn;
 
+    /**
+     * The missed-review count already raised as a tracing event, so the sweep fires once per
+     * crossing rather than every night. Crossing from tracing into defaulting is new information;
+     * repeating the same alert daily is what teaches people to ignore it.
+     */
+    @Column(name = "tracing_notified_missed_visits", nullable = false)
+    private Integer tracingNotifiedMissedVisits = 0;
+
+    @Column(name = "tracing_notified_at")
+    private OffsetDateTime tracingNotifiedAt;
+
     @Column(name = "next_review_due")
     private LocalDate nextReviewDue;
 
@@ -391,6 +402,22 @@ public class ImamEpisodeEntity {
 
     public void setLastContactOn(LocalDate lastContactOn) {
         this.lastContactOn = lastContactOn;
+    }
+
+    public Integer getTracingNotifiedMissedVisits() {
+        return tracingNotifiedMissedVisits;
+    }
+
+    public void setTracingNotifiedMissedVisits(Integer tracingNotifiedMissedVisits) {
+        this.tracingNotifiedMissedVisits = tracingNotifiedMissedVisits;
+    }
+
+    public OffsetDateTime getTracingNotifiedAt() {
+        return tracingNotifiedAt;
+    }
+
+    public void setTracingNotifiedAt(OffsetDateTime tracingNotifiedAt) {
+        this.tracingNotifiedAt = tracingNotifiedAt;
     }
 
     public LocalDate getNextReviewDue() {

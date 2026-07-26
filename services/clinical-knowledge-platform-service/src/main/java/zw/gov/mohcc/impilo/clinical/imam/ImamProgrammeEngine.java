@@ -402,7 +402,10 @@ public final class ImamProgrammeEngine {
             actions.add("Weight is below the admission weight. Assess today for illness and feeding, and consider "
                     + "inpatient care.");
         }
-        if (sachetsPerWeek != null) {
+        // Only when the child is actually in front of someone. "Issue 21 sachets" on the worklist
+        // row of a child who has stopped attending reads as a task to complete, and the task that
+        // matters for that child is finding them.
+        if (sachetsPerWeek != null && "ATTENDING".equals(attendanceStatus)) {
             actions.add("Issue " + sachetsPerWeek + " sachets of "
                     + programme.therapeuticFood().productCode() + " for the coming review interval.");
         }
