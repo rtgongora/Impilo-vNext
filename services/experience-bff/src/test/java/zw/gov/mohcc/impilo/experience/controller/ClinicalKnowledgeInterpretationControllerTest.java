@@ -13,11 +13,13 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit test for the BFF interpretation proxy: success passes the upstream payload through, and an
- * upstream failure fails honest (empty interpretation, never fabricated flags).
+ * upstream failure returns 502 rather than an empty interpretation that would read as a completed
+ * review which flagged nothing.
  */
 class ClinicalKnowledgeInterpretationControllerTest {
 
@@ -36,14 +38,19 @@ class ClinicalKnowledgeInterpretationControllerTest {
     }
 
     @Test
+    /**
+     * This asserted a 200 with an empty interpretation and called it "failing honest". An empty
+     * interpretation is what a completed review that flagged nothing looks like, so the caller
+     * could not tell a clean result from an engine that never ran. Honest now means 502.
+     */
     void interpretationEvaluate_failsHonestOnUpstreamError() {
         ClinicalKnowledgeController controller = new ClinicalKnowledgeController(new StubClient(true));
         ResponseEntity<Map<String, Object>> response = controller.interpretationEvaluate("t1", Map.of());
 
-        assertEquals(200, response.getStatusCode().value());
-        JsonNode node = MAPPER.valueToTree(response.getBody().get("data"));
-        assertTrue(node.get("interpreted_observations").isEmpty());
-        assertTrue(node.get("alerts").isEmpty());
+        assertEquals(502, response.getStatusCode().value());
+        assertEquals("interpretation_unavailable", response.getBody().get("error"));
+        assertNull(response.getBody().get("data"),
+                "an empty interpretation here would read as 'reviewed, nothing abnormal'");
     }
 
     private static final class StubClient extends ClinicalKnowledgePlatformClient {

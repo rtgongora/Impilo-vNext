@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -36,9 +37,12 @@ public class ChannelsController {
                     "data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Channels list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Channels list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "channels_unavailable",
+                    "message", "Channels could not be retrieved. Do not treat this as an absence of channels.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -57,9 +61,12 @@ public class ChannelsController {
                     "data", data,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Channel get failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of(),
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Channel get failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "channel_unavailable",
+                    "message", "The channel could not be retrieved. Do not treat this as a missing channel.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

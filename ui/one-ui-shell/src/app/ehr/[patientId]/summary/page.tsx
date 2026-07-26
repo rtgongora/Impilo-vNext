@@ -66,13 +66,13 @@ export default function PatientSummaryPage() {
   const { data: patientSummaryData } = usePatientSummary(patientId);
   const patientSummary = patientSummaryData?.data ?? null;
 
-  const { data: allergiesData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: allergiesData, isError: allergiesUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["allergies", { patientId }],
     queryFn: () => apiClient.get(`/internal/v1/allergies?patient_id=${patientId}`),
     enabled: !!patientId,
   });
 
-  const { data: conditionsData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: conditionsData, isError: conditionsUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["conditions", { patientId }],
     queryFn: () => apiClient.get(`/internal/v1/conditions?patient_id=${patientId}`),
     enabled: !!patientId,
@@ -507,7 +507,11 @@ export default function PatientSummaryPage() {
                   <Stethoscope className="w-4 h-4 text-orange-500" />
                   <h3 className="text-sm font-medium text-foreground">Active Conditions ({activeConditions.length})</h3>
                 </div>
-                {activeConditions.length === 0 ? (
+                {conditionsUnavailable ? (
+                  <p className="text-sm text-red-600">
+                    Conditions unavailable — not a record of none.
+                  </p>
+                ) : activeConditions.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No active conditions</p>
                 ) : (
                   <div className="space-y-1.5">
@@ -534,7 +538,13 @@ export default function PatientSummaryPage() {
                   <ShieldAlert className="w-4 h-4 text-red-500" />
                   <h3 className="text-sm font-medium text-foreground">Allergies ({activeAllergies.length})</h3>
                 </div>
-                {activeAllergies.length === 0 ? (
+                {allergiesUnavailable ? (
+                  /* The green NKDA line is an affirmative safety claim. A failed read is not
+                     grounds for making it. */
+                  <p className="text-sm text-red-600">
+                    Allergies unavailable — not NKDA. Retry before prescribing.
+                  </p>
+                ) : activeAllergies.length === 0 ? (
                   <p className="text-sm text-green-600">No known allergies (NKDA)</p>
                 ) : (
                   <div className="space-y-1.5">

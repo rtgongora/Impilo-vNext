@@ -28,7 +28,7 @@ export default function EmergencyPatientViewPage() {
   const { data: patientData, isLoading: loadingPatient } = usePatient(patientId);
   const { data: patientSummaryRes } = usePatientSummary(patientId);
   const { data: encountersData } = useEncounters(patientId);
-  const { data: allergiesData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: allergiesData, isError: allergiesUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["allergies", { patientId }],
     queryFn: () => apiClient.get(`/internal/v1/allergies?patient_id=${patientId}`),
     enabled: !!patientId,
@@ -131,7 +131,14 @@ export default function EmergencyPatientViewPage() {
                 <ShieldAlert className="h-3.5 w-3.5" />
                 Allergies
               </h2>
-              {activeAllergies.length === 0 ? (
+              {allergiesUnavailable ? (
+                /* On an emergency view, "no allergies on record" is the claim most likely to be
+                   acted on immediately. Never say it on the strength of a failed read. */
+                <p className="mt-1 text-sm font-medium text-red-700">
+                  Allergy record unavailable — not a statement that there are none. Check another
+                  source before treating.
+                </p>
+              ) : activeAllergies.length === 0 ? (
                 <p className="mt-1 text-sm text-muted-foreground">No active allergies on record in this view.</p>
               ) : (
                 <ul className="mt-2 space-y-1 text-sm text-foreground">

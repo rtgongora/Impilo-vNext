@@ -246,13 +246,17 @@ class GoldenPathIntegrationTest {
     @Order(7)
     @DisplayName("Path D: Audit log is queryable")
     void pathD_auditLog() throws Exception {
+        // No TSHEPO audit store runs in this suite. This used to assert 200 with a data array,
+        // which passed only because the BFF answered an unreachable audit store with an empty
+        // list — the test was asserting a fabricated "nobody accessed this record".
         mvc.perform(get("/internal/v1/admin/audit")
                         .header("X-Tenant-ID", TENANT)
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("audit_trail_unavailable"))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     // ── Path E: Marketplace ──────────────────────────────────────
@@ -312,10 +316,13 @@ class GoldenPathIntegrationTest {
     // ── Shift management (supports all clinical paths) ───────────
     @Test
     @Order(11)
-    @DisplayName("Start and end a shift")
+    @DisplayName("Starting a shift without TUSO reports failure, not a local shift")
     void shiftLifecycle() throws Exception {
-        // Start shift
-        String startResponse = mvc.perform(post("/internal/v1/shifts/start")
+        // TUSO is the system of record for duty state and does not run in this suite. This test
+        // used to assert a 201 with status ACTIVE and then end that shift — a full lifecycle over
+        // a shift no system had ever recorded, because the BFF minted a local one on failure.
+        // Duty state is an authorization input, so the honest answer is that it did not start.
+        mvc.perform(post("/internal/v1/shifts/start")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "facility_id", "f1000000-0000-0000-0000-000000000001",
@@ -326,27 +333,9 @@ class GoldenPathIntegrationTest {
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", UUID.randomUUID().toString()))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.type").value("Shift"))
-                .andExpect(jsonPath("$.data.attributes.status").value("ACTIVE"))
-                .andReturn().getResponse().getContentAsString();
-
-        JsonNode startNode = objectMapper.readTree(startResponse);
-        String shiftId = startNode.get("data").get("id").asText();
-
-        // End shift
-        mvc.perform(post("/internal/v1/shifts/" + shiftId + "/end")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of(
-                                "handover_notes", "All patients seen. No pending cases."
-                        )))
-                        .header("X-Tenant-ID", TENANT)
-                        .header("X-Pod-ID", POD)
-                        .header("X-Request-ID", UUID.randomUUID().toString())
-                        .header("X-Correlation-ID", UUID.randomUUID().toString())
-                        .header("Idempotency-Key", UUID.randomUUID().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.attributes.status").value("ENDED"));
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("shift_not_started"))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     // ── Pharmacy flow ────────────────────────────────────────────
@@ -369,12 +358,15 @@ class GoldenPathIntegrationTest {
     @Order(13)
     @DisplayName("List inventory items")
     void inventoryItems() throws Exception {
+        // As above: no inventory-service runs here, and an empty stock list is not a neutral
+        // answer — it reads as "this facility holds none of this".
         mvc.perform(get("/internal/v1/inventory/items")
                         .header("X-Tenant-ID", TENANT)
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("stock_on_hand_unavailable"))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 }

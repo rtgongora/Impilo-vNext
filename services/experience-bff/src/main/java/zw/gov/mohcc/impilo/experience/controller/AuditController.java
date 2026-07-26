@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -47,9 +48,14 @@ public class AuditController {
                             "aggregate_type", aggregateType == null ? "" : aggregateType,
                             "aggregate_id", aggregateId == null ? "" : aggregateId)));
         } catch (Exception e) {
+            // An empty audit list is an affirmative forensic finding — "nobody accessed this
+            // record" — and it is exactly the answer an investigation must not be handed when
+            // the audit store could not be queried.
             log.error("Audit list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "audit_trail_unavailable",
+                    "message", "Audit events could not be retrieved. Do not treat this as an "
+                               + "absence of audit events.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
                             "page", page, "size", size,
                             "aggregate_type", aggregateType == null ? "" : aggregateType,
@@ -69,9 +75,12 @@ public class AuditController {
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
+            // An empty object here is indistinguishable from an audit event that does not exist.
             log.error("Audit get failed for id={}: {}", id, e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of(),
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "audit_event_unavailable",
+                    "message", "The audit event could not be retrieved. Do not treat this as a "
+                               + "missing event.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

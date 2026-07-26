@@ -67,9 +67,13 @@ public class ImmunizationsController {
                     "data", pctData != null ? pctData : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT listImmunizations failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty 200 here reads as "this patient is unvaccinated", which invites a repeat
+            // dose of a vaccine already given. Fail loudly rather than fabricate the absence.
+            log.error("PCT listImmunizations failed for patient={}: {}", patientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "immunization_history_unavailable",
+                    "message", "Immunisations could not be retrieved. Do not treat this as an "
+                               + "absence of immunisations.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

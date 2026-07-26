@@ -160,8 +160,13 @@ public class IdentityServicesController {
                     "data", result != null ? result : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            // "No such person" is the finding that leads to creating a second record for someone
+            // who already has one. It must come from the registry, not from a failed call to it.
+            log.error("VITO identity search failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "identity_search_unavailable",
+                    "message", "The identity registry could not be searched. Do not treat this as "
+                               + "confirmation that no matching identity exists.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

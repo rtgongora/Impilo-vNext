@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -81,12 +82,16 @@ public class EhrPatientSummaryController {
             JsonNode pct = pctClient.getPatientHealthSummary(cpid);
             clinical.putAll(mapPctSummary(cpid, pct));
         } catch (Exception e) {
-            log.debug("PCT health summary unavailable for cpid={}: {}", cpid, e.getMessage());
-            clinical.put("conditions", List.of());
-            clinical.put("medications", List.of());
-            clinical.put("allergies", List.of());
-            clinical.put("immunizations", List.of());
-            clinical.put("recentEncounters", List.of());
+            // This block used to answer a failed call with empty conditions, medications,
+            // allergies and immunisations — a whole clinical summary asserting that a patient has
+            // no problems, takes nothing, and is allergic to nothing. That is four fabricated
+            // findings in one payload, and "no known allergies" is the one a prescriber acts on.
+            log.error("PCT health summary failed for cpid={}: {}", cpid, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "patient_summary_unavailable",
+                    "message", "The patient summary could not be retrieved. Do not treat this as "
+                               + "an absence of conditions, medications or allergies.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
         Map<String, Object> consent = fetchMvumoConsentSummary(cpid);
         clinical.put("consentSummary", consent);

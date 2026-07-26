@@ -47,8 +47,12 @@ public class CommunityController {
             return ResponseEntity.ok(Map.of("data", groups != null ? groups : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Community groups list unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", List.of(),
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Community groups list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "community_groups_unavailable",
+                    "message", "Community groups could not be retrieved. Do not treat this as an absence of groups.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -107,8 +111,12 @@ public class CommunityController {
             return ResponseEntity.ok(Map.of("data", posts != null ? posts : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Community posts list unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", List.of(),
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Community posts list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "community_posts_unavailable",
+                    "message", "Community posts could not be retrieved. Do not treat this as an absence of posts.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

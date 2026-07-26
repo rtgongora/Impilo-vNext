@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -85,14 +86,14 @@ public class InventoryController {
             ));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.warn("Inventory on-hand list unavailable: {}", e.getMessage());
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", List.of());
-            response.put("meta", Map.of(
-                    "request_id", requestId,
-                    "correlation_id", correlationId
-            ));
-            return ResponseEntity.ok(response);
+            // An empty on-hand list reads as "this facility holds none of this stock", which is
+            // how a dispensing decision becomes "we are out" and a substitution gets made.
+            log.error("Inventory on-hand list failed for facility={}: {}", facilityId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "stock_on_hand_unavailable",
+                    "message", "Stock on hand could not be retrieved. Do not treat this as an "
+                               + "absence of stock.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
 
@@ -142,7 +143,15 @@ public class InventoryController {
                     return ResponseEntity.ok(response(liveRows, requestId, correlationId));
                 }
             } catch (Exception e) {
-                log.warn("Inventory requisitions list from service unavailable: {}", e.getMessage());
+                // Falling through here reaches demo rows (when enabled) or an empty list — either
+                // way the caller is told something about real requisitions that we do not know.
+                log.error("Inventory requisitions list failed for facility={}: {}",
+                        facilityUuid, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "requisitions_unavailable",
+                        "message", "Requisitions could not be retrieved. Do not treat this as an "
+                                   + "absence of requisitions.",
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
 

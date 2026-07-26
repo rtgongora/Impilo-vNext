@@ -46,9 +46,14 @@ export default function GrowthChartPage() {
   const { isClinical } = useRoleGroup();
   const { data: patientData } = usePatient(patientId);
   const { data: encountersData } = useEncounters(patientId);
-  const { data: growthRows = [], isLoading: growthLoading } = useGrowth(patientId);
+  const {
+    data: growthRows = [],
+    isLoading: growthLoading,
+    isError: growthUnavailable,
+  } = useGrowth(patientId);
   const recordGrowth = useRecordGrowth();
-  const { data: vitalsData, isLoading: vitalsLoading } = useVitals(patientId);
+  const { data: vitalsData, isLoading: vitalsLoading, isError: vitalsUnavailable } =
+    useVitals(patientId);
   const [showForm, setShowForm] = useState(false);
   const [weightKg, setWeightKg] = useState("");
   const [lengthCm, setLengthCm] = useState("");
@@ -340,7 +345,16 @@ export default function GrowthChartPage() {
               </h2>
             </div>
 
-            {!hasStructuredGrowth && legacyVitalsRows.length === 0 ? (
+            {growthUnavailable || vitalsUnavailable ? (
+              /*
+               * "No measurements yet" is a clinical finding — it says this child has never been
+               * weighed. When the read fails we cannot make that claim, so say what we know.
+               */
+              <p className="text-sm text-red-600">
+                Growth measurements could not be loaded. This is not a record that the child has
+                no measurements — retry before assessing growth.
+              </p>
+            ) : !hasStructuredGrowth && legacyVitalsRows.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No growth measurements or vitals-backed anthropometrics yet.
               </p>

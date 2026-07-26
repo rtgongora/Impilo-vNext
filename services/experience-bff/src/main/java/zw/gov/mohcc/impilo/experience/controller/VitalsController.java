@@ -70,7 +70,15 @@ public class VitalsController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "encounter_id must be a numeric PCT encounter id when patient_id is omitted");
             } catch (Exception e) {
-                log.warn("PCT getEncounter for vitals list failed: {}", e.getMessage());
+                // Falling through would blame the caller's encounter_id (400) for what is
+                // actually an upstream outage, and the 400 handler cannot tell the difference.
+                log.error("PCT getEncounter for vitals list failed for encounter={}: {}",
+                        encounterId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "vitals_unavailable",
+                        "message", "The encounter could not be resolved because PCT is "
+                                   + "unreachable. Do not treat this as an absence of observations.",
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
 
@@ -86,9 +94,14 @@ public class VitalsController {
                     "data", pctData != null ? pctData : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT listVitals failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty 200 here reads as "this patient has no recorded observations" — the same
+            // reassuring shape a stable patient produces, said exactly when the system knows
+            // least. Fail loudly rather than fabricate the absence.
+            log.error("PCT listVitals failed for patient={}: {}", cpid, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "vitals_unavailable",
+                    "message", "Vital signs could not be retrieved. Do not treat this as an "
+                               + "absence of observations.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

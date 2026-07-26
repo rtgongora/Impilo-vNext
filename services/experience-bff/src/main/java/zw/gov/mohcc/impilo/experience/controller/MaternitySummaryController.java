@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -44,9 +45,13 @@ public class MaternitySummaryController {
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
+            // An empty 200 here reads as "there is no maternity record for this woman", which is
+            // an affirmative finding and would be a fabricated one. Fail loudly instead.
             log.error("PCT getMaternitySummary failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of(),
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "maternity_summary_unavailable",
+                    "message", "The maternity summary could not be retrieved. Do not treat this "
+                               + "as an absence of a maternity record.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

@@ -92,7 +92,15 @@ public class TriageController {
                         "data", timeline != null ? timeline : List.of(),
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             } catch (Exception e) {
-                log.warn("PCT getPatientTimeline for triage list failed: {}", e.getMessage());
+                // Falling through to the empty list below reports "this patient has not been
+                // triaged", which in an emergency queue is the finding that decides who waits.
+                log.error("PCT getPatientTimeline for triage list failed for patient={}: {}",
+                        patientId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "triage_records_unavailable",
+                        "message", "Triage records could not be retrieved. Do not treat this as "
+                                   + "an absence of triage.",
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
         if (encounterId != null && !encounterId.isBlank()) {
@@ -104,7 +112,14 @@ public class TriageController {
                             "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
                 }
             } catch (Exception e) {
-                log.warn("PCT getJourney for triage list failed: {}", e.getMessage());
+                // As above — an unreachable journey must not render as an untriaged patient.
+                log.error("PCT getJourney for triage list failed for encounter={}: {}",
+                        encounterId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "triage_records_unavailable",
+                        "message", "Triage records could not be retrieved. Do not treat this as "
+                                   + "an absence of triage.",
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
         return ResponseEntity.ok(Map.of(

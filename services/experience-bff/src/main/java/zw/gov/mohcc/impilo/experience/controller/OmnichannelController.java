@@ -51,6 +51,8 @@ public class OmnichannelController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
         long startedNs = System.nanoTime();
+        // Category (b): composite dashboard. Each source's failure is recorded in sourceHealth and
+        // counted in the source_errors metric, so the empty panel is attributable.
         Map<String, Object> sourceHealth = new LinkedHashMap<>();
 
         int pendingCallbacks = 0;

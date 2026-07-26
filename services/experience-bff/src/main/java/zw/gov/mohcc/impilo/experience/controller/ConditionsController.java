@@ -67,9 +67,13 @@ public class ConditionsController {
                     "data", pctData != null ? pctData : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT listConditions failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty 200 here reads as "this patient has no diagnosed conditions", which is an
+            // affirmative clinical finding and would be a fabricated one. Fail loudly instead.
+            log.error("PCT listConditions failed for patient={}: {}", patientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "condition_list_unavailable",
+                    "message", "Conditions could not be retrieved. Do not treat this as an "
+                               + "absence of conditions.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

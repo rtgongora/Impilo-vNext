@@ -70,6 +70,9 @@ public class CommunicationController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         long startedNs = System.nanoTime();
+        // Category (b): as in CommsApprovalController — a composite dashboard whose per-source
+        // failures are reported in sourceHealth rather than swallowed, so a degraded panel is
+        // visibly degraded instead of looking like a quiet day.
         Map<String, Object> sourceHealth = new LinkedHashMap<>();
 
         int activeAnnouncements = 0;
