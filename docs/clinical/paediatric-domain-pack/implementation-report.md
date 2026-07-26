@@ -287,8 +287,22 @@ subscribed to the specific topic. The event published successfully to a topic no
 on, with every individual step reporting success. **Adding a cross-service event means adding a
 route case — the route is the contract.**
 
-Remaining: growth intelligence in the knowledge platform; enabling the BUTANO listeners and
-proving the hop; deepened form content; and migrating the locally declared
+**Growth intelligence** is done and live-proven (`POST /internal/v1/clinical/paediatric/growth/interpret`).
+Growth faltering shows in the change between contacts long before any single measurement crosses a
+line, so interpretation is a judgement about a series and belongs in governed content. The boundary
+is deliberate: PCT owns the record and stamps the z-score at measurement, the shared library owns
+the arithmetic, and this engine owns neither — it cannot recompute a score, so its interpretation
+can never drift from what the record says.
+
+Two design points carried the weight. **Data quality outranks clinical interpretation**: an
+implausible jump, or the artefact of a child first measured standing rather than lying down,
+suppresses the clinical signals entirely rather than sitting beside them — otherwise a mistyped
+weight raises a severe-faltering alert and a clinic investigates a transcription error as if it
+were disease. And **one signal per family**: faltering thresholds are a severity ladder, not
+independent findings, so a child crossing 1.5 z reports the one urgent action rather than burying
+it under three weaker restatements.
+
+**Wave 4 is complete.** Remaining: deepened form content; and migrating the locally declared
 antigen codes onto a governed Zibo value set once zibo-service holds a vaccine terminology (it
 holds none today, which is why the schedule declares its own code system with a documented
 migration point).
