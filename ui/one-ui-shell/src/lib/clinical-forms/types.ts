@@ -13,7 +13,20 @@ export type ClinicalFieldKind =
   | "segmented"
   | "terminology_bound"
   | "fhir_mapped"
-  | "text";
+  | "text"
+  /**
+   * Yes / No / Unknown / Not assessed. A clinical record has to distinguish "no" from
+   * "nobody looked": a danger sign left blank is not a danger sign ruled out, and the
+   * decision-support engines refuse to treat the two alike. Options are supplied by the
+   * renderer from the canonical set, so the same answer means the same thing everywhere.
+   */
+  | "clinical_assertion"
+  /**
+   * Normal / Abnormal / Not examined / Unable / Deferred / Child distressed / Uncertain.
+   * A blank examination field must never read as normal, and the reasons an examination
+   * produced no finding lead to different next steps.
+   */
+  | "exam_finding";
 
 export type AgeBand = "NEONATAL" | "INFANT" | "CHILD" | "ADOLESCENT" | "ADULT" | "OLDER_ADULT";
 
@@ -157,4 +170,10 @@ export type FormValues = Record<string, string | number | boolean | string[] | n
 export interface FormValidationIssue {
   fieldId: string;
   message: string;
+  /**
+   * "error" blocks submission; "warning" surfaces a gap without blocking. An unassessed
+   * danger sign is a warning: recording that it was not assessed is honest and must stay
+   * possible, but the clinician should see that the question is still open.
+   */
+  severity?: "error" | "warning";
 }

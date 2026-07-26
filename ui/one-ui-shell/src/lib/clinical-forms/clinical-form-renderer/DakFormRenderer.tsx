@@ -6,6 +6,8 @@ import type { ClinicalFormDefinition, ClinicalFormRuntimeContext, FormValues } f
 import { visibleFieldsForSection } from "../evaluate-visibility";
 import { validateClinicalForm } from "../validate-form";
 import { useClinicalFormDraft } from "./useClinicalFormDraft";
+import { SegmentedControl } from "shared-ui";
+import { optionsForKind, tonesForKind } from "../canonical-option-sets";
 import { runAncContact1DecisionSupport, type DecisionSupportAlert } from "../decision-support-hooks/anc-decision-support";
 import { ANTENATAL_CONTACT_1_FORM } from "../clinical-form-definitions/antenatal-contact-1-exemplar";
 
@@ -20,8 +22,46 @@ function renderField(
   const border = err ? "border-red-400" : "border-border";
 
   switch (field.kind) {
-    case "coded_single":
     case "segmented":
+    case "clinical_assertion":
+    case "exam_finding": {
+      // Options for the clinical kinds come from the canonical sets rather than the form
+      // author, so "not assessed" means the same thing on every form in the platform.
+      const canonical = optionsForKind(field.kind);
+      const options = (canonical ?? field.options ?? []).map((o) => ({
+        value: o.code,
+        label: o.display,
+        tone: tonesForKind(field.kind)[o.code],
+      }));
+      return (
+        <div key={field.id}>
+          <span id={`${field.id}-label`} className="text-xs font-medium text-muted-foreground">
+            {field.label}
+          </span>
+          <div className="mt-1">
+            <SegmentedControl
+              options={options}
+              value={values[field.id] === undefined || values[field.id] === null ? "" : String(values[field.id])}
+              onChange={(v) => setField(field.id, v)}
+              aria-labelledby={`${field.id}-label`}
+              data-testid={`field-${field.id}`}
+            />
+          </div>
+          {field.allowAuxiliaryNarrative && (
+            <textarea
+              className={`${base} ${border} mt-2`}
+              rows={2}
+              placeholder={field.auxiliaryNarrativeLabel ?? "Optional notes"}
+              value={String(values[`${field.id}__narrative`] ?? "")}
+              onChange={(e) => setField(`${field.id}__narrative`, e.target.value)}
+            />
+          )}
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </div>
+      );
+    }
+    case "coded_single":
+    case "terminology_bound":
       return (
         <div key={field.id}>
           <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
@@ -109,6 +149,63 @@ function renderField(
             value={String(values[field.id] ?? "")}
             onChange={(e) => setField(field.id, e.target.value)}
           />
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </label>
+      );
+    case "boolean":
+      // Rendered as an explicit two-option choice rather than a checkbox: an unticked
+      // checkbox is indistinguishable from an unanswered question, which is exactly the
+      // ambiguity clinical data entry cannot afford.
+      return (
+        <div key={field.id}>
+          <span id={`${field.id}-label`} className="text-xs font-medium text-muted-foreground">
+            {field.label}
+          </span>
+          <div className="mt-1">
+            <SegmentedControl
+              options={[
+                { value: "true", label: "Yes", tone: "danger" },
+                { value: "false", label: "No", tone: "positive" },
+              ]}
+              value={values[field.id] === undefined || values[field.id] === null ? "" : String(values[field.id])}
+              onChange={(v) => setField(field.id, v === "true")}
+              aria-labelledby={`${field.id}-label`}
+              data-testid={`field-${field.id}`}
+            />
+          </div>
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </div>
+      );
+    case "datetime":
+      return (
+        <label key={field.id} className="block">
+          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
+          <input
+            type="datetime-local"
+            className={`${base} ${border} mt-1`}
+            data-testid={`field-${field.id}`}
+            value={String(values[field.id] ?? "")}
+            onChange={(e) => setField(field.id, e.target.value)}
+          />
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </label>
+      );
+    case "fhir_mapped":
+      // The FHIR link is provenance, not a widget: render by the underlying shape so the
+      // clinician sees a normal field and the mapping stays metadata.
+      return (
+        <label key={field.id} className="block">
+          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
+          <input
+            type={field.unit ? "number" : "text"}
+            className={`${base} ${border} mt-1`}
+            data-testid={`field-${field.id}`}
+            value={values[field.id] === undefined || values[field.id] === null ? "" : String(values[field.id])}
+            onChange={(e) =>
+              setField(field.id, field.unit ? (e.target.value === "" ? "" : Number(e.target.value)) : e.target.value)
+            }
+          />
+          {field.unit && <span className="ml-2 text-xs text-muted-foreground">{field.unit}</span>}
           {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
         </label>
       );

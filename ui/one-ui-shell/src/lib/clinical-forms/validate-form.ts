@@ -1,5 +1,6 @@
 import type { ClinicalFormDefinition, ClinicalFormRuntimeContext, FormValidationIssue, FormValues } from "./types";
 import { fieldVisible } from "./evaluate-visibility";
+import { isAnsweredAssertion, isAnsweredExamFinding } from "./canonical-option-sets";
 
 export function validateClinicalForm(
   form: ClinicalFormDefinition,
@@ -27,6 +28,16 @@ export function validateClinicalForm(
       }
       if (f.kind === "text" && typeof v === "string" && f.validation?.maxLength && v.length > f.validation.maxLength) {
         issues.push({ fieldId: f.id, message: `Max length ${f.validation.maxLength}` });
+      }
+      // A required clinical question must be addressed, but "unknown" and "not assessed"
+      // are legitimate answers to record — they say something true about the consultation.
+      // What a required field rejects is silence, which is handled by the check above; here
+      // we only surface the remaining gap so a clinician can see what is still open.
+      if (req && f.kind === "clinical_assertion" && v !== undefined && !isAnsweredAssertion(v)) {
+        issues.push({ fieldId: f.id, message: `${f.label} has not been assessed`, severity: "warning" });
+      }
+      if (req && f.kind === "exam_finding" && v !== undefined && !isAnsweredExamFinding(v)) {
+        issues.push({ fieldId: f.id, message: `${f.label} has not been examined`, severity: "warning" });
       }
     }
   }

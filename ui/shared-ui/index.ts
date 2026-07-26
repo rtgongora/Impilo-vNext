@@ -69,6 +69,8 @@ export type { FormGridProps, FormFieldProps, FormSectionProps } from "./componen
 export { StickyActionBar } from "./components/StickyActionBar";
 export type { StickyActionBarProps } from "./components/StickyActionBar";
 
+export { SegmentedControl } from "./components/SegmentedControl";
+export type { SegmentedControlProps, SegmentedControlOption } from "./components/SegmentedControl";
 export { Stepper } from "./components/Stepper";
 export type { StepperProps, StepperStep } from "./components/Stepper";
 
