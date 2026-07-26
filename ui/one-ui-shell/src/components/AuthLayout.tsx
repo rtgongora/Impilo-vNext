@@ -30,7 +30,7 @@ export function AuthLayout({
       <PublicHeader />
 
       {/* Main Trust Canvas */}
-      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-[90rem] mx-auto w-full flex items-center justify-center">
+      <main className="flex-1 py-8 pb-24 px-4 sm:px-6 lg:px-8 max-w-[90rem] mx-auto w-full flex items-center justify-center">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Left Column (Desktop): Saved Journey Context Panel */}
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center">
