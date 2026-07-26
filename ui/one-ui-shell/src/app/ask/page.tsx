@@ -54,7 +54,7 @@ export default function AskPage() {
   const [mode, setMode] = useState<"general" | "edliz">("general");
   const askEdliz = useAskEdlizClinical();
   const askGuidance = useAskGuidance();
-  const { data: pathwaysRes } = useClinicalPathways();
+  const { data: pathwaysRes, isError: pathwaysUnavailable } = useClinicalPathways();
   const startPathway = useStartClinicalPathwaySession();
   const [pathwaySessionId, setPathwaySessionId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -203,6 +203,15 @@ export default function AskPage() {
               </div>
             </div>
           )}
+          {mode === "edliz" && pathwaysUnavailable && (
+            /* The block below is gated on pathways.length, so a failed read made guided
+               protocols vanish rather than appear unavailable — the clinician is left without
+               protocol guidance and without knowing it was withheld. */
+            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-warning-foreground">
+              Guided pathways could not be loaded. This is not a record that none exist for this
+              presentation — consult the protocol directly.
+            </div>
+          )}
           {mode === "edliz" && pathways.length > 0 && (
             <div className="mb-3 rounded-lg border border-emerald-100 bg-card p-3 text-xs text-foreground">
               <p className="font-medium text-primary-hover mb-2">Guided pathways (national demo)</p>
@@ -237,6 +246,14 @@ export default function AskPage() {
                 <p className="mt-2 text-[10px] text-muted-foreground">
                   Session started: <span className="font-mono">{pathwaySessionId}</span> — advance via{" "}
                   <code className="bg-neutral-100 px-1 rounded">POST /clinical/pathways/sessions/…/advance</code>
+                </p>
+              )}
+              {startPathway.isError && (
+                /* The BFF used to answer a failed start with 200 and {"error":"unavailable"}, so
+                   the button did nothing and looked like it had worked. */
+                <p className="mt-2 text-[10px] font-medium text-red-700">
+                  The pathway session could not be started — you are not being guided through a
+                  protocol.
                 </p>
               )}
             </div>

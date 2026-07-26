@@ -34,7 +34,12 @@ export function OfflineClinicalQueueOrchestrationPanel() {
               ? "Facility context required to probe offline reconciliation queue"
               : queueQ.isLoading
                 ? "Loading TSHEPO offline pack snapshot…"
-                : `${depth} queued item(s) · ${pending.length} pending reconcile batch(es) · source ${source}`}
+                : pendingQ.isError
+                  ? /* "0 pending reconcile batch(es)" reads as "everything captured offline has
+                       been reconciled", which is how offline clinical data goes missing without
+                       anyone noticing. */
+                    `${depth} queued item(s) · pending reconcile batches could not be read — not a record that none are outstanding`
+                  : `${depth} queued item(s) · ${pending.length} pending reconcile batch(es) · source ${source}`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -81,6 +86,13 @@ export function OfflineClinicalQueueOrchestrationPanel() {
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Bridging web shell → TSHEPO offline federation path…
         </div>
+      )}
+      {reconcile.isError && (
+        /* A failed reconcile submit left the button simply re-enabling, which reads as done.
+           The batches are still outstanding and the offline data is still unmerged. */
+        <p className="mt-2 rounded border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-medium text-red-700">
+          Reconciliation did not run. The pending batches are still outstanding.
+        </p>
       )}
     </section>
   );
