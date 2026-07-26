@@ -32,12 +32,44 @@ Heads verified on disk immediately before publishing this file.
 
 | Service | Head today | **RMNP block** | Planned use |
 |---|---|---|---|
-| `pct-service` | V060 | **V058, V059, V061–V069** (V060 excluded — see §2a) | intention + contraception V058 · pregnancy episode + dating revisions V059 · fetuses V061 · ANC contacts V062 · delivery records V063 · postnatal + lactation V064 · loss + termination V065 · obstetric emergencies V066 · confidentiality V067 · constraint validation V068 · reserve V069 |
+| `pct-service` | V401 | **V058, V059, V061 (landed) + V430–V459 (everything from here)** — see §2c | intention V058 · pregnancy episode + dating revisions V059 · fetuses V061 · **contraception V430** · ANC contacts V431 · delivery records V432 · postnatal + lactation V433 · loss + termination V434 · obstetric emergencies V435 · confidentiality V436 · constraint validation V437 · reserve V438–V459 |
 | `clinical-knowledge-platform-service` | V006 | **V041–V050** (see §2b) | rule-definition rows + source-document provenance V041 · national policy parameters V042 · reserve V043–50 |
 | `forms-service` | V002 | **V003–V006** | form applicability columns if the ANC/PNC/FP seeds need them |
 | `tshepo-authz-service` | V047 | **V048–V052** | SRH sensitivity assignment + adolescent consent policy seeds |
 | `vito-service` | V048 | **V055–V059** | mother↔child relationship types, the missing read, idempotency (below the Emergency lane's V060) |
 | `ubomi-service` | V005 | **V006–V008** | stillbirth / fetal-death civil notification |
+
+### 2c. Why RMNP abandoned V062–V069 and moved to V430–V459
+
+**The remaining low numbers in this lease are dead space. Do not use them, and check whether your own
+lease has the same problem.**
+
+pct's highest applied version on the preview estate is **401**. `application.yml` sets
+`validate-on-migrate: false` and does **not** set `out-of-order`, and Flyway's default is to
+*silently ignore* a pending migration whose version is below the highest applied one. Ignored means
+exactly that: it does not apply, it does not fail, the service starts, the health check is green, and
+the table is absent. That is not theoretical — V058 and V059 of this pack were skipped that way on
+2026-07-26 and needed a cross-lane repair to recover.
+
+An honest complication, recorded rather than tidied away: the estate **does** show
+`V106__structured_history` applying at 18:43 after `V401` applied at 18:19, on this same database.
+Out-of-order application is therefore happening somewhere, and the mechanism is not in
+`values-full-preview.yaml` (the only `SPRING_FLYWAY_OUT_OF_ORDER: "true"` there is scoped to
+`tshepo-authz-service`), not in the pct pod's environment, and not in the service configuration.
+**Nobody has explained it, so nobody should build on it.**
+
+The asymmetry settles it without needing the explanation. Numbering above the current maximum costs
+nothing if the concern turns out to be unfounded; numbering below it costs a silently absent schema
+if it does not, and that failure is invisible at every layer that would normally report it.
+
+Two consequences for other lanes:
+
+1. **If you hold a lease below 401 and have not yet applied it, treat it as unsafe** and move above
+   the current maximum. IMAM has V400–V429 (paediatrics); RMNP takes V430–V459.
+2. `V107__medication_reconciliation.sql` and `V108__medical_episode_emergency_fk.sql` are on disk,
+   unapplied, and below 401. They may be fine — they may simply not have been deployed yet — but
+   whoever owns them should confirm against `flyway_schema_history` on the target rather than against
+   a green service.
 
 ### 2a. pct V060 is not ours, and it is not committed
 
