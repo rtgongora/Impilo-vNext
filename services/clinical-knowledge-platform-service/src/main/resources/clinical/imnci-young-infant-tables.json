@@ -1,0 +1,253 @@
+{
+  "packId": "impilo.paediatric.imnci-young-infant",
+  "version": "engineering-seed-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": "Assess-and-classify tables for the sick young infant from birth up to 2 months, following the WHO/UNICEF Integrated Management of Newborn and Childhood Illness chart booklet and the WHO guidance on managing possible serious bacterial infection in young infants. The signs and thresholds in the possible-serious-bacterial-infection row are deliberately identical to the PSBI_YOUNG_INFANT danger-sign rule in paediatric-danger-signs.json: the alert layer and the classification layer must never disagree about the same baby. Thresholds and wording are an engineering seed and are NOT a ratified national protocol. They require MoHCC and neonatal specialist sign-off before they drive care. See docs/clinical-governance/edliz-engineering-seed-policy.md.",
+  "tables": [
+
+    {
+      "tableId": "IMNCI_YI_BACTERIAL_INFECTION",
+      "name": "Possible serious bacterial infection",
+      "axis": "Bacterial infection",
+      "ageMinDays": 0,
+      "ageMaxDays": 59,
+      "appliesWhen": null,
+      "requiredInputs": ["feeding", "convulsions", "movesOnlyWhenStimulated", "vitals.temperature", "vitals.respiratoryRate", "severeChestIndrawing", "umbilicus", "skinPustules"],
+      "sourceRefs": [
+        "WHO IMNCI chart booklet — sick young infant age up to 2 months",
+        "WHO — managing possible serious bacterial infection in young infants"
+      ],
+      "tiers": [
+        {
+          "code": "POSSIBLE_SERIOUS_BACTERIAL_INFECTION",
+          "name": "Possible serious bacterial infection or very severe disease",
+          "colour": "PINK",
+          "logic": {
+            "any": [
+              {"input": "feeding", "op": "in", "values": ["POOR", "NONE", "NOT_FEEDING"]},
+              {"finding": "convulsions", "present": true},
+              {"finding": "movesOnlyWhenStimulated", "present": true},
+              {"input": "vitals.temperature", "op": "gte", "value": 37.5},
+              {"input": "vitals.temperature", "op": "lt", "value": 35.5},
+              {"input": "vitals.respiratoryRate", "op": "gte", "value": 60},
+              {"finding": "severeChestIndrawing", "present": true},
+              {"finding": "bulgingFontanelle", "present": true},
+              {"input": "umbilicus", "op": "eq", "value": "REDNESS_EXTENDING_TO_SKIN"}
+            ]
+          },
+          "action": "Give the first dose of injectable antibiotics, keep the infant warm, treat hypoglycaemia, and refer urgently to hospital with the mother.",
+          "treatments": ["First dose of injectable ampicillin and gentamicin per EDLIZ neonatal dosing", "Keep warm — skin-to-skin during transfer", "Treat and prevent hypoglycaemia", "Advise the mother to keep breastfeeding", "Urgent referral with the mother"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "LOCAL_BACTERIAL_INFECTION",
+          "name": "Local bacterial infection",
+          "colour": "YELLOW",
+          "logic": {
+            "any": [
+              {"input": "umbilicus", "op": "eq", "value": "RED_OR_DRAINING_PUS"},
+              {"finding": "skinPustules", "present": true}
+            ]
+          },
+          "action": "Give an oral antibiotic for 5 days, teach the mother to treat local infections at home, and review in 2 days.",
+          "treatments": ["Oral amoxicillin for 5 days per EDLIZ neonatal dosing", "Teach the mother to treat the umbilicus or pustules at home", "Follow-up in 2 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "SEVERE_DISEASE_OR_LOCAL_INFECTION_UNLIKELY",
+          "name": "Severe disease or local infection unlikely",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "No antibiotic. Advise the mother on home care for the young infant and teach the signs that mean return immediately.",
+          "treatments": ["Home care for the young infant", "Teach the return-immediately signs", "Ensure exclusive breastfeeding"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "poor feeding is possible serious bacterial infection", "facts": {"ageDays": 10, "feeding": "POOR"}, "expectStatus": "CLASSIFIED", "expectClassification": "POSSIBLE_SERIOUS_BACTERIAL_INFECTION"},
+        {"name": "hypothermia is possible serious bacterial infection", "facts": {"ageDays": 10, "vitals": {"temperature": 35.0}}, "expectStatus": "CLASSIFIED", "expectClassification": "POSSIBLE_SERIOUS_BACTERIAL_INFECTION"},
+        {"name": "60 breaths a minute is possible serious bacterial infection in a young infant", "facts": {"ageDays": 20, "vitals": {"respiratoryRate": 60}}, "expectStatus": "CLASSIFIED", "expectClassification": "POSSIBLE_SERIOUS_BACTERIAL_INFECTION"},
+        {"name": "a red umbilicus without spread is a local infection", "facts": {"ageDays": 10, "feeding": "GOOD", "convulsions": "ABSENT", "movesOnlyWhenStimulated": "ABSENT", "severeChestIndrawing": "ABSENT", "bulgingFontanelle": "ABSENT", "umbilicus": "RED_OR_DRAINING_PUS", "skinPustules": "ABSENT", "vitals": {"temperature": 36.8, "respiratoryRate": 44}}, "expectStatus": "CLASSIFIED", "expectClassification": "LOCAL_BACTERIAL_INFECTION"},
+        {"name": "a fully assessed well infant is unlikely to have either", "facts": {"ageDays": 10, "feeding": "GOOD", "convulsions": "ABSENT", "movesOnlyWhenStimulated": "ABSENT", "severeChestIndrawing": "ABSENT", "bulgingFontanelle": "ABSENT", "umbilicus": "NORMAL", "skinPustules": "ABSENT", "vitals": {"temperature": 36.8, "respiratoryRate": 44}}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_DISEASE_OR_LOCAL_INFECTION_UNLIKELY"},
+        {"name": "an infant with no temperature and no respiratory rate cannot be cleared", "facts": {"ageDays": 10, "feeding": "GOOD", "convulsions": "ABSENT", "movesOnlyWhenStimulated": "ABSENT", "severeChestIndrawing": "ABSENT", "bulgingFontanelle": "ABSENT", "umbilicus": "NORMAL", "skinPustules": "ABSENT"}, "expectStatus": "INDETERMINATE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_YI_JAUNDICE",
+      "name": "Jaundice",
+      "axis": "Jaundice",
+      "ageMinDays": 0,
+      "ageMaxDays": 59,
+      "appliesWhen": null,
+      "requiredInputs": ["jaundice", "jaundiceOnsetAgeHours", "palmsSolesYellow"],
+      "sourceRefs": ["WHO IMNCI chart booklet — jaundice in the young infant"],
+      "tiers": [
+        {
+          "code": "SEVERE_JAUNDICE",
+          "name": "Severe jaundice",
+          "colour": "PINK",
+          "logic": {
+            "all": [
+              {"finding": "jaundice", "present": true},
+              {"any": [
+                {"input": "jaundiceOnsetAgeHours", "op": "lt", "value": 24},
+                {"finding": "palmsSolesYellow", "present": true},
+                {"all": [
+                  {"input": "ageDays", "op": "gte", "value": 14},
+                  {"finding": "jaundice", "present": true}
+                ]}
+              ]}
+            ]
+          },
+          "action": "Treat to prevent low blood sugar, keep the infant warm, and refer urgently to hospital. Jaundice in the first 24 hours, yellow palms or soles, or jaundice persisting beyond 14 days all need investigation the same day.",
+          "treatments": ["Prevent hypoglycaemia", "Keep warm", "Urgent referral for bilirubin assessment and phototherapy"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "JAUNDICE",
+          "name": "Jaundice",
+          "colour": "YELLOW",
+          "logic": {"finding": "jaundice", "present": true},
+          "action": "Advise the mother on home care, encourage frequent breastfeeding, and review in 1 day. Tell her to return immediately if the palms or soles become yellow.",
+          "treatments": ["Frequent breastfeeding", "Home care advice", "Follow-up in 1 day", "Return immediately if palms or soles turn yellow"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "NO_JAUNDICE",
+          "name": "No jaundice",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "No treatment for jaundice.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "jaundice in the first 24 hours is severe", "facts": {"ageDays": 0, "jaundice": "PRESENT", "jaundiceOnsetAgeHours": 12}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_JAUNDICE"},
+        {"name": "yellow palms are severe at any age", "facts": {"ageDays": 5, "jaundice": "PRESENT", "jaundiceOnsetAgeHours": 72, "palmsSolesYellow": "PRESENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_JAUNDICE"},
+        {"name": "jaundice still present at 16 days is severe", "facts": {"ageDays": 16, "jaundice": "PRESENT", "jaundiceOnsetAgeHours": 96, "palmsSolesYellow": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_JAUNDICE"},
+        {"name": "day-three jaundice with normal palms is jaundice", "facts": {"ageDays": 3, "jaundice": "PRESENT", "jaundiceOnsetAgeHours": 60, "palmsSolesYellow": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "JAUNDICE"},
+        {"name": "no jaundice is no jaundice", "facts": {"ageDays": 3, "jaundice": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "NO_JAUNDICE"},
+        {"name": "an infant never looked at for jaundice is not clear of it", "facts": {"ageDays": 3}, "expectStatus": "INDETERMINATE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_YI_DEHYDRATION",
+      "name": "Diarrhoea in the young infant",
+      "axis": "Dehydration status",
+      "ageMinDays": 0,
+      "ageMaxDays": 59,
+      "appliesWhen": {"finding": "diarrhoea", "present": true},
+      "requiredInputs": ["movesOnlyWhenStimulated", "sunkenEyes", "skinPinch", "restlessIrritable"],
+      "sourceRefs": ["WHO IMNCI chart booklet — diarrhoea in the young infant"],
+      "tiers": [
+        {
+          "code": "SEVERE_DEHYDRATION",
+          "name": "Severe dehydration",
+          "colour": "PINK",
+          "logic": {
+            "atLeast": 2,
+            "of": [
+              {"finding": "movesOnlyWhenStimulated", "present": true},
+              {"finding": "sunkenEyes", "present": true},
+              {"input": "skinPinch", "op": "eq", "value": "VERY_SLOW"}
+            ]
+          },
+          "action": "Start Plan C now — intravenous fluid if you can give it — and refer urgently. A young infant dehydrates faster than an older child and tolerates it less well.",
+          "treatments": ["Plan C intravenous rehydration", "Continue breastfeeding if able", "Urgent referral"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "SOME_DEHYDRATION",
+          "name": "Some dehydration",
+          "colour": "YELLOW",
+          "logic": {
+            "atLeast": 2,
+            "of": [
+              {"finding": "restlessIrritable", "present": true},
+              {"finding": "sunkenEyes", "present": true},
+              {"input": "skinPinch", "op": "eq", "value": "SLOW"}
+            ]
+          },
+          "action": "Give ORS at this facility under observation (Plan B), continue breastfeeding throughout, and reassess.",
+          "treatments": ["Plan B — ORS under observation", "Continue breastfeeding", "Zinc per neonatal protocol", "Reassess before discharge"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "NO_DEHYDRATION",
+          "name": "No dehydration",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "Continue breastfeeding and give extra fluid (Plan A). Teach the mother the signs that mean return immediately.",
+          "treatments": ["Plan A — continue and increase breastfeeding", "Teach the return-immediately signs"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "sunken eyes with a very slow skin pinch is severe", "facts": {"ageDays": 40, "diarrhoea": "PRESENT", "sunkenEyes": "PRESENT", "skinPinch": "VERY_SLOW"}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_DEHYDRATION"},
+        {"name": "no diarrhoea means the table does not apply", "facts": {"ageDays": 40, "diarrhoea": "ABSENT"}, "expectStatus": "NOT_APPLICABLE"},
+        {"name": "one sign with the rest unexamined cannot be called no dehydration", "facts": {"ageDays": 40, "diarrhoea": "PRESENT", "sunkenEyes": "PRESENT"}, "expectStatus": "INDETERMINATE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_YI_FEEDING",
+      "name": "Feeding problem or low weight for age",
+      "axis": "Feeding and growth",
+      "ageMinDays": 0,
+      "ageMaxDays": 59,
+      "appliesWhen": null,
+      "requiredInputs": ["attachment", "sucklingEffective", "feedsPer24Hours", "weightForAgeZ", "oralThrush"],
+      "sourceRefs": ["WHO IMNCI chart booklet — feeding problem or low weight in the young infant"],
+      "tiers": [
+        {
+          "code": "FEEDING_PROBLEM_OR_LOW_WEIGHT",
+          "name": "Feeding problem or low weight for age",
+          "colour": "YELLOW",
+          "logic": {
+            "any": [
+              {"input": "attachment", "op": "in", "values": ["NOT_WELL_ATTACHED", "NOT_ATTACHED"]},
+              {"input": "sucklingEffective", "op": "eq", "value": "NOT_EFFECTIVE"},
+              {"input": "feedsPer24Hours", "op": "lt", "value": 8},
+              {"finding": "receivesOtherFoodsOrDrinks", "present": true},
+              {"input": "weightForAgeZ", "op": "lt", "value": -2},
+              {"finding": "oralThrush", "present": true}
+            ]
+          },
+          "action": "Counsel the mother on positioning and attachment, treat thrush if present, and review in 2 days. A low weight for age in a young infant is a feeding problem until proven otherwise.",
+          "treatments": ["Counsel on correct positioning and attachment", "Advise breastfeeding at least 8 times in 24 hours", "Treat oral thrush with nystatin if present", "Follow-up in 2 days", "Weigh again at follow-up"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "NO_FEEDING_PROBLEM",
+          "name": "No feeding problem",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "Praise the mother for feeding the infant well and advise her to continue exclusive breastfeeding.",
+          "treatments": ["Praise and encourage continued exclusive breastfeeding"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "poor attachment is a feeding problem", "facts": {"ageDays": 20, "attachment": "NOT_WELL_ATTACHED"}, "expectStatus": "CLASSIFIED", "expectClassification": "FEEDING_PROBLEM_OR_LOW_WEIGHT"},
+        {"name": "low weight for age alone is a feeding problem", "facts": {"ageDays": 20, "attachment": "GOOD", "sucklingEffective": "EFFECTIVE", "feedsPer24Hours": 10, "receivesOtherFoodsOrDrinks": "ABSENT", "weightForAgeZ": -2.4, "oralThrush": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "FEEDING_PROBLEM_OR_LOW_WEIGHT"},
+        {"name": "feeding well and growing is no feeding problem", "facts": {"ageDays": 20, "attachment": "GOOD", "sucklingEffective": "EFFECTIVE", "feedsPer24Hours": 10, "receivesOtherFoodsOrDrinks": "ABSENT", "weightForAgeZ": -0.4, "oralThrush": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "NO_FEEDING_PROBLEM"},
+        {"name": "an infant who was never weighed cannot be cleared", "facts": {"ageDays": 20, "attachment": "GOOD", "sucklingEffective": "EFFECTIVE", "feedsPer24Hours": 10, "receivesOtherFoodsOrDrinks": "ABSENT", "oralThrush": "ABSENT"}, "expectStatus": "INDETERMINATE"}
+      ]
+    }
+  ]
+}

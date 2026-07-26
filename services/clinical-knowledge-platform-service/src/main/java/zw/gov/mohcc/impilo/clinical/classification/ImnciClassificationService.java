@@ -34,8 +34,15 @@ public class ImnciClassificationService {
     private static final Logger log = LoggerFactory.getLogger(ImnciClassificationService.class);
 
     static final String CONTENT_PATH = "clinical/imnci-classification-tables.json";
+    static final String YOUNG_INFANT_CONTENT_PATH = "clinical/imnci-young-infant-tables.json";
 
-    /** IMNCI's lower bound: below 2 months the young-infant tables apply instead. */
+    /**
+     * IMNCI splits at two months, and the split is not cosmetic. A young infant's signs of serious
+     * illness are few, non-specific and different from an older child's — poor feeding and
+     * hypothermia rather than cough and fast breathing at the child thresholds — and deterioration
+     * is far quicker. Applying the 2-months-to-5-years tables to a newborn would miss most of what
+     * is dangerous about being a newborn.
+     */
     private static final int YOUNG_INFANT_MAX_AGE_DAYS = 59;
 
     private final ClassificationContentLoader contentLoader;
@@ -52,6 +59,7 @@ public class ImnciClassificationService {
      */
     public record Assessment(
             Integer ageDays,
+            String pathway,
             boolean applicable,
             List<ClassificationEngine.Outcome> classifications,
             boolean urgentReferralRequired,
@@ -68,20 +76,17 @@ public class ImnciClassificationService {
     }
 
     public Assessment evaluate(Integer ageDays, Map<String, Object> facts) {
-        ClassificationContentLoader.Pack pack = contentLoader.load(CONTENT_PATH);
+        // The pack is chosen by age before anything else, because the young infant and the older
+        // child are assessed for different things, not merely at different thresholds.
+        boolean youngInfant = ageDays != null && ageDays <= YOUNG_INFANT_MAX_AGE_DAYS;
+        ClassificationContentLoader.Pack pack =
+                contentLoader.load(youngInfant ? YOUNG_INFANT_CONTENT_PATH : CONTENT_PATH);
 
         if (ageDays == null) {
             return unusable(null, pack,
                     "Age is unknown. Every IMNCI table is age-scoped and the fast-breathing "
                     + "threshold changes at one year, so no table can be applied safely.");
         }
-        if (ageDays <= YOUNG_INFANT_MAX_AGE_DAYS) {
-            return unusable(ageDays, pack,
-                    "This child is " + ageDays + " days old. The sick young infant (up to 2 months) "
-                    + "pathway applies, not the 2-months-to-5-years tables; use the young-infant "
-                    + "assessment and the possible-serious-bacterial-infection danger signs.");
-        }
-
         Map<String, Object> flat = flatten(facts);
         flat.putIfAbsent("ageDays", ageDays);
 
@@ -123,6 +128,7 @@ public class ImnciClassificationService {
 
         return new Assessment(
                 ageDays,
+                youngInfant ? "SICK_YOUNG_INFANT_0_TO_2_MONTHS" : "SICK_CHILD_2_MONTHS_TO_5_YEARS",
                 true,
                 List.copyOf(outcomes),
                 urgent,
@@ -166,7 +172,7 @@ public class ImnciClassificationService {
     }
 
     private Assessment unusable(Integer ageDays, ClassificationContentLoader.Pack pack, String note) {
-        return new Assessment(ageDays, false, List.of(), false, false, true, List.of(), List.of(), List.of(),
+        return new Assessment(ageDays, null, false, List.of(), false, false, true, List.of(), List.of(), List.of(),
                 "COMPLETE_ASSESSMENT_BEFORE_DISPOSITION",
                 pack.version(), pack.provenance(), pack.approvalStatus(), note);
     }

@@ -202,13 +202,23 @@ class ImnciClassificationServiceTest {
     // --- age routing ----------------------------------------------------------------------------
 
     @Test
-    void aYoungInfantIsRoutedAwayFromTheseTablesRatherThanClassifiedByThem() {
-        var a = service.evaluate(30, facts("cough", "PRESENT"));
+    void aYoungInfantIsAssessedByTheYoungInfantChartNotTheChildOne() {
+        var a = service.evaluate(30, facts("feeding", "GOOD"));
 
-        assertThat(a.applicable()).isFalse();
-        assertThat(a.classifications()).isEmpty();
-        assertThat(a.note()).contains("young infant");
-        assertThat(a.disposition()).isEqualTo("COMPLETE_ASSESSMENT_BEFORE_DISPOSITION");
+        assertThat(a.pathway()).isEqualTo("SICK_YOUNG_INFANT_0_TO_2_MONTHS");
+        // None of the older-child tables appear; the young-infant ones do.
+        List<String> tables = a.classifications().stream()
+                .map(ClassificationEngine.Outcome::tableId).toList();
+        assertThat(tables).contains("IMNCI_YI_BACTERIAL_INFECTION", "IMNCI_YI_JAUNDICE");
+        assertThat(tables).doesNotContain("IMNCI_PNEUMONIA", "IMNCI_ANAEMIA");
+    }
+
+    @Test
+    void theChartSwitchesAtExactlyTwoMonths() {
+        // 59 days is a young infant; 60 days is a child. The boundary is load-bearing — the
+        // fast-breathing threshold alone differs by 10 breaths a minute across it.
+        assertThat(service.evaluate(59, facts()).pathway()).isEqualTo("SICK_YOUNG_INFANT_0_TO_2_MONTHS");
+        assertThat(service.evaluate(60, facts()).pathway()).isEqualTo("SICK_CHILD_2_MONTHS_TO_5_YEARS");
     }
 
     @Test
