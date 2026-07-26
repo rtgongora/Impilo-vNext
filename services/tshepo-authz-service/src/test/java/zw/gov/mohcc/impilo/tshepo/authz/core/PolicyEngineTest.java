@@ -542,6 +542,90 @@ class PolicyEngineTest {
         assertEquals(Verdict.DENY, discharged.verdict(), "amend on a DISCHARGED transaction is blocked");
     }
 
+    // ── jurisdiction (RB-2c) ────────────────────────────────────────────────
+    //
+    // A regulator's authority is bounded by WHERE as well as by which organisation. Before this
+    // dimension existed, an inspector appointed for one province held a session indistinguishable
+    // from a national one — and the appointment's jurisdiction, though read by the BFF, was never
+    // put on the token at all.
+
+    private static DutyContext regulatoryDuty(String jurisdiction) {
+        return new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                null, null, null, null, null, "org-1", null, "INSPECTOR", null, jurisdiction);
+    }
+
+    @Test
+    @DisplayName("jurisdiction: allowed_jurisdictions gates to the appointed jurisdiction")
+    void evaluate_jurisdiction_gate() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("insp", "INSPECTOR", "POST",
+                "{\"path_contains\": \"/x/insp\", \"allowed_jurisdictions\": [\"HARARE\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        AuthzResponse ok = policyEngine.evaluate(dimRequest("/x/insp", "insp", "POST:/x/insp",
+                List.of("INSPECTOR"), null, null, null, regulatoryDuty("HARARE")));
+        assertEquals(Verdict.ALLOW, ok.verdict(), "the appointed jurisdiction is allowed");
+
+        AuthzResponse elsewhere = policyEngine.evaluate(dimRequest("/x/insp", "insp", "POST:/x/insp",
+                List.of("INSPECTOR"), null, null, null, regulatoryDuty("BULAWAYO")));
+        assertEquals(Verdict.DENY, elsewhere.verdict(),
+                "an inspector appointed elsewhere may not act in this jurisdiction");
+    }
+
+    @Test
+    @DisplayName("jurisdiction: NATIONAL duty satisfies a province-scoped rule")
+    void evaluate_jurisdiction_nationalIsAWildcardOnTheDutySide() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("insp", "INSPECTOR", "POST",
+                "{\"path_contains\": \"/x/insp\", \"allowed_jurisdictions\": [\"HARARE\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        AuthzResponse national = policyEngine.evaluate(dimRequest("/x/insp", "insp", "POST:/x/insp",
+                List.of("INSPECTOR"), null, null, null, regulatoryDuty("NATIONAL")));
+        assertEquals(Verdict.ALLOW, national.verdict(),
+                "a nationally-appointed officer covers any province");
+    }
+
+    /**
+     * The dimension must fail closed. A caller with no duty token has not proven any jurisdiction,
+     * and treating "unknown" as "anywhere" would make the condition decorative — the same defect
+     * as an unimplemented key, reached by a different route.
+     */
+    @Test
+    @DisplayName("jurisdiction: no duty token proves no jurisdiction, so the rule does not match")
+    void evaluate_jurisdiction_absentDutyIsDenied() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("insp", "INSPECTOR", "POST",
+                "{\"path_contains\": \"/x/insp\", \"allowed_jurisdictions\": [\"HARARE\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        AuthzResponse noToken = policyEngine.evaluate(dimRequest("/x/insp", "insp", "POST:/x/insp",
+                List.of("INSPECTOR"), null, null, null, DutyContext.absent()));
+        assertEquals(Verdict.DENY, noToken.verdict(),
+                "an unproven jurisdiction is not a satisfied jurisdiction");
+    }
+
+    /**
+     * A revoked token must not carry authority forward. Without {@code usable()} gating, the claims
+     * of a token the trust plane has already torn down would still satisfy the condition.
+     */
+    @Test
+    @DisplayName("jurisdiction: a revoked duty token proves nothing")
+    void evaluate_jurisdiction_revokedDutyIsDenied() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("insp", "INSPECTOR", "POST",
+                "{\"path_contains\": \"/x/insp\", \"allowed_jurisdictions\": [\"HARARE\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        AuthzResponse revoked = policyEngine.evaluate(dimRequest("/x/insp", "insp", "POST:/x/insp",
+                List.of("INSPECTOR"), null, null, null, DutyContext.revoked()));
+        assertEquals(Verdict.DENY, revoked.verdict(), "a revoked token carries no jurisdiction");
+    }
+
     @Test
     @DisplayName("department: allowed_departments gates to the matching department")
     void evaluate_department_gate() {
@@ -591,7 +675,7 @@ class PolicyEngineTest {
         // The Keycloak claim carries NO CLINICIAN role; the duty token proves NURSE_ONCOLOGY_SNR,
         // which the catalog maps to CLINICIAN. Facility/actor match so the token is trusted.
         DutyContext duty = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
-                FACILITY_ID.toString(), null, null, null, null, null, null, "NURSE_ONCOLOGY_SNR", null);
+                FACILITY_ID.toString(), null, null, null, null, null, null, "NURSE_ONCOLOGY_SNR", null, null);
         AuthzResponse resp = policyEngine.evaluate(dimRequest("/x/note", "note", "POST:/x/note",
                 List.of(), null, null, null, duty));
 
