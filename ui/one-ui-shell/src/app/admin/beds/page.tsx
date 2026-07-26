@@ -25,6 +25,16 @@ export default function AdminBedsPage() {
   const [wardName, setWardName] = useState("");
   const [wardType, setWardType] = useState("GENERAL");
   const [totalBeds, setTotalBeds] = useState(6);
+  const [floorLabel, setFloorLabel] = useState("");
+  const [genderDesignation, setGenderDesignation] = useState("ANY");
+  const [ageGroup, setAgeGroup] = useState("ADULT");
+  // Capabilities start unticked and are sent as stated. The bed-safety evaluator treats an
+  // undeclared capability as absent, so defaulting these to true would let the form promise
+  // oxygen or intensive care that the ward has not been confirmed to have.
+  const [isolationCapable, setIsolationCapable] = useState(false);
+  const [oxygenAvailable, setOxygenAvailable] = useState(false);
+  const [monitoringCapable, setMonitoringCapable] = useState(false);
+  const [icuCapable, setIcuCapable] = useState(false);
   const patientId = searchParams.get("patientId");
   const encounterId = searchParams.get("encounterId");
   const source = searchParams.get("source");
@@ -149,11 +159,76 @@ export default function AdminBedsPage() {
               <input type="number" min="1" max="50" value={totalBeds} onChange={(e) => setTotalBeds(Number(e.target.value))}
                 className="px-3 py-2 text-sm border border-border rounded-lg" />
             </div>
-            <button onClick={() => createWard.mutate({ name: wardName, wardType, totalBeds, facilityId: facility?.id })}
+
+            {/* Placement safety. These are not preferences: the bed-safety evaluator refuses to
+                admit a patient needing oxygen, isolation, monitoring or intensive care to a ward
+                that does not offer it. Anything left unticked is recorded as absent rather than
+                assumed present, so an unconfigured ward blocks a placement instead of accepting
+                one it cannot support. */}
+            <div className="mt-4 rounded-lg border border-border bg-background/60 p-3">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                Ward capabilities
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tick only what this ward genuinely provides. Anything left unticked is recorded as
+                not available, and patients needing it will not be placed here.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+                <select value={genderDesignation} onChange={(e) => setGenderDesignation(e.target.value)}
+                  className="px-3 py-2 text-sm border border-border rounded-lg" aria-label="Gender designation">
+                  <option value="ANY">Any gender</option>
+                  <option value="MALE">Male only</option>
+                  <option value="FEMALE">Female only</option>
+                </select>
+                <select value={ageGroup} onChange={(e) => setAgeGroup(e.target.value)}
+                  className="px-3 py-2 text-sm border border-border rounded-lg" aria-label="Age group">
+                  <option value="ADULT">Adult</option>
+                  <option value="PAEDIATRIC">Paediatric</option>
+                  <option value="NEONATAL">Neonatal</option>
+                  <option value="ANY">Any age</option>
+                </select>
+                <input type="text" placeholder="Floor (optional)" value={floorLabel}
+                  onChange={(e) => setFloorLabel(e.target.value)}
+                  className="px-3 py-2 text-sm border border-border rounded-lg" aria-label="Floor label" />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-4">
+                {([
+                  ["Oxygen available", oxygenAvailable, setOxygenAvailable],
+                  ["Isolation capable", isolationCapable, setIsolationCapable],
+                  ["Monitoring capable", monitoringCapable, setMonitoringCapable],
+                  ["ICU capable", icuCapable, setIcuCapable],
+                ] as const).map(([label, value, setter]) => (
+                  <label key={label} className="inline-flex items-center gap-2 text-sm text-foreground">
+                    <input type="checkbox" checked={value} onChange={(e) => setter(e.target.checked)}
+                      className="h-4 w-4 rounded border-border" />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={() => createWard.mutate({
+                name: wardName,
+                wardType,
+                totalBeds,
+                facilityId: facility?.id,
+                floorLabel: floorLabel || undefined,
+                genderDesignation,
+                ageGroup,
+                isolationCapable,
+                oxygenAvailable,
+                monitoringCapable,
+                icuCapable,
+              })}
               disabled={!wardName || createWard.isPending}
               className="mt-3 px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary-hover disabled:opacity-50">
               {createWard.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Ward & Beds"}
             </button>
+            {createWard.isError && (
+              <p className="mt-2 text-sm text-destructive">
+                Ward was not created. {(createWard.error as Error)?.message ?? "Please try again."}
+              </p>
+            )}
           </div>
         )}
 

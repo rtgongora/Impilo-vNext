@@ -65,10 +65,12 @@ class DownstreamRouteContractTest {
      * Each line is a real defect, not an exemption.
      *
      * <ul>
-     *   <li><b>Tuso shifts / staffing / wards</b> — tuso-service serves shifts at
+     *   <li><b>Tuso shifts / staffing</b> — tuso-service serves shifts at
      *       {@code /v1/internal/facilities/{facilityId}/...}; nothing in the estate serves
-     *       {@code /v1/staffing} or {@code /v1/wards} at all. Shift start/end, the on-call roster,
-     *       swaps and the ward list are dead. Reported to the workforce/facility lane.</li>
+     *       {@code /v1/staffing} at all, so the roster-week read, the on-call roster and swaps are
+     *       dead. Being completed in vashandi, which owns {@code vsh_roster}/{@code vsh_shift}.
+     *       ({@code /v1/wards} was on this list and is fixed — ward create now goes to
+     *       inpatient-service, where ward reads already went.)</li>
      *   <li><b>Adult Medicine {@code /v1/ehr}</b> — the structured-history vertical, owed a system
      *       of record by that pack's W2. Its responses already name the owning lane and wave.</li>
      *   <li><b>FHIR gateway</b> — proxied to HAPI rather than declared as Spring routes, so the
@@ -80,11 +82,15 @@ class DownstreamRouteContractTest {
     private static final Set<String> BASELINE = Set.of(
             // ── Workforce / facility lane ────────────────────────────────────────
             // tuso-service serves shifts at /v1/internal/facilities/{facilityId}/…; nothing in the
-            // estate serves /v1/staffing or /v1/wards at all. Shift start/end, the on-call roster,
-            // swaps and the ward list are dead.
+            // estate serves /v1/staffing at all, so the roster-week read, the on-call roster and
+            // swaps are dead. Being completed in vashandi (vsh_roster/vsh_shift), which owns them.
+            //
+            // /v1/wards is FIXED and gone from this list: hospital wards are inpatient-service's
+            // (inpatient.ward), which is also where the BFF already read them from, so ward create
+            // was repointed there rather than built in tuso. Tuso's `wards` are zw_admin_ward —
+            // electoral wards on the geography API — a different thing wearing the same word.
             "TusoServiceClient -> /v1/shifts",
             "TusoServiceClient -> /v1/staffing",
-            "TusoServiceClient -> /v1/wards",
 
             // ── LIVE AND BROKEN — needs completion, not deletion ─────────────────
             // /v1/vitals has real callers (VitalsController and the patient surfaces) and pct
