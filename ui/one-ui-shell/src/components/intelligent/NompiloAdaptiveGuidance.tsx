@@ -1,25 +1,42 @@
 "use client";
 
 /**
- * Nompilo Adaptive Guidance — Stateful, non-blocking 6-stage lifecycle
- * for identity and journey guidance.
+ * Nompilo Adaptive Guidance — stateful, non-blocking guidance that accompanies a
+ * journey instead of interrupting it.
  *
  * Lifecycle: Arrival -> Reading Period -> Gentle Fade -> Re-expansion -> Context Change -> User Control.
+ *
+ * Modes (doctrine §11 — Nompilo guides the active journey, it does not sit in a footer):
+ *  - "inline"    default. Collapses to an expandable pill after the reading period.
+ *  - "advisory"  never auto-collapses. For guidance a person must not miss (safety,
+ *                what a service can and cannot do). Still dismissible by the user.
+ *  - "companion" sticks alongside the task on wide screens, flowing inline on mobile
+ *                so it never covers content on a phone.
+ *
+ * It never covers input fields, primary actions or emergency controls: it renders in
+ * flow, and the pill it collapses to is a sibling of the content, not an overlay.
  */
 
 import { useEffect, useRef, useState } from "react";
 import { Bot, ChevronDown, ChevronUp, Sparkles, X } from "lucide-react";
 
+export type NompiloGuidanceMode = "inline" | "advisory" | "companion";
+
 interface NompiloAdaptiveGuidanceProps {
   contextMessage: string;
   suggestions?: string[];
   id?: string;
+  mode?: NompiloGuidanceMode;
+  /** Short label for the collapsed pill. Defaults to a journey-neutral prompt. */
+  collapsedLabel?: string;
 }
 
 export function NompiloAdaptiveGuidance({
   contextMessage,
   suggestions = [],
   id = "auth-guidance",
+  mode = "inline",
+  collapsedLabel,
 }: NompiloAdaptiveGuidanceProps) {
   const [expanded, setExpanded] = useState(true);
   const [dismissed, setDismissed] = useState(false);
@@ -35,7 +52,10 @@ export function NompiloAdaptiveGuidance({
 
   // Stage 2 -> 3: reading-period auto-collapse into pill after 8s, but NEVER while the user is
   // hovering, keyboard-focused inside it, or has requested reduced motion (a11y doctrine).
+  // Advisory guidance never auto-collapses — it is the mode used for things a person
+  // should not miss, so only an explicit minimise/dismiss closes it.
   useEffect(() => {
+    if (mode === "advisory") return;
     if (!expanded || dismissed || hovered || focused || reducedMotion) return;
     timerRef.current = setTimeout(() => {
       setExpanded(false);
@@ -43,7 +63,7 @@ export function NompiloAdaptiveGuidance({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [expanded, dismissed, hovered, focused, reducedMotion]);
+  }, [expanded, dismissed, hovered, focused, reducedMotion, mode]);
 
   if (dismissed) return null;
 
@@ -56,7 +76,7 @@ export function NompiloAdaptiveGuidance({
         className="mt-3 inline-flex items-center gap-2 rounded-full border border-violet-300 bg-violet-50/90 px-3.5 py-1.5 text-xs font-semibold text-violet-900 shadow-sm hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600"
       >
         <Sparkles className="h-3.5 w-3.5 text-violet-600" aria-hidden />
-        <span>Why do I need to sign in?</span>
+        <span>{collapsedLabel ?? "Why do I need to sign in?"}</span>
         <ChevronDown className="h-3.5 w-3.5 text-violet-500" aria-hidden />
       </button>
     );
@@ -71,7 +91,9 @@ export function NompiloAdaptiveGuidance({
       onBlurCapture={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocused(false);
       }}
-      className="mt-4 rounded-2xl border border-violet-200 bg-violet-50/80 p-4 shadow-sm"
+      className={`mt-4 rounded-2xl border border-violet-200 bg-violet-50/80 p-4 shadow-sm${
+        mode === "companion" ? " lg:sticky lg:top-24" : ""
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">

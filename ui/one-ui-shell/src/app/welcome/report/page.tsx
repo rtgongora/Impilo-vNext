@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
 import { ReportIncidentTriage } from "@/components/public/ReportIncidentTriage";
+import { NompiloAdaptiveGuidance } from "@/components/intelligent/NompiloAdaptiveGuidance";
 
 export const metadata = {
   title: "Report a health incident — Impilo",
@@ -32,6 +33,20 @@ export default function ReportIncidentPage() {
           handled immediately and are never blocked by sign-in.
         </p>
       </section>
+
+      {/* Advisory: anonymity and the claim code are consequential choices a person
+          must not miss, so this guidance does not auto-collapse. */}
+      <NompiloAdaptiveGuidance
+        id="report-guidance"
+        mode="advisory"
+        collapsedLabel="How is my report handled?"
+        contextMessage="Tell us what happened in your own words. You can report anonymously — you do not need an Impilo ID, and you are not asked to identify the person involved."
+        suggestions={[
+          "Anonymous reports cannot be followed up with you directly. Add contact details only if you want a response.",
+          "Keep the claim code you are given — it is how you check progress later without signing in.",
+          "If someone is in immediate danger, use Emergency instead. This form is not monitored in real time.",
+        ]}
+      />
 
       <ReportIncidentTriage />
 

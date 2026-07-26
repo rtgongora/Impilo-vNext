@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
 import { FindCareExperience } from "@/components/public/find-care/FindCareExperience";
+import { NompiloAdaptiveGuidance } from "@/components/intelligent/NompiloAdaptiveGuidance";
 
 export const metadata = {
   title: "Find health services — Impilo",
@@ -52,6 +53,21 @@ export default function FindCarePage() {
           Emergency information
         </Link>
       </div>
+
+      {/* Nompilo companion on the active journey (doctrine §11). Advisory mode: it states
+          what this search can and cannot tell you, which a person should not miss, so it
+          does not auto-collapse. Renders in flow — never over the search or its actions. */}
+      <NompiloAdaptiveGuidance
+        id="find-care-guidance"
+        mode="advisory"
+        collapsedLabel="What can this search tell me?"
+        contextMessage="Tell me what care you need in ordinary words — a service like maternity or X-ray, or a need like 'somewhere to get insulin'. Sharing your location is optional and only sorts results by distance."
+        suggestions={[
+          "Results come from the national facility register, so a listing means the service is recorded — not that it is open right now.",
+          "Opening hours are not a live signal, so check by phone before travelling.",
+          "You can search, compare and get directions without signing in. Signing in is only needed to book or save a facility.",
+        ]}
+      />
 
       <div className="mt-8">
         <FindCareExperience />
