@@ -249,7 +249,13 @@ public class WorkContextController {
         issueRequest.put("assignmentId", text(matched, "id"));
         issueRequest.put("roleTemplateId", text(matched, "roleCode"));
         issueRequest.put("purposeOfUse", "REGULATORY_DUTY");
+        // The appointment's jurisdiction bounds the session. It was read here and used only to
+        // decorate the response — the minted token never carried it, so the PDP had no jurisdiction
+        // to enforce and a province-scoped inspector held a national session.
         String jurisdiction = text(matched, "jurisdictionCode");
+        if (jurisdiction != null && !jurisdiction.isBlank()) {
+            issueRequest.put("jurisdictionCode", jurisdiction);
+        }
         if (previousJti != null) {
             issueRequest.put("previousJti", previousJti);
         }

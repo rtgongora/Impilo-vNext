@@ -2,7 +2,7 @@ package zw.gov.mohcc.impilo.experience.scheduling;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
-import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -18,10 +18,13 @@ import java.util.Set;
 @Component
 public class AppointmentProviderRecipientResolver {
 
-    private final TusoServiceClient tusoClient;
+    // Repointed from tuso: this resolver read the on-call rota from tuso /v1/staffing/on-call, a
+    // path no service serves, so resolveFacilityStaff has always come back empty and appointment
+    // notifications never reached facility staff. Rostering is vashandi's.
+    private final VashandiServiceClient vashandiClient;
 
-    public AppointmentProviderRecipientResolver(TusoServiceClient tusoClient) {
-        this.tusoClient = tusoClient;
+    public AppointmentProviderRecipientResolver(VashandiServiceClient vashandiClient) {
+        this.vashandiClient = vashandiClient;
     }
 
     public List<String> resolve(String providerId, String facilityId) {
@@ -43,12 +46,18 @@ public class AppointmentProviderRecipientResolver {
         Set<String> recipients = new LinkedHashSet<>();
         try {
             String weekStart = LocalDate.now().with(DayOfWeek.MONDAY).toString();
-            JsonNode onCall = tusoClient.listOnCall(facilityId, weekStart);
+            JsonNode onCall = vashandiClient.listOnCall(facilityId, weekStart);
             if (onCall != null && onCall.isArray()) {
                 for (JsonNode row : onCall) {
-                    addIfPresent(recipients, row, "provider_id", "providerId", "actor:");
-                    addIfPresent(recipients, row, "staff_id", "staffId", "staff:");
-                    addIfPresent(recipients, row, "primary_staff_id", "primaryStaffId", "staff:");
+                    // The rota is a resource envelope: identifiers live under "attributes", and the
+                    // person reference vashandi holds is the workforce profile id. Reading the old
+                    // flat provider_id/staff_id keys would compile, run, and quietly resolve nobody
+                    // — which is how this path came to be silently empty in the first place.
+                    JsonNode attributes = row.has("attributes") ? row.get("attributes") : row;
+                    addIfPresent(recipients, attributes,
+                            "primary_workforce_profile_id", "primaryWorkforceProfileId", "staff:");
+                    addIfPresent(recipients, attributes,
+                            "backup_workforce_profile_id", "backupWorkforceProfileId", "staff:");
                 }
             }
         } catch (Exception ignored) {

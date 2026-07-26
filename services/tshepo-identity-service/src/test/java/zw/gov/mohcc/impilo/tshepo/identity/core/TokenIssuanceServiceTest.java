@@ -482,6 +482,7 @@ class TokenIssuanceServiceTest {
                     null,   // wardId
                     null,   // programmeId
                     null,   // organisationId
+                    null,   // jurisdictionCode
                     null,   // assignmentId
                     UUID.fromString("22222222-2222-4222-8222-222222222222"),
                     "NURSE_GENERAL",
