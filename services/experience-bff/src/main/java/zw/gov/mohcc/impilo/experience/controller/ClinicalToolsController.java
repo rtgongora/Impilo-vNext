@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -127,9 +128,12 @@ public class ClinicalToolsController {
                     "data", pending != null ? pending : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Offline reconcile pending list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty pending list reads as "everything captured offline has been reconciled",
+            // which is how offline-captured clinical data goes missing without anyone noticing.
+            log.error("Offline reconcile pending list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "offline_reconcile_queue_unavailable",
+                    "message", "Pending offline batches could not be retrieved. Do not treat this as an empty reconcile queue.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
