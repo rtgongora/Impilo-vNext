@@ -71,6 +71,14 @@ public class FormResolverService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private zw.gov.mohcc.impilo.pct.persistence.repository.ObservationRepository observationRepository;
 
+    /**
+     * The medicine list, for interaction and duplicate-therapy checking. Field-injected and
+     * optional for the same reason as the others: form resolution underpins every clinical
+     * encounter and must not fail because one collaborator is unavailable.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.pct.integration.OrosMedicationIntegration orosMedicationIntegration;
+
     public FormResolverService(EncounterRepository encounterRepository,
                                VitoIntegration vitoIntegration,
                                FormsCatalogIntegration formsCatalogIntegration,
@@ -190,15 +198,25 @@ public class FormResolverService {
                 gestationalAgeWeeks(cpid),
                 latestMeasurement(tenantId, cpid, WEIGHT_CODES, "MEASURED"),
                 latestMeasurement(tenantId, cpid, EGFR_CODES, null),
-                // Hepatic impairment and the current medicine list are deliberately not derived
-                // here. Both live outside pct-service — hepatic staging in the governed Child-Pugh
-                // instrument this lane owes, the medicine list in OROS — and a service-to-service
-                // call needs its own client_credentials token (fleet DoD; trust headers are not
-                // authentication). Deriving them from whatever is locally to hand would produce a
-                // fact that looks authoritative and is not, which is worse than null: null makes a
-                // rule decline to score and say why.
+                // Hepatic impairment still comes from the governed Child-Pugh instrument this lane
+                // owes, which does not exist yet. Null, not "NONE" — an unstaged liver is not a
+                // healthy one, and a rule needing the stage must decline to score and say why.
                 null,
-                null);
+                currentMedications(tenantId, cpid));
+    }
+
+    /**
+     * The patient's current medicines, from OROS.
+     *
+     * <p>Returns null rather than an empty list whenever OROS could not be asked. An empty list is
+     * an affirmative clinical claim — an interaction checker reads it as "nothing to interact
+     * with" — so producing one from a failed call would manufacture a confident all-clear.</p>
+     */
+    private List<String> currentMedications(java.util.UUID tenantId, String cpid) {
+        if (blank(cpid) || orosMedicationIntegration == null) {
+            return null;
+        }
+        return orosMedicationIntegration.currentMedicationCodes(tenantId, cpid);
     }
 
     /** LOINC codes for body weight. */
