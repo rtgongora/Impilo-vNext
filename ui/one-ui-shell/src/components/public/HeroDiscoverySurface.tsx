@@ -616,61 +616,46 @@ export function HeroDiscoverySurface() {
                     : { latitude: location.lat, longitude: location.lng, zoom: 11 }
                 }
               />
-              {/* Selected-result card, over the map so the map stays the dominant visual. */}
+              {/*
+                Selected result, as a compact bar rather than a panel. The map is ~206px
+                tall at 1366x768, so a full card covered it entirely — and it sat under the
+                map's own zoom column, which punched through the text. Inset past that
+                column and raised above it.
+              */}
               {selectedResult && (
-                <div className="absolute inset-x-2 bottom-2 z-[5]">
-                  <div className="rounded-xl border border-emerald-300 bg-white/95 p-3 shadow-lg backdrop-blur-sm">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                            CATEGORY_BADGE[selectedResult.category] ?? "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {selectedResult.type}
-                        </span>
-                        <p className="mt-1 truncate text-sm font-bold text-slate-900">
-                          {selectedResult.title}
-                        </p>
-                        {selectedResult.subtitle && (
-                          <p className="truncate text-xs text-slate-500">{selectedResult.subtitle}</p>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        aria-label="Close selected result"
-                        onClick={() => setSelectedKey(null)}
-                        className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                      >
-                        <X className="h-4 w-4" aria-hidden />
-                      </button>
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                      {selectedResult.availability && (
-                        <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                          {selectedResult.availability}
-                        </span>
-                      )}
-                      {formatKm(selectedResult.distanceMeters) && (
-                        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
-                          {formatKm(selectedResult.distanceMeters)}
-                          {selectedResult.etaMinutes != null && ` · ~${selectedResult.etaMinutes} min`}
-                        </span>
-                      )}
-                      {selectedResult.meta.map((m) => (
-                        <span key={m} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
-                          {m}
-                        </span>
-                      ))}
+                <div className="absolute inset-x-2 bottom-2 z-30 sm:left-16">
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold leading-tight text-slate-900">
+                        {selectedResult.title}
+                      </p>
+                      <p className="truncate text-[11px] leading-tight text-slate-500">
+                        {[
+                          selectedResult.type,
+                          formatKm(selectedResult.distanceMeters),
+                          selectedResult.availability,
+                          selectedResult.subtitle,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
                     </div>
                     {selectedResult.href && selectedResult.actionLabel && (
                       <Link
                         href={selectedResult.href}
-                        className="mt-2 inline-flex min-h-9 items-center rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+                        className="shrink-0 rounded-lg bg-emerald-700 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
                       >
                         {selectedResult.actionLabel}
                       </Link>
                     )}
+                    <button
+                      type="button"
+                      aria-label="Close selected result"
+                      onClick={() => setSelectedKey(null)}
+                      className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
                   </div>
                 </div>
               )}
