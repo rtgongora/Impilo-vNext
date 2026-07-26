@@ -23,11 +23,14 @@ import { OrganizationPlaneContextBar } from "@/components/experience/Organizatio
 import { PageShell } from "@/components/PageShell";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import {
+  identityResolutionFailed,
+  staffLabel,
   useCreateOnCallSwap,
   useOnCallSwaps,
   useOnCallWeek,
   usePatchOnCallSwap,
   type OnCallAssignmentResource,
+  type OnCallSwapResource,
 } from "@/hooks/queries/useStaffing";
 
 function getMonday(d: Date): Date {
@@ -64,6 +67,17 @@ const SPECIALTY_COLORS: Record<string, string> = {
   Obstetrics: "bg-pink-100 text-pink-700",
 };
 
+/**
+ * A swap row carries no worker reference — vashandi keys swaps on ids, deliberately, because two
+ * staff share a name. So an unresolved party falls back to the profile id in full: long, but it is
+ * the identifier the request was actually made against, and it cannot be confused with a name.
+ */
+function swapPartyLabel(displayName: string | null | undefined, profileId: string | null): string {
+  const name = displayName?.trim();
+  if (name) return name;
+  return profileId ?? "—";
+}
+
 function mapUiSwapStatus(s: string): "Pending" | "Approved" | "Declined" {
   if (s === "APPROVED") return "Approved";
   if (s === "DECLINED") return "Declined";
@@ -89,12 +103,20 @@ export default function OnCallPage() {
     facilityId: facility?.id,
     weekStartISO,
   });
-  const { data: swapsRes, isLoading: swapsLoading } = useOnCallSwaps(facility?.id);
+  const {
+    data: swapsRes,
+    isLoading: swapsLoading,
+    isError: swapsError,
+  } = useOnCallSwaps(facility?.id);
   const patchSwap = usePatchOnCallSwap();
   const createSwap = useCreateOnCallSwap();
 
   const schedule: OnCallAssignmentResource[] = useMemo(() => weekRes?.data ?? [], [weekRes?.data]);
   const swaps = useMemo(() => swapsRes?.data ?? [], [swapsRes?.data]);
+  // Names absent because the registries did not answer is a different fact from names absent
+  // because these people have no registry record, and only the first one is a fault to report.
+  const namesUnavailable =
+    identityResolutionFailed(weekRes?.meta) || identityResolutionFailed(swapsRes?.meta);
 
   const dates = useMemo(() => {
     const set = new Set(schedule.map((s) => s.attributes.assignment_date));
@@ -148,6 +170,12 @@ export default function OnCallPage() {
         ? {
             shiftId: s.attributes.primary_shift_id,
             profileId: s.attributes.primary_workforce_profile_id,
+            // The person, however they can be named: registry name first, worker reference
+            // otherwise. Picking a colleague by raw profile UUID is how the wrong person gets
+            // asked to cover a night.
+            personLabel:
+              staffLabel(s.attributes.primary_display_name, s.attributes.primary_staff_reference) ??
+              "Unnamed colleague",
             label: `${s.attributes.assignment_date} · ${s.attributes.specialty} · first call`,
           }
         : null,
@@ -155,6 +183,9 @@ export default function OnCallPage() {
         ? {
             shiftId: s.attributes.backup_shift_id,
             profileId: s.attributes.backup_workforce_profile_id,
+            personLabel:
+              staffLabel(s.attributes.backup_display_name, s.attributes.backup_staff_reference) ??
+              "Unnamed colleague",
             label: `${s.attributes.assignment_date} · ${s.attributes.specialty} · second call`,
           }
         : null,
@@ -186,6 +217,26 @@ export default function OnCallPage() {
         {!facility?.id ? (
           <div className="rounded-lg border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
             Select a facility to load on-call assignments.
+          </div>
+        ) : null}
+
+        {namesUnavailable ? (
+          <div
+            role="status"
+            className="mb-4 rounded-lg border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground"
+          >
+            Staff names could not be looked up just now — the rota below shows worker references
+            instead. These are the people rostered; only their names are missing.
+          </div>
+        ) : null}
+
+        {swapsError ? (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-red-800"
+          >
+            Swap requests could not be loaded. Any pending swap for this week is not shown here — do
+            not read this as &ldquo;no swaps requested&rdquo;.
           </div>
         ) : null}
 
@@ -268,7 +319,7 @@ export default function OnCallPage() {
                       <option value="">Select a rostered shift…</option>
                       {rosteredShifts.map((r) => (
                         <option key={r.shiftId} value={r.shiftId}>
-                          {r.label}
+                          {r.label} · {r.personLabel}
                         </option>
                       ))}
                     </select>
@@ -288,7 +339,7 @@ export default function OnCallPage() {
                           .map((r) => [r.profileId, r])
                       ).values()].map((r) => (
                         <option key={r.profileId!} value={r.profileId!}>
-                          {r.profileId}
+                          {r.personLabel}
                         </option>
                       ))}
                     </select>
@@ -338,8 +389,8 @@ export default function OnCallPage() {
                   return (
                     <div key={sw.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-card rounded-lg p-3 mt-2">
                       <div className="text-xs text-muted-foreground">
-                        <span className="font-medium">{a.requesting_workforce_profile_id}</span> asks{" "}
-                        <span className="font-medium">{a.requested_workforce_profile_id}</span> to cover their shift
+                        <span className="font-medium">{swapPartyLabel(a.requesting_display_name, a.requesting_workforce_profile_id)}</span> asks{" "}
+                        <span className="font-medium">{swapPartyLabel(a.requested_display_name, a.requested_workforce_profile_id)}</span> to cover their shift
                         {a.reason ? <> — {a.reason}</> : null}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -444,9 +495,13 @@ export default function OnCallPage() {
                             <tr key={oc.id} className="border-b border-border hover:bg-background">
                               <td className="px-4 py-3 text-foreground">{o.assignment_date}</td>
                               <td className="px-4 py-3 text-foreground">{o.specialty}</td>
-                              <td className="px-4 py-3 text-foreground">{o.primary_staff_reference ?? "—"}</td>
                               <td className="px-4 py-3 text-foreground">
-                                {o.backup_staff_reference ?? (
+                                {staffLabel(o.primary_display_name, o.primary_staff_reference) ?? "—"}
+                              </td>
+                              <td className="px-4 py-3 text-foreground">
+                                {o.backup_workforce_profile_id ? (
+                                  staffLabel(o.backup_display_name, o.backup_staff_reference) ?? "—"
+                                ) : (
                                   <span className="text-amber-700">No second on call</span>
                                 )}
                               </td>
@@ -488,9 +543,13 @@ export default function OnCallPage() {
                       const ui = mapUiSwapStatus(a.status);
                       return (
                         <tr key={sw.id} className="border-b border-border hover:bg-background transition-colors">
-                          <td className="px-4 py-3 text-foreground">{a.requesting_workforce_profile_id}</td>
+                          <td className="px-4 py-3 text-foreground">
+                            {swapPartyLabel(a.requesting_display_name, a.requesting_workforce_profile_id)}
+                          </td>
                           <td className="px-4 py-3 text-muted-foreground">{a.created_at?.slice(0, 10) ?? "—"}</td>
-                          <td className="px-4 py-3 text-foreground">{a.requested_workforce_profile_id}</td>
+                          <td className="px-4 py-3 text-foreground">
+                            {swapPartyLabel(a.requested_display_name, a.requested_workforce_profile_id)}
+                          </td>
                           <td className="px-4 py-3 text-muted-foreground">{a.reason ?? "—"}</td>
                           <td className="px-4 py-3">
                             <span
@@ -523,6 +582,8 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
   const o = oc.attributes;
   const primaryPhone = o.primary_phone ?? "";
   const backupPhone = o.backup_phone ?? "";
+  const primaryLabel = staffLabel(o.primary_display_name, o.primary_staff_reference);
+  const backupLabel = staffLabel(o.backup_display_name, o.backup_staff_reference);
   return (
     <div key={oc.id} className="bg-card rounded-lg border border-border p-5">
       <div className="flex items-center justify-between mb-4">
@@ -540,11 +601,16 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary-soft text-primary flex items-center justify-center text-xs font-semibold">
-              {(o.primary_staff_reference ?? "—").slice(0, 2).toUpperCase()}
+              {(primaryLabel ?? "—").slice(0, 2).toUpperCase()}
             </div>
-            <span className="text-sm font-medium text-foreground">
-              {o.primary_staff_reference ?? "Not rostered"}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-foreground">
+                {primaryLabel ?? "Not rostered"}
+              </span>
+              {o.primary_profession ? (
+                <span className="text-[11px] text-muted-foreground">{o.primary_profession}</span>
+              ) : null}
+            </div>
           </div>
           {primaryPhone ? (
             <a href={`tel:${primaryPhone}`} className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary">
@@ -560,11 +626,16 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-neutral-100 text-muted-foreground flex items-center justify-center text-xs font-semibold">
-              {(o.backup_staff_reference ?? "—").slice(0, 2).toUpperCase()}
+              {(backupLabel ?? "—").slice(0, 2).toUpperCase()}
             </div>
-            {/* "Nobody is second on call tonight" is the most useful thing this card can say. */}
+            {/* "Nobody is second on call tonight" is the most useful thing this card can say, and
+                resolving names must never turn an uncovered night into a covered-looking one. */}
             <span className="text-sm text-foreground">
-              {o.backup_staff_reference ?? <span className="text-amber-700">No second on call</span>}
+              {o.backup_workforce_profile_id ? (
+                backupLabel ?? "Rostered — name unavailable"
+              ) : (
+                <span className="text-amber-700">No second on call</span>
+              )}
             </span>
           </div>
           {backupPhone ? (

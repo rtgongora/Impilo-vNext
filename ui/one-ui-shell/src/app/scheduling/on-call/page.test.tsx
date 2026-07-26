@@ -88,6 +88,89 @@ describe("OnCallPage", () => {
     expect(String(weekCall?.[0])).toContain("facility_id=f1000000-0000-0000-0000-000000000001");
   });
 
+  const rotaRow = (overrides: Record<string, unknown> = {}) => ({
+    id: "oc-1",
+    type: "OnCallAssignment",
+    attributes: {
+      assignment_date: "2026-04-06",
+      specialty: "Internal Medicine",
+      shift_kind: "24hr",
+      primary_workforce_profile_id: "11111111-1111-4111-8111-111111111111",
+      primary_staff_reference: "PW-004821",
+      primary_shift_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      primary_display_name: "Dr Tendai Moyo",
+      primary_profession: "MEDICAL_PRACTITIONER",
+      primary_phone: "+263770000000",
+      primary_phone_source: "PROVIDER_REGISTRY",
+      backup_workforce_profile_id: null,
+      backup_staff_reference: null,
+      backup_shift_id: null,
+      backup_display_name: null,
+      backup_phone: null,
+      ...overrides,
+    },
+  });
+
+  const serveRota = (row: ReturnType<typeof rotaRow>, meta: Record<string, unknown> = {}) => {
+    get.mockImplementation((path: string) => {
+      if (path.includes("/internal/v1/staffing/on-call/swaps")) {
+        return Promise.resolve({ data: [], meta });
+      }
+      return Promise.resolve({ data: [row], meta });
+    });
+  };
+
+  it("shows the resolved name and the registry phone number", async () => {
+    serveRota(rotaRow(), { identity_resolution: "LIVE" });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Dr Tendai Moyo").length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText("+263770000000").length).toBeGreaterThan(0);
+  });
+
+  /**
+   * The failure this guards. A rota whose names could not be resolved must not look like a rota of
+   * people who have no names — otherwise an identity-registry outage renders as normal operation.
+   */
+  it("says so when the registries could not be reached, and keeps the worker reference", async () => {
+    serveRota(
+      rotaRow({ primary_display_name: null, primary_phone: null, primary_phone_source: undefined }),
+      { identity_resolution: "UNAVAILABLE" }
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/names could not be looked up/i)).toBeInTheDocument();
+    });
+    expect(screen.getAllByText("PW-004821").length).toBeGreaterThan(0);
+  });
+
+  it("does not warn about names when resolution was live", async () => {
+    serveRota(rotaRow(), { identity_resolution: "LIVE" });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Dr Tendai Moyo").length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByText(/names could not be looked up/i)).not.toBeInTheDocument();
+  });
+
+  /** Resolving names must never turn an uncovered night into a covered-looking one. */
+  it("still reports an uncovered night once names resolve", async () => {
+    serveRota(rotaRow(), { identity_resolution: "LIVE" });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("No second on call").length).toBeGreaterThan(0);
+    });
+  });
+
   it("renders seeded specialty rows from API attributes", async () => {
     get.mockImplementation((path: string) => {
       if (path.includes("/internal/v1/staffing/on-call/swaps")) {
