@@ -105,3 +105,11 @@ export { TabBar } from "./layout/TabBar";
 export type { TabBarProps, TabItem } from "./layout/TabBar";
 export { DashboardSection } from "./layout/DashboardSection";
 export type { DashboardSectionProps } from "./layout/DashboardSection";
+
+// Facility regulatory disclosure (HPA-listed vs confirmed-operating).
+// Shared so citizen-app and provider-app cannot drift into two vocabularies.
+export { FacilityDisclosure, FacilityUnconfirmedTag, UnconfirmedField } from "./facility/FacilityDisclosure";
+// Predicate + types are JSX-free so non-presentational callers (filters, work-context
+// binding) can use them without importing React components.
+export { isUnconfirmedFacility, UNCONFIRMED_REGULATORY_STATUS } from "./facility/regulatory-status";
+export type { LocationPrecision } from "./facility/regulatory-status";

@@ -3,10 +3,10 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, RefreshControl } from "react-native";
-import { Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge } from "@impilo/mobile-design-system";
+import { FacilityUnconfirmedTag, Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge } from "@impilo/mobile-design-system";
 import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import { fetchFacilities, type FacilitySummary } from "../services/facilityService";
-import { FacilityUnconfirmedTag } from "../components/FacilityDisclosure";
+
 import { appStore, useAppStore } from "../stores/appStore";
 
 type Facility = FacilitySummary;

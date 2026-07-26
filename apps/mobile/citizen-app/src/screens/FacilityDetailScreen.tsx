@@ -11,7 +11,7 @@ import {
   UnconfirmedField,
   isUnconfirmedFacility,
   type LocationPrecision,
-} from "../components/FacilityDisclosure";
+} from "@impilo/mobile-design-system";
 
 interface FacilityResource {
   id: string;
