@@ -14,12 +14,16 @@ import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -42,7 +46,9 @@ class ProblemServiceTest {
     void setUp() {
         service = new ProblemService(problemRepository, outboxRepository, new ObjectMapper(), accessGuard);
         // Stand in for @PrePersist, which JPA fires on save and a mocked repository does not.
-        when(problemRepository.save(any())).thenAnswer(inv -> {
+        // Lenient because the vocabulary-rejection tests never reach a save — which is the point:
+        // an unrecognised value is refused before anything is written.
+        lenient().when(problemRepository.save(any())).thenAnswer(inv -> {
             ProblemEntity saved = inv.getArgument(0);
             if (saved.getProblemId() == null) saved.setProblemId(UUID.randomUUID());
             return saved;
@@ -109,5 +115,140 @@ class ProblemServiceTest {
         ProblemEntity p = add(problem());
         assertThat(p.getClinicalStatus()).isEqualTo("ACTIVE");
         assertThat(p.getCategory()).isEqualTo("DIAGNOSIS");
+    }
+
+    // ── Certainty is a separate axis from kind ──────────────────────────────────
+
+    /**
+     * The distinction the whole model exists for. These two facts have to be recordable together —
+     * folding certainty into the category would make "definitely has chest pain, might have an MI"
+     * inexpressible, which is how a differential ends up on a record looking like a conclusion.
+     */
+    @Test
+    void recordsAConfirmedSymptomAndASuspectedDiagnosisAsDifferentThings() {
+        Map<String, Object> symptom = problem();
+        symptom.put("display", "Chest pain");
+        symptom.put("category", "SYMPTOM");
+        symptom.put("diagnostic_certainty", "CONFIRMED");
+        ProblemEntity s = add(symptom);
+
+        Map<String, Object> diagnosis = problem();
+        diagnosis.put("display", "Acute coronary syndrome");
+        diagnosis.put("category", "DIAGNOSIS");
+        diagnosis.put("diagnostic_certainty", "SUSPECTED");
+        ProblemEntity d = add(diagnosis);
+
+        assertThat(s.getCategory()).isEqualTo("SYMPTOM");
+        assertThat(s.getDiagnosticCertainty()).isEqualTo("CONFIRMED");
+        assertThat(d.getCategory()).isEqualTo("DIAGNOSIS");
+        assertThat(d.getDiagnosticCertainty()).isEqualTo("SUSPECTED");
+    }
+
+    /**
+     * A guideline classification is the output of applying a rule to findings — "severe pneumonia"
+     * on a chart, "stage 3a CKD". Recording one as a diagnosis claims more than the chart said.
+     */
+    @Test
+    void keepsAGuidelineClassificationDistinctFromADiagnosis() {
+        Map<String, Object> body = problem();
+        body.put("display", "Severe pneumonia");
+        body.put("category", "GUIDELINE_CLASSIFICATION");
+        assertThat(add(body).getCategory()).isEqualTo("GUIDELINE_CLASSIFICATION");
+    }
+
+    @Test
+    void leavesAnUnstatedCertaintyUnstated() {
+        assertThat(add(problem()).getDiagnosticCertainty()).isNull();
+    }
+
+    @Test
+    void refusesACertaintyOutsideTheVocabulary() {
+        Map<String, Object> body = problem();
+        body.put("diagnostic_certainty", "PROBABLY");
+        assertThatThrownBy(() -> add(body))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("PROBABLY");
+    }
+
+    @Test
+    void refusesACategoryOutsideTheVocabulary() {
+        Map<String, Object> body = problem();
+        body.put("category", "HUNCH");
+        assertThatThrownBy(() -> add(body)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void recordsEvidenceResponsibleServiceAndReviewDate() {
+        Map<String, Object> body = problem();
+        body.put("evidence", "Clinic BP 168/98 on three occasions");
+        body.put("responsible_service", "CARDIOLOGY");
+        body.put("review_date", "2026-10-01");
+        ProblemEntity p = add(body);
+        assertThat(p.getEvidence()).isEqualTo("Clinic BP 168/98 on three occasions");
+        assertThat(p.getResponsibleService()).isEqualTo("CARDIOLOGY");
+        assertThat(p.getReviewDate()).isEqualTo(LocalDate.of(2026, 10, 1));
+    }
+
+    // ── One disease stays one row ───────────────────────────────────────────────
+
+    /**
+     * The transition the status vocabulary was widened for. Before it existed, a condition coming
+     * back could only be recorded by editing the resolved row or adding a second problem — the
+     * second of which is how one disease becomes several entries and a problem list stops being
+     * countable.
+     */
+    @Test
+    void aResolvedProblemCanComeBackWithoutBecomingASecondProblem() {
+        ProblemEntity p = add(problem());
+        UUID id = p.getProblemId();
+        when(problemRepository.findById(id)).thenReturn(Optional.of(p));
+
+        ProblemEntity resolved = changeStatus(id, "RESOLVED");
+        assertThat(resolved.getClinicalStatus()).isEqualTo("RESOLVED");
+        assertThat(resolved.getResolvedAt()).isNotNull();
+
+        ProblemEntity recurred = changeStatus(id, "RECURRENCE");
+        assertThat(recurred.getProblemId()).isEqualTo(id);
+        assertThat(recurred.getClinicalStatus()).isEqualTo("RECURRENCE");
+        assertThat(recurred.getLastRecurrenceAt()).isNotNull();
+    }
+
+    /** A resolution timestamp left on a problem that is active again misdates the record. */
+    @Test
+    void clearsTheStaleResolutionWhenAProblemIsNoLongerResolved() {
+        ProblemEntity p = add(problem());
+        when(problemRepository.findById(p.getProblemId())).thenReturn(Optional.of(p));
+
+        changeStatus(p.getProblemId(), "RESOLVED");
+        ProblemEntity recurred = changeStatus(p.getProblemId(), "RELAPSE");
+
+        assertThat(recurred.getResolvedAt()).isNull();
+        assertThat(recurred.getLastRecurrenceAt()).isNotNull();
+    }
+
+    /** Remission is not recurrence — the condition has not returned, it is being held. */
+    @Test
+    void remissionDoesNotStampARecurrence() {
+        ProblemEntity p = add(problem());
+        when(problemRepository.findById(p.getProblemId())).thenReturn(Optional.of(p));
+
+        ProblemEntity remitted = changeStatus(p.getProblemId(), "REMISSION");
+        assertThat(remitted.getClinicalStatus()).isEqualTo("REMISSION");
+        assertThat(remitted.getLastRecurrenceAt()).isNull();
+    }
+
+    @Test
+    void refusesAStatusOutsideTheVocabulary() {
+        ProblemEntity p = add(problem());
+        when(problemRepository.findById(p.getProblemId())).thenReturn(Optional.of(p));
+        assertThatThrownBy(() -> changeStatus(p.getProblemId(), "CURED"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private ProblemEntity changeStatus(UUID problemId, String status) {
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(ctx());
+            return service.changeStatus(problemId, status);
+        }
     }
 }

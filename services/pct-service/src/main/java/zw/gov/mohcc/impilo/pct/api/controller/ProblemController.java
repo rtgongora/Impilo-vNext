@@ -56,6 +56,19 @@ public class ProblemController {
         return ResponseEntity.ok(ApiResponse.ok(toMap(p), TrustContextHolder.require().correlationId().toString()));
     }
 
+    /**
+     * Moves a problem to a new clinical status — including back out of RESOLVED when a condition
+     * returns, which is the transition that keeps one disease as one row instead of accumulating a
+     * fresh entry on the list every time it relapses.
+     */
+    @PostMapping("/{problemId}/status")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> changeStatus(
+            @PathVariable UUID problemId,
+            @RequestBody Map<String, Object> body) {
+        ProblemEntity p = problemService.changeStatus(problemId, String.valueOf(body.get("clinical_status")));
+        return ResponseEntity.ok(ApiResponse.ok(toMap(p), TrustContextHolder.require().correlationId().toString()));
+    }
+
     private Map<String, Object> toMap(ProblemEntity p) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("problem_id", p.getProblemId().toString());
@@ -68,6 +81,11 @@ public class ProblemController {
         m.put("clinical_status", p.getClinicalStatus());
         m.put("category", p.getCategory());
         m.put("severity", p.getSeverity());
+        m.put("diagnostic_certainty", p.getDiagnosticCertainty());
+        m.put("evidence", p.getEvidence());
+        m.put("responsible_service", p.getResponsibleService());
+        m.put("review_date", p.getReviewDate() != null ? p.getReviewDate().toString() : null);
+        m.put("last_recurrence_at", p.getLastRecurrenceAt() != null ? p.getLastRecurrenceAt().toString() : null);
         m.put("onset_date", p.getOnsetDate() != null ? p.getOnsetDate().toString() : null);
         m.put("recorded_by", p.getRecordedBy());
         m.put("resolved_at", p.getResolvedAt() != null ? p.getResolvedAt().toString() : null);

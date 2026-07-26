@@ -72,14 +72,29 @@ public class ProblemService {
         p.setCode(str(body.get("code")));
         p.setCodeSystem(str(body.get("code_system")));
         p.setDisplay(required(body, "display"));
-        p.setCategory(upperOr(body.get("category"), "DIAGNOSIS"));
-        p.setClinicalStatus(upperOr(body.get("clinical_status"), "ACTIVE"));
-        // No default: an unstated severity stays NULL. Defaulting it would record an assessment
-        // the clinician never made, and "mild" is the one value that would stop a reader looking.
+        p.setCategory(ProblemVocabulary.require("category",
+                body.getOrDefault("category", "DIAGNOSIS"), ProblemVocabulary.CATEGORIES, true));
+        p.setClinicalStatus(ProblemVocabulary.require("clinical_status",
+                body.getOrDefault("clinical_status", "ACTIVE"), ProblemVocabulary.CLINICAL_STATUSES, true));
+        // No default on either of these: an unstated severity or certainty stays NULL. Defaulting
+        // would record an assessment the clinician never made — "mild" is the one severity that
+        // stops a reader looking, and CONFIRMED is the one certainty that ends an investigation.
         p.setSeverity(upper(body.get("severity")));
+        p.setDiagnosticCertainty(ProblemVocabulary.require("diagnostic_certainty",
+                body.get("diagnostic_certainty"), ProblemVocabulary.CERTAINTIES, false));
         String onset = str(body.get("onset_date"));
         if (onset != null) {
             p.setOnsetDate(LocalDate.parse(onset));
+        }
+        String reviewDate = str(body.get("review_date"));
+        if (reviewDate != null) {
+            p.setReviewDate(LocalDate.parse(reviewDate));
+        }
+        p.setEvidence(str(body.get("evidence")));
+        p.setResponsibleService(str(body.get("responsible_service")));
+        // A problem recorded directly as recurrent is one the clinician already knows has come back.
+        if (ProblemVocabulary.RECURRENT_STATUSES.contains(p.getClinicalStatus())) {
+            p.setLastRecurrenceAt(OffsetDateTime.now());
         }
         p.setNotes(str(body.get("notes")));
         p.setRecordedBy(ctx.actorId());
@@ -93,22 +108,59 @@ public class ProblemService {
 
     @Transactional
     public ProblemEntity resolve(UUID problemId) {
+        return changeStatus(problemId, "RESOLVED");
+    }
+
+    /**
+     * Moves a problem to a new clinical status, keeping one disease as one row.
+     *
+     * <p>The transition that matters is back out of RESOLVED. Before this existed the only ways to
+     * record a condition returning were to edit the resolved row — losing the fact that it had ever
+     * resolved — or to add a second problem, which is how one disease becomes two entries and how a
+     * problem list stops being countable. A recurrence now stamps {@code last_recurrence_at} and
+     * clears the stale resolution, and the transition itself is preserved on the event, which
+     * carries the status the problem moved from.</p>
+     */
+    @Transactional
+    public ProblemEntity changeStatus(UUID problemId, String requestedStatus) {
         TrustContext ctx = TrustContextHolder.require();
         ProblemEntity p = problemRepository.findById(problemId)
                 .orElseThrow(() -> new IllegalArgumentException("Problem not found: " + problemId));
         if (!p.getTenantId().equals(ctx.tenantId())) {
             throw new IllegalArgumentException("Problem not found: " + problemId);
         }
-        p.setClinicalStatus("RESOLVED");
-        p.setResolvedAt(OffsetDateTime.now());
+        String status = ProblemVocabulary.require(
+                "clinical_status", requestedStatus, ProblemVocabulary.CLINICAL_STATUSES, true);
+        String previousStatus = p.getClinicalStatus();
+
+        p.setClinicalStatus(status);
+        if ("RESOLVED".equals(status)) {
+            p.setResolvedAt(OffsetDateTime.now());
+        } else {
+            // No longer resolved, so a resolution timestamp left behind would misdate the record.
+            p.setResolvedAt(null);
+        }
+        if (ProblemVocabulary.RECURRENT_STATUSES.contains(status)) {
+            p.setLastRecurrenceAt(OffsetDateTime.now());
+        }
         p = problemRepository.save(p);
-        emit("PROBLEM_RESOLVED", p);
-        log.info("pct.problem.resolved id={} subject={} by={} correlationId={}",
-                p.getProblemId(), p.getSubjectCpid(), ctx.actorId(), ctx.correlationId());
+
+        emit("RESOLVED".equals(status) ? "PROBLEM_RESOLVED" : "PROBLEM_STATUS_CHANGED", p, previousStatus);
+        log.info("pct.problem.status_changed id={} subject={} from={} to={} by={} correlationId={}",
+                p.getProblemId(), p.getSubjectCpid(), previousStatus, status,
+                ctx.actorId(), ctx.correlationId());
         return p;
     }
 
     private void emit(String eventType, ProblemEntity p) {
+        emit(eventType, p, null);
+    }
+
+    /**
+     * @param previousStatus the status moved from, or null on creation. The transition is only
+     *                       recoverable from the event stream, so it has to travel on the event.
+     */
+    private void emit(String eventType, ProblemEntity p, String previousStatus) {
         TrustContext ctx = TrustContextHolder.require();
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("problemId", p.getProblemId().toString());
@@ -116,6 +168,9 @@ public class ProblemService {
         payload.put("journeyId", p.getJourneyId());
         payload.put("display", p.getDisplay());
         payload.put("clinicalStatus", p.getClinicalStatus());
+        payload.put("previousClinicalStatus", previousStatus);
+        payload.put("diagnosticCertainty", p.getDiagnosticCertainty());
+        payload.put("category", p.getCategory());
         payload.put("actorId", ctx.actorId());
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("PROBLEM");
