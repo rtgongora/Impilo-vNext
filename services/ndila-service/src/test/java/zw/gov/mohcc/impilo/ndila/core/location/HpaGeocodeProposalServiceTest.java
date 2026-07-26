@@ -2,59 +2,102 @@ package zw.gov.mohcc.impilo.ndila.core.location;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * HAR W4 guard tests — a geocode proposal must stay a proposal, and must describe itself honestly.
+ * HAR W7 guard tests — a proposal must stay a proposal, must describe its own precision honestly,
+ * and must key on something that actually exists in the data.
+ *
+ * <p>The previous implementation failed the last of those: it keyed on {@code district} and
+ * {@code proposed_locality}, both null on all 6,327 live queue rows, so it proposed nothing and
+ * reported success. These tests pin the replacement.</p>
  */
 class HpaGeocodeProposalServiceTest {
 
-    /**
-     * A district centroid is where to start looking, not where the clinic is. Nothing in this
-     * service may ever grade itself HIGH — that word belongs to a surveyed coordinate.
-     */
-    @Test
-    void confidenceIsNeverHigh() {
-        var tight = new HpaGeocodeProposalService.DistrictCentroid(
-                "Buhera", null, null, 40, HpaGeocodeProposalService.TIGHT_SPREAD_KM - 1);
-        var wide = new HpaGeocodeProposalService.DistrictCentroid(
-                "Binga", null, null, 40, HpaGeocodeProposalService.TIGHT_SPREAD_KM + 50);
-
-        assertThat(tight.confidence()).isEqualTo("MEDIUM");
-        assertThat(wide.confidence()).isEqualTo("LOW");
-        assertThat(tight.confidence()).isNotEqualTo("HIGH");
-        assertThat(wide.confidence()).isNotEqualTo("HIGH");
+    private static String source(String name) throws Exception {
+        return Files.readString(Path.of(
+                "src/main/java/zw/gov/mohcc/impilo/ndila/core/location/" + name));
     }
 
-    /** The source label has to say what the number actually is, so a reviewer is not misled. */
+    /** A street address describes a building; a suburb centroid describes a neighbourhood. */
     @Test
-    void theSourceLabelNamesTheDerivation() {
-        assertThat(HpaGeocodeProposalService.PROPOSED_SOURCE)
-                .contains("CENTROID")
-                .contains("SURVEYED");
+    void addressOutranksSuburbAndNeitherIsEverHigh() {
+        assertThat(HpaGeocodeProposalService.confidenceFor(
+                HpaGeocodeProposalService.PRECISION_ADDRESS)).isEqualTo("MEDIUM");
+        assertThat(HpaGeocodeProposalService.confidenceFor(
+                HpaGeocodeProposalService.PRECISION_SUBURB)).isEqualTo("LOW");
+        assertThat(HpaGeocodeProposalService.confidenceFor(null)).isNotEqualTo("HIGH");
+        assertThat(HpaGeocodeProposalService.confidenceFor(
+                HpaGeocodeProposalService.PRECISION_ADDRESS)).isNotEqualTo("HIGH");
     }
 
-    /** A wider district must never grade better than a tighter one. */
+    /** Matching is case- and whitespace-insensitive, because the source data is neither. */
     @Test
-    void spreadGradesMonotonically() {
-        double narrow = HpaGeocodeProposalService.boundingBoxDiagonalKm(-19.5, -19.4, 31.7, 31.8);
-        double broad = HpaGeocodeProposalService.boundingBoxDiagonalKm(-19.9, -18.9, 31.2, 32.4);
-        assertThat(narrow).isLessThan(broad);
-        assertThat(narrow).isGreaterThan(0.0);
+    void placeKeysNormalise() {
+        assertThat(HpaGeocodeProposalService.key("  city centre ")).isEqualTo("CITY CENTRE");
+        assertThat(HpaGeocodeProposalService.key("Harare")).isEqualTo("HARARE");
+        assertThat(HpaGeocodeProposalService.key(null)).isNull();
     }
 
     /**
-     * The gazetteer must be built from surveyed rows only. If it ever read GEOCODED rows, each run
-     * would average its own guesses and the estate would drift towards a single point.
+     * The regression that made the previous version inert: it keyed on columns that are null on
+     * every existing row. The replacement must join to ndila_locations and key on locality+province.
      */
     @Test
-    void theGazetteerExcludesItsOwnOutput() throws Exception {
-        String source = java.nio.file.Files.readString(java.nio.file.Path.of(
-                "src/main/java/zw/gov/mohcc/impilo/ndila/core/location/HpaGeocodeProposalService.java"));
-        assertThat(source).contains("source <> 'GEOCODED'");
-        assertThat(source)
-                .as("proposals are written to the review queue, never to ndila_locations")
-                .doesNotContain("UPDATE ndila_locations")
-                .doesNotContain("INSERT INTO ndila_locations");
+    void proposalsKeyOnLocalityAndProvinceViaTheLocationsJoin() throws Exception {
+        String src = source("HpaGeocodeProposalService.java");
+        assertThat(src)
+                .as("the queue carries no locality; it must join back to ndila_locations")
+                .contains("JOIN ndila_locations l")
+                .contains("l.owner_entity_id = q.owner_entity_id");
+        assertThat(src).contains("g.locality_key = upper(trim(l.locality))");
+        assertThat(src).contains("g.province_key = upper(trim(l.province))");
+        // Match the SQL/field usage, not the word — the javadoc names both columns when explaining
+        // why the old keying failed, and an assertion that trips on prose tests nothing.
+        assertThat(src)
+                .as("district was the broken key and must not come back")
+                .doesNotContain("q.district")
+                .doesNotContain("q.proposed_locality")
+                .doesNotContain("row.get(\"district\")")
+                .doesNotContain("row.get(\"proposed_locality\")");
+    }
+
+    /** Only a human-reviewed place may be proposed from, and nothing may publish a pin. */
+    @Test
+    void onlyReviewedPlacesPropose_andNothingWritesALocation() throws Exception {
+        String src = source("HpaGeocodeProposalService.java");
+        assertThat(HpaGeocodeProposalService.GAZETTEER_REVIEWED).isEqualTo("REVIEWED");
+        assertThat(src).contains("g.status = ?");
+        assertThat(src)
+                .as("proposals go to the review queue, never to ndila_locations")
+                .doesNotContain("INSERT INTO ndila_locations")
+                .doesNotContain("UPDATE ndila_locations");
+    }
+
+    /**
+     * Building the gazetteer must not overwrite a coordinate a reviewer has already placed, or
+     * reset their verdict — otherwise every re-run silently discards human work.
+     */
+    @Test
+    void rebuildingTheGazetteerPreservesReviewedPlacements() throws Exception {
+        String src = source("HpaGeocodeProposalService.java");
+        assertThat(src).contains("ON CONFLICT (tenant_id, locality_key, province_key)");
+        assertThat(src).contains("DO UPDATE SET facility_count = EXCLUDED.facility_count");
+        assertThat(src)
+                .as("a re-run must not touch latitude/longitude/status")
+                .doesNotContain("DO UPDATE SET latitude");
+    }
+
+    /** The migration must refuse a REVIEWED row with no coordinate, and cap the precision vocabulary. */
+    @Test
+    void theSchemaRefusesAReviewedPlaceWithNoPoint() throws Exception {
+        String sql = Files.readString(
+                Path.of("src/main/resources/db/migration/V006__place_gazetteer.sql"));
+        assertThat(sql).contains("CHECK (status <> 'REVIEWED' OR latitude IS NOT NULL)");
+        assertThat(sql).contains("CHECK (precision_tier IN ('ADDRESS', 'SUBURB_CENTROID'))");
+        assertThat(sql).contains("CHECK ((latitude IS NULL) = (longitude IS NULL))");
     }
 }

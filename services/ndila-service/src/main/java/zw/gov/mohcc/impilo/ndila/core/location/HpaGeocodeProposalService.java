@@ -7,45 +7,43 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Turns 6,327 dead PENDING review rows into a workable queue by proposing a starting point for
- * each (HAR W4).
+ * Proposes a location for HPA-listed facilities from a curated place gazetteer (HAR W7).
  *
- * <p><b>Where the proposal comes from.</b> Not an external geocoder and not a province centroid.
- * It is the centroid of the health facilities we have <em>already surveyed</em> in the same
- * district — real coordinates from the Ministry's master facility list. HPA gave us a locality for
- * 5,400 of its 5,423 location rows and a plausible coordinate for exactly one; the districts those
- * localities name are districts we already have mapped facilities in.</p>
+ * <p><b>This replaces a version that did not work.</b> The first implementation keyed each pending
+ * review row on its {@code district}, then on {@code proposed_locality}. Measured against the live
+ * estate afterwards: of 6,327 queue rows, <b>zero</b> carry either — both columns are written only
+ * by the newer importer path, so they are populated for imports that have not happened yet. The
+ * service would have proposed nothing and reported success, which is the failure mode this whole
+ * programme exists to remove. The key that actually exists in the data is
+ * {@code (locality, province)} on {@code ndila_locations}, and across the 2,294 HPA rows that carry
+ * a locality there are only <b>212 distinct pairs</b>.</p>
  *
- * <p><b>What it deliberately does NOT do: publish.</b> Every proposal lands on
- * {@code ndila_geocode_review_queue}, never on {@code ndila_locations}. A district centroid is not
- * where the clinic is — it is where to start looking. Rendered as a pin it would be
- * indistinguishable from a surveyed one, and a care-seeker would travel on it. So a steward or the
- * claiming facility confirms first, and only that confirmation publishes.</p>
+ * <p><b>Two precisions, never blended.</b> {@code ADDRESS} describes one building.
+ * {@code SUBURB_CENTROID} is one point shared by every facility in a suburb — 188 facilities sit
+ * behind CITY CENTRE/Harare alone. Both are proposals; only their precision differs, and the
+ * difference has to survive all the way to the screen. A shared centroid rendered as "1.2 km" is a
+ * precise-looking lie.</p>
  *
- * <p><b>Confidence is reported honestly.</b> A district whose known facilities are spread over more
- * than {@value #TIGHT_SPREAD_KM} km yields LOW; a tight district yields MEDIUM. Nothing here ever
- * yields HIGH — a centroid cannot be high-confidence about an individual building.</p>
+ * <p><b>Still publishes nothing.</b> Proposals land on {@code ndila_geocode_review_queue}. A
+ * gazetteer entry is only usable once a human has marked it {@code REVIEWED}, and a queue row still
+ * needs a steward before any pin reaches {@code ndila_locations}.</p>
  */
 @Service
 public class HpaGeocodeProposalService {
 
     private static final Logger log = LoggerFactory.getLogger(HpaGeocodeProposalService.class);
 
-    /** Districts whose surveyed facilities sit within this radius are "tight" enough for MEDIUM. */
-    static final double TIGHT_SPREAD_KM = 15.0;
+    static final String PRECISION_ADDRESS = "ADDRESS";
+    static final String PRECISION_SUBURB = "SUBURB_CENTROID";
 
-    /** A district with fewer known facilities than this has too thin a basis to average. */
-    static final int MIN_DISTRICT_SAMPLE = 3;
-
-    static final String PROPOSED_SOURCE = "DISTRICT_CENTROID_OF_SURVEYED_FACILITIES";
+    /** Only a human-reviewed gazetteer entry may be proposed from. */
+    static final String GAZETTEER_REVIEWED = "REVIEWED";
 
     private final JdbcTemplate jdbc;
     private final NdilaCoordinateValidator coordinateValidator;
@@ -58,117 +56,142 @@ public class HpaGeocodeProposalService {
     public record ProposalSummary(int queueRowsConsidered, int proposalsWritten, int noGazetteerMatch,
                                   int rejectedByValidator, boolean dryRun) {}
 
-    /** A district we have surveyed coordinates for, and how tightly those coordinates cluster. */
-    record DistrictCentroid(String district, BigDecimal latitude, BigDecimal longitude,
-                            int sampleSize, double spreadKm) {
-        String confidence() {
-            return spreadKm <= TIGHT_SPREAD_KM ? "MEDIUM" : "LOW";
+    public record GazetteerBuildSummary(int distinctPlaces, int created, int updated, boolean dryRun) {}
+
+    /**
+     * Derive the distinct (locality, province) pairs the HPA estate actually uses, and record each
+     * as a gazetteer row awaiting coordinates.
+     *
+     * <p>Coordinates are deliberately left NULL. There is no geocoding service in this estate, and
+     * inventing one from a province centroid would put a pin 100 km from the clinic. What this
+     * produces is an honest, countable worklist — 212 rows, ordered by how many facilities depend on
+     * each — rather than a silent gap.</p>
+     */
+    @Transactional
+    public GazetteerBuildSummary buildGazetteerFromLocations(UUID tenantId, boolean dryRun) {
+        List<Map<String, Object>> places = jdbc.queryForList(
+                """
+                SELECT trim(locality) AS locality, trim(province) AS province, count(*) AS facility_count
+                  FROM ndila_locations
+                 WHERE tenant_id = ?
+                   AND owner_entity_id LIKE 'HPA-%'
+                   AND nullif(trim(locality), '') IS NOT NULL
+                   AND nullif(trim(province), '') IS NOT NULL
+                 GROUP BY trim(locality), trim(province)
+                 ORDER BY count(*) DESC
+                """,
+                tenantId);
+
+        int created = 0, updated = 0;
+        for (Map<String, Object> place : places) {
+            String locality = (String) place.get("locality");
+            String province = (String) place.get("province");
+            int count = ((Number) place.get("facility_count")).intValue();
+            if (dryRun) {
+                continue;
+            }
+            // Idempotent: re-running refreshes the facility count without disturbing a coordinate a
+            // reviewer has already placed, or resetting their REVIEWED verdict.
+            int rows = jdbc.update(
+                    """
+                    INSERT INTO ndila_place_gazetteer
+                        (tenant_id, locality, province, locality_key, province_key, facility_count)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (tenant_id, locality_key, province_key)
+                    DO UPDATE SET facility_count = EXCLUDED.facility_count, updated_at = NOW()
+                    """,
+                    tenantId, locality, province, key(locality), key(province), count);
+            if (rows == 1) {
+                created++;
+            } else {
+                updated++;
+            }
         }
+        log.info("HPA gazetteer build: distinctPlaces={} created={} updated={} dryRun={}",
+                places.size(), created, updated, dryRun);
+        return new GazetteerBuildSummary(places.size(), created, updated, dryRun);
     }
 
+    /**
+     * Propose a coordinate for each pending review row whose place has a reviewed gazetteer entry.
+     *
+     * <p>The queue carries no locality of its own, so each row is joined back to its
+     * {@code ndila_locations} record by {@code owner_entity_id} — the join the previous version was
+     * missing.</p>
+     */
     @Transactional
     public ProposalSummary proposeForPendingReviews(UUID tenantId, boolean dryRun, int limit) {
-        Map<String, DistrictCentroid> gazetteer = buildDistrictGazetteer(tenantId);
-        if (gazetteer.isEmpty()) {
-            log.warn("HPA geocode proposals: no surveyed facility coordinates to build a gazetteer from");
-            return new ProposalSummary(0, 0, 0, 0, dryRun);
-        }
-
         List<Map<String, Object>> pending = jdbc.queryForList(
-                "SELECT id, district, proposed_locality, province FROM ndila_geocode_review_queue "
-                        + "WHERE tenant_id = ? AND status = 'PENDING' AND proposal_status IS NULL "
-                        + "  AND proposed_latitude IS NULL "
-                        + "ORDER BY created_at LIMIT ?",
-                tenantId, Math.max(1, limit));
+                """
+                SELECT q.id,
+                       g.latitude, g.longitude, g.precision_tier, g.coordinate_source,
+                       l.locality, l.province
+                  FROM ndila_geocode_review_queue q
+                  JOIN ndila_locations l
+                    ON l.tenant_id = q.tenant_id AND l.owner_entity_id = q.owner_entity_id
+                  LEFT JOIN ndila_place_gazetteer g
+                    ON g.tenant_id = q.tenant_id
+                   AND g.locality_key = upper(trim(l.locality))
+                   AND g.province_key = upper(trim(l.province))
+                   AND g.status = ?
+                 WHERE q.tenant_id = ?
+                   AND q.status = 'PENDING'
+                   AND q.proposal_status IS NULL
+                   AND q.proposed_latitude IS NULL
+                 ORDER BY q.created_at
+                 LIMIT ?
+                """,
+                GAZETTEER_REVIEWED, tenantId, Math.max(1, limit));
 
         int written = 0, unmatched = 0, rejected = 0;
         for (Map<String, Object> row : pending) {
-            // HPA's locality is the administrative area; it is the only place hint most rows have.
-            String hint = firstNonBlank((String) row.get("district"), (String) row.get("proposed_locality"));
-            DistrictCentroid centroid = hint == null ? null : gazetteer.get(normalise(hint));
-            if (centroid == null) {
+            BigDecimal lat = (BigDecimal) row.get("latitude");
+            BigDecimal lng = (BigDecimal) row.get("longitude");
+            if (lat == null || lng == null) {
+                // No reviewed gazetteer entry for this place yet. Not an error — it is the worklist.
                 unmatched++;
                 continue;
             }
             NdilaCoordinateValidator.Result validation =
-                    coordinateValidator.validate(centroid.latitude(), centroid.longitude(), null, "ZWE");
+                    coordinateValidator.validate(lat, lng, null, "ZWE");
             if (!validation.valid() || !validation.plausible()) {
-                // Should not happen — the inputs are surveyed Zimbabwe facilities — but a centroid
-                // is arithmetic on data we did not check today, so it goes through the same gate.
+                // A reviewed entry should already be plausible, but a coordinate never reaches the
+                // queue without passing the same gate every other coordinate passes.
                 rejected++;
                 continue;
             }
             if (!dryRun) {
                 jdbc.update(
-                        "UPDATE ndila_geocode_review_queue SET proposed_latitude = ?, proposed_longitude = ?, "
-                                + "proposed_source = ?, proposed_confidence = ?, proposed_at = NOW(), "
-                                + "proposal_status = 'PROPOSED' WHERE id = ?",
-                        centroid.latitude(), centroid.longitude(), PROPOSED_SOURCE,
-                        centroid.confidence(), row.get("id"));
+                        """
+                        UPDATE ndila_geocode_review_queue
+                           SET proposed_latitude = ?, proposed_longitude = ?,
+                               proposed_source = ?, proposed_precision = ?,
+                               proposed_confidence = ?, proposed_at = NOW(),
+                               proposal_status = 'PROPOSED'
+                         WHERE id = ?
+                        """,
+                        lat, lng,
+                        (String) row.get("coordinate_source"),
+                        (String) row.get("precision_tier"),
+                        confidenceFor((String) row.get("precision_tier")),
+                        row.get("id"));
             }
             written++;
         }
-        log.info("HPA geocode proposals: considered={} written={} noGazetteerMatch={} rejected={} dryRun={}",
+        log.info("HPA geocode proposals: considered={} written={} noReviewedPlace={} rejected={} dryRun={}",
                 pending.size(), written, unmatched, rejected, dryRun);
         return new ProposalSummary(pending.size(), written, unmatched, rejected, dryRun);
     }
 
     /**
-     * Build the gazetteer from surveyed facility coordinates only — never from a proposal, or the
-     * next run would average its own guesses.
+     * A street address describes a building; a suburb centroid describes a neighbourhood. Neither is
+     * ever HIGH — that word belongs to a surveyed coordinate, and nothing here surveys anything.
      */
-    Map<String, DistrictCentroid> buildDistrictGazetteer(UUID tenantId) {
-        List<Map<String, Object>> rows = jdbc.queryForList(
-                "SELECT district, avg(latitude) AS lat, avg(longitude) AS lng, count(*) AS n, "
-                        + "       max(latitude) AS max_lat, min(latitude) AS min_lat, "
-                        + "       max(longitude) AS max_lng, min(longitude) AS min_lng "
-                        + "  FROM ndila_locations "
-                        + " WHERE tenant_id = ? AND location_type = ? AND is_active = TRUE "
-                        + "   AND latitude IS NOT NULL AND longitude IS NOT NULL "
-                        + "   AND district IS NOT NULL AND source <> 'GEOCODED' "
-                        + " GROUP BY district",
-                tenantId, NdilaLocationVocabulary.LOCATION_TYPE_HEALTH_FACILITY);
-
-        Map<String, DistrictCentroid> gazetteer = new HashMap<>();
-        for (Map<String, Object> row : rows) {
-            int sample = ((Number) row.get("n")).intValue();
-            if (sample < MIN_DISTRICT_SAMPLE) {
-                continue;
-            }
-            String district = (String) row.get("district");
-            BigDecimal lat = scale((Number) row.get("lat"));
-            BigDecimal lng = scale((Number) row.get("lng"));
-            double spreadKm = boundingBoxDiagonalKm(
-                    num(row.get("min_lat")), num(row.get("max_lat")),
-                    num(row.get("min_lng")), num(row.get("max_lng")));
-            gazetteer.put(normalise(district), new DistrictCentroid(district, lat, lng, sample, spreadKm));
-        }
-        return gazetteer;
+    static String confidenceFor(String precisionTier) {
+        return PRECISION_ADDRESS.equals(precisionTier) ? "MEDIUM" : "LOW";
     }
 
-    /** Rough diagonal of the district's bounding box — enough to grade confidence, not navigate by. */
-    static double boundingBoxDiagonalKm(double minLat, double maxLat, double minLng, double maxLng) {
-        double latKm = (maxLat - minLat) * 110.574;
-        double midLatRad = Math.toRadians((maxLat + minLat) / 2.0);
-        double lngKm = (maxLng - minLng) * 111.320 * Math.cos(midLatRad);
-        return Math.sqrt(latKm * latKm + lngKm * lngKm);
-    }
-
-    private static double num(Object value) {
-        return value instanceof Number n ? n.doubleValue() : 0.0;
-    }
-
-    private static BigDecimal scale(Number value) {
-        return value == null ? null : new BigDecimal(value.toString()).setScale(7, RoundingMode.HALF_UP);
-    }
-
-    static String normalise(String value) {
-        return value == null ? null : value.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private static String firstNonBlank(String a, String b) {
-        if (a != null && !a.isBlank()) return a.trim();
-        if (b != null && !b.isBlank()) return b.trim();
-        return null;
+    static String key(String value) {
+        return value == null ? null : value.trim().toUpperCase(Locale.ROOT);
     }
 }

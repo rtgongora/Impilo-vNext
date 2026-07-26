@@ -84,6 +84,33 @@ public class HpaLocationImportController {
 
     public record ProposeApiRequest(String tenantId, Boolean dryRun, Integer limit) {}
 
+    /**
+     * HAR W7 — derive the distinct (locality, province) places the HPA estate uses and record each
+     * as a gazetteer row awaiting a coordinate. Idempotent; refreshes facility counts without
+     * disturbing a reviewer's placement.
+     */
+    @PostMapping("/build-gazetteer")
+    public ResponseEntity<HpaGeocodeProposalService.GazetteerBuildSummary> buildGazetteer(
+            @RequestBody(required = false) ProposeApiRequest request) {
+        boolean dryRun = request == null || request.dryRun() == null || request.dryRun();
+        return ResponseEntity.ok(proposalService.buildGazetteerFromLocations(
+                tenant(request == null ? null : request.tenantId()), dryRun));
+    }
+
+    /** HAR W7 — the gazetteer worklist: places awaiting coordinates, biggest blast radius first. */
+    @GetMapping("/gazetteer")
+    public ResponseEntity<List<Map<String, Object>>> gazetteer(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "limit", defaultValue = "250") int limit) {
+        return ResponseEntity.ok(jdbc.queryForList(
+                "SELECT locality, province, facility_count, latitude, longitude, precision_tier, "
+                        + "       coordinate_source, status, reviewed_by, reviewed_at "
+                        + "  FROM ndila_place_gazetteer "
+                        + " WHERE (? IS NULL OR status = ?) "
+                        + " ORDER BY facility_count DESC, locality LIMIT ?",
+                status, status, Math.min(Math.max(limit, 1), 1000)));
+    }
+
     private static UUID tenant(String raw) {
         return (raw == null || raw.isBlank()) ? null : UUID.fromString(raw.trim());
     }
