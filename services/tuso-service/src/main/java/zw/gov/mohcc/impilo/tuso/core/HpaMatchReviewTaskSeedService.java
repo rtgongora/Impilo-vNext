@@ -92,7 +92,7 @@ public class HpaMatchReviewTaskSeedService {
             }
             List<String> columns = parseCsvLine(stripBom(header));
             String line;
-            while ((line = reader.readLine()) != null) {
+            while ((line = readRecord(reader)) != null) {
                 if (line.isBlank()) {
                     continue;
                 }
@@ -219,8 +219,22 @@ public class HpaMatchReviewTaskSeedService {
         }
     }
 
+    /**
+     * The crosswalk carries a bare institution id ({@code 3892}); the importer stored the
+     * deterministic identifier with its source prefix ({@code HPA-3892}). Comparing them raw matched
+     * nothing at all — caught by the dry run, which is the entire reason for running one.
+     */
+    static String identifierValue(String institutionId) {
+        if (institutionId == null || institutionId.isBlank()) {
+            return null;
+        }
+        String trimmed = institutionId.trim();
+        return trimmed.startsWith("HPA-") ? trimmed : "HPA-" + trimmed;
+    }
+
     private Long resolveFacilityId(UUID tenantId, String institutionId) {
-        if (institutionId == null) {
+        String value = identifierValue(institutionId);
+        if (value == null) {
             return null;
         }
         try {
@@ -228,13 +242,45 @@ public class HpaMatchReviewTaskSeedService {
                     "SELECT f.id FROM tuso.facility f "
                             + "  JOIN tuso.facility_identifier i ON i.facility_id = f.id "
                             + " WHERE f.tenant_id = ? AND i.system = ? AND i.value = ? LIMIT 1",
-                    Long.class, tenantId, HpaEnrichmentImportService.SYS_HPA_INSTITUTION_ID, institutionId);
+                    Long.class, tenantId, HpaEnrichmentImportService.SYS_HPA_INSTITUTION_ID, value);
         } catch (Exception e) {
             return null;
         }
     }
 
     // ---- Minimal CSV reader: quoted fields with embedded commas and doubled quotes ----
+
+    /**
+     * Read one CSV <em>record</em>, which is not the same as one line: the crosswalk's free-text
+     * columns (notably {@code DataAuthorityNote}) contain newlines inside quoted fields. Reading
+     * line-by-line split those records and produced 7,852 garbage rows from a 6,327-record file —
+     * the dry run's row count is what exposed it. Keeps consuming lines until the quotes balance.
+     */
+    static String readRecord(BufferedReader reader) throws IOException {
+        String line = reader.readLine();
+        if (line == null) {
+            return null;
+        }
+        StringBuilder record = new StringBuilder(line);
+        while (unbalancedQuotes(record)) {
+            String next = reader.readLine();
+            if (next == null) {
+                break; // truncated final record — take what we have rather than dropping it
+            }
+            record.append('\n').append(next);
+        }
+        return record.toString();
+    }
+
+    static boolean unbalancedQuotes(CharSequence value) {
+        int quotes = 0;
+        for (int i = 0; i < value.length(); i++) {
+            if (value.charAt(i) == '"') {
+                quotes++;
+            }
+        }
+        return quotes % 2 != 0;
+    }
 
     static List<String> parseCsvLine(String line) {
         List<String> out = new ArrayList<>();
