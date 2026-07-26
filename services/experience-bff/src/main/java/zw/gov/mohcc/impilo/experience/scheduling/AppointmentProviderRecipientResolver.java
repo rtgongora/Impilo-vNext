@@ -2,7 +2,7 @@ package zw.gov.mohcc.impilo.experience.scheduling;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
-import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -18,10 +18,14 @@ import java.util.Set;
 @Component
 public class AppointmentProviderRecipientResolver {
 
-    private final TusoServiceClient tusoClient;
+    // Rostering and on-call are vashandi's, not tuso's. TusoServiceClient's staffing
+    // methods called tuso /v1/staffing/*, which no service serves, and were removed with a
+    // docblock saying not to reintroduce them; this caller was left pointing at one of
+    // them by a different lane, which is why the module stopped compiling.
+    private final VashandiServiceClient vashandiClient;
 
-    public AppointmentProviderRecipientResolver(TusoServiceClient tusoClient) {
-        this.tusoClient = tusoClient;
+    public AppointmentProviderRecipientResolver(VashandiServiceClient vashandiClient) {
+        this.vashandiClient = vashandiClient;
     }
 
     public List<String> resolve(String providerId, String facilityId) {
@@ -43,7 +47,7 @@ public class AppointmentProviderRecipientResolver {
         Set<String> recipients = new LinkedHashSet<>();
         try {
             String weekStart = LocalDate.now().with(DayOfWeek.MONDAY).toString();
-            JsonNode onCall = tusoClient.listOnCall(facilityId, weekStart);
+            JsonNode onCall = vashandiClient.listOnCall(facilityId, weekStart);
             if (onCall != null && onCall.isArray()) {
                 for (JsonNode row : onCall) {
                     addIfPresent(recipients, row, "provider_id", "providerId", "actor:");
