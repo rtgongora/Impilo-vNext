@@ -93,7 +93,9 @@ class GrowthEngineTest {
 
     @Test
     void pretermInfantIsScoredAgainstCorrectedAge() {
-        // Born at 32 weeks, measured at 120 days chronological => 85 days corrected.
+        // Born at 32 weeks — eight weeks short of full term — measured at 120 days
+        // chronological => 64 days corrected. This read 85 while corrected age was measured
+        // back to the 37-week preterm threshold rather than to 40 weeks.
         GrowthEngine.GrowthAssessment assessment = engine.assess(
                 new GrowthEngine.PatientContext(LocalDate.parse("2026-01-01"), "FEMALE", 32),
                 new GrowthEngine.GrowthMeasurement(
@@ -101,7 +103,7 @@ class GrowthEngineTest {
                         BigDecimal.valueOf(5.0d), null, null, null, null, null));
 
         assertEquals(120, assessment.ageDays());
-        assertEquals(85, assessment.correctedAgeDays());
+        assertEquals(120 - 56, assessment.correctedAgeDays());
         assertTrue(assessment.correctedAgeApplied());
 
         // At 32 weeks' gestation plus 17 completed weeks lived, this infant is 49 weeks
@@ -126,7 +128,8 @@ class GrowthEngineTest {
     @Test
     void pretermInfantPastThePretermChartMovesToWhoAtCorrectedAge() {
         // Born at 32 weeks, measured at 300 days chronological => 74 weeks postmenstrual,
-        // beyond the Fenton chart, so follow-up continues on WHO at 265 days corrected.
+        // beyond the Fenton chart, so follow-up continues on WHO at 244 days corrected
+        // (300 less the eight weeks this baby was born short of term).
         GrowthEngine.GrowthAssessment assessment = engine.assess(
                 new GrowthEngine.PatientContext(LocalDate.parse("2025-01-01"), "FEMALE", 32),
                 new GrowthEngine.GrowthMeasurement(
@@ -134,7 +137,7 @@ class GrowthEngineTest {
                         BigDecimal.valueOf(7.0d), null, null, null, null, null));
 
         assertEquals(300, assessment.ageDays());
-        assertEquals(265, assessment.correctedAgeDays());
+        assertEquals(300 - 56, assessment.correctedAgeDays());
         assertEquals(GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS.standardId(), assessment.standard());
 
         // The same weight scored against chronological age would look worse than it is.

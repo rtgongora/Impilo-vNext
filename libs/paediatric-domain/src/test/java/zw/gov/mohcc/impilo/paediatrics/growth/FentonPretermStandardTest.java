@@ -164,17 +164,18 @@ class FentonPretermStandardTest {
         assertNotNull(firstTermWeek.zScore(GrowthIndicator.WEIGHT_FOR_AGE),
                 "the handover must not leave a week where nothing can be scored");
 
-        // KNOWN DISCONTINUITY AT THE HANDOVER, recorded here rather than papered over.
-        // At 50 weeks postmenstrual this infant is 10 weeks past term, so the clinical
-        // convention puts corrected age at 70 days. CorrectedAge corrects to 37 weeks
-        // rather than 40 — it reuses the preterm threshold as the correction target — so
-        // it returns 91. The effect is to read a preterm child's growth about three weeks
-        // "old", which is to say slightly worse than it is, from the moment they leave the
-        // preterm chart. Changing it would restate every corrected-age score already
-        // stamped in the record, so it is raised as its own decision rather than folded
-        // into this one. This assertion exists so the fix trips it deliberately.
-        assertEquals(91, firstTermWeek.correctedAgeDays(),
-                "corrected age still targets 37 weeks, not the conventional 40 — see the pack's open questions");
+        // THE HANDOVER IS CONTINUOUS IN AGE, which is the property this chart is drawn for.
+        // At 50 weeks postmenstrual this infant is 10 weeks past term, so corrected age is
+        // 70 days — and 70 is what the WHO tables are now read at. This assertion previously
+        // stood at 91, because CorrectedAge reused the preterm threshold (37 weeks) as the
+        // correction target instead of full term (40), reading every preterm child about
+        // three weeks "old" from the moment they left the preterm chart. It was pinned at
+        // the wrong value deliberately so that separating the two constants would trip it.
+        // It has now been separated, so this is the conventional value.
+        assertEquals(70, firstTermWeek.correctedAgeDays(),
+                "corrected age must target full term (40 weeks), so 50 weeks postmenstrual"
+                        + " reads as 10 weeks corrected and the Fenton→WHO handover does not"
+                        + " jump the child forward in age");
     }
 
     @Test

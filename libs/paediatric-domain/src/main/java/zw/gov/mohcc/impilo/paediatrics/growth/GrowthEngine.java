@@ -69,11 +69,14 @@ public final class GrowthEngine {
     public static final String STANDARD_ID = GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS.standardId();
 
     /**
-     * Bumped from 1.0.0 when preterm infants stopped being scored on the term standard.
-     * The version is stamped on every score, so a record written by either engine stays
-     * interpretable as the thing it actually was.
+     * Bumped from 1.0.0 when preterm infants stopped being scored on the term standard, and
+     * from 2.0.0 when corrected age began targeting 40 weeks rather than 37 — which moved the
+     * age a preterm child is read at on the WHO tables, and so their z-scores, by up to three
+     * weeks. The version is stamped on every score, so a record written by any of these
+     * engines stays interpretable as the thing it actually was. Each bump is major because a
+     * score is not comparable across it for the same child and the same measurement.
      */
-    public static final String ENGINE_VERSION = "2.0.0";
+    public static final String ENGINE_VERSION = "3.0.0";
 
     private final Map<GrowthStandard, GrowthReferenceTables> references;
 
