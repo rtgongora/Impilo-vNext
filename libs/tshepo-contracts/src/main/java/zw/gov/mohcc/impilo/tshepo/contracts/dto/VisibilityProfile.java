@@ -160,6 +160,27 @@ public record VisibilityProfile(
             }
         }
 
+        /**
+         * Raise the tier to at least {@code floor}, syncing the access levels that a higher tier
+         * implies. The mirror of {@link #capVisibilityTier}, for a grant the PDP has decided the
+         * actor holds (e.g. the subject reading their own specially-protected record). Unlike
+         * {@link #liftWithEscalation} it stamps no grant token — there is no workflow escalation
+         * behind it, just an entitlement.
+         */
+        public void raiseVisibilityTier(DataVisibilityTier floor) {
+            DataVisibilityTier current = DataVisibilityTier.fromString(
+                    visibilityTier != null ? visibilityTier : DataVisibilityTier.AGGREGATE_ONLY.name());
+            DataVisibilityTier raised = DataVisibilityTier.max(current, floor);
+            visibilityTier = raised.name();
+            if (raised.allowsRowLevel()) {
+                aggregateOnly = false;
+            }
+            if (raised.allowsFullClinical()) {
+                clinicalAccess = ClinicalAccessLevel.FULL.name();
+                piiAccess = PiiAccessLevel.FULL.name();
+            }
+        }
+
         public void liftWithEscalation(DataVisibilityTier grantCeiling, String grantToken, String workflow) {
             DataVisibilityTier current = DataVisibilityTier.fromString(
                     visibilityTier != null ? visibilityTier : DataVisibilityTier.AGGREGATE_ONLY.name());
@@ -173,7 +194,9 @@ public record VisibilityProfile(
             if (lifted.disclosureLevel() >= DataVisibilityTier.IDENTIFIED_LIMITED_CLINICAL.disclosureLevel()) {
                 clinicalAccess = ClinicalAccessLevel.SUMMARY.name();
             }
-            if (lifted == DataVisibilityTier.FULL_IDENTIFIED_CLINICAL) {
+            // allowsFullClinical() rather than == FULL_IDENTIFIED_CLINICAL: the strictly higher
+            // SPECIALLY_PROTECTED_CLINICAL tier is a superset and must not fall back to SUMMARY.
+            if (lifted.allowsFullClinical()) {
                 clinicalAccess = ClinicalAccessLevel.FULL.name();
                 piiAccess = PiiAccessLevel.FULL.name();
             }
