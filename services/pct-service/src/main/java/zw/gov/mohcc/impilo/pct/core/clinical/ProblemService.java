@@ -74,6 +74,9 @@ public class ProblemService {
         p.setDisplay(required(body, "display"));
         p.setCategory(upperOr(body.get("category"), "DIAGNOSIS"));
         p.setClinicalStatus(upperOr(body.get("clinical_status"), "ACTIVE"));
+        // No default: an unstated severity stays NULL. Defaulting it would record an assessment
+        // the clinician never made, and "mild" is the one value that would stop a reader looking.
+        p.setSeverity(upper(body.get("severity")));
         String onset = str(body.get("onset_date"));
         if (onset != null) {
             p.setOnsetDate(LocalDate.parse(onset));
@@ -140,6 +143,12 @@ public class ProblemService {
     private static String upperOr(Object v, String def) {
         String s = str(v);
         return s == null ? def : s.toUpperCase(Locale.ROOT);
+    }
+
+    /** Normalises case without inventing a value — absent stays absent. */
+    private static String upper(Object v) {
+        String s = str(v);
+        return s == null ? null : s.toUpperCase(Locale.ROOT);
     }
 
     private String toJson(Object obj) {

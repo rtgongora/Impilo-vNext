@@ -42,6 +42,10 @@ public class ProblemEntity {
     @Column(name = "category", nullable = false)
     private String category = "DIAGNOSIS";
 
+    /** Clinician-assessed severity. NULL means not stated — never read as mild. */
+    @Column(name = "severity")
+    private String severity;
+
     @Column(name = "onset_date")
     private LocalDate onsetDate;
 
@@ -102,6 +106,9 @@ public class ProblemEntity {
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public String getSeverity() { return severity; }
+    public void setSeverity(String severity) { this.severity = severity; }
 
     public LocalDate getOnsetDate() { return onsetDate; }
     public void setOnsetDate(LocalDate onsetDate) { this.onsetDate = onsetDate; }

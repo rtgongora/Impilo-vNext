@@ -67,6 +67,7 @@ public class ProblemController {
         m.put("display", p.getDisplay());
         m.put("clinical_status", p.getClinicalStatus());
         m.put("category", p.getCategory());
+        m.put("severity", p.getSeverity());
         m.put("onset_date", p.getOnsetDate() != null ? p.getOnsetDate().toString() : null);
         m.put("recorded_by", p.getRecordedBy());
         m.put("resolved_at", p.getResolvedAt() != null ? p.getResolvedAt().toString() : null);
