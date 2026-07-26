@@ -80,8 +80,8 @@ Consequences that are not optional:
 | `services/mental-health-service/**` — **NEW service, port 8397** | See §4. |
 | `services/experience-bff/**` — emergency controllers only | |
 | `ui/one-ui-shell/src/{app/clinical/emergency,features/emergency,lib/offline}/**` | |
-| `libs/emergency-domain/**` and `libs/burn-domain/**` — **NEW libraries** |
-| `apps/mobile/provider-app/src/screens/provider/SpecialtyWorkspacePanel.tsx` — burns and resuscitation tools only | Nobody else claims mobile this wave; the trauma lease held it and that programme is closed. | |
+| `libs/emergency-domain/**` and `libs/burn-domain/**` — **NEW libraries** | `burn-domain` is shared with surgery by design (§5b Decision 1). |
+| `apps/mobile/provider-app/src/screens/provider/SpecialtyWorkspacePanel.tsx` — burns and resuscitation tools only | Nobody else claims mobile this wave; the trauma lease held it and that programme is closed. |
 | `scripts/runtime-proof/emergency-*.sh`, `scripts/guard/check-emergency-*.sh`, `check-no-ts-clinical-logic.sh`, `check-identity-repoint-coverage.sh` | |
 | `docs/clinical/emergency-domain-pack/**`, `docs/clinical-governance/emergency/**` | |
 
