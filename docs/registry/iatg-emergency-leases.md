@@ -64,6 +64,26 @@ Consequences that are not optional:
   And note the structural shortcut: sessions in this tree **share one `.git`**, so a peer's commits
   are already in your `HEAD` — no fetch is needed at all to push, and `git push` is a fast-forward.
   Both hazards confirmed independently by the RMNP lane.
+- **When ff-only genuinely fails, MERGE — do not rebase, and do not stash.** "If ff-only fails,
+  stop" is insufficient guidance and this pack hit the case: a peer committed locally, then
+  recommitted the same work and pushed it, stranding their original commit underneath mine. The
+  branch was 2 ahead / 1 behind with two commits carrying **identical patch-ids**.
+
+  `git rebase` is the textbook answer and is wrong here: it demands a clean worktree, and on a
+  shared tree the worktree always holds someone else's uncommitted work, so `--autostash` would
+  capture a peer's edits into your stash. Merge needs no clean tree, rewrites nothing and destroys
+  nothing; a merge commit on a six-session branch is honest rather than noisy.
+
+  Before pushing a merge, prove the peer's change was not doubled:
+
+  ```
+  git show <local> | git patch-id --stable      # compare against the remote twin
+  git diff origin/$(git branch --show-current) -- <their files> --stat   # must be EMPTY
+  git diff --name-only origin/$(git branch --show-current)..HEAD         # must list ONLY your files
+  ```
+
+  The duplicate commit stays in history with the same message twice. That is cosmetic; the tree is
+  what matters, and the third command is the one that proves it.
 
 ## 2. Lane ownership
 
