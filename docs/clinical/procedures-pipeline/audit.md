@@ -5,8 +5,9 @@ section-by-section coverage matrix against the Clinical Procedures Pipeline spec
 
 Audited at `09b28436e` on `claude/staging-ux-orchestration-remediation-Yypyl`, 2026-07-26.
 Every claim below is a file read or a grep, not a recollection. Where an earlier draft of this
-audit was wrong, the correction is stated explicitly rather than quietly fixed — two of them
-materially shrink the work.
+audit was wrong, the correction is stated explicitly rather than quietly fixed. Three of them are
+recorded here, and each shrinks the work: the request lifecycle, the results chain and the implant
+registry are all more built than the first pass credited.
 
 Companion documents: [surgical pack audit](../surgical-domain-pack/audit.md) ·
 [boundary ADR](../../architecture/adr/ADR-SURGERY-AND-PROCEDURES-SERVICE-BOUNDARIES.md)
@@ -40,7 +41,7 @@ So the pipeline's problem is **not** that execution is missing. It is that:
    or interventional-radiology procedure has nowhere to execute;
 5. nothing guarantees a request cannot disappear.
 
-## 2. Two corrections to the first draft of this audit
+## 2. Corrections to the first draft of this audit
 
 ### 2.1 OROS already owns the procedure request — and it is far richer than assumed
 
@@ -77,11 +78,22 @@ Two consequences:
   preliminary from final from interpretation from action from communication", and `ACKNOWLEDGED`
   gives the "not closed while results are unreviewed" invariant a real state to hang on.
 
-### 2.2 Ten rigs, not nine
+### 2.2 A national implant registry already exists
+
+`inventory-service` holds one, and the first draft of this audit missed it.
+`ImplantTraceabilityService` over `ImplantUnitEntity` and `PatientImplantEntity`, exposed at
+`/v1/internal/implants`, answers three questions the specification asks for: recall trace by UDI
+or lot **across all patients**, every implant a given patient carries, and the history of a given
+unit. Product, manufacturer, lot, serial, expiry and anatomical site are captured at insertion.
+
+So §14 is largely built. Two real gaps remain inside it: information given to the patient about
+their own implant, and removal, revision or replacement as tracked events.
+
+### 2.3 Ten rigs, not nine
 
 `ls scripts/runtime-proof/theatre-*.sh` returns ten scripts. An earlier count of nine was wrong.
 
-### 2.3 One prior decision this programme closes
+### 2.4 One prior decision this programme closes
 
 `docs/architecture/clinical-procedure-or-context-map.md` ends with an explicitly open question:
 
@@ -108,7 +120,7 @@ procedure needs.
 | Counts → retained-item safety | `procedure_count` (V023) → RITO | real; Sign-Out gated |
 | Blood | `procedure_blood_link` (V020) → MADI reserve/compatible | real |
 | Patient + specimen transport | `procedure_transport` (V021) → NHUME PATIENT (nhume V006) | real |
-| Implants + UDI | `procedure_implant` (V027) | real; per-episode only |
+| Implants + UDI | `procedure_implant` (V027) → inventory `ImplantTraceabilityService` | real; national registry with recall trace by UDI or lot |
 | Instrument sets + CSSD cycles | V028, tuso V026 `instrument_set_cssd_cycle` | real |
 | Controlled drugs + witness | `procedure_controlled_drug` (V030) | real |
 | Anaesthesia chart time-series | `procedure_anaesthesia_chart_entry` (V024) | real |
@@ -192,7 +204,7 @@ Legend: **BUILT** — real and proven · **PARTIAL** — real but materially sho
 | 11 | Execution record | BUILT | intraop events, vitals, technique, findings, signable note → Butano |
 | 12 | Procedure graphics (20 maps) | **ABSENT** | body-map primitive only |
 | 13 | Specimens + chain of custody | PARTIAL | episode → oros specimen → histopathology real; custody, adequacy, label-mismatch prevention thin |
-| 14 | Devices + implants | PARTIAL | UDI/lot/serial/expiry/site real per episode; no registry, recall sweep or patient information |
+| 14 | Devices + implants | PARTIAL | national registry real (recall by UDI or lot, per-patient, per-unit); patient-facing information and the removal/revision lifecycle absent |
 | 15 | Recovery | PARTIAL | PACU real and gated; non-theatre recovery absent |
 | 16 | Results + interpretation | BUILT | oros preliminary/final/released/acknowledged/amended/superseded + observations + histopathology |
 | 17 | Aftercare | **ABSENT** | — |

@@ -60,7 +60,7 @@ and becomes the surgical pack's foundation:
 | Specimens → histopathology | V022 → oros V012/V014 | discharge summary surfaces pending results |
 | Counts → retained-item safety | V023 → RITO | real Sign-Out gate |
 | Blood | V020 → MADI reserved + compatible | real gate |
-| Implants, UDI, lot, serial, expiry | V027 | per-episode; no registry |
+| Implants, UDI, lot, serial, expiry | V027 + inventory `ImplantTraceabilityService` | national registry, recall trace by UDI or lot |
 | Instrument sets + CSSD cycles | V028, tuso V026 | real |
 | Anaesthesia chart + ASA/Aldrete scoring | V024, V012 | real time-series |
 | PACU depth + Aldrete discharge gate | V031 | escalation, unplanned ICU, return to theatre |
@@ -116,8 +116,11 @@ and becomes the surgical pack's foundation:
    histopathology, which is good, but §16's "do not close a surgical episode with an unreviewed
    histology result" needs a surgical episode to gate — and there isn't one. OROS has the
    `ACKNOWLEDGED` state that would make the gate real.
-10. **No implant registry.** §17 needs cross-patient product/lot/serial tracking with recall
-    sweep and patient-facing implant information. Today implants are rows on one episode.
+10. **Implants are tracked; drains, stomas and wounds are not.** Correcting an error in the
+    first draft of this audit: `inventory-service` does hold a national implant registry
+    (`ImplantTraceabilityService`, recall trace by UDI or lot across all patients, per-patient
+    and per-unit history). What §17 still lacks is patient-facing implant information, the
+    removal/revision lifecycle, and drains, stomas and wounds as longitudinal objects at all.
 11. **No surgical decision support.** CKP has the right machinery — versioned, applicability-
     scoped, structurally inspectable rules — and no surgical content in it.
 12. **Facility capability is spaces, not capability.** §20's fourteen dimensions (surgical
@@ -150,7 +153,7 @@ nothing exists.
 | 14 | Recovery + surgical ward workspace (18 tiles) | PARTIAL | PACU real and gated; the ward workspace as specified is absent |
 | 15 | Complications (20 pathways) | PARTIAL | events + RITO routing; no pathways |
 | 16 | Pathology + specimen closure (10 states) | PARTIAL | OROS has the states; the surgical closure gate has nothing to gate |
-| 17 | Implants, devices, drains, stomas (12 attributes) | PARTIAL | implants real per episode; drains/stomas absent; no registry, recall sweep or patient information |
+| 17 | Implants, devices, drains, stomas (12 attributes) | PARTIAL | implant registry with recall real; drains, stomas and wounds absent; patient-facing information and removal/revision absent |
 | 18 | Discharge + long-term follow-up (18 items) | PARTIAL | surgical discharge summary real; surveillance, future surgery, restrictions, fit note, transport absent |
 | 19 | Decision support (12 areas) | **ABSENT** | CKP machinery ready, no content |
 | 20 | Facility capability (14 dimensions) | PARTIAL | spaces/beds/equipment/instrument sets; capability query absent |
