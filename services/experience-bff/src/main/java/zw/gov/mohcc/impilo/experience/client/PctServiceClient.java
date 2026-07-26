@@ -831,26 +831,43 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    // ── Vitals (strangler migration) ────────────────────────────
+    // ── Vitals → discrete observations ──────────────────────────
+    //
+    // The vitals surface reads and writes pct's observation spine (pct_observations). This client
+    // previously called /v1/vitals, an endpoint pct-service has never served, so every clinical
+    // vitals read 404'd and rendered as "no vitals recorded" — the same defect, and the same
+    // repair, as /v1/conditions → /v1/problems. "Vitals" survives as the BFF's outward-facing
+    // noun because the UI is built on it; the clinical truth is the coded observation, and the
+    // translation lives in VitalsObservationBridge rather than in a second endpoint on the
+    // system of record.
 
-    public JsonNode deleteVital(String vitalId) {
-        String url = baseUrl + "/v1/vitals/" + vitalId;
-        log.info("PCT: Deleting vital={}", vitalId);
-        restTemplate.exchange(url, HttpMethod.DELETE, null, JsonNode.class);
-        return new ObjectMapper().createObjectNode();
-    }
-
-    public JsonNode listVitals(String patientCpid, int page, int size) {
-        String url = baseUrl + "/v1/vitals?patient_id=" + patientCpid + "&page=" + page + "&size=" + size;
-        log.debug("PCT: Listing vitals for patient={}...",
+    /** All observations for a subject, optionally narrowed to one encounter. Unpaged from pct. */
+    public JsonNode listObservationsForSubject(String patientCpid, String encounterId) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/observations")
+                .queryParam("patient_id", patientCpid);
+        if (encounterId != null && !encounterId.isBlank()) {
+            b.queryParam("encounter_id", encounterId);
+        }
+        log.debug("PCT: Listing observations for patient={}...",
                 patientCpid.substring(0, Math.min(8, patientCpid.length())));
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
         return extractData(response);
     }
 
-    public JsonNode createVitals(Map<String, Object> body) {
-        String url = baseUrl + "/v1/vitals";
-        log.info("PCT: Recording vitals for patient={}", body.get("patient_id"));
+    /** A set of observations taken at one contact — applied in one transaction by pct. */
+    public JsonNode recordObservationsBatch(List<Map<String, Object>> observations) {
+        String url = baseUrl + "/v1/observations/batch";
+        log.info("PCT: Recording observation batch of {}", observations.size());
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, Map.of("observations", observations), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Withdraw an observation (ENTERED_IN_ERROR). Idempotent on pct's side. */
+    public JsonNode voidObservation(String observationId, String reason) {
+        String url = baseUrl + "/v1/observations/" + observationId + "/void";
+        log.info("PCT: Voiding observation={}", observationId);
+        Map<String, Object> body = reason == null ? Map.of() : Map.of("reason", reason);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }

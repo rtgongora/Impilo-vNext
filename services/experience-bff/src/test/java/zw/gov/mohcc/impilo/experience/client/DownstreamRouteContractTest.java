@@ -92,12 +92,10 @@ class DownstreamRouteContractTest {
             // MobileDischargeController) now call inpatient-service directly instead of paying a
             // doomed pct round-trip and falling through a catch block.
             //
-            //   LIVE AND BROKEN — real callers on a path nobody serves. This is a broken feature,
-            //   and deleting it would hide exactly the incompleteness the rule is about. /v1/vitals
-            //   is as core as a clinical read gets; /v1/records has two callers, one of them
-            //   citizen-facing (CitizenRecordsController — someone fetching their own record).
-            //   Both routed to the coordinator for an owner; neither is this lane's to fix.
-            "PctServiceClient -> /v1/vitals",
+            //   LIVE AND BROKEN — real callers on a path nobody serves. /v1/vitals has been
+            //   repaired (the vitals surface now reads and writes pct's /v1/observations spine via
+            //   VitalsObservationBridge); /v1/records remains until the patient-document capability
+            //   lands, and deleting it would hide exactly the incompleteness the rule is about.
             "PctServiceClient -> /v1/records",
 
             // ── Adult Medicine lane (mine) ───────────────────────────────────────
