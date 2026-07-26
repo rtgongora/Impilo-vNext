@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ConditionsPage from "./page";
 
@@ -9,8 +10,11 @@ type ConditionsState = {
   isError: boolean;
 };
 
-const { conditionsState } = vi.hoisted(() => ({
+type CreateState = { mutate: (...args: unknown[]) => void; isPending: boolean; isError: boolean; error?: unknown };
+
+const { conditionsState, createState } = vi.hoisted(() => ({
   conditionsState: { current: {} as ConditionsState },
+  createState: { current: {} as CreateState },
 }));
 
 const POPULATED: ConditionsState = {
@@ -64,15 +68,20 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
-vi.mock("@/hooks/queries/useConditions", () => ({
+vi.mock("@/hooks/queries/useConditions", async (importOriginal) => ({
+  // asDuplicateReport is a pure narrowing helper and is deliberately NOT mocked — mocking it
+  // would mean the test proves the page renders whatever the mock says, rather than that the
+  // page recognises a real 409 body.
+  ...(await importOriginal<object>()),
   useConditions: () => conditionsState.current,
-  useCreateCondition: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+  useCreateCondition: () => createState.current,
   useResolveCondition: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 describe("ConditionsPage", () => {
   beforeEach(() => {
     conditionsState.current = POPULATED;
+    createState.current = { mutate: vi.fn(), isPending: false, isError: false };
   });
 
   it("adds encounter-aware review scaffolding to the problem list", () => {
@@ -105,6 +114,57 @@ describe("ConditionsPage", () => {
     it("never claims the patient has no conditions", () => {
       render(<ConditionsPage />);
       expect(screen.queryByText(/no conditions recorded yet/i)).not.toBeInTheDocument();
+    });
+  });
+
+  /**
+   * A duplicate is the server asking a question, not reporting a failure. Rendering it as
+   * "failed, please try again" is a dead end — the retry returns the same 409 forever — and it
+   * throws away the existing problem, which is the one thing needed to answer.
+   */
+  describe("when the condition is already on the list", () => {
+    const duplicate = {
+      status: 409,
+      error: "condition_already_on_list",
+      message: "A problem matching 'Hypertension' is already on this patient's list (status ACTIVE).",
+      existing: {
+        id: "cond-1",
+        attributes: { conditionName: "Hypertension", clinicalStatus: "ACTIVE", onsetDate: "2026-01-15" },
+      },
+    };
+
+    beforeEach(() => {
+      createState.current = { mutate: vi.fn(), isPending: false, isError: true, error: duplicate };
+    });
+
+    it("offers the two answers instead of a retry", async () => {
+      render(<ConditionsPage />);
+      await userEvent.click(screen.getByRole("button", { name: /add condition/i }));
+
+      expect(screen.getByText(/already on this patient's problem list/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /it has recurred/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /a separate problem/i })).toBeInTheDocument();
+    });
+
+    it("shows the condition already recorded, so the question can be answered", async () => {
+      render(<ConditionsPage />);
+      await userEvent.click(screen.getByRole("button", { name: /add condition/i }));
+      expect(screen.getAllByText(/Hypertension/i).length).toBeGreaterThan(0);
+    });
+
+    it("does not tell the clinician the write failed", async () => {
+      render(<ConditionsPage />);
+      await userEvent.click(screen.getByRole("button", { name: /add condition/i }));
+      expect(screen.queryByText(/was not saved/i)).not.toBeInTheDocument();
+    });
+
+    it("sends the chosen answer back rather than repeating the same request", async () => {
+      render(<ConditionsPage />);
+      await userEvent.click(screen.getByRole("button", { name: /add condition/i }));
+      await userEvent.click(screen.getByRole("button", { name: /it has recurred/i }));
+
+      const payload = (createState.current.mutate as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(payload.duplicateResolution).toBe("SAME_PROBLEM_RETURNING");
     });
   });
 

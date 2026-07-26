@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
@@ -60,19 +61,34 @@ public class ConditionsController {
         this.pctClient = pctClient;
     }
 
+    /**
+     * The create payload, accepting both spellings of every field.
+     *
+     * <p>The aliases are not cosmetic. The web client posts camelCase ({@code patientId},
+     * {@code conditionName}) and this record declared only snake_case, with no naming strategy
+     * configured on either side and no key transformation in the api-client — so Jackson bound
+     * every field to null and {@code @Valid} rejected the request as a 400 before it ever reached
+     * pct-service. That is a second, independent break in the same vertical as the wrong endpoint
+     * path: the write path could not have worked even once the path was fixed.</p>
+     *
+     * <p>Both spellings are accepted rather than one chosen, because the web client and the mobile
+     * client do not agree with each other and breaking either to tidy the contract would trade one
+     * dead write path for another.</p>
+     */
     public record CreateConditionRequest(
-            @NotBlank String patient_id,
-            String encounter_id,
-            String journey_id,
-            @NotBlank String condition_name,
-            String icd_code,
+            @JsonAlias("patientId") @NotBlank String patient_id,
+            @JsonAlias("encounterId") String encounter_id,
+            @JsonAlias("journeyId") String journey_id,
+            @JsonAlias("conditionName") @NotBlank String condition_name,
+            @JsonAlias("icdCode") String icd_code,
             String category,
-            String clinical_status,
+            @JsonAlias("clinicalStatus") String clinical_status,
             String severity,
-            LocalDate onset_date,
-            String recorded_by,
+            @JsonAlias({"diagnosticCertainty"}) String diagnostic_certainty,
+            @JsonAlias("onsetDate") LocalDate onset_date,
+            @JsonAlias("recordedBy") String recorded_by,
             String notes,
-            String duplicate_resolution
+            @JsonAlias("duplicateResolution") String duplicate_resolution
     ) {}
 
     @GetMapping
@@ -214,6 +230,7 @@ public class ConditionsController {
         body.put("category", r.category());
         body.put("clinical_status", r.clinical_status() != null ? r.clinical_status() : "ACTIVE");
         body.put("severity", r.severity());
+        body.put("diagnostic_certainty", r.diagnostic_certainty());
         body.put("onset_date", r.onset_date() != null ? r.onset_date().toString() : null);
         body.put("notes", r.notes());
         body.put("duplicate_resolution", r.duplicate_resolution());
@@ -251,6 +268,7 @@ public class ConditionsController {
         attrs.put("category", text(p, "category"));
         attrs.put("clinicalStatus", text(p, "clinical_status"));
         attrs.put("severity", text(p, "severity"));
+        attrs.put("diagnosticCertainty", text(p, "diagnostic_certainty"));
         attrs.put("onsetDate", text(p, "onset_date"));
         attrs.put("recordedBy", text(p, "recorded_by"));
         attrs.put("resolvedAt", text(p, "resolved_at"));

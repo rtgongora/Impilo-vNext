@@ -183,9 +183,69 @@ class ConditionsControllerTest {
         new ConditionsController(stub).createCondition("t1", "pod-1", "req-2", "corr-2", null,
                 new ConditionsController.CreateConditionRequest(
                         "patient-1", "enc-1", "jrn-1", "Hypertension", "I10",
-                        "DIAGNOSIS", "ACTIVE", "MODERATE", null, "doc-1", "Notes",
+                        "DIAGNOSIS", "ACTIVE", "MODERATE", "WORKING", null, "doc-1", "Notes",
                         "SAME_PROBLEM_RETURNING"));
         assertEquals("SAME_PROBLEM_RETURNING", stub.lastCreateBody.get("duplicate_resolution"));
+    }
+
+    /**
+     * The web client posts camelCase and this record declared only snake_case, with no naming
+     * strategy on either side and no key transformation in the api-client — so Jackson bound every
+     * field to null and {@code @Valid} rejected the request as a 400 before it reached pct-service.
+     * The write path could not have worked even after the endpoint path was fixed.
+     *
+     * <p>Deserialised from the literal JSON the UI sends rather than constructed in Java, because
+     * a hand-built record cannot fail the way the wire format does — which is exactly why every
+     * previous test passed while the vertical was dead.</p>
+     */
+    @Test
+    void bindsThePayloadTheWebClientActuallySends() throws Exception {
+        String uiPayload = """
+                {
+                  "patientId": "CPID-9",
+                  "conditionName": "Hypertension",
+                  "icdCode": "I10",
+                  "category": "DIAGNOSIS",
+                  "clinicalStatus": "ACTIVE",
+                  "diagnosticCertainty": "WORKING",
+                  "severity": "MODERATE",
+                  "onsetDate": null,
+                  "notes": "Clinic BP 168/98",
+                  "duplicateResolution": null
+                }
+                """;
+
+        ConditionsController.CreateConditionRequest bound =
+                mapper.readValue(uiPayload, ConditionsController.CreateConditionRequest.class);
+
+        assertEquals("CPID-9", bound.patient_id());
+        assertEquals("Hypertension", bound.condition_name());
+        assertEquals("I10", bound.icd_code());
+        assertEquals("ACTIVE", bound.clinical_status());
+        assertEquals("WORKING", bound.diagnostic_certainty());
+    }
+
+    /** The snake_case spelling other clients use must keep working. */
+    @Test
+    void alsoBindsTheSnakeCaseSpelling() throws Exception {
+        ConditionsController.CreateConditionRequest bound = mapper.readValue(
+                "{\"patient_id\":\"CPID-9\",\"condition_name\":\"Asthma\",\"clinical_status\":\"ACTIVE\"}",
+                ConditionsController.CreateConditionRequest.class);
+        assertEquals("CPID-9", bound.patient_id());
+        assertEquals("Asthma", bound.condition_name());
+    }
+
+    @Test
+    void carriesDiagnosticCertaintyToPctAndBack() {
+        StubPctClient stub = new StubPctClient();
+        ConditionsController controller = new ConditionsController(stub);
+
+        controller.createCondition("t1", "pod-1", "req-2", "corr-2", null, request());
+        assertEquals("WORKING", stub.lastCreateBody.get("diagnostic_certainty"));
+
+        Map<String, Object> attrs = firstAttributes(
+                controller.listConditions("t1", "req-1", "corr-1", "patient-1"));
+        assertEquals("WORKING", attrs.get("diagnosticCertainty"));
     }
 
     // ── Fixtures ────────────────────────────────────────────────────────────────
@@ -193,7 +253,7 @@ class ConditionsControllerTest {
     private static ConditionsController.CreateConditionRequest request() {
         return new ConditionsController.CreateConditionRequest(
                 "patient-1", "enc-1", "jrn-1", "Hypertension", "I10",
-                "DIAGNOSIS", "ACTIVE", "MODERATE", null, "doc-1", "Notes", null);
+                "DIAGNOSIS", "ACTIVE", "MODERATE", "WORKING", null, "doc-1", "Notes", null);
     }
 
     @SuppressWarnings("unchecked")
@@ -251,6 +311,7 @@ class ConditionsControllerTest {
             node.put("clinical_status", "ACTIVE");
             node.put("category", "DIAGNOSIS");
             node.put("severity", "MODERATE");
+            node.put("diagnostic_certainty", "WORKING");
             node.put("onset_date", "2026-01-15");
             node.put("recorded_by", "clinician-9");
             node.put("notes", "Notes");

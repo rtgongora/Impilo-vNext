@@ -32,7 +32,39 @@ interface CreateConditionPayload {
   severity: string;
   onsetDate?: string | null;
   notes?: string | null;
+  /**
+   * Set only after the server has reported a duplicate and the clinician has answered. Sending it
+   * unprompted would skip the check the answer exists to resolve.
+   */
+  duplicateResolution?: DuplicateResolution;
   [key: string]: unknown;
+}
+
+export type DuplicateResolution = "SAME_PROBLEM_RETURNING" | "DISTINCT_PROBLEM";
+
+/**
+ * The 409 the BFF returns when this condition is already on the patient's list.
+ *
+ * <p>It is <strong>data, not a failure</strong>. The server is not reporting that the write broke —
+ * it is asking a question only the clinician can answer, and it carries the existing condition
+ * because the question is unanswerable without seeing it. Rendering this as "something went wrong,
+ * please try again" produces a dead end: the retry returns the same 409 forever.</p>
+ */
+export interface DuplicateConditionReport {
+  status: 409;
+  error: "condition_already_on_list";
+  message: string;
+  existing?: ConditionResource;
+  resolutions?: Array<{ duplicate_resolution: DuplicateResolution; effect: string }>;
+}
+
+/** Narrows a thrown api-client error to the duplicate question. */
+export function asDuplicateReport(error: unknown): DuplicateConditionReport | null {
+  if (!error || typeof error !== "object") return null;
+  const candidate = error as Partial<DuplicateConditionReport>;
+  return candidate.status === 409 && candidate.error === "condition_already_on_list"
+    ? (candidate as DuplicateConditionReport)
+    : null;
 }
 
 type ConditionsResponse = ApiResponse<ConditionResource[]>;
