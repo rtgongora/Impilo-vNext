@@ -91,6 +91,13 @@ describe("no orphan withdrawals", () => {
     expect(unnamed).toEqual([]);
   });
 
+  it("routes every label to a named lane — nothing is left unassigned", () => {
+    const unrouted = Object.entries(SPECIALTY_TOOL_REGISTRY).filter(
+      ([, d]) => d.state === "IN_DEVELOPMENT" && (d.owner === "UNASSIGNED" || d.owner === "TBC"),
+    );
+    expect(unrouted).toEqual([]);
+  });
+
   it("cites a completion of record where the owning lane has already delivered one", () => {
     for (const label of ["Partograph", "CTG Interpretation"]) {
       const d = resolveTool(label);
