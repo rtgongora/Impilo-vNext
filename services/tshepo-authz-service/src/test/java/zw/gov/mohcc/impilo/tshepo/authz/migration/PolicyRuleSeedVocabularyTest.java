@@ -75,10 +75,24 @@ import static org.assertj.core.api.Assertions.fail;
  * sets a valid value for that rule by name. That keeps the guard honest without ever asking
  * anyone to rewrite history, and without an allowlist to rot.
  *
- * <p><b>Deliberately not guarded:</b> {@code role} and {@code resource_type} are open
- * vocabularies (free-form role codes and service-defined resource names) with no enum to
- * check against — a guard there would be guesswork. Note this means the guard cannot see a
- * rule made unreachable by an unmatchable {@code resource_type}; see V049's scope note.
+ * <p><b>{@code resource_type} — reachability against the real path space.</b> This one has no
+ * vocabulary at all: the PDP never receives a resource type, it derives one as the last
+ * non-UUID path segment of the request. So the question is again reachability, and it is
+ * decidable — a resource type is producible only if it is a path segment somewhere in the
+ * estate. {@link ReachablePathSegments} gathers those; a seeded value appearing in no path at
+ * all can never be derived, which is precisely how V017 seeded
+ * {@code 'khuluma-conversation'} for routes that yield {@code 'conversations'} and left the
+ * Khuluma hub denied for its whole life.
+ *
+ * <p><b>{@code role} is deliberately still not guarded</b>, and the reason is worth recording so
+ * nobody "fixes" it with something worse. Roles have no single declaration: they arrive from the
+ * Keycloak realm, from the Vashandi role-template catalog, and from provider registries. Measured
+ * against the realm alone, 14 of 52 seeded roles look unknown — mostly false alarms. The only
+ * anchor broad enough to avoid those, "any upper-snake literal in the codebase", matches over
+ * 7,000 strings and would pass essentially anything. A guard that cries wolf gets muted, and a
+ * guard that proves nothing is worse than an honest gap. Three seeded roles
+ * ({@code HPA_OVERSIGHT_OFFICER}, {@code PROVINCIAL_COORDINATOR}, {@code WARD_MANAGER}) match
+ * neither the realm nor any code literal and are worth a human look.
  */
 @DisplayName("policy_rule seeds stay inside the runtime's closed vocabularies")
 class PolicyRuleSeedVocabularyTest {
@@ -93,7 +107,8 @@ class PolicyRuleSeedVocabularyTest {
             .map(Enum::name).collect(Collectors.toUnmodifiableSet());
 
     /** The columns this guard checks. Order is irrelevant; membership is what matters. */
-    private static final List<String> GUARDED_COLUMNS = List.of("purpose", "actor_type", "effect");
+    private static final List<String> GUARDED_COLUMNS =
+            List.of("purpose", "actor_type", "effect", "resource_type");
 
     /**
      * Actor types someone can actually put on the wire: whatever a client union declares, plus the
@@ -110,7 +125,8 @@ class PolicyRuleSeedVocabularyTest {
         return Map.of(
                 "purpose", PURPOSES,
                 "actor_type", emittableActorTypes(),
-                "effect", EFFECTS);
+                "effect", EFFECTS,
+                "resource_type", ReachablePathSegments.all());
     }
 
     private static final Pattern INSERT_HEAD = Pattern.compile(
@@ -131,6 +147,10 @@ class PolicyRuleSeedVocabularyTest {
 
     private static final Pattern QUOTED = Pattern.compile("'((?:[^']|'')*)'");
 
+    /** {@code active = false} in an UPDATE's SET clause — a rule being switched off. */
+    private static final Pattern DEACTIVATION = Pattern.compile(
+            "\\bactive\\s*=\\s*false\\b", Pattern.CASE_INSENSITIVE);
+
     @Test
     void everySeededPurposeActorTypeAndEffectIsInVocabulary() {
         List<Path> migrations = locateMigrations();
@@ -146,6 +166,10 @@ class PolicyRuleSeedVocabularyTest {
                         + " values alone, the client mirrors stopped being readable and the"
                         + " actor_type check would pass everything")
                 .hasSizeGreaterThan(ContractMirrors.SERVICE_SIDE_ACTOR_TYPES.size());
+        assertThat(vocabularies.get("resource_type"))
+                .as("path segments discovered across the source tree — a collapse here means the"
+                        + " scan stopped finding sources, and resource_type would pass everything")
+                .hasSizeGreaterThan(500);
 
         // Pass 1: read every script once, in Flyway order.
         List<String> scripts = migrations.stream().map(m -> stripComments(read(m))).toList();
@@ -156,6 +180,18 @@ class PolicyRuleSeedVocabularyTest {
             for (Correction c : parseCorrections(scripts.get(i), i)) {
                 // Later migrations win; equal indexes cannot occur (one script per index).
                 corrections.merge(c.key(), c, (a, b) -> a.scriptIndex() >= b.scriptIndex() ? a : b);
+            }
+        }
+
+        // Rules a later migration switched off. A retired rule asserts nothing about live access,
+        // so a bad value on it is history rather than a defect — that is how a superseded seed is
+        // meant to be dealt with, given the original migration can never be edited. Note this is
+        // strictly "switched off later": a row seeded active=false from birth is a SHADOW rule
+        // awaiting a flip, and stays under guard so it is not dead on the day it is turned on.
+        Map<String, Integer> retiredAt = new LinkedHashMap<>();
+        for (int i = 0; i < scripts.size(); i++) {
+            for (String rule : parseRetirements(scripts.get(i))) {
+                retiredAt.putIfAbsent(rule, i);
             }
         }
 
@@ -186,6 +222,10 @@ class PolicyRuleSeedVocabularyTest {
                     String ruleName = literalOf(byColumn.get("name"));
 
                     int seededIn = fileIndex;
+                    Integer retired = retiredAt.get(ruleName);
+                    if (retired != null && retired > seededIn) {
+                        continue; // superseded and switched off; it claims nothing any more
+                    }
                     vocabularies.forEach((column, allowed) -> {
                         Value value = byColumn.get(column);
                         if (value == null || isSqlNull(value)) {
@@ -257,6 +297,41 @@ class PolicyRuleSeedVocabularyTest {
     }
 
     /**
+     * Rule names identified by an UPDATE's WHERE clause, via {@code name = 'x'} or
+     * {@code name IN ('x','y')}. An UPDATE that does not name rules cannot be attributed to any,
+     * so it yields nothing rather than being assumed to affect something — the conservative
+     * direction for a guard.
+     */
+    private static List<String> namesIn(String whereClause) {
+        List<String> names = new ArrayList<>();
+        Matcher predicate = NAME_PREDICATE.matcher(whereClause);
+        while (predicate.find()) {
+            if (predicate.group(1) != null) {
+                names.add(predicate.group(1).replace("''", "'"));
+            } else {
+                Matcher each = QUOTED.matcher(predicate.group(2));
+                while (each.find()) {
+                    names.add(each.group(1).replace("''", "'"));
+                }
+            }
+        }
+        return names;
+    }
+
+    /** Rule names a script switches off via {@code UPDATE ... SET active = false WHERE name ...}. */
+    private static List<String> parseRetirements(String sql) {
+        List<String> retired = new ArrayList<>();
+        Matcher stmt = UPDATE_STATEMENT.matcher(sql);
+        while (stmt.find()) {
+            if (!DEACTIVATION.matcher(stmt.group(1)).find()) {
+                continue;
+            }
+            retired.addAll(namesIn(stmt.group(2)));
+        }
+        return retired;
+    }
+
+    /**
      * Extracts {@code UPDATE policy_rule SET <guarded column> = '<value>' WHERE ... name ...}.
      * An UPDATE whose WHERE clause does not identify rules by name cannot be attributed, so it is
      * ignored rather than assumed to fix anything — the conservative direction for a guard.
@@ -266,20 +341,7 @@ class PolicyRuleSeedVocabularyTest {
         Matcher stmt = UPDATE_STATEMENT.matcher(sql);
         while (stmt.find()) {
             String setClause = stmt.group(1);
-            String whereClause = stmt.group(2);
-
-            List<String> names = new ArrayList<>();
-            Matcher predicate = NAME_PREDICATE.matcher(whereClause);
-            while (predicate.find()) {
-                if (predicate.group(1) != null) {
-                    names.add(predicate.group(1).replace("''", "'"));
-                } else {
-                    Matcher each = QUOTED.matcher(predicate.group(2));
-                    while (each.find()) {
-                        names.add(each.group(1).replace("''", "'"));
-                    }
-                }
-            }
+            List<String> names = namesIn(stmt.group(2));
             if (names.isEmpty()) {
                 continue;
             }
