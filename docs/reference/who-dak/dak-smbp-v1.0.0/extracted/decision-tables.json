@@ -7,10 +7,14 @@
         "Annotations",
         "Reference(s)"
       ],
-      "coversIds": [],
+      "coversIds": [
+        "SMBP.B4.DT"
+      ],
       "hitPolicy": null,
       "id": "SMBP.B4.DT",
-      "idsFromSheetName": [],
+      "idsFromSheetName": [
+        "SMBP.B4.DT"
+      ],
       "idsFromSheetNote": [],
       "metadata": {
         "activityId": "SMBP.B4",
@@ -64,10 +68,14 @@
         "Annotations",
         "Reference(s)"
       ],
-      "coversIds": [],
+      "coversIds": [
+        "SMBP.B7.DT"
+      ],
       "hitPolicy": null,
       "id": "SMBP.B7.DT",
-      "idsFromSheetName": [],
+      "idsFromSheetName": [
+        "SMBP.B7.DT"
+      ],
       "idsFromSheetNote": [],
       "metadata": {
         "activityId": "SMBP.B7",
@@ -163,10 +171,14 @@
         "Annotations",
         "Reference(s)"
       ],
-      "coversIds": [],
+      "coversIds": [
+        "SMBP.B7.DT (Danger signs)"
+      ],
       "hitPolicy": null,
-      "id": "SMBP.B7.DT",
-      "idsFromSheetName": [],
+      "id": "SMBP.B7.DT (Danger signs)",
+      "idsFromSheetName": [
+        "SMBP.B7.DT"
+      ],
       "idsFromSheetNote": [],
       "metadata": {
         "activityId": "SMBP.B7",

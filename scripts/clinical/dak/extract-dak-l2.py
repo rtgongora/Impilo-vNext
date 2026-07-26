@@ -273,7 +273,8 @@ def _classify(sheet_name: str, meta: dict[str, str]) -> str:
 # names it with a range ("ANC.DT.07–14 Laboratory&imaging"), so 16 sheets carry 38 tables. Coverage
 # has to be tracked per table id, not per sheet, or a table nobody implemented would never be
 # missed — which is the failure this whole traceability spine exists to prevent.
-_ID = re.compile(r"\b([A-Z]{2,4}(?:\.[A-Z0-9]+)*\.(?:DT|S|IND|LO)\.?\s?\d+)", re.IGNORECASE)
+# SMBP publishes tables as "SMBP.B4.DT" with no trailing number, so the number is optional.
+_ID = re.compile(r"\b([A-Z]{2,4}(?:\.[A-Z0-9]+)*\.(?:DT|S|IND|LO)(?:\.?\s?\d+)?)\b", re.IGNORECASE)
 _RANGE = re.compile(r"\b([A-Z]{2,4}\.(?:DT|S|IND))\.(\d+)\s*[-–—]\s*(\d+)", re.IGNORECASE)
 
 
@@ -282,7 +283,10 @@ def _ids_from_sheet_name(sheet_name: str) -> list[str]:
     for prefix, start, end in _RANGE.findall(sheet_name):
         first, last = int(start), int(end)
         if last >= first and last - first < 60:
-            ids.extend(f"{prefix.upper()}.{n:02d}" for n in range(first, last + 1))
+            # Pad to the width WHO used at the start of the range ("07-14" -> 07..14, "3-5" -> 3..5)
+            # so a synthesised id looks the way the same id looks everywhere else in the document.
+            width = len(start)
+            ids.extend(f"{prefix}.{n:0{width}d}" for n in range(first, last + 1))
     if not ids:
         for raw in _ID.findall(sheet_name):
             ids.append(_canonical_id(raw))
@@ -300,13 +304,14 @@ def _ids_from_note(rows: list[list[str]]) -> list[str]:
 
 
 def _canonical_id(raw: str) -> str:
-    text = raw.upper().replace(" ", "")
-    match = re.match(r"^(.*?)\.?(\d+)$", text)
-    if not match:
-        return text
-    head, number = match.groups()
-    head = head.rstrip(".")
-    return f"{head}.{int(number):02d}"
+    """The identifier exactly as WHO published it, minus stray whitespace.
+
+    Deliberately NOT upper-cased or zero-padded. WHO writes ``PNC.B3a.DT.3`` and ``ANC.DT.01`` — the
+    lower-case ``a``/``b`` suffix distinguishes the woman's table from the newborn's, and normalising
+    it away produces an identifier that looks tidy and cites nothing. A traceability matrix whose
+    ids do not appear in the source document is worse than none: it reads as evidence.
+    """
+    return raw.replace(" ", "").strip()
 
 
 def _dedupe(values: list[str]) -> list[str]:
@@ -329,6 +334,7 @@ def _decision_id(meta: dict[str, str], sheet_name: str) -> str:
 
 def extract_workbook(path: Path, full_dictionaries: bool = False) -> dict:
     book = Workbook(path)
+    seen_ids: dict[str, str] = {}
     payload = {
         "sourceFile": path.name,
         "sourceSha256": hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -362,6 +368,19 @@ def extract_workbook(path: Path, full_dictionaries: bool = False) -> dict:
         from_note = _ids_from_note(rows)
         covers = _dedupe(from_name + from_note)
 
+        # An indicator sheet is a table OF artefacts, not one artefact: each row is its own
+        # indicator with its own published code (ANC.IND.1 ... ANC.IND.13). Treating the sheet as a
+        # single unit would hide twelve of them from the coverage inventory.
+        if kind == "indicator":
+            row_ids: list[str] = []
+            for record in records:
+                for value in record.values():
+                    match = _ID.fullmatch(value.strip())
+                    if match:
+                        row_ids.append(_canonical_id(match.group(1)))
+                        break
+            covers = _dedupe(covers + row_ids) if not row_ids else _dedupe(row_ids)
+
         # A sheet whose title and whose own note disagree about which tables it holds is worth
         # saying out loud. ANC.DT.07–14's note lists DT.09 twice and never mentions DT.14, so the
         # title promises eight tables and the note names seven. Neither is authoritative, and a
@@ -393,8 +412,28 @@ def extract_workbook(path: Path, full_dictionaries: bool = False) -> dict:
             headers = [c.strip() for c in rows[header_index] if c.strip()]
             rows_out = _element_index(records, headers)
 
+        # Two different SMBP sheets are both published as "SMBP.B7.DT" — one for health actions and
+        # one for danger signs. A collision would silently drop one of them from the coverage
+        # inventory, so the second occurrence is qualified by its sheet and the ambiguity is stated
+        # rather than resolved: WHO's own identifier does not distinguish them.
+        qualified: list[str] = []
+        for candidate in covers:
+            if candidate in seen_ids and seen_ids[candidate] != sheet_name:
+                suffix = sheet_name.replace(candidate, "").strip(" .-–—")
+                qualified_id = f"{candidate} ({suffix})" if suffix else f"{candidate} ({sheet_name})"
+                payload["parseWarnings"].append(
+                    f"{sheet_name}: WHO publishes this table under {candidate}, which is already "
+                    f"used by sheet {seen_ids[candidate]!r}. Recorded as {qualified_id!r} so both "
+                    f"remain visible; the published identifier does not distinguish them."
+                )
+                qualified.append(qualified_id)
+            else:
+                seen_ids.setdefault(candidate, sheet_name)
+                qualified.append(candidate)
+        covers = _dedupe(qualified)
+
         entry = {
-            "id": _decision_id(meta, sheet_name),
+            "id": covers[0] if covers else _decision_id(meta, sheet_name),
             "coversIds": covers,
             "idsFromSheetName": from_name,
             "idsFromSheetNote": from_note,

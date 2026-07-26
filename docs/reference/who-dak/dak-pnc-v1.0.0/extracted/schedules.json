@@ -19,7 +19,7 @@
         "PNC.S.01"
       ],
       "hitPolicy": null,
-      "id": "Postnatal care (PNC) schedule",
+      "id": "PNC.S.01",
       "idsFromSheetName": [
         "PNC.S.01"
       ],
@@ -101,7 +101,7 @@
         "PNC.S.02"
       ],
       "hitPolicy": null,
-      "id": "Newborn/infant immunization schedule",
+      "id": "PNC.S.02",
       "idsFromSheetName": [
         "PNC.S.02"
       ],

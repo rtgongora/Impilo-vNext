@@ -1,6 +1,8 @@
 {
   "pack": "dak-smbp-v1.0.0",
-  "parseWarnings": [],
+  "parseWarnings": [
+    "SMBP.B7.DT Danger signs: WHO publishes this table under SMBP.B7.DT, which is already used by sheet 'SMBP.B7.DT SMBP health actions'. Recorded as 'SMBP.B7.DT (Danger signs)' so both remain visible; the published identifier does not distinguish them."
+  ],
   "workbooks": [
     {
       "counts": {

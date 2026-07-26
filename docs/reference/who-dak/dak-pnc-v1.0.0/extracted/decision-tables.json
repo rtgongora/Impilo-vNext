@@ -11,12 +11,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.A2.DT.01"
+        "PNC.A2.DT.1"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.A2.DT.1",
       "idsFromSheetName": [
-        "PNC.A2.DT.01"
+        "PNC.A2.DT.1"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -128,12 +128,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.A4.DT.02"
+        "PNC.A4.DT.2"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.A4.DT.2",
       "idsFromSheetName": [
-        "PNC.A4.DT.02"
+        "PNC.A4.DT.2"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -168,12 +168,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B3A.DT.03"
+        "PNC.B3a.DT.3"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B3a.DT.3",
       "idsFromSheetName": [
-        "PNC.B3A.DT.03"
+        "PNC.B3a.DT.3"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -220,12 +220,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B3A.DT.04"
+        "PNC.B3a.DT.4"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B3a.DT.4",
       "idsFromSheetName": [
-        "PNC.B3A.DT.04"
+        "PNC.B3a.DT.4"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -316,12 +316,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B3A.DT.05"
+        "PNC.B3a.DT.5"
       ],
       "hitPolicy": "Rule Order",
-      "id": "PNC.B4a.DT.5",
+      "id": "PNC.B3a.DT.5",
       "idsFromSheetName": [
-        "PNC.B3A.DT.05"
+        "PNC.B3a.DT.5"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -359,12 +359,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B4A.DT.06"
+        "PNC.B4a.DT.6"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B4a.DT.6",
       "idsFromSheetName": [
-        "PNC.B4A.DT.06"
+        "PNC.B4a.DT.6"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -465,12 +465,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B6A.DT.07"
+        "PNC.B6a.DT.7"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B6a.DT.7",
       "idsFromSheetName": [
-        "PNC.B6A.DT.07"
+        "PNC.B6a.DT.7"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -907,12 +907,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B6A.DT.08"
+        "PNC.B6a.DT.8"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B6a.DT.8",
       "idsFromSheetName": [
-        "PNC.B6A.DT.08"
+        "PNC.B6a.DT.8"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -982,12 +982,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B6A.DT.09"
+        "PNC.B6a.DT.9"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B6a.DT.9",
       "idsFromSheetName": [
-        "PNC.B6A.DT.09"
+        "PNC.B6a.DT.9"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -1078,12 +1078,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B6A.DT.10"
+        "PNC.B6a.DT.10"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B6a.DT.10",
       "idsFromSheetName": [
-        "PNC.B6A.DT.10"
+        "PNC.B6a.DT.10"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -1803,12 +1803,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B4B.DT.14"
+        "PNC.B4b.DT.14"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B4b.DT.14",
       "idsFromSheetName": [
-        "PNC.B4B.DT.14"
+        "PNC.B4b.DT.14"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -1860,12 +1860,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B4B.DT.15"
+        "PNC.B4b.DT.15"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B4b.DT.15",
       "idsFromSheetName": [
-        "PNC.B4B.DT.15"
+        "PNC.B4b.DT.15"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -1919,12 +1919,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B6B.DT.16"
+        "PNC.B6b.DT.16"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B6b.DT.16",
       "idsFromSheetName": [
-        "PNC.B6B.DT.16"
+        "PNC.B6b.DT.16"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -2185,12 +2185,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B6B.DT.17"
+        "PNC.B6b.DT.17"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B6b.DT.17",
       "idsFromSheetName": [
-        "PNC.B6B.DT.17"
+        "PNC.B6b.DT.17"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -2245,12 +2245,12 @@
         "Reference(s)"
       ],
       "coversIds": [
-        "PNC.B6B.DT.18"
+        "PNC.B6b.DT.18"
       ],
       "hitPolicy": "Rule Order",
       "id": "PNC.B6b.DT.18",
       "idsFromSheetName": [
-        "PNC.B6B.DT.18"
+        "PNC.B6b.DT.18"
       ],
       "idsFromSheetNote": [],
       "metadata": {
@@ -2419,7 +2419,7 @@
         "PNC.C1.DT.19"
       ],
       "hitPolicy": "Rule Order",
-      "id": "PNC.DT.19",
+      "id": "PNC.C1.DT.19",
       "idsFromSheetName": [
         "PNC.C1.DT.19"
       ],
