@@ -693,9 +693,13 @@ public class AuthSessionController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
             ));
         } catch (Exception e) {
-            log.warn("Failed to resolve linked IDs for actor={}: {}", actorId, e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of("id", actorId, "type", "linked-ids", "attributes", Map.of()),
+            // Empty attributes read as "this person holds no Provider ID and no valid licence",
+            // which is the input to deciding whether they may practise at all.
+            log.error("Failed to resolve linked IDs for actor={}: {}", actorId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "linked_ids_unavailable",
+                    "message", "Linked identifiers could not be resolved. Do not treat this as an "
+                               + "absence of a Provider ID or licence.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
             ));
         }
@@ -1114,9 +1118,15 @@ public class AuthSessionController {
                     "data", affiliations != null ? affiliations : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.debug("No affiliations found for actor {}: {}", actorId, e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            // The old log line said "No affiliations found" for what was an exception — the
+            // conflation this endpoint then passed on to the caller. Organisational affiliation
+            // is a precondition for professional execution.
+            log.error("VARAPI getProviderAffiliations failed for actor={}: {}",
+                    actorId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "affiliations_unavailable",
+                    "message", "Affiliations could not be retrieved. Do not treat this as an "
+                               + "absence of affiliations.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -1137,9 +1147,13 @@ public class AuthSessionController {
                     "data", notices != null ? notices : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.debug("No notices for actor {}: {}", actorId, e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            // An empty notice list reads as "nothing outstanding" — the state in which a licence
+            // renewal or compliance action would go unseen.
+            log.error("VARAPI getProviderNotices failed for actor={}: {}", actorId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "notices_unavailable",
+                    "message", "Professional notices could not be retrieved. Do not treat this as "
+                               + "an absence of notices.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -1157,9 +1171,11 @@ public class AuthSessionController {
                     "data", certs != null ? certs : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.debug("No certificates for actor: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            log.error("VARAPI portalListCertificates failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "certificates_unavailable",
+                    "message", "Your certificates could not be retrieved. Do not treat this as an "
+                               + "absence of certificates.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
