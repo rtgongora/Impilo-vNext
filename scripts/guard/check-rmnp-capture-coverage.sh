@@ -43,6 +43,7 @@ PAIRINGS = {
                                            "12-imci-young-infant-assessment.json"],
     "rmnp-labour-care-guide.json": ["13-labour-partograph-observation.json"],
     "rmnp-smbp-escalation.json": ["20-smbp-home-readings.json"],
+    "rmnp-early-pregnancy-danger.json": ["19-early-pregnancy-assessment.json"],
     "rmnp-spr-rules.json": ["18-family-planning-eligibility.json"],
     "rmnp-mec-matrix.json": ["18-family-planning-eligibility.json"],
     "rmnp-reproductive-intention.json": ["18-family-planning-eligibility.json"],

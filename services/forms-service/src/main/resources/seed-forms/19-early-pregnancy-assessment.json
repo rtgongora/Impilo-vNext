@@ -1,0 +1,363 @@
+{
+  "formKey": "impilo.earlypregnancy.assessment.v1",
+  "name": "Early pregnancy assessment",
+  "description": "The woman presenting with pain or bleeding in early pregnancy, or who may be pregnant and does not know. Captures what the danger-sign rules need to distinguish a miscarriage from an ectopic, and a settling bleed from a septic one.",
+  "formType": "CLINICAL_ASSESSMENT",
+  "careSettings": ["OUTPATIENT", "EMERGENCY", "INPATIENT"],
+  "careStages": ["TRIAGE", "ASSESSMENT", "CONSULTATION"],
+  "specialties": ["OBSTETRICS", "MIDWIFERY", "EMERGENCY_MEDICINE", "NURSING", "FAMILY_MEDICINE"],
+  "encounterTypes": ["EMERGENCY", "OUTPATIENT", "GYNAECOLOGY", "REPRODUCTIVE_HEALTH", "MATERNITY"],
+  "encounterContexts": ["emergency", "outpatient", "inpatient"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER"],
+  "minAgeMonths": 108,
+  "sexApplicability": "FEMALE",
+  "requirePregnant": false,
+  "programmeApplicability": ["MATERNAL", "REPRODUCTIVE_HEALTH", "EMERGENCY"],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO Managing Complications in Pregnancy and Childbirth; WHO Abortion care guideline",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {
+        "linkId": "systolicBp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "mm[Hg]",
+        "code": {"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}
+      },
+      {
+        "linkId": "diastolicBp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "mm[Hg]",
+        "code": {"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}
+      },
+      {
+        "linkId": "pulseRate",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "/min",
+        "code": {"system": "http://loinc.org", "code": "8867-4", "display": "Heart rate"}
+      },
+      {
+        "linkId": "temperature",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "Cel",
+        "code": {"system": "http://loinc.org", "code": "8310-5", "display": "Body temperature"}
+      }
+    ]
+  },
+  "indicators": {
+    "indicators": [
+      {"programmeIndicatorCode": "EARLY_PREGNANCY_ASSESSMENTS"},
+      {"programmeIndicatorCode": "SUSPECTED_ECTOPIC_REFERRALS"}
+    ]
+  },
+  "definition": {
+    "id": "early-pregnancy-assessment-v1",
+    "version": "1.0.0",
+    "title": "Early pregnancy assessment",
+    "description": "Ask all of it. The findings that distinguish an ectopic from a miscarriage are the ones most often left blank.",
+    "dakReference": "None — no WHO DAK covers early pregnancy loss or ectopic pregnancy. The ANC DAK begins at a confirmed, continuing pregnancy.",
+    "healthDomain": "MATERNAL_HEALTH",
+    "programme": "MATERNAL",
+    "encounterTypes": ["EMERGENCY", "OUTPATIENT", "GYNAECOLOGY", "REPRODUCTIVE_HEALTH"],
+    "minAgeMonths": 108,
+    "sexApplicability": "FEMALE",
+    "providerRoles": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "SENSITIVE"},
+    "sections": [
+      {
+        "id": "observations",
+        "title": "Observations",
+        "description": "Taken first. The shock-with-pain alert reads these and needs nothing else — not a pregnancy test, not a history.",
+        "fields": [
+          {
+            "id": "systolicBp",
+            "linkId": "systolicBp",
+            "label": "Systolic blood pressure",
+            "kind": "numeric_with_unit",
+            "unit": "mm[Hg]",
+            "validation": {"min": 40, "max": 300, "required": false}
+          },
+          {
+            "id": "diastolicBp",
+            "linkId": "diastolicBp",
+            "label": "Diastolic blood pressure",
+            "kind": "numeric_with_unit",
+            "unit": "mm[Hg]",
+            "validation": {"min": 20, "max": 200, "required": false}
+          },
+          {
+            "id": "pulseRate",
+            "linkId": "pulseRate",
+            "label": "Pulse",
+            "kind": "numeric_with_unit",
+            "unit": "/min",
+            "description": "A rising pulse is the first thing to change in a woman bleeding internally, and it changes before the blood pressure does.",
+            "validation": {"min": 20, "max": 250, "required": false}
+          },
+          {
+            "id": "temperature",
+            "linkId": "temperature",
+            "label": "Temperature",
+            "kind": "numeric_with_unit",
+            "unit": "Cel",
+            "validation": {"min": 30, "max": 45, "required": false}
+          }
+        ]
+      },
+      {
+        "id": "pregnancy-status",
+        "title": "Is she pregnant?",
+        "fields": [
+          {
+            "id": "pregnancyStatus",
+            "linkId": "pregnancyStatus",
+            "label": "Pregnancy status",
+            "kind": "coded_single",
+            "description": "POSSIBLE is a real answer and the right one when nobody knows yet. The shock-with-pain alert does not wait for this field — it fires regardless — because the woman who dies of a ruptured ectopic is usually the one whose pregnancy was never confirmed.",
+            "options": [
+              {"code": "CONFIRMED", "display": "Confirmed — positive test or scan"},
+              {"code": "POSSIBLE", "display": "Possible — not tested, or unknown"},
+              {"code": "EXCLUDED", "display": "Excluded — negative test today"},
+              {"code": "UNKNOWN", "display": "Not established"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "lastMensesOnsetDate",
+            "linkId": "lastMensesOnsetDate",
+            "label": "First day of her last menstrual period",
+            "kind": "date",
+            "validation": {"required": false}
+          }
+        ]
+      },
+      {
+        "id": "symptoms",
+        "title": "Pain and bleeding",
+        "fields": [
+          {
+            "id": "abdominalPain",
+            "linkId": "abdominalPain",
+            "label": "Abdominal pain",
+            "kind": "coded_single",
+            "options": [
+              {"code": "PRESENT", "display": "Present"},
+              {"code": "ABSENT", "display": "Absent"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "abdominalPainSeverity",
+            "linkId": "abdominalPainSeverity",
+            "label": "How severe is the pain?",
+            "kind": "coded_single",
+            "options": [
+              {"code": "MILD", "display": "Mild"},
+              {"code": "MODERATE", "display": "Moderate"},
+              {"code": "SEVERE", "display": "Severe"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "shoulderTipPain",
+            "linkId": "shoulderTipPain",
+            "label": "Shoulder-tip pain",
+            "kind": "coded_single",
+            "description": "Ask specifically — she will not volunteer it, because pain in the shoulder does not seem related to her pregnancy. It is blood under the diaphragm.",
+            "options": [
+              {"code": "PRESENT", "display": "Present"},
+              {"code": "ABSENT", "display": "Absent"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "syncopeOrCollapse",
+            "linkId": "syncopeOrCollapse",
+            "label": "Fainting or collapse",
+            "kind": "coded_single",
+            "options": [
+              {"code": "PRESENT", "display": "Yes"},
+              {"code": "ABSENT", "display": "No"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "vaginalBleeding",
+            "linkId": "vaginalBleeding",
+            "label": "Vaginal bleeding",
+            "kind": "coded_single",
+            "description": "Judge against what she says, not only what is visible. Much of the loss in early pregnancy is never seen by anyone.",
+            "options": [
+              {"code": "ABSENT", "display": "None"},
+              {"code": "LIGHT", "display": "Light — spotting"},
+              {"code": "MODERATE", "display": "Moderate"},
+              {"code": "HEAVY", "display": "Heavy — soaking, clots"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "offensiveVaginalDischarge",
+            "linkId": "offensiveVaginalDischarge",
+            "label": "Offensive vaginal discharge",
+            "kind": "coded_single",
+            "options": [
+              {"code": "PRESENT", "display": "Present"},
+              {"code": "ABSENT", "display": "Absent"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "vesiclesPassed",
+            "linkId": "vesiclesPassed",
+            "label": "Grape-like vesicles passed",
+            "kind": "coded_single",
+            "options": [
+              {"code": "PRESENT", "display": "Yes"},
+              {"code": "ABSENT", "display": "No"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "persistentVomiting",
+            "linkId": "persistentVomiting",
+            "label": "Persistent vomiting",
+            "kind": "coded_single",
+            "options": [
+              {"code": "PRESENT", "display": "Present"},
+              {"code": "ABSENT", "display": "Absent"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "unableToKeepFluidsDown",
+            "linkId": "unableToKeepFluidsDown",
+            "label": "Unable to keep fluids down",
+            "kind": "coded_single",
+            "options": [
+              {"code": "YES", "display": "Yes"},
+              {"code": "NO", "display": "No"}
+            ],
+            "validation": {"required": false}
+          }
+        ]
+      },
+      {
+        "id": "examination",
+        "title": "Examination and investigations",
+        "fields": [
+          {
+            "id": "cervicalOsState",
+            "linkId": "cervicalOsState",
+            "label": "Cervical os",
+            "kind": "coded_single",
+            "description": "Open with bleeding means retained products. Closed does not exclude an ectopic — it is one of the two findings that look identical in a threatened miscarriage and an early ectopic.",
+            "options": [
+              {"code": "CLOSED", "display": "Closed"},
+              {"code": "OPEN", "display": "Open"},
+              {"code": "NOT_EXAMINED", "display": "Not examined"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "productsOfConceptionSeen",
+            "linkId": "productsOfConceptionSeen",
+            "label": "Products of conception at the os",
+            "kind": "coded_single",
+            "options": [
+              {"code": "YES", "display": "Yes"},
+              {"code": "NO", "display": "No"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "uterineSizeVsDates",
+            "linkId": "uterineSizeVsDates",
+            "label": "Uterine size against dates",
+            "kind": "coded_single",
+            "options": [
+              {"code": "LARGER", "display": "Larger than dates"},
+              {"code": "CONSISTENT", "display": "Consistent with dates"},
+              {"code": "SMALLER", "display": "Smaller than dates"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "ultrasoundIntrauterinePregnancy",
+            "linkId": "ultrasoundIntrauterinePregnancy",
+            "label": "Intrauterine pregnancy on ultrasound",
+            "kind": "coded_single",
+            "description": "NOT_SEEN and NOT_DONE are different answers and must never be recorded as the same one. A positive test with nothing seen in the uterus is a pregnancy of unknown location — an ectopic until proven otherwise — while no scan yet is simply an unanswered question.",
+            "options": [
+              {"code": "SEEN", "display": "Intrauterine pregnancy seen"},
+              {"code": "NOT_SEEN", "display": "Scan done — no intrauterine pregnancy seen"},
+              {"code": "NOT_DONE", "display": "No scan done"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "urineKetones",
+            "linkId": "urineKetones",
+            "label": "Urine ketones",
+            "kind": "coded_single",
+            "options": [
+              {"code": "NEGATIVE", "display": "Negative"},
+              {"code": "TRACE", "display": "Trace"},
+              {"code": "ONE_PLUS", "display": "1+"},
+              {"code": "TWO_PLUS", "display": "2+"},
+              {"code": "THREE_PLUS", "display": "3+"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "recentUterineIntervention",
+            "linkId": "recentUterineIntervention",
+            "label": "Any recent uterine procedure or intervention",
+            "kind": "coded_single",
+            "description": "Asked neutrally and recorded neutrally. She is not required to say what it was or who did it, and treatment does not depend on her answering.",
+            "options": [
+              {"code": "YES", "display": "Yes"},
+              {"code": "NO", "display": "No"},
+              {"code": "DECLINED_TO_STATE", "display": "Declined to state"}
+            ],
+            "validation": {"required": false}
+          }
+        ]
+      },
+      {
+        "id": "completion",
+        "title": "Completing the assessment",
+        "fields": [
+          {
+            "id": "screeningComplete",
+            "linkId": "screeningComplete",
+            "label": "All the questions above were asked",
+            "kind": "coded_single",
+            "description": "The only field that permits the result to read 'no danger signs found'. Without it, an empty alert list means nothing was found in what was asked — which is not the same statement, and is the one a tired reader turns into reassurance.",
+            "options": [
+              {"code": "YES", "display": "Yes — screening complete"},
+              {"code": "NO", "display": "No — assessment interrupted or partial"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "assessmentNotes",
+            "linkId": "assessmentNotes",
+            "label": "Notes",
+            "kind": "text",
+            "validation": {"required": false}
+          }
+        ]
+      }
+    ]
+  }
+}

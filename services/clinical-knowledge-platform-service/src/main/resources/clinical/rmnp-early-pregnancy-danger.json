@@ -1,0 +1,364 @@
+{
+  "packId": "rmnp-early-pregnancy-danger",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Early pregnancy danger signs — ectopic, miscarriage, sepsis, molar pregnancy",
+    "primarySource": "WHO Managing Complications in Pregnancy and Childbirth; WHO Abortion care guideline",
+    "why": "Ruptured ectopic pregnancy and septic abortion are leading causes of first-trimester maternal death, and both kill women who were seen and sent home. The failure is almost never a wrong treatment — it is a question nobody asked.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "No WHO DAK covers early pregnancy loss or ectopic pregnancy — the ANC DAK begins at a confirmed, continuing pregnancy. These rules were authored against published WHO guidance and standard emergency obstetric practice rather than extracted from a pinned artefact, and every rule states which it is. Ships as ENGINEERING_SEED and must not be ratified until the primary texts are vendored and each threshold is checked against them."
+    },
+    "designNote": "The most important decision in this pack is what it does NOT gate on. See EP_SHOCK_WITH_ABDOMINAL_PAIN."
+  },
+  "rules": [
+    {
+      "code": "EP_SHOCK_WITH_ABDOMINAL_PAIN",
+      "name": "Shock with abdominal pain — ruptured ectopic until proven otherwise",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["systolicBp", "pulseRate", "abdominalPain"],
+      "logic": {
+        "all": [
+          {"any": [
+            {"input": "systolicBp", "op": "lt", "value": 90},
+            {"input": "pulseRate", "op": "gte", "value": 110}
+          ]},
+          {"finding": "abdominalPain", "present": true}
+        ]
+      },
+      "message": "Shock with abdominal pain. Treat as a ruptured ectopic pregnancy until proven otherwise.",
+      "explanation": "This rule has NO pregnancy precondition, and that is deliberate. The woman who dies of a ruptured ectopic is characteristically the one whose pregnancy was never confirmed — she did not know, or did not say, and a rule requiring a positive test would have excluded exactly the case it exists to catch. If she turns out not to be pregnant, the cost of this alert is one pregnancy test. If she is, it is the difference between a laparotomy and a death.",
+      "requiredAction": "Resuscitate now: two large-bore cannulae, fluids, group and cross-match. Do a pregnancy test — do not wait for it before resuscitating. Call for surgical and anaesthetic help. Do not send her for an outpatient scan.",
+      "monitoringInstruction": "Continuous observation. A transient response to fluids is not improvement — it is a warning.",
+      "sourceRefs": [
+        "WHO Managing Complications in Pregnancy and Childbirth — shock and ectopic pregnancy",
+        "Zimbabwe EDLIZ — obstetric emergencies"
+      ],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "Ectopic pregnancy should be suspected in any woman of reproductive age with abdominal pain, amenorrhoea and shock.",
+        "nationalStatement": "The alert fires on shock with abdominal pain alone, with no pregnancy status required and no amenorrhoea history required.",
+        "rationale": "Requiring amenorrhoea or a confirmed pregnancy makes the rule depend on history the collapsing woman may not be able to give and may not have known. Every precondition added to this rule removes a woman it was written for. The false-positive cost is a pregnancy test on a shocked woman who needed one anyway.",
+        "evidenceRefs": [
+          "WHO Managing Complications in Pregnancy and Childbirth — shock and ectopic pregnancy"
+        ],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "applicablePopulation": "Any woman of reproductive age"
+      },
+      "testCases": [
+        {"name": "shock and pain fire with no pregnancy status at all", "facts": {"systolicBp": 84, "pulseRate": 124, "abdominalPain": "PRESENT"}, "expectFires": true},
+        {"name": "tachycardia alone with pain is enough", "facts": {"systolicBp": 112, "pulseRate": 118, "abdominalPain": "PRESENT"}, "expectFires": true},
+        {"name": "fires even where pregnancy is recorded as excluded, because the test may be wrong", "facts": {"systolicBp": 82, "pulseRate": 130, "abdominalPain": "PRESENT", "pregnancyStatus": "EXCLUDED"}, "expectFires": true},
+        {"name": "stable observations with pain do not fire this rule", "facts": {"systolicBp": 118, "pulseRate": 78, "abdominalPain": "PRESENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "EP_SEPTIC_MISCARRIAGE",
+      "name": "Septic miscarriage or septic abortion",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["temperature", "offensiveVaginalDischarge", "vaginalBleeding", "recentUterineIntervention"],
+      "logic": {
+        "all": [
+          {"any": [
+            {"input": "temperature", "op": "gte", "value": 38.0},
+            {"finding": "offensiveVaginalDischarge", "present": true}
+          ]},
+          {"any": [
+            {"input": "vaginalBleeding", "op": "in", "values": ["MODERATE", "HEAVY"]},
+            {"input": "recentUterineIntervention", "op": "eq", "value": "YES"}
+          ]}
+        ]
+      },
+      "message": "Septic miscarriage. Start antibiotics and arrange urgent uterine evacuation.",
+      "explanation": "Infection with retained products kills quickly and the woman often looks better than she is. She may have had an unsafe termination and may not say so — and she does not have to. Nothing in this alert requires her to disclose it, and treatment must not wait on the question. Asking her to explain herself before treating is both clinically wrong and the reason she may have delayed coming.",
+      "requiredAction": "Give broad-spectrum antibiotics immediately, resuscitate, and arrange uterine evacuation urgently. Treat the sepsis first; the history can wait and is not a condition of care.",
+      "monitoringInstruction": "Hourly observations and urine output. Deterioration after antibiotics means she needs theatre now, not a second dose.",
+      "sourceRefs": [
+        "WHO Managing Complications in Pregnancy and Childbirth — sepsis following abortion",
+        "WHO Abortion care guideline — post-abortion care"
+      ],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Fever, offensive vaginal discharge and bleeding following abortion or miscarriage indicate sepsis requiring immediate antibiotics and uterine evacuation.",
+        "nationalStatement": "Adopted as published, with the explanation stating explicitly that treatment is not conditional on her disclosing an induced termination.",
+        "evidenceRefs": [
+          "WHO Managing Complications in Pregnancy and Childbirth — sepsis following abortion",
+          "WHO Abortion care guideline — post-abortion care"
+        ],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "fever with heavy bleeding fires", "facts": {"temperature": 38.6, "vaginalBleeding": "HEAVY"}, "expectFires": true},
+        {"name": "offensive discharge after a recent evacuation fires without fever", "facts": {"temperature": 37.2, "offensiveVaginalDischarge": "PRESENT", "recentUterineIntervention": "YES"}, "expectFires": true},
+        {"name": "fever alone with no bleeding and no intervention does not fire", "facts": {"temperature": 38.4, "vaginalBleeding": "ABSENT", "recentUterineIntervention": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "EP_HEAVY_BLEEDING",
+      "name": "Heavy vaginal bleeding in early pregnancy",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["vaginalBleeding"],
+      "appliesWhen": {"input": "pregnancyStatus", "op": "in", "values": ["CONFIRMED", "POSSIBLE"]},
+      "logic": {"input": "vaginalBleeding", "op": "eq", "value": "HEAVY"},
+      "message": "Heavy bleeding in early pregnancy — resuscitate and assess for incomplete miscarriage.",
+      "explanation": "Blood loss in early pregnancy is routinely underestimated because much of it is not seen. A woman can lose a great deal into pads, into a toilet, and on the way in.",
+      "requiredAction": "Resuscitate, group and cross-match, and examine for products of conception at the cervical os — removing them can stop the bleeding. Arrange evacuation.",
+      "sourceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — vaginal bleeding in early pregnancy"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Heavy vaginal bleeding in early pregnancy requires resuscitation and assessment for incomplete abortion.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — vaginal bleeding in early pregnancy"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "heavy bleeding in a confirmed pregnancy fires", "facts": {"pregnancyStatus": "CONFIRMED", "vaginalBleeding": "HEAVY"}, "expectFires": true},
+        {"name": "light bleeding does not", "facts": {"pregnancyStatus": "CONFIRMED", "vaginalBleeding": "LIGHT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "EP_PREGNANCY_OF_UNKNOWN_LOCATION",
+      "name": "Positive pregnancy test with no intrauterine pregnancy seen",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["pregnancyStatus", "ultrasoundIntrauterinePregnancy"],
+      "logic": {
+        "all": [
+          {"input": "pregnancyStatus", "op": "eq", "value": "CONFIRMED"},
+          {"input": "ultrasoundIntrauterinePregnancy", "op": "eq", "value": "NOT_SEEN"}
+        ]
+      },
+      "message": "Pregnancy of unknown location — this scan is not a normal result.",
+      "explanation": "A positive pregnancy test with no pregnancy visible in the uterus is an ectopic pregnancy until proven otherwise. This is the single most misread result in early pregnancy: the scan report says nothing was seen, that reads as nothing wrong, and the woman goes home. She needs serial hCG and a repeat scan with a named follow-up, not reassurance.",
+      "requiredAction": "Do not discharge without a follow-up plan. Arrange serial hCG and a repeat scan, and tell her plainly to return immediately with pain, shoulder-tip pain, faintness or bleeding.",
+      "monitoringInstruction": "Follow up the hCG trend. A plateau or a slow rise is the pattern that matters, and she must be contactable.",
+      "sourceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — ectopic pregnancy"],
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "The guidance addresses suspected ectopic pregnancy but does not name the pregnancy-of-unknown-location result as a distinct alertable state.",
+        "nationalStatement": "A confirmed pregnancy with no intrauterine pregnancy on ultrasound raises an explicit alert requiring a documented follow-up plan before discharge.",
+        "rationale": "An empty-looking scan is the archetype of a result whose failure mode is indistinguishable from a good outcome. The report contains no abnormality, so it reads as normal, and nothing in the record objects when she is discharged. Naming the state is what makes the absence visible.",
+        "evidenceRefs": [
+          "WHO Managing Complications in Pregnancy and Childbirth — ectopic pregnancy",
+          "Zimbabwe EDLIZ — obstetric emergencies"
+        ],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "positive test with no intrauterine pregnancy fires", "facts": {"pregnancyStatus": "CONFIRMED", "ultrasoundIntrauterinePregnancy": "NOT_SEEN"}, "expectFires": true},
+        {"name": "an intrauterine pregnancy seen does not fire", "facts": {"pregnancyStatus": "CONFIRMED", "ultrasoundIntrauterinePregnancy": "SEEN"}, "expectFires": false},
+        {"name": "no scan done is not the same as nothing seen", "facts": {"pregnancyStatus": "CONFIRMED", "ultrasoundIntrauterinePregnancy": "NOT_DONE"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "EP_ECTOPIC_SUSPECTED_STABLE",
+      "name": "Suspected ectopic pregnancy in a haemodynamically stable woman",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["pregnancyStatus", "abdominalPain", "shoulderTipPain"],
+      "appliesWhen": {"input": "pregnancyStatus", "op": "in", "values": ["CONFIRMED", "POSSIBLE"]},
+      "logic": {
+        "any": [
+          {"finding": "shoulderTipPain", "present": true},
+          {"all": [
+            {"finding": "abdominalPain", "present": true},
+            {"input": "abdominalPainSeverity", "op": "in", "values": ["MODERATE", "SEVERE"]}
+          ]}
+        ]
+      },
+      "message": "Suspected ectopic pregnancy. She is stable now; that is not reassurance.",
+      "explanation": "Shoulder-tip pain is referred diaphragmatic irritation from blood in the abdomen and is a late sign presenting early. A stable ectopic can rupture within the hour, and the interval between looking well and being in shock is short.",
+      "requiredAction": "Keep her where she can be observed, get intravenous access and blood group, and arrange urgent ultrasound and hCG. Do not send her home to await an outpatient appointment.",
+      "monitoringInstruction": "Half-hourly observations while she waits. A rising pulse is the first thing to change.",
+      "sourceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — ectopic pregnancy"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Ectopic pregnancy should be suspected in a woman with amenorrhoea, abdominal pain and vaginal bleeding, including where she appears stable.",
+        "nationalStatement": "Adopted as published, with the action stating explicitly that she is not to be discharged to an outpatient appointment.",
+        "evidenceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — ectopic pregnancy"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "shoulder tip pain alone fires", "facts": {"pregnancyStatus": "CONFIRMED", "shoulderTipPain": "PRESENT"}, "expectFires": true},
+        {"name": "moderate abdominal pain fires", "facts": {"pregnancyStatus": "POSSIBLE", "abdominalPain": "PRESENT", "abdominalPainSeverity": "MODERATE"}, "expectFires": true},
+        {"name": "mild pain with no shoulder tip pain does not", "facts": {"pregnancyStatus": "CONFIRMED", "abdominalPain": "PRESENT", "abdominalPainSeverity": "MILD", "shoulderTipPain": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "EP_INCOMPLETE_MISCARRIAGE",
+      "name": "Incomplete miscarriage — open os with bleeding",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["cervicalOsState", "vaginalBleeding"],
+      "appliesWhen": {"input": "pregnancyStatus", "op": "in", "values": ["CONFIRMED", "POSSIBLE"]},
+      "logic": {
+        "all": [
+          {"input": "cervicalOsState", "op": "eq", "value": "OPEN"},
+          {"input": "vaginalBleeding", "op": "in", "values": ["MODERATE", "HEAVY"]}
+        ]
+      },
+      "message": "Incomplete miscarriage — arrange uterine evacuation.",
+      "explanation": "An open os with ongoing bleeding means retained products. Bleeding will not settle while they remain, and retained products are what becomes sepsis.",
+      "requiredAction": "Arrange evacuation — manual vacuum aspiration or medical management per protocol. Offer contraception counselling before she leaves, and record what she chose.",
+      "sourceRefs": [
+        "WHO Managing Complications in Pregnancy and Childbirth — incomplete abortion",
+        "WHO Abortion care guideline — post-abortion contraception"
+      ],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Incomplete abortion requires uterine evacuation, and post-abortion contraception should be offered before discharge.",
+        "nationalStatement": "Adopted as published. The contraception step is in the required action rather than in follow-up guidance, because it is the visit at which she is present.",
+        "evidenceRefs": [
+          "WHO Managing Complications in Pregnancy and Childbirth — incomplete abortion",
+          "WHO Abortion care guideline — post-abortion contraception"
+        ],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "open os with moderate bleeding fires", "facts": {"pregnancyStatus": "CONFIRMED", "cervicalOsState": "OPEN", "vaginalBleeding": "MODERATE"}, "expectFires": true},
+        {"name": "closed os with light bleeding does not", "facts": {"pregnancyStatus": "CONFIRMED", "cervicalOsState": "CLOSED", "vaginalBleeding": "LIGHT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "EP_MOLAR_PREGNANCY_SUSPECTED",
+      "name": "Suspected molar pregnancy",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["vesiclesPassed", "uterineSizeVsDates", "persistentVomiting"],
+      "appliesWhen": {"input": "pregnancyStatus", "op": "in", "values": ["CONFIRMED", "POSSIBLE"]},
+      "logic": {
+        "any": [
+          {"finding": "vesiclesPassed", "present": true},
+          {"all": [
+            {"input": "uterineSizeVsDates", "op": "eq", "value": "LARGER"},
+            {"finding": "persistentVomiting", "present": true}
+          ]}
+        ]
+      },
+      "message": "Suspected molar pregnancy — refer for evacuation and follow-up.",
+      "explanation": "Grape-like vesicles passed vaginally are diagnostic. A uterus large for dates with severe vomiting is suggestive. Molar pregnancy needs evacuation and then hCG surveillance, because a proportion become gestational trophoblastic neoplasia — the follow-up is as important as the evacuation.",
+      "requiredAction": "Refer for evacuation at a facility that can manage it, and register her for hCG surveillance before she leaves. Do not give a follow-up plan that ends at discharge.",
+      "monitoringInstruction": "Serial hCG to non-detectable, then continued surveillance per protocol. Effective contraception throughout, so a new pregnancy does not mask a rising hCG.",
+      "sourceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — molar pregnancy"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Molar pregnancy requires uterine evacuation followed by hCG monitoring for gestational trophoblastic neoplasia.",
+        "nationalStatement": "Adopted as published, with the contraception point named because a pregnancy during surveillance makes a rising hCG uninterpretable.",
+        "evidenceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — molar pregnancy"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "vesicles passed fire on their own", "facts": {"pregnancyStatus": "CONFIRMED", "vesiclesPassed": "PRESENT"}, "expectFires": true},
+        {"name": "large-for-dates with persistent vomiting fires", "facts": {"pregnancyStatus": "CONFIRMED", "uterineSizeVsDates": "LARGER", "persistentVomiting": "PRESENT"}, "expectFires": true},
+        {"name": "large for dates alone does not", "facts": {"pregnancyStatus": "CONFIRMED", "uterineSizeVsDates": "LARGER", "persistentVomiting": "ABSENT", "vesiclesPassed": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "EP_HYPEREMESIS",
+      "name": "Hyperemesis gravidarum",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_RISK",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["persistentVomiting", "unableToKeepFluidsDown", "urineKetones"],
+      "appliesWhen": {"input": "pregnancyStatus", "op": "in", "values": ["CONFIRMED", "POSSIBLE"]},
+      "logic": {
+        "all": [
+          {"finding": "persistentVomiting", "present": true},
+          {"any": [
+            {"input": "unableToKeepFluidsDown", "op": "eq", "value": "YES"},
+            {"input": "urineKetones", "op": "in", "values": ["TWO_PLUS", "THREE_PLUS"]}
+          ]}
+        ]
+      },
+      "message": "Hyperemesis with dehydration — she needs rehydration, not reassurance about morning sickness.",
+      "explanation": "Vomiting in pregnancy is common and hyperemesis is not the same thing. Ketones with an inability to keep fluids down is a woman who is dehydrated now and who will not improve on advice.",
+      "requiredAction": "Admit for intravenous rehydration and antiemetics, and give thiamine before any glucose-containing fluid.",
+      "monitoringInstruction": "Repeat urine ketones and weight. Persistent vomiting despite treatment needs another explanation looked for, including molar pregnancy.",
+      "sourceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — vomiting in pregnancy"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "Severe vomiting in pregnancy with dehydration requires intravenous fluid replacement and antiemetics.",
+        "nationalStatement": "Adopted, with thiamine before glucose stated in the required action rather than left to general practice.",
+        "rationale": "Giving glucose to a thiamine-depleted woman who has been vomiting for weeks can precipitate Wernicke's encephalopathy. It is a rare, preventable, permanent harm caused by the treatment rather than the disease, and it belongs in the instruction rather than in a footnote.",
+        "evidenceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — vomiting in pregnancy"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "vomiting with heavy ketonuria fires", "facts": {"pregnancyStatus": "CONFIRMED", "persistentVomiting": "PRESENT", "urineKetones": "THREE_PLUS"}, "expectFires": true},
+        {"name": "vomiting but keeping fluids down with no ketones does not", "facts": {"pregnancyStatus": "CONFIRMED", "persistentVomiting": "PRESENT", "unableToKeepFluidsDown": "NO", "urineKetones": "NEGATIVE"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "EP_THREATENED_MISCARRIAGE_LOCATE_FIRST",
+      "name": "Bleeding with a closed os — locate the pregnancy before reassuring her",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "EARLY_PREGNANCY_RISK",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["cervicalOsState", "vaginalBleeding", "ultrasoundIntrauterinePregnancy"],
+      "appliesWhen": {"input": "pregnancyStatus", "op": "in", "values": ["CONFIRMED", "POSSIBLE"]},
+      "logic": {
+        "all": [
+          {"input": "cervicalOsState", "op": "eq", "value": "CLOSED"},
+          {"input": "vaginalBleeding", "op": "in", "values": ["LIGHT", "MODERATE"]},
+          {"input": "ultrasoundIntrauterinePregnancy", "op": "ne", "value": "SEEN"}
+        ]
+      },
+      "message": "Threatened miscarriage — but the pregnancy has not been located yet.",
+      "explanation": "Light bleeding with a closed os in an intrauterine pregnancy often continues to a normal birth, and telling her so is right once the pregnancy has been seen in the uterus. Said before that, it is a reassurance about an ectopic. The order matters: locate, then reassure.",
+      "requiredAction": "Arrange an ultrasound to locate the pregnancy before giving a prognosis. Tell her what to come back for — pain, faintness, heavier bleeding — and make sure she can get back.",
+      "sourceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — threatened abortion"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "Threatened abortion with a closed cervical os and light bleeding is usually managed expectantly.",
+        "nationalStatement": "Expectant management only once an intrauterine pregnancy has been confirmed on ultrasound; until then the presentation is treated as unlocated.",
+        "rationale": "The clinical picture of a threatened miscarriage and an early unruptured ectopic are the same picture. Expectant management is correct for one and fatal for the other, and only the scan distinguishes them. Reassurance given before the pregnancy is located is the mechanism by which the ectopic goes home.",
+        "evidenceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — threatened abortion"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "closed os and light bleeding with no scan fires", "facts": {"pregnancyStatus": "CONFIRMED", "cervicalOsState": "CLOSED", "vaginalBleeding": "LIGHT", "ultrasoundIntrauterinePregnancy": "NOT_DONE"}, "expectFires": true},
+        {"name": "does not fire once the pregnancy is seen in the uterus", "facts": {"pregnancyStatus": "CONFIRMED", "cervicalOsState": "CLOSED", "vaginalBleeding": "LIGHT", "ultrasoundIntrauterinePregnancy": "SEEN"}, "expectFires": false}
+      ]
+    }
+  ]
+}
