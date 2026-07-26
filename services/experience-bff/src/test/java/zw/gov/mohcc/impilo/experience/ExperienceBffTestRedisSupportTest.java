@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,4 +49,22 @@ class ExperienceBffTestRedisSupportTest {
         assertEquals("127.0.0.1", config.host());
         assertEquals(6379, config.port());
     }
+
+    @Test
+    @DisplayName("each test class gets a Redis database of its own, stable across lookups")
+    void allocatesOneDatabasePerClass() {
+        int first = ExperienceBffTestRedisSupport.databaseFor(SampleA.class);
+        int second = ExperienceBffTestRedisSupport.databaseFor(SampleB.class);
+
+        assertNotEquals(first, second,
+                "two classes sharing a keyspace would leak idempotency keys and rate-limiter counters");
+        assertEquals(first, ExperienceBffTestRedisSupport.databaseFor(SampleA.class),
+                "a context rebuilt after a cache eviction must land on the keyspace it had before");
+        assertTrue(first < ExperienceBffTestRedisSupport.MAX_ISOLATED_CLASSES);
+        assertTrue(second < ExperienceBffTestRedisSupport.MAX_ISOLATED_CLASSES);
+    }
+
+    private static final class SampleA {}
+
+    private static final class SampleB {}
 }
