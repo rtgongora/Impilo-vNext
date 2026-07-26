@@ -74,11 +74,12 @@ export default function ProfessionalProfilePage() {
   const notices = (noticeData?.data ?? []).map((n) => ({ id: n.id, text: n.attributes.text, severity: n.attributes.severity, category: n.attributes.category }));
   const linkedAttrs = data?.data?.attributes;
   const providerId = linkedAttrs?.providerId ?? user?.providerId;
-  // These two defaults were the whole defect on this page: an unreachable registry rendered a
-  // green "Active (MCAZ)" and a valid licence. Regulatory standing is the one claim on this
-  // screen a provider may act on, and it must never be manufactured from a failed read.
-  const providerStatus = linkedAttrs?.providerStatus ?? "Active";
-  const licenceValid = linkedAttrs?.licenceValid ?? true;
+  // These defaults used to be "Active" and true, so a failed VARAPI read told a provider their
+  // registration was in good standing and their licence valid — the two facts this page exists to
+  // report, asserted without having checked either. Regulatory standing is the one claim on this
+  // screen a provider may act on: fall back to unknown, never to reassurance.
+  const providerStatus = linkedAttrs?.providerStatus ?? (linkedIdsUnavailable ? "Unknown" : "Active");
+  const licenceValid = linkedAttrs?.licenceValid ?? (linkedIdsUnavailable ? null : true);
 
   return (
     <AppLayout>
@@ -161,13 +162,23 @@ export default function ProfessionalProfilePage() {
                 </div>
                 <div className="flex items-center justify-between py-1">
                   <span className="text-sm text-muted-foreground">Licence</span>
+                  {/* Three states, not two: "Expired" is as much a fabricated finding as "Valid"
+                      when the registry could not be read. */}
                   <span
                     className={[
                       "text-sm font-medium",
-                      licenceValid ? "text-primary-hover" : "text-brand-red",
+                      licenceValid === null
+                        ? "text-warning-foreground"
+                        : licenceValid
+                          ? "text-primary-hover"
+                          : "text-brand-red",
                     ].join(" ")}
                   >
-                    {licenceValid ? "Valid" : "Expired"}
+                    {licenceValid === null
+                      ? "Could not be checked"
+                      : licenceValid
+                        ? "Valid"
+                        : "Expired"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 pt-2">

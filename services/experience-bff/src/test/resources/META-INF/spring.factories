@@ -1,0 +1,6 @@
+# Test-scope only (src/test/resources): every Spring context started by this module's tests gets
+# its downstream base URLs pinned to a closed port, so an integration test asserts against a
+# fixture rather than against whatever is listening on the developer's loopback.
+# See ClosedLoopbackDownstreamsEnvironmentPostProcessor for the full reasoning.
+org.springframework.boot.env.EnvironmentPostProcessor=\
+  zw.gov.mohcc.impilo.experience.ClosedLoopbackDownstreamsEnvironmentPostProcessor

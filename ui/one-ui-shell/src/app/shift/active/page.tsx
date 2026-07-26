@@ -55,7 +55,14 @@ export default function ActiveShiftPage() {
         <PageShell title="Active Shift" subtitle="No active shift">
           <div className="bg-card rounded-lg border border-border p-12 text-center">
             <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">No active shift. Start a shift to begin.</p>
+            {/* This branch reads local shift state. If TUSO could not be asked we cannot confirm
+                there is no shift open server-side, and starting a second one would be worse than
+                saying so. */}
+            <p className={shiftUnavailable ? "text-sm text-warning-foreground" : "text-muted-foreground text-sm"}>
+              {shiftUnavailable
+                ? "Your duty state could not be confirmed. This is not a record that you have no shift open — check before starting another."
+                : "No active shift. Start a shift to begin."}
+            </p>
             <button
               onClick={() => router.push("/shift")}
               className="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover"
@@ -178,6 +185,15 @@ export default function ActiveShiftPage() {
                       Cancel
                     </button>
                   </div>
+                  {endShiftMutation.isError && (
+                    /* The BFF used to report a "local shift end" that TUSO never recorded. Now
+                       the write fails loudly, and the person needs to know they are still on
+                       duty rather than watch the dialog sit there. */
+                    <p className="mt-3 rounded border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-medium text-red-700">
+                      The shift could not be ended and is still open. You remain responsible for
+                      it — retry, or hand over before leaving.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

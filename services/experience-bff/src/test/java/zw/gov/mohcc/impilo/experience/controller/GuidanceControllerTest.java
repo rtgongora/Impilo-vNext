@@ -71,8 +71,18 @@ class GuidanceControllerTest {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
         }
 
+        // Both overloads, deliberately. This class used to override only the two-argument one,
+        // while GuidanceController calls the three-argument one — so nothing was stubbed and the
+        // test passed because the real call to the guidance-service dev port happened to be
+        // refused. It failed the moment anything was listening on that port.
         @Override
         public com.fasterxml.jackson.databind.JsonNode ask(String question, boolean personalized) {
+            throw new RuntimeException("guidance unavailable");
+        }
+
+        @Override
+        public com.fasterxml.jackson.databind.JsonNode ask(
+                String question, boolean personalized, Map<String, Object> context) {
             throw new RuntimeException("guidance unavailable");
         }
     }

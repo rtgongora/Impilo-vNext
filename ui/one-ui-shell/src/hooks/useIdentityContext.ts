@@ -15,13 +15,26 @@ import {
   type LoginMethod,
 } from "@/lib/identity-context";
 
-export function useIdentityContext(): IdentityContext & { isLoading: boolean; isUnavailable: boolean } {
+/**
+ * {@code isUnavailable} means the professional identity reads (linked IDs, council affiliations,
+ * work assignments) failed, not that the person holds none. The resolver below fails closed on
+ * missing input, so an outage silently downgrades a clinician to citizen access — safe, but
+ * indistinguishable from "you are not a provider". Surfaces that explain or gate professional
+ * capacity should say which of the two happened rather than let the person conclude their
+ * registration has lapsed.
+ */
+export function useIdentityContext(): IdentityContext & {
+  isLoading: boolean;
+  isUnavailable: boolean;
+} {
   const user = useAuthStore((s) => s.user);
   const hasFacility = useFacilityStore((s) => s.hasFacility);
   const operationalMode = useOperationalContextStore((s) => s.operationalMode);
-  const { data: linkedData, isLoading: linkedLoading, isError: linkedError } = useLinkedIds();
-  const { data: affiliations = [], isLoading: affLoading, isError: affError } = useAffiliations();
-  const { data: workAssignments = [], isLoading: assignLoading, isError: assignError } = useWorkAssignments();
+  const { data: linkedData, isLoading: linkedLoading, isError: linkedUnavailable } = useLinkedIds();
+  const { data: affiliations = [], isLoading: affLoading, isError: affUnavailable } =
+    useAffiliations();
+  const { data: workAssignments = [], isLoading: assignLoading, isError: assignUnavailable } =
+    useWorkAssignments();
 
   const loginMethod = (user as { loginMethod?: LoginMethod } | null)?.loginMethod;
 
@@ -51,6 +64,6 @@ export function useIdentityContext(): IdentityContext & { isLoading: boolean; is
   return {
     ...context,
     isLoading: linkedLoading || affLoading || assignLoading,
-    isUnavailable: linkedError || affError || assignError,
+    isUnavailable: linkedUnavailable || affUnavailable || assignUnavailable,
   };
 }

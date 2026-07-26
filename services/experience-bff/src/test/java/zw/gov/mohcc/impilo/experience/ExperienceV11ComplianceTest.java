@@ -2,7 +2,6 @@ package zw.gov.mohcc.impilo.experience;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -36,20 +35,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@ExtendWith(DockerOrExternalPostgresCondition.class)
+@ExtendWith(IntegrationEnvironmentCondition.class)
 class ExperienceV11ComplianceTest {
-
-    private static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        REDIS.configure(registry);
+        ExperienceBffTestRedisSupport.configure(ExperienceV11ComplianceTest.class, registry);
         ExperienceBffReportingWireMockSupport.register(registry);
-    }
-
-    @AfterAll
-    static void stopRedis() {
-        REDIS.stop();
     }
 
     @Autowired
