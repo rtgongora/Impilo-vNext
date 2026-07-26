@@ -82,7 +82,11 @@ export function ShellChrome() {
 
   // Persistent Emergency Help (gateway doctrine §7): visible before and after login on
   // every surface this chrome reaches. /welcome/** already mounts it via PublicShell.
-  const showEmergencyHelp = !pathname?.startsWith("/welcome");
+  // The public header carries a persistent Emergency action, so the floating button is a
+  // duplicate on those routes. /welcome/** was already excluded; the landing root renders
+  // the same PublicHeader and was not, which is why "/" showed two of them on desktop.
+  // PublicShell still mounts its own for narrow viewports, where the header condenses.
+  const showEmergencyHelp = !pathname?.startsWith("/welcome") && pathname !== "/";
 
   return (
     <>
