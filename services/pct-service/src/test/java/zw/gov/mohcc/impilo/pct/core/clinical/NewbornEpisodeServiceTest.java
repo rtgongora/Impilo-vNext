@@ -10,11 +10,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import zw.gov.mohcc.impilo.pct.core.EncounterService;
-import zw.gov.mohcc.impilo.pct.core.JourneyStateMachine;
-import zw.gov.mohcc.impilo.pct.persistence.entity.EncounterEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
-import zw.gov.mohcc.impilo.pct.persistence.entity.JourneyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.NewbornBirthRecordEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.NewbornBirthRecordRepository;
@@ -48,8 +44,7 @@ class NewbornEpisodeServiceTest {
 
     @Mock private NewbornBirthRecordRepository birthRecordRepository;
     @Mock private EventOutboxRepository outboxRepository;
-    @Mock private JourneyStateMachine journeyStateMachine;
-    @Mock private EncounterService encounterService;
+    @Mock private NewbornEpisodeOpener episodeOpener;
 
     private NewbornEpisodeService newbornEpisodeService;
     private TrustContext context;
@@ -57,8 +52,7 @@ class NewbornEpisodeServiceTest {
     @BeforeEach
     void setUp() {
         newbornEpisodeService = new NewbornEpisodeService(
-                birthRecordRepository, outboxRepository, new ObjectMapper(),
-                journeyStateMachine, encounterService);
+                birthRecordRepository, outboxRepository, new ObjectMapper(), episodeOpener);
         context = new TrustContext(
                 TENANT, "midwife-1", "PROVIDER", "TREATMENT", null,
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, AccessMode.INTERNAL);
@@ -68,16 +62,8 @@ class NewbornEpisodeServiceTest {
         when(birthRecordRepository.findByTenantIdAndSubjectCpid(any(), anyString()))
                 .thenReturn(Optional.empty());
 
-        JourneyEntity journey = new JourneyEntity();
-        journey.setJourneyId("J-NEWBORN-1");
-        journey.setPatientCpid(BABY);
-        when(journeyStateMachine.createJourney(any(), anyString(), anyString(), any())).thenReturn(journey);
-
-        EncounterEntity encounter = new EncounterEntity();
-        encounter.setEncounterRef(UUID.randomUUID());
-        encounter.setJourneyId("J-NEWBORN-1");
-        when(encounterService.startEncounter(anyString(), anyString(), any(), any(), any(),
-                any(), any(), any(), any(), any(), any())).thenReturn(encounter);
+        when(episodeOpener.open(any(), anyString(), any()))
+                .thenReturn(new NewbornEpisodeOpener.OpenedEpisode("J-NEWBORN-1", UUID.randomUUID().toString()));
     }
 
     @Test
@@ -116,7 +102,7 @@ class NewbornEpisodeServiceTest {
 
         assertThat(second.getBirthRecordId()).isEqualTo(first.getBirthRecordId());
         // The journey is opened once, not on every replay.
-        verify(journeyStateMachine, times(1)).createJourney(any(), anyString(), anyString(), any());
+        verify(episodeOpener, times(1)).open(any(), anyString(), any());
     }
 
     @Test
@@ -138,7 +124,7 @@ class NewbornEpisodeServiceTest {
         assertThat(first.getBirthOrder()).isEqualTo(1);
         assertThat(second.getBirthOrder()).isEqualTo(2);
         assertThat(second.isMultipleBirth()).isTrue();
-        verify(journeyStateMachine, times(2)).createJourney(any(), anyString(), anyString(), any());
+        verify(episodeOpener, times(2)).open(any(), anyString(), any());
     }
 
     @Test
@@ -209,10 +195,15 @@ class NewbornEpisodeServiceTest {
     }
 
     @Test
-    void theBirthRecordSurvivesAFailureToOpenTheClinicalEpisode() {
+    void theBirthRecordSurvivesWhenTheEpisodeCannotBeOpened() {
         // Losing the delivery facts would be worse than losing the workflow scaffolding.
-        when(journeyStateMachine.createJourney(any(), anyString(), anyString(), any()))
-                .thenThrow(new IllegalStateException("journey service unavailable"));
+        //
+        // The opener returns null rather than throwing, and that distinction is the fix for a
+        // real production failure: when this service caught the exception itself, the failed
+        // insert had already marked the transaction rollback-only, so the birth record was
+        // discarded at commit even though the code looked like it recovered. The opener now
+        // runs in its own transaction (REQUIRES_NEW) and reports failure by returning null.
+        when(episodeOpener.open(any(), anyString(), any())).thenReturn(null);
 
         NewbornBirthRecordEntity record = ensure(body -> {
             body.put("baby_cpid", BABY);
@@ -221,6 +212,7 @@ class NewbornEpisodeServiceTest {
 
         assertThat(record.getBirthWeightGrams()).isEqualTo(3200);
         assertThat(record.getJourneyId()).isNull();
+        assertThat(record.getEncounterId()).isNull();
     }
 
     @Test

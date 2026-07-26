@@ -5,11 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import zw.gov.mohcc.impilo.pct.core.EncounterService;
-import zw.gov.mohcc.impilo.pct.core.JourneyStateMachine;
-import zw.gov.mohcc.impilo.pct.persistence.entity.EncounterEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
-import zw.gov.mohcc.impilo.pct.persistence.entity.JourneyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.NewbornBirthRecordEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.NewbornBirthRecordRepository;
@@ -56,19 +52,16 @@ public class NewbornEpisodeService {
     private final NewbornBirthRecordRepository birthRecordRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
-    private final JourneyStateMachine journeyStateMachine;
-    private final EncounterService encounterService;
+    private final NewbornEpisodeOpener episodeOpener;
 
     public NewbornEpisodeService(NewbornBirthRecordRepository birthRecordRepository,
                                  EventOutboxRepository outboxRepository,
                                  ObjectMapper objectMapper,
-                                 JourneyStateMachine journeyStateMachine,
-                                 EncounterService encounterService) {
+                                 NewbornEpisodeOpener episodeOpener) {
         this.birthRecordRepository = birthRecordRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
-        this.journeyStateMachine = journeyStateMachine;
-        this.encounterService = encounterService;
+        this.episodeOpener = episodeOpener;
     }
 
     @Transactional(readOnly = true)
@@ -145,24 +138,19 @@ public class NewbornEpisodeService {
     }
 
     /**
-     * Opens the baby's journey and encounter. A failure here must not lose the birth record:
-     * the clinical facts of the delivery are worth more than the workflow scaffolding around
-     * them, and the episode can be opened later.
+     * Opens the baby's journey and encounter, delegating to {@link NewbornEpisodeOpener} so the
+     * attempt runs in its own transaction. A failure there must not lose the birth record — the
+     * clinical facts of the delivery are worth more than the workflow scaffolding around them —
+     * and catching the exception here would not be enough, because a failed insert marks the
+     * surrounding transaction rollback-only and the birth record would be discarded at commit.
      */
     private void openClinicalEpisode(NewbornBirthRecordEntity record, TrustContext ctx) {
-        try {
-            UUID facilityId = record.getFacilityId() != null ? record.getFacilityId() : ctx.facilityId();
-            JourneyEntity journey = journeyStateMachine.createJourney(
-                    facilityId, record.getSubjectCpid(), "BIRTH", record.getDeliverySourceRef());
-            record.setJourneyId(journey.getJourneyId());
-
-            EncounterEntity encounter = encounterService.startEncounter(
-                    journey.getJourneyId(), "NEWBORN", "inpatient", "birth",
-                    "in_person", null, "inpatient", "routine", null, null, null);
-            record.setEncounterId(encounter.getEncounterRef().toString());
-        } catch (RuntimeException e) {
-            log.warn("Newborn birth record for {} stored, but the clinical episode could not be opened: {}",
-                    record.getSubjectCpid(), e.getMessage());
+        UUID facilityId = record.getFacilityId() != null ? record.getFacilityId() : ctx.facilityId();
+        NewbornEpisodeOpener.OpenedEpisode episode =
+                episodeOpener.open(facilityId, record.getSubjectCpid(), record.getDeliverySourceRef());
+        if (episode != null) {
+            record.setJourneyId(episode.journeyId());
+            record.setEncounterId(episode.encounterId());
         }
     }
 
