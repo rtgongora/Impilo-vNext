@@ -291,6 +291,48 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
         </p>
       </section>
 
+      {/* HAR W6 — how to reach the facility. 3,654 contacts were ingested and then rendered as
+          nothing, so a facility with no map pin and no confirmed hours also offered no way to ask
+          whether it was open. Facility-scope numbers only: tuso filters on role == FACILITY and
+          strips the contact person's name, so nobody's personal mobile can surface here. */}
+      {profile.contacts && profile.contacts.length > 0 ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-sm font-semibold text-slate-900">How to reach this facility</h2>
+          <ul className="mt-3 space-y-2">
+            {profile.contacts.map((contact, index) => (
+              <li
+                key={`${contact.phone ?? contact.email ?? "contact"}-${index}`}
+                className="flex flex-wrap items-center gap-2 text-sm text-slate-700"
+              >
+                {contact.phone ? (
+                  <a href={`tel:${contact.phone.replace(/\s+/g, "")}`} className="font-medium text-emerald-700 hover:underline">
+                    {contact.phone}
+                  </a>
+                ) : null}
+                {contact.email ? (
+                  <a href={`mailto:${contact.email}`} className="font-medium text-emerald-700 hover:underline">
+                    {contact.email}
+                  </a>
+                ) : null}
+                {contact.verified === false ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                    <AlertTriangle className="h-3 w-3" aria-hidden />
+                    Not confirmed
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          {profile.contacts.some((c) => c.verified === false) ? (
+            <p className="mt-3 flex items-start gap-1.5 text-xs text-slate-500">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden />
+              Numbers marked &quot;not confirmed&quot; come from the regulator&apos;s earlier records
+              and nobody has checked them recently. Please call before travelling.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
       {/* Access-to-care actions — real next steps (sign-in continuity or an honest request receipt). */}
       <FindCareAccessActions
         facilityId={profile.id ?? Number(facilityId)}

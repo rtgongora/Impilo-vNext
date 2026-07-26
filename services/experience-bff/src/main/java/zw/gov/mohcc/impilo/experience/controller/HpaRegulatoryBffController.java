@@ -221,6 +221,80 @@ public class HpaRegulatoryBffController {
         return forwardGet("/applications/" + applicationId + "/council-reviews", requestId, correlationId);
     }
 
+    // ---- Cross-facility worklists (HAR W6/W7) ---------------------------------------
+
+    /**
+     * The registry-wide data-gap worklist. Per-facility task lists already existed; the HPA import
+     * produced 24,616 tasks across 5,509 facilities, which is only workable in aggregate.
+     */
+    @GetMapping("/data-gap-worklist")
+    public ResponseEntity<Map<String, Object>> dataGapWorklist(
+            @RequestParam(required = false) String dimension,
+            @RequestParam(required = false) String responsibleActor,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(defaultValue = "OPEN") String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        StringBuilder q = new StringBuilder("/data-gap-worklist?status=" + enc(status)
+                + "&page=" + page + "&size=" + size);
+        appendIfPresent(q, "dimension", dimension);
+        appendIfPresent(q, "responsibleActor", responsibleActor);
+        appendIfPresent(q, "priority", priority);
+        appendIfPresent(q, "province", province);
+        appendIfPresent(q, "taskType", taskType);
+        return forwardGet(q.toString(), requestId, correlationId);
+    }
+
+    /** Counts per dimension and province — where a steward decides to start. */
+    @GetMapping("/data-gap-worklist/summary")
+    public ResponseEntity<Map<String, Object>> dataGapWorklistSummary(
+            @RequestParam(defaultValue = "OPEN") String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet("/data-gap-worklist/summary?status=" + enc(status), requestId, correlationId);
+    }
+
+    /** Bounded, audited bulk transition. Cannot mark anything verified — only move a status. */
+    @PostMapping("/data-gap-worklist/bulk-transition")
+    public ResponseEntity<Map<String, Object>> dataGapBulkTransition(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost("/data-gap-worklist/bulk-transition", body, requestId, correlationId);
+    }
+
+    /**
+     * The registry-wide PIC nomination queue. 6,180 nominations were reachable only one facility at
+     * a time across 5,509 facilities.
+     */
+    @GetMapping("/pic-nominations")
+    public ResponseEntity<Map<String, Object>> picNominationQueue(
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String province,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        StringBuilder q = new StringBuilder("/pic-nominations?page=" + page + "&size=" + size);
+        appendIfPresent(q, "state", state);
+        appendIfPresent(q, "province", province);
+        return forwardGet(q.toString(), requestId, correlationId);
+    }
+
+    private static void appendIfPresent(StringBuilder query, String name, String value) {
+        if (value != null && !value.isBlank()) {
+            query.append('&').append(name).append('=').append(enc(value));
+        }
+    }
+
+    private static String enc(String value) {
+        return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
     // ---- PIC nominations -----------------------------------------------------------
 
     @PostMapping("/pic-nominations")

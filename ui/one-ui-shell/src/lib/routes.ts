@@ -394,6 +394,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/registry/provider-council/council-workspace", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Council operations", navLabel: "Council ops", navZone: "professional" },
   { path: "/registry/facility-classification", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Facility classification reconciliation", navLabel: "Classification", navZone: "professional" },
   { path: "/registry/facilities", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility Registry", navLabel: "Facilities", navZone: "professional" },
+  // HAR W6/W7 — cross-facility worklist. Static segment, so it wins over /[id] in Next routing.
+  { path: "/registry/facilities/worklist", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry worklist", navLabel: "Worklist", navZone: "professional" },
   { path: "/registry/facilities/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility Profile", navLabel: "Facility", navZone: "professional" },
   // Steward console for place self-service case types NOT owned by the Trust Console
   // (facility/site registration, site operator grants, facility verification & governance).
@@ -1018,7 +1020,7 @@ export const ROUTES: RouteDefinition[] = [
 // monitoring home with §14.6 patient-wording law).
 // Khuluma first-class communication front door (Jul 2026): +7 role-aware hub routes.
 // Ruvimbo canonical product face (Jul 2026): +6 role-aware financing routes. Total 798.
-export const EXPECTED_ROUTE_COUNT = 798;
+export const EXPECTED_ROUTE_COUNT = 800;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

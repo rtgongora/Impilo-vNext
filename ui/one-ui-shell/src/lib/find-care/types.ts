@@ -128,6 +128,21 @@ export interface FacilityProfile {
    * Rito reputation is available. Verified experience domains only; never respondent identity.
    */
   experience?: FacilityExperienceSummary | null;
+  /**
+   * HAR W6 — facility-scope contact points only. Tuso filters strictly on `role == "FACILITY"`, so
+   * a practitioner's personal number can never appear here, and drops `name`/`role` entirely
+   * because a contact person is a person. `verified` is false for numbers carried over from HPA's
+   * legacy records that nobody has confirmed — shown anyway, because a possibly-stale number beats
+   * no way to ask whether a clinic is open, but never presented as confirmed.
+   */
+  contacts?: FacilityContact[] | null;
+}
+
+export interface FacilityContact {
+  contactType: string | null;
+  phone: string | null;
+  email: string | null;
+  verified: boolean | null;
 }
 
 export interface FacilityExperienceDomain {

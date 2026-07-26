@@ -562,3 +562,149 @@ export function useOpenEnforcementCase() {
     onSuccess: (_response, variables) => invalidateFacilityRegistry(queryClient, variables.facilityId),
   });
 }
+
+// ── HAR W6/W7 — cross-facility worklists ────────────────────────────────────
+//
+// Per-facility task lists already existed and are right for a facility administrator. They are
+// useless for a steward: the HPA import produced 24,616 data-gap tasks across 5,509 facilities and
+// 6,180 PIC nominations, reachable only one facility at a time. These read the aggregate views.
+
+export interface DataGapTaskRow {
+  id: number;
+  facilityId: number;
+  facilityUuid?: string;
+  facilityCode?: string;
+  facilityName?: string;
+  province?: string;
+  district?: string;
+  regulatoryStatus?: string;
+  taskType: string;
+  dimension?: string;
+  requiredInformation: string;
+  whyRequired?: string;
+  responsibleActor: string;
+  acceptedEvidence?: string;
+  priority: string;
+  visibility: string;
+  status: string;
+  updatedAt?: string;
+}
+
+export interface DataGapWorklistPage {
+  items: DataGapTaskRow[];
+  page: number;
+  size: number;
+  totalElements: number;
+}
+
+export interface DataGapWorklistParams {
+  dimension?: string;
+  responsibleActor?: string;
+  priority?: string;
+  province?: string;
+  taskType?: string;
+  status?: string;
+  page?: number;
+  size?: number;
+}
+
+export function useDataGapWorklist(params?: DataGapWorklistParams) {
+  return useQuery<ApiResponse<DataGapWorklistPage>>({
+    queryKey: ["facility-registry", "data-gap-worklist", params],
+    queryFn: () => {
+      const sp = new URLSearchParams();
+      if (params?.dimension) sp.set("dimension", params.dimension);
+      if (params?.responsibleActor) sp.set("responsibleActor", params.responsibleActor);
+      if (params?.priority) sp.set("priority", params.priority);
+      if (params?.province) sp.set("province", params.province);
+      if (params?.taskType) sp.set("taskType", params.taskType);
+      sp.set("status", params?.status ?? "OPEN");
+      sp.set("page", String(params?.page ?? 0));
+      sp.set("size", String(params?.size ?? 50));
+      return apiClient.get<ApiResponse<DataGapWorklistPage>>(
+        `/internal/v1/facility-registry/data-gap-worklist?${sp.toString()}`,
+      );
+    },
+  });
+}
+
+export interface DataGapWorklistSummary {
+  byDimension: Array<{ dimension?: string; priority?: string; taskCount: number }>;
+  byProvince: Array<{ province?: string; taskCount: number; facilityCount: number }>;
+}
+
+export function useDataGapWorklistSummary(status = "OPEN") {
+  return useQuery<ApiResponse<DataGapWorklistSummary>>({
+    queryKey: ["facility-registry", "data-gap-worklist", "summary", status],
+    queryFn: () =>
+      apiClient.get<ApiResponse<DataGapWorklistSummary>>(
+        `/internal/v1/facility-registry/data-gap-worklist/summary?status=${encodeURIComponent(status)}`,
+      ),
+  });
+}
+
+/**
+ * Bulk transition. The backend caps the batch and appends the same audit entry the single-task path
+ * writes; RESOLVED is as far as it goes, because a data gap closes when evidence arrives, not when
+ * a steward clears a row.
+ */
+export function useBulkTransitionDataGapTasks() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<{ requested: number; updated: number; status: string }>,
+    unknown,
+    { taskIds: number[]; status: string; note?: string }
+  >({
+    mutationFn: (body) =>
+      apiClient.post<ApiResponse<{ requested: number; updated: number; status: string }>>(
+        "/internal/v1/facility-registry/data-gap-worklist/bulk-transition",
+        body,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facility-registry", "data-gap-worklist"] });
+    },
+  });
+}
+
+export interface PicNominationRow {
+  nomination: {
+    nominationId: string;
+    facilityId: number;
+    providerPublicId: string;
+    state: string;
+    eligibilityResult?: string;
+    nominatedAt?: string;
+  };
+  facilityCode?: string;
+  facilityName?: string;
+  province?: string;
+  facilityRegulatoryStatus?: string;
+}
+
+export interface PicNominationQueuePage {
+  content: PicNominationRow[];
+  number: number;
+  size: number;
+  totalElements: number;
+}
+
+export function usePicNominationQueue(params?: {
+  state?: string;
+  province?: string;
+  page?: number;
+  size?: number;
+}) {
+  return useQuery<ApiResponse<PicNominationQueuePage>>({
+    queryKey: ["facility-registry", "pic-nomination-queue", params],
+    queryFn: () => {
+      const sp = new URLSearchParams();
+      if (params?.state) sp.set("state", params.state);
+      if (params?.province) sp.set("province", params.province);
+      sp.set("page", String(params?.page ?? 0));
+      sp.set("size", String(params?.size ?? 50));
+      return apiClient.get<ApiResponse<PicNominationQueuePage>>(
+        `/internal/v1/facility-registry/pic-nominations?${sp.toString()}`,
+      );
+    },
+  });
+}
