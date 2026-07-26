@@ -1,6 +1,8 @@
 # experience-bff empty-200 honesty register
 
 **Measured 2026-07-26** against `services/experience-bff/.../experience/controller/`.
+**UI consumers closed out 2026-07-26** — see [The remaining 13](#the-remaining-13--audited-2026-07-26).
+Nothing is outstanding from this register.
 
 A failed downstream call was caught and returned as HTTP 200 with an empty payload, so a caller
 could not distinguish "the backend says there is no data" from "the backend could not be reached".
@@ -135,18 +137,87 @@ evaluated the rules engine against a context describing a patient with no condit
 medications and no allergies — and the engine correctly answered "no alerts". It now fails closed,
 and `EHRLayout` puts an explicit "decision support unavailable" entry on the alert rail.
 
-### Not yet audited
+### The remaining 13 — audited 2026-07-26
 
 A precise scan (query hooks that call a changed endpoint, in files with no error reference) found
-20 consumers. The clinically significant ones above are done. Still to review, lower severity:
+20 consumers. The clinically significant ones above were done first; the remaining 13 are now
+closed. Nothing is outstanding from this register.
 
-`app/ask/page.tsx`, `app/professional/page.tsx`, `app/shift/active/page.tsx`,
-`app/ehr/[patientId]/documents/page.tsx`, `app/ehr/[patientId]/page.tsx`,
-`components/ProviderActivationBanner.tsx`, `components/chronic-care/CarePlanOrchestrationRail.tsx`,
-`components/clinical/InterpretedVitalsPanel.tsx`,
-`components/clinical/OfflineClinicalQueueOrchestrationPanel.tsx`,
-`components/clinical/PatientJourneyContextPanel.tsx`, `components/ehr/sections/AssessmentSection.tsx`,
-`components/encounter/EncounterCareChainRail.tsx`, `hooks/useIdentityContext.ts`.
+Twelve were fixed, one was deliberately left as 200 with the reasoning recorded in a comment at
+the call site. Two of the twelve turned out to be more severe than "lower severity" suggested.
+
+**Fixed — the sharpest two**
+
+- `app/professional/page.tsx` — defaulted `providerStatus` to `"Active"` and `licenceValid` to
+  `true`, so an unreachable registry rendered a green **Active (MCAZ)** and a valid licence. That
+  is the one claim on the page a provider may act on. The same page also *invented* the licence
+  expiry (today + one year, computed client-side; no expiry field exists on the linked-ids
+  payload) — that date is now removed rather than fabricated. Affiliations and notices likewise
+  stopped issuing "No facility affiliations yet — ask HR" (which sends an already-affiliated
+  provider to chase a non-problem) and "No professional notices at this time" (an all-clear on
+  regulatory standing).
+- `components/clinical/PatientJourneyContextPanel.tsx` — its empty state described itself as
+  "an honest empty state — not a simulated journey" while asserting six absences none of its
+  sources had confirmed. It now names the unreadable sources, marks each tile individually, and
+  flags the compact strip "Journey incomplete" so the suggested next action is not read as
+  derived from a complete picture.
+
+**Fixed — the rest**
+
+- `components/ehr/sections/AssessmentSection.tsx` — "No triage data available for this encounter"
+  claimed the patient was never triaged: no acuity category, no danger-sign screening. Same for
+  the history panel.
+- `components/clinical/InterpretedVitalsPanel.tsx` — rendered nothing at all on failure,
+  indistinguishable from "checked against the governed reference ranges, nothing abnormal".
+- `app/ehr/[patientId]/page.tsx` — four confident zeros on the coordination pulse, plus
+  "Patient not found" for a registry that was merely unreachable (the conflation behind the
+  duplicate-registration finding above). The encounter list's silent absence also invited a
+  second encounter to be opened on top of a live one.
+- `app/ehr/[patientId]/documents/page.tsx` — "No documents uploaded yet" hid referral letters,
+  discharge summaries and consent forms; the three header metrics showed 0/0/0.
+- `app/shift/active/page.tsx` — painted a green **ACTIVE** pill from the local zustand store after
+  the shift read failed (the BFF is stateless; client state proves nothing about TUSO). Worse, the
+  end-shift dialog said "This will end your current shift" when the in-progress queue could not be
+  read — that sentence is the all-clear a clinician hands over on.
+- `components/clinical/OfflineClinicalQueueOrchestrationPanel.tsx` — "0 queued item(s) · 0 pending
+  reconcile batch(es)" for an unreachable queue is exactly the reading that says nothing captured
+  offline is still waiting to reach the record. The reconcile *write* also failed silently.
+- `components/chronic-care/CarePlanOrchestrationRail.tsx` — its four writes are the ones the BFF
+  used to answer optimistically (`{"updated": true}`, `{"performed": true}`, a 201 carrying a UUID
+  for a goal PCT never stored). They now fail honestly, but the rail said nothing, and a silent
+  failure repeats the same claim: that care was delivered.
+- `components/encounter/EncounterCareChainRail.tsx` — zeros for OROS orders, COSTA cost events and
+  MusheX intents. The chain is cascaded (a failed invoice read yields no bill ids, which disables
+  the intents query, which disables settlements), so one outage produced three confident zeros.
+- `hooks/useIdentityContext.ts` — a failed source resolved identically to an empty one: no linked
+  Provider ID, no affiliations, no work assignments. Now exposes `isUnavailable`. `isLoading` still
+  goes false on error deliberately — a permanently-spinning chooser strands the user — so display
+  surfaces must consult the new flag. `AuthGuardProvider` is safe by construction (the BFF Session
+  Experience Contract is authoritative there and the client-side citizen heuristic only blocks
+  where the contract also declines); `app/auth/context-chooser` was wired, because its fallback
+  told a provider whose affiliations merely failed to load to go request access they already hold.
+- `app/ask/page.tsx` — minor: the EDLIZ pathway chips vanished entirely, reading as "no guided
+  pathways are published". The two Ask paths and the consent check are left as-is and commented:
+  both already name their own degradation in-band (fail-closed to non-personalized; an explicit
+  assistant message when the knowledge service is down).
+
+**Left as 200 — category (b), commented at the call site**
+
+- `components/ProviderActivationBanner.tsx` — on a failed linked-ids read the banner stays hidden.
+  That is an absent invitation, not a fabricated finding: nothing renders, so no reader can
+  mistake it for "you have no Provider ID". The regulatory claim it would otherwise imply is made
+  on `/professional`, which now shows an explicit unavailable state, and activation stays
+  reachable there. A silent fallback here loses a prompt, not a fact.
+
+**Tests.** `ProfessionalProfilePage`, `PatientJourneyContextPanel`, `EncounterCareChainRail`,
+`OfflineClinicalQueueOrchestrationPanel` and `CarePlanOrchestrationRail` now have cases pinning the
+distinction in both directions — a genuinely empty answer still renders zero, an unreadable one
+never does. `AssessmentSection` is covered by comment and type only: rendering it in a test would
+mean mocking the clerking editor, vitals recorder, lab system and timeline for one assertion.
+
+**Not a 502 consumer, found in passing.** The invented licence expiry on `app/professional/page.tsx`
+was fabrication of a different kind — no failed read involved, the date was simply computed from
+`Date.now()`. It was removed with the surrounding fix because it sat inside the same sentence.
 
 ## What the test suite was proving
 
