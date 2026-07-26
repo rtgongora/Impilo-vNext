@@ -210,11 +210,20 @@ public final class EpiForecastEngine {
                 // and a child who missed it still starts the primary series on time at six weeks.
                 // Treating every higher dose number as dependent would strand the whole polio
                 // series for every baby not born in a facility.
+                //
+                // Age is checked first. A child not yet old enough for this dose is simply not due
+                // it, and saying "awaiting the previous dose" against a dose that is years away
+                // fills the card with noise that hides the rows needing action today.
                 if (dose.minimumIntervalDays() != null && previousValidDoseDate == null) {
-                    rows.add(row(antigen, dose, DoseStatus.AWAITING_PREVIOUS_DOSE, earliest, recommended,
-                            overdueAfter, latestUseful, null, null,
-                            "The previous dose in this series has not been validly given, so this dose "
-                            + "cannot be scheduled yet."));
+                    boolean oldEnough = !asOf.isBefore(earliest);
+                    rows.add(row(antigen, dose,
+                            oldEnough ? DoseStatus.AWAITING_PREVIOUS_DOSE : DoseStatus.NOT_YET_DUE,
+                            earliest, recommended, overdueAfter, latestUseful, null, null,
+                            oldEnough
+                                    ? "The previous dose in this series has not been validly given, so "
+                                      + "this dose cannot be scheduled yet."
+                                    : "Not yet due; eligible from " + earliest + " at the earliest, and "
+                                      + "only once the previous dose in the series has been given."));
                     continue;
                 }
 
@@ -230,9 +239,9 @@ public final class EpiForecastEngine {
                             blockedByInterval ? DoseStatus.BLOCKED_BY_INTERVAL : DoseStatus.NOT_YET_DUE,
                             eligibleFrom, recommended, overdueAfter, latestUseful, null, null,
                             blockedByInterval
-                                    ? "Old enough, but only " + ChronoUnit.DAYS.between(previousValidDoseDate, asOf)
-                                      + " days have passed since the previous dose and "
-                                      + dose.minimumIntervalDays() + " are required. Eligible from "
+                                    ? "Old enough, but only " + days(ChronoUnit.DAYS.between(previousValidDoseDate, asOf))
+                                      + " have passed since the previous dose and "
+                                      + days(dose.minimumIntervalDays()) + " are required. Eligible from "
                                       + eligibleFrom + ". Giving it earlier would not immunise."
                                     : "Not yet due; eligible from " + eligibleFrom + "."));
                     continue;
@@ -243,7 +252,7 @@ public final class EpiForecastEngine {
                 rows.add(row(antigen, dose, overdue ? DoseStatus.OVERDUE : DoseStatus.DUE,
                         eligibleFrom, recommended, overdueAfter, latestUseful, daysOverdue, null,
                         overdue
-                                ? "Overdue by " + daysOverdue + " days. Give it at this contact; there is "
+                                ? "Overdue by " + days(daysOverdue) + ". Give it at this contact; there is "
                                   + "no need to restart the series."
                                 : "Due now."));
             }
@@ -260,6 +269,11 @@ public final class EpiForecastEngine {
                         ? null
                         : "This forecast counts doses that were reported but never verified. Verify "
                           + "them against the child's card before treating the schedule as complete.");
+    }
+
+    /** Clinician-facing text goes on a child's card, so "1 days" is not acceptable. */
+    private static String days(long n) {
+        return n == 1 ? "1 day" : n + " days";
     }
 
     /** Why a recorded dose does not count, or null when it is valid. */

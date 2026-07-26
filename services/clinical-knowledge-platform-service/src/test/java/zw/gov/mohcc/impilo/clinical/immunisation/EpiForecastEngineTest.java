@@ -180,7 +180,10 @@ class EpiForecastEngineTest {
         List<AdministeredDose> given = new ArrayList<>(onSchedule(0));
         given.add(dose("PENTA", 1, 28));
 
-        Forecast f = at(60, given);
+        // Evaluated at 80 days, when the child IS old enough for dose 2. At 60 days the answer
+        // would be "not yet due" for reasons of age alone, and the test could not tell whether the
+        // invalid first dose had been correctly ignored.
+        Forecast f = at(80, given);
 
         assertThat(row(f, "PENTA", 1).status()).isEqualTo(DoseStatus.INVALID_REPEAT_REQUIRED);
         assertThat(row(f, "PENTA", 2).status()).isEqualTo(DoseStatus.AWAITING_PREVIOUS_DOSE);
@@ -200,6 +203,17 @@ class EpiForecastEngineTest {
         assertThat(penta2.status()).isEqualTo(DoseStatus.INVALID_REPEAT_REQUIRED);
         assertThat(penta2.rationale()).contains("15 days after the previous dose");
         assertThat(penta2.rationale()).doesNotContain("before the minimum age");
+    }
+
+    @Test
+    void aDoseYearsAwayReadsAsNotYetDueRatherThanAwaitingItsPredecessor() {
+        // Noticed on the estate: an 85-day-old's card listed HPV dose 2 as "awaiting the previous
+        // dose". True, and useless — it is nine years away, and rows like it buried the three
+        // doses actually due that morning.
+        ForecastRow hpv2 = row(at(85, onSchedule(0)), "HPV", 2);
+
+        assertThat(hpv2.status()).isEqualTo(DoseStatus.NOT_YET_DUE);
+        assertThat(hpv2.rationale()).contains("eligible from");
     }
 
     // --- the rotavirus ceiling, which is a safety limit -------------------------------------------
