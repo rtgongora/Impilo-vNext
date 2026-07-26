@@ -162,21 +162,40 @@ public final class PredicateEvaluator {
         return anyUnknown ? Outcome.UNKNOWN : Outcome.TRUE;
     }
 
-    /** At least one child must hold. A single true is decisive even if others are unknown. */
+    /**
+     * At least one child must hold. A single true is decisive even if others are unknown.
+     *
+     * <p><b>The verdict short-circuits; the evidence does not.</b> Every child is evaluated even
+     * after one has held, so {@code usedInputs} lists everything that actually qualified rather than
+     * everything up to the first match.
+     *
+     * <p>This was found by deploying the paediatric pack: a ten-day-old fired the young-infant
+     * infection rule on poor feeding and the alert did not mention the qualifying temperature of
+     * 35.0, because evaluation stopped at the first true. There the under-reporting was cosmetic —
+     * the alert and the action were identical either way.
+     *
+     * <p>In the maternal domain it would not be. {@code triggeringFindings} is what selects which
+     * emergency response opens, and a woman who is both convulsing and bleeding must open the
+     * eclampsia pathway and the haemorrhage pathway. Stopping at the first match would open one of
+     * them and leave the other invisible, with the record showing a complete-looking assessment.
+     */
     private static Outcome combineAny(JsonNode children, Map<String, Object> facts, Result result) {
         if (!children.isArray() || children.isEmpty()) {
             result.contentErrors.add("'any' needs a non-empty array");
             return Outcome.UNKNOWN;
         }
+        boolean anyTrue = false;
         boolean anyUnknown = false;
         for (JsonNode child : children) {
             Outcome outcome = evaluateNode(child, facts, result);
             if (outcome == Outcome.TRUE) {
-                return Outcome.TRUE;
-            }
-            if (outcome == Outcome.UNKNOWN) {
+                anyTrue = true;
+            } else if (outcome == Outcome.UNKNOWN) {
                 anyUnknown = true;
             }
+        }
+        if (anyTrue) {
+            return Outcome.TRUE;
         }
         return anyUnknown ? Outcome.UNKNOWN : Outcome.FALSE;
     }
