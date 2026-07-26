@@ -20,6 +20,9 @@ schema:
   consumes_from: Upstream authoritative dependencies
   exposes_to: Downstream consumers
   forbidden_responsibilities: Explicit anti-responsibilities
+  continuum: care | wellness — which person continuum the service participates in (care-continuum-doctrine.md CC-8)
+  continuum_role: owner | component | correlator | record-authority
+  continuum_parent: The continuum owner a component/correlator is subordinate to; null for owners and record-authorities
   production_status: production readiness disposition
   implementation_status: implementation depth
   frontend_wiring_status: experience wiring depth
@@ -190,13 +193,16 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: null
     product_names:
       - Booking
     owner_team: TBD
     system_of_record_for:
-      - Booking canonical records
+      - Booking canonical records (booking/appointment transaction data — a component of the Care Continuum, never a container of care; the continuum links journeys to appointments via pct V031, not the reverse — care-continuum-doctrine.md CC-7)
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -205,6 +211,7 @@ services:
     forbidden_responsibilities:
       - must-not-become-system-of-record-for-clinical-or-finance
       - must-not-embed-actor-facing-business-workflows
+      - must-not-contain-care-journeys           # components attach to the continuum; they never contain it (CC-7)
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: wired
@@ -219,6 +226,9 @@ services:
     secondary_planes: []
     sovereign: true
     sovereign_group: BUTANO
+    continuum: care
+    continuum_role: record-authority
+    continuum_parent: null
     primary_protocol: fhir
     default_http_port: 8289
     product_names:
@@ -248,6 +258,9 @@ services:
     secondary_planes: []
     sovereign: true
     sovereign_group: BUTANO
+    continuum: care
+    continuum_role: record-authority
+    continuum_parent: null
     primary_protocol: fhir
     default_http_port: 8090
     product_names:
@@ -403,13 +416,16 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: null
     product_names:
       - Community
     owner_team: TBD
     system_of_record_for:
-      - Community canonical records
+      - Community experience surfaces only — community households, visits and screenings context is pct-service SoR (V019/V027); disposition is an open PO decision (care-continuum-doctrine.md CC-6)
     consumes_from:
       - tshepo-authz-service
       - multiple-domain-services-via-bff
@@ -418,6 +434,7 @@ services:
     forbidden_responsibilities:
       - must-not-own-domain-source-data
       - must-not-bypass-bff-authz-audit-controls
+      - must-not-fork-community-care-context     # pct-service owns the community care context (CC-6)
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: wired
@@ -525,6 +542,9 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: correlator
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: 8392
     product_names:
@@ -535,7 +555,7 @@ services:
       - emergency_request, emergency_incident, mission status timeline, resource_request, affected_site
       - assistance_request (crowdfunding case aggregate, verification lifecycle, timeline; money in mushe, attestation in credential-verification — referenced by id)
       - EMS clinical dispatch — ems_mission crew/vehicle clinical state machine (CREATED..HANDOVER) and prehospital ePCR (patient vitals/GCS/interventions time-series), bound to the trauma incident and trauma_episode_id. This is the clinical dispatch of a crew to a patient, distinct from nhume logistics (parcel) dispatch; crew resolves from vashandi, routing/ETA from ndila, ambulance is an asset-registry Object ID.
-      - canonical trauma_episode correlation spine (trauma_episode + trauma_episode_phase read-model); phase-owner SoR rows (pct/inpatient/madi) carry trauma_episode_id and remain owned by their services
+      - delegated trauma_episode correlation spine operated on behalf of the Care Continuum (pct-service) for the prehospital/multi-facility window (trauma_episode + trauma_episode_phase read-model); phase-owner SoR rows (pct/inpatient/madi) carry trauma_episode_id and remain owned by their services; episodes must become resolvable to a PCT anchor on facility arrival (care-continuum-doctrine.md CC-4)
     consumes_from:
       - tshepo-authz-service
       - nhume-service
@@ -552,6 +572,7 @@ services:
       - must-not-own-maps-routing
       - must-not-own-clinical-record-source-of-truth  # owns the ePCR prehospital record + trauma_episode spine; does NOT own facility clinical encounter/record (pct/butano)
       - must-not-bypass-bff-authz-audit-controls
+      - must-not-own-care-continuum              # trauma correlation is delegated by pct-service, never above it (CC-4)
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: wired
@@ -885,6 +906,9 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: 8240
     product_names:
@@ -1068,6 +1092,9 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: 8121
     product_names:
@@ -1402,6 +1429,9 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: 8300
     product_names:
@@ -1874,6 +1904,9 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: 8089
     product_names:
@@ -1966,12 +1999,16 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: owner
+    continuum_parent: null
     primary_protocol: rest
     default_http_port: 8088
     product_names:
       - PCT
     owner_team: TBD
     system_of_record_for:
+      - The person Care Continuum — cradle-to-grave composition of visit journeys, encounters, problems, care plans, allergies, growth, immunisations, birth and death pathways, referrals and community care context (care-continuum-doctrine.md CC-1)
       - Pct canonical records
       - Encounter cadre decision (Java CadreEngine; GAP-4 unify-with-scope-rules resolved via FormScopeEngine composition)
       - Encounter form responses (structured data-entry responses, resolver decisions, extraction provenance)
@@ -1993,6 +2030,8 @@ services:
       - must-not-own-form-definitions
       - must-not-own-immunisation-schedule-or-forecast-rules
       - must-not-own-civil-birth-registration
+      - must-not-own-wellness-continuum          # simba-service is the peer Wellness Continuum owner (CC-1)
+      - must-not-duplicate-longitudinal-SHR      # butano-service is the record-authority; PCT contributes, never forks (CC-3)
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -2123,13 +2162,16 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: null
     product_names:
       - Referral
     owner_team: TBD
     system_of_record_for:
-      - Referral canonical records
+      - Referral experience stub only — referral SoR lives in pct-service (migrations V008/V021/V032/V033/V045-V050, incl. the transition ledger and offline store-and-forward); disposition retire-vs-read-model is an open PO decision (care-continuum-doctrine.md CC-6)
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -2138,6 +2180,7 @@ services:
     forbidden_responsibilities:
       - must-not-become-system-of-record-for-clinical-or-finance
       - must-not-embed-actor-facing-business-workflows
+      - must-not-claim-referral-canonical-records  # pct-service owns referral SoR (CC-6)
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -2261,6 +2304,9 @@ services:
     secondary_planes: []
     sovereign: false
     sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
     primary_protocol: rest
     default_http_port: 8394
     product_names:
@@ -2504,12 +2550,16 @@ services:
       - trust
     sovereign: false
     sovereign_group: null
+    continuum: wellness
+    continuum_role: owner
+    continuum_parent: null
     primary_protocol: rest
     default_http_port: null
     product_names:
       - Simba
     owner_team: TBD
     system_of_record_for:
+      - The person Wellness Continuum — peer in rank to the Care Continuum owned by pct-service (care-continuum-doctrine.md CC-1)
       - wellness journeys
       - lifestyle plans
       - self-care plans
@@ -3008,6 +3058,9 @@ services:
       - trust
     sovereign: false
     sovereign_group: null
+    continuum: wellness
+    continuum_role: component
+    continuum_parent: simba-service
     primary_protocol: rest
     default_http_port: null
     product_names:
@@ -3026,6 +3079,7 @@ services:
       - must-not-own-patient-identity-source-of-truth
       - must-not-own-provider-identity-source-of-truth
       - must-not-own-facility-registry
+      - must-not-fork-wellness-continuum         # compatibility alias of simba-service; retirement gated on folder-move approval (CC-6)
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial

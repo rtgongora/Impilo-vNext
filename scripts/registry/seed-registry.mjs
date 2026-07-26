@@ -106,13 +106,70 @@ const LEGACY = new Map(
 const DOCTRINE_OVERRIDES = new Map(
   [
     [
+      "pct-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "care-delivery",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "owner",
+        continuum_parent: null,
+        system_of_record_for: [
+          "The person Care Continuum \u2014 cradle-to-grave composition of visit journeys, encounters, problems, care plans, allergies, growth, immunisations, birth and death pathways, referrals and community care context (care-continuum-doctrine.md CC-1)",
+          "Pct canonical records",
+          "Encounter cadre decision (Java CadreEngine; GAP-4 unify-with-scope-rules resolved via FormScopeEngine composition)",
+          "Encounter form responses (structured data-entry responses, resolver decisions, extraction provenance)",
+          "Front-door sorting desk (visit-type sort; GAP-11 unifying session pending)",
+          "Clinical problems list",
+          "OPD care plans and goals",
+          "Community households, visits and screenings context",
+          "Child growth measurement registry (anthropometry with measurement conditions; WHO z-scores stamped at write with standard and engine version)",
+          "Immunisation administered-dose registry (dose facts only; the national schedule and the due/overdue forecast are not owned here)",
+          "Newborn clinical birth summary and neonatal episodes (child-anchored; civil birth notification stays ubomi-service, identity and mother-baby linkage stay vito-service)",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-act-as-identity-source-of-record",
+          "must-not-own-enterprise-ledgering",
+          "must-not-own-form-definitions",
+          "must-not-own-immunisation-schedule-or-forecast-rules",
+          "must-not-own-civil-birth-registration",
+          "must-not-own-wellness-continuum",
+          "must-not-duplicate-longitudinal-SHR",
+        ],
+      },
+    ],
+    [
       "simba-service",
       {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
         primary_plane: "enterprise",
         plane: "enterprise",
         domain: "wellness-personal-health-data",
-        secondary_planes: ["experience", "data", "integration", "registry", "trust"],
+        secondary_planes: [
+          "experience",
+          "data",
+          "integration",
+          "registry",
+          "trust",
+        ],
+        continuum: "wellness",
+        continuum_role: "owner",
+        continuum_parent: null,
         system_of_record_for: [
+          "The person Wellness Continuum \u2014 peer in rank to the Care Continuum owned by pct-service (care-continuum-doctrine.md CC-1)",
           "wellness journeys",
           "lifestyle plans",
           "self-care plans",
@@ -125,6 +182,13 @@ const DOCTRINE_OVERRIDES = new Map(
           "connected source registry and permissions",
           "personal wellness readings and manual entries",
           "wellness remote monitoring alerts",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
         ],
         forbidden_responsibilities: [
           "must-not-own-clinical-encounter-lifecycle",
@@ -141,15 +205,378 @@ const DOCTRINE_OVERRIDES = new Map(
       },
     ],
     [
+      "butano-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "care-delivery",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "record-authority",
+        continuum_parent: null,
+        system_of_record_for: [
+          "Butano canonical records",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-act-as-identity-source-of-record",
+          "must-not-own-enterprise-ledgering",
+        ],
+      },
+    ],
+    [
+      "butano-fhir",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "care-delivery",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "record-authority",
+        continuum_parent: null,
+        system_of_record_for: [
+          "Butano Fhir canonical records",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-act-as-identity-source-of-record",
+          "must-not-own-enterprise-ledgering",
+        ],
+      },
+    ],
+    [
+      "inpatient-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "care-delivery",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Inpatient canonical records",
+          "Early warning scores (server-computed NEWS2 and age-banded paediatric scores; thresholds versioned as content)",
+          "Neonatal admissions arising from theatre handover to neonatal care",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-act-as-identity-source-of-record",
+          "must-not-own-enterprise-ledgering",
+          "must-not-own-longitudinal-child-health-registry",
+        ],
+      },
+    ],
+    [
+      "oros-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "care-delivery",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Oros canonical records",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-act-as-identity-source-of-record",
+          "must-not-own-enterprise-ledgering",
+        ],
+      },
+    ],
+    [
+      "booking-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "experience",
+        plane: "experience",
+        domain: "workflow-orchestration",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Booking canonical records (booking/appointment transaction data \u2014 a component of the Care Continuum, never a container of care; the continuum links journeys to appointments via pct V031, not the reverse \u2014 care-continuum-doctrine.md CC-7)",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-become-system-of-record-for-clinical-or-finance",
+          "must-not-embed-actor-facing-business-workflows",
+          "must-not-contain-care-journeys",
+        ],
+      },
+    ],
+    [
+      "telemonitoring-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "care-delivery",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "MonitoringPlan / ThresholdProfile / AlertRule / AlertEpisode lifecycle (Vol II \u00a714; alerts land with OF-B26)",
+          "DeviceAssignmentId (clinical-assignment truth of the three-way device split; OF-B24)",
+          "Single designated writer of monitoring-band Observations to BUTANO via fhir-gateway (OF-B25)",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+          "oros-service",
+          "iot-ingestion-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "pct-service",
+        ],
+        forbidden_responsibilities: [
+          "must-not-talk-to-devices-directly",
+          "must-not-duplicate-surveillance-domain",
+          "must-not-duplicate-wellness-domain",
+          "must-not-own-task-source-of-truth",
+        ],
+      },
+    ],
+    [
+      "referral-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "integration",
+        plane: "integration",
+        domain: "platform-ops",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Referral experience stub only \u2014 referral SoR lives in pct-service (migrations V008/V021/V032/V033/V045-V050, incl. the transition ledger and offline store-and-forward); disposition retire-vs-read-model is an open PO decision (care-continuum-doctrine.md CC-6)",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-become-system-of-record-for-clinical-or-finance",
+          "must-not-embed-actor-facing-business-workflows",
+          "must-not-claim-referral-canonical-records",
+        ],
+      },
+    ],
+    [
+      "community-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "experience",
+        plane: "experience",
+        domain: "workflow-orchestration",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Community experience surfaces only \u2014 community households, visits and screenings context is pct-service SoR (V019/V027); disposition is an open PO decision (care-continuum-doctrine.md CC-6)",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+          "multiple-domain-services-via-bff",
+        ],
+        exposes_to: [
+          "web-mobile-experience",
+        ],
+        forbidden_responsibilities: [
+          "must-not-own-domain-source-data",
+          "must-not-bypass-bff-authz-audit-controls",
+          "must-not-fork-community-care-context",
+        ],
+      },
+    ],
+    [
+      "forms-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "clinical-knowledge",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Forms canonical records",
+          "Encounter form definitions and versions (clinical DAK metadata; immutable version snapshots)",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-act-as-identity-source-of-record",
+          "must-not-own-enterprise-ledgering",
+          "must-not-own-clinical-encounters",
+          "must-not-own-form-responses",
+        ],
+      },
+    ],
+    [
+      "madi-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "integration",
+        domain: "platform-ops",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Madi canonical records",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
+        forbidden_responsibilities: [
+          "must-not-become-system-of-record-for-clinical-or-finance",
+          "must-not-embed-actor-facing-business-workflows",
+        ],
+      },
+    ],
+    [
+      "daidzai-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "experience",
+        plane: "experience",
+        domain: "workflow-orchestration",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "correlator",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Daidzai emergency/disaster response command canonical records",
+          "emergency_request, emergency_incident, mission status timeline, resource_request, affected_site",
+          "assistance_request (crowdfunding case aggregate, verification lifecycle, timeline; money in mushe, attestation in credential-verification \u2014 referenced by id)",
+          "EMS clinical dispatch \u2014 ems_mission crew/vehicle clinical state machine (CREATED..HANDOVER) and prehospital ePCR (patient vitals/GCS/interventions time-series), bound to the trauma incident and trauma_episode_id. This is the clinical dispatch of a crew to a patient, distinct from nhume logistics (parcel) dispatch; crew resolves from vashandi, routing/ETA from ndila, ambulance is an asset-registry Object ID.",
+          "delegated trauma_episode correlation spine operated on behalf of the Care Continuum (pct-service) for the prehospital/multi-facility window (trauma_episode + trauma_episode_phase read-model); phase-owner SoR rows (pct/inpatient/madi) carry trauma_episode_id and remain owned by their services; episodes must become resolvable to a PCT anchor on facility arrival (care-continuum-doctrine.md CC-4)",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+          "nhume-service",
+          "ndila-service",
+          "pct-service",
+          "tuso-service",
+          "indawo-service",
+          "khuluma-service",
+          "rito-quality-safety-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+        ],
+        forbidden_responsibilities: [
+          "must-not-own-logistics-dispatch-execution",
+          "must-not-own-maps-routing",
+          "must-not-own-clinical-record-source-of-truth",
+          "must-not-bypass-bff-authz-audit-controls",
+          "must-not-own-care-continuum",
+        ],
+      },
+    ],
+    [
       "wellness-service",
       {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
         primary_plane: "enterprise",
         plane: "enterprise",
         domain: "wellness-compatibility-alias",
-        secondary_planes: ["experience", "data", "registry", "trust"],
+        secondary_planes: [
+          "experience",
+          "data",
+          "registry",
+          "trust",
+        ],
+        continuum: "wellness",
+        continuum_role: "component",
+        continuum_parent: "simba-service",
         system_of_record_for: [],
-        consumes_from: ["simba-service"],
-        exposes_to: ["experience-bff", "integration-hub"],
+        consumes_from: [
+          "simba-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "integration-hub",
+        ],
         forbidden_responsibilities: [
           "must-not-own-public-health-surveillance-source-of-truth",
           "must-not-own-clinical-encounter-lifecycle",
@@ -157,8 +584,8 @@ const DOCTRINE_OVERRIDES = new Map(
           "must-not-own-patient-identity-source-of-truth",
           "must-not-own-provider-identity-source-of-truth",
           "must-not-own-facility-registry",
+          "must-not-fork-wellness-continuum",
         ],
-        frontend_wiring_status: "unknown-or-partial",
       },
     ],
     [
@@ -177,22 +604,6 @@ const DOCTRINE_OVERRIDES = new Map(
           "must-not-bypass-data-governance-or-consent-policy",
           "must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries",
         ],
-      },
-    ],
-    [
-      "booking-service",
-      {
-        primary_plane: "experience",
-        plane: "experience",
-        domain: "workflow-orchestration",
-        frontend_wiring_status: "wired",
-      },
-    ],
-    [
-      "madi-service",
-      {
-        primary_plane: "clinical",
-        frontend_wiring_status: "wired",
       },
     ],
     [
@@ -460,6 +871,9 @@ const doc = {
     consumes_from: "Upstream authoritative dependencies",
     exposes_to: "Downstream consumers",
     forbidden_responsibilities: "Explicit anti-responsibilities",
+    continuum: "care | wellness — which person continuum the service participates in (care-continuum-doctrine.md CC-8)",
+    continuum_role: "owner | component | correlator | record-authority",
+    continuum_parent: "The continuum owner a component/correlator is subordinate to; null for owners and record-authorities",
     production_status: "production readiness disposition",
     implementation_status: "implementation depth",
     frontend_wiring_status: "experience wiring depth",
