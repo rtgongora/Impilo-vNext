@@ -1,0 +1,222 @@
+{
+  "packId": "impilo.paediatric.growth-intelligence",
+  "version": "engineering-seed-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": "Growth-faltering thresholds follow the WHO child growth standards and the widely used 0.67 z-score criterion for a clinically significant downward centile crossing; acute-malnutrition cut-offs follow WHO/UNICEF community-based management of severe acute malnutrition. This engine interprets z-scores that were computed and stamped at the time of measurement by pct-service — it never recomputes them, so a stored score and its interpretation cannot drift apart. Thresholds and actions are an engineering seed and are NOT a ratified national protocol. See docs/clinical-governance/edliz-engineering-seed-policy.md.",
+  "signals": [
+    {
+      "code": "IMPLAUSIBLE_MEASUREMENT",
+      "name": "Implausible change between measurements",
+      "severity": "DATA_QUALITY",
+      "priority": 10,
+      "zChangeMagnitudeAtLeast": 6.0,
+      "action": "Do not act on this trend. A change this large between contacts is far more often a measurement or transcription error than real growth — check the scale, the recorded date and whether these two measurements belong to the same child.",
+      "blocksInterpretation": true,
+      "measure": "WEIGHT_FOR_AGE"
+    },
+    {
+      "code": "STATURE_MODE_ARTEFACT",
+      "name": "Apparent drop explained by the switch from length to height",
+      "severity": "DATA_QUALITY",
+      "priority": 20,
+      "statureModeChanged": true,
+      "action": "Do not act on this apparent loss. Standing height measures about 0.7 cm less than recumbent length in the same child, and the standards change at two years to match. Confirm on the next visit before treating this as faltering.",
+      "blocksInterpretation": true
+    },
+    {
+      "code": "SEVERE_WEIGHT_FALTERING",
+      "name": "Severe growth faltering",
+      "severity": "HIGH",
+      "priority": 30,
+      "measure": "WEIGHT_FOR_AGE",
+      "zDropAtLeast": 1.34,
+      "action": "Assess for underlying illness including tuberculosis and HIV, assess feeding directly rather than by report, and refer for nutritional management. A drop of two thresholds is rarely explained by feeding technique alone.",
+      "referralRequired": true,
+      "family": "WEIGHT_TREND"
+    },
+    {
+      "code": "WEIGHT_LOSS",
+      "name": "Absolute weight loss",
+      "severity": "HIGH",
+      "priority": 40,
+      "absoluteWeightLoss": true,
+      "action": "A child who has lost weight since the last contact needs assessment today: look for illness, feeding difficulty and food insecurity in the household. Do not wait for the next scheduled visit.",
+      "referralRequired": false,
+      "family": "WEIGHT_TREND"
+    },
+    {
+      "code": "WEIGHT_FALTERING",
+      "name": "Growth faltering",
+      "severity": "MODERATE",
+      "priority": 50,
+      "measure": "WEIGHT_FOR_AGE",
+      "zDropAtLeast": 0.67,
+      "action": "Assess feeding by observing a feed, check for illness, counsel the carer, and weigh again in two weeks rather than at the next routine visit. Faltering is visible in the trend long before any single measurement crosses a classification line.",
+      "referralRequired": false,
+      "family": "WEIGHT_TREND"
+    },
+    {
+      "code": "STATIC_WEIGHT",
+      "name": "No weight gain",
+      "severity": "MODERATE",
+      "priority": 60,
+      "measure": "WEIGHT_FOR_AGE",
+      "staticWeightMinDays": 60,
+      "maxAgeDays": 730,
+      "action": "A child under two who has not gained weight in two months is faltering even if their weight-for-age has not yet crossed a threshold. Assess feeding and illness now.",
+      "referralRequired": false,
+      "family": "WEIGHT_TREND"
+    },
+    {
+      "code": "HEAD_CIRCUMFERENCE_CROSSING",
+      "name": "Head circumference crossing centiles",
+      "severity": "MODERATE",
+      "priority": 70,
+      "measure": "HEAD_CIRCUMFERENCE_FOR_AGE",
+      "zChangeMagnitudeAtLeast": 0.67,
+      "maxAgeDays": 730,
+      "action": "Head growth crossing centiles in either direction needs neurological assessment: accelerating growth can mean raised intracranial pressure, and decelerating growth can be the first sign of a developmental problem. Confirm the measurement before referring.",
+      "referralRequired": false,
+      "family": "HEAD_TREND"
+    },
+    {
+      "code": "CATCH_UP_GROWTH",
+      "name": "Catch-up growth",
+      "severity": "REASSURING",
+      "priority": 80,
+      "measure": "WEIGHT_FOR_AGE",
+      "zRiseAtLeast": 0.67,
+      "action": "Weight-for-age is rising. Continue the current feeding plan and keep the child under review until the gain is sustained across two contacts — a single good weight can be a wet nappy.",
+      "referralRequired": false,
+      "family": "WEIGHT_TREND"
+    }
+  ],
+  "testCases": [
+    {
+      "name": "a z drop of 0.9 is faltering",
+      "points": [
+        {
+          "ageDays": 200,
+          "weightKg": 7.4,
+          "weightForAgeZ": -0.4
+        },
+        {
+          "ageDays": 260,
+          "weightKg": 7.6,
+          "weightForAgeZ": -1.3
+        }
+      ],
+      "expectSignals": [
+        "WEIGHT_FALTERING"
+      ]
+    },
+    {
+      "name": "a z drop of 1.5 is severe and needs referral",
+      "points": [
+        {
+          "ageDays": 200,
+          "weightKg": 7.4,
+          "weightForAgeZ": -0.4
+        },
+        {
+          "ageDays": 260,
+          "weightKg": 7.0,
+          "weightForAgeZ": -1.9
+        }
+      ],
+      "expectSignals": [
+        "SEVERE_WEIGHT_FALTERING"
+      ],
+      "expectReferral": true
+    },
+    {
+      "name": "steady growth raises nothing",
+      "points": [
+        {
+          "ageDays": 200,
+          "weightKg": 7.4,
+          "weightForAgeZ": -0.4
+        },
+        {
+          "ageDays": 260,
+          "weightKg": 8.0,
+          "weightForAgeZ": -0.3
+        }
+      ],
+      "expectSignals": []
+    },
+    {
+      "name": "an implausible jump blocks interpretation rather than reporting faltering",
+      "points": [
+        {
+          "ageDays": 200,
+          "weightKg": 7.4,
+          "weightForAgeZ": -0.4
+        },
+        {
+          "ageDays": 260,
+          "weightKg": 2.0,
+          "weightForAgeZ": -8.0
+        }
+      ],
+      "expectSignals": [
+        "IMPLAUSIBLE_MEASUREMENT"
+      ],
+      "expectBlocked": true
+    },
+    {
+      "name": "the length-to-height switch is not treated as faltering",
+      "points": [
+        {
+          "ageDays": 700,
+          "weightKg": 10.0,
+          "weightForAgeZ": -0.5,
+          "lengthHeightForAgeZ": -0.3,
+          "statureMode": "LENGTH"
+        },
+        {
+          "ageDays": 760,
+          "weightKg": 10.2,
+          "weightForAgeZ": -0.5,
+          "lengthHeightForAgeZ": -1.1,
+          "statureMode": "HEIGHT"
+        }
+      ],
+      "expectSignals": [
+        "STATURE_MODE_ARTEFACT"
+      ],
+      "expectBlocked": true
+    },
+    {
+      "name": "recovering weight is reported as catch-up",
+      "points": [
+        {
+          "ageDays": 200,
+          "weightKg": 6.2,
+          "weightForAgeZ": -2.6
+        },
+        {
+          "ageDays": 260,
+          "weightKg": 7.4,
+          "weightForAgeZ": -1.7
+        }
+      ],
+      "expectSignals": [
+        "CATCH_UP_GROWTH"
+      ]
+    },
+    {
+      "name": "a single measurement cannot show a trend",
+      "points": [
+        {
+          "ageDays": 200,
+          "weightKg": 7.4,
+          "weightForAgeZ": -0.4
+        }
+      ],
+      "expectSignals": [],
+      "expectInsufficient": true
+    }
+  ]
+}

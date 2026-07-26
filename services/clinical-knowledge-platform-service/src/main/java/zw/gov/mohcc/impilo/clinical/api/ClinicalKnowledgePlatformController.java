@@ -60,6 +60,10 @@ public class ClinicalKnowledgePlatformController {
     @org.springframework.beans.factory.annotation.Autowired
     private zw.gov.mohcc.impilo.clinical.immunisation.EpiForecastService epiForecastService;
 
+    /** Growth trajectory interpretation. Field-injected on the same convention. */
+    @org.springframework.beans.factory.annotation.Autowired
+    private zw.gov.mohcc.impilo.clinical.growth.GrowthIntelligenceService growthIntelligenceService;
+
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
             PrescribingEvaluationService prescribingEvaluationService,
@@ -279,6 +283,29 @@ public class ClinicalKnowledgePlatformController {
         data.put("approval_status", forecast.approvalStatus());
         data.put("note", forecast.note());
         return ResponseEntity.ok(Map.of("data", data));
+    }
+
+    /**
+     * Interprets a child's growth trajectory and says what to do about it.
+     *
+     * <p>Stateless: pct-service owns the growth history and the z-scores stamped at the time of
+     * measurement, and passes them in. This endpoint never recomputes a score, so its
+     * interpretation cannot drift away from what the record says.</p>
+     *
+     * <p>Two measurements are the minimum. A single contact returns not-assessable with the reason,
+     * rather than "no concerns" — a child weighed once has not been shown to be growing well.</p>
+     */
+    @PostMapping("/paediatric/growth/interpret")
+    public ResponseEntity<Map<String, Object>> growthInterpret(@RequestBody Map<String, Object> body) {
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> history = body.get("measurements") instanceof List<?> l
+                ? (List<Map<String, Object>>) (List<?>) l
+                : body.get("history") instanceof List<?> h
+                        ? (List<Map<String, Object>>) (List<?>) h
+                        : List.of();
+        var assessment = growthIntelligenceService.assess(history);
+        return ResponseEntity.ok(Map.of("data",
+                zw.gov.mohcc.impilo.clinical.growth.GrowthIntelligenceService.toMap(assessment)));
     }
 
     @PostMapping("/interpretation/evaluate")
