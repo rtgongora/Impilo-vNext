@@ -98,11 +98,27 @@ export function EHRLayout({ children }: { children: ReactNode }) {
   const showEncounterWizard = isEhrShell && !!patientId;
 
   // Real, patient-specific CDS alerts from the governed rules engine (empty when nothing triggers).
-  const { alerts: cdsRawAlerts } = useClinicalCdsAlerts(isEhrShell ? patientId : undefined);
+  const { alerts: cdsRawAlerts, isError: cdsUnavailable } =
+    useClinicalCdsAlerts(isEhrShell ? patientId : undefined);
   // Grounded, fail-closed AI insight over those deterministic alerts (absent when LLM unavailable).
   const { insight: cdsInsight } = useCdsInsight(isEhrShell ? patientId : undefined, cdsRawAlerts, encounterId ?? undefined);
   const cdsAlerts = useMemo(() => {
     const items = cdsRawAlerts.map(mapCdsAlert);
+    if (cdsUnavailable) {
+      // An empty alert rail is read as "nothing triggered". When the rules engine or its source
+      // records could not be read, say so on the rail rather than presenting a silent all-clear.
+      items.push({
+        id: "cds-unavailable",
+        type: "alert",
+        severity: "high",
+        title: "Decision support unavailable",
+        message:
+          "Clinical alerts could not be evaluated. Do not read the absence of alerts here as an all-clear.",
+        source: "Clinical decision support",
+        timestamp: new Date(),
+        dismissed: false,
+      });
+    }
     if (cdsInsight?.summary) {
       // Advisory only (info) — never outranks a deterministic alert; clearly AI-attributed.
       items.push({
@@ -117,7 +133,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
       });
     }
     return items;
-  }, [cdsRawAlerts, cdsInsight]);
+  }, [cdsRawAlerts, cdsInsight, cdsUnavailable]);
 
   const [programmeWorkflow, setProgrammeWorkflow] = useState<ClinicalWorkflowConfig | null>(null);
   useEffect(() => {

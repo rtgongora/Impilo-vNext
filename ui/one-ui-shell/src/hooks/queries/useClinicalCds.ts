@@ -47,8 +47,15 @@ export function useClinicalCdsAlerts(patientId: string | undefined) {
   const vitals = useVitals(pid);
   const allergies = useAllergies(pid);
 
+  // A source that FAILED is not a source that returned nothing. If we evaluate anyway, the
+  // context we send describes a patient with no conditions, no medications and no allergies, and
+  // the engine dutifully answers "no alerts" — a clean bill of health assembled out of an outage.
+  const sourcesUnavailable =
+    conditions.isError || prescriptions.isError || vitals.isError || allergies.isError;
+
   const sourcesSettled =
     !!patientId &&
+    !sourcesUnavailable &&
     !conditions.isLoading &&
     !prescriptions.isLoading &&
     !vitals.isLoading &&
@@ -100,8 +107,8 @@ export function useClinicalCdsAlerts(patientId: string | undefined) {
 
   return {
     alerts: query.data?.data?.alerts ?? [],
-    isLoading: !sourcesSettled || query.isLoading,
-    isError: query.isError,
+    isLoading: !sourcesUnavailable && (!sourcesSettled || query.isLoading),
+    isError: query.isError || sourcesUnavailable,
   };
 }
 
