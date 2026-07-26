@@ -59,7 +59,7 @@ INSERT INTO tshepo_authz.policy_rule (
 -- you are working in, not to protected records nationwide. min_loa 3 because a confidential
 -- disclosure is not something a weakly-assured session should be able to read.
 ('00000000-0000-0000-0000-000000000001'::uuid, 'confidential-lane-read-clinician',
- 'CLINICIAN (in facility scope): read specially-protected clinical content. Carries the governed SPECIALLY_PROTECTED_CLINICAL entitlement.',
+ 'CLINICIAN (in facility scope): read specially-protected clinical content. Carries the governed confidential-category entitlement.',
  'PROVIDER', 'CLINICIAN', NULL, 'GET', 'TREATMENT', true, false, 'ALLOW', 50,
  '{"path_contains": "/confidential/", "min_loa": 3, "visibility": {"confidentialCategories": ["SEXUAL_REPRODUCTIVE_HEALTH", "HIV", "MENTAL_HEALTH", "SUBSTANCE_USE"]}}', false),
 

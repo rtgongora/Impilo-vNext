@@ -2,7 +2,7 @@
 -- "which clinical content is confidential by nature?"
 --
 -- WHY THIS LIVES HERE. The trust plane enforces WHO may read specially-protected content
--- (tshepo-authz Step 4.7 / DataVisibilityTier.SPECIALLY_PROTECTED_CLINICAL) and each clinical
+-- (tshepo-authz Step 4.7 / the VisibilityProfile.confidentialCategories obligation) and each clinical
 -- system of record stamps WHICH of its records carry that class. Left to itself, every service
 -- would answer "is this confidential?" with its own hardcoded list of codes, scattering a
 -- confidentiality decision across the estate where nobody can review it and no two services agree.
