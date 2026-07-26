@@ -54,7 +54,7 @@ export default function AskPage() {
   const [mode, setMode] = useState<"general" | "edliz">("general");
   const askEdliz = useAskEdlizClinical();
   const askGuidance = useAskGuidance();
-  const { data: pathwaysRes } = useClinicalPathways();
+  const { data: pathwaysRes, isError: pathwaysUnavailable } = useClinicalPathways();
   const startPathway = useStartClinicalPathwaySession();
   const [pathwaySessionId, setPathwaySessionId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -66,7 +66,11 @@ export default function AskPage() {
     step_count?: number;
   }>;
 
-  // Health OS §16a: consent-aware — check if user has opted into personalized guidance
+  // Health OS §16a: consent-aware — check if user has opted into personalized guidance.
+  // Left as-is by the empty-200 honesty sweep: this catch is fail-closed (a failed consent read
+  // drops to non-personalized), and the banner below states that mode explicitly, so the
+  // degradation is named rather than hidden. The two Ask paths likewise already report their own
+  // unavailability in-band, as assistant messages.
   useEffect(() => {
     apiClient
       .get<{ data: { guidanceConsent: boolean } }>("/internal/v1/guidance/consent-status")
@@ -203,7 +207,15 @@ export default function AskPage() {
               </div>
             </div>
           )}
-          {mode === "edliz" && pathways.length > 0 && (
+          {/* The pathway chips vanish entirely on a failed read, which in EDLIZ mode reads as
+              "no guided pathways are published". Low stakes — the user can still ask the question
+              directly — but say it rather than disappear. */}
+          {mode === "edliz" && pathwaysUnavailable && (
+            <div className="mb-3 rounded-lg border border-warning/35 bg-warning-soft p-3 text-xs text-warning-foreground">
+              Guided pathways could not be loaded. This is not a record that none are published.
+            </div>
+          )}
+          {mode === "edliz" && !pathwaysUnavailable && pathways.length > 0 && (
             <div className="mb-3 rounded-lg border border-emerald-100 bg-card p-3 text-xs text-foreground">
               <p className="font-medium text-primary-hover mb-2">Guided pathways (national demo)</p>
               <div className="flex flex-wrap gap-2">
