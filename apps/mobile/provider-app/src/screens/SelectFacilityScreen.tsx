@@ -19,6 +19,8 @@ import {
   LoadingSpinner,
   EmptyState,
   ErrorState,
+  FacilityUnconfirmedTag,
+  isUnconfirmedFacility,
 } from "@impilo/mobile-design-system";
 import { appStore } from "../stores/appStore";
 
@@ -28,6 +30,13 @@ interface Facility {
   facilityType: string;
   district: string;
   province: string;
+  /**
+   * tuso regulatory_status. IMPORTED_PENDING_CONFIGURATION means HPA-registered
+   * but not yet configured in Impilo. Measured by the HPA lane: ZERO workspaces
+   * are attached to any of the 5,509 such facilities — so selecting one cannot
+   * produce a valid work session under any policy. This is a fact, not a rule.
+   */
+  regulatoryStatus?: string | null;
 }
 
 export function SelectFacilityScreen() {
@@ -50,6 +59,7 @@ export function SelectFacilityScreen() {
             facility_type: string;
             district: string;
             province: string;
+            regulatoryStatus?: string | null;
           };
         }[];
       }>(`/internal/v1/facilities${params}`);
@@ -60,6 +70,7 @@ export function SelectFacilityScreen() {
           facilityType: f.attributes.facility_type,
           district: f.attributes.district,
           province: f.attributes.province,
+          regulatoryStatus: f.attributes.regulatoryStatus ?? null,
         }))
       );
     } catch (err) {
@@ -73,8 +84,23 @@ export function SelectFacilityScreen() {
     fetchFacilities();
   }, [fetchFacilities]);
 
+  const [blockedFacility, setBlockedFacility] = useState<Facility | null>(null);
+
   const handleSelectFacility = useCallback(
     (facility: Facility) => {
+      /**
+       * A facility that is HPA-registered but not yet configured in Impilo has no
+       * workspace to bind to, so a work session cannot legitimately start there.
+       * We do NOT hard-block the tap: the person tapping may be exactly the
+       * practice owner who should configure it, and blocking would strand all
+       * 5,509 with no route forward. Selection is accepted as an INTENT and
+       * explained, rather than silently producing a broken session.
+       */
+      if (isUnconfirmedFacility(facility.regulatoryStatus)) {
+        setBlockedFacility(facility);
+        return;
+      }
+      setBlockedFacility(null);
       appStore.getState().setFacilityContext(facility.id, facility.name);
       auth.setFacility(facility.id, facility.name);
     },
@@ -92,6 +118,32 @@ export function SelectFacilityScreen() {
           placeholder="Type facility name..."
           testID="facility-search"
         />
+        {blockedFacility ? (
+          <Card>
+            <CardBody>
+              <View testID="facility-not-configured-notice" style={styles.noticeBody}>
+                <Text style={styles.noticeTitle}>{blockedFacility.name} is not yet set up in Impilo</Text>
+                <Text style={styles.noticeText}>
+                  This facility is registered with the Health Professions Authority but is not yet set
+                  up in Impilo. You cannot start a work session here until it has been configured.
+                </Text>
+                <Text style={styles.noticeText}>
+                  If you administer this facility you can complete its setup. Otherwise, ask your
+                  facility administrator to complete setup, or contact the registry.
+                </Text>
+                <View style={styles.noticeActions}>
+                  <Button
+                    title="Dismiss"
+                    variant="outline"
+                    size="sm"
+                    onPress={() => setBlockedFacility(null)}
+                    testID="dismiss-not-configured"
+                  />
+                </View>
+              </View>
+            </CardBody>
+          </Card>
+        ) : null}
         <View style={styles.listContainer}>
           {loading ? (
             <LoadingSpinner size="md" />
@@ -116,6 +168,14 @@ export function SelectFacilityScreen() {
                       <Text style={styles.facilityDetail}>
                         {`${f.facilityType} \u00B7 ${f.district}, ${f.province}`}
                       </Text>
+                      {/* Provider framing: the regulator HAS confirmed this facility is
+                          real and registered — the only gap is OUR configuration. Copy
+                          that implied doubt about legitimacy would teach providers to
+                          distrust the register, the opposite of this programme's purpose. */}
+                      <FacilityUnconfirmedTag
+                        regulatoryStatus={f.regulatoryStatus}
+                        label="Not yet set up in Impilo"
+                      />
                     </View>
                     <Button
                       title="Select"
@@ -150,6 +210,10 @@ const styles = StyleSheet.create({
   facilityInfo: {
     flex: 1,
   },
+  noticeBody: { gap: 8 },
+  noticeTitle: { fontSize: 15, fontWeight: "700", color: "#92400E" },
+  noticeText: { fontSize: 13, color: "#78350F", lineHeight: 19 },
+  noticeActions: { flexDirection: "row", gap: 8, marginTop: 4 },
   facilityName: {
     fontWeight: "bold",
   },
