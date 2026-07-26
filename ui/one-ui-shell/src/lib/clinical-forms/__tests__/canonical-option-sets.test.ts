@@ -92,6 +92,7 @@ describe("validation of clinical answers", () => {
     healthDomain: "CHILD",
     programme: "IMCI",
     encounterTypes: ["IMCI"],
+    audit: { dataCustodian: "MoHCC", sensitivity: "STANDARD" },
     sections: [
       {
         id: "s1",

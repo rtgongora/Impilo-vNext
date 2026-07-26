@@ -51,6 +51,7 @@ function formWith(kind: ClinicalFieldKind): ClinicalFormDefinition {
     healthDomain: "CHILD",
     programme: "IMCI",
     encounterTypes: ["IMCI"],
+    audit: { dataCustodian: "MoHCC", sensitivity: "STANDARD" },
     sections: [
       {
         id: "s1",
@@ -78,7 +79,13 @@ function formWith(kind: ClinicalFieldKind): ClinicalFormDefinition {
 
 function renderKind(kind: ClinicalFieldKind) {
   return render(
-    <DakFormRenderer form={formWith(kind)} context={context} onSubmit={vi.fn()} />,
+    <DakFormRenderer
+      form={formWith(kind)}
+      runtime={context}
+      patientId="CPID-1"
+      encounterId="ENC-1"
+      onSubmit={vi.fn()}
+    />,
   );
 }
 
