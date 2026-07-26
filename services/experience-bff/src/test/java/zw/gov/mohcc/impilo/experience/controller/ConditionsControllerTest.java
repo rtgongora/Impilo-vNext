@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
@@ -149,12 +150,50 @@ class ConditionsControllerTest {
         assertEquals("condition_not_resolved", response.getBody().get("error"));
     }
 
+    /**
+     * A duplicate is a question, not an outage. Flattening PCT's 409 into the generic 502 would
+     * tell the clinician their write broke and would lose the existing problem — which is the one
+     * thing they need to see in order to answer.
+     */
+    @Test
+    void createPassesADuplicateThroughAsAQuestionRatherThanAnOutage() {
+        ResponseEntity<Map<String, Object>> response =
+                new ConditionsController(new DuplicatePctClient())
+                        .createCondition("t1", "pod-1", "req-2", "corr-2", null, request());
+
+        assertEquals(409, response.getStatusCode().value());
+        assertEquals("condition_already_on_list", response.getBody().get("error"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> existing = (Map<String, Object>) response.getBody().get("existing");
+        assertNotNull(existing, "the clinician cannot answer without seeing what is already there");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> attrs = (Map<String, Object>) existing.get("attributes");
+        assertEquals("Hypertension", attrs.get("conditionName"));
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> resolutions =
+                (List<Map<String, Object>>) response.getBody().get("resolutions");
+        assertEquals(2, resolutions.size());
+    }
+
+    @Test
+    void createForwardsTheCliniciansDuplicateAnswerToPct() {
+        StubPctClient stub = new StubPctClient();
+        new ConditionsController(stub).createCondition("t1", "pod-1", "req-2", "corr-2", null,
+                new ConditionsController.CreateConditionRequest(
+                        "patient-1", "enc-1", "jrn-1", "Hypertension", "I10",
+                        "DIAGNOSIS", "ACTIVE", "MODERATE", null, "doc-1", "Notes",
+                        "SAME_PROBLEM_RETURNING"));
+        assertEquals("SAME_PROBLEM_RETURNING", stub.lastCreateBody.get("duplicate_resolution"));
+    }
+
     // ── Fixtures ────────────────────────────────────────────────────────────────
 
     private static ConditionsController.CreateConditionRequest request() {
         return new ConditionsController.CreateConditionRequest(
                 "patient-1", "enc-1", "jrn-1", "Hypertension", "I10",
-                "DIAGNOSIS", "ACTIVE", "MODERATE", null, "doc-1", "Notes");
+                "DIAGNOSIS", "ACTIVE", "MODERATE", null, "doc-1", "Notes", null);
     }
 
     @SuppressWarnings("unchecked")
@@ -200,7 +239,7 @@ class ConditionsControllerTest {
             return node;
         }
 
-        private ObjectNode problem(String subjectCpid) {
+        ObjectNode problem(String subjectCpid) {
             ObjectNode node = mapper.createObjectNode();
             node.put("problem_id", "prob-1");
             node.put("subject_cpid", subjectCpid);
@@ -217,6 +256,21 @@ class ConditionsControllerTest {
             node.put("notes", "Notes");
             node.put("created_at", "2026-01-15T09:00:00Z");
             return node;
+        }
+    }
+
+    /** Answers a create with the 409 PCT raises when the problem is already on the list. */
+    private static final class DuplicatePctClient extends StubPctClient {
+        @Override public JsonNode createProblem(Map<String, Object> body) {
+            ObjectNode upstream = mapper.createObjectNode();
+            upstream.put("error", "problem_already_on_list");
+            upstream.put("message", "A problem matching 'Hypertension' is already on this patient's list");
+            upstream.set("existing", problem("patient-1"));
+            throw HttpClientErrorException.create(
+                    org.springframework.http.HttpStatus.CONFLICT, "Conflict",
+                    org.springframework.http.HttpHeaders.EMPTY,
+                    upstream.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    java.nio.charset.StandardCharsets.UTF_8);
         }
     }
 

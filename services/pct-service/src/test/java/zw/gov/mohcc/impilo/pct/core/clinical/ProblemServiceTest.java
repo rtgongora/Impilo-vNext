@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,6 +24,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -243,6 +247,133 @@ class ProblemServiceTest {
         when(problemRepository.findById(p.getProblemId())).thenReturn(Optional.of(p));
         assertThatThrownBy(() -> changeStatus(p.getProblemId(), "CURED"))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // ── One disease, one entry, across clinics ──────────────────────────────────
+
+    /**
+     * The requirement this implements: a patient seen in the diabetic clinic, the renal clinic and
+     * a medical ward acquires the same diagnosis three times unless something looks.
+     */
+    @Test
+    void reportsAProblemAlreadyOnTheListRatherThanSilentlyAddingItTwice() {
+        ProblemEntity existing = onList(p -> {
+            p.setDisplay("Hypertension");
+            p.setCode("I10");
+            p.setCodeSystem("ICD-10");
+        });
+
+        assertThatThrownBy(() -> add(problem()))
+                .isInstanceOf(DuplicateProblemException.class)
+                .hasMessageContaining("Hypertension");
+
+        // Reported, not written: the caller has to say what they mean first.
+        verify(problemRepository, never()).save(argThat(p -> p.getProblemId() == null));
+        assertThat(existing.getClinicalStatus()).isEqualTo("ACTIVE");
+    }
+
+    /** Case and spacing are not clinical differences, and most problems here are still free text. */
+    @Test
+    void matchesOnDisplayWhenTheProblemIsUncoded() {
+        onList(p -> {
+            p.setDisplay("Type 2 diabetes mellitus");
+            p.setCode(null);
+            p.setCodeSystem(null);
+        });
+        Map<String, Object> incoming = problem();
+        incoming.put("display", "  type 2   DIABETES mellitus ");
+        incoming.remove("code");
+        incoming.remove("code_system");
+
+        assertThatThrownBy(() -> add(incoming)).isInstanceOf(DuplicateProblemException.class);
+    }
+
+    /**
+     * Refusing outright would make a genuine second problem unrecordable — a second primary
+     * cancer, the other knee. The clinician says which it is; the service does not guess.
+     */
+    @Test
+    void recordsASeparateProblemWhenTheClinicianSaysItIsDistinct() {
+        onList(p -> p.setDisplay("Hypertension"));
+        Map<String, Object> incoming = problem();
+        incoming.put("duplicate_resolution", "DISTINCT_PROBLEM");
+
+        ProblemEntity created = add(incoming);
+        assertThat(created.getDisplay()).isEqualTo("Hypertension");
+        assertThat(created.getClinicalStatus()).isEqualTo("ACTIVE");
+    }
+
+    /** The other answer: no new row, the disease already listed has come back. */
+    @Test
+    void movesTheExistingProblemToRecurrenceWhenTheClinicianSaysItIsTheSameOne() {
+        ProblemEntity existing = onList(p -> p.setDisplay("Hypertension"));
+        when(problemRepository.findById(existing.getProblemId())).thenReturn(Optional.of(existing));
+
+        Map<String, Object> incoming = problem();
+        incoming.put("duplicate_resolution", "SAME_PROBLEM_RETURNING");
+
+        ProblemEntity result = add(incoming);
+        assertThat(result.getProblemId()).isEqualTo(existing.getProblemId());
+        assertThat(result.getClinicalStatus()).isEqualTo("RECURRENCE");
+        assertThat(result.getLastRecurrenceAt()).isNotNull();
+    }
+
+    /**
+     * A second episode of pneumonia two years later is a new problem, not a collision. Treating a
+     * resolved row as a duplicate would make the new episode unrecordable without an override.
+     */
+    @Test
+    void aResolvedProblemIsNotADuplicateOfANewOne() {
+        onList(p -> {
+            p.setDisplay("Community-acquired pneumonia");
+            p.setClinicalStatus("RESOLVED");
+        });
+        Map<String, Object> incoming = problem();
+        incoming.put("display", "Community-acquired pneumonia");
+
+        assertThat(add(incoming).getClinicalStatus()).isEqualTo("ACTIVE");
+    }
+
+    /** A diagnosis that was excluded must not block someone raising it again on new evidence. */
+    @Test
+    void aRefutedProblemDoesNotBlockRaisingItAgain() {
+        onList(p -> {
+            p.setDisplay("Pulmonary embolism");
+            p.setDiagnosticCertainty("REFUTED");
+        });
+        Map<String, Object> incoming = problem();
+        incoming.put("display", "Pulmonary embolism");
+        incoming.put("diagnostic_certainty", "SUSPECTED");
+
+        assertThat(add(incoming).getDiagnosticCertainty()).isEqualTo("SUSPECTED");
+    }
+
+    @Test
+    void aDifferentProblemIsNotADuplicate() {
+        onList(p -> p.setDisplay("Hypertension"));
+        Map<String, Object> incoming = problem();
+        incoming.put("display", "Asthma");
+        incoming.remove("code");
+
+        assertThat(add(incoming).getDisplay()).isEqualTo("Asthma");
+    }
+
+    /** Puts one problem on the patient's list for the duplicate check to find. */
+    private ProblemEntity onList(java.util.function.Consumer<ProblemEntity> customise) {
+        ProblemEntity existing = new ProblemEntity();
+        existing.setProblemId(UUID.randomUUID());
+        existing.setTenantId(TENANT_ID);
+        existing.setSubjectCpid("CPID-9");
+        existing.setDisplay("Hypertension");
+        existing.setCode("I10");
+        existing.setCodeSystem("ICD-10");
+        existing.setCategory("DIAGNOSIS");
+        existing.setClinicalStatus("ACTIVE");
+        existing.setRecordedBy("clinician-0");
+        customise.accept(existing);
+        lenient().when(problemRepository.findByTenantIdAndSubjectCpidOrderByCreatedAtDesc(TENANT_ID, "CPID-9"))
+                .thenReturn(List.of(existing));
+        return existing;
     }
 
     private ProblemEntity changeStatus(UUID problemId, String status) {

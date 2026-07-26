@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -57,6 +58,13 @@ public class ProblemService {
         return problemRepository.findByTenantIdAndSubjectCpidAndClinicalStatusOrderByCreatedAtDesc(
                 tenantId, subjectCpid, clinicalStatus.trim().toUpperCase(Locale.ROOT));
     }
+
+    /**
+     * How the caller has resolved a duplicate this service reported. Absent means they have not
+     * been told about one yet.
+     */
+    private static final String RESOLUTION_SAME_PROBLEM_RETURNING = "SAME_PROBLEM_RETURNING";
+    private static final String RESOLUTION_DISTINCT_PROBLEM = "DISTINCT_PROBLEM";
 
     @Transactional
     public ProblemEntity add(Map<String, Object> body) {
@@ -98,6 +106,21 @@ public class ProblemService {
         }
         p.setNotes(str(body.get("notes")));
         p.setRecordedBy(ctx.actorId());
+
+        // Cross-clinic duplication check. A patient seen in the diabetic clinic, the renal clinic
+        // and a medical ward acquires the same diagnosis three times unless something looks.
+        String resolution = upper(body.get("duplicate_resolution"));
+        if (!RESOLUTION_DISTINCT_PROBLEM.equals(resolution)) {
+            ProblemEntity existing = findDuplicate(ctx.tenantId(), p);
+            if (existing != null) {
+                if (RESOLUTION_SAME_PROBLEM_RETURNING.equals(resolution)) {
+                    // Not a new row: the disease already on the list has come back.
+                    return changeStatus(existing.getProblemId(), "RECURRENCE");
+                }
+                throw new DuplicateProblemException(existing);
+            }
+        }
+
         p = problemRepository.save(p);
 
         emit("PROBLEM_ADDED", p);
@@ -150,6 +173,57 @@ public class ProblemService {
                 p.getProblemId(), p.getSubjectCpid(), previousStatus, status,
                 ctx.actorId(), ctx.correlationId());
         return p;
+    }
+
+    /**
+     * Finds an open problem on this patient's list that the incoming one appears to duplicate, or
+     * null.
+     *
+     * <p>Two problems match if they carry the same code in the same code system, or — when either
+     * is uncoded — the same normalised display. Coded matching is the reliable half; display
+     * matching exists because most problems in this estate are still recorded as free text, and a
+     * duplicate detector that only worked on coded rows would fire almost never.</p>
+     *
+     * <p><strong>Only open problems are compared.</strong> A resolved problem is not a duplicate of
+     * a new one — a second episode of pneumonia two years later is a new problem, and treating the
+     * old resolved row as a collision would make it unrecordable. Recurrence is the caller's
+     * explicit choice, not this method's guess. REFUTED problems are likewise skipped: a diagnosis
+     * that was excluded must not block someone from raising it again on new evidence.</p>
+     */
+    private ProblemEntity findDuplicate(UUID tenantId, ProblemEntity incoming) {
+        List<ProblemEntity> existing =
+                problemRepository.findByTenantIdAndSubjectCpidOrderByCreatedAtDesc(
+                        tenantId, incoming.getSubjectCpid());
+        for (ProblemEntity candidate : existing) {
+            if (!ProblemVocabulary.OPEN_STATUSES.contains(candidate.getClinicalStatus())) {
+                continue;
+            }
+            if ("REFUTED".equals(candidate.getDiagnosticCertainty())) {
+                continue;
+            }
+            if (sameCode(candidate, incoming) || sameDisplay(candidate, incoming)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private static boolean sameCode(ProblemEntity a, ProblemEntity b) {
+        return a.getCode() != null && b.getCode() != null
+                && a.getCode().equalsIgnoreCase(b.getCode())
+                && Objects.equals(
+                        a.getCodeSystem() == null ? null : a.getCodeSystem().toUpperCase(Locale.ROOT),
+                        b.getCodeSystem() == null ? null : b.getCodeSystem().toUpperCase(Locale.ROOT));
+    }
+
+    private static boolean sameDisplay(ProblemEntity a, ProblemEntity b) {
+        return normaliseDisplay(a.getDisplay()).equals(normaliseDisplay(b.getDisplay()));
+    }
+
+    /** Case and internal whitespace are not clinical differences. */
+    private static String normaliseDisplay(String display) {
+        if (display == null) return "";
+        return display.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     private void emit(String eventType, ProblemEntity p) {
