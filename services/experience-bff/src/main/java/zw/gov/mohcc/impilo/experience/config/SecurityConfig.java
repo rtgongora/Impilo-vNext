@@ -237,6 +237,11 @@ public class SecurityConfig {
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/growth/**")
                             .hasAnyRole(CLINICAL_ROLES)
+                    // IMAM: enrolment, reviews, outcomes and the defaulter tracing worklist.
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/imam/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/imam/**")
+                            .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.GET, "/internal/v1/maternity/**")
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/maternity/**")

@@ -971,6 +971,49 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    // ── IMAM — acute malnutrition treatment episodes ────────────
+
+    public JsonNode listImamEpisodes(String patientCpid) {
+        String url = baseUrl + "/v1/imam/episodes?patient_id=" + patientCpid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getImamEpisode(String episodeId) {
+        String url = baseUrl + "/v1/imam/episodes/" + episodeId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode enrolImamEpisode(Map<String, Object> body) {
+        String url = baseUrl + "/v1/imam/episodes";
+        log.info("PCT: Enrolling IMAM episode for patient={} classification={}",
+                body.get("patient_id"), body.get("source_classification"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordImamVisit(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/imam/episodes/" + episodeId + "/visits";
+        log.info("PCT: Recording IMAM review for episode={} attended={}", episodeId, body.get("attended"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode closeImamEpisode(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/imam/episodes/" + episodeId + "/outcome";
+        log.info("PCT: Closing IMAM episode={} outcome={}", episodeId, body.get("outcome"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode imamTracingQueue(String facilityId) {
+        String url = baseUrl + "/v1/imam/tracing-queue"
+                + (facilityId == null || facilityId.isBlank() ? "" : "?facility_id=" + facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Clinical Depth — Discharge Clearances (strangler migration) ──
 
     public JsonNode initDischargeClearances(Map<String, Object> body) {
