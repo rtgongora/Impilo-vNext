@@ -1,0 +1,588 @@
+{
+  "packId": "impilo.paediatric.imnci-classification",
+  "version": "engineering-seed-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": "Assess-and-classify tables follow the WHO/UNICEF Integrated Management of Newborn and Childhood Illness chart booklet for the sick child aged 2 months up to 5 years. Malaria classification requires parasitological confirmation in line with WHO policy and Zimbabwe's focal transmission; presumptive treatment on fever alone is deliberately not implemented. Thresholds, wording and treatment lines are an engineering seed and are NOT a ratified national protocol. They require MoHCC and paediatric specialist sign-off before they drive care. See docs/clinical-governance/edliz-engineering-seed-policy.md.",
+  "tables": [
+
+    {
+      "tableId": "IMNCI_PNEUMONIA",
+      "name": "Cough or difficult breathing",
+      "axis": "Pneumonia severity",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": {
+        "any": [
+          {"finding": "cough", "present": true},
+          {"finding": "difficultBreathing", "present": true}
+        ]
+      },
+      "requiredInputs": ["chestIndrawing", "stridorAtRest", "vitals.respiratoryRate"],
+      "sourceRefs": ["WHO IMNCI chart booklet — cough or difficult breathing"],
+      "tiers": [
+        {
+          "code": "SEVERE_PNEUMONIA_OR_VERY_SEVERE_DISEASE",
+          "name": "Severe pneumonia or very severe disease",
+          "colour": "PINK",
+          "logic": {
+            "any": [
+              {"finding": "unableToDrinkOrBreastfeed", "present": true},
+              {"finding": "vomitsEverything", "present": true},
+              {"finding": "convulsions", "present": true},
+              {"finding": "lethargicOrUnconscious", "present": true},
+              {"finding": "chestIndrawing", "present": true},
+              {"finding": "stridorAtRest", "present": true}
+            ]
+          },
+          "action": "Give the first dose of an appropriate antibiotic, treat wheeze if present, keep the child warm, and refer urgently to hospital.",
+          "treatments": ["First dose of injectable or oral antibiotic per EDLIZ", "Oxygen if saturation below 90%", "Urgent referral"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "PNEUMONIA",
+          "name": "Pneumonia",
+          "colour": "YELLOW",
+          "logic": {
+            "any": [
+              {"all": [
+                {"input": "ageDays", "op": "between", "min": 60, "max": 364},
+                {"input": "vitals.respiratoryRate", "op": "gte", "value": 50}
+              ]},
+              {"all": [
+                {"input": "ageDays", "op": "between", "min": 365, "max": 1824},
+                {"input": "vitals.respiratoryRate", "op": "gte", "value": 40}
+              ]}
+            ]
+          },
+          "action": "Treat with oral antibiotic at this facility, advise the carer on when to return immediately, and review in 3 days.",
+          "treatments": ["Oral amoxicillin per EDLIZ paediatric dosing", "Soothe the throat and relieve cough with a safe remedy", "Follow-up in 3 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "COUGH_OR_COLD",
+          "name": "Cough or cold",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "No antibiotic. Advise home care, soothe the throat, and teach the carer the signs that mean return immediately.",
+          "treatments": ["Home care advice", "Safe remedy for cough", "Return immediately if breathing becomes difficult or fast"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "chest indrawing is severe pneumonia", "facts": {"ageDays": 420, "cough": "PRESENT", "chestIndrawing": "PRESENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_PNEUMONIA_OR_VERY_SEVERE_DISEASE"},
+        {"name": "fast breathing at 14 months is pneumonia", "facts": {"ageDays": 420, "cough": "PRESENT", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT", "chestIndrawing": "ABSENT", "stridorAtRest": "ABSENT", "vitals": {"respiratoryRate": 46}}, "expectStatus": "CLASSIFIED", "expectClassification": "PNEUMONIA"},
+        {"name": "46 breaths at 6 months is also pneumonia only below the infant threshold", "facts": {"ageDays": 180, "cough": "PRESENT", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT", "chestIndrawing": "ABSENT", "stridorAtRest": "ABSENT", "vitals": {"respiratoryRate": 46}}, "expectStatus": "CLASSIFIED", "expectClassification": "COUGH_OR_COLD"},
+        {"name": "no cough means the table does not apply", "facts": {"ageDays": 420, "cough": "ABSENT", "difficultBreathing": "ABSENT"}, "expectStatus": "NOT_APPLICABLE"},
+        {"name": "unexamined chest cannot be classified as a cold", "facts": {"ageDays": 420, "cough": "PRESENT", "vitals": {"respiratoryRate": 30}}, "expectStatus": "INDETERMINATE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_DEHYDRATION",
+      "name": "Diarrhoea — dehydration",
+      "axis": "Dehydration status",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": {"finding": "diarrhoea", "present": true},
+      "requiredInputs": ["lethargicOrUnconscious", "sunkenEyes", "drinkingPattern", "skinPinch"],
+      "sourceRefs": ["WHO IMNCI chart booklet — diarrhoea, classify dehydration"],
+      "tiers": [
+        {
+          "code": "SEVERE_DEHYDRATION",
+          "name": "Severe dehydration",
+          "colour": "PINK",
+          "logic": {
+            "atLeast": 2,
+            "of": [
+              {"finding": "lethargicOrUnconscious", "present": true},
+              {"finding": "sunkenEyes", "present": true},
+              {"input": "drinkingPattern", "op": "eq", "value": "NOT_ABLE_TO_DRINK_OR_DRINKING_POORLY"},
+              {"input": "skinPinch", "op": "eq", "value": "VERY_SLOW"}
+            ]
+          },
+          "action": "Start Plan C now — intravenous fluid if you can give it, and refer urgently. Give ORS by mouth on the way if the child can drink.",
+          "treatments": ["Plan C intravenous rehydration", "Urgent referral", "ORS during transfer if able to drink"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "SOME_DEHYDRATION",
+          "name": "Some dehydration",
+          "colour": "YELLOW",
+          "logic": {
+            "atLeast": 2,
+            "of": [
+              {"finding": "restlessIrritable", "present": true},
+              {"finding": "sunkenEyes", "present": true},
+              {"input": "drinkingPattern", "op": "eq", "value": "DRINKS_EAGERLY_THIRSTY"},
+              {"input": "skinPinch", "op": "eq", "value": "SLOW"}
+            ]
+          },
+          "action": "Give ORS at this facility under observation for 4 hours (Plan B), continue feeding, and reassess.",
+          "treatments": ["Plan B — ORS in the clinic for 4 hours", "Continue breastfeeding", "Zinc for 14 days", "Review in 5 days if not improving"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "NO_DEHYDRATION",
+          "name": "No dehydration",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "Treat at home with extra fluid, zinc and continued feeding (Plan A), and teach the return signs.",
+          "treatments": ["Plan A — extra fluid at home", "Zinc for 14 days", "Continue feeding", "Return immediately if drinking poorly or blood in the stool"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "sunken eyes with a very slow skin pinch is severe", "facts": {"ageDays": 400, "diarrhoea": "PRESENT", "sunkenEyes": "PRESENT", "skinPinch": "VERY_SLOW"}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_DEHYDRATION"},
+        {"name": "one severe sign alone is not severe dehydration", "facts": {"ageDays": 400, "diarrhoea": "PRESENT", "lethargicOrUnconscious": "ABSENT", "sunkenEyes": "PRESENT", "drinkingPattern": "DRINKS_NORMALLY", "skinPinch": "NORMAL", "restlessIrritable": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "NO_DEHYDRATION"},
+        {"name": "thirsty with sunken eyes is some dehydration", "facts": {"ageDays": 400, "diarrhoea": "PRESENT", "lethargicOrUnconscious": "ABSENT", "sunkenEyes": "PRESENT", "drinkingPattern": "DRINKS_EAGERLY_THIRSTY", "skinPinch": "NORMAL", "restlessIrritable": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "SOME_DEHYDRATION"},
+        {"name": "one sign present and the rest unexamined cannot be called no dehydration", "facts": {"ageDays": 400, "diarrhoea": "PRESENT", "sunkenEyes": "PRESENT"}, "expectStatus": "INDETERMINATE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_PERSISTENT_DIARRHOEA",
+      "name": "Diarrhoea — persistence",
+      "axis": "Diarrhoea duration",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": {
+        "all": [
+          {"finding": "diarrhoea", "present": true},
+          {"input": "diarrhoeaDurationDays", "op": "gte", "value": 14}
+        ]
+      },
+      "requiredInputs": ["diarrhoeaDurationDays", "sunkenEyes", "skinPinch"],
+      "sourceRefs": ["WHO IMNCI chart booklet — persistent diarrhoea"],
+      "tiers": [
+        {
+          "code": "SEVERE_PERSISTENT_DIARRHOEA",
+          "name": "Severe persistent diarrhoea",
+          "colour": "PINK",
+          "logic": {
+            "atLeast": 2,
+            "of": [
+              {"finding": "lethargicOrUnconscious", "present": true},
+              {"finding": "sunkenEyes", "present": true},
+              {"input": "drinkingPattern", "op": "eq", "value": "NOT_ABLE_TO_DRINK_OR_DRINKING_POORLY"},
+              {"input": "skinPinch", "op": "eq", "value": "VERY_SLOW"},
+              {"finding": "restlessIrritable", "present": true},
+              {"input": "drinkingPattern", "op": "eq", "value": "DRINKS_EAGERLY_THIRSTY"},
+              {"input": "skinPinch", "op": "eq", "value": "SLOW"}
+            ]
+          },
+          "action": "Treat the dehydration before referral unless the child also has severe acute malnutrition, then refer.",
+          "treatments": ["Rehydrate before transfer", "Referral to hospital"],
+          "referralRequired": true,
+          "urgentReferral": false
+        },
+        {
+          "code": "PERSISTENT_DIARRHOEA",
+          "name": "Persistent diarrhoea",
+          "colour": "YELLOW",
+          "logic": null,
+          "action": "Advise on feeding for persistent diarrhoea, give multivitamins and minerals including zinc for 14 days, and review in 5 days.",
+          "treatments": ["Feeding advice for persistent diarrhoea", "Zinc and micronutrients for 14 days", "Follow-up in 5 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "three days of diarrhoea is not persistent", "facts": {"ageDays": 400, "diarrhoea": "PRESENT", "diarrhoeaDurationDays": 3}, "expectStatus": "NOT_APPLICABLE"},
+        {"name": "twenty days without dehydration is persistent diarrhoea", "facts": {"ageDays": 400, "diarrhoea": "PRESENT", "diarrhoeaDurationDays": 20, "lethargicOrUnconscious": "ABSENT", "sunkenEyes": "ABSENT", "drinkingPattern": "DRINKS_NORMALLY", "skinPinch": "NORMAL", "restlessIrritable": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "PERSISTENT_DIARRHOEA"},
+        {"name": "duration never recorded leaves the table unassessed", "facts": {"ageDays": 400, "diarrhoea": "PRESENT"}, "expectStatus": "NOT_ASSESSED"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_DYSENTERY",
+      "name": "Diarrhoea — blood in the stool",
+      "axis": "Dysentery",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": {"finding": "diarrhoea", "present": true},
+      "requiredInputs": ["bloodInStool"],
+      "sourceRefs": ["WHO IMNCI chart booklet — dysentery"],
+      "tiers": [
+        {
+          "code": "DYSENTERY",
+          "name": "Dysentery",
+          "colour": "YELLOW",
+          "logic": {"finding": "bloodInStool", "present": true},
+          "action": "Treat for shigella with an oral antibiotic per EDLIZ and review in 3 days.",
+          "treatments": ["Ciprofloxacin per EDLIZ paediatric dosing", "Zinc for 14 days", "Follow-up in 3 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "NO_DYSENTERY",
+          "name": "No dysentery",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "No antibiotic for dysentery.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "blood in the stool is dysentery", "facts": {"ageDays": 400, "diarrhoea": "PRESENT", "bloodInStool": "PRESENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "DYSENTERY"},
+        {"name": "stool never asked about cannot be called no dysentery", "facts": {"ageDays": 400, "diarrhoea": "PRESENT"}, "expectStatus": "INDETERMINATE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_FEVER_MALARIA",
+      "name": "Fever",
+      "axis": "Febrile illness",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": {
+        "any": [
+          {"finding": "feverByHistory", "present": true},
+          {"finding": "feelsHot", "present": true},
+          {"input": "vitals.temperature", "op": "gte", "value": 37.5}
+        ]
+      },
+      "requiredInputs": ["stiffNeck", "malariaTestResult"],
+      "sourceRefs": [
+        "WHO IMNCI chart booklet — fever",
+        "WHO Guidelines for malaria — parasitological confirmation before treatment"
+      ],
+      "tiers": [
+        {
+          "code": "VERY_SEVERE_FEBRILE_DISEASE",
+          "name": "Very severe febrile disease",
+          "colour": "PINK",
+          "logic": {
+            "any": [
+              {"finding": "unableToDrinkOrBreastfeed", "present": true},
+              {"finding": "vomitsEverything", "present": true},
+              {"finding": "convulsions", "present": true},
+              {"finding": "lethargicOrUnconscious", "present": true},
+              {"finding": "stiffNeck", "present": true},
+              {"finding": "bulgingFontanelle", "present": true}
+            ]
+          },
+          "action": "Give the first dose of an antibiotic and of artesunate or quinine, treat hypoglycaemia, give paracetamol for high fever, and refer urgently.",
+          "treatments": ["First dose of injectable antibiotic", "First dose of parenteral antimalarial", "Treat hypoglycaemia", "Urgent referral"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "MALARIA",
+          "name": "Malaria",
+          "colour": "YELLOW",
+          "logic": {"input": "malariaTestResult", "op": "eq", "value": "POSITIVE"},
+          "action": "Treat with the first-line oral antimalarial per EDLIZ, give paracetamol for high fever, and review in 3 days if the fever persists.",
+          "treatments": ["Artemether-lumefantrine per EDLIZ weight bands", "Paracetamol for fever above 38.5C", "Return in 3 days if fever persists"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "FEVER_NO_MALARIA",
+          "name": "Fever — no malaria",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "Do not give an antimalarial. Look for and treat another cause of the fever, give paracetamol for high fever, and advise return in 2 days if the fever persists.",
+          "treatments": ["Paracetamol for fever above 38.5C", "Assess and treat other causes", "Return in 2 days if fever persists"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "stiff neck with fever is very severe febrile disease", "facts": {"ageDays": 400, "feelsHot": "PRESENT", "stiffNeck": "PRESENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "VERY_SEVERE_FEBRILE_DISEASE"},
+        {"name": "a positive test is malaria", "facts": {"ageDays": 400, "feelsHot": "PRESENT", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT", "stiffNeck": "ABSENT", "bulgingFontanelle": "ABSENT", "malariaTestResult": "POSITIVE"}, "expectStatus": "CLASSIFIED", "expectClassification": "MALARIA"},
+        {"name": "a negative test is fever without malaria", "facts": {"ageDays": 400, "feelsHot": "PRESENT", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT", "stiffNeck": "ABSENT", "bulgingFontanelle": "ABSENT", "malariaTestResult": "NEGATIVE"}, "expectStatus": "CLASSIFIED", "expectClassification": "FEVER_NO_MALARIA"},
+        {"name": "fever with no test and no neck examination is indeterminate, never no-malaria", "facts": {"ageDays": 400, "feelsHot": "PRESENT"}, "expectStatus": "INDETERMINATE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_MEASLES",
+      "name": "Fever with measles",
+      "axis": "Measles complications",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": {
+        "all": [
+          {"any": [
+            {"finding": "feverByHistory", "present": true},
+            {"finding": "feelsHot", "present": true},
+            {"input": "vitals.temperature", "op": "gte", "value": 37.5}
+          ]},
+          {"any": [
+            {"finding": "generalisedRash", "present": true},
+            {"finding": "measlesWithinThreeMonths", "present": true}
+          ]}
+        ]
+      },
+      "requiredInputs": ["cornealClouding", "mouthUlcers", "pusDrainingFromEye"],
+      "sourceRefs": ["WHO IMNCI chart booklet — measles"],
+      "tiers": [
+        {
+          "code": "SEVERE_COMPLICATED_MEASLES",
+          "name": "Severe complicated measles",
+          "colour": "PINK",
+          "logic": {
+            "any": [
+              {"finding": "unableToDrinkOrBreastfeed", "present": true},
+              {"finding": "vomitsEverything", "present": true},
+              {"finding": "convulsions", "present": true},
+              {"finding": "lethargicOrUnconscious", "present": true},
+              {"finding": "cornealClouding", "present": true},
+              {"input": "mouthUlcers", "op": "eq", "value": "DEEP_OR_EXTENSIVE"}
+            ]
+          },
+          "action": "Give vitamin A, the first dose of an antibiotic, tetracycline eye ointment if the cornea is clouded, and refer urgently.",
+          "treatments": ["Vitamin A", "First dose of antibiotic", "Tetracycline eye ointment", "Urgent referral"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "MEASLES_WITH_EYE_OR_MOUTH_COMPLICATIONS",
+          "name": "Measles with eye or mouth complications",
+          "colour": "YELLOW",
+          "logic": {
+            "any": [
+              {"finding": "pusDrainingFromEye", "present": true},
+              {"input": "mouthUlcers", "op": "eq", "value": "PRESENT_NOT_DEEP"}
+            ]
+          },
+          "action": "Give vitamin A, treat the eye with tetracycline ointment or the mouth with gentian violet, and review in 3 days.",
+          "treatments": ["Vitamin A", "Tetracycline eye ointment", "Gentian violet for mouth ulcers", "Follow-up in 3 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "MEASLES",
+          "name": "Measles",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "Give vitamin A and advise on home care and the return signs.",
+          "treatments": ["Vitamin A", "Home care advice"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "clouded cornea is severe complicated measles", "facts": {"ageDays": 400, "feelsHot": "PRESENT", "generalisedRash": "PRESENT", "cornealClouding": "PRESENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_COMPLICATED_MEASLES"},
+        {"name": "fever without a rash means the table does not apply", "facts": {"ageDays": 400, "feelsHot": "PRESENT", "generalisedRash": "ABSENT", "measlesWithinThreeMonths": "ABSENT"}, "expectStatus": "NOT_APPLICABLE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_EAR",
+      "name": "Ear problem",
+      "axis": "Ear infection",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": {"finding": "earProblem", "present": true},
+      "requiredInputs": ["tenderSwellingBehindEar", "earDischarge", "earDischargeDurationDays", "earPain"],
+      "sourceRefs": ["WHO IMNCI chart booklet — ear problem"],
+      "tiers": [
+        {
+          "code": "MASTOIDITIS",
+          "name": "Mastoiditis",
+          "colour": "PINK",
+          "logic": {"finding": "tenderSwellingBehindEar", "present": true},
+          "action": "Give the first dose of an antibiotic and of paracetamol for pain, and refer urgently.",
+          "treatments": ["First dose of injectable antibiotic", "Paracetamol for pain", "Urgent referral"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "CHRONIC_EAR_INFECTION",
+          "name": "Chronic ear infection",
+          "colour": "YELLOW",
+          "logic": {
+            "all": [
+              {"finding": "earDischarge", "present": true},
+              {"input": "earDischargeDurationDays", "op": "gte", "value": 14}
+            ]
+          },
+          "action": "Teach the carer to wick the ear dry three times a day. No oral antibiotic for chronic discharge.",
+          "treatments": ["Dry wicking three times daily", "Topical treatment per EDLIZ", "Follow-up in 5 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "ACUTE_EAR_INFECTION",
+          "name": "Acute ear infection",
+          "colour": "YELLOW",
+          "logic": {
+            "any": [
+              {"all": [
+                {"finding": "earDischarge", "present": true},
+                {"input": "earDischargeDurationDays", "op": "lt", "value": 14}
+              ]},
+              {"finding": "earPain", "present": true}
+            ]
+          },
+          "action": "Give an oral antibiotic for 5 days, paracetamol for pain, dry the ear by wicking, and review in 5 days.",
+          "treatments": ["Oral amoxicillin for 5 days", "Paracetamol for pain", "Dry wicking", "Follow-up in 5 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "NO_EAR_INFECTION",
+          "name": "No ear infection",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "No additional treatment for the ear.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "tender swelling behind the ear is mastoiditis", "facts": {"ageDays": 400, "earProblem": "PRESENT", "tenderSwellingBehindEar": "PRESENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "MASTOIDITIS"},
+        {"name": "three weeks of discharge is chronic", "facts": {"ageDays": 400, "earProblem": "PRESENT", "tenderSwellingBehindEar": "ABSENT", "earDischarge": "PRESENT", "earDischargeDurationDays": 21, "earPain": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "CHRONIC_EAR_INFECTION"},
+        {"name": "ear pain alone is an acute infection", "facts": {"ageDays": 400, "earProblem": "PRESENT", "tenderSwellingBehindEar": "ABSENT", "earDischarge": "ABSENT", "earPain": "PRESENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "ACUTE_EAR_INFECTION"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_ACUTE_MALNUTRITION",
+      "name": "Acute malnutrition",
+      "axis": "Nutritional status",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": null,
+      "requiredInputs": ["muacCm", "bilateralPittingOedema", "appetiteTest"],
+      "sourceRefs": [
+        "WHO IMNCI chart booklet — malnutrition",
+        "WHO/UNICEF community-based management of severe acute malnutrition"
+      ],
+      "tiers": [
+        {
+          "code": "COMPLICATED_SEVERE_ACUTE_MALNUTRITION",
+          "name": "Complicated severe acute malnutrition",
+          "colour": "PINK",
+          "logic": {
+            "all": [
+              {"any": [
+                {"input": "muacCm", "op": "lt", "value": 11.5},
+                {"finding": "bilateralPittingOedema", "present": true},
+                {"input": "weightForHeightZ", "op": "lt", "value": -3, "optionalCriterion": true}
+              ]},
+              {"any": [
+                {"input": "appetiteTest", "op": "eq", "value": "FAILED"},
+                {"finding": "unableToDrinkOrBreastfeed", "present": true},
+                {"finding": "vomitsEverything", "present": true},
+                {"finding": "convulsions", "present": true},
+                {"finding": "lethargicOrUnconscious", "present": true}
+              ]}
+            ]
+          },
+          "action": "Admit for inpatient therapeutic care. Give the first dose of an antibiotic, treat and prevent hypoglycaemia and hypothermia, and refer urgently.",
+          "treatments": ["Inpatient therapeutic feeding", "First dose of antibiotic", "Prevent hypoglycaemia and hypothermia", "Urgent referral"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "UNCOMPLICATED_SEVERE_ACUTE_MALNUTRITION",
+          "name": "Uncomplicated severe acute malnutrition",
+          "colour": "YELLOW",
+          "logic": {
+            "any": [
+              {"input": "muacCm", "op": "lt", "value": 11.5},
+              {"finding": "bilateralPittingOedema", "present": true},
+              {"input": "weightForHeightZ", "op": "lt", "value": -3, "optionalCriterion": true}
+            ]
+          },
+          "action": "Enrol in outpatient therapeutic care with ready-to-use therapeutic food, give routine medicines, and review weekly.",
+          "treatments": ["Outpatient therapeutic programme with RUTF", "Routine antibiotic per protocol", "Vitamin A", "Weekly review"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "MODERATE_ACUTE_MALNUTRITION",
+          "name": "Moderate acute malnutrition",
+          "colour": "YELLOW",
+          "logic": {
+            "any": [
+              {"input": "muacCm", "op": "between", "min": 11.5, "max": 12.499},
+              {"input": "weightForHeightZ", "op": "between", "min": -2.999, "max": -2, "optionalCriterion": true}
+            ]
+          },
+          "action": "Enrol in supplementary feeding, counsel on feeding, and review in 14 days.",
+          "treatments": ["Supplementary feeding programme", "Feeding counselling", "Review in 14 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "NO_ACUTE_MALNUTRITION",
+          "name": "No acute malnutrition",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "Counsel on feeding. If the child is under 2 years, assess the feeding practice in full.",
+          "treatments": ["Feeding counselling"],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "MUAC 10.8 with a failed appetite test is complicated SAM", "facts": {"ageDays": 400, "muacCm": 10.8, "appetiteTest": "FAILED"}, "expectStatus": "CLASSIFIED", "expectClassification": "COMPLICATED_SEVERE_ACUTE_MALNUTRITION"},
+        {"name": "MUAC 10.8 passing appetite with no complication is uncomplicated SAM", "facts": {"ageDays": 400, "muacCm": 10.8, "appetiteTest": "PASSED", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT", "bilateralPittingOedema": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "UNCOMPLICATED_SEVERE_ACUTE_MALNUTRITION"},
+        {"name": "MUAC 12.0 is moderate acute malnutrition", "facts": {"ageDays": 400, "muacCm": 12.0, "bilateralPittingOedema": "ABSENT", "appetiteTest": "PASSED", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "MODERATE_ACUTE_MALNUTRITION"},
+        {"name": "oedema alone is severe acute malnutrition regardless of MUAC", "facts": {"ageDays": 400, "muacCm": 14.0, "bilateralPittingOedema": "PRESENT", "appetiteTest": "PASSED", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "UNCOMPLICATED_SEVERE_ACUTE_MALNUTRITION"},
+        {"name": "a child never measured is not well nourished", "facts": {"ageDays": 400}, "expectStatus": "INDETERMINATE"}
+      ]
+    },
+
+    {
+      "tableId": "IMNCI_ANAEMIA",
+      "name": "Anaemia",
+      "axis": "Anaemia",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "appliesWhen": null,
+      "requiredInputs": ["palmarPallor"],
+      "sourceRefs": ["WHO IMNCI chart booklet — anaemia"],
+      "tiers": [
+        {
+          "code": "SEVERE_ANAEMIA",
+          "name": "Severe anaemia",
+          "colour": "PINK",
+          "logic": {"input": "palmarPallor", "op": "eq", "value": "SEVERE"},
+          "action": "Refer urgently to hospital for assessment and possible transfusion.",
+          "treatments": ["Urgent referral", "Assess for transfusion"],
+          "referralRequired": true,
+          "urgentReferral": true
+        },
+        {
+          "code": "ANAEMIA",
+          "name": "Anaemia",
+          "colour": "YELLOW",
+          "logic": {"input": "palmarPallor", "op": "eq", "value": "SOME"},
+          "action": "Give iron, treat for malaria if in a risk area with a positive test, deworm if over one year and not dewormed in the last six months, and review in 14 days.",
+          "treatments": ["Iron supplementation", "Mebendazole if eligible", "Follow-up in 14 days"],
+          "referralRequired": false,
+          "urgentReferral": false
+        },
+        {
+          "code": "NO_ANAEMIA",
+          "name": "No anaemia",
+          "colour": "GREEN",
+          "logic": null,
+          "action": "No treatment for anaemia.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false
+        }
+      ],
+      "testCases": [
+        {"name": "severe palmar pallor is severe anaemia", "facts": {"ageDays": 400, "palmarPallor": "SEVERE"}, "expectStatus": "CLASSIFIED", "expectClassification": "SEVERE_ANAEMIA"},
+        {"name": "no pallor is no anaemia", "facts": {"ageDays": 400, "palmarPallor": "NONE"}, "expectStatus": "CLASSIFIED", "expectClassification": "NO_ANAEMIA"},
+        {"name": "palms never looked at cannot be called no anaemia", "facts": {"ageDays": 400}, "expectStatus": "INDETERMINATE"}
+      ]
+    }
+  ]
+}

@@ -68,17 +68,58 @@ public final class PredicateEvaluator {
         return result;
     }
 
+    /**
+     * Evaluates a node, applying the optional-criterion waiver if the content declares one.
+     *
+     * <p>{@code "optionalCriterion"} is a deliberate, narrow exception to this evaluator's central
+     * rule that an unanswered question is unknown rather than negative. It exists because some
+     * clinical criteria are genuinely unavailable at some levels of care: weight-for-height needs a
+     * height board, and most rural clinics assess acute malnutrition on mid-upper-arm circumference
+     * and oedema alone, which WHO endorses. Without the waiver every nutrition classification at
+     * such a clinic would be flagged provisional, and a safety flag that fires on every child is
+     * worse than no flag — it teaches people to dismiss the one that matters.</p>
+     *
+     * <p>The waiver never hides the gap. A waived branch is recorded in {@link Result#waivedCriteria()}
+     * so the classification can state which criterion was unavailable. It must only ever be used on
+     * a criterion that is an <em>additional</em> route to a finding, never on one that is the sole
+     * way to exclude it.</p>
+     */
     private static Outcome evaluateNode(JsonNode node, Map<String, Object> facts, Result result) {
         if (node == null || node.isNull() || !node.isObject()) {
             result.contentErrors.add("A predicate must be an object");
             return Outcome.UNKNOWN;
         }
 
+        if (node.path("optionalCriterion").asBoolean(false)) {
+            Outcome inner = evaluateShape(node, facts, result);
+            if (inner == Outcome.UNKNOWN) {
+                result.waivedCriteria.add(describeCriterion(node));
+                return Outcome.FALSE;
+            }
+            return inner;
+        }
+        return evaluateShape(node, facts, result);
+    }
+
+    private static String describeCriterion(JsonNode node) {
+        if (node.has("input")) {
+            return node.get("input").asText();
+        }
+        if (node.has("finding")) {
+            return node.get("finding").asText();
+        }
+        return "an optional criterion";
+    }
+
+    private static Outcome evaluateShape(JsonNode node, Map<String, Object> facts, Result result) {
         if (node.has("all")) {
             return combineAll(node.get("all"), facts, result);
         }
         if (node.has("any")) {
             return combineAny(node.get("any"), facts, result);
+        }
+        if (node.has("atLeast")) {
+            return combineAtLeast(node, facts, result);
         }
         if (node.has("not")) {
             Outcome inner = evaluateNode(node.get("not"), facts, result);
@@ -138,6 +179,50 @@ public final class PredicateEvaluator {
             }
         }
         return anyUnknown ? Outcome.UNKNOWN : Outcome.FALSE;
+    }
+
+    /**
+     * At least N of the children must hold — IMNCI's "two of the following signs", which is how
+     * the dehydration tables are written and cannot be expressed with all/any without enumerating
+     * every combination.
+     *
+     * <p>The three-valued arithmetic is the point. With a threshold of two: two trues is decisive
+     * regardless of what else is unknown; but one true and one unknown is <em>not</em> false,
+     * because answering the outstanding question could complete the pair. Only when the trues plus
+     * the still-unanswered cannot reach the threshold is the answer false. Treating unknowns as
+     * absent here would classify a child with sunken eyes and an unexamined skin pinch as having
+     * no dehydration.</p>
+     */
+    private static Outcome combineAtLeast(JsonNode node, Map<String, Object> facts, Result result) {
+        JsonNode children = node.get("of");
+        if (children == null || !children.isArray() || children.isEmpty()) {
+            result.contentErrors.add("'atLeast' needs a non-empty 'of' array");
+            return Outcome.UNKNOWN;
+        }
+        JsonNode thresholdNode = node.get("atLeast");
+        if (thresholdNode == null || !thresholdNode.isNumber()) {
+            result.contentErrors.add("'atLeast' must be a number");
+            return Outcome.UNKNOWN;
+        }
+        int threshold = thresholdNode.asInt();
+        if (threshold <= 0) {
+            result.contentErrors.add("'atLeast' must be greater than zero");
+            return Outcome.UNKNOWN;
+        }
+
+        int trues = 0;
+        int unknowns = 0;
+        for (JsonNode child : children) {
+            switch (evaluateNode(child, facts, result)) {
+                case TRUE -> trues++;
+                case UNKNOWN -> unknowns++;
+                default -> { /* FALSE contributes nothing and cannot later become true. */ }
+            }
+        }
+        if (trues >= threshold) {
+            return Outcome.TRUE;
+        }
+        return trues + unknowns >= threshold ? Outcome.UNKNOWN : Outcome.FALSE;
     }
 
     /**
@@ -393,6 +478,7 @@ public final class PredicateEvaluator {
         private final Set<String> missingInputs = new LinkedHashSet<>();
         private final Set<String> usedInputs = new LinkedHashSet<>();
         private final List<String> contentErrors = new ArrayList<>();
+        private final Set<String> waivedCriteria = new LinkedHashSet<>();
 
         public Outcome outcome() {
             return outcome;
@@ -412,6 +498,15 @@ public final class PredicateEvaluator {
 
         public List<String> contentErrors() {
             return List.copyOf(contentErrors);
+        }
+
+        /**
+         * Criteria the content declared optional that could not be evaluated, so were treated as
+         * not met. Surfaced so a classification can state what was unavailable rather than
+         * implying it was assessed and negative.
+         */
+        public List<String> waivedCriteria() {
+            return List.copyOf(waivedCriteria);
         }
 
         public boolean hasContentErrors() {

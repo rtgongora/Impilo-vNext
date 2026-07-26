@@ -19,6 +19,7 @@ import zw.gov.mohcc.impilo.clinical.rules.ClinicalRulesEngine;
 import zw.gov.mohcc.impilo.clinical.rules.model.ClinicalEvaluationContext;
 import zw.gov.mohcc.impilo.clinical.rules.model.RuleAlert;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,10 @@ public class ClinicalKnowledgePlatformController {
      */
     @org.springframework.beans.factory.annotation.Autowired
     private zw.gov.mohcc.impilo.clinical.danger.DangerSignEvaluationService dangerSignEvaluationService;
+
+    /** IMNCI assess-and-classify. Field-injected for the same reason as the danger-sign service. */
+    @org.springframework.beans.factory.annotation.Autowired
+    private zw.gov.mohcc.impilo.clinical.classification.ImnciClassificationService imnciClassificationService;
 
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
@@ -141,6 +146,65 @@ public class ClinicalKnowledgePlatformController {
         }
         var assessment = dangerSignEvaluationService.evaluate(ageDays, body);
         return ResponseEntity.ok(Map.of("data", assessment.toMap()));
+    }
+
+    /**
+     * Runs the IMNCI assess-and-classify tables for a sick child aged 2 months up to 5 years.
+     *
+     * <p>Returns one outcome per table, always including the tables that did not apply, so the
+     * response shows what was considered rather than only what was found. A classification that
+     * could not be safely reached is reported as indeterminate with the observation needed to
+     * resolve it — never as the reassuring row.</p>
+     *
+     * <p>The response carries no diagnosis. IMNCI classifications are management categories, and
+     * recording one as a diagnosis would assert something no clinician stated.</p>
+     */
+    @PostMapping("/paediatric/imnci/classify")
+    public ResponseEntity<Map<String, Object>> imnciClassify(@RequestBody Map<String, Object> body) {
+        Integer ageDays = body.get("ageDays") instanceof Number n ? n.intValue() : null;
+        if (ageDays == null && body.get("age_days") instanceof Number n2) {
+            ageDays = n2.intValue();
+        }
+        var assessment = imnciClassificationService.evaluate(ageDays, body);
+
+        List<Map<String, Object>> classifications = new ArrayList<>();
+        for (var o : assessment.classifications()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("table_id", o.tableId());
+            m.put("axis", o.axis());
+            m.put("status", o.status().name());
+            m.put("classification", o.classificationCode());
+            m.put("classification_name", o.classificationName());
+            m.put("colour", o.colour());
+            m.put("provisional", o.provisional());
+            m.put("actionable", o.actionable());
+            m.put("unresolved_tiers", o.unresolvedTiers());
+            m.put("missing_inputs", o.missingInputs());
+            m.put("waived_criteria", o.waivedCriteria());
+            m.put("action", o.action());
+            m.put("treatments", o.treatments());
+            m.put("referral_required", o.referralRequired());
+            m.put("urgent_referral", o.urgentReferral());
+            m.put("rationale", o.rationale());
+            classifications.add(m);
+        }
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("age_days", assessment.ageDays());
+        data.put("applicable", assessment.applicable());
+        data.put("classifications", classifications);
+        data.put("urgent_referral_required", assessment.urgentReferralRequired());
+        data.put("referral_required", assessment.referralRequired());
+        data.put("incomplete", assessment.incomplete());
+        data.put("outstanding_assessments", assessment.outstandingAssessments());
+        data.put("unavailable_criteria", assessment.unavailableCriteria());
+        data.put("treatment_plan", assessment.treatmentPlan());
+        data.put("disposition", assessment.disposition());
+        data.put("content_version", assessment.contentVersion());
+        data.put("content_source", assessment.contentSource());
+        data.put("approval_status", assessment.approvalStatus());
+        data.put("note", assessment.note());
+        return ResponseEntity.ok(Map.of("data", data));
     }
 
     @PostMapping("/interpretation/evaluate")
