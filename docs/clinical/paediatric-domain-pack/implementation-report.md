@@ -127,7 +127,7 @@ every age from birth and asserts a band exists.
 
 | Definition-of-Done journey | Status |
 |---|---|
-| **2. Sick newborn (10-day-old, poor feeding, hypothermia)** | **Backend complete.** The danger-sign engine raises possible serious bacterial infection with referral required and non-overridable; neonatal dose restrictions apply; the birth record and neonatal admission exist. No UI. |
+| **2. Sick newborn (10-day-old, poor feeding, hypothermia)** | **Backend complete and live-proven.** Both CDS layers now answer, and they agree: the danger-sign engine raises possible serious bacterial infection (critical, non-overridable, referral required), and the young-infant classification chart independently returns the same category as pink with an urgent-referral disposition and the neonatal antibiotic first dose at the head of the plan. Neonatal dose restrictions apply; the birth record and neonatal admission exist. No UI. |
 | **1. Sick 14-month-old (fever, cough, poor feeding)** | **Backend complete and live-proven.** Danger signs, age-banded vitals, growth with z-scores and faltering, safe dose calculation, and now the IMNCI assess-and-classify tables. Proven on the estate: chest indrawing with a positive malaria test, MUAC 11.9 and some palmar pallor returns severe pneumonia (pink), malaria, moderate acute malnutrition and anaemia, with an urgent-referral disposition and a severity-ordered treatment plan. Missing: immunisation forecast, Dura stock check, Khuluma caregiver instructions, UI. |
 | **3. Growth monitoring visit** | **Partial.** Measurement capture, WHO scoring, faltering detection and IMAM eligibility signalling work. Missing: the "what is due today" composition, the plotted chart, IMAM referral creation. |
 | **4. Paediatric surgical emergency** | **Not started.** Existing theatre and inpatient spines are reusable; the surgical-abdomen pathway and paediatric surgical clerking are not built. |
@@ -224,8 +224,17 @@ panel; the plotted WHO growth chart; the reusable body-map framework; the paedia
 controllers.
 
 **Wave 4 — integrated under-five care.** The IMNCI assess-and-classify tables are **done and
-live-proven** (nine tables, `POST /internal/v1/clinical/paediatric/imnci/classify`). Remaining:
-young-infant PSBI classification tables; growth intelligence in the knowledge platform; the ZW EPI
+live-proven** — nine tables for the child aged 2 months to 5 years and four for the sick young
+infant from birth, age-routed behind one endpoint,
+`POST /internal/v1/clinical/paediatric/imnci/classify`, which reports which chart it used.
+
+The young-infant possible-serious-bacterial-infection row reuses the danger-sign rule's predicate
+verbatim, and a test asserts across eight presentations that the alert layer and the classification
+layer never disagree about the same baby. **Anyone editing one must edit the other**: a critical
+alert displayed beside a classification saying serious infection is unlikely would destroy a
+clinician's trust in both, and separate layers are only safe when something holds them together.
+
+Remaining: growth intelligence in the knowledge platform; the ZW EPI
 schedule as a governed Zibo artifact and the forecast engine; `pct_observations` and the BUTANO
 Observation/Immunization write path; deepened form content.
 
