@@ -298,7 +298,9 @@ class PolicyRuleSeedVocabularyTest {
     /** A later migration setting {@code column} to {@code value} for the rule named {@code rule}. */
     private record Correction(String column, String rule, String value, int scriptIndex) {
         static String key(String column, String rule) {
-            return column + " " + rule;
+            // Escaped rather than a literal NUL: a literal one makes this file binary to git
+            // and unreviewable in a diff. Same character, same key, readable source.
+            return column + "\0" + rule;
         }
 
         String key() {
