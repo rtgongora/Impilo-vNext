@@ -21,11 +21,33 @@ export const UNCONFIRMED_REGULATORY_STATUS = "IMPORTED_PENDING_CONFIGURATION";
 
 /**
  * Location precision tiers for the coordinate programme.
- *   address-precise → real coordinate; a distance may be shown
- *   approximate     → suburb level only; NEVER show a precise km figure
+ *   address-precise → real coordinate for THIS building; a distance may be shown
+ *   approximate     → suburb centroid: ONE point shared by every facility in that
+ *                     suburb (188 sit behind "CITY CENTRE/Harare" alone), so a
+ *                     precise km figure would be fabricated — never show one
  *   absent          → no coordinate (current state of the HPA-imported set)
  */
 export type LocationPrecision = "address-precise" | "approximate" | "absent";
+
+/**
+ * Maps the tuso wire values to display tiers. Kept here rather than in the
+ * component so every surface reaches the same conclusion from the same input.
+ *
+ * Unknown values collapse to "absent" ON PURPOSE: if tuso adds a precision level
+ * this client has never heard of, the honest response is to claim no location
+ * rather than to guess which tier it resembles and risk drawing a pin we cannot
+ * justify. Silence is recoverable; a wrong pin sends someone to the wrong place.
+ */
+export function toLocationPrecision(wire?: string | null): LocationPrecision {
+  switch ((wire ?? "").toUpperCase()) {
+    case "ADDRESS":
+      return "address-precise";
+    case "SUBURB_CENTROID":
+      return "approximate";
+    default:
+      return "absent";
+  }
+}
 
 /**
  * True only for the known unconfirmed status. Unrecognised statuses return false

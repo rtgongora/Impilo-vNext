@@ -10,6 +10,7 @@ import {
   FacilityDisclosure,
   UnconfirmedField,
   isUnconfirmedFacility,
+  toLocationPrecision,
   type LocationPrecision,
 } from "@impilo/mobile-design-system";
 
@@ -26,7 +27,7 @@ interface FacilityResource {
     regulatory_status?: string | null;
     latitude?: number | null;
     longitude?: number | null;
-    locationPrecision?: LocationPrecision | null;
+    locationPrecision?: string | null;
   };
 }
 
@@ -48,7 +49,7 @@ interface Facility {
  * Defaults to "absent" — never claim a location we cannot substantiate.
  */
 function resolvePrecision(a: FacilityResource["attributes"]): LocationPrecision {
-  if (a.locationPrecision) return a.locationPrecision;
+  if (a.locationPrecision) return toLocationPrecision(a.locationPrecision);
   return a.latitude != null && a.longitude != null ? "address-precise" : "absent";
 }
 

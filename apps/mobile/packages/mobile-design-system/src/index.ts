@@ -111,5 +111,5 @@ export type { DashboardSectionProps } from "./layout/DashboardSection";
 export { FacilityDisclosure, FacilityUnconfirmedTag, UnconfirmedField } from "./facility/FacilityDisclosure";
 // Predicate + types are JSX-free so non-presentational callers (filters, work-context
 // binding) can use them without importing React components.
-export { isUnconfirmedFacility, UNCONFIRMED_REGULATORY_STATUS } from "./facility/regulatory-status";
+export { isUnconfirmedFacility, toLocationPrecision, UNCONFIRMED_REGULATORY_STATUS } from "./facility/regulatory-status";
 export type { LocationPrecision } from "./facility/regulatory-status";

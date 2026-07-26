@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { isUnconfirmedFacility, UNCONFIRMED_REGULATORY_STATUS } from "./regulatory-status";
+import { isUnconfirmedFacility, toLocationPrecision, UNCONFIRMED_REGULATORY_STATUS } from "./regulatory-status";
 
 describe("isUnconfirmedFacility", () => {
   it("treats the real tuso HPA-import status as unconfirmed", () => {
@@ -45,5 +45,21 @@ describe("isUnconfirmedFacility", () => {
 
   it("is case-insensitive so a serialisation change cannot silently drop the warning", () => {
     expect(isUnconfirmedFacility("imported_pending_configuration")).toBe(true);
+  });
+});
+
+describe("toLocationPrecision", () => {
+  it("maps the real tuso wire values", () => {
+    expect(toLocationPrecision("ADDRESS")).toBe("address-precise");
+    expect(toLocationPrecision("SUBURB_CENTROID")).toBe("approximate");
+  });
+
+  it("collapses unknown/absent precision to 'absent' rather than guessing", () => {
+    // A wrong pin sends someone to the wrong building; claiming no location is
+    // recoverable. 188 facilities share the CITY CENTRE/Harare centroid, so
+    // treating an unknown tier as precise would fabricate distance for all of them.
+    expect(toLocationPrecision(null)).toBe("absent");
+    expect(toLocationPrecision(undefined)).toBe("absent");
+    expect(toLocationPrecision("SOME_FUTURE_TIER")).toBe("absent");
   });
 });
