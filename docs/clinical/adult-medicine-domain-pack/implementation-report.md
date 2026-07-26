@@ -74,7 +74,7 @@ section; the EDLIZ 2025 PDF with SHA-256 provenance. None of it was rebuilt.
 | **V106** `pct_structured_history` | Social, family, functional, past procedures, advance directives. |
 | `OrosMedicationIntegration` | The current medicine list, over the S2S `client_credentials` seam. |
 | **V107** `pct_medication_reconciliations` | The comparison event and its findings. |
-| **V108** | `emergency_episode_id` promoted from a soft reference to a real FK, once the emergency lane's V200 landed. `RESTRICT`, `NOT VALID` then `VALIDATE`. Proven on the live schema: applies, validates, and refuses a dangling reference. |
+| ~~V108~~ | **Withdrawn.** The emergency-episode FK cannot live in this pack's band — see §5a. The constraint now lives in the emergency lane's block above V200. |
 
 ---
 
@@ -145,6 +145,25 @@ Established with the coordinator and now the fleet standard, from this pack's li
 Proven live on `impilo-full-preview`: V100–V103 applied `success=true`; positive write `WRITE_OK`;
 negative `pct_problem_links_no_self_link` refusal; `probe rows left: 0/0`.
 
+### 5a. Where this standard was not enough — a correction
+
+The V108 foreign key passed exactly the verification above and would still have failed on a clean
+full boot. Flyway applies in version order and V108 < V200, so the constraint ran before
+`emergency_episode` existed. The dry-run proved it *applied* and *bit*, both true, against a preview
+schema where the referenced table was already deployed — it never tested whether it could apply **in
+migration order on a clean database**.
+
+**A negative control only covers the axis you point it at.** Mine was pointed at dangling
+references, which is the failure a reader expects, rather than at ordering, which is the one the
+band convention creates. Withdrawn before deployment (`ac620b355`), reproduced independently on a
+scratch schema first.
+
+**The general rule, contributed by the emergency lane whose band convention surfaced it:** with one
+band per lane, a cross-lane dependency — a foreign key, an insert referencing a higher-band table,
+an `ALTER` against one — must live in the band of the lane that owns the **referenced** object,
+never the referencing one. A lower band always applies first, so it can never depend on a higher
+one. The trap is invisible in every environment except a clean boot.
+
 ---
 
 ## 6. Tests
@@ -187,8 +206,8 @@ repository remains a single UI file.
 **Clinical content requiring ratification.** Every vocabulary, threshold and cut-off shipped is an
 engineering seed. Correctly structured, tested and traceable — but not national protocol.
 
-**Nothing is owed to another lane.** The emergency-episode FK — the one cross-pack item this pack
-carried — is closed at V108.
+**One item sits with another lane by design.** The emergency-episode FK is written in the emergency
+lane's block above V200, for the ordering reason in §5a. Nothing else is owed in either direction.
 
 **Migration numbering on a shared tree.** pct **V104/V105 are permanently retired** (applied under
 one name by the IMAM lane, then renamed to V400/V401 — applied-then-renamed is never reusable). This
