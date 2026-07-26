@@ -40,6 +40,14 @@ class PartographProgressEngineTest {
         assertThat(a.status()).isEqualTo(ProgressStatus.INSUFFICIENT_DATA);
         assertThat(a.status()).isNotEqualTo(ProgressStatus.LEFT_OF_ALERT);
         assertThat(a.observations()).anyMatch(s -> s.contains("No labour observations"));
+
+        // Caught on the estate, not here: an empty session first reported "0 outstanding
+        // observations", which put a reassuring line beside the most alarming verdict. Every
+        // observation is outstanding when none has been taken.
+        assertThat(a.outstandingObservations())
+                .contains("fetal heart rate has never been recorded in this session")
+                .contains("cervical dilation has never been recorded in this session")
+                .hasSize(5);
     }
 
     @Test

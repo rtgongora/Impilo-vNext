@@ -208,9 +208,12 @@ public final class PartographProgressEngine {
      */
     private static List<String> outstandingObservations(List<Observation> ordered, OffsetDateTime asOf) {
         List<String> outstanding = new ArrayList<>();
-        if (ordered.isEmpty() || asOf == null) {
+        if (asOf == null) {
             return outstanding;
         }
+        // An empty session is deliberately NOT short-circuited to an empty list. A partograph with
+        // nothing on it has every observation outstanding, and reporting "none outstanding" beside
+        // an INSUFFICIENT_DATA verdict would put a reassuring line on the most alarming case.
         checkInterval(ordered, asOf, FHR_INTERVAL_MINUTES, o -> o.fetalHeartRateBpm() != null,
                 "fetal heart rate", outstanding);
         checkInterval(ordered, asOf, FHR_INTERVAL_MINUTES, o -> o.maternalPulseBpm() != null,
