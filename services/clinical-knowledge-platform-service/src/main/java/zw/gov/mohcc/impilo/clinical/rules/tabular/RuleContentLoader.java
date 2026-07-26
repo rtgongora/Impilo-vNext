@@ -110,6 +110,7 @@ public class RuleContentLoader {
                 node.path("referralRequired").asBoolean(false),
                 integer(node, "ageMinDays"),
                 integer(node, "ageMaxDays"),
+                node.hasNonNull("appliesWhen") ? node.get("appliesWhen") : null,
                 strings(node.path("requiredInputs")),
                 logic,
                 message,
