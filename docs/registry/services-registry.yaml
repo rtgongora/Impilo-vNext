@@ -1075,6 +1075,8 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Inpatient canonical records
+      - Early warning scores (server-computed NEWS2 and age-banded paediatric scores; thresholds versioned as content)
+      - Neonatal admissions arising from theatre handover to neonatal care
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -1083,6 +1085,7 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
+      - must-not-own-longitudinal-child-health-registry
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -1976,6 +1979,9 @@ services:
       - Clinical problems list
       - OPD care plans and goals
       - Community households, visits and screenings context
+      - Child growth measurement registry (anthropometry with measurement conditions; WHO z-scores stamped at write with standard and engine version)
+      - Immunisation administered-dose registry (dose facts only; the national schedule and the due/overdue forecast are not owned here)
+      - Newborn clinical birth summary and neonatal episodes (child-anchored; civil birth notification stays ubomi-service, identity and mother-baby linkage stay vito-service)
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -1985,6 +1991,8 @@ services:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
       - must-not-own-form-definitions
+      - must-not-own-immunisation-schedule-or-forecast-rules
+      - must-not-own-civil-birth-registration
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial

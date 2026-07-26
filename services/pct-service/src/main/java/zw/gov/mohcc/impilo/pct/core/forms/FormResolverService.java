@@ -6,9 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.paediatrics.age.AgeCalculator;
 import zw.gov.mohcc.impilo.pct.core.cadre.CadreDecision;
 import zw.gov.mohcc.impilo.pct.core.cadre.CadreEngine;
 import zw.gov.mohcc.impilo.pct.core.cadre.CadreDecisionRequest;
+import zw.gov.mohcc.impilo.pct.core.clinical.NewbornEpisodeService;
 import zw.gov.mohcc.impilo.pct.integration.FormsCatalogIntegration;
 import zw.gov.mohcc.impilo.pct.integration.VitoIntegration;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EncounterEntity;
@@ -22,7 +24,6 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,14 @@ public class FormResolverService {
     private final FormResolverDecisionRepository decisionRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+
+    /**
+     * Birth records, for gestational age at birth. Field-injected and optional so form
+     * resolution — which every clinical encounter depends on — never fails because a
+     * paediatric collaborator is unavailable.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private NewbornEpisodeService newbornEpisodeService;
 
     public FormResolverService(EncounterRepository encounterRepository,
                                VitoIntegration vitoIntegration,
@@ -123,36 +132,61 @@ public class FormResolverService {
         Boolean pregnant = input.pregnant();
         List<String> programmes = input.programmes();
         List<String> conditions = input.conditionCodes();
+        Integer ageDays = null;
 
         boolean needVito = (ageMonths == null || blank(sex)) && !blank(cpid);
         if (needVito) {
             Map<String, Object> demo = vitoIntegration.resolvePatientByCpid(cpid);
             if (demo != null && !demo.isEmpty()) {
+                LocalDate birth = birthDate(demo);
                 if (ageMonths == null) {
-                    ageMonths = deriveAgeMonths(demo);
+                    ageMonths = AgeCalculator.ageMonths(birth, LocalDate.now());
                 }
+                // Day-level age matters in paediatrics in a way months cannot express: the
+                // sick-young-infant assessment applies to 0-59 days, and the neonatal bands
+                // to the first week and the first month.
+                ageDays = AgeCalculator.ageDays(birth, LocalDate.now());
                 if (blank(sex)) {
                     sex = firstNonBlank(str(demo.get("gender")), str(demo.get("sex")));
                 }
             }
         }
+
         return new PatientFacts(
                 ageMonths,
                 blank(sex) ? "UNKNOWN" : sex.toUpperCase(),
                 pregnant,
                 programmes == null ? List.of() : programmes,
-                conditions == null ? List.of() : conditions);
+                conditions == null ? List.of() : conditions,
+                ageDays,
+                gestationalAgeWeeks(cpid));
     }
 
-    private Integer deriveAgeMonths(Map<String, Object> demo) {
+    /**
+     * Gestational age at birth, read from the child's birth record where one exists, so a form
+     * meant for preterm infants can be selected on corrected rather than chronological age.
+     * A missing birth record is the normal case for anyone not born in the system and is not
+     * an error.
+     */
+    private Integer gestationalAgeWeeks(String cpid) {
+        if (blank(cpid) || newbornEpisodeService == null) {
+            return null;
+        }
+        try {
+            return newbornEpisodeService.gestationalAgeWeeks(cpid);
+        } catch (RuntimeException e) {
+            log.debug("No gestational age available for subject: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private LocalDate birthDate(Map<String, Object> demo) {
         String dob = firstNonBlank(str(demo.get("dateOfBirth")), str(demo.get("dob")), str(demo.get("birthDate")));
         if (blank(dob)) {
             return null;
         }
         try {
-            LocalDate birth = LocalDate.parse(dob.length() > 10 ? dob.substring(0, 10) : dob);
-            long months = ChronoUnit.MONTHS.between(birth, LocalDate.now());
-            return (int) Math.max(0, months);
+            return LocalDate.parse(dob.length() > 10 ? dob.substring(0, 10) : dob);
         } catch (DateTimeParseException e) {
             return null;
         }
@@ -177,6 +211,11 @@ public class FormResolverService {
         // De-PII'd patient context (age band / sex / pregnant / programmes) — never raw demographics.
         Map<String, Object> pc = new LinkedHashMap<>();
         pc.put("ageMonths", patient.ageMonths());
+        // Days and gestational age are audited alongside months because they are what a
+        // paediatric obligation actually turned on; without them the audit cannot explain
+        // why a sick-young-infant form was or was not required.
+        pc.put("ageDays", patient.ageDays());
+        pc.put("gestationalAgeWeeks", patient.gestationalAgeWeeks());
         pc.put("sex", patient.sex());
         pc.put("pregnant", patient.pregnant());
         pc.put("programmes", patient.programmesOrEmpty());
