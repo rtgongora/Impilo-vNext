@@ -50,9 +50,19 @@ interface FindCareMapProps {
   /** The person's shared origin, if any (rendered as a distinct pin). */
   origin?: { lat: number; lng: number } | null;
   selectedFacilityId?: number | null;
+  /** Map height in px (default 360). The hero surface uses a taller fill. */
+  height?: number;
+  /** Hide the textual caption below the map (the hero surface shows its own). */
+  hideCaption?: boolean;
 }
 
-export function FindCareMap({ results, origin, selectedFacilityId }: FindCareMapProps) {
+export function FindCareMap({
+  results,
+  origin,
+  selectedFacilityId,
+  height = 360,
+  hideCaption = false,
+}: FindCareMapProps) {
   const markers = useMemo<NdilaGeoMarker[]>(() => {
     const facilityMarkers: NdilaGeoMarker[] = results
       .filter((r) => r.latitude != null && r.longitude != null && r.facilityId != null)
@@ -101,15 +111,17 @@ export function FindCareMap({ results, origin, selectedFacilityId }: FindCareMap
         fitToMarkers={mappable > 0}
         clusterMarkers
         showNavigation
-        height={360}
+        height={height}
         flyToCenter={false}
       />
-      <p className="mt-2 text-xs text-slate-500">
-        {mappable === 0
-          ? "None of these results have mapped coordinates yet, so no pins are shown. Use the list below."
-          : `${mappable} of ${results.length} result${results.length === 1 ? "" : "s"} have map coordinates. Full details and directions are in the cards below.`}
-        {selectedFacilityId != null && " The facility you opened is highlighted in the list."}
-      </p>
+      {!hideCaption && (
+        <p className="mt-2 text-xs text-slate-500">
+          {mappable === 0
+            ? "None of these results have mapped coordinates yet, so no pins are shown. Use the list below."
+            : `${mappable} of ${results.length} result${results.length === 1 ? "" : "s"} have map coordinates. Full details and directions are in the cards below.`}
+          {selectedFacilityId != null && " The facility you opened is highlighted in the list."}
+        </p>
+      )}
     </div>
   );
 }

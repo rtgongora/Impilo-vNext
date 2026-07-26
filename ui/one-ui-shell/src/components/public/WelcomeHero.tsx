@@ -19,7 +19,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import { useI18n } from "@/lib/i18n/useI18n";
 import { IntentLink } from "./IntentLink";
-import { PublicVisualAsset } from "./PublicVisualAsset";
+import { HeroFindCareSurface } from "./HeroFindCareSurface";
 
 interface GuidanceAnswer {
   answer?: string;
@@ -141,9 +141,10 @@ const QUICK_PROMPTS = [
 ] as const;
 
 /**
- * The Impilo living canvas: need-first Nompilo command mode on the left and a
- * contextual visual/result scene on the right. The public entry remains useful
- * without the photograph, JavaScript guidance response, account or location.
+ * The Impilo living canvas hero: need-first Nompilo command mode on the left
+ * (with inline public guidance), and a live "Get Health Services" care-discovery
+ * surface on the right — real Tuso/Ndila facilities, not a passive photograph.
+ * The public entry stays useful without an account, location or the map bundle.
  */
 export function WelcomeHero() {
   const { t } = useI18n();
@@ -181,7 +182,7 @@ export function WelcomeHero() {
       setError(
         status === 429
           ? "Nompilo is busy right now. Use the suggested public journey, or wait a moment and try again."
-          : "Nompilo guidance is temporarily unavailable. Public services below are still available.",
+          : "Nompilo guidance is temporarily unavailable. Public services beside and below are still available.",
       );
     } finally {
       setLoading(false);
@@ -200,7 +201,8 @@ export function WelcomeHero() {
       className="public-living-canvas overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-[0_24px_70px_-36px_rgba(6,78,59,.45)]"
       aria-labelledby="living-canvas-title"
     >
-      <div className="grid min-h-[34rem] lg:grid-cols-[minmax(0,1.08fr)_minmax(22rem,.92fr)]">
+      <div className="grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
+        {/* Left: need-first intent + inline Nompilo guidance */}
         <div className="relative z-10 flex flex-col justify-center p-6 sm:p-9 lg:p-12">
           <p className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-800">
             <ShieldCheck className="h-4 w-4" aria-hidden />
@@ -208,11 +210,11 @@ export function WelcomeHero() {
           </p>
           <h1
             id="living-canvas-title"
-            className="mt-5 max-w-3xl text-[clamp(2.15rem,5.5vw,4.5rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-slate-950"
+            className="mt-5 max-w-3xl text-[clamp(2.15rem,5vw,4rem)] font-extrabold leading-[1.03] tracking-[-0.035em] text-slate-950"
           >
             {t("public.welcome.needFirstTitle")}
           </h1>
-          <p className="mt-4 max-w-2xl text-[clamp(1rem,1.7vw,1.2rem)] leading-7 text-slate-600">
+          <p className="mt-4 max-w-2xl text-[clamp(1rem,1.6vw,1.15rem)] leading-7 text-slate-600">
             {t("public.welcome.needFirstIntro")}
           </p>
           <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-emerald-800">
@@ -268,13 +270,88 @@ export function WelcomeHero() {
             ))}
           </div>
 
+          {/* Inline Nompilo public guidance (kept beside the live care surface, never over it). */}
+          {hasResponse && (
+            <div
+              className={`mt-5 rounded-2xl border p-4 sm:p-5 ${
+                suggestion?.tone === "emergency"
+                  ? "border-red-200 bg-gradient-to-br from-red-50 to-white"
+                  : "border-violet-200 bg-gradient-to-br from-violet-50 via-white to-emerald-50"
+              }`}
+              aria-live="polite"
+              data-testid="public-intent-result"
+            >
+              <div className="flex items-center gap-2 text-sm font-semibold text-violet-800">
+                <Sparkles className="h-4 w-4" aria-hidden />
+                Nompilo · public guidance
+              </div>
+              <p className="mt-2 text-xs font-medium text-slate-500">You asked</p>
+              <p className="mt-0.5 font-semibold text-slate-950">{askedQuestion}</p>
+
+              {suggestion && (
+                <div className="mt-4 rounded-xl border border-white/80 bg-white/80 p-4 shadow-sm">
+                  <h2
+                    className={`text-lg font-bold ${
+                      suggestion.tone === "emergency" ? "text-red-900" : "text-slate-950"
+                    }`}
+                  >
+                    {suggestion.title}
+                  </h2>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-700">{suggestion.description}</p>
+                  <Link
+                    href={suggestion.href}
+                    className={`mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white ${
+                      suggestion.tone === "emergency"
+                        ? "bg-red-700 hover:bg-red-800"
+                        : "bg-emerald-700 hover:bg-emerald-800"
+                    }`}
+                  >
+                    {suggestion.action}
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                </div>
+              )}
+
+              {loading && (
+                <p className="mt-4 flex items-center gap-2 text-sm text-violet-800">
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  Checking trusted public guidance…
+                </p>
+              )}
+
+              {guidance && (
+                <div className="mt-4 rounded-xl border border-violet-100 bg-white p-4">
+                  <p className="whitespace-pre-line text-sm leading-6 text-slate-800">
+                    {guidance.answer ||
+                      "I do not have trusted information about that yet. Please use the public services here or ask a health worker."}
+                  </p>
+                  {guidance.sources && guidance.sources.length > 0 && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      Sources: {guidance.sources.slice(0, 3).join(" · ")}
+                    </p>
+                  )}
+                  <p className="mt-2 border-t border-slate-100 pt-2 text-xs leading-5 text-slate-500">
+                    {guidance.disclaimer ||
+                      "Nompilo provides general guidance, not a diagnosis or professional care."}
+                  </p>
+                </div>
+              )}
+
+              {error && (
+                <p role="alert" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  {error}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="mt-7 flex flex-wrap items-center gap-2.5" aria-label="Primary Impilo actions">
             <Link
               href="/welcome/find-care"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
             >
               <HeartHandshake className="h-4 w-4" aria-hidden />
-              Get Health Services
+              Get care
             </Link>
             <Link
               href="/welcome/emergency"
@@ -288,7 +365,7 @@ export function WelcomeHero() {
               className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
             >
               <MessageSquareHeart className="h-4 w-4" aria-hidden />
-              Give Feedback
+              Give feedback
             </Link>
           </div>
 
@@ -321,116 +398,9 @@ export function WelcomeHero() {
           </div>
         </div>
 
-        <div className="min-h-80 p-3 sm:p-5 lg:p-6 lg:pl-0">
-          {!hasResponse ? (
-            <PublicVisualAsset
-              src="/experience/hero/hero-clinic-nurse.webp"
-              compactSrc="/experience/hero/hero-clinic-nurse-960.webp"
-              alt="A Zimbabwean health worker using Impilo at a clinic"
-              objectPosition="center 35%"
-              priority
-              className="h-full rounded-[1.6rem]"
-              fallback={
-                <>
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-200">
-                    One national health operating system
-                  </p>
-                  <p className="mt-2 max-w-md text-2xl font-bold leading-tight">
-                    Public help now. Protected personal services when trust is needed.
-                  </p>
-                </>
-              }
-            />
-          ) : (
-            <div
-              className={`flex h-full min-h-72 flex-col rounded-[1.6rem] border p-6 sm:p-8 ${
-                suggestion?.tone === "emergency"
-                  ? "border-red-200 bg-gradient-to-br from-red-50 to-white"
-                  : "border-violet-200 bg-gradient-to-br from-violet-50 via-white to-emerald-50"
-              }`}
-              aria-live="polite"
-              data-testid="public-intent-result"
-            >
-              <div className="flex items-center gap-2 text-sm font-semibold text-violet-800">
-                <Sparkles className="h-4 w-4" aria-hidden />
-                Nompilo · public guidance
-              </div>
-              <p className="mt-4 text-xs font-medium text-slate-500">You asked</p>
-              <p className="mt-1 font-semibold text-slate-950">{askedQuestion}</p>
-
-              {suggestion && (
-                <div className="mt-5 rounded-2xl border border-white/80 bg-white/80 p-5 shadow-sm">
-                  <h2
-                    className={`text-xl font-bold ${
-                      suggestion.tone === "emergency" ? "text-red-900" : "text-slate-950"
-                    }`}
-                  >
-                    {suggestion.title}
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">{suggestion.description}</p>
-                  <Link
-                    href={suggestion.href}
-                    className={`mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white ${
-                      suggestion.tone === "emergency"
-                        ? "bg-red-700 hover:bg-red-800"
-                        : "bg-emerald-700 hover:bg-emerald-800"
-                    }`}
-                  >
-                    {suggestion.action}
-                    <ArrowRight className="h-4 w-4" aria-hidden />
-                  </Link>
-                </div>
-              )}
-
-              {loading && (
-                <p className="mt-5 flex items-center gap-2 text-sm text-violet-800">
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                  Checking trusted public guidance…
-                </p>
-              )}
-
-              {guidance && (
-                <div className="mt-5 rounded-2xl border border-violet-100 bg-white p-5">
-                  <p className="whitespace-pre-line text-sm leading-6 text-slate-800">
-                    {guidance.answer ||
-                      "I do not have trusted information about that yet. Please use the public services below or ask a health worker."}
-                  </p>
-                  {guidance.sources && guidance.sources.length > 0 && (
-                    <p className="mt-3 text-xs text-slate-500">
-                      Sources: {guidance.sources.slice(0, 3).join(" · ")}
-                    </p>
-                  )}
-                  <p className="mt-3 border-t border-slate-100 pt-3 text-xs leading-5 text-slate-500">
-                    {guidance.disclaimer ||
-                      "Nompilo provides general guidance, not a diagnosis or professional care."}
-                  </p>
-                </div>
-              )}
-
-              {error && (
-                <p role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                  {error}
-                </p>
-              )}
-
-              {!suggestion && !loading && (
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Link
-                    href="/welcome/health-info"
-                    className="inline-flex min-h-10 items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Browse trusted health information
-                  </Link>
-                  <Link
-                    href="/welcome/find-care"
-                    className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800"
-                  >
-                    Find care
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
+        {/* Right: live Get Health Services surface (real facilities, honest fields). */}
+        <div className="p-3 sm:p-5 lg:p-6 lg:pl-0">
+          <HeroFindCareSurface />
         </div>
       </div>
     </section>
