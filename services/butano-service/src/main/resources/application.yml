@@ -38,6 +38,12 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     out-of-order: true
+    # BUTANO is the shared health record. Its data must never be deleted on any redeploy or
+    # boot, so `clean` is disabled explicitly rather than left to the framework default —
+    # relying on a default for the one database that holds the national clinical record is
+    # not a safety position. There is no supported path that empties this schema; a genuine
+    # restore goes through scripts/dr/restore-db.sh from a backup, never through a clean.
+    clean-disabled: true
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
