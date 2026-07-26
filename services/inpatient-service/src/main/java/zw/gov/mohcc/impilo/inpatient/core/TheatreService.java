@@ -130,6 +130,14 @@ public class TheatreService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Admits the neonate in their own right when handed over to neonatal care. Field-injected
+     * to keep the large shared constructor a stable merge surface, following the convention
+     * used elsewhere in this service.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private NeonatalAdmissionHandler neonatalAdmissionHandler;
+
     private UUID tenant() { return TrustContextHolder.require().tenantId(); }
 
     private String actor() {
@@ -143,6 +151,12 @@ public class TheatreService {
         try {
             UUID f = TrustContextHolder.require().facilityId();
             return f != null ? f.toString() : null;
+        } catch (IllegalStateException e) { return null; }
+    }
+
+    private UUID currentFacilityId() {
+        try {
+            return TrustContextHolder.require().facilityId();
         } catch (IllegalStateException e) { return null; }
     }
 
@@ -507,14 +521,35 @@ public class TheatreService {
                     "babyCpid is required for the neonatal handover");
         }
         String destination = normaliseNeonatalDestination(ClinicalPayloadMapper.str(body, "destination"));
+
+        // A baby going to a neonatal unit is an inpatient in their own right. Without an
+        // admission under the baby's own CPID, every later clinical write about the baby —
+        // APGAR, observations, medication administration — fails the care-context check,
+        // because the theatre episode belongs to the mother. A baby rooming in with their
+        // mother is deliberately not admitted separately.
+        String neonatalAdmissionRef = null;
+        if (neonatalAdmissionHandler != null && NeonatalAdmissionHandler.requiresAdmission(destination)) {
+            neonatalAdmissionRef = neonatalAdmissionHandler
+                    .admitOnHandover(tenant(), babyCpid, currentFacilityId(), destination, episodeId)
+                    .map(a -> a.getAdmissionRef().toString())
+                    .orElse(null);
+        }
+
+        Map<String, Object> event = new LinkedHashMap<>(Map.of(
+                "episode_id", episodeId.toString(), "baby_cpid", babyCpid,
+                "mother_cpid", e.getSubjectCpid(), "destination", destination,
+                "handover_by", actor()));
+        if (neonatalAdmissionRef != null) {
+            event.put("neonatal_admission_ref", neonatalAdmissionRef);
+        }
         appendOutbox("PROCEDURE", episodeId.toString(), "theatre.obstetric.neonatal-handover",
-                withTrauma(e, Map.of("episode_id", episodeId.toString(), "baby_cpid", babyCpid,
-                        "mother_cpid", e.getSubjectCpid(), "destination", destination,
-                        "handover_by", actor())));
+                withTrauma(e, event));
+
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("episode_id", episodeId.toString());
         out.put("baby_cpid", babyCpid);
         out.put("destination", destination);
+        out.put("neonatal_admission_ref", neonatalAdmissionRef);
         return out;
     }
 

@@ -89,6 +89,15 @@ public class InpatientClinicalService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private zw.gov.mohcc.impilo.inpatient.persistence.repository.ResuscitationEventRepository resuscitationEventRepository;
 
+    /**
+     * Server-side early warning calculator. Field-injected (not constructor) to keep the
+     * large shared constructor a stable merge surface, following the convention already
+     * used above; required, so a missing bean fails at startup rather than silently
+     * reverting to trusting client-supplied scores.
+     */
+    @org.springframework.beans.factory.annotation.Autowired
+    private EwsCalculatorEngine ewsCalculator;
+
     private static final List<String> CLEARANCE_TYPES = List.of(
             "CLINICAL", "NURSING", "PHARMACY", "LABORATORY", "IMAGING",
             "FINANCIAL", "ADMINISTRATIVE", "RECORDS", "CRVS");
@@ -607,32 +616,102 @@ public class InpatientClinicalService {
 
     // ── EWS ─────────────────────────────────────────────────────────
 
+    /**
+     * Record an early warning score.
+     *
+     * <p>When observations are supplied the server calculates the score, choosing the adult
+     * or age-banded paediatric parameter set from the patient's age. A total supplied by the
+     * client is recomputed rather than trusted: the number that triggers an escalation must
+     * be one the platform derived. Where the two disagree the server value stands and the
+     * client's is retained, because a disagreement is a signal about the device or the
+     * observation set rather than noise.</p>
+     *
+     * <p>Without observations the legacy path still applies and a client total is accepted,
+     * so existing callers keep working while they migrate to sending the observations.</p>
+     */
     @Transactional
     public Map<String, Object> recordEws(Map<String, Object> body) {
         String cpid = patientCpid(body);
         requireActiveCareContext(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"),
                 ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
-        Integer total = ClinicalPayloadMapper.integer(body, "totalScore", "total_score");
-        if (total == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "totalScore is required");
+
+        Integer clientTotal = ClinicalPayloadMapper.integer(body, "totalScore", "total_score");
+        Integer ageDays = ClinicalPayloadMapper.integer(body, "ageDays", "age_days");
+        Map<String, Object> observations = observationsOf(body);
+        String requestedType = ClinicalPayloadMapper.str(body, "scoreType", "score_type");
+
+        EwsCalculatorEngine.EwsCalculation calculation = observations.isEmpty()
+                ? null
+                : ewsCalculator.calculate(requestedType, ageDays, observations);
+
+        Integer total;
+        String scoreType;
+        boolean serverComputed;
+        if (calculation != null && calculation.calculable()) {
+            total = calculation.totalScore();
+            scoreType = calculation.scoreType();
+            serverComputed = true;
+        } else {
+            if (clientTotal == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        calculation != null && calculation.reason() != null
+                                ? calculation.reason() + " Supply observations, or a totalScore."
+                                : "Supply observations to be scored, or a totalScore.");
+            }
+            total = clientTotal;
+            scoreType = Objects.requireNonNullElse(requestedType, "NEWS2");
+            serverComputed = false;
+        }
+
         EarlyWarningScoreEntity e = new EarlyWarningScoreEntity();
         e.setTenantId(currentTenant());
         e.setSubjectCpid(cpid);
         e.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         e.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
-        e.setScoreType(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "scoreType", "score_type"), "NEWS2"));
+        e.setScoreType(scoreType);
         e.setTotalScore(total);
-        String risk = total >= 7 ? "HIGH" : total >= 5 ? "MEDIUM" : total >= 1 ? "LOW" : "NONE";
+        String risk = calculation != null && calculation.calculable()
+                ? calculation.riskLevel()
+                : (total >= 7 ? "HIGH" : total >= 5 ? "MEDIUM" : total >= 1 ? "LOW" : "NONE");
         e.setRiskLevel(risk);
         boolean escalate = total >= safetyService.escalationThreshold();
         e.setEscalationRequired(escalate);
-        e.setComponentsJson(ClinicalPayloadMapper.str(body, "components", "components_json"));
+        e.setComponentsJson(componentsJson(body, calculation));
         e.setRecordedBy(ClinicalPayloadMapper.str(body, "recordedBy", "recorded_by"));
+        e.setComputedServerSide(serverComputed);
+        if (calculation != null && calculation.calculable()) {
+            e.setAgeBand(calculation.ageBandId());
+            e.setCalculatorVersion(calculation.contentVersion());
+            e.setIncomplete(calculation.incomplete());
+            if (calculation.incomplete()) {
+                e.setMissingParameters(String.join(",", calculation.missingParameters()));
+            }
+            if (clientTotal != null && !clientTotal.equals(total)) {
+                e.setClientReportedScore(clientTotal);
+            }
+        }
         e = ewsRepository.save(e);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", e.getScoreId().toString());
+        result.put("scoreType", e.getScoreType());
+        result.put("totalScore", e.getTotalScore());
         result.put("riskLevel", risk);
         result.put("escalationRequired", e.isEscalationRequired());
+        result.put("computedServerSide", serverComputed);
+        if (calculation != null && calculation.calculable()) {
+            result.put("ageBand", calculation.ageBandId());
+            result.put("contributions", calculation.contributions());
+            result.put("calculatorVersion", calculation.contentVersion());
+            if (calculation.incomplete()) {
+                result.put("incomplete", true);
+                result.put("missingParameters", calculation.missingParameters());
+            }
+            if (e.getClientReportedScore() != null) {
+                result.put("clientReportedScore", e.getClientReportedScore());
+                result.put("scoreDiscrepancy", true);
+            }
+        }
 
         if (escalate) {
             // Resolve ward/facility from the patient's active admission so the escalation lands on the
@@ -654,14 +733,68 @@ public class InpatientClinicalService {
         return result;
     }
 
+    /**
+     * The observed vital signs to be scored. Accepts either an {@code observations} map or
+     * the existing {@code components} field, so callers already sending components get
+     * server-side calculation without changing their payload.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> observationsOf(Map<String, Object> body) {
+        Object raw = body.get("observations");
+        if (raw == null) {
+            raw = body.get("components");
+        }
+        if (raw instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
+        if (raw instanceof String text && !text.isBlank()) {
+            try {
+                return objectMapper.readValue(text, Map.class);
+            } catch (JsonProcessingException e) {
+                return Map.of();
+            }
+        }
+        return Map.of();
+    }
+
+    /**
+     * Stores what was observed together with what each observation contributed, so a score
+     * can be explained after the fact rather than appearing as a bare number.
+     */
+    private String componentsJson(Map<String, Object> body, EwsCalculatorEngine.EwsCalculation calculation) {
+        String supplied = ClinicalPayloadMapper.str(body, "components", "components_json");
+        if (calculation == null || !calculation.calculable()) {
+            return supplied;
+        }
+        Map<String, Object> components = new LinkedHashMap<>();
+        components.put("observations", observationsOf(body));
+        components.put("contributions", calculation.contributions());
+        components.put("missing_parameters", calculation.missingParameters());
+        components.put("calculator_version", calculation.contentVersion());
+        try {
+            return objectMapper.writeValueAsString(components);
+        } catch (JsonProcessingException e) {
+            return supplied;
+        }
+    }
+
     public List<Map<String, Object>> getEws(String patientId) {
         return ewsRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(currentTenant(), patientId)
                 .stream().map(e -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("id", e.getScoreId().toString());
+                    m.put("score_type", e.getScoreType());
                     m.put("total_score", e.getTotalScore());
                     m.put("risk_level", e.getRiskLevel());
                     m.put("escalation_required", e.isEscalationRequired());
+                    m.put("age_band", e.getAgeBand());
+                    m.put("computed_server_side", e.isComputedServerSide());
+                    m.put("calculator_version", e.getCalculatorVersion());
+                    // Surfaced on every read: a score missing observations must never be
+                    // presented as though it were complete.
+                    m.put("incomplete", e.isIncomplete());
+                    m.put("missing_parameters", e.getMissingParameters());
+                    m.put("client_reported_score", e.getClientReportedScore());
                     m.put("recorded_at", e.getRecordedAt());
                     return m;
                 }).toList();

@@ -45,6 +45,27 @@ public class EarlyWarningScoreEntity {
     @Column(name = "recorded_at")
     private OffsetDateTime recordedAt;
 
+    /** Which paediatric age band's thresholds applied; null for the adult score. */
+    @Column(name = "age_band")
+    private String ageBand;
+
+    @Column(name = "computed_server_side", nullable = false)
+    private boolean computedServerSide;
+
+    @Column(name = "calculator_version")
+    private String calculatorVersion;
+
+    /** True when a scored parameter was never observed; such a score is not reassurance. */
+    @Column(name = "incomplete", nullable = false)
+    private boolean incomplete;
+
+    @Column(name = "missing_parameters")
+    private String missingParameters;
+
+    /** Retained when a client-supplied total disagreed with the server calculation. */
+    @Column(name = "client_reported_score")
+    private Integer clientReportedScore;
+
     @PrePersist
     void onCreate() {
         if (scoreId == null) scoreId = UUID.randomUUID();
@@ -75,4 +96,16 @@ public class EarlyWarningScoreEntity {
     public void setRecordedBy(String recordedBy) { this.recordedBy = recordedBy; }
     public OffsetDateTime getRecordedAt() { return recordedAt; }
     public void setRecordedAt(OffsetDateTime recordedAt) { this.recordedAt = recordedAt; }
+    public String getAgeBand() { return ageBand; }
+    public void setAgeBand(String ageBand) { this.ageBand = ageBand; }
+    public boolean isComputedServerSide() { return computedServerSide; }
+    public void setComputedServerSide(boolean computedServerSide) { this.computedServerSide = computedServerSide; }
+    public String getCalculatorVersion() { return calculatorVersion; }
+    public void setCalculatorVersion(String calculatorVersion) { this.calculatorVersion = calculatorVersion; }
+    public boolean isIncomplete() { return incomplete; }
+    public void setIncomplete(boolean incomplete) { this.incomplete = incomplete; }
+    public String getMissingParameters() { return missingParameters; }
+    public void setMissingParameters(String missingParameters) { this.missingParameters = missingParameters; }
+    public Integer getClientReportedScore() { return clientReportedScore; }
+    public void setClientReportedScore(Integer clientReportedScore) { this.clientReportedScore = clientReportedScore; }
 }

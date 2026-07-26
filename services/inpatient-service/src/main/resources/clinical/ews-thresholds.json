@@ -1,0 +1,167 @@
+{
+  "version": "engineering-seed-1.0.0",
+  "status": "ENGINEERING_SEED",
+  "provenance": "Structure follows the NEWS2 (RCP) parameter set for adults and an age-banded paediatric early warning parameter set of the Brighton PEWS family. The threshold VALUES here are an engineering seed and are NOT a ratified national protocol: they must be reviewed and signed off by MoHCC and a paediatric specialist before they drive escalation in production. See docs/clinical-governance/edliz-engineering-seed-policy.md.",
+  "scoreTypes": {
+    "NEWS2": {
+      "appliesFromAgeYears": 13,
+      "parameters": {
+        "respiratoryRate": [
+          {"max": 8, "points": 3},
+          {"min": 9, "max": 11, "points": 1},
+          {"min": 12, "max": 20, "points": 0},
+          {"min": 21, "max": 24, "points": 2},
+          {"min": 25, "points": 3}
+        ],
+        "oxygenSaturation": [
+          {"max": 91, "points": 3},
+          {"min": 92, "max": 93, "points": 2},
+          {"min": 94, "max": 95, "points": 1},
+          {"min": 96, "points": 0}
+        ],
+        "heartRate": [
+          {"max": 40, "points": 3},
+          {"min": 41, "max": 50, "points": 1},
+          {"min": 51, "max": 90, "points": 0},
+          {"min": 91, "max": 110, "points": 1},
+          {"min": 111, "max": 130, "points": 2},
+          {"min": 131, "points": 3}
+        ],
+        "systolicBloodPressure": [
+          {"max": 90, "points": 3},
+          {"min": 91, "max": 100, "points": 2},
+          {"min": 101, "max": 110, "points": 1},
+          {"min": 111, "max": 219, "points": 0},
+          {"min": 220, "points": 3}
+        ],
+        "temperature": [
+          {"max": 35.0, "points": 3},
+          {"min": 35.1, "max": 36.0, "points": 1},
+          {"min": 36.1, "max": 38.0, "points": 0},
+          {"min": 38.1, "max": 39.0, "points": 1},
+          {"min": 39.1, "points": 2}
+        ]
+      },
+      "codedParameters": {
+        "consciousness": {"ALERT": 0, "CONFUSED": 3, "VOICE": 3, "PAIN": 3, "UNRESPONSIVE": 3},
+        "supplementalOxygen": {"NO": 0, "YES": 2}
+      },
+      "riskBands": [
+        {"min": 7, "level": "HIGH"},
+        {"min": 5, "level": "MEDIUM"},
+        {"min": 1, "level": "LOW"},
+        {"min": 0, "level": "NONE"}
+      ]
+    },
+    "PEWS": {
+      "appliesToAgeYearsBelow": 13,
+      "ageBands": [
+        {
+          "id": "INFANT_0_11M",
+          "minAgeDays": 0,
+          "maxAgeDays": 364,
+          "parameters": {
+            "respiratoryRate": [
+              {"max": 19, "points": 3},
+              {"min": 20, "max": 29, "points": 1},
+              {"min": 30, "max": 59, "points": 0},
+              {"min": 60, "max": 69, "points": 2},
+              {"min": 70, "points": 3}
+            ],
+            "heartRate": [
+              {"max": 89, "points": 3},
+              {"min": 90, "max": 109, "points": 1},
+              {"min": 110, "max": 159, "points": 0},
+              {"min": 160, "max": 179, "points": 2},
+              {"min": 180, "points": 3}
+            ],
+            "oxygenSaturation": [
+              {"max": 89, "points": 3},
+              {"min": 90, "max": 93, "points": 2},
+              {"min": 94, "points": 0}
+            ],
+            "systolicBloodPressure": [
+              {"max": 59, "points": 3},
+              {"min": 60, "max": 69, "points": 2},
+              {"min": 70, "points": 0}
+            ]
+          }
+        },
+        {
+          "id": "YOUNG_CHILD_1_4Y",
+          "minAgeDays": 365,
+          "maxAgeDays": 1824,
+          "parameters": {
+            "respiratoryRate": [
+              {"max": 14, "points": 3},
+              {"min": 15, "max": 19, "points": 1},
+              {"min": 20, "max": 39, "points": 0},
+              {"min": 40, "max": 49, "points": 2},
+              {"min": 50, "points": 3}
+            ],
+            "heartRate": [
+              {"max": 79, "points": 3},
+              {"min": 80, "max": 89, "points": 1},
+              {"min": 90, "max": 139, "points": 0},
+              {"min": 140, "max": 159, "points": 2},
+              {"min": 160, "points": 3}
+            ],
+            "oxygenSaturation": [
+              {"max": 89, "points": 3},
+              {"min": 90, "max": 93, "points": 2},
+              {"min": 94, "points": 0}
+            ],
+            "systolicBloodPressure": [
+              {"max": 69, "points": 3},
+              {"min": 70, "max": 79, "points": 2},
+              {"min": 80, "points": 0}
+            ]
+          }
+        },
+        {
+          "id": "SCHOOL_AGE_5_11Y",
+          "minAgeDays": 1825,
+          "maxAgeDays": 4382,
+          "parameters": {
+            "respiratoryRate": [
+              {"max": 11, "points": 3},
+              {"min": 12, "max": 15, "points": 1},
+              {"min": 16, "max": 29, "points": 0},
+              {"min": 30, "max": 39, "points": 2},
+              {"min": 40, "points": 3}
+            ],
+            "heartRate": [
+              {"max": 59, "points": 3},
+              {"min": 60, "max": 69, "points": 1},
+              {"min": 70, "max": 119, "points": 0},
+              {"min": 120, "max": 139, "points": 2},
+              {"min": 140, "points": 3}
+            ],
+            "oxygenSaturation": [
+              {"max": 89, "points": 3},
+              {"min": 90, "max": 93, "points": 2},
+              {"min": 94, "points": 0}
+            ],
+            "systolicBloodPressure": [
+              {"max": 79, "points": 3},
+              {"min": 80, "max": 89, "points": 2},
+              {"min": 90, "points": 0}
+            ]
+          }
+        }
+      ],
+      "codedParameters": {
+        "consciousness": {"ALERT": 0, "SLEEPING": 1, "IRRITABLE": 1, "VOICE": 2, "PAIN": 3, "UNRESPONSIVE": 3},
+        "respiratoryEffort": {"NORMAL": 0, "MILD_RECESSION": 1, "MODERATE_RECESSION": 2, "SEVERE_RECESSION": 3, "GRUNTING": 3},
+        "capillaryRefill": {"UNDER_2_SECONDS": 0, "2_TO_3_SECONDS": 1, "OVER_3_SECONDS": 2, "OVER_4_SECONDS": 3},
+        "supplementalOxygen": {"NO": 0, "YES": 2}
+      },
+      "riskBands": [
+        {"min": 7, "level": "HIGH"},
+        {"min": 5, "level": "MEDIUM"},
+        {"min": 1, "level": "LOW"},
+        {"min": 0, "level": "NONE"}
+      ]
+    }
+  }
+}
