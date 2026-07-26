@@ -189,6 +189,14 @@ public class OutboxPublisher {
             // subscribed at all.
             case "pct.newborn.episode.opened", "pct.newborn.record.updated" -> "pct.newborn.episode.opened";
 
+            // The estate's only ED safety event. EdDiagnosticsService has emitted
+            // pct.ed.critical_result since the ED diagnostics lane was built, but with no route
+            // case here it landed on the pct.events catch-all — so rito (safety signal) and
+            // notification (clinician paging) had to filter every PCT event to find a critical
+            // result, which means neither subscribed. A critical result nobody is told about is
+            // the precise failure the acknowledge-and-act loop exists to prevent.
+            case "pct.ed.critical_result" -> "pct.emergency.critical_result";
+
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             // Virtual-pool substrate: TUSO consumes pool.materialized to flip

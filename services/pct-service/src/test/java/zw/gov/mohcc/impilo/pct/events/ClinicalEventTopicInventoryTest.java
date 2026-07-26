@@ -31,8 +31,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p><b>Maintaining it:</b> the inventory is hand-listed rather than reflected out of the source,
  * because the point is that a human states the routing intent for a new cross-service event. Find
- * the emit sites with:
- * <pre>grep -rn 'emit("pct\.' services/pct-service/src/main/java</pre>
+ * the emit sites with BOTH of these — an event can reach the outbox either way, and searching only
+ * for {@code emit(} is how {@code pct.ed.critical_result} stayed absent from both maps while being
+ * emitted in production:
+ * <pre>
+ * grep -rn 'emit("pct\.' services/pct-service/src/main/java
+ * grep -rn 'setEventType(' services/pct-service/src/main/java
+ * </pre>
  */
 class ClinicalEventTopicInventoryTest {
 
@@ -48,6 +53,12 @@ class ClinicalEventTopicInventoryTest {
         // for a human to attest, BUTANO archives the birth summary.
         put("pct.newborn.episode.opened", "pct.newborn.episode.opened");
         put("pct.newborn.record.updated", "pct.newborn.episode.opened");
+
+        // rito raises a safety signal and notification pages the responsible clinician. This event
+        // was emitted by EdDiagnosticsService long before this inventory existed and appeared in
+        // NEITHER map, so the guard silently passed while the estate's only ED safety event rode the
+        // catch-all. See the maintenance note above: it is emitted via setEventType(), not emit().
+        put("pct.ed.critical_result", "pct.emergency.critical_result");
     }};
 
     /**
