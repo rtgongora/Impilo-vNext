@@ -95,7 +95,6 @@ class DownstreamRouteContractTest {
             "PctServiceClient -> /v1/fluid-balance",
             "PctServiceClient -> /v1/transfers",
             "PctServiceClient -> /v1/discharge-clearances",
-            "PctServiceClient -> /v1/emergency",
             "PctServiceClient -> /v1/records",
 
             // ── Adult Medicine lane (mine) ───────────────────────────────────────
