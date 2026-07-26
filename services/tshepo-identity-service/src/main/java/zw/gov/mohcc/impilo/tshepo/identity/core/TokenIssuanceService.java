@@ -182,6 +182,9 @@ public class TokenIssuanceService {
         if (request.organisationId() != null && !request.organisationId().isBlank()) {
             context.put("org_id", request.organisationId());
         }
+        if (request.jurisdictionCode() != null && !request.jurisdictionCode().isBlank()) {
+            context.put("jurisdiction_code", request.jurisdictionCode());
+        }
         if (request.assignmentId() != null && !request.assignmentId().isBlank()) {
             context.put("assignment_id", request.assignmentId());
         }
