@@ -10,7 +10,10 @@ what a concurrent session may and may not touch while this programme is in fligh
 Audits: [procedures pipeline](../clinical/procedures-pipeline/audit.md) ·
 [surgical pack](../clinical/surgical-domain-pack/audit.md).
 Boundary: [ADR-SURGERY-AND-PROCEDURES-SERVICE-BOUNDARIES](../architecture/adr/ADR-SURGERY-AND-PROCEDURES-SERVICE-BOUNDARIES.md).
-Peer lease still recorded and honoured: [`iatg-trauma-leases.md`](iatg-trauma-leases.md).
+Peer leases recorded and honoured: [`iatg-trauma-leases.md`](iatg-trauma-leases.md) ·
+[`iatg-emergency-leases.md`](iatg-emergency-leases.md) — the emergency lane has already recorded
+this programme's claims and reserved around them; where its prose and its table disagree, the
+table is authoritative.
 
 ---
 
@@ -95,7 +98,7 @@ Heads verified at `09b28436e`. **Reserve before writing; announce if a block nee
 | `mvumo-service` | V008 | V009–V014 |
 | `clinical-knowledge-platform-service` | V006 | V007–V020 |
 | `zibo-service` | V007 | V008–V014 |
-| `tuso-service` | V041 | V042–V048 |
+| `tuso-service` | **V043** | **V044–V049** |
 | `inventory-service` | V014 | V015–V020 |
 | `varapi-service` | V038 | V039–V042 |
 | `vashandi-workforce-service` | V008 | V009–V012 |
@@ -106,8 +109,55 @@ Heads verified at `09b28436e`. **Reserve before writing; announce if a block nee
 | `coverage-service` | V020 | V021–V024 |
 
 Note on `inpatient-service`: trauma's historical block was V035–V064 and the theatre programme
-took V065–V066. V037–V064 are unused but stay unclaimed to preserve the historical record;
-this programme starts at **V067**.
+took V065–V066. V037–V064 are **dead space** — verified empty, the files jump V036 to V065 — but
+stay unclaimed to preserve the historical record. This programme starts at **V067** and stops at
+V080; the emergency lane holds V081–V110.
+
+**Two corrections found on 2026-07-26 when the emergency lane opened its lease:**
+
+- **`tuso-service` V042–V048 was never mine to claim.** V042 (`emonc_signal_function_readiness`)
+  and V043 (`readiness_assessment_programme`) had already landed from the facility-readiness lane
+  — V043 in `09b28436e`, this programme's own anchor commit — so the range collided from birth.
+  Corrected to **V044–V049**, which is what is actually free below the emergency lane's V050.
+  The lesson is that a head measured on a busy shared tree is a snapshot, not a reservation:
+  re-check immediately before writing, not only when opening a lease.
+- **`pct-service` head is V100, not V057.** This programme reserves **nothing** in pct — it reads
+  a care-continuum anchor and writes nothing — so nothing is affected, but the stale figure is
+  corrected rather than left to mislead. Note the numbering there is not contiguous (V058 absent,
+  a gap from V061 to V099, V060 flagged by the emergency lane as an untracked exception).
+
+## 3b. Cross-programme contract with the emergency lane (agreed 2026-07-26)
+
+Accepted in full. Recorded here so it binds the waves that implement it.
+
+1. **No parallel procedure episode.** Unchanged from the ADR and from trauma lease §2a.
+   `surgery-service` owns surgical *disease* — episode, condition, staging, indication, decision,
+   outcome, surveillance. It owns no operative record and no theatre workflow, and references
+   `inpatient.procedure_episode` per operation. If any reviewer finds a second operative record
+   anywhere in `surgery-service`, that is a defect to raise, not a design variation.
+2. **Handover acceptance.** On disposition `TO_THEATRE` / `ADMIT_SURGERY` the emergency episode
+   stays `OPEN_AWAITING_ACCEPTANCE` until the accepting side writes back. **Creating the
+   `procedure_episode` is the acceptance**: this programme calls
+   `POST /v1/emergency/handovers/{id}/accept` with `accepting_ref = procedure_episode_id`.
+   - Implemented at the single funnel — `ensureProcedureEpisode` — so every entry path
+     (booking, waiting list, emergency intake) accepts, and no path can create an episode
+     without accepting.
+   - **Idempotent and keyed**, because re-entry and replay are normal here.
+   - **Best-effort on the outbound leg only**: an unavailable emergency service must never block
+     the creation of an emergency surgical episode. A failed acceptance is retried from the
+     outbox, never dropped silently.
+   - Note for the emergency lane: emergency-surgery intake will now carry **two** callbacks —
+     this acceptance, and the existing daidzai `THEATRE` phase registration from theatre W5b.
+     They are independent and must both remain idempotent.
+3. **Acute abdomen.** The emergency lane classifies and hands over; this programme owns surgical
+   decision-making from that point. No surgical CDS content will be built on the eleven
+   `V005__ed_emergency_pathways.sql` UUIDs until the emergency lane's W4 repair lands — eight
+   have zero `pathway_steps` and four cite the wrong source section.
+4. **Standards traceability.** Both packs write governed content into CKP, and the coverage guard
+   now reads **per-domain** registers at `docs/clinical-governance/<domain>/coverage-exclusions.json`
+   rather than only the rmnp file. Content only counts as covering a standard when it carries
+   `dakRef` plus `adaptation`; a rule with neither leaves its standard sitting at `UNCOVERED` and
+   fails the guard.
 
 ## 4. Test-runner law — 118 dead integration tests
 
