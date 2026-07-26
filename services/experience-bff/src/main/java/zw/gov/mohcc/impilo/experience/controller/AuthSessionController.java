@@ -1200,9 +1200,13 @@ public class AuthSessionController {
                     "data", Map.of("count", count),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("CDS alerts fetch failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of("count", 0),
+            // A count of 0 is what an all-clear looks like, so this cleared the alert badge
+            // whenever the rules engine was unreachable.
+            log.error("CDS alerts fetch failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "cds_alert_count_unavailable",
+                    "message", "The decision-support alert count could not be retrieved. Do not "
+                               + "treat this as an absence of alerts.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

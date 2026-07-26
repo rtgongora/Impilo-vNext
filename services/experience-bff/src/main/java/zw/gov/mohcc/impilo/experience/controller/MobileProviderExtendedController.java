@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +31,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/internal/v1/mobile/provider")
 public class MobileProviderExtendedController {
+
+    private static final Logger log = LoggerFactory.getLogger(MobileProviderExtendedController.class);
 
     private final PctServiceClient pctClient;
     private final VitoServiceClient vitoClient;
@@ -71,7 +75,13 @@ public class MobileProviderExtendedController {
                 var result = pctClient.callNext(UUID.fromString(queueId));
                 return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of()));
             } catch (Exception e) {
-                return ResponseEntity.ok(Map.of("data", Map.of()));
+                // An empty 200 reads as "the queue is empty, nobody to call" — indistinguishable
+                // from a successful call on an empty queue, so the clinic stops calling patients.
+                log.error("PCT callNext failed for queue={}: {}", queueId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "queue_call_next_failed",
+                        "message", "The next patient could not be called. Do not treat this as an "
+                                   + "empty queue."));
             }
         }
         return ResponseEntity.ok(Map.of("data", Map.of()));
@@ -437,17 +447,30 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/clinical/mar")
     public ResponseEntity<Map<String, Object>> getMAR(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
+        // The inpatient MAR rows below are real, so a failed pharmacy sync should not blank the
+        // drug chart — but it does mean an active prescription may be missing from it, and a
+        // silently short MAR is a missed dose. Serve the rows and say the chart is incomplete.
+        boolean pharmacySyncDegraded = false;
         try {
             JsonNode prescriptions = pharmacyClient.getPatientPrescriptions(patientId, "ACTIVE", 0, 100);
             List<Map<String, Object>> rxRows = pharmacyPrescriptionsForMar(prescriptions);
             if (!rxRows.isEmpty()) {
                 inpatientClient.syncMarSchedule(Map.of("patientId", patientId, "prescriptions", rxRows));
             }
-        } catch (Exception ignored) {
-            // MAR list still returns inpatient rows when pharmacy is unavailable in preview.
+        } catch (Exception e) {
+            pharmacySyncDegraded = true;
+            log.error("Pharmacy MAR sync failed for patient={} — chart may omit active "
+                      + "prescriptions: {}", patientId, e.getMessage());
         }
         JsonNode data = inpatientClient.listMar(patientId);
-        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of()));
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("pharmacy_sync_degraded", pharmacySyncDegraded);
+        if (pharmacySyncDegraded) {
+            meta.put("message", "Active prescriptions could not be synced from pharmacy. This "
+                                + "chart may be incomplete — do not treat it as the full "
+                                + "medication list.");
+        }
+        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of(), "meta", meta));
     }
 
     private static List<Map<String, Object>> pharmacyPrescriptionsForMar(JsonNode prescriptions) {

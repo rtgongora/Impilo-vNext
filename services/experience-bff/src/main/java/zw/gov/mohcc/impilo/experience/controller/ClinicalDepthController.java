@@ -201,7 +201,16 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> addGoal(
             @PathVariable UUID planId,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.addCarePlanGoal(planId.toString(), body); } catch (Exception e) { log.warn("PCT addCarePlanGoal failed (non-blocking): {}", e.getMessage()); }
+        try {
+            pctClient.addCarePlanGoal(planId.toString(), body);
+        } catch (Exception e) {
+            // This returned 201 with a freshly minted random UUID for a goal PCT never stored —
+            // an id that resolves to nothing anywhere in the system.
+            log.error("PCT addCarePlanGoal failed for plan={}: {}", planId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "care_plan_goal_not_created",
+                    "message", "The goal could not be added to the care plan and has not been saved."));
+        }
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
     }
@@ -210,8 +219,16 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> updateGoal(
             @PathVariable UUID planId, @PathVariable UUID goalId,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.updateCarePlanGoal(planId.toString(), goalId.toString(), body); } catch (Exception e) { log.warn("PCT updateCarePlanGoal failed (non-blocking): {}", e.getMessage()); }
-        if ("ACHIEVED".equals(body.get("status"))) {
+        try {
+            pctClient.updateCarePlanGoal(planId.toString(), goalId.toString(), body);
+        } catch (Exception e) {
+            // {"updated": true} for a write that did not land — the clinician's change to the
+            // care plan silently disappears while the UI confirms it.
+            log.error("PCT updateCarePlanGoal failed for plan={} goal={}: {}",
+                    planId, goalId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "care_plan_goal_not_updated",
+                    "message", "The goal could not be updated and the change has not been saved."));
         }
         return ResponseEntity.ok(Map.of("updated", true));
     }
@@ -220,7 +237,16 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> addIntervention(
             @PathVariable UUID planId,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.addCarePlanIntervention(planId.toString(), body); } catch (Exception e) { log.warn("PCT addCarePlanIntervention failed (non-blocking): {}", e.getMessage()); }
+        try {
+            pctClient.addCarePlanIntervention(planId.toString(), body);
+        } catch (Exception e) {
+            // As with goals: a 201 and a random id for an intervention that was never stored.
+            log.error("PCT addCarePlanIntervention failed for plan={}: {}", planId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "care_plan_intervention_not_created",
+                    "message", "The intervention could not be added to the care plan and has not "
+                               + "been saved."));
+        }
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
     }
@@ -228,7 +254,18 @@ public class ClinicalDepthController {
     @PostMapping("/care-plans/{planId}/interventions/{intId}/perform")
     public ResponseEntity<Map<String, Object>> performIntervention(
             @PathVariable UUID planId, @PathVariable UUID intId) {
-        try { pctClient.performCarePlanIntervention(planId.toString(), intId.toString()); } catch (Exception e) { log.warn("PCT performCarePlanIntervention failed (non-blocking): {}", e.getMessage()); }
+        try {
+            pctClient.performCarePlanIntervention(planId.toString(), intId.toString());
+        } catch (Exception e) {
+            // {"performed": true} is a clinical claim that care was delivered. If PCT never
+            // recorded it, the record says the intervention happened and no one will repeat it.
+            log.error("PCT performCarePlanIntervention failed for plan={} intervention={}: {}",
+                    planId, intId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "care_plan_intervention_not_recorded",
+                    "message", "The intervention could not be recorded as performed. It is not "
+                               + "in the record."));
+        }
         return ResponseEntity.ok(Map.of("performed", true));
     }
 
