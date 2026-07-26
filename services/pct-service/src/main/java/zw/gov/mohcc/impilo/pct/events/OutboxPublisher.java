@@ -197,6 +197,16 @@ public class OutboxPublisher {
             // the precise failure the acknowledge-and-act loop exists to prevent.
             case "pct.ed.critical_result" -> "pct.emergency.critical_result";
 
+            // The emergency episode's own lifecycle. daidzai consumes the state change to back-fill
+            // its continuum link, butano archives it, and reporting derives the time-to-clinician and
+            // length-of-stay indicators from it. Routed on the same day the emitter is written, not
+            // later — the estate has already proved that an event without a route is an event that
+            // publishes successfully and reaches nobody.
+            case "EMERGENCY_EPISODE_OPENED",
+                 "EMERGENCY_EPISODE_STATE_CHANGED",
+                 "EMERGENCY_EPISODE_ANCHOR_RESOLVED",
+                 "EMERGENCY_EPISODE_MERGED" -> "pct.emergency.episode.state_changed";
+
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             // Nutrition programme lifecycle. Tracing gets its own topic because it is acted on by a
