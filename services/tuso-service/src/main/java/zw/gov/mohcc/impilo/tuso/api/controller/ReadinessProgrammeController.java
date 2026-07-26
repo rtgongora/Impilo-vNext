@@ -107,6 +107,48 @@ public class ReadinessProgrammeController {
         return ResponseEntity.ok(ApiResponse.ok(Map.of("assignmentId", assignmentId.toString()), corr(ctx)));
     }
 
+    // ── Failure mapping ─────────────────────────────────────────────────────
+    //
+    // The cadence guard exists to TEACH: "a round longer than its own recall window cannot produce
+    // a current register — the facilities assessed first have expired before the last are visited."
+    // Surfaced as a 500 that message is discarded and the operator sees "Internal Server Error",
+    // which tells them nothing and invites them to retry the same thing. A rejected round is a
+    // client error carrying an explanation, so it is mapped as one.
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> onInvalidRequest(IllegalArgumentException ex) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.badRequest().body(ApiResponse.error(
+                "INVALID_ROUND", ex.getMessage(), 400, corr(ctx)));
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Object>> onConflict(IllegalStateException ex) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(
+                "ROUND_STATE_CONFLICT", ex.getMessage(), 409, corr(ctx)));
+    }
+
+    /**
+     * The database CHECK constraint is the last line, and it fires as a DataIntegrityViolation
+     * rather than an IllegalArgumentException — a round that slips past the service-level guard
+     * still must not read as a server fault.
+     */
+    @org.springframework.web.bind.annotation.ExceptionHandler(
+            org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Object>> onConstraintViolation(
+            org.springframework.dao.DataIntegrityViolationException ex) {
+        TrustContext ctx = TrustContextHolder.require();
+        String detail = ex.getMostSpecificCause().getMessage();
+        String message = detail != null && detail.contains("chk_round_not_longer_than_recall")
+                ? "A round longer than its own recall window cannot produce a current register: "
+                  + "the facilities assessed first expire before the last are visited. Shorten the "
+                  + "round, or state a longer recall window if the standard genuinely differs."
+                : "The round or assignment violates a registry constraint: " + detail;
+        return ResponseEntity.badRequest().body(ApiResponse.error(
+                "INVALID_ROUND", message, 400, corr(ctx)));
+    }
+
     private static String corr(TrustContext ctx) {
         return ctx.correlationId() != null ? ctx.correlationId().toString() : null;
     }

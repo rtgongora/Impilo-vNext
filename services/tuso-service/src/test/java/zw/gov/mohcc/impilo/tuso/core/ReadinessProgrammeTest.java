@@ -118,6 +118,23 @@ class ReadinessProgrammeTest {
         assertThat(migration()).contains("'PENDING', 'IN_PROGRESS', 'COMPLETED', 'UNREACHABLE', 'DECLINED'");
     }
 
+    /**
+     * A rejected round must return the explanation, not a 500. The guard exists to teach the
+     * operator why an annual cadence cannot work; surfaced as an internal error that lesson is
+     * discarded and they retry the same thing. Verified live: it returned 500 before this handler.
+     */
+    @Test
+    void aRejectedRoundIsAClientErrorCarryingItsReason() throws Exception {
+        String controller = Files.readString(Path.of(
+                "src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/ReadinessProgrammeController.java"));
+        assertThat(controller).contains("ExceptionHandler(IllegalArgumentException.class)");
+        assertThat(controller).contains("badRequest()");
+        assertThat(controller)
+                .as("the DB CHECK fires as a DataIntegrityViolation, not IllegalArgumentException")
+                .contains("DataIntegrityViolationException.class")
+                .contains("chk_round_not_longer_than_recall");
+    }
+
     /** No programme-level readiness flag on the facility — one answer, derived from observations. */
     @Test
     void theProgrammeDoesNotStoreASecondReadinessAnswer() throws Exception {
