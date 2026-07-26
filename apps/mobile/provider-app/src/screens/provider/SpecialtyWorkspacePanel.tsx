@@ -120,7 +120,7 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
               <Text style={styles.toolTitle}>{tool}</Text>
               <Text style={[styles.toolHint, kind === "withheld" && styles.toolHintWithheld]}>
                 {kind === "withheld"
-                  ? "Unavailable — calculator withdrawn"
+                  ? "In development — Emergency pack W1"
                   : kind === "soon"
                     ? "Coming soon overview"
                     : "Tap for workspace form"}
@@ -185,9 +185,14 @@ function ToolModalBody({
             output.
           </Text>
           <Text style={styles.modalDesc}>
-            A governed, age-banded burns calculation that persists against the emergency episode is
-            being delivered by the Emergency, Resuscitation and Acute Care pack. This workspace will
-            use that one rather than keep a private copy.
+            <Text style={styles.emphasis}>In development — Emergency, Resuscitation and Acute Care
+            pack, wave W1.</Text> The governed calculation now exists: age-banded Lund–Browder and
+            injury-clocked Parkland, in the shared <Text style={styles.emphasis}>burn-domain</Text>
+            library, with the age bands verified to sum to 100% of body surface. What is not yet
+            built is this screen&apos;s connection to it and the write to the patient&apos;s burn
+            assessment, so the calculation is deliberately not offered here until entering a value
+            also records it. This workspace will use the shared calculation rather than keep a
+            private copy.
           </Text>
         </ScrollView>
         <TouchableOpacity style={styles.primaryBtn} onPress={onClose}>
