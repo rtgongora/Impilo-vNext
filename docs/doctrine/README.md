@@ -6,6 +6,16 @@
 - `doctrine-gap-matrix.md`
 - `healthcare-coding-standards.md`
 
+## Care Continuum Pack
+
+- `care-continuum-doctrine.md` — one person, two continua: **PCT owns the Care Continuum**
+  (cradle-to-grave clinical journey), **Simba owns the peer Wellness Continuum**; every other
+  care-path service is a subordinate component (rulings CC-0…CC-9: terminology — code "journey"
+  = facility visit, never the continuum; subordination semantics; BUTANO as record-authority not
+  component; daidzai trauma spine as *delegated* correlation; the CC-5 anchoring rule — every
+  clinical record carries a resolvable PCT anchor; ghost-service rulings; registry
+  `continuum`/`continuum_role`/`continuum_parent` fields)
+
 ## Service Relationship & Reputation Pack
 
 - `service-relationship-doctrine.md` — the operational backbone (Tuso = *where*, Varapi = *who-authorised*, Vashandi = *who-working-here-now*, TSHEPO = *what-may-happen*); consumer contracts for Khuluma/Rito/Ndila/Nhume/Ruvimbo (+ PCT/OROS/Dura/Madi/Fundo/Msika/Indawo/Nompilo); canonical identifiers, the historical-context snapshot rule, the three integration patterns, and the responsibility matrix
