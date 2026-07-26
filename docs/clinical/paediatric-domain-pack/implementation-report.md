@@ -326,19 +326,30 @@ applied set rather than assumed: **V107** (`medication_reconciliation` —
 `pct_medication_reconciliations`, `pct_medication_reconciliation_items`) and **V108**
 (`medical_episode_emergency_fk`). Nothing else is outstanding.
 
-**V108 is a cross-band dependency and will fail on any fresh database.** It adds a foreign key from
-`pct_medical_episodes` (Adult Medicine, V100s) to `emergency_episode`, which is created by V200
-(Emergency). A fresh database applies strictly ascending, so V108 runs before V200 and the target
-does not exist. Reproduced on a scratch database:
+**V108 was a cross-band dependency that would have failed on any fresh database — now resolved.**
+It added a foreign key from `pct_medical_episodes` (Adult Medicine, V100s) to `emergency_episode`,
+created by V200 (Emergency). A fresh database applies strictly ascending, so V108 ran before V200
+and the target did not exist. Reproduced on a scratch database:
 
 ```
 ERROR:  relation "emergency_episode" does not exist
 ```
 
-This is not caused by out-of-order and is not fixed by it — but the flip does *hide* it, because on
-the estate V200 has already applied and V108 therefore succeeds. Owned by the Adult Medicine and
-Emergency lanes; raised with the coordinator rather than fixed here, because the correct resolution
-(move the FK into the higher band, or drop it) is theirs to choose.
+Resolved the same day: Adult withdrew V108 (`ac620b355` — "a cross-lane FK cannot live in the
+referencing band", verified never applied anywhere) and Emergency re-landed the identical constraint
+as **V201**, inside their own band and numerically above the V200 that creates the table. Ascending
+order now works on a fresh database by construction.
+
+**The rule this produced is fleet law and worth carrying:** a foreign key belongs in the band of the
+table it *references*, never the band of the table that references it. The referencing lane can then
+never order itself ahead of its own dependency.
+
+Two properties of the near-miss are worth keeping, because neither is visible from the estate:
+out-of-order neither caused nor fixed it, but it *hid* it — on a long-lived database V200 has
+already applied, so V108 succeeded there while every new environment would have failed to boot. And
+it was a boot failure rather than a degraded feature, so it would have taken out every lane's pct
+surfaces, not just Adult's. **A cross-band dependency is invisible until a disaster-recovery
+rebuild**, which is the worst possible moment to meet it.
 
 **Not built:** nothing in this vertical. The screens are deployed to the preview estate and the
 data path under them is proven; what has not been done is a human walking the rendered pages.
