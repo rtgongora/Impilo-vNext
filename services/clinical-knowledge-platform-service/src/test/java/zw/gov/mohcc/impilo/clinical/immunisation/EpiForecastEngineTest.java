@@ -137,7 +137,9 @@ class EpiForecastEngineTest {
 
         assertThat(penta2.status()).isEqualTo(DoseStatus.BLOCKED_BY_INTERVAL);
         assertThat(penta2.earliestDate()).isEqualTo(DOB.plusDays(84 + 28));
-        assertThat(penta2.rationale()).contains("would not immunise");
+        assertThat(penta2.rationale())
+                .contains("the previous dose was 1 day ago and 28 days are required")
+                .contains("would not immunise");
     }
 
     @Test

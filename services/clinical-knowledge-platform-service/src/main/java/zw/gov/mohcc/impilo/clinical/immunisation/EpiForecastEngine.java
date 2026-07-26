@@ -239,10 +239,11 @@ public final class EpiForecastEngine {
                             blockedByInterval ? DoseStatus.BLOCKED_BY_INTERVAL : DoseStatus.NOT_YET_DUE,
                             eligibleFrom, recommended, overdueAfter, latestUseful, null, null,
                             blockedByInterval
-                                    ? "Old enough, but only " + days(ChronoUnit.DAYS.between(previousValidDoseDate, asOf))
-                                      + " have passed since the previous dose and "
-                                      + days(dose.minimumIntervalDays()) + " are required. Eligible from "
-                                      + eligibleFrom + ". Giving it earlier would not immunise."
+                                    ? "Old enough, but the previous dose was "
+                                      + days(ChronoUnit.DAYS.between(previousValidDoseDate, asOf))
+                                      + " ago and " + days(dose.minimumIntervalDays())
+                                      + " are required. Eligible from " + eligibleFrom
+                                      + ". Giving it earlier would not immunise."
                                     : "Not yet due; eligible from " + eligibleFrom + "."));
                     continue;
                 }
