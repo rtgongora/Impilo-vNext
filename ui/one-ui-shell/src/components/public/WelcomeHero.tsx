@@ -204,7 +204,7 @@ export function WelcomeHero() {
       // teal pooled toward the lower left and a dark teal-green foundation at the bottom.
       // Baked into this background rather than layered as blurred orb divs, which the
       // section's overflow-hidden would clip.
-      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(62%_52%_at_-4%_104%,rgba(16,185,160,.46),transparent_64%),radial-gradient(50%_44%_at_20%_86%,rgba(45,212,191,.3),transparent_62%),radial-gradient(58%_48%_at_92%_4%,rgba(103,232,249,.24),transparent_60%),linear-gradient(180deg,#0a4a48_0%,#0b3f43_40%,#06303a_72%,#03222a_100%)] shadow-[0_40px_110px_-40px_rgba(2,30,26,.85)]"
+      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(62%_52%_at_-4%_104%,rgba(16,185,160,.46),transparent_64%),radial-gradient(50%_44%_at_20%_86%,rgba(45,212,191,.3),transparent_62%),radial-gradient(58%_48%_at_92%_4%,rgba(103,232,249,.24),transparent_60%),linear-gradient(180deg,#0e5a55_0%,#0b4547_30%,#083a40_62%,#04262e_84%,#03222a_100%)] shadow-[0_40px_110px_-40px_rgba(2,30,26,.85)]"
       aria-labelledby="living-canvas-title"
     >
       {/*
@@ -214,7 +214,7 @@ export function WelcomeHero() {
         the hero's height changes with content, and the transition band would drift over
         the eyebrow and heading, leaving white text on a pale teal.
       */}
-      <div className="relative z-10 bg-[linear-gradient(180deg,#ffffff_0%,#f1faf7_46%,rgba(241,250,247,.5)_78%,rgba(241,250,247,0)_100%)] px-6 pb-7 pt-5 sm:px-9 lg:px-12">
+      <div className="relative z-10 bg-[linear-gradient(180deg,#ffffff_0%,#f5fbfa_24%,rgba(213,239,234,.9)_48%,rgba(140,199,193,.5)_70%,rgba(74,150,146,.2)_86%,rgba(74,150,146,0)_100%)] px-6 pb-16 pt-5 sm:px-9 lg:px-12">
         <ImpiloBrandLogo variant="hero" tone="brand" />
       </div>
       <div className="relative z-10 grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">

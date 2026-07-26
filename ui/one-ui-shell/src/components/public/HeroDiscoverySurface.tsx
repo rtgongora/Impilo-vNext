@@ -497,7 +497,13 @@ export function HeroDiscoverySurface() {
           </div>
         ) : view === "map" ? (
           <div className="flex h-full min-h-0 flex-col gap-2">
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200">
+            {/*
+              min-h floor matters as much as flex-1 here. Stacked below lg the surface
+              sits at its own min-h-[30rem] and the chrome above/below eats nearly all
+              of it — the map resolved to 28px at 390 and 105px at 768, a strip of
+              nothing. The floor makes the surface grow instead of crushing the map.
+            */}
+            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200">
               <FindCareMap
                 results={[]}
                 geoMarkers={geoMarkers}
