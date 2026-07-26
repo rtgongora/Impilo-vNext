@@ -98,7 +98,19 @@ public class FindCareOrchestrationService {
             Boolean openNow,
             Boolean telemedicineAvailable,
             Double latitude,
-            Double longitude) {}
+            Double longitude,
+            /**
+             * HAR W5 — {@code SERVICE_MATCH} when TUSO holds a live matching capability;
+             * {@code REGISTRY_LISTING} when the facility is only known to be registered with HPA and
+             * nobody has confirmed what it does. The shell renders the two under different headings,
+             * so a register entry is never presented as an offered service.
+             */
+            String resultLane,
+            String regulatoryStatus) {
+
+        public static final String LANE_SERVICE_MATCH = "SERVICE_MATCH";
+        public static final String LANE_REGISTRY_LISTING = "REGISTRY_LISTING";
+    }
 
     /**
      * A real, ACTIVE virtual-care option (TUSO virtual-service registry truth). Surfaced only when
@@ -231,6 +243,19 @@ public class FindCareOrchestrationService {
             }
         }
 
+        // (b2) HAR W5 — the second lane. 5,509 facilities are registered with HPA but carry no
+        // confirmed capability, so a service-filtered search is structurally blind to them: they
+        // exist, they are legally registered, and a citizen searching for "pharmacy" in their
+        // district would be told there is nothing there. Rather than invent capabilities, we return
+        // them separately and say exactly what we know — registered, services not confirmed. Only
+        // when a service was actually interpreted (an unfiltered directory search already includes
+        // them), and only within the caller's own province/district.
+        if (token != null && (province != null && !province.isBlank()
+                || district != null && !district.isBlank())) {
+            List<CareResult> registryListings = fetchRegistryListings(province, district, candidates, notes);
+            candidates.addAll(registryListings);
+        }
+
         // (c) Distance + ETA when the caller shared a location. Ndila first; haversine fallback.
         boolean haveOrigin = isNumeric(lat) && isNumeric(lng);
         boolean distanceAvailable = false;
@@ -242,6 +267,8 @@ public class FindCareOrchestrationService {
         }
 
         // (d) Rank: service-match first, then nearest (nulls last), then name for stability.
+        // A registry listing sorts below every service match by construction — serviceMatch is false
+        // on all of them — so an unconfirmed entry can never outrank a confirmed service.
         candidates.sort(Comparator
                 .comparing((CareResult r) -> r.serviceMatch() ? 0 : 1)
                 .thenComparing(r -> r.distanceMeters() == null ? Double.MAX_VALUE : r.distanceMeters())
@@ -342,7 +369,58 @@ public class FindCareOrchestrationService {
 
     // ── internals ─────────────────────────────────────────────────────────
 
+    /** How many registry listings may accompany a service search — a hint, not a directory dump. */
+    static final int MAX_REGISTRY_LISTINGS = 10;
+
+    /**
+     * HAR W5 — fetch HPA-registered facilities in the caller's area that carry no confirmed
+     * capability, tagged so the shell can present them under their own honest heading.
+     *
+     * <p>Best-effort: a failure omits the lane rather than failing the search. Facilities already
+     * returned as service matches are excluded, so nothing appears twice.</p>
+     */
+    private List<CareResult> fetchRegistryListings(String province, String district,
+                                                   List<CareResult> alreadyReturned, List<String> notes) {
+        java.util.Set<Long> seen = alreadyReturned.stream()
+                .map(CareResult::facilityId)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+        List<CareResult> listings = new ArrayList<>();
+        try {
+            JsonNode paged = tuso.publicFacilityRegistryListings(
+                    province, district, 0, MAX_REGISTRY_LISTINGS + seen.size());
+            JsonNode items = paged == null ? null : paged.path("items");
+            if (items != null && items.isArray()) {
+                for (JsonNode item : items) {
+                    if (listings.size() >= MAX_REGISTRY_LISTINGS) {
+                        break;
+                    }
+                    Long id = item.hasNonNull("id") ? item.get("id").asLong() : null;
+                    if (id != null && seen.contains(id)) {
+                        continue;
+                    }
+                    listings.add(toCareResult(item, false, null, CareResult.LANE_REGISTRY_LISTING));
+                }
+            }
+        } catch (Exception e) {
+            // The primary lane already succeeded; a missing second lane is better than a failed search.
+            log.warn("Find-care registry-listing lane unavailable: {}", e.getMessage());
+            return List.of();
+        }
+        if (!listings.isEmpty()) {
+            notes.add("Some places nearby are registered with the Health Professions Authority, but "
+                    + "the services they offer have not been confirmed yet. Call before travelling.");
+        }
+        return listings;
+    }
+
     private CareResult toCareResult(JsonNode item, boolean serviceMatched, String matchedService) {
+        return toCareResult(item, serviceMatched, matchedService,
+                serviceMatched ? CareResult.LANE_SERVICE_MATCH : null);
+    }
+
+    private CareResult toCareResult(JsonNode item, boolean serviceMatched, String matchedService,
+                                    String resultLane) {
         Double lat = item.hasNonNull("latitude") ? item.get("latitude").asDouble() : null;
         Double lng = item.hasNonNull("longitude") ? item.get("longitude").asDouble() : null;
         String opStatus = item.hasNonNull("operationalStatus") ? item.get("operationalStatus").asText() : null;
@@ -362,7 +440,9 @@ public class FindCareOrchestrationService {
                 true,  // operationalStatusUnverified — register status is not a live signal
                 null,  // openNow — not derivable from the search summary (no operating hours here)
                 null,  // telemedicineAvailable — not held per-facility in the register yet
-                lat, lng);
+                lat, lng,
+                resultLane,
+                item.hasNonNull("regulatoryStatus") ? item.get("regulatoryStatus").asText() : null);
     }
 
     /**
@@ -435,7 +515,8 @@ public class FindCareOrchestrationService {
                     c.district(), c.province(), c.serviceMatch(), c.matchedService(),
                     Math.round(distances[j] * 10.0) / 10.0, etaMin,
                     c.operationalStatus(), c.operationalStatusUnverified(), c.openNow(),
-                    c.telemedicineAvailable(), c.latitude(), c.longitude()));
+                    c.telemedicineAvailable(), c.latitude(), c.longitude(),
+                    c.resultLane(), c.regulatoryStatus()));
         }
         return true;
     }

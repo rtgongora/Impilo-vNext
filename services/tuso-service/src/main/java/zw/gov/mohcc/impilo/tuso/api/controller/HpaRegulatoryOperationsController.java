@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.tuso.core.ApplicationGovernanceService;
 import zw.gov.mohcc.impilo.tuso.core.InspectionContentService;
 import zw.gov.mohcc.impilo.tuso.core.InspectionVisitService;
+import zw.gov.mohcc.impilo.tuso.core.HpaCapabilityDerivationService;
 import zw.gov.mohcc.impilo.tuso.core.HpaPicNominationSeedService;
 import zw.gov.mohcc.impilo.tuso.core.PicNominationService;
 import zw.gov.mohcc.impilo.tuso.core.PremisesService;
@@ -60,6 +61,7 @@ public class HpaRegulatoryOperationsController {
     private final FacilityInspectionRepository inspectionRepository;
     private final RegulatoryDemandSignalService demandSignalService;
     private final HpaPicNominationSeedService picNominationSeedService;
+    private final HpaCapabilityDerivationService capabilityDerivationService;
 
     public HpaRegulatoryOperationsController(ApplicationGovernanceService governanceService,
                                              PicNominationService picNominationService,
@@ -70,7 +72,8 @@ public class HpaRegulatoryOperationsController {
                                              InspectionContentService contentService,
                                              FacilityInspectionRepository inspectionRepository,
                                              RegulatoryDemandSignalService demandSignalService,
-                                             HpaPicNominationSeedService picNominationSeedService) {
+                                             HpaPicNominationSeedService picNominationSeedService,
+                                             HpaCapabilityDerivationService capabilityDerivationService) {
         this.governanceService = governanceService;
         this.picNominationService = picNominationService;
         this.visitService = visitService;
@@ -81,6 +84,7 @@ public class HpaRegulatoryOperationsController {
         this.inspectionRepository = inspectionRepository;
         this.demandSignalService = demandSignalService;
         this.picNominationSeedService = picNominationSeedService;
+        this.capabilityDerivationService = capabilityDerivationService;
     }
 
     /**
@@ -222,6 +226,25 @@ public class HpaRegulatoryOperationsController {
         TrustContext ctx = TrustContextHolder.require();
         return ResponseEntity.ok(ApiResponse.ok(governanceService.listCouncilReviews(applicationId), corr(ctx)));
     }
+
+    /**
+     * HAR W5 — derive a capability for HPA-listed facilities where the licence class IS the service
+     * (pharmacy, laboratory, radiology, dental, optometry, ambulance). Never OPD, IPD, maternity or
+     * emergency. Dry-run by default.
+     */
+    @PostMapping("/derive-capabilities")
+    public ResponseEntity<ApiResponse<HpaCapabilityDerivationService.DerivationSummary>> deriveCapabilities(
+            @RequestBody(required = false) DeriveCapabilitiesRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID tenantId = (request != null && request.tenantId() != null && !request.tenantId().isBlank())
+                ? UUID.fromString(request.tenantId().trim()) : ctx.tenantId();
+        boolean dryRun = request == null || request.dryRun() == null || request.dryRun();
+        int limit = request == null || request.limit() == null ? 10_000 : request.limit();
+        return ResponseEntity.ok(ApiResponse.ok(
+                capabilityDerivationService.deriveForImportedFacilities(tenantId, dryRun, limit), corr(ctx)));
+    }
+
+    public record DeriveCapabilitiesRequest(String tenantId, Boolean dryRun, Integer limit) {}
 
     // ---- PIC nominations -----------------------------------------------------
 

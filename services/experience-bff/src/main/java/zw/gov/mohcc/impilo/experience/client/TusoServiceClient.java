@@ -259,6 +259,21 @@ public class TusoServiceClient {
         return publicFacilitySearch(params);
     }
 
+    /**
+     * HAR W5 — HPA-registered facilities that carry no confirmed capability, for find-care's second
+     * "registered, services not confirmed" lane. No service facet by design: these facilities have
+     * no capabilities, which is precisely why the service-filtered lane cannot see them.
+     */
+    public JsonNode publicFacilityRegistryListings(String province, String district, int page, int size) {
+        Map<String, String> params = new LinkedHashMap<>();
+        putIfPresent(params, "province", province);
+        putIfPresent(params, "district", district);
+        params.put("regulatoryStatus", "IMPORTED_PENDING_CONFIGURATION");
+        params.put("page", String.valueOf(Math.max(0, page)));
+        params.put("size", String.valueOf(size));
+        return publicFacilitySearch(params);
+    }
+
     private static void putIfPresent(Map<String, String> params, String key, String value) {
         if (value != null && !value.isBlank()) {
             params.put(key, value.trim());

@@ -76,6 +76,7 @@ public class PublicFacilityController {
             @RequestParam(required = false) String district,
             @RequestParam(required = false) String level,
             @RequestParam(required = false) String service,
+            @RequestParam(required = false) String regulatoryStatus,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
 
@@ -86,7 +87,11 @@ public class PublicFacilityController {
         log.info("Public facility search [query={}, type={}, province={}, district={}, service={}] correlationId={}",
                 query, facilityType, province, district, service, ctx.correlationId());
 
-        var filters = new FacilityService.FacilitySearchFilters(facilityType, status, district, province);
+        // HAR W5 — regulatoryStatus lets a caller ask for the register's HPA-listed population
+        // specifically. It is what backs find-care's second "Registered with HPA — services not yet
+        // confirmed" lane, and it is the only way those 5,509 can be asked for rather than stumbled on.
+        var filters = new FacilityService.FacilitySearchFilters(
+                facilityType, status, district, province, regulatoryStatus);
         // Service-aware facet: when a capability token is supplied, only facilities that carry an
         // ACTIVE matching capability are returned (registry truth). Otherwise, plain directory search.
         Page<FacilityEntity> entityPage = (service != null && !service.isBlank())
@@ -223,7 +228,8 @@ public class PublicFacilityController {
                 pack.hasValidCoordinates(),
                 pack.missingFacilityCode(),
                 pack.locationContext(),
-                pack.bedCapacity()
+                pack.bedCapacity(),
+                entity.getRegulatoryStatus() != null ? entity.getRegulatoryStatus().name() : null
         );
     }
 }

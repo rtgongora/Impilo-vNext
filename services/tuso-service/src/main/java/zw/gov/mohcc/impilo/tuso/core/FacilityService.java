@@ -362,7 +362,8 @@ public class FacilityService {
         String status = filters != null ? filters.status() : null;
         String district = filters != null ? filters.district() : null;
         String province = filters != null ? filters.province() : null;
-        FacilityRegulatoryStatus regulatoryStatus = null;
+        FacilityRegulatoryStatus regulatoryStatus = parseRegulatoryStatus(
+                filters != null ? filters.regulatoryStatus() : null);
 
         if (query != null && !query.isBlank()) {
             log.debug("Searching facilities for tenant {} with query '{}', type={}, status={}, district={}, province={}",
@@ -374,6 +375,18 @@ public class FacilityService {
         log.debug("Listing facilities for tenant {} with type={}, status={}, district={}, province={}",
                 tenantId, type, status, district, province);
         return facilityRepository.findByFilters(tenantId, type, status, regulatoryStatus, district, province, pageable);
+    }
+
+    /** An unrecognised value filters nothing rather than throwing — this is an anonymous lane. */
+    static FacilityRegulatoryStatus parseRegulatoryStatus(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return FacilityRegulatoryStatus.valueOf(raw.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**
@@ -655,9 +668,19 @@ public class FacilityService {
             Integer deviceCount, Boolean ehrReady, String complianceFlags
     ) {}
 
+    /**
+     * Search filters. {@code regulatoryStatus} (HAR W5) is what separates the register's two
+     * populations: a facility the Ministry operates from one HPA has merely listed. Without it the
+     * 5,509 {@code IMPORTED_PENDING_CONFIGURATION} rows can only be found by name — no caller could
+     * ask for them, or exclude them.
+     */
     public record FacilitySearchFilters(
-            String facilityType, String status, String district, String province
-    ) {}
+            String facilityType, String status, String district, String province, String regulatoryStatus
+    ) {
+        public FacilitySearchFilters(String facilityType, String status, String district, String province) {
+            this(facilityType, status, district, province, null);
+        }
+    }
 
     public record FacilityDetail(
             FacilityEntity facility,
