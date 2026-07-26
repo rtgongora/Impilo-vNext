@@ -1,22 +1,22 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-20T18:15:49.575Z
-> Branch: `claude/livekit-turn-tls-5349`
+> Generated: 2026-07-25T02:45:36.978Z
+> Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 
 ## Executive summary
 
 | Metric | Count |
 |--------|------:|
-| Total services audited | 99 |
-| Backend services | 99 |
+| Total services audited | 100 |
+| Backend services | 100 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 855 |
+| Frontend surfaces (routes) | 895 |
 | Mobile screens | 212 |
-| BFF route handlers | 3199 |
-| OpenAPI contracts | 108 |
-| Services with DB persistence | 99 |
-| **Phase 6 complete (user-facing + documented internal)** | **99** |
-| User-facing services with `real` code present (file-existence axis) | 74 / 74 |
+| BFF route handlers | 3320 |
+| OpenAPI contracts | 110 |
+| Services with DB persistence | 100 |
+| **Phase 6 complete (user-facing + documented internal)** | **100** |
+| User-facing services with `real` code present (file-existence axis) | 75 / 75 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **4** |
 | Services internal-only (documented) | 25 |
 | Services partially complete | 0 |
@@ -37,7 +37,7 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 25 |
-| REAL_CODE_NOT_PROBED | 70 |
+| REAL_CODE_NOT_PROBED | 71 |
 | REAL_PROVEN | 4 |
 
 ## Quality gates added

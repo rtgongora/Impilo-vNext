@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-07-20T18:15:49.575Z
-> Web surfaces: **855** | Mobile screens: **212**
+> Generated: 2026-07-25T02:45:36.978Z
+> Web surfaces: **895** | Mobile screens: **212**
 
 ## Web routes (one-ui-shell)
 
@@ -85,15 +85,21 @@
 | /omnichannel | Omnichannel Hub | admin | yes | no | yes | yes | yes | — |
 | /coverage | Coverage Operations | admin | yes | no | yes | yes | yes | — |
 | /coverage/enroll | Enroll in Coverage | home | yes | no | yes | yes | yes | — |
-| /coverage/member | My Coverage | home | yes | no | yes | yes | yes | — |
+| /coverage/member | My Coverage | home | no | no | yes | no | no | — |
 | /coverage/contracts | Provider Contracts | admin | yes | no | yes | yes | yes | — |
 | /coverage/operations | Ruvimbo Operations | admin | yes | no | yes | yes | yes | — |
+| /ruvimbo | Ruvimbo | home | yes | no | yes | no | yes | — |
+| /ruvimbo/member | My Ruvimbo | home | yes | no | yes | yes | yes | — |
+| /ruvimbo/provider | Ruvimbo Provider | admin | yes | no | yes | yes | yes | — |
+| /ruvimbo/payer | Ruvimbo Payer | admin | yes | no | yes | yes | yes | — |
+| /ruvimbo/administration | Ruvimbo Administration | admin | yes | no | yes | yes | yes | — |
+| /ruvimbo/performance | Ruvimbo Performance | admin | yes | no | yes | yes | yes | — |
 | /id-services | Identity Services | admin | yes | no | yes | yes | yes | — |
 | /ai-governance | AI Governance | admin | yes | no | yes | yes | yes | — |
 | /ai-governance/models/[id] | AI Model | admin | yes | no | yes | yes | yes | — |
 | /access | Access Channels | admin | yes | no | yes | yes | yes | — |
 | /kiosk | Self Check-In | auth | yes | no | yes | yes | yes | — |
-| / | Home | home | no | no | yes | no | no | — |
+| / | Home | home | yes | no | yes | no | yes | — |
 | /home | Home | home | yes | no | yes | yes | yes | — |
 | /home/notifications | Notifications | home | yes | no | yes | yes | yes | — |
 | /home/profile | My Profile | home | yes | no | yes | yes | yes | — |
@@ -134,6 +140,14 @@
 | /verify/facility-certificate | Verify Facility Certificate | home | yes | no | yes | yes | yes | — |
 | /verify/practitioner | Verify a Health Professional | home | yes | no | yes | yes | yes | — |
 | /professional/pic-nominations | PIC Nominations | professional | yes | no | yes | yes | yes | — |
+| /professional/regulatory | My Regulatory Affairs | professional | yes | no | yes | no | yes | — |
+| /professional/regulatory/applications/[id] | Regulatory Application | professional | yes | no | yes | no | yes | — |
+| /professional/regulatory/complaints | Complaints involving me | professional | yes | no | yes | no | yes | — |
+| /professional/practice-regulation | Practice & Facility Regulation | professional | yes | no | yes | yes | yes | — |
+| /work/regulators/[regulatorId]/committee | Committee & hearings | operations | yes | no | yes | no | yes | — |
+| /work/regulators/[regulatorId]/bulk-import | Bulk import | operations | yes | no | yes | no | yes | — |
+| /work/regulatory/[orgId]/dashboard | Regulatory dashboards | operations | yes | no | yes | no | yes | — |
+| /work/regulatory/hpa/oversight | HPA oversight | operations | yes | no | yes | no | yes | — |
 | /share/claim | Claim Shared Documents | home | yes | no | yes | yes | no | — |
 | /collaboration/access | Provider collaboration access | home | yes | no | yes | yes | yes | — |
 | /facility | Select Facility | facility | yes | no | yes | no | yes | — |
@@ -156,12 +170,21 @@
 | /scheduling/booking-requests | Booking Requests | queue | yes | no | yes | yes | yes | — |
 | /scheduling/today | Today's Appointments | queue | yes | no | yes | yes | yes | — |
 | /scheduling/bookings/config | Booking Configuration | queue | yes | no | yes | yes | yes | — |
-| /communication | Khuluma — Communication Hub | queue | yes | no | yes | yes | yes | — |
-| /communication/secure-messaging | Khuluma — Secure Messaging | queue | yes | no | yes | yes | yes | — |
-| /communication/approvals | Khuluma — Comms Approval Queue | queue | yes | no | yes | yes | yes | — |
-| /communication/announcements | Khuluma — Facility Announcements | queue | yes | no | yes | yes | yes | — |
+| /communication | Communication Ops — Hub | queue | yes | no | yes | yes | yes | — |
+| /communication/secure-messaging | Communication Ops — Secure Messaging | queue | yes | no | yes | yes | yes | — |
+| /communication/approvals | Communication Ops — Approval Queue | queue | yes | no | yes | yes | yes | — |
+| /communication/announcements | Communication Ops — Facility Announcements | queue | yes | no | yes | yes | yes | — |
+| /khuluma | Khuluma | home | yes | no | yes | yes | yes | — |
+| /khuluma/inbox | Khuluma — Inbox | home | yes | no | yes | yes | yes | — |
+| /khuluma/calls | Khuluma — Calls | home | yes | no | yes | yes | yes | — |
+| /khuluma/meetings | Khuluma — Meetings | home | yes | no | yes | yes | yes | — |
+| /khuluma/updates | Khuluma — Updates & Actions | home | yes | no | yes | yes | yes | — |
+| /khuluma/channels | Khuluma — Teams & Channels | home | yes | no | yes | yes | yes | — |
+| /khuluma/feedback | Khuluma — Feedback & Support | home | yes | no | yes | yes | yes | — |
 | /work/comms | Khuluma — Comms Hub | queue | yes | no | yes | yes | yes | — |
 | /my/comms | Khuluma — Messages | home | yes | no | yes | yes | yes | — |
+| /my/orders/[requestId]/offers | Compare Offers | home | yes | no | yes | yes | yes | — |
+| /my/monitoring | My Monitoring | home | yes | no | yes | yes | yes | — |
 | /queue | Patient Queue | queue | yes | no | yes | yes | yes | — |
 | /queue/triage | Triage Queue | queue | yes | no | yes | yes | yes | — |
 | /queue/waiting | Waiting Room | queue | yes | no | yes | yes | yes | — |
@@ -484,29 +507,6 @@
 | /operations/vito/internal-search | Internal Search | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/biometrics | Biometrics | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/biometric-enrol | Biometric enrol & verify | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/biometric-onboard | Biometric onboarding | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/adjudication | Biometric adjudication | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/adjudication/[caseId] | Adjudication case | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/recovery | Recovery & SHS | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/registry-admin | Registry Admin | operations | yes | no | yes | yes | yes | — |
-| /operations/butano | SHR Operations | operations | yes | no | yes | no | yes | — |
-| /operations/assets | Asset Management | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment | Equipment Management | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment/[equipmentId] | Equipment Detail | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment/maintenance | Maintenance | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment/calibration | Calibration | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment/readiness | Service Readiness | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment/iot | IoT & Device Status | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment/deployment | Deployment Kits | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment/audit | Asset Audit | operations | yes | no | yes | yes | yes | — |
-| /support | Support | support | yes | no | yes | no | yes | — |
-| /support/tickets | Support Tickets | support | yes | no | yes | no | yes | — |
-| /support/knowledge-base | Knowledge Base | support | yes | no | yes | no | yes | — |
-| /developer | Developer Portal | developer | yes | no | yes | no | yes | — |
-| /developer/api-catalog | API Catalog | developer | yes | no | yes | no | yes | — |
-| /developer/clients | Client Registration | developer | yes | no | yes | no | yes | — |
-| /developer/sandbox | Sandbox | developer | yes | yes | yes | no | yes | — |
-| /home/documents | My Documents | home | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 

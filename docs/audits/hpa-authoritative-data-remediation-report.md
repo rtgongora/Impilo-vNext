@@ -186,17 +186,53 @@ session's independent check; not yet fixed.
 `CLINIC → MATERNITY` inference that Wave 0 deleted. Caught by the full suite two waves later, fixed
 in `92aabef49`. Wave 0 was committed without running the full suite.
 
-## 8. Open
+## 8. The crosswalk finding — why there is no feed-join rebuild
 
-- **Coordinates** — PO decision taken 2026-07-26: ingest the 2,227 addresses and geocode at address
-  precision, with the 212-pair suburb gazetteer as fallback only, rendered as a distinct lower
-  precision tier. Not yet built. Requires a geocoding source; none exists in the estate.
+A second gap was reported and a PO decision taken to rebuild the bundle's current↔legacy join to
+recover ~3,100 localities. **That gap does not exist either.** The bundle ships
+`hpa_current_legacy_crosswalk.csv` (6,327 rows) whose own `MatchStatus` explains the feed exactly:
+
+| MatchStatus | rows | w/locality | w/address |
+|---|---:|---:|---:|
+| `CURRENT_ONLY_NO_SQL_MATCH` | 3,442 | 0 | 0 |
+| `AUTO_EXACT_REG_CORROBORATED` | 2,294 | 2,294 | 2,281 |
+| `REVIEW_EXACT_REG_IDENTITY_CONFLICT` | 324 | 324 | 300 |
+| `REVIEW_EXACT_REG_POSSIBLE_RENAME` | 168 | 168 | 166 |
+| `REVIEW_EXACT_NAME_PROVINCE_REG_CHANGED` | 86 | 86 | 86 |
+| `AMBIGUOUS_REGISTRATION_KEY` | 13 | 0 | 0 |
+
+The join is **conservative, not lossy**: it enriched exactly the 2,294 certain matches and withheld
+the 591 its own matcher flagged. 3,442 current institutions have no legacy record at all — nothing
+to recover by any means. A rebuild's ceiling is 578 localities / 552 addresses, every one obtainable
+only by **overriding a human-review flag**, which would attach a street address to a facility the
+source system explicitly said it was unsure about.
+
+The ~3,100 figure came from comparing 5,400 CSV localities against 2,294 feed enrichments. Those
+5,400 belong to *legacy* records — 5,261 distinct registration numbers, only 2,872 of which appear
+in the crosswalk at all; the rest are historical facilities no longer in the current register. Two
+populations compared across a key that was never inspected.
+
+**Rebuild cancelled.** Replaced by seeding the 591 disputed matches as review tasks on the existing
+`facility_data_gap_task` rail, so the withheld data is released by a registrar's judgement rather
+than by code deciding the matcher was too cautious.
+
+## 9. Open
+
+- **Coordinates** — approved sequence: V007 column move (done) → seed 591 review tasks (built,
+  not run) → geocode the 2,281 recovered addresses at ADDRESS precision → 212-pair suburb gazetteer
+  for the remainder → **no pin for the 4,028 province-only rows**. The code for every step is
+  written. The geocoding itself requires an external source; the platform side is an input contract
+  (`GET /addresses-awaiting-geocode` → `POST /propose-geocoded-addresses`), so nothing is blocked on
+  guessing a coordinate.
+- **Three-tier rendering** is owned by the discovery lane and lands before any pin publishes:
+  address-precise / approximate-suburb / absent, carried through distance display, sort order and
+  the map.
 - **Capability derivation has not been run.** `POST /derive-capabilities` is deployed and dry-run
   tested; no capability rows have been written.
 - **The claim path and PIC queue are deployed but unexercised** — no practitioner has claimed.
 - **Data-gap worklist** is live over 24,616 real tasks; nobody has worked one.
 
-## 9. Verification commands
+## 10. Verification commands
 
 ```bash
 # tuso

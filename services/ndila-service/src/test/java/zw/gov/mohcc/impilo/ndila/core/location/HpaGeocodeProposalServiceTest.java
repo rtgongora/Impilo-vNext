@@ -91,6 +91,60 @@ class HpaGeocodeProposalServiceTest {
                 .doesNotContain("DO UPDATE SET latitude");
     }
 
+    /**
+     * An externally geocoded point is exactly the kind that comes back plausible-looking but in the
+     * wrong country, so it must pass the same validator as every other coordinate — and must still
+     * land as a proposal rather than a published pin.
+     */
+    @Test
+    void externallyGeocodedAddressesAreRevalidatedAndStayProposals() throws Exception {
+        String src = source("HpaGeocodeProposalService.java");
+        assertThat(src).contains("coordinateValidator.validate(point.latitude(), point.longitude()");
+        assertThat(src).contains("proposal_status = 'PROPOSED'");
+        assertThat(src)
+                .as("an address proposal must never write a location row either")
+                .doesNotContain("INSERT INTO ndila_locations");
+    }
+
+    /** A geocoding run must not be able to re-place a facility a steward has already settled. */
+    @Test
+    void alreadyProposedOrResolvedRowsAreNotOverwritten() throws Exception {
+        String src = source("HpaGeocodeProposalService.java");
+        assertThat(src).contains("AND status = 'PENDING' AND proposal_status IS NULL");
+        assertThat(src)
+                .as("the geocode input list must exclude rows already carrying a proposal")
+                .contains("q.proposal_status IS NULL");
+    }
+
+    /** Address precision outranks a suburb centroid but is still not a surveyed coordinate. */
+    @Test
+    void addressPrecisionIsRecordedAsSuchOnTheQueue() throws Exception {
+        String src = source("HpaGeocodeProposalService.java");
+        assertThat(src).contains("proposed_precision = ?");
+        assertThat(src).contains("PRECISION_ADDRESS, confidenceFor(PRECISION_ADDRESS)");
+    }
+
+    /**
+     * PO ruling: the 4,028 rows with a province but no locality get NO pin. A province centroid is
+     * meaningless for finding a clinic — Harare province is the whole city, Midlands is enormous —
+     * so a pin there would send someone the wrong way while looking authoritative.
+     *
+     * <p>This holds by construction rather than by a check: the gazetteer is only built from rows
+     * that HAVE a locality, so a province-only row can never match an entry and can never receive a
+     * proposal. This test pins that construction — if the locality filter is ever relaxed, province
+     * centroids start flowing and the ruling is silently reversed.</p>
+     */
+    @Test
+    void provinceOnlyRowsCanNeverReceiveAPin() throws Exception {
+        String src = source("HpaGeocodeProposalService.java");
+        assertThat(src)
+                .as("the gazetteer must only be built from places that carry a locality")
+                .contains("AND nullif(trim(locality), '') IS NOT NULL");
+        assertThat(src)
+                .as("matching requires a locality key, so province alone can never resolve")
+                .contains("g.locality_key = upper(trim(l.locality))");
+    }
+
     /** The migration must refuse a REVIEWED row with no coordinate, and cap the precision vocabulary. */
     @Test
     void theSchemaRefusesAReviewedPlaceWithNoPoint() throws Exception {

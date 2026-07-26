@@ -111,6 +111,32 @@ public class HpaLocationImportController {
                 status, status, Math.min(Math.max(limit, 1), 1000)));
     }
 
+    /**
+     * HAR W7 — facilities whose recovered street address is ready for geocoding. This is the input
+     * a geocoding run consumes; the estate has no geocoder of its own.
+     */
+    @GetMapping("/addresses-awaiting-geocode")
+    public ResponseEntity<List<Map<String, Object>>> addressesAwaitingGeocode(
+            @RequestParam(value = "tenantId", required = false) String tenantId,
+            @RequestParam(value = "limit", defaultValue = "1000") int limit) {
+        return ResponseEntity.ok(proposalService.addressesAwaitingGeocode(tenant(tenantId), limit));
+    }
+
+    /**
+     * HAR W7 — record address-precision proposals from a geocoding run. Every point is revalidated
+     * here regardless of who produced it, and lands as a proposal, never as a published pin.
+     */
+    @PostMapping("/propose-geocoded-addresses")
+    public ResponseEntity<HpaGeocodeProposalService.AddressProposalSummary> proposeGeocodedAddresses(
+            @RequestBody GeocodedAddressBatch request) {
+        boolean dryRun = request.dryRun() == null || request.dryRun();
+        return ResponseEntity.ok(proposalService.proposeFromGeocodedAddresses(
+                tenant(request.tenantId()), request.results(), dryRun));
+    }
+
+    public record GeocodedAddressBatch(String tenantId, Boolean dryRun,
+                                       List<HpaGeocodeProposalService.GeocodedAddress> results) {}
+
     private static UUID tenant(String raw) {
         return (raw == null || raw.isBlank()) ? null : UUID.fromString(raw.trim());
     }

@@ -183,6 +183,101 @@ public class HpaGeocodeProposalService {
         return new ProposalSummary(pending.size(), written, unmatched, rejected, dryRun);
     }
 
+    /** One geocoded street address, as supplied by whatever placed it. */
+    public record GeocodedAddress(String ownerEntityId, BigDecimal latitude, BigDecimal longitude,
+                                  String geocoder) {}
+
+    public record AddressProposalSummary(int submitted, int accepted, int rejectedByValidator,
+                                         int noPendingReview, boolean dryRun) {}
+
+    /**
+     * Record address-precision proposals for facilities whose street address has been geocoded
+     * elsewhere.
+     *
+     * <p>There is no geocoding service inside this estate, and inventing one would mean either a
+     * network dependency this deployment does not have or a fabricated coordinate. So the geocoding
+     * step happens outside and its <em>results</em> arrive here — which makes the external
+     * dependency a defined input (owner id → coordinate → geocoder name) rather than an open
+     * question, and keeps every coordinate that reaches the platform on the same validated path.</p>
+     *
+     * <p>Each point still passes {@link NdilaCoordinateValidator} — an outside geocoder is exactly
+     * the kind of source that returns a plausible-looking point in the wrong country — and still
+     * lands as a <em>proposal</em> on the review queue. Address precision means "we know which
+     * building"; it does not mean "nobody needs to check".</p>
+     */
+    @Transactional
+    public AddressProposalSummary proposeFromGeocodedAddresses(UUID tenantId,
+                                                               List<GeocodedAddress> geocoded,
+                                                               boolean dryRun) {
+        if (geocoded == null || geocoded.isEmpty()) {
+            return new AddressProposalSummary(0, 0, 0, 0, dryRun);
+        }
+        int accepted = 0, rejected = 0, noPending = 0;
+        for (GeocodedAddress point : geocoded) {
+            if (point == null || point.ownerEntityId() == null
+                    || point.latitude() == null || point.longitude() == null) {
+                rejected++;
+                continue;
+            }
+            NdilaCoordinateValidator.Result validation =
+                    coordinateValidator.validate(point.latitude(), point.longitude(), null, "ZWE");
+            if (!validation.valid() || !validation.plausible()) {
+                rejected++;
+                continue;
+            }
+            if (dryRun) {
+                accepted++;
+                continue;
+            }
+            int updated = jdbc.update(
+                    """
+                    UPDATE ndila_geocode_review_queue
+                       SET proposed_latitude = ?, proposed_longitude = ?,
+                           proposed_source = ?, proposed_precision = ?,
+                           proposed_confidence = ?, proposed_at = NOW(),
+                           proposal_status = 'PROPOSED'
+                     WHERE tenant_id = ? AND owner_entity_id = ?
+                       AND status = 'PENDING' AND proposal_status IS NULL
+                    """,
+                    point.latitude(), point.longitude(),
+                    point.geocoder() == null ? "EXTERNAL_GEOCODER" : point.geocoder(),
+                    PRECISION_ADDRESS, confidenceFor(PRECISION_ADDRESS),
+                    tenantId, point.ownerEntityId());
+            if (updated == 0) {
+                // Already proposed, already resolved, or not queued — never force it.
+                noPending++;
+            } else {
+                accepted += updated;
+            }
+        }
+        log.info("HPA address proposals: submitted={} accepted={} rejected={} noPendingReview={} dryRun={}",
+                geocoded.size(), accepted, rejected, noPending, dryRun);
+        return new AddressProposalSummary(geocoded.size(), accepted, rejected, noPending, dryRun);
+    }
+
+    /**
+     * Facilities whose recovered street address is ready to be geocoded — the input a geocoding run
+     * consumes. Only rows still awaiting a coordinate are offered, so a run cannot re-place a
+     * facility a steward has already settled.
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> addressesAwaitingGeocode(UUID tenantId, int limit) {
+        return jdbc.queryForList(
+                """
+                SELECT l.owner_entity_id, l.name, l.address_line1, l.locality, l.province
+                  FROM ndila_geocode_review_queue q
+                  JOIN ndila_locations l
+                    ON l.tenant_id = q.tenant_id AND l.owner_entity_id = q.owner_entity_id
+                 WHERE q.tenant_id = ?
+                   AND q.status = 'PENDING'
+                   AND q.proposal_status IS NULL
+                   AND nullif(trim(coalesce(l.address_line1, '')), '') IS NOT NULL
+                 ORDER BY l.province, l.name
+                 LIMIT ?
+                """,
+                tenantId, Math.min(Math.max(limit, 1), 5000));
+    }
+
     /**
      * A street address describes a building; a suburb centroid describes a neighbourhood. Neither is
      * ever HIGH — that word belongs to a surveyed coordinate, and nothing here surveys anything.

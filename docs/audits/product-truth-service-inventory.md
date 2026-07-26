@@ -1,8 +1,8 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-07-20T18:15:49.575Z
+> Generated: 2026-07-25T02:45:36.978Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
-> Total services: **99** | Libraries: **12** | UI workspaces: **20**
+> Total services: **100** | Libraries: **12** | UI workspaces: **20**
 
 ## Registry drift
 
@@ -14,7 +14,7 @@
 | Status | Count |
 |--------|------:|
 | internal-only | 25 |
-| real | 74 |
+| real | 75 |
 
 ## Service inventory
 
@@ -76,7 +76,7 @@
 | nhume-service | integration | real | real | real | real | real | n/a | real | real |
 | notification-service | integration | real | real | real | real | real | real | real | real |
 | observability-service | integration | real | real | real | real | real | absent | real | internal-only |
-| offline-edge-service | integration | real | real | real | absent | thin | real | real | internal-only |
+| offline-edge-service | integration | real | real | real | absent | real | real | real | internal-only |
 | offline-sync-service | integration | real | real | real | absent | real | real | real | internal-only |
 | oros-service | clinical | real | real | real | real | real | real | real | real |
 | pacs-adapter-service | clinical | real | real | real | absent | real | real | real | internal-only |
@@ -90,6 +90,7 @@
 | reporting-service | data | real | real | real | real | real | n/a | real | real |
 | rito-quality-safety-service | experience | real | real | real | real | real | n/a | real | real |
 | participation-service | experience | real | real | real | real | real | n/a | real | real |
+| telemonitoring-service | clinical | real | real | real | real | real | n/a | real | real |
 | rtc-gateway-service | integration | real | real | real | real | real | n/a | real | real |
 | rules-service | clinical | real | real | real | real | real | n/a | real | real |
 | scheduling-service | clinical | real | real | real | real | real | n/a | real | real |

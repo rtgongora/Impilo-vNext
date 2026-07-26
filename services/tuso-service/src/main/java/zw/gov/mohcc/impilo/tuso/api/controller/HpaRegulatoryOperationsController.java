@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.tuso.core.ApplicationGovernanceService;
 import zw.gov.mohcc.impilo.tuso.core.InspectionContentService;
 import zw.gov.mohcc.impilo.tuso.core.InspectionVisitService;
 import zw.gov.mohcc.impilo.tuso.core.HpaCapabilityDerivationService;
+import zw.gov.mohcc.impilo.tuso.core.HpaMatchReviewTaskSeedService;
 import zw.gov.mohcc.impilo.tuso.core.HpaPicNominationSeedService;
 import zw.gov.mohcc.impilo.tuso.core.PicNominationService;
 import zw.gov.mohcc.impilo.tuso.core.PremisesService;
@@ -62,6 +63,7 @@ public class HpaRegulatoryOperationsController {
     private final RegulatoryDemandSignalService demandSignalService;
     private final HpaPicNominationSeedService picNominationSeedService;
     private final HpaCapabilityDerivationService capabilityDerivationService;
+    private final HpaMatchReviewTaskSeedService matchReviewTaskSeedService;
 
     public HpaRegulatoryOperationsController(ApplicationGovernanceService governanceService,
                                              PicNominationService picNominationService,
@@ -73,7 +75,8 @@ public class HpaRegulatoryOperationsController {
                                              FacilityInspectionRepository inspectionRepository,
                                              RegulatoryDemandSignalService demandSignalService,
                                              HpaPicNominationSeedService picNominationSeedService,
-                                             HpaCapabilityDerivationService capabilityDerivationService) {
+                                             HpaCapabilityDerivationService capabilityDerivationService,
+                                             HpaMatchReviewTaskSeedService matchReviewTaskSeedService) {
         this.governanceService = governanceService;
         this.picNominationService = picNominationService;
         this.visitService = visitService;
@@ -85,6 +88,7 @@ public class HpaRegulatoryOperationsController {
         this.demandSignalService = demandSignalService;
         this.picNominationSeedService = picNominationSeedService;
         this.capabilityDerivationService = capabilityDerivationService;
+        this.matchReviewTaskSeedService = matchReviewTaskSeedService;
     }
 
     /**
@@ -245,6 +249,24 @@ public class HpaRegulatoryOperationsController {
     }
 
     public record DeriveCapabilitiesRequest(String tenantId, Boolean dryRun, Integer limit) {}
+
+    /**
+     * HAR W7 — seed review tasks for the 591 current↔legacy matches HPA's own matcher withheld.
+     * This replaced a planned feed-join rebuild: the join is conservative, not lossy, so the
+     * recovery is a registrar's judgement rather than an algorithm overriding a warning.
+     */
+    @PostMapping("/seed-match-review-tasks")
+    public ResponseEntity<ApiResponse<HpaMatchReviewTaskSeedService.SeedSummary>> seedMatchReviewTasks(
+            @RequestBody SeedMatchReviewRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID tenantId = (request.tenantId() != null && !request.tenantId().isBlank())
+                ? UUID.fromString(request.tenantId().trim()) : ctx.tenantId();
+        boolean dryRun = request.dryRun() == null || request.dryRun();
+        return ResponseEntity.ok(ApiResponse.ok(matchReviewTaskSeedService.seedFromCrosswalk(
+                tenantId, request.crosswalkPath(), dryRun), corr(ctx)));
+    }
+
+    public record SeedMatchReviewRequest(String crosswalkPath, String tenantId, Boolean dryRun) {}
 
     // ---- PIC nominations -----------------------------------------------------
 
