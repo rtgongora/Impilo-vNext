@@ -33,6 +33,17 @@ Consequences that are not optional:
 - **Verify before pushing**: `git show --stat HEAD` must contain only your files.
 - **Reserve a migration block before writing a migration**, and re-verify the head first — three
   packs are consuming numbers concurrently.
+- **On a shared tree the WORKING TREE is part of the migration namespace, not just history.** An
+  in-flight migration from another lane is **untracked**, so `git log` cannot see it and neither can
+  any check built on committed history. Run **both**, immediately before you cut a number:
+
+  ```
+  ls services/<svc>/src/main/resources/db/migration | sort -V | tail
+  git status --porcelain services/*/src/main/resources/db/migration/
+  ```
+
+  This is how `pct` **V060** was found (see §3c) — `git log` showed nothing. Contributed by the RMNP
+  lane, 2026-07-26.
 
 ## 2. Lane ownership
 
@@ -64,7 +75,7 @@ and surgery/procedures leases**, so a collision is impossible in either directio
 
 | Service | Head today | Trauma lease | Surgery lease | **Emergency block** | Sub-ranges |
 |---|---|---|---|---|---|
-| `pct-service` | V060 | V035–V069 | — | **V070–V099** | episode V070–72 · triage V073–74 · alerts V075 · diagnostics/order-sets V076–77 · medicines V078 · obs-stay/disposition/handover V079–81 · identity ledger V082 · board V083–85 · reserve V086–99 |
+| `pct-service` | **V060 (untracked — §3c)** | V035–V069 | — | **V070–V099** | episode V070–72 · triage V073–74 · alerts V075 · diagnostics/order-sets V076–77 · medicines V078 · obs-stay/disposition/handover V079–81 · identity ledger V082 · board V083–85 · reserve V086–99 |
 | `inpatient-service` | V066 | V035–V064 (**dead, see §3a**) | V067–V080 | **V081–V110** | resus tenant/anchor V081 · concurrency V082 · `resuscitation_medication` V083 · activation origin/CHECK V084 · reserve V085–110 |
 | `daidzai-service` | V016 | V010–V049 | — | **V050–V079** | generalise + PCT back-link V050–52 · merge/adopt V053 · MCI casualty V054–56 |
 | `madi-service` | V015 | V015–V044 (MTP sub-range **never built**, superseded — §3b) | — | **V045–V074** | MHP V045–48 · emergency release V049–50 · ratio content V051 |
@@ -80,6 +91,27 @@ and surgery/procedures leases**, so a collision is impossible in either directio
 | `mental-health-service` | — | — | — | **V001–V030** | new service |
 | `costing-engine-service` (COSTA) | V024 | — | V025–V028 | **none needed** | emergency override + deferred-charge reconciliation already built (V012/V014) |
 | `mvumo-service` | V008 | — | V009–V014 | **none needed** | `L4_EMERGENCY_OVERRIDE` consent break-glass already built |
+
+### 3c. Peer claims recorded here — and `pct` V060 is an EXCEPTION, not part of a range
+
+The RMNP lane asked to record its block here rather than open a third lease document, so:
+
+| Lane | Claim |
+|---|---|
+| **RMNP (reproductive/maternal/newborn)** | `pct` **V058, V059, and V061–V069** · `clinical-knowledge-platform-service` **V007–V009** |
+| **Adult problem-list repair** | `pct` **V060** — `V060__problem_severity.sql` |
+
+> ⚠️ **`pct` V060 IS TAKEN. Do not read V058–V069 as contiguous.**
+> `services/pct-service/src/main/resources/db/migration/V060__problem_severity.sql` exists on disk
+> and is **untracked** — it is another lane's in-flight work (adding a severity column so that
+> repairing the broken `/v1/conditions` write path does not convert a visible outage into a silent
+> drop of a clinical attribute). Because it is untracked, `git log` shows nothing and every
+> history-based check misses it. See the `git status --porcelain` rule in §1.
+
+RMNP adds no CKP state beyond rule-governance rows and source-document provenance — its clinical
+content lives in classpath JSON rather than migrations, deliberately, so a change to a clinical
+threshold is a reviewable diff and not a data migration. This pack follows the same rule (R6: content
+out of the jar, and out of the schema).
 
 ### 3a. `inpatient-service` V037–V064 is dead space
 
@@ -141,7 +173,46 @@ RMNP sessions on 2026-07-26.
    `docs/clinical-governance/emergency/standards-baseline.json` and run through
    `scripts/clinical/dak/build-traceability-matrix.py` + `scripts/guard/check-dak-traceability.sh`,
    generalised for exactly this purpose by RMNP in `0619341d7`. This pack builds no rival matrix or
-   guard.
+   guard. The input contract, verified on disk:
+
+   ```json
+   { "domain": "emergency",
+     "standards": [ { "standardId": "EMS-IITT-014", "family": "IITT",
+                      "title": "…", "sourceCitation": "…", "kind": "STANDARD" } ] }
+   ```
+
+   `standardId`, `family` and a **non-blank `sourceCitation`** are mandatory — the guard fails
+   without a citation, because "a declared standard with no citation is an assertion wearing the
+   costume of a standard". Families: `IITT` · `BEC` · `DSEC` · `ECT_CHECKLIST` · `SSC26` · `EDLIZ` ·
+   `ZW_POLICY` (`WHO_DAK` is RMNP's). Non-coverage goes in a per-domain exclusions register and every
+   deferral needs a revisit condition. Each domain's standards stay in its own file; only the
+   machinery is common.
+
+## 5a. Inherited engineering constraints (from the RMNP lane, 2026-07-26)
+
+Two constraints on CKP internals this pack must respect rather than rediscover.
+
+**`PredicateEvaluator` is shared by four engines — any change is a retest-all-four event.** It backs
+the danger-sign engine, *both* IMNCI classification packs and the dosing engine. Touching it means
+running `PredicateEvaluatorTest`, `PaediatricRuleContentTest`, `DangerSignEvaluationServiceTest`,
+`ImnciClassificationServiceTest`, `YoungInfantClassificationTest`, `DoseCalculationServiceTest`,
+`PaediatricUnsafeDoseTest`, `PaediatricVitalsRulesTest` **and** re-proving the live estate cases. The
+emergency IITT engine should extend via content and the two hooks below, not by editing the evaluator.
+
+**Two recent hooks to use instead of inventing equivalents:**
+- **`bandKey` on `bands`** — lets a threshold be scored against something other than `ageDays`.
+  **Never overload `ageDays`**: facts are one flat map shared by every rule in a request, so
+  overloading it corrupts every other rule in the same evaluation. The emergency pack needs this for
+  gestation-scoped obstetric rules and for weight-banded dosing.
+- **`appliesWhen` on `TabularRule`** — "is this rule about this patient at all", three-valued, where
+  UNKNOWN reports the inputs as unassessed rather than silently dropping the rule. This is the
+  mechanism for age/pregnancy/context-routed triage variants; it is *not* the same question as "does
+  it fire".
+
+Also confirmed by RMNP and worth restating: `pct` sets `validate-on-migrate: false`
+(`services/pct-service/src/main/resources/application.yml:31`), which hides a Flyway *validate*
+failure **without** making a lower-versioned migration apply — so the schema diverges from what the
+code expects and nothing says so.
 
 ## 6. Defects fixed in W0 that other lanes depend on
 
