@@ -234,9 +234,25 @@ layer never disagree about the same baby. **Anyone editing one must edit the oth
 alert displayed beside a classification saying serious infection is unlikely would destroy a
 clinician's trust in both, and separate layers are only safe when something holds them together.
 
-Remaining: growth intelligence in the knowledge platform; the ZW EPI
-schedule as a governed Zibo artifact and the forecast engine; `pct_observations` and the BUTANO
-Observation/Immunization write path; deepened form content.
+The **Zimbabwe EPI schedule and immunisation forecast engine** are also done and live-proven
+(`POST /internal/v1/clinical/paediatric/immunisation/forecast`). The schedule is governed content
+because the EPI programme owns it, and the engine is stateless: the dose history is clinical record
+and stays in pct-service, so the caller supplies it and the same forecast runs unchanged against an
+offline copy.
+
+Two design points worth carrying forward. **Age eligibility and the minimum interval are separate
+gates** — a defaulting child given pentavalent 1 today is old enough for dose 2 but would not be
+immunised by it for another four weeks, and forecasting it as due would waste a dose and record a
+child as protected who is not. And **dependence between doses is expressed by the minimum interval,
+not by dose numbering**: treating "dose 1 follows dose 0" as a dependency stranded the entire polio
+primary series behind a birth dose that can no longer be given, which would have affected every
+baby not born in a facility.
+
+Remaining: growth intelligence in the knowledge platform; `pct_observations` and the BUTANO
+Observation/Immunization write path; deepened form content; and migrating the locally declared
+antigen codes onto a governed Zibo value set once zibo-service holds a vaccine terminology (it
+holds none today, which is why the schedule declares its own code system with a documented
+migration point).
 
 The classification engine introduced one concept worth knowing about before extending the content.
 `optionalCriterion` marks a branch whose unknown value is treated as not-met rather than blocking,
