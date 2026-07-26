@@ -180,6 +180,15 @@ public class OutboxPublisher {
             // bridge would either miss them entirely or have to filter every PCT event to find
             // them — and it missed them entirely, which is how this route came to be added.
             case "pct.observation.recorded" -> "pct.observation.recorded";
+
+            // A birth is the one clinical event that other planes must act on rather than merely
+            // record: VITO asserts the mother-child relationship from it, UBOMI raises the civil
+            // birth notification a human then attests, and BUTANO archives the birth summary.
+            // Left on the catch-all — where it sat until now — each of those consumers would have
+            // to filter every PCT event to find a birth, which in practice means none of them
+            // subscribed at all.
+            case "pct.newborn.episode.opened", "pct.newborn.record.updated" -> "pct.newborn.episode.opened";
+
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             // Virtual-pool substrate: TUSO consumes pool.materialized to flip
