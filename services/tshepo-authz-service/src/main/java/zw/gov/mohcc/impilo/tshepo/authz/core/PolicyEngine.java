@@ -57,6 +57,9 @@ import java.time.Instant;
 @Service
 public class PolicyEngine {
 
+    /** National duty satisfies any jurisdiction-scoped rule; see the allowed_jurisdictions check. */
+    private static final String JURISDICTION_NATIONAL = "NATIONAL";
+
     private static final Logger log = LoggerFactory.getLogger(PolicyEngine.class);
 
     private static final Set<String> CLINICAL_RESOURCE_TYPES = Set.of(
@@ -624,6 +627,26 @@ public class PolicyEngine {
                 String org = effectiveOrganisation(request);
                 if (org == null || allowed.stream().noneMatch(org::equalsIgnoreCase)) {
                     log.debug("Condition failed: organisation '{}' not in allowed {}", org, allowed);
+                    return false;
+                }
+            }
+
+            // Jurisdiction: a regulator's authority is bounded by WHERE as well as by which
+            // organisation. An inspector appointed for one province must not act nationally
+            // merely because their council is national, so this is its own dimension rather
+            // than something inferred from the organisation.
+            //
+            // NATIONAL is a wildcard on the DUTY side only: a nationally-appointed officer
+            // satisfies a rule scoped to any province. It is deliberately not a wildcard on the
+            // rule side — a rule listing NATIONAL means national duty, not "anyone anywhere".
+            if (conditions.containsKey("allowed_jurisdictions")) {
+                List<String> allowed = (List<String>) conditions.get("allowed_jurisdictions");
+                String jurisdiction = effectiveJurisdiction(request);
+                boolean satisfied = jurisdiction != null
+                        && (JURISDICTION_NATIONAL.equalsIgnoreCase(jurisdiction)
+                            || allowed.stream().anyMatch(jurisdiction::equalsIgnoreCase));
+                if (!satisfied) {
+                    log.debug("Condition failed: jurisdiction '{}' not in allowed {}", jurisdiction, allowed);
                     return false;
                 }
             }
@@ -1487,6 +1510,19 @@ public class PolicyEngine {
     private static String effectiveOrganisation(AuthzInternalRequest request) {
         DutyContext dc = request.dutyContext();
         if (dc != null && dc.usable() && dc.orgId() != null) return dc.orgId();
+        return null;
+    }
+
+    /**
+     * Jurisdiction of the current duty, read only from a usable WORK_CONTEXT token.
+     *
+     * <p>Deliberately NOT sourced from a request header: a header-supplied jurisdiction would let
+     * a caller widen their own geographic authority by asserting it, which is precisely what the
+     * duty token exists to prevent.</p>
+     */
+    private static String effectiveJurisdiction(AuthzInternalRequest request) {
+        DutyContext dc = request.dutyContext();
+        if (dc != null && dc.usable() && dc.jurisdictionCode() != null) return dc.jurisdictionCode();
         return null;
     }
 
