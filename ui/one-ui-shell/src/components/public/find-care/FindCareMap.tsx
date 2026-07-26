@@ -54,6 +54,8 @@ interface FindCareMapProps {
   height?: number;
   /** Hide the textual caption below the map (the hero surface shows its own). */
   hideCaption?: boolean;
+  /** Pre-built markers (e.g. from unified discovery). When set, `results` are ignored for markers. */
+  geoMarkers?: NdilaGeoMarker[];
 }
 
 export function FindCareMap({
@@ -62,18 +64,21 @@ export function FindCareMap({
   selectedFacilityId,
   height = 360,
   hideCaption = false,
+  geoMarkers,
 }: FindCareMapProps) {
   const markers = useMemo<NdilaGeoMarker[]>(() => {
-    const facilityMarkers: NdilaGeoMarker[] = results
-      .filter((r) => r.latitude != null && r.longitude != null && r.facilityId != null)
-      .map((r) => ({
-        id: String(r.facilityId),
-        label: r.name ?? "Facility",
-        latitude: r.latitude as number,
-        longitude: r.longitude as number,
-        markerType: "facility",
-        status: r.serviceMatch ? "Offers this service" : "In directory",
-      }));
+    const facilityMarkers: NdilaGeoMarker[] = geoMarkers
+      ? [...geoMarkers]
+      : results
+          .filter((r) => r.latitude != null && r.longitude != null && r.facilityId != null)
+          .map((r) => ({
+            id: String(r.facilityId),
+            label: r.name ?? "Facility",
+            latitude: r.latitude as number,
+            longitude: r.longitude as number,
+            markerType: "facility",
+            status: r.serviceMatch ? "Offers this service" : "In directory",
+          }));
 
     if (origin) {
       facilityMarkers.unshift({
@@ -85,7 +90,7 @@ export function FindCareMap({
       });
     }
     return facilityMarkers;
-  }, [results, origin]);
+  }, [results, origin, geoMarkers]);
 
   const center = useMemo(() => {
     if (origin) return { latitude: origin.lat, longitude: origin.lng };

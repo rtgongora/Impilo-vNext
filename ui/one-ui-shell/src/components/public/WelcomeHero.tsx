@@ -19,7 +19,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import { useI18n } from "@/lib/i18n/useI18n";
 import { IntentLink } from "./IntentLink";
-import { HeroFindCareSurface } from "./HeroFindCareSurface";
+import { HeroDiscoverySurface } from "./HeroDiscoverySurface";
 
 interface GuidanceAnswer {
   answer?: string;
@@ -398,9 +398,9 @@ export function WelcomeHero() {
           </div>
         </div>
 
-        {/* Right: live Get Health Services surface (real facilities, honest fields). */}
+        {/* Right: unified Get Health Services discovery (care, medicines, wellness — honest, real). */}
         <div className="p-3 sm:p-5 lg:p-6 lg:pl-0">
-          <HeroFindCareSurface />
+          <HeroDiscoverySurface />
         </div>
       </div>
     </section>
