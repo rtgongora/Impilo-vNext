@@ -19,15 +19,26 @@ import type { SpecialtyWorkspaceDef } from "../../data/specialtyWorkspaces";
 import { colors } from "@impilo/mobile-design-system";
 import { dispositionForTool, type ToolDisposition } from "../../data/specialtyToolRegistry";
 import { APGARScreen } from "./APGARScreen";
+import { PartographWorkspace, CtgWorkspace } from "./MaternityWorkspaces";
 
 type Props = {
   workspace: SpecialtyWorkspaceDef;
   onBack: () => void;
 };
 
-/** The consolidated surfaces this panel can render in place of a second copy. */
-const CONSOLIDATED_SURFACES: Record<string, () => React.ReactElement> = {
+/**
+ * The real surfaces this panel can render.
+ *
+ * A WIRED or CONSOLIDATED entry names a key here rather than carrying its own copy of an
+ * instrument, which is what makes the reachability rule checkable: the guard test asserts every
+ * declared surface exists in this map and every entry in this map is claimed by some tool, so a
+ * registry entry cannot advertise a surface that was never built, and a surface cannot be left
+ * stranded with nothing pointing at it.
+ */
+export const RENDERED_SURFACES: Record<string, () => React.ReactElement> = {
   APGARScreen: () => <APGARScreen />,
+  PartographWorkspace: () => <PartographWorkspace />,
+  CtgWorkspace: () => <CtgWorkspace />,
 };
 
 /**
@@ -136,21 +147,20 @@ function ToolModalBody({
 }) {
   const d = resolveTool(toolName);
 
-  if (d?.state === "CONSOLIDATED") {
-    const Surface = CONSOLIDATED_SURFACES[d.surface];
+  if (d?.state === "WIRED" || d?.state === "CONSOLIDATED") {
+    const Surface = RENDERED_SURFACES[d.surface];
+    // Governed instruments carry a running observation list alongside their form, so they get a
+    // bounded fixed-height container rather than a short scroll view.
     return (
       <>
         <Text style={styles.modalTitle}>{toolName}</Text>
         <Text style={styles.modalMeta}>
-          {workspaceName} · {d.route}
+          {workspaceName}
+          {d.state === "CONSOLIDATED" ? ` · ${d.route}` : ""}
         </Text>
-        <ScrollView style={{ maxHeight: 420 }}>
-          {Surface ? (
-            <Surface />
-          ) : (
-            <Text style={styles.modalDesc}>{d.note}</Text>
-          )}
-        </ScrollView>
+        <View style={{ height: 480 }}>
+          {Surface ? <Surface /> : <Text style={styles.modalDesc}>{d.note}</Text>}
+        </View>
         <TouchableOpacity style={styles.secondaryBtn} onPress={onClose}>
           <Text style={styles.secondaryBtnText}>Close</Text>
         </TouchableOpacity>

@@ -41,7 +41,7 @@ const registryMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<Record<string, unknown>>();
   const React = await import("react");
   return {
     ...actual,

@@ -1,0 +1,122 @@
+{
+  "packId": "impilo.confidentiality.adolescent",
+  "version": "engineering-seed-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "effective": false,
+  "provenance": "Category list and the guardian-confidentiality age thresholds below are an ENGINEERING SEED authored to give the confidentiality mechanism something to load. They are NOT law, NOT national policy, and NOT a legal determination. Every age value carries verificationStatus UNVERIFIED and a legalBasisToVerify pointing at the instrument that would settle it. Zimbabwean consent ages are not uniform across services — independent consent for HIV testing, contraception and mental health care are governed by different instruments and have been amended at different times — which is exactly why this cannot be an engineering call. See docs/clinical-governance/adolescent-confidentiality-seed-policy.md.",
+  "inertnessNote": "effective=false and approvalStatus!=RATIFIED mean this pack grants nothing and withholds nothing. The mechanism that reads it is fully built and tested; it changes no behaviour until someone with the authority to decide sets these values and ratifies the pack. This is deliberate: a record must never carry a protection label that does not protect it.",
+
+  "consumers": {
+    "protectedCategories": "tshepo-authz PDP — the vocabulary of confidential-category grants carried on the VisibilityProfile obligation.",
+    "guardianConfidentialityRules": "The clinical system of record at STAMP time, not the PDP. Deciding whether a record is confidential from a guardian needs the patient's age, which the PDP does not have — it sees a subject identifier, never a date of birth. pct-service knows the age and stamps accordingly; the PDP then only has to honour the stamp."
+  },
+
+  "protectedCategories": [
+    "SEXUAL_REPRODUCTIVE_HEALTH",
+    "HIV",
+    "MENTAL_HEALTH",
+    "SAFEGUARDING",
+    "SUBSTANCE_USE",
+    "GENDER_BASED_VIOLENCE"
+  ],
+
+  "guardianConfidentialityRules": [
+    {
+      "category": "HIV",
+      "confidentialFromGuardianAgeYears": null,
+      "verificationStatus": "UNVERIFIED",
+      "legalBasisToVerify": "Age of independent consent to HIV testing and to disclosure of HIV status. Check the Public Health Act [Chapter 15:17] as amended (2018) and any subsequent statutory instrument, together with current MoHCC HIV testing services guidelines.",
+      "openQuestions": [
+        "Does independent consent to testing imply confidentiality of the result from a guardian, or are they separate determinations?",
+        "Does a younger child in HIV care hold any confidentiality against a guardian who is also their treatment supporter?"
+      ],
+      "sourceRefs": ["TO BE SUPPLIED BY MoHCC / legal review"]
+    },
+    {
+      "category": "SEXUAL_REPRODUCTIVE_HEALTH",
+      "confidentialFromGuardianAgeYears": null,
+      "verificationStatus": "UNVERIFIED",
+      "legalBasisToVerify": "Age of independent access to contraception and sexual health services. Check the Constitution of Zimbabwe s.76 (health care) and s.81 (rights of children), the Children's Act [Chapter 5:06], the Marriages Act (2022), and the National Adolescent and Youth Sexual and Reproductive Health Strategy in force.",
+      "openQuestions": [
+        "Contraception, STI treatment and termination of pregnancy may each carry a different threshold — should this be one rule or three?",
+        "How does the mandatory-reporting duty for a sexual offence against a minor interact with confidentiality from the guardian? This is the sharpest conflict in the whole pack and must be resolved before any threshold is set."
+      ],
+      "sourceRefs": ["TO BE SUPPLIED BY MoHCC / legal review"]
+    },
+    {
+      "category": "MENTAL_HEALTH",
+      "confidentialFromGuardianAgeYears": null,
+      "verificationStatus": "UNVERIFIED",
+      "legalBasisToVerify": "Check the Mental Health Act [Chapter 15:12] and its provisions on minors, consent and the role of a guardian.",
+      "openQuestions": [
+        "Where a young person discloses suicidal intent, confidentiality from the guardian may be actively unsafe. Does the pack need a per-record safety override, distinct from the category rule?"
+      ],
+      "sourceRefs": ["TO BE SUPPLIED BY MoHCC / legal review"]
+    },
+    {
+      "category": "SAFEGUARDING",
+      "confidentialFromGuardianAgeYears": null,
+      "verificationStatus": "UNVERIFIED",
+      "legalBasisToVerify": "Child protection duties under the Children's Act [Chapter 5:06] and MoHCC/Department of Social Development safeguarding procedure.",
+      "openQuestions": [
+        "A safeguarding disclosure frequently concerns the guardian themselves, so confidentiality here is not age-derived at all — it is relational. This category probably needs a rule shape the other categories do not: confidential from a NAMED person regardless of age. Flagged rather than guessed."
+      ],
+      "sourceRefs": ["TO BE SUPPLIED BY MoHCC / legal review"]
+    },
+    {
+      "category": "SUBSTANCE_USE",
+      "confidentialFromGuardianAgeYears": null,
+      "verificationStatus": "UNVERIFIED",
+      "legalBasisToVerify": "Check MoHCC substance-use treatment policy and any provisions on minors' consent to treatment.",
+      "openQuestions": [],
+      "sourceRefs": ["TO BE SUPPLIED BY MoHCC / legal review"]
+    },
+    {
+      "category": "GENDER_BASED_VIOLENCE",
+      "confidentialFromGuardianAgeYears": null,
+      "verificationStatus": "UNVERIFIED",
+      "legalBasisToVerify": "Check the Domestic Violence Act [Chapter 5:16] and the national GBV clinical management protocol, including mandatory-reporting duties.",
+      "openQuestions": [
+        "As with safeguarding, the person the record must be confidential FROM may be the guardian. Relational, not age-derived."
+      ],
+      "sourceRefs": ["TO BE SUPPLIED BY MoHCC / legal review"]
+    }
+  ],
+
+  "testCases": [
+    {
+      "name": "an unratified pack grants no category",
+      "packState": {"approvalStatus": "ENGINEERING_SEED", "effective": false},
+      "expectRatified": false,
+      "expectGrantableCategories": []
+    },
+    {
+      "name": "an unratified pack cannot be enforced",
+      "packState": {"approvalStatus": "ENGINEERING_SEED", "effective": false},
+      "expectEnforceable": false
+    },
+    {
+      "name": "a ratified and effective pack exposes its categories",
+      "packState": {"approvalStatus": "RATIFIED", "effective": true},
+      "expectRatified": true,
+      "expectEnforceable": true,
+      "expectGrantableCategories": [
+        "SEXUAL_REPRODUCTIVE_HEALTH", "HIV", "MENTAL_HEALTH",
+        "SAFEGUARDING", "SUBSTANCE_USE", "GENDER_BASED_VIOLENCE"
+      ]
+    },
+    {
+      "name": "ratified but not effective is still inert — both flags must agree",
+      "packState": {"approvalStatus": "RATIFIED", "effective": false},
+      "expectRatified": false,
+      "expectEnforceable": false
+    },
+    {
+      "name": "an age rule with a null threshold is not usable even when the pack is ratified",
+      "packState": {"approvalStatus": "RATIFIED", "effective": true},
+      "category": "HIV",
+      "expectAgeRuleUsable": false
+    }
+  ]
+}

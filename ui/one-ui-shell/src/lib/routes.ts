@@ -1032,6 +1032,7 @@ export const ROUTES: RouteDefinition[] = [
 // monitoring home with §14.6 patient-wording law).
 // Khuluma first-class communication front door (Jul 2026): +7 role-aware hub routes.
 // Ruvimbo canonical product face (Jul 2026): +6 role-aware financing routes. Total 798.
+// Paediatric workspace (26 Jul 2026): +1 — /ehr/[patientId]/paediatrics. Total 799.
 // Emergency pack W0 (Jul 2026): +3 ED child routes that shipped unregistered and therefore
 // unguarded — resus/[activationId], episode/[episodeId], [visitId]. Total 803.
 export const EXPECTED_ROUTE_COUNT = 803;

@@ -56,6 +56,30 @@ class StructuredHistoryHonestyTest {
     }
 
     /**
+     * Product-owner rule: we do not delete things to hide incomplete functionality, we complete it —
+     * and honest failure is an acceptable transitional state only while the backing wave is named.
+     * An unattributed "unavailable" is indistinguishable from an outage, so a reader cannot tell
+     * whether to wait, escalate, or record the history somewhere else.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void anInDevelopmentNoticeNamesTheLaneAndWaveThatOweIt() {
+        StructuredHistoryController controller = new StructuredHistoryController(
+                mapper, new DownPctClient(), new InpatientServiceClient(
+                        new RestTemplate(), ServiceClientConfig.testServiceEndpoints(), mapper));
+
+        Map<String, Object> body = controller.socialHistory("t", "req", "corr", PATIENT_ID).getBody();
+        Map<String, Object> notice = (Map<String, Object>) body.get("in_development");
+        assertTrue(notice != null, "a transitional failure must say who owes the capability");
+        assertTrue(String.valueOf(notice.get("owner")).contains("Adult Medicine"),
+                "the notice must name the owning lane");
+        assertTrue(String.valueOf(notice.get("owner")).contains("W2"),
+                "the notice must name the wave that completes it");
+        assertTrue(String.valueOf(notice.get("status")).contains("not an outage"),
+                "in development and broken must be distinguishable");
+    }
+
+    /**
      * The guard that matters going forward. W2 builds the PCT endpoints this controller calls, at
      * which point a genuine empty answer becomes reachable for the first time — and any fixture
      * left in the fallback would start firing against real patients.

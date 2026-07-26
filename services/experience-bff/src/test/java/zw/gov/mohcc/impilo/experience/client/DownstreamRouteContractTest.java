@@ -69,6 +69,8 @@ class DownstreamRouteContractTest {
      *       {@code /v1/internal/facilities/{facilityId}/...}; nothing in the estate serves
      *       {@code /v1/staffing} or {@code /v1/wards} at all. Shift start/end, the on-call roster,
      *       swaps and the ward list are dead. Reported to the workforce/facility lane.</li>
+     *   <li><b>Adult Medicine {@code /v1/ehr}</b> — the structured-history vertical, owed a system
+     *       of record by that pack's W2. Its responses already name the owning lane and wave.</li>
      *   <li><b>FHIR gateway</b> — proxied to HAPI rather than declared as Spring routes, so the
      *       scanner cannot see them. Verify before removing this line.</li>
      *   <li><b>Nhume {@code /internal/v1}</b> — a bare prefix from a concatenated path; the
@@ -84,23 +86,16 @@ class DownstreamRouteContractTest {
             "TusoServiceClient -> /v1/staffing",
             "TusoServiceClient -> /v1/wards",
 
-            // ── Inpatient lane ───────────────────────────────────────────────────
-            // These are inpatient concepts called against pct-service, which serves none of them;
-            // inpatient-service routes under /internal/v1/… so the prefix is wrong twice over.
-            // Vitals is the alarming one — it is as core as a clinical read gets.
+            // ── LIVE AND BROKEN — needs completion, not deletion ─────────────────
+            // /v1/vitals has real callers (VitalsController and the patient surfaces) and pct
+            // serves it nowhere. Under the product-owner rule this is a broken feature to be
+            // completed; deleting it would hide exactly the incompleteness the rule surfaces.
+            // Routed to the coordinator for an owner — vitals is as core as a clinical read gets.
             "PctServiceClient -> /v1/vitals",
-            "PctServiceClient -> /v1/ews",
-            "PctServiceClient -> /v1/ward-rounds",
-            "PctServiceClient -> /v1/apgar",
-            "PctServiceClient -> /v1/fluid-balance",
-            "PctServiceClient -> /v1/transfers",
-            "PctServiceClient -> /v1/discharge-clearances",
-            "PctServiceClient -> /v1/records",
 
             // ── Adult Medicine lane (mine) ───────────────────────────────────────
-            // The structured-history vertical: social, family, functional, procedures and advance
-            // directives, calling pct paths that do not exist and falling through to a demo
-            // fixture. W2 builds the system of record; this line goes when it lands.
+            // /v1/ehr — the structured-history vertical. W2 builds the system of record; this line
+            // goes when it lands. Every response already names this lane and wave.
             "PctServiceClient -> /v1/ehr",
 
             // ── Not resolvable by a static scan ──────────────────────────────────

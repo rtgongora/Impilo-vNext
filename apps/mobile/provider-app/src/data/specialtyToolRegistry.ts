@@ -22,14 +22,19 @@
  *   IN_DEVELOPMENT  not built here yet, naming the owning lane and wave. This is a
  *                   transitional state, never a destination.
  *
- * Every entry names an owning lane — there are no unrouted labels, and a test enforces that.
- * Ownership was routed at workspace level by the coordinator; an owning lane may flag an
- * individual label back rather than claim it. The full label -> state -> owner -> wave map is
- * docs/clinical/specialty-tool-ownership-map.md, generated from this file so it cannot drift.
+ * Every IN_DEVELOPMENT entry names an owning lane — there are no unrouted labels, and a test
+ * enforces it. Ownership was routed at workspace level by the coordinator; an owning lane may
+ * flag an individual label back rather than claim it. The full label -> state -> owner -> wave
+ * map is docs/clinical/specialty-tool-ownership-map.md, generated from this file so it cannot
+ * drift from what the app actually does.
+ *
+ * WIRED and CONSOLIDATED entries name a surface in the panel's RENDERED_SURFACES map. The guard
+ * test asserts that mapping is total in both directions, so an entry cannot claim a surface that
+ * was never built, and a built surface cannot be left with nothing pointing at it.
  */
 
 export type ToolDisposition =
-  | { state: "WIRED"; form: string; note: string }
+  | { state: "WIRED"; surface: string; note: string }
   | { state: "CONSOLIDATED"; surface: string; route: string; note: string }
   | {
       state: "IN_DEVELOPMENT";
@@ -125,12 +130,10 @@ export const SPECIALTY_TOOL_REGISTRY: Record<string, ToolDisposition> = {
   "Lumbar Puncture Record": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "MS Relapse Assessment": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "Cognitive Screen (MMSE/MoCA)": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
-  "Partograph": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "governed form delivered",
-    note: "PCT backend (V056) and the BFF partograph routes exist, and RMNP has published the governed form definition and the mobile contract. What is missing is this app's wiring to them.",
-    evidence: "services/forms-service/src/main/resources/seed-forms/13-labour-partograph-observation.json; docs/clinical/rmnp/partograph-ctg-mobile-contract.md" },
-  "CTG Interpretation": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "governed form delivered",
-    note: "PCT backend (V056) and restored BFF routes exist; RMNP has published the governed CTG annotation form. Mobile wiring is the remaining step.",
-    evidence: "services/forms-service/src/main/resources/seed-forms/14-ctg-annotation.json; docs/clinical/rmnp/partograph-ctg-mobile-contract.md" },
+  "Partograph": { state: "WIRED", surface: "PartographWorkspace",
+    note: "Delivered by the mobile lane against pct-service V056 and the RMNP pack's mobile contract (docs/clinical/rmnp/partograph-ctg-mobile-contract.md). This entry renders the governed workspace itself, so there is no second copy to drift." },
+  "CTG Interpretation": { state: "WIRED", surface: "CtgWorkspace",
+    note: "Delivered by the mobile lane against pct-service V056 and the RMNP pack's mobile contract (docs/clinical/rmnp/partograph-ctg-mobile-contract.md). This entry renders the governed workspace itself, so there is no second copy to drift." },
   "Bishop Score": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "TBC", note: "Cervical favourability scoring. No backend today; routed to RMNP." },
   "PPH Protocol": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "TBC", note: "Not built on this surface. Routed to the RMNP lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "Eclampsia Protocol": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "TBC", note: "Not built on this surface. Routed to the RMNP lane at workspace level; that lane may flag individual labels back to the coordinator." },

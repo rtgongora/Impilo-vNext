@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>zw.gov.mohcc.impilo</groupId>
+    <artifactId>emergency-domain</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>Impilo — Emergency Domain (WHO Interagency Integrated Triage Tool)</name>
+    <description>
+        Pure Java 21 emergency primitives shared by the clinical plane: the WHO/ICRC/MSF Interagency
+        Integrated Triage Tool for age 12-and-over and age under-12, in three-valued logic so an
+        unassessed patient is never scored as a well one.
+
+        Transcribed from the vendored, hashed charts in docs/reference/who-emergency-care-toolkit/
+        and verified against the pdftotext extractions committed beside them. Those charts carry no
+        version number, so the SHA-256 recorded there is the version identity.
+
+        No Spring, no I/O, so the same engine runs inside a service, a batch job or an offline
+        package. It owns the published criteria, never national policy: time targets, zone maps and
+        destination rules are content, because the IITT FAQ is explicit that time-to-care per colour
+        is for facilities to determine.
+    </description>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>5.10.3</junit.version>
+    </properties>
+
+    <dependencies>
+        <!-- Age banding, so the emergency and paediatric packs cannot disagree about a child's band. -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>paediatric-domain</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>21</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

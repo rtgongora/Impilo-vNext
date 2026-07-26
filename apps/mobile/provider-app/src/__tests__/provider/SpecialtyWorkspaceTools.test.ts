@@ -25,7 +25,7 @@
 import { describe, expect, it } from "vitest";
 import { SPECIALTY_WORKSPACES } from "../../data/specialtyWorkspaces";
 import { SPECIALTY_TOOL_REGISTRY } from "../../data/specialtyToolRegistry";
-import { resolveTool } from "../../screens/provider/SpecialtyWorkspacePanel";
+import { resolveTool, RENDERED_SURFACES } from "../../screens/provider/SpecialtyWorkspacePanel";
 
 const ALL_LABELS = SPECIALTY_WORKSPACES.flatMap((w) => w.tools);
 
@@ -53,13 +53,28 @@ describe("position is never consulted", () => {
   });
 });
 
-describe("no tool computes a clinical value", () => {
-  it("exposes no calculating form in the app", () => {
-    // Nothing may compute here. The only real implementation reachable from this panel is a
-    // CONSOLIDATED one that persists server-side. A WIRED entry would have to persist too.
-    expect(Object.entries(SPECIALTY_TOOL_REGISTRY).filter(([, d]) => d.state === "WIRED")).toEqual([]);
+describe("every real surface is reachable, and every claim of one is real", () => {
+  // The reachability rule from the fleet DoD, made checkable in both directions: an entry cannot
+  // advertise a surface that was never built, and a built surface cannot be stranded with nothing
+  // pointing at it. This is what stops a "real" claim being a paper one.
+  it("only declares surfaces the panel can actually render", () => {
+    const declared = Object.values(SPECIALTY_TOOL_REGISTRY)
+      .filter((d) => d.state === "WIRED" || d.state === "CONSOLIDATED")
+      .map((d) => (d.state === "WIRED" || d.state === "CONSOLIDATED" ? d.surface : ""));
+    expect(declared.filter((s) => !(s in RENDERED_SURFACES))).toEqual([]);
   });
 
+  it("leaves no rendered surface unclaimed", () => {
+    const declared = new Set(
+      Object.values(SPECIALTY_TOOL_REGISTRY)
+        .filter((d) => d.state === "WIRED" || d.state === "CONSOLIDATED")
+        .map((d) => (d.state === "WIRED" || d.state === "CONSOLIDATED" ? d.surface : "")),
+    );
+    expect(Object.keys(RENDERED_SURFACES).filter((k) => !declared.has(k))).toEqual([]);
+  });
+});
+
+describe("no tool computes a clinical value in this app", () => {
   it("keeps burns arithmetic out of the app", () => {
     for (const label of ["Burns Assessment (Rule of 9s)", "Fluid Resuscitation (Parkland)"]) {
       const d = resolveTool(label);
@@ -98,11 +113,31 @@ describe("no orphan withdrawals", () => {
     expect(unrouted).toEqual([]);
   });
 
-  it("cites a completion of record where the owning lane has already delivered one", () => {
-    for (const label of ["Partograph", "CTG Interpretation"]) {
-      const d = resolveTool(label);
-      expect(d?.state === "IN_DEVELOPMENT" && d.owner).toBe("RMNP");
-      expect(d?.state === "IN_DEVELOPMENT" && d.evidence).toBeTruthy();
-    }
+});
+
+describe("obstetrics: partograph and CTG resolve to the governed instruments, not notes", () => {
+  // Ported from the mobile lane's routing tests when 0cb7412e9 delivered these two workspaces.
+  // Their original form asserted formKindForTool(label, index, workspace) at two different
+  // indices to prove name-matching beat index-matching. That guard is now structural rather than
+  // exemplary: resolveTool takes no index at all, so there is no index to vary. The property
+  // those tests protected — "these two must never regress to a notes box" — is kept here.
+  it("renders the governed partograph workspace", () => {
+    const d = resolveTool("Partograph");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("PartographWorkspace");
+  });
+
+  it("renders the governed CTG workspace", () => {
+    const d = resolveTool("CTG Interpretation");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("CtgWorkspace");
+  });
+
+  it("leaves Bishop Score with RMNP rather than sweeping it in", () => {
+    // Out of scope for that pass per the mobile contract §6: Bishop lands with the
+    // labour-and-delivery wave, not this one.
+    const d = resolveTool("Bishop Score");
+    expect(d?.state).toBe("IN_DEVELOPMENT");
+    expect(d?.state === "IN_DEVELOPMENT" && d.owner).toBe("RMNP");
   });
 });

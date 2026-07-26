@@ -275,12 +275,11 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> recordNEWS2Components(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
-        try {
-            JsonNode pctData = pctClient.recordNEWS2Components(body);
-            if (pctData != null) return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", pctData));
-        } catch (Exception e) {
-            log.warn("PCT recordNEWS2Components failed, persisting NEWS2 to inpatient EWS: {}", e.getMessage());
-        }
+        // The PCT attempt that used to sit here called /v1/ews/news2, which pct-service has never
+        // served. It failed on every request and the "fallback" below did all the work — so the
+        // fallback was the real path, wearing the costume of a contingency. Removed rather than
+        // repaired: inpatient-service owns the early warning score and its EwsCalculatorEngine, and
+        // a second store for NEWS2 in PCT would be a duplicate system of record, not a capability.
         // NEWS2 component scoring: each parameter 0-3 points.
         int rrScore = toInt(body.getOrDefault("respiratoryRateScore", 0));
         int spo2Score = toInt(body.getOrDefault("spo2Score", 0));

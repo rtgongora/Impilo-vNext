@@ -107,8 +107,8 @@ durable homes — hand-editing a generated report would be overwritten and would
 | Neurology | Lumbar Puncture Record | In development | AdultMedicine | W6+ |
 | Neurology | MS Relapse Assessment | In development | AdultMedicine | W6+ |
 | Neurology | Cognitive Screen (MMSE/MoCA) | In development | AdultMedicine | W6+ |
-| Obstetrics | Partograph | In development | RMNP | governed form delivered · evidence on file |
-| Obstetrics | CTG Interpretation | In development | RMNP | governed form delivered · evidence on file |
+| Obstetrics | Partograph | **Wired** → `PartographWorkspace` | — | delivered, persists |
+| Obstetrics | CTG Interpretation | **Wired** → `CtgWorkspace` | — | delivered, persists |
 | Obstetrics | Bishop Score | In development | RMNP | TBC |
 | Obstetrics | PPH Protocol | In development | RMNP | TBC |
 | Obstetrics | Eclampsia Protocol | In development | RMNP | TBC |

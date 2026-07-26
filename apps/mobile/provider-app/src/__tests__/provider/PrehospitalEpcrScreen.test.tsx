@@ -28,7 +28,7 @@ vi.mock("@impilo/mobile-offline", () => ({
 }));
 
 vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
   Card: ({ children }: any) => React.createElement("div", null, children),
