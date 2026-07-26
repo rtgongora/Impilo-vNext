@@ -386,6 +386,21 @@ export function HeroDiscoverySurface() {
 
   const notes = data?.notes ?? [];
 
+  /**
+   * Kilometres from the chosen locality to the closest result that actually has a pin.
+   * The find-care lane does a registry search and annotates distance afterwards — it does
+   * not do a proximity query — so a locality can legitimately have no mapped care anywhere
+   * near it. Centring tight on that locality would then render a confidently empty map,
+   * which reads as "no care here" rather than "no coordinates here".
+   */
+  const nearestMappedKm = useMemo(() => {
+    const withDistance = results
+      .filter((r) => r.latitude != null && r.distanceMeters != null)
+      .map((r) => (r.distanceMeters as number) / 1000);
+    return withDistance.length ? Math.min(...withDistance) : null;
+  }, [results]);
+  const mappedCareIsFar = nearestMappedKm != null && nearestMappedKm > 30;
+
   // Resolve by key rather than holding the object: a new search replaces every result,
   // and a stale selection would keep an old facility on screen over a fresh map.
   const selectedResult = useMemo(
@@ -575,7 +590,11 @@ export function HeroDiscoverySurface() {
                 height="100%"
                 hideCaption
                 compactChrome
-                view={{ latitude: location.lat, longitude: location.lng, zoom: 11 }}
+                view={
+                  geoMarkers.length === 0 || mappedCareIsFar
+                    ? null
+                    : { latitude: location.lat, longitude: location.lng, zoom: 11 }
+                }
               />
               {/* Selected-result card, over the map so the map stays the dominant visual. */}
               {selectedResult && (
@@ -648,13 +667,28 @@ export function HeroDiscoverySurface() {
                     />
                   ) : (
                     <p className="rounded-lg bg-white/95 px-3 py-2 text-xs text-slate-600 shadow-lg backdrop-blur-sm">
-                      These results don&apos;t have map locations. Switch to List, or search care and
-                      pharmacies to see pins.
+                      None of these results carry map coordinates yet. They are all in the list —
+                      switch to List to see them.
                     </p>
                   )}
                 </div>
               )}
             </div>
+
+            {/*
+              The coordinate gap, stated plainly. HPA's register recorded almost no
+              coordinates, so a city can have plenty of care and no pins near it. Saying
+              "nearest mapped facility is 150 km away" is the difference between a data gap
+              and an apparent absence of care.
+            */}
+            {mappedCareIsFar && !preciseLocation && (
+              <p className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">
+                No mapped facility within 30&nbsp;km of {location.label} — the nearest with
+                coordinates is {Math.round(nearestMappedKm as number)}&nbsp;km away, so the map is
+                showing a wider area. Facilities near you may still be listed without a map
+                location.
+              </p>
+            )}
 
             {/* Nearby-results strip: uses the lower right area with the same real results. */}
             {results.length > 0 && (
