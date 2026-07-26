@@ -29,6 +29,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import type { NdilaGeoMarker } from "@/components/ndila/NdilaMapLibre";
 import { FindCareMap } from "./find-care/FindCareMap";
+import { ResumeJourneyCard } from "./ResumeJourneyCard";
 
 interface DiscoveryResult {
   category: string;
@@ -84,12 +85,158 @@ function formatKm(m: number | null): string | null {
   return m >= 1000 ? `${(m / 1000).toFixed(m < 10000 ? 1 : 0)} km` : `${Math.round(m)} m`;
 }
 
+function resultKey(r: DiscoveryResult, i: number): string {
+  return `${r.category}-${r.id ?? i}`;
+}
+
+/** One discovery result. Selecting it drives the enlarged card over the map. */
+function ResultCard({
+  result: r,
+  selected,
+  onSelect,
+}: {
+  result: DiscoveryResult;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <div
+      className={`rounded-xl border bg-white p-3 transition-colors ${
+        selected ? "border-emerald-500 ring-1 ring-emerald-500/30" : "border-slate-200"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={selected}
+        className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <span
+              className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                CATEGORY_BADGE[r.category] ?? "bg-slate-100 text-slate-700"
+              }`}
+            >
+              {r.type}
+            </span>
+            <p className="mt-1 truncate font-semibold text-slate-900">{r.title}</p>
+            {r.subtitle && <p className="truncate text-xs text-slate-500">{r.subtitle}</p>}
+          </div>
+          {(formatKm(r.distanceMeters) || r.etaMinutes != null) && (
+            <span className="shrink-0 text-right text-xs font-medium text-slate-600">
+              {formatKm(r.distanceMeters)}
+              {r.etaMinutes != null && (
+                <span className="block text-[11px] font-normal text-slate-500">
+                  ~{r.etaMinutes} min away
+                </span>
+              )}
+            </span>
+          )}
+        </div>
+        {(r.availability || r.meta.length > 0) && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {r.availability && (
+              <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800">
+                {r.availability}
+              </span>
+            )}
+            {r.meta.map((m) => (
+              <span key={m} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
+                {m}
+              </span>
+            ))}
+          </div>
+        )}
+      </button>
+      {r.href && r.actionLabel && (
+        <Link
+          href={r.href}
+          className="mt-2 inline-flex min-h-8 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+        >
+          {r.actionLabel}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/**
+ * What the surface shows when a lane returned nothing. It reports every note the
+ * orchestrator gave (they fail independently, so several can be true at once) and
+ * offers the one action that actually unblocks the common case — sharing location,
+ * which the find-care lane requires before it will return anything at all.
+ */
+function DiscoveryEmptyState({
+  notes,
+  hasLocation,
+  geoStatus,
+  onRequestLocation,
+  compact = false,
+}: {
+  notes: string[];
+  hasLocation: boolean;
+  geoStatus: GeoStatus;
+  onRequestLocation: () => void;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border border-slate-200 p-4 ${
+        compact ? "bg-white/95 shadow-lg backdrop-blur-sm" : "bg-slate-50/70"
+      }`}
+    >
+      <p className="text-sm font-semibold text-slate-900">Nothing to show here yet</p>
+      {notes.length > 0 ? (
+        <ul className="mt-1.5 space-y-1 text-sm text-slate-600">
+          {notes.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1.5 text-sm text-slate-600">
+          Search a service, medicine or wellness need to see results.
+        </p>
+      )}
+      {!hasLocation && (
+        <button
+          type="button"
+          onClick={onRequestLocation}
+          disabled={geoStatus === "requesting"}
+          className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
+        >
+          {geoStatus === "requesting" ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <Navigation className="h-4 w-4" aria-hidden />
+          )}
+          Share my location
+        </button>
+      )}
+      {geoStatus === "denied" && (
+        <p className="mt-2 text-xs text-slate-500">
+          Location is blocked for this site. You can still search by name — try a clinic, a
+          medicine or a service.
+        </p>
+      )}
+      {(geoStatus === "unsupported" || geoStatus === "error") && (
+        <p className="mt-2 text-xs text-slate-500">
+          We couldn&apos;t read your location. Searching by name works just as well.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function HeroDiscoverySurface() {
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [location, setLocation] = useState<{ lat: number; lng: number; label: string } | null>(null);
-  const [view, setView] = useState<"map" | "list">("list");
+  // Map is the default discovery view: the brief treats spatial context as the primary
+  // way people find care. List stays one click away for low-bandwidth and screen readers.
+  const [view, setView] = useState<"map" | "list">("map");
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [data, setData] = useState<DiscoveryResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -185,6 +332,30 @@ export function HeroDiscoverySurface() {
     [results],
   );
 
+  /**
+   * Per-category counts the BFF already returns. Only meaningful while the blend is
+   * unfiltered: once a category is selected the response contains that lane alone, so
+   * every other chip would read 0 and imply "nothing there" when nothing was asked for.
+   * Providers has no public listing at all, so it never carries a count.
+   */
+  const countFor = useCallback(
+    (value: string): number | null => {
+      if (category !== "all" || !data || value === "providers") return null;
+      if (value === "all") return results.length || null;
+      return data.categoryCounts?.[value] ?? null;
+    },
+    [category, data, results.length],
+  );
+
+  const notes = data?.notes ?? [];
+
+  // Resolve by key rather than holding the object: a new search replaces every result,
+  // and a stale selection would keep an old facility on screen over a fresh map.
+  const selectedResult = useMemo(
+    () => (selectedKey ? results.find((r, i) => resultKey(r, i) === selectedKey) ?? null : null),
+    [results, selectedKey],
+  );
+
   return (
     <section
       aria-label="Get health services"
@@ -265,22 +436,34 @@ export function HeroDiscoverySurface() {
               Near me
             </button>
           )}
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              role="tab"
-              aria-selected={category === c.value}
-              onClick={() => pickCategory(c.value)}
-              className={`min-h-8 shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${
-                category === c.value
-                  ? "border-emerald-500 bg-emerald-600 text-white"
-                  : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
+          {CATEGORIES.map((c) => {
+            const count = countFor(c.value);
+            return (
+              <button
+                key={c.value}
+                type="button"
+                role="tab"
+                aria-selected={category === c.value}
+                onClick={() => pickCategory(c.value)}
+                className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
+                  category === c.value
+                    ? "border-emerald-500 bg-emerald-600 text-white"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50"
+                }`}
+              >
+                {c.label}
+                {count != null && (
+                  <span
+                    className={`rounded-full px-1.5 text-[10px] font-bold tabular-nums ${
+                      category === c.value ? "bg-white/25 text-white" : "bg-white text-slate-600"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {error && (
@@ -313,65 +496,213 @@ export function HeroDiscoverySurface() {
             </Link>
           </div>
         ) : view === "map" ? (
-          <div className="space-y-3">
-            <div className="overflow-hidden rounded-xl border border-slate-200">
+          <div className="flex h-full min-h-0 flex-col gap-2">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200">
               <FindCareMap
                 results={[]}
                 geoMarkers={geoMarkers}
                 origin={location ? { lat: location.lat, lng: location.lng } : null}
-                height={300}
+                height="100%"
                 hideCaption
               />
+              {/* Selected-result card, over the map so the map stays the dominant visual. */}
+              {selectedResult && (
+                <div className="absolute inset-x-2 bottom-2 z-[5]">
+                  <div className="rounded-xl border border-emerald-300 bg-white/95 p-3 shadow-lg backdrop-blur-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                            CATEGORY_BADGE[selectedResult.category] ?? "bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          {selectedResult.type}
+                        </span>
+                        <p className="mt-1 truncate text-sm font-bold text-slate-900">
+                          {selectedResult.title}
+                        </p>
+                        {selectedResult.subtitle && (
+                          <p className="truncate text-xs text-slate-500">{selectedResult.subtitle}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Close selected result"
+                        onClick={() => setSelectedKey(null)}
+                        className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      >
+                        <X className="h-4 w-4" aria-hidden />
+                      </button>
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                      {selectedResult.availability && (
+                        <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800">
+                          {selectedResult.availability}
+                        </span>
+                      )}
+                      {formatKm(selectedResult.distanceMeters) && (
+                        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
+                          {formatKm(selectedResult.distanceMeters)}
+                          {selectedResult.etaMinutes != null && ` · ~${selectedResult.etaMinutes} min`}
+                        </span>
+                      )}
+                      {selectedResult.meta.map((m) => (
+                        <span key={m} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
+                          {m}
+                        </span>
+                      ))}
+                    </div>
+                    {selectedResult.href && selectedResult.actionLabel && (
+                      <Link
+                        href={selectedResult.href}
+                        className="mt-2 inline-flex min-h-9 items-center rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+                      >
+                        {selectedResult.actionLabel}
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Nothing to pin: say why and offer the one action that changes it. */}
+              {!loading && geoMarkers.length === 0 && !selectedResult && (
+                <div className="absolute inset-x-2 bottom-2 z-[5]">
+                  {results.length === 0 ? (
+                    <DiscoveryEmptyState
+                      notes={notes}
+                      hasLocation={!!location}
+                      geoStatus={geoStatus}
+                      onRequestLocation={requestLocation}
+                      compact
+                    />
+                  ) : (
+                    <p className="rounded-lg bg-white/95 px-3 py-2 text-xs text-slate-600 shadow-lg backdrop-blur-sm">
+                      These results don&apos;t have map locations. Switch to List, or search care and
+                      pharmacies to see pins.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-            {geoMarkers.length === 0 && (
-              <p className="px-1 text-xs text-slate-500">
-                These results don&apos;t have map locations. Switch to List, or search care/pharmacies to see pins.
-              </p>
+
+            {/* Nearby-results strip: uses the lower right area with the same real results. */}
+            {results.length > 0 && (
+              <div className="shrink-0">
+                <p className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  {location ? "Nearby results" : "In these results"}
+                </p>
+                <ul className="flex gap-2 overflow-x-auto pb-1">
+                  {results.slice(0, 12).map((r, i) => {
+                    const key = resultKey(r, i);
+                    return (
+                      <li key={key} className="shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedKey(key)}
+                          aria-pressed={selectedKey === key}
+                          className={`w-44 rounded-lg border px-2.5 py-2 text-left ${
+                            selectedKey === key
+                              ? "border-emerald-500 bg-emerald-50"
+                              : "border-slate-200 bg-white hover:border-emerald-300"
+                          }`}
+                        >
+                          <span className="block truncate text-xs font-semibold text-slate-900">
+                            {r.title}
+                          </span>
+                          <span className="block truncate text-[11px] text-slate-500">
+                            {formatKm(r.distanceMeters) ?? r.type}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
           </div>
         ) : (
-          <div className="max-h-[26rem] space-y-2.5 overflow-y-auto pr-1">
+          <div className="h-full min-h-0 space-y-2.5 overflow-y-auto pr-1">
             {results.length > 0 ? (
-              results.map((r, i) => (
-                <div key={`${r.category}-${r.id ?? i}`} className="rounded-xl border border-slate-200 bg-white p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${CATEGORY_BADGE[r.category] ?? "bg-slate-100 text-slate-700"}`}>
-                        {r.type}
-                      </span>
-                      <p className="mt-1 truncate font-semibold text-slate-900">{r.title}</p>
-                      {r.subtitle && <p className="truncate text-xs text-slate-500">{r.subtitle}</p>}
-                    </div>
-                    {formatKm(r.distanceMeters) && (
-                      <span className="shrink-0 text-xs font-medium text-slate-600">{formatKm(r.distanceMeters)}</span>
-                    )}
-                  </div>
-                  {r.meta.length > 0 && (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      {r.meta.map((m) => (
-                        <span key={m} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">{m}</span>
-                      ))}
-                    </div>
-                  )}
-                  {r.href && r.actionLabel && (
-                    <Link
-                      href={r.href}
-                      className="mt-2 inline-flex min-h-8 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
-                    >
-                      {r.actionLabel}
-                    </Link>
-                  )}
-                </div>
-              ))
+              results.map((r, i) => {
+                const key = resultKey(r, i);
+                return (
+                  <ResultCard
+                    key={key}
+                    result={r}
+                    selected={selectedKey === key}
+                    onSelect={() => setSelectedKey(selectedKey === key ? null : key)}
+                  />
+                );
+              })
             ) : (
               !loading && (
-                <p className="px-1 text-sm text-slate-500">
-                  {data?.notes?.[0] ?? "Search a service, medicine or wellness need to see results."}
-                </p>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Nothing to show here yet
+                  </p>
+                  {/*
+                    Every note the orchestrator returned, not just the first. The lanes fail
+                    independently, so "medicines unavailable" and "share your location" can
+                    both be true at once — dropping all but one reports a tidier picture than
+                    the one the backend actually described.
+                  */}
+                  {notes.length > 0 ? (
+                    <ul className="mt-1.5 space-y-1 text-sm text-slate-600">
+                      {notes.map((n) => (
+                        <li key={n}>{n}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-1.5 text-sm text-slate-600">
+                      Search a service, medicine or wellness need to see results.
+                    </p>
+                  )}
+                  {!location && (
+                    <button
+                      type="button"
+                      onClick={requestLocation}
+                      disabled={geoStatus === "requesting"}
+                      className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
+                    >
+                      {geoStatus === "requesting" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                      ) : (
+                        <Navigation className="h-4 w-4" aria-hidden />
+                      )}
+                      Share my location
+                    </button>
+                  )}
+                  {geoStatus === "denied" && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      Location is blocked for this site. You can still search by name — try a
+                      clinic, a medicine or a service.
+                    </p>
+                  )}
+                  {(geoStatus === "unsupported" || geoStatus === "error") && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      We couldn&apos;t read your location. Searching by name works just as well.
+                    </p>
+                  )}
+                </div>
               )
             )}
           </div>
         )}
+      </div>
+
+      {/*
+        Continuation strip. Both children gate themselves on real state, so this whole
+        band collapses to nothing when there is nothing true to say — it exists to use
+        the space the fill above recovered, not to fill it regardless.
+      */}
+      <div className="shrink-0 space-y-2 px-4 pb-3 empty:hidden sm:px-5">
+        {results.length > 0 && notes.length > 0 && (
+          <ul className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+            {notes.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        )}
+        <ResumeJourneyCard tone="light" />
       </div>
 
       {/* Footer */}

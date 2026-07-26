@@ -40,7 +40,7 @@ describe("WelcomeHero", () => {
     expect(
       screen.getByRole("heading", { name: "How can Impilo help you today?" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Get Health Services" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Get care" })).toHaveAttribute(
       "href",
       "/welcome/find-care",
     );
@@ -73,10 +73,10 @@ describe("WelcomeHero", () => {
     });
     render(<WelcomeHero />);
 
-    fireEvent.change(screen.getByRole("searchbox"), {
+    fireEvent.change(screen.getByLabelText("Ask Nompilo"), {
       target: { value: "Where can I get help for anxiety?" },
     });
-    fireEvent.submit(screen.getByRole("search"));
+    fireEvent.submit(screen.getByRole("search", { name: /ask nompilo/i }));
 
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith("/internal/v1/public/gateway/guidance/ask", {
@@ -91,10 +91,10 @@ describe("WelcomeHero", () => {
     post.mockRejectedValue({ status: 502 });
     render(<WelcomeHero />);
 
-    fireEvent.change(screen.getByRole("searchbox"), {
+    fireEvent.change(screen.getByLabelText("Ask Nompilo"), {
       target: { value: "I need a clinic open now" },
     });
-    fireEvent.submit(screen.getByRole("search"));
+    fireEvent.submit(screen.getByRole("search", { name: /ask nompilo/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/temporarily unavailable/i);
     expect(screen.getByRole("link", { name: "Find care" })).toHaveAttribute(

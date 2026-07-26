@@ -40,7 +40,13 @@ export interface NdilaMapLibreProps {
   zoom?: number;
   markers?: NdilaGeoMarker[];
   routeCoordinates?: NdilaMapCoordinate[];
-  height?: number;
+  /**
+   * Shell height. A number is px; a string is passed through as a CSS length, so
+   * "100%" lets the map fill a flex/grid parent that has a definite height. A
+   * percentage only resolves if that parent is definite — otherwise the shell
+   * collapses to 0 and the canvas paints nothing.
+   */
+  height?: number | string;
   tileConfig?: NdilaTileConfigInput | null;
   fitToMarkers?: boolean;
   showNavigation?: boolean;
@@ -459,6 +465,18 @@ export function NdilaMapLibre({
       map.remove();
       mapRef.current = null;
     };
+  }, []);
+
+  // MapLibre's own trackResize only listens to window resize. A shell sized by its
+  // parent (height="100%" inside a flex column) also changes when sibling content
+  // grows or a tab switches — without this the canvas keeps stale bounds and paints
+  // into the wrong box. Observing the shell covers both cases.
+  useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => mapRef.current?.resize());
+    observer.observe(shell);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {

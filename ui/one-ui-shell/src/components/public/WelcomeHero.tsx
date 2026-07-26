@@ -21,7 +21,6 @@ import { useI18n } from "@/lib/i18n/useI18n";
 import { IntentLink } from "./IntentLink";
 import { HeroDiscoverySurface } from "./HeroDiscoverySurface";
 import { ReturningUserCard } from "./ReturningUserCard";
-import { ResumeJourneyCard } from "./ResumeJourneyCard";
 
 interface GuidanceAnswer {
   answer?: string;
@@ -280,8 +279,9 @@ export function WelcomeHero() {
           {/* Returning-user greeting (only when a masked opt-in hint exists). */}
           <ReturningUserCard />
 
-          {/* Honest journey continuity — real persisted care search, never a fabricated feed. */}
-          <ResumeJourneyCard />
+          {/* Journey continuity now lives inside the discovery surface on the right, where
+              it uses the space the fill recovered instead of lengthening this column (which
+              is what pushed the right column taller than its own content in the first place). */}
 
           {/* Inline Nompilo public guidance (kept beside the live care surface, never over it). */}
           {hasResponse && (
@@ -412,7 +412,10 @@ export function WelcomeHero() {
         </div>
 
         {/* Right: unified Get Health Services discovery (care, medicines, wellness — honest, real). */}
-        <div className="min-w-0 p-3 sm:p-5 lg:p-6 lg:pl-0">
+        {/* flex + flex-col so the surface's own h-full resolves against a definite box.
+            Relying on grid stretch alone left the surface sized by its content, which is
+            how the map and list ended up capped with dead space beneath them. */}
+        <div className="flex min-w-0 flex-col p-3 sm:p-5 lg:p-6 lg:pl-0">
           <HeroDiscoverySurface />
         </div>
       </div>

@@ -17,7 +17,15 @@ import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { useFindCareJourneyStore } from "@/hooks/useFindCareJourneyStore";
 
-export function ResumeJourneyCard() {
+interface ResumeJourneyCardProps {
+  /**
+   * "dark" sits on the hero canvas; "light" sits inside the white discovery
+   * surface. Same content either way — only the contrast pairing changes.
+   */
+  tone?: "dark" | "light";
+}
+
+export function ResumeJourneyCard({ tone = "dark" }: ResumeJourneyCardProps = {}) {
   const hydrate = useFindCareJourneyStore((s) => s.hydrate);
   const hydrated = useFindCareJourneyStore((s) => s.hydrated);
   const need = useFindCareJourneyStore((s) => s.need);
@@ -39,6 +47,30 @@ export function ResumeJourneyCard() {
       : serviceToken
       ? `/welcome/find-care?service=${encodeURIComponent(serviceToken)}`
       : `/welcome/find-care?q=${encodeURIComponent(label)}`;
+
+  if (tone === "light") {
+    return (
+      <div
+        data-testid="resume-journey-card"
+        className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3"
+      >
+        <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-700">
+          <Clock className="h-3.5 w-3.5" aria-hidden />
+          Continue where you left off
+        </p>
+        <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+          You were looking for {label}
+        </p>
+        <Link
+          href={href}
+          className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+        >
+          Resume your search
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div
