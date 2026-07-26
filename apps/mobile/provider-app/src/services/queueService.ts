@@ -188,6 +188,19 @@ export async function evaluateCDS(body: Record<string, unknown>): Promise<unknow
   const r = await apiClient.post<{ data: unknown[] }>(`${V1}/clinical/cds/evaluate`, body);
   return r.data.data;
 }
+/**
+ * NOT WIRED — nothing calls this, and the two specialty menus disagree.
+ *
+ * `ClinicalToolsScreen` renders the local `SPECIALTY_WORKSPACES` catalog (18 specialties × 6
+ * tools), not this route, which serves a different 10 × 3 catalog. The two have always been
+ * independent.
+ *
+ * Do not wire this up as a drop-in: the BFF catalog is the smaller of the two, so swapping it in
+ * silently removes eight specialties. Each BFF tool now carries `available`, `maturity`, `route`
+ * and `unavailable_reason` (see `MobileProviderExtendedController#getSpecialtyWorkspaces`), so a
+ * real convergence means rendering that availability in the panel — not just replacing the array.
+ * Until then the honest state is decided locally by `formKindForTool`.
+ */
 export async function fetchSpecialtyWorkspaces(): Promise<unknown[]> {
   const r = await apiClient.get<{ data: unknown[] }>(`${V1}/workspaces/specialties`);
   return r.data.data;
