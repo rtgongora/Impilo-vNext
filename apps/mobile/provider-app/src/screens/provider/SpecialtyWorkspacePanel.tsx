@@ -18,29 +18,36 @@ type Props = {
   onBack: () => void;
 };
 
-type ToolFormKind = "rule9" | "bsa" | "parkland" | "ktv" | "notes" | "checklist" | "sum" | "soon";
+type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withdrawn";
 
 function formKindForTool(toolName: string, index: number): ToolFormKind {
   if (index >= 4) return "soon";
   const t = toolName.toLowerCase();
-  if (t.includes("rule of 9")) return "rule9";
+  // Burns TBSA and Parkland are WITHDRAWN, not merely unimplemented — they shipped, they were
+  // used, and they produced wrong numbers a clinician could act on:
+  //
+  //  - the rule-of-9 chart used fixed ADULT body proportions in an app that treats children. A
+  //    small child's head is roughly twice the adult share of body surface, so an adult chart
+  //    UNDER-estimates a paediatric burn — and TBSA is the multiplier in the fluid calculation,
+  //    so the error propagates straight into under-resuscitation.
+  //  - Parkland returned a single 24-hour volume with no injury clock. Half that volume is due
+  //    within 8 hours OF THE BURN, not of arrival, so a patient presenting late needs the same
+  //    half in whatever remains of that window. A lone 24-hour figure invites an even infusion
+  //    and under-resuscitates exactly the patient who is already behind.
+  //  - and it claimed to save. "TBSA X% recorded locally" was an Alert, nothing was persisted.
+  //
+  // A wrong number carries more authority than no number, so these stay withdrawn until the
+  // governed implementation lands (libs/burn-domain: age-adjusted Lund-Browder + injury-clocked
+  // Parkland, with a real pct.burn_assessment write). Emergency pack W1; see
+  // docs/registry/iatg-emergency-leases.md §5b.
+  if (t.includes("rule of 9") || t.includes("rule of 9s") || t.includes("burns assessment")) return "withdrawn";
+  if (t.includes("parkland") || t.includes("fluid resuscitation")) return "withdrawn";
   if (t.includes("bsa")) return "bsa";
-  if (t.includes("parkland")) return "parkland";
   if (t.includes("kt/v") || t.includes("ktv")) return "ktv";
   if (t.includes("checklist") || t.includes("pre-chemo")) return "checklist";
   if (index === 3) return "sum";
   return "notes";
 }
-
-const RULE9_REGIONS: { key: string; label: string; pct: number }[] = [
-  { key: "head", label: "Head / neck", pct: 9 },
-  { key: "ra", label: "Right arm", pct: 9 },
-  { key: "la", label: "Left arm", pct: 9 },
-  { key: "torso", label: "Chest / abdomen", pct: 18 },
-  { key: "back", label: "Back", pct: 18 },
-  { key: "rl", label: "Right leg", pct: 18 },
-  { key: "ll", label: "Left leg", pct: 18 },
-];
 
 export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
   const [modalTool, setModalTool] = useState<{ name: string; index: number } | null>(null);
@@ -121,6 +128,27 @@ function ToolModalBody({
 }) {
   const kind = formKindForTool(toolName, toolIndex);
 
+  if (kind === "withdrawn") {
+    return (
+      <>
+        <Text style={styles.modalTitle}>{toolName}</Text>
+        <Text style={styles.modalDesc}>
+          This calculator has been withdrawn because it gave unsafe results. The burn-surface chart
+          used adult body proportions for every patient, which under-estimates a child&apos;s burn, and
+          the fluid estimate ignored the time of injury, which under-estimates fluid for anyone who
+          presents late. It also did not save what you entered.
+        </Text>
+        <Text style={styles.modalDesc}>
+          Use your unit&apos;s printed burn chart and fluid protocol, and record the assessment in the
+          patient&apos;s notes. A governed replacement is in development.
+        </Text>
+        <TouchableOpacity style={styles.primaryBtn} onPress={onClose}>
+          <Text style={styles.primaryBtnText}>Close</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
+
   if (kind === "soon") {
     return (
       <>
@@ -138,9 +166,7 @@ function ToolModalBody({
       <Text style={styles.modalTitle}>{toolName}</Text>
       <Text style={styles.modalMeta}>{workspaceName}</Text>
       <ScrollView style={{ maxHeight: 360 }}>
-        {kind === "rule9" && <RuleOf9Form toolName={toolName} />}
         {kind === "bsa" && <BsaForm />}
-        {kind === "parkland" && <ParklandForm />}
         {kind === "ktv" && <KtVForm />}
         {kind === "checklist" && <ChecklistForm />}
         {kind === "sum" && <SumForm />}
@@ -150,29 +176,6 @@ function ToolModalBody({
         <Text style={styles.secondaryBtnText}>Close</Text>
       </TouchableOpacity>
     </>
-  );
-}
-
-function RuleOf9Form({ toolName }: { toolName: string }) {
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const pct = useMemo(
-    () => RULE9_REGIONS.filter((r) => selected[r.key]).reduce((s, r) => s + r.pct, 0),
-    [selected],
-  );
-  return (
-    <View style={styles.formBlock}>
-      <Text style={styles.formLabel}>{toolName}</Text>
-      {RULE9_REGIONS.map((r) => (
-        <View key={r.key} style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{r.label} ({r.pct}%)</Text>
-          <Switch value={!!selected[r.key]} onValueChange={(v) => setSelected((prev) => ({ ...prev, [r.key]: v }))} />
-        </View>
-      ))}
-      <Text style={styles.result}>Estimated TBSA: {pct}%</Text>
-      <TouchableOpacity style={styles.primaryBtn} onPress={() => Alert.alert("Saved", `TBSA ${pct}% recorded locally.`)}>
-        <Text style={styles.primaryBtnText}>Save snapshot</Text>
-      </TouchableOpacity>
-    </View>
   );
 }
 
@@ -196,29 +199,6 @@ function BsaForm() {
       <TouchableOpacity style={styles.primaryBtn} onPress={() => Alert.alert("BSA", bsa != null ? `${bsa.toFixed(2)} m²` : "Incomplete")}>
         <Text style={styles.primaryBtnText}>Save</Text>
       </TouchableOpacity>
-    </View>
-  );
-}
-
-function ParklandForm() {
-  const [tbsa, setTbsa] = useState("");
-  const [weight, setWeight] = useState("");
-  const fluid = useMemo(() => {
-    const p = parseFloat(tbsa);
-    const kg = parseFloat(weight);
-    if (!Number.isFinite(p) || !Number.isFinite(kg) || p <= 0 || kg <= 0) return null;
-    return 4 * kg * p;
-  }, [tbsa, weight]);
-  return (
-    <View style={styles.formBlock}>
-      <Text style={styles.formLabel}>Parkland (24h crystalloid estimate)</Text>
-      <Text style={styles.inputLabel}>TBSA %</Text>
-      <TextInput style={styles.input} keyboardType="decimal-pad" value={tbsa} onChangeText={setTbsa} />
-      <Text style={styles.inputLabel}>Weight (kg)</Text>
-      <TextInput style={styles.input} keyboardType="decimal-pad" value={weight} onChangeText={setWeight} />
-      <Text style={styles.result}>
-        {fluid != null ? `First 24h ringers lactate ≈ ${Math.round(fluid)} ml (4 ml × kg × %TBSA)` : "Enter TBSA % and weight"}
-      </Text>
     </View>
   );
 }
