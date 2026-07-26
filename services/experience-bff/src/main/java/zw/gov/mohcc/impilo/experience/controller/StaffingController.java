@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
+import zw.gov.mohcc.impilo.experience.staffing.StaffIdentityResolver;
 
 import java.util.*;
 
@@ -37,9 +39,12 @@ public class StaffingController {
     private static final Logger log = LoggerFactory.getLogger(StaffingController.class);
 
     private final VashandiServiceClient vashandiClient;
+    private final StaffIdentityResolver identityResolver;
 
-    public StaffingController(VashandiServiceClient vashandiClient) {
+    public StaffingController(VashandiServiceClient vashandiClient,
+                              StaffIdentityResolver identityResolver) {
         this.vashandiClient = vashandiClient;
+        this.identityResolver = identityResolver;
     }
 
     public record PatchSwapRequest(@NotBlank String status, String note) {}
@@ -68,7 +73,11 @@ public class StaffingController {
             @RequestParam(name = "workspace_id", required = false) String workspaceId) {
         try {
             JsonNode roster = vashandiClient.getRosterWeek(facilityId, weekStartParam);
-            return ok(roster, requestId, correlationId, Map.of("week_start", weekStartParam));
+            StaffIdentityResolver.Resolution names = resolveNames(roster, "workforce_profile_id");
+            enrichRows(roster, names, List.of(new NameField("workforce_profile_id", "")));
+            return ok(roster, requestId, correlationId, Map.of(
+                    "week_start", weekStartParam,
+                    "identity_resolution", names.status()));
         } catch (Exception e) {
             log.warn("VASHANDI roster-week unavailable: {}", e.getMessage());
             return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
@@ -84,7 +93,14 @@ public class StaffingController {
             @RequestParam(name = "week_start") String weekStartParam) {
         try {
             JsonNode onCall = vashandiClient.listOnCall(facilityId, weekStartParam);
-            return ok(onCall, requestId, correlationId, Map.of("week_start", weekStartParam));
+            StaffIdentityResolver.Resolution names = resolveNames(
+                    onCall, "primary_workforce_profile_id", "backup_workforce_profile_id");
+            enrichRows(onCall, names, List.of(
+                    new NameField("primary_workforce_profile_id", "primary_"),
+                    new NameField("backup_workforce_profile_id", "backup_")));
+            return ok(onCall, requestId, correlationId, Map.of(
+                    "week_start", weekStartParam,
+                    "identity_resolution", names.status()));
         } catch (Exception e) {
             log.warn("VASHANDI on-call unavailable: {}", e.getMessage());
             return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
@@ -99,7 +115,12 @@ public class StaffingController {
             @RequestParam(name = "facility_id") String facilityId) {
         try {
             JsonNode swaps = vashandiClient.listSwapRequests(facilityId);
-            return ok(swaps, requestId, correlationId, Map.of());
+            StaffIdentityResolver.Resolution names = resolveNames(
+                    swaps, "requesting_workforce_profile_id", "requested_workforce_profile_id");
+            enrichRows(swaps, names, List.of(
+                    new NameField("requesting_workforce_profile_id", "requesting_"),
+                    new NameField("requested_workforce_profile_id", "requested_")));
+            return ok(swaps, requestId, correlationId, Map.of("identity_resolution", names.status()));
         } catch (Exception e) {
             log.warn("VASHANDI swap list unavailable: {}", e.getMessage());
             return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
@@ -168,6 +189,74 @@ public class StaffingController {
         } catch (Exception e) {
             log.warn("VASHANDI patch swap unavailable: {}", e.getMessage());
             return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
+        }
+    }
+
+    // ── display-name composition ─────────────────────────────────────────────
+    //
+    // Vashandi holds no names and no telephone numbers by design; the rota therefore arrives
+    // carrying profile ids and worker references. The names are composed here against the identity
+    // registries (see StaffIdentityResolver) rather than copied into the rostering service, and
+    // when the registries cannot be reached the references stay exactly as they were — with the
+    // response saying so, so that "nobody is on file" never masquerades as "we could not ask".
+
+    /** One profile-id field on a row and the prefix its resolved facts are written under. */
+    private record NameField(String profileIdField, String outputPrefix) {}
+
+    private StaffIdentityResolver.Resolution resolveNames(JsonNode rows, String... profileIdFields) {
+        Set<String> profileIds = new LinkedHashSet<>();
+        if (rows != null && rows.isArray()) {
+            for (JsonNode row : rows) {
+                JsonNode attributes = row.path("attributes");
+                for (String field : profileIdFields) {
+                    JsonNode value = attributes.get(field);
+                    if (value != null && !value.isNull() && !value.asText().isBlank()) {
+                        profileIds.add(value.asText());
+                    }
+                }
+            }
+        }
+        return identityResolver.resolve(profileIds);
+    }
+
+    private void enrichRows(JsonNode rows, StaffIdentityResolver.Resolution names, List<NameField> fields) {
+        if (rows == null || !rows.isArray()) {
+            return;
+        }
+        for (JsonNode row : rows) {
+            if (!(row.path("attributes") instanceof ObjectNode attributes)) {
+                continue;
+            }
+            for (NameField field : fields) {
+                JsonNode idNode = attributes.get(field.profileIdField());
+                String profileId = idNode == null || idNode.isNull() ? null : idNode.asText();
+                StaffIdentityResolver.StaffIdentity identity = names.get(profileId);
+
+                // Written on every row, resolved or not: a screen that reads display_name must be
+                // able to tell a person with no registry name from a field that was never composed.
+                putOrNull(attributes, field.outputPrefix() + "display_name",
+                        identity == null ? null : identity.displayName());
+                putOrNull(attributes, field.outputPrefix() + "profession",
+                        identity == null ? null : identity.profession());
+
+                // The rota's contact number: vashandi always sends null, so a number here is the
+                // one the provider registry holds, never one this layer made up.
+                String phoneField = field.outputPrefix() + "phone";
+                if (identity != null && identity.phone() != null) {
+                    attributes.put(phoneField, identity.phone());
+                    attributes.put(field.outputPrefix() + "phone_source", "PROVIDER_REGISTRY");
+                } else if (!attributes.has(phoneField)) {
+                    attributes.putNull(phoneField);
+                }
+            }
+        }
+    }
+
+    private static void putOrNull(ObjectNode attributes, String field, String value) {
+        if (value == null) {
+            attributes.putNull(field);
+        } else {
+            attributes.put(field, value);
         }
     }
 

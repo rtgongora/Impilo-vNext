@@ -38,6 +38,8 @@ class StaffingReadServiceTest {
 
     @Mock private ShiftRepository shiftRepository;
     @Mock private ShiftSwapRequestRepository swapRepository;
+    @Mock(strictness = org.mockito.Mock.Strictness.LENIENT)
+    private zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository profileRepository;
     @Mock private VashandiOutboxWriter outboxWriter;
 
     private StaffingReadService service;
@@ -48,7 +50,10 @@ class StaffingReadServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new StaffingReadService(shiftRepository, swapRepository, outboxWriter);
+        // A profile lookup that finds nothing is the honest default here: the reference is null and
+        // the row still renders, which is the behaviour the rota depends on.
+        when(profileRepository.findByTenantIdAndId(any(), any())).thenReturn(Optional.empty());
+        service = new StaffingReadService(shiftRepository, swapRepository, profileRepository, outboxWriter);
     }
 
     private ShiftEntity shift(String role, String specialty, UUID profileId, int dayOffset) {

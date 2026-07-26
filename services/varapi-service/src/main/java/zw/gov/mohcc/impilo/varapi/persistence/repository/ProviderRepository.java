@@ -40,6 +40,9 @@ public interface ProviderRepository extends JpaRepository<ProviderEntity, Long> 
 
     Optional<ProviderEntity> findByTenantIdAndImpiloHealthId(UUID tenantId, UUID impiloHealthId);
 
+    /** Batch display-facts resolution for the experience composition layer (rota, swap picker). */
+    List<ProviderEntity> findByTenantIdAndImpiloHealthIdIn(UUID tenantId, java.util.Collection<UUID> impiloHealthIds);
+
     /** HAR W3 — resolve a council registration number to a preloaded profile (reviewer-facing only). */
     Optional<ProviderEntity> findFirstByTenantIdAndPracticeNumberIgnoreCase(UUID tenantId, String practiceNumber);
 }

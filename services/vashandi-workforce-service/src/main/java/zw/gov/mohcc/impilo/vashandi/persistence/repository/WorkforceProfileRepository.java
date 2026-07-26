@@ -17,5 +17,8 @@ public interface WorkforceProfileRepository extends JpaRepository<WorkforceProfi
 
     Optional<WorkforceProfileEntity> findByTenantIdAndProviderWorkerId(UUID tenantId, String providerWorkerId);
 
+    /** Batch profile→person-anchor lookup for the experience composition layer (rota display names). */
+    List<WorkforceProfileEntity> findByTenantIdAndIdIn(UUID tenantId, java.util.Collection<UUID> ids);
+
     long countByTenantIdAndCurrentStatus(UUID tenantId, String currentStatus);
 }
