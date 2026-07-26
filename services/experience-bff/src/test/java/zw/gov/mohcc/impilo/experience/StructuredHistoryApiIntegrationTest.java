@@ -52,7 +52,7 @@ class StructuredHistoryApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET structured history endpoints return seeded data for golden-path patient")
+    @DisplayName("GET structured history reports 502 when PCT is unreachable, not an empty history")
     void structuredHistoryGoldenPatient() throws Exception {
         String rid = UUID.randomUUID().toString();
         String cid = UUID.randomUUID().toString();
@@ -63,9 +63,9 @@ class StructuredHistoryApiIntegrationTest {
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", rid)
                         .header("X-Correlation-ID", cid))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(greaterThanOrEqualTo(1)))
-                .andExpect(jsonPath("$.data[0].category").exists());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("social_history_unavailable"))
+                .andExpect(jsonPath("$.data").doesNotExist());
 
         mockMvc.perform(get("/internal/v1/ehr/family-history")
                         .param("patient_id", PATIENT_ID)
@@ -73,8 +73,9 @@ class StructuredHistoryApiIntegrationTest {
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", rid)
                         .header("X-Correlation-ID", cid))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].conditions").isArray());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("family_history_unavailable"))
+                .andExpect(jsonPath("$.data").doesNotExist());
 
         mockMvc.perform(get("/internal/v1/ehr/functional-assessments")
                         .param("patient_id", PATIENT_ID)
@@ -82,8 +83,9 @@ class StructuredHistoryApiIntegrationTest {
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", rid)
                         .header("X-Correlation-ID", cid))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].activities").isArray());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("functional_assessments_unavailable"))
+                .andExpect(jsonPath("$.data").doesNotExist());
 
         mockMvc.perform(get("/internal/v1/ehr/procedures")
                         .param("patient_id", PATIENT_ID)
@@ -91,8 +93,9 @@ class StructuredHistoryApiIntegrationTest {
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", rid)
                         .header("X-Correlation-ID", cid))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].name").exists());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("procedure_history_unavailable"))
+                .andExpect(jsonPath("$.data").doesNotExist());
 
         mockMvc.perform(get("/internal/v1/ehr/advance-directives")
                         .param("patient_id", PATIENT_ID)
@@ -100,8 +103,9 @@ class StructuredHistoryApiIntegrationTest {
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", rid)
                         .header("X-Correlation-ID", cid))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].type").exists());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("advance_directives_unavailable"))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @Test
