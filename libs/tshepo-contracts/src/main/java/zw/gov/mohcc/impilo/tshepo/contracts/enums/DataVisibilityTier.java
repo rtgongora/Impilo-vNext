@@ -10,18 +10,7 @@ public enum DataVisibilityTier {
     PSEUDONYMISED_PERSON_LEVEL,
     IDENTIFIED_OPERATIONAL_ONLY,
     IDENTIFIED_LIMITED_CLINICAL,
-    FULL_IDENTIFIED_CLINICAL,
-
-    /**
-     * Strictly above {@link #FULL_IDENTIFIED_CLINICAL}: the actor may additionally receive content
-     * classified {@code SPECIALLY_PROTECTED} (sexual and reproductive health, HIV, mental health,
-     * safeguarding). No purpose-of-use grants this tier by default — it must be granted explicitly
-     * by a governed policy rule, by the subject reading their own record, or by an audited
-     * break-glass. That default-withhold is what makes the class enforcing rather than decorative.
-     *
-     * <p>Appended last on purpose: existing constants keep their ordinals.</p>
-     */
-    SPECIALLY_PROTECTED_CLINICAL;
+    FULL_IDENTIFIED_CLINICAL;
 
     public static DataVisibilityTier fromString(String raw) {
         if (raw == null || raw.isBlank()) {
@@ -43,22 +32,12 @@ public enum DataVisibilityTier {
     public boolean allowsDirectIdentifiers() {
         return this == IDENTIFIED_OPERATIONAL_ONLY
                 || this == IDENTIFIED_LIMITED_CLINICAL
-                || this == FULL_IDENTIFIED_CLINICAL
-                || this == SPECIALLY_PROTECTED_CLINICAL;
+                || this == FULL_IDENTIFIED_CLINICAL;
     }
 
     /** Whether unrestricted clinical narrative/detail is allowed. */
     public boolean allowsFullClinical() {
-        return this == FULL_IDENTIFIED_CLINICAL || this == SPECIALLY_PROTECTED_CLINICAL;
-    }
-
-    /**
-     * Whether content classified {@code SPECIALLY_PROTECTED} may be disclosed to this actor.
-     * This is the question a PEP asks before returning — or including in a collection — a record
-     * carrying that class. Only the top tier answers yes.
-     */
-    public boolean allowsSpeciallyProtected() {
-        return this == SPECIALLY_PROTECTED_CLINICAL;
+        return this == FULL_IDENTIFIED_CLINICAL;
     }
 
     /** Higher means more disclosure (for max/min composition in PDP/PEP). */
@@ -70,7 +49,6 @@ public enum DataVisibilityTier {
             case IDENTIFIED_OPERATIONAL_ONLY -> 3;
             case IDENTIFIED_LIMITED_CLINICAL -> 4;
             case FULL_IDENTIFIED_CLINICAL -> 5;
-            case SPECIALLY_PROTECTED_CLINICAL -> 6;
         };
     }
 

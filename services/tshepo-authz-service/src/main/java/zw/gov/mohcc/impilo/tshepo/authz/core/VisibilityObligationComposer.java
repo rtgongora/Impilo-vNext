@@ -39,15 +39,16 @@ public final class VisibilityObligationComposer {
             PolicyRuleEntity matchedAllowRule,
             Optional<EscalationGrantView> activeGrant,
             ObjectMapper objectMapper) {
-        return compose(request, purpose, riskScore, matchedAllowRule, activeGrant, objectMapper, false);
+        return compose(request, purpose, riskScore, matchedAllowRule, activeGrant, objectMapper, null);
     }
 
     /**
-     * @param speciallyProtectedEntitled the PolicyEngine's confidentiality verdict — whether this
-     *        requester may receive content classified {@code SPECIALLY_PROTECTED}. When false the
-     *        composed tier is clamped below {@code SPECIALLY_PROTECTED_CLINICAL} no matter what the
-     *        purpose default, the rule overlay or an escalation grant asked for, so protected
-     *        content stays withheld by default rather than by hope.
+     * @param grantedConfidentialCategories the PolicyEngine's confidentiality verdict — which
+     *        categories of {@code SPECIALLY_PROTECTED} content this requester may receive
+     *        ({@code ["*"]} for a whole-set grant). Empty or null revokes every category the rule
+     *        overlay may have asked for, so protected content stays withheld by default rather than
+     *        by hope. Confidentiality rides this obligation, not the tier: a tier is a total order,
+     *        and holding safeguarding must not imply holding mental health.
      */
     public static Obligations compose(
             AuthzInternalRequest request,
@@ -56,7 +57,7 @@ public final class VisibilityObligationComposer {
             PolicyRuleEntity matchedAllowRule,
             Optional<EscalationGrantView> activeGrant,
             ObjectMapper objectMapper,
-            boolean speciallyProtectedEntitled) {
+            List<String> grantedConfidentialCategories) {
 
         String loggingLevel = riskScore > 50 ? "ELEVATED" : "STANDARD";
 
@@ -84,18 +85,13 @@ public final class VisibilityObligationComposer {
             vis.workflowContext(request.workflowContext());
         }
 
-        // An entitlement must actually LIFT, not merely fail to be clamped: no purpose-of-use
-        // default reaches the protected tier, so without this the entitled subject reading their
-        // own protected record would still be handed FULL_IDENTIFIED_CLINICAL and the PEP would
-        // suppress the very record they are entitled to.
-        if (speciallyProtectedEntitled && sensitivity == DataSensitivityClass.SPECIALLY_PROTECTED) {
-            vis.raiseVisibilityTier(DataVisibilityTier.SPECIALLY_PROTECTED_CLINICAL);
-        }
-
-        // Applied LAST, after the rule overlay and any escalation lift, because each of those can
-        // raise the tier and this is the one clamp that must win.
-        if (!speciallyProtectedEntitled) {
-            vis.capVisibilityTier(DataVisibilityTier.FULL_IDENTIFIED_CLINICAL);
+        // Applied LAST, after the rule overlay and any escalation lift, because either can add
+        // categories and this is the one revocation that has to win. An empty grant revokes
+        // everything: the default for every actor is that no protected content is reachable.
+        if (grantedConfidentialCategories == null || grantedConfidentialCategories.isEmpty()) {
+            vis.revokeConfidentialCategories();
+        } else {
+            vis.grantConfidentialCategories(grantedConfidentialCategories);
         }
 
         VisibilityProfile profile = vis.build();
@@ -128,7 +124,8 @@ public final class VisibilityObligationComposer {
                                 vp.suppressFields(),
                                 vp.pseudonymiseFields(),
                                 ExportPolicy.AGGREGATE_ONLY.name(),
-                                false));
+                                false,
+                                vp.confidentialCategories()));
             }
         }
         return o;
@@ -166,6 +163,13 @@ public final class VisibilityObligationComposer {
             }
             if (vm.get("drillDownAllowed") instanceof Boolean d) {
                 vis.drillDownAllowed(d);
+            }
+            if (vm.get("confidentialCategories") instanceof List<?> cc) {
+                List<String> categories = new ArrayList<>();
+                for (Object o : cc) {
+                    categories.add(o.toString());
+                }
+                vis.grantConfidentialCategories(categories);
             }
         } catch (Exception ignored) {
             // ignore malformed overlay

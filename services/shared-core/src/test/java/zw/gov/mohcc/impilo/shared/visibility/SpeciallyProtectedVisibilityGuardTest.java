@@ -3,114 +3,201 @@ package zw.gov.mohcc.impilo.shared.visibility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import zw.gov.mohcc.impilo.shared.auth.AccessMode;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpeciallyProtectedVisibilityGuardTest {
 
-    private record Note(String id, String sensitivityClass) {}
+    private record Note(String id, String sensitivityClass, String category) {}
 
-    private static final Note ORDINARY = new Note("n1", "FULL_CLINICAL");
-    private static final Note PROTECTED = new Note("n2", "SPECIALLY_PROTECTED");
-    private static final Note UNSTAMPED = new Note("n3", null);
+    private static final Note ORDINARY = new Note("n1", "FULL_CLINICAL", null);
+    private static final Note SAFEGUARDING = new Note("n2", "SPECIALLY_PROTECTED", "SAFEGUARDING");
+    private static final Note MENTAL_HEALTH = new Note("n3", "SPECIALLY_PROTECTED", "MENTAL_HEALTH");
+    private static final Note UNSTAMPED = new Note("n4", null, null);
 
     @AfterEach
     void clearContext() {
         VisibilityContextHolder.clear();
+        TrustContextHolder.clear();
     }
 
-    private static VisibilityProfile profileWithTier(String tier) {
-        return VisibilityProfile.builder().visibilityTier(tier).buildBare();
+    private static VisibilityProfile granting(String... categories) {
+        return VisibilityProfile.builder()
+                .visibilityTier("FULL_IDENTIFIED_CLINICAL")
+                .confidentialCategories(categories.length == 0 ? null : List.of(categories))
+                .buildBare();
+    }
+
+    private static TrustContext ctxWithPurpose(String purpose) {
+        return new TrustContext(UUID.randomUUID(), "actor-1", "PROVIDER", purpose,
+                "fp", UUID.randomUUID(), null, null, null, AccessMode.EXTERNAL);
+    }
+
+    // ── Category scoping: the reason this is an obligation and not a tier ─────────
+
+    @Test
+    @DisplayName("a safeguarding grant does NOT confer mental-health access")
+    void grantsAreCategoryScoped() {
+        VisibilityProfile safeguardingOnly = granting("SAFEGUARDING");
+
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds(
+                        "SPECIALLY_PROTECTED", "SAFEGUARDING", safeguardingOnly, null),
+                "the safeguarding lead must be able to read the disclosure they are acting on");
+        assertTrue(SpeciallyProtectedVisibilityGuard.withholds(
+                        "SPECIALLY_PROTECTED", "MENTAL_HEALTH", safeguardingOnly, null),
+                "holding safeguarding must not sweep in the adolescent's mental-health notes — "
+                        + "an ordered tier could not express this, which is why it is an obligation");
     }
 
     @Test
-    @DisplayName("only the protected tier admits protected content")
-    void allowsProtectedContent_onlyAtTheProtectedTier() {
-        assertTrue(SpeciallyProtectedVisibilityGuard.allowsProtectedContent(
-                profileWithTier("SPECIALLY_PROTECTED_CLINICAL")));
-        assertFalse(SpeciallyProtectedVisibilityGuard.allowsProtectedContent(
-                profileWithTier("FULL_IDENTIFIED_CLINICAL")),
-                "full clinical access is not confidential access — that conflation is the original defect");
+    @DisplayName("full clinical access alone confers no confidential category")
+    void fullClinicalIsNotConfidentialAccess() {
+        assertTrue(SpeciallyProtectedVisibilityGuard.withholds(
+                        "SPECIALLY_PROTECTED", "HIV", granting(), null),
+                "conflating full clinical access with confidential access is the original defect");
     }
 
     @Test
-    @DisplayName("fails closed: a missing profile or unparseable tier admits nothing")
+    @DisplayName("a whole-set grant covers every category, including an unlabelled protected record")
+    void wholeSetGrant() {
+        VisibilityProfile all = granting("*");
+
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED", "HIV", all, null));
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED", null, all, null));
+    }
+
+    @Test
+    @DisplayName("an unlabelled protected record is withheld from a category-scoped grant")
+    void unlabelledProtectedRecordIsWithheld() {
+        assertTrue(SpeciallyProtectedVisibilityGuard.withholds(
+                        "SPECIALLY_PROTECTED", null, granting("SAFEGUARDING"), null),
+                "a protected record with no category cannot be matched to a grant, so it stays closed");
+    }
+
+    // ── Fail-closed ───────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("fails closed: no profile, no context, no disclosure")
     void failsClosed() {
-        assertFalse(SpeciallyProtectedVisibilityGuard.allowsProtectedContent((VisibilityProfile) null),
+        assertTrue(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED", "HIV", null, null),
                 "silence from the PDP must not mean disclosure for the highest confidentiality class");
-        assertFalse(SpeciallyProtectedVisibilityGuard.allowsProtectedContent(profileWithTier(null)));
-        assertFalse(SpeciallyProtectedVisibilityGuard.allowsProtectedContent(profileWithTier("nonsense")));
-        assertFalse(SpeciallyProtectedVisibilityGuard.allowsProtectedContent(),
+        assertFalse(SpeciallyProtectedVisibilityGuard.allowsCategory("HIV", null));
+        assertFalse(SpeciallyProtectedVisibilityGuard.allowsCategory("HIV"),
                 "with no request context bound, nothing is disclosable");
     }
 
     @Test
-    @DisplayName("withholds a protected record from an unentitled requester, and nothing else")
-    void withholds_onlyProtectedAndOnlyUnentitled() {
-        VisibilityProfile unentitled = profileWithTier("FULL_IDENTIFIED_CLINICAL");
-        VisibilityProfile entitled = profileWithTier("SPECIALLY_PROTECTED_CLINICAL");
-
-        assertTrue(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED", unentitled));
-        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED", entitled));
-        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("FULL_CLINICAL", unentitled),
-                "ordinary clinical records must not be withheld — the control narrows protected data only");
-        assertFalse(SpeciallyProtectedVisibilityGuard.withholds(null, unentitled),
+    @DisplayName("ordinary and unstamped records are never withheld")
+    void ordinaryRecordsAreNeverWithheld() {
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("FULL_CLINICAL", null, granting(), null));
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds(null, null, granting(), null),
                 "an unstamped record is ordinary data and must stay visible to those entitled to it");
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("not-a-class", null, granting(), null),
+                "an unreadable stamp must not silently withhold ordinary care");
+    }
+
+    // ── Emergency waiver (mirrors ClinicalAccessGuard) ────────────────────────────
+
+    @Test
+    @DisplayName("EMERGENCY purpose waives the category requirement")
+    void emergencyPurposeWaives() {
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds(
+                        "SPECIALLY_PROTECTED", "HIV", granting(), ctxWithPurpose("EMERGENCY")),
+                "a teenager arriving unconscious must not have the HIV status that explains the "
+                        + "presentation hidden from the clinician treating them");
     }
 
     @Test
-    @DisplayName("mixed collections drop protected rows and keep the rest")
-    void filterProtected_dropsOnlyProtectedRows() {
-        List<Note> all = List.of(ORDINARY, PROTECTED, UNSTAMPED);
-
-        List<Note> visible = SpeciallyProtectedVisibilityGuard.filterProtected(
-                all, Note::sensitivityClass, profileWithTier("FULL_IDENTIFIED_CLINICAL"));
-
-        assertEquals(List.of(ORDINARY, UNSTAMPED), visible,
-                "a request for a person's encounters is allowed even when three of them are confidential");
+    @DisplayName("BREAK_GLASS purpose waives the category requirement")
+    void breakGlassWaives() {
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds(
+                "SPECIALLY_PROTECTED", "MENTAL_HEALTH", granting(), ctxWithPurpose("BREAK_GLASS")));
     }
 
     @Test
-    @DisplayName("an entitled requester sees the collection unchanged")
-    void filterProtected_entitledSeesEverything() {
-        List<Note> all = List.of(ORDINARY, PROTECTED, UNSTAMPED);
-
-        List<Note> visible = SpeciallyProtectedVisibilityGuard.filterProtected(
-                all, Note::sensitivityClass, profileWithTier("SPECIALLY_PROTECTED_CLINICAL"));
-
-        assertSame(all, visible);
+    @DisplayName("the waiver survives a completely missing profile")
+    void emergencyWaivesEvenWithNoProfile() {
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds(
+                        "SPECIALLY_PROTECTED", "HIV", null, ctxWithPurpose("EMERGENCY")),
+                "a service not yet wired to obligation headers must not become a place where "
+                        + "emergency care fails");
     }
 
     @Test
-    @DisplayName("with no bound context a collection is filtered, not passed through")
-    void filterProtected_noContextFailsClosed() {
+    @DisplayName("an ordinary purpose does not waive")
+    void ordinaryPurposeDoesNotWaive() {
+        assertTrue(SpeciallyProtectedVisibilityGuard.withholds(
+                "SPECIALLY_PROTECTED", "HIV", granting(), ctxWithPurpose("TREATMENT")));
+        assertTrue(SpeciallyProtectedVisibilityGuard.withholds(
+                "SPECIALLY_PROTECTED", "HIV", granting(), ctxWithPurpose("OPERATIONS")));
+    }
+
+    // ── Mixed collections ─────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("a mixed collection drops only the categories not granted")
+    void filterProtected_isPerCategory() {
+        List<Note> all = List.of(ORDINARY, SAFEGUARDING, MENTAL_HEALTH, UNSTAMPED);
+
         List<Note> visible = SpeciallyProtectedVisibilityGuard.filterProtected(
-                List.of(ORDINARY, PROTECTED), Note::sensitivityClass);
+                all, Note::sensitivityClass, Note::category, granting("SAFEGUARDING"), null);
+
+        assertEquals(List.of(ORDINARY, SAFEGUARDING, UNSTAMPED), visible,
+                "a request for a person's encounters is allowed even when some are confidential");
+    }
+
+    @Test
+    @DisplayName("with no grant, every protected row is dropped and the rest survive")
+    void filterProtected_noGrant() {
+        List<Note> visible = SpeciallyProtectedVisibilityGuard.filterProtected(
+                List.of(ORDINARY, SAFEGUARDING, MENTAL_HEALTH), Note::sensitivityClass, Note::category,
+                granting(), null);
 
         assertEquals(List.of(ORDINARY), visible);
     }
 
     @Test
-    @DisplayName("the thread-bound profile is honoured by the no-argument overloads")
-    void currentContext_isHonoured() {
-        VisibilityContextHolder.set(profileWithTier("SPECIALLY_PROTECTED_CLINICAL"));
+    @DisplayName("under emergency the whole collection survives")
+    void filterProtected_emergency() {
+        List<Note> all = List.of(ORDINARY, SAFEGUARDING, MENTAL_HEALTH);
 
-        assertTrue(SpeciallyProtectedVisibilityGuard.allowsProtectedContent());
-        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED"));
+        List<Note> visible = SpeciallyProtectedVisibilityGuard.filterProtected(
+                all, Note::sensitivityClass, Note::category, granting(), ctxWithPurpose("EMERGENCY"));
+
+        assertEquals(all, visible);
     }
 
     @Test
-    @DisplayName("empty and null collections are handled without a null return")
+    @DisplayName("empty and null collections return an empty list, never null")
     void filterProtected_emptyInputs() {
         assertEquals(List.of(), SpeciallyProtectedVisibilityGuard.filterProtected(
-                null, Note::sensitivityClass, profileWithTier("FULL_IDENTIFIED_CLINICAL")));
+                null, Note::sensitivityClass, Note::category, granting(), null));
         assertEquals(List.of(), SpeciallyProtectedVisibilityGuard.filterProtected(
-                List.of(), Note::sensitivityClass, profileWithTier("FULL_IDENTIFIED_CLINICAL")));
+                List.of(), Note::sensitivityClass, Note::category, granting(), null));
+    }
+
+    // ── Thread-bound context ──────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("the bound profile and trust context drive the no-argument overloads")
+    void boundContextIsHonoured() {
+        VisibilityContextHolder.set(granting("HIV"));
+
+        assertTrue(SpeciallyProtectedVisibilityGuard.allowsCategory("HIV"));
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED", "HIV"));
+        assertTrue(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED", "SAFEGUARDING"));
+
+        TrustContextHolder.set(ctxWithPurpose("EMERGENCY"));
+        assertFalse(SpeciallyProtectedVisibilityGuard.withholds("SPECIALLY_PROTECTED", "SAFEGUARDING"),
+                "the emergency waiver applies through the bound trust context too");
     }
 }

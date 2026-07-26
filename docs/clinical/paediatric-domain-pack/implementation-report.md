@@ -131,7 +131,7 @@ every age from birth and asserts a band exists.
 | **1. Sick 14-month-old (fever, cough, poor feeding)** | **Backend complete and live-proven.** Danger signs, age-banded vitals, growth with z-scores and faltering, safe dose calculation, and now the IMNCI assess-and-classify tables. Proven on the estate: chest indrawing with a positive malaria test, MUAC 11.9 and some palmar pallor returns severe pneumonia (pink), malaria, moderate acute malnutrition and anaemia, with an urgent-referral disposition and a severity-ordered treatment plan. Missing: immunisation forecast, Dura stock check, Khuluma caregiver instructions, UI. |
 | **3. Growth monitoring visit** | **Partial.** Measurement capture, WHO scoring, faltering detection and IMAM eligibility signalling work. Missing: the "what is due today" composition, the plotted chart, IMAM referral creation. |
 | **4. Paediatric surgical emergency** | **Not started.** Existing theatre and inpatient spines are reusable; the surgical-abdomen pathway and paediatric surgical clerking are not built. |
-| **5. Confidential adolescent visit** | **Unblocked; pathway not started.** The `SPECIALLY_PROTECTED` enforcement seam is now built and tested end to end — distinct visibility tier, guardian-context refusal at the PDP, governed category value set, audited grants and refusals (see §5, Wave 5). Nothing yet flows through it: no clinical route is on the confidential lane and no service stamps the class on a record. The pathway can now be built without manufacturing a false assurance, which was the blocker. |
+| **5. Confidential adolescent visit** | **Mechanism built and shipped INERT; content awaiting MoHCC.** The `SPECIALLY_PROTECTED` enforcement mechanism is complete and tested — category-scoped confidentiality obligation, guardian-versus-self as a real decision input, audited refusals as well as reads, emergency waiver (see §5, Wave 5). It changes no behaviour: the confidentiality ages and the confidential code list are legal and policy questions, so they ship as `ENGINEERING_SEED` and the control runs in `SHADOW`. Nothing is stamped and nothing is denied. The pathway can now be built without manufacturing a false assurance, which was the blocker. |
 
 **Live-proof status (updated 2026-07-26).** The earlier statement that none of this had run against
 a deployed estate no longer holds. pct-service, inpatient-service and the clinical knowledge
@@ -346,12 +346,18 @@ in any UI that displays the label. That is worse than leaving it unmarked: it ma
 assurance for the clinician deciding whether it is safe to write something down, and for the
 adolescent being told their record is confidential.
 
-**All four enforcement requirements are now built and tested.**
+**All four enforcement requirements are now built and tested — and the mechanism ships inert.**
 
-1. *A distinct visibility tier.* `DataVisibilityTier.SPECIALLY_PROTECTED_CLINICAL` sits strictly
-   above `FULL_IDENTIFIED_CLINICAL`. No purpose-of-use default reaches it, so protected content is
-   withheld from every actor unless something explicitly grants it — the enforcement is
-   default-deny rather than default-allow-with-a-label.
+1. *A seam of its own, distinct from ordinary clinical access.* Confidentiality rides a
+   **category-scoped obligation** (`VisibilityProfile.confidentialCategories`), on the same footing
+   as `piiAccess` and `clinicalAccess`. A distinct *visibility tier* was the first design and was
+   rejected on review: the tier is a total order, so a rung above `FULL_IDENTIFIED_CLINICAL` would
+   assert that reaching confidential content implies reaching everything below it. That is wrong for
+   the cases that matter — a safeguarding lead should read the safeguarding disclosure and not the
+   whole clinical record, and a sexual-health nurse should not thereby reach the mental-health notes.
+   Confidentiality is also relational ("protected from the guardian, not from the person"), which is
+   not a disclosure level at all. No purpose-of-use grants any category, so protected content is
+   withheld from every actor by default.
 2. *Guardian context as a first-class input.* PolicyEngine Step 4.5 already resolved the Mvumo
    delegation (`relationshipType` = GUARDIAN | CAREGIVER | CHW | FACILITY_STAFF) and discarded it;
    it is now threaded into a new **Step 4.7**, which refuses a delegated act on the confidential
@@ -367,30 +373,57 @@ adolescent being told their record is confidential.
    the returned class; they do not each carry their own list of confidential codes.
 4. *Audited grants and refusals.* Dedicated `CONFIDENTIAL_ACCESS_GRANTED` /
    `CONFIDENTIAL_ACCESS_REFUSED` governance events, so the control is reviewable without filtering
-   the whole authz stream. The grant event is driven off the *composed* visibility tier rather than
-   the entitlement flag, so any future route that can reach protected data appears in the stream
-   even if nobody remembers to instrument it.
+   the whole authz stream. The grant event is driven off the *composed* obligation rather than the
+   decision, so any future route that can reach protected data appears in the stream even if nobody
+   remembers to instrument it. Refusals in `SHADOW` carry `enforced: false` — they are the list of
+   accesses that would break on the day enforcement is switched on.
 
-**What flows through the seam today: nothing.** No clinical route is on the confidential lane and
-no service stamps the class on a record. That is the honest state — the enforcement is real,
-tested and default-closed, so the pathway can now be built on top of it without manufacturing a
-false assurance. The remaining work for journey 5 is the pathway itself: a confidential
-`/v1/pct/confidential/**` lane in pct-service, records stamped via the zibo classifier at write
-time, `SpeciallyProtectedVisibilityGuard` consumed on the read paths, and the adolescent-facing UI.
+**The mechanism is complete; the content is not, and that is deliberate.** Two questions decide
+behaviour and neither is an engineering call: at what age a young person's record becomes
+confidential from their parent (Zimbabwean law and MoHCC policy — and *not uniform*, since
+independent consent for HIV testing, contraception and mental health care sit under different
+instruments), and which clinical codes are confidential by nature. Both ship as `ENGINEERING_SEED` /
+`PENDING_MOHCC_RATIFICATION` with provenance and fixtures, matching the danger-sign, dosing, IMNCI,
+EPI and growth packs. Four switches gate activation and must be flipped together — the policy pack's
+`approvalStatus`/`effective`, zibo's `CATEGORY_MAP_RATIFIED`, the `V048` rule `active` flags, and
+`confidentiality-mode: ENFORCE`. `ENFORCE` with an unratified pack refuses to enforce and emits
+`CONFIDENTIALITY_ENFORCE_UNAVAILABLE`; it will not silently half-work, because being quietly
+ineffective is the original defect. Every age threshold ships `null` with `verificationStatus:
+UNVERIFIED` and a named instrument to check: a guessed age that looks authoritative is worse than an
+obviously missing one. Full governance note:
+`docs/clinical-governance/adolescent-confidentiality-seed-policy.md`.
 
-Two design decisions a product owner may wish to revisit:
+The governing rule, which the inertness exists to satisfy: **no record may ever carry a protection
+label that does not protect it.** zibo therefore withholds the stampable sensitivity class while the
+map is unratified, reporting only which categories matched — so the seed can be reviewed without any
+record being labelled protected before the enforcement that would make the label true is live.
 
-- **Break-glass reaches protected content; a bare `EMERGENCY` purpose does not.** Break-glass is
-  the governed emergency route and already requires an active break-glass request plus a completed
-  step-up, and every such reach is audited. `EMERGENCY` is an unverified header claim, and granting
-  protected access on it would make the whole control theatre. The cost of this choice is that an
-  emergency clinician must take the break-glass path to see an adolescent's HIV medication.
+**What flows through the seam today: nothing, by design.** No clinical route is on the confidential
+lane, no service stamps the class, and the control is in `SHADOW`. The remaining work for journey 5
+is the pathway itself: a confidential `/v1/pct/confidential/**` lane in pct-service, records stamped
+via the zibo classifier at write time (once ratified), `SpeciallyProtectedVisibilityGuard` consumed
+on the read paths, and the adolescent-facing UI. None of that can manufacture a false assurance now,
+because the mechanism withholds the label until the content is ratified.
+
+**Emergency access is a hard requirement, and it works.** `EMERGENCY` and `BREAK_GLASS`
+purpose-of-use waive the category requirement entirely, at both the PDP and the PEP, mirroring
+`ClinicalAccessGuard` in pct-service so the two layers behave identically. Over-restricting kills
+people too: a teenager arriving unconscious whose HIV status or medication explains the presentation
+must not be invisible to the clinician treating them. The waiver is checked *before* the delegate
+exclusion, so an accompanying adult handing over a collapsed teenager is not the reason the picture
+stays hidden. It is **detection, not prevention** — `EMERGENCY` is a self-asserted header, and the
+only control over its misuse is that every waiver is logged at WARN naming the actor and emits a
+governance event. That protects nobody unless the stream is reviewed, so **the review needs an owner
+before enforcement is switched on.**
+
+One decision a product owner may wish to revisit:
+
 - **A clinical role alone does not confer the entitlement.** It must be granted by a governed
-  policy rule (`V048`). The seed is minimal — the person themselves, clinicians and nurses staffing
-  the service, and the safety focal for safeguarding. Nurses are included because they staff most
-  adolescent and sexual-health care in Zimbabwe and excluding them would push the work outside the
-  record entirely. Which cadres hold the entitlement is a national policy question and the list
-  needs MoHCC ratification before go-live.
+  policy rule (`V048`, shipped inactive). The seed is minimal — the person themselves, clinicians and
+  nurses staffing the service, and the safety focal for safeguarding. Nurses are included because
+  they staff most adolescent and sexual-health care in Zimbabwe and excluding them would push the
+  work outside the record entirely. Which cadres hold which category is a national policy question
+  and the list needs MoHCC ratification before any row is activated.
 
 Remaining Wave 5 items — paediatric surgery, IMAM episodes end to end, the remaining body-map
 instruments, 5–19 year LMS data acquisition, and PWA offline — are independent of this and can

@@ -86,11 +86,11 @@ public final class ResourceSensitivityClassifier {
             case PSEUDONYMISED_PERSON_LEVEL -> DataVisibilityTier.PSEUDONYMISED_PERSON_LEVEL;
             case IDENTIFIED_OPERATIONAL -> DataVisibilityTier.IDENTIFIED_OPERATIONAL_ONLY;
             case IDENTIFIED_CLINICAL_SUMMARY -> DataVisibilityTier.IDENTIFIED_LIMITED_CLINICAL;
-            case FULL_CLINICAL -> DataVisibilityTier.FULL_IDENTIFIED_CLINICAL;
-            // A distinct ceiling, not a shared one. Note this is a CEILING: it permits the protected
-            // tier to survive composition, it never grants it. The grant is the PolicyEngine's
-            // entitlement decision — so the default for every actor remains withheld.
-            case SPECIALLY_PROTECTED -> DataVisibilityTier.SPECIALLY_PROTECTED_CLINICAL;
+            // Both map to the top tier because confidentiality is NOT a disclosure level — a tier
+            // is a total order, and "may see the safeguarding note" does not imply "may see
+            // everything below it". The confidential axis is the confidentialCategories obligation
+            // on VisibilityProfile; this switch only bounds how much ordinary detail may flow.
+            case FULL_CLINICAL, SPECIALLY_PROTECTED -> DataVisibilityTier.FULL_IDENTIFIED_CLINICAL;
         };
     }
 }

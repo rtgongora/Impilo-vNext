@@ -19,7 +19,6 @@ import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.ConsentDecision;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.Obligations;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
-import zw.gov.mohcc.impilo.tshepo.contracts.enums.DataVisibilityTier;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
@@ -83,6 +82,7 @@ public class PolicyEngine {
     private final DelegationClient delegationClient;
     private final OpaDecisionClient opaDecisionClient;
     private final RoleTemplateCatalog roleTemplateCatalog;
+    private final ConfidentialityPolicyPack confidentialityPack;
 
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
@@ -97,7 +97,8 @@ public class PolicyEngine {
                         VisibilityEscalationService visibilityEscalationService,
                         DelegationClient delegationClient,
                         OpaDecisionClient opaDecisionClient,
-                        RoleTemplateCatalog roleTemplateCatalog) {
+                        RoleTemplateCatalog roleTemplateCatalog,
+                        ConfidentialityPolicyPack confidentialityPack) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -112,6 +113,7 @@ public class PolicyEngine {
         this.delegationClient = delegationClient;
         this.opaDecisionClient = opaDecisionClient;
         this.roleTemplateCatalog = roleTemplateCatalog;
+        this.confidentialityPack = confidentialityPack;
     }
 
     /**
@@ -229,7 +231,7 @@ public class PolicyEngine {
         // subject themselves or an explicit governed entitlement. Both outcomes are audited.
         // ────────────────────────────────────────────────────────────────
         ProtectedAccess protectedAccess = evaluateConfidentiality(
-                request, matchedAllowRule, delegation.resolution(), riskScore, startTime);
+                request, purpose, matchedAllowRule, delegation.resolution(), riskScore, startTime);
         if (protectedAccess.deny() != null) {
             return protectedAccess.deny();
         }
@@ -266,7 +268,7 @@ public class PolicyEngine {
         // ────────────────────────────────────────────────────────────────
         Obligations obligations = VisibilityObligationComposer.compose(
                 request, purpose, riskScore, matchedAllowRule, activeEscalation, objectMapper,
-                protectedAccess.entitled());
+                protectedAccess.grantedCategories());
         Map<String, String> headerMutations = buildHeaderMutations(obligations, request);
 
         // Phase 3 strangler: SHADOW-compare the OPA gate decision (Java stays authoritative).
@@ -305,7 +307,8 @@ public class PolicyEngine {
         // it is an unverified claim, and granting protected access on it would be the hole that
         // makes the whole control theatre. Every such reach is audited below.
         Obligations obligations = VisibilityObligationComposer.compose(
-                request, PurposeOfUse.BREAK_GLASS, riskScore, null, Optional.empty(), objectMapper, true);
+                request, PurposeOfUse.BREAK_GLASS, riskScore, null, Optional.empty(), objectMapper,
+                List.of("*"));
         Map<String, String> headers = buildHeaderMutations(obligations, request);
 
         log.warn("BREAK-GLASS ALLOW: actor={}, resource={}/{}, correlation={}",
@@ -786,103 +789,185 @@ public class PolicyEngine {
     // ════════════════════════════════════════════════════════════════════
 
     /**
-     * The confidentiality verdict: an optional DENY, whether the requester is entitled to
-     * specially-protected content, and the basis on which entitlement was granted (for audit).
+     * The confidentiality verdict: an optional DENY, the confidential categories granted to this
+     * requester, and the basis (for audit).
      */
-    private record ProtectedAccess(AuthzResponse deny, boolean entitled, String grantBasis) {
+    private record ProtectedAccess(AuthzResponse deny, List<String> grantedCategories, String grantBasis) {
         static ProtectedAccess notApplicable() {
-            return new ProtectedAccess(null, false, null);
+            return new ProtectedAccess(null, List.of(), null);
         }
 
         static ProtectedAccess deny(AuthzResponse deny) {
-            return new ProtectedAccess(deny, false, null);
+            return new ProtectedAccess(deny, List.of(), null);
         }
 
-        static ProtectedAccess entitled(String basis) {
-            return new ProtectedAccess(null, true, basis);
+        static ProtectedAccess granted(List<String> categories, String basis) {
+            return new ProtectedAccess(null, categories, basis);
+        }
+
+        /** Refused, but in SHADOW mode: no denial, and no grant either. */
+        static ProtectedAccess shadowRefused() {
+            return new ProtectedAccess(null, List.of(), null);
         }
     }
 
+    /** The whole-set grant. Used where enumerating categories would only add a chance to miss one. */
+    private static final List<String> ALL_CATEGORIES = List.of("*");
+
     /**
-     * Decide whether this requester may receive content classified {@code SPECIALLY_PROTECTED}.
+     * Decide which categories of {@code SPECIALLY_PROTECTED} content this requester may receive.
      *
      * <p>Only the confidential lane is in scope — ordinary care is untouched, because a
-     * confidentiality control that narrows everything gets routed around. Within that lane:</p>
+     * confidentiality control that narrows everything gets routed around. Within that lane, in
+     * order:</p>
      * <ol>
-     *   <li><strong>A delegated act is refused, absolutely.</strong> A caregiver acting for a child
-     *       is a different requester from the child, and separating guardian access from the
-     *       confidential adolescent record is the entire feature. No policy rule widens this — a
-     *       rule that could would reintroduce the hole through the governance channel.</li>
-     *   <li><strong>The subject themselves is entitled.</strong> The adolescent whose record it is
-     *       can read it.</li>
-     *   <li><strong>Otherwise an explicit governed entitlement is required</strong> — a policy rule
-     *       whose {@code visibility} overlay grants {@code SPECIALLY_PROTECTED_CLINICAL}. Holding a
-     *       clinical role is deliberately not enough; if it were, the class would again mean nothing.</li>
+     *   <li><strong>Emergency and break-glass waive, always.</strong> Over-restricting kills people
+     *       too: a teenager arriving unconscious whose HIV status or medication explains the
+     *       presentation must not be invisible. Mirrors {@code ClinicalAccessGuard} in pct-service so
+     *       the two layers behave identically, and is loudly audited — this is detection, not
+     *       prevention, and it depends on the audit actually being reviewed.</li>
+     *   <li><strong>A delegated act is refused.</strong> A caregiver acting for a child is a
+     *       different requester from the child, and separating guardian access from the confidential
+     *       adolescent record is the point. No policy rule widens this.</li>
+     *   <li><strong>The subject themselves is granted every category</strong> — it is their record.</li>
+     *   <li><strong>Otherwise the governed rule grant applies</strong>, narrowed to what the ratified
+     *       policy pack currently permits. A clinical role alone grants nothing.</li>
      * </ol>
      *
-     * <p>Refusals and grants are both audited ({@link #auditConfidentialRefusal} /
-     * {@link #auditConfidentialGrant}).</p>
+     * <p><strong>Mode-gated.</strong> In {@code SHADOW} (the default) this evaluates and audits but
+     * never denies, because the content that decides behaviour is an engineering seed pending MoHCC
+     * ratification. {@code ENFORCE} additionally requires a ratified, effective pack; without one the
+     * control stays inert and says so at ERROR rather than silently — being quietly ineffective is
+     * the exact failure this seam exists to prevent.</p>
      */
     private ProtectedAccess evaluateConfidentiality(AuthzInternalRequest request,
+                                                    PurposeOfUse purpose,
                                                     PolicyRuleEntity matchedAllowRule,
                                                     DelegationResolution delegation,
                                                     int riskScore, long startTime) {
+        String mode = properties.getConfidentialityMode();
+        if (mode == null || "OFF".equalsIgnoreCase(mode)) {
+            return ProtectedAccess.notApplicable();
+        }
         if (!ResourceSensitivityClassifier.isSpeciallyProtected(request.resourceType())) {
             return ProtectedAccess.notApplicable();
         }
 
+        boolean enforcing = "ENFORCE".equalsIgnoreCase(mode);
+        if (enforcing && !confidentialityPack.isEffective()) {
+            // Asked to enforce with no ratified content. Refusing to enforce is the safe choice —
+            // enforcing on an engineering seed could hide records from the clinicians treating the
+            // person — but it must never be quiet, or an operator believes a control is live when it
+            // is not. That belief is precisely the false assurance we are eliminating.
+            log.error("CONFIDENTIALITY mode=ENFORCE but the policy pack is {} — the control is INERT. "
+                            + "Ratify and activate {} before relying on it.",
+                    confidentialityPack.stateLabel(), confidentialityPack.packId());
+            emitConfidentialityEvent("CONFIDENTIALITY_ENFORCE_UNAVAILABLE", request, packStatePayload(request));
+            enforcing = false;
+        }
+
+        // ── 1. Emergency / break-glass waiver ────────────────────────────────
+        if (purpose == PurposeOfUse.EMERGENCY || purpose == PurposeOfUse.BREAK_GLASS) {
+            log.warn("CONFIDENTIALITY WAIVED (purpose={}): actor={} reaching specially-protected "
+                            + "content for subject={} resource={}/{} — emergency override. correlation={}",
+                    purpose, request.actorId(), request.subjectId(),
+                    request.resourceType(), request.resourceId(), request.correlationId());
+            return ProtectedAccess.granted(ALL_CATEGORIES, "EMERGENCY_WAIVER:" + purpose.name());
+        }
+
+        // ── 2. Delegated act — refused ───────────────────────────────────────
         if (delegation != null) {
             String relationship = delegation.relationshipType() == null
                     ? "UNSPECIFIED" : delegation.relationshipType().toUpperCase(Locale.ROOT);
-            auditConfidentialRefusal(request, "PROTECTED_RECORD_DELEGATE_DENIED", relationship);
+            auditConfidentialRefusal(request, "PROTECTED_RECORD_DELEGATE_DENIED", relationship, enforcing);
+            if (!enforcing) {
+                return ProtectedAccess.shadowRefused();
+            }
             return ProtectedAccess.deny(denyAndLog(request, "PROTECTED_RECORD_DELEGATE_DENIED",
                     "This record is specially protected and cannot be opened on another person's "
                             + "behalf. The person it belongs to can share it themselves.",
                     riskScore, startTime));
         }
 
+        // ── 3. The subject themselves ────────────────────────────────────────
         String subjectId = request.subjectId();
         if (subjectId != null && !subjectId.isBlank() && subjectId.equals(request.actorId())) {
-            return ProtectedAccess.entitled("SUBJECT_SELF");
+            return ProtectedAccess.granted(ALL_CATEGORIES, "SUBJECT_SELF");
         }
 
-        if (ruleGrantsProtectedTier(matchedAllowRule)) {
-            return ProtectedAccess.entitled("POLICY_RULE:"
+        // ── 4. Governed rule grant, narrowed by the ratified pack ────────────
+        List<String> requested = ruleRequestedCategories(matchedAllowRule);
+        Set<String> permitted = confidentialityPack.retainGrantable(requested);
+        if (!permitted.isEmpty()) {
+            return ProtectedAccess.granted(List.copyOf(permitted), "POLICY_RULE:"
                     + (matchedAllowRule.getName() != null ? matchedAllowRule.getName() : "unnamed"));
         }
 
-        auditConfidentialRefusal(request, "PROTECTED_RECORD_NOT_ENTITLED", null);
-        return ProtectedAccess.deny(denyAndLog(request, "PROTECTED_RECORD_NOT_ENTITLED",
-                "Access to specially-protected data requires an explicit entitlement for this "
-                        + "actor, purpose and context.",
+        String reason = requested.isEmpty()
+                ? "PROTECTED_RECORD_NOT_ENTITLED"
+                : "PROTECTED_RECORD_PACK_INERT";
+        auditConfidentialRefusal(request, reason, null, enforcing);
+        if (!enforcing) {
+            return ProtectedAccess.shadowRefused();
+        }
+        return ProtectedAccess.deny(denyAndLog(request, reason,
+                requested.isEmpty()
+                        ? "Access to specially-protected data requires an explicit entitlement for "
+                                + "this actor, purpose and context."
+                        : "The confidentiality policy pack is not ratified, so no protected-content "
+                                + "entitlement can be granted.",
                 riskScore, startTime));
     }
 
     /**
-     * Whether the matched ALLOW rule's {@code visibility} overlay grants the protected tier. This is
-     * the governance channel: entitlement is seeded and reviewed as a policy rule, never compiled in.
+     * The confidential categories the matched ALLOW rule asks for. This is the governance channel:
+     * entitlement is seeded and reviewed as policy, never compiled in. A legacy rule that only says
+     * {@code visibilityTier} grants nothing — confidentiality is a category obligation, not a tier.
      */
-    private boolean ruleGrantsProtectedTier(PolicyRuleEntity matchedAllowRule) {
+    private List<String> ruleRequestedCategories(PolicyRuleEntity matchedAllowRule) {
         if (matchedAllowRule == null) {
-            return false;
+            return List.of();
         }
         Object visibility = parseConditions(matchedAllowRule).get("visibility");
         if (!(visibility instanceof Map<?, ?> overlay)) {
-            return false;
+            return List.of();
         }
-        Object tier = overlay.get("visibilityTier");
-        return tier != null
-                && DataVisibilityTier.fromString(tier.toString()).allowsSpeciallyProtected();
+        if (!(overlay.get("confidentialCategories") instanceof List<?> raw)) {
+            return List.of();
+        }
+        List<String> categories = new ArrayList<>();
+        for (Object o : raw) {
+            if (o != null && !o.toString().isBlank()) {
+                categories.add(o.toString());
+            }
+        }
+        return categories;
+    }
+
+    private Map<String, Object> packStatePayload(AuthzInternalRequest request) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("packId", confidentialityPack.packId());
+        payload.put("packVersion", confidentialityPack.version());
+        payload.put("packState", confidentialityPack.stateLabel());
+        payload.put("actorId", request.actorId());
+        payload.put("resourceType", request.resourceType());
+        payload.put("correlationId", request.correlationId() != null ? request.correlationId().toString() : null);
+        return payload;
     }
 
     /**
      * Audit a refusal on the confidential lane. Separate from the standard decision-log DENY so a
      * reviewer can read the confidentiality control's own record without filtering the whole authz
-     * stream — a control nobody can review is not a control.
+     * stream — a control nobody can review is not a control. {@code enforced=false} marks a SHADOW
+     * observation: what the control WOULD have refused had it been live.
      */
-    private void auditConfidentialRefusal(AuthzInternalRequest request, String reason, String relationship) {
+    private void auditConfidentialRefusal(AuthzInternalRequest request, String reason,
+                                          String relationship, boolean enforced) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("reason", reason);
+        payload.put("enforced", enforced);
+        payload.put("mode", properties.getConfidentialityMode());
+        payload.put("packState", confidentialityPack.stateLabel());
         payload.put("actorId", request.actorId());
         payload.put("actorType", request.actorType());
         payload.put("subjectId", request.subjectId());
@@ -898,28 +983,29 @@ public class PolicyEngine {
 
     /**
      * Audit an access that actually reached specially-protected content. Driven off the COMPOSED
-     * obligations rather than the entitlement flag, so every route that can reach protected data —
-     * self-access, a governed rule, break-glass, a workflow escalation grant — lands in the same
-     * reviewable stream, including any future one nobody remembered to instrument.
+     * obligations rather than the decision, so every route that can reach protected data —
+     * self-access, a governed rule, the emergency waiver, a workflow escalation grant — lands in the
+     * same reviewable stream, including any future one nobody remembered to instrument.
      */
     private void auditConfidentialGrant(AuthzInternalRequest request, Obligations obligations, String basis) {
         if (obligations == null || obligations.visibilityProfile() == null) {
             return;
         }
-        DataVisibilityTier granted =
-                DataVisibilityTier.fromString(obligations.visibilityProfile().visibilityTier());
-        if (!granted.allowsSpeciallyProtected()) {
+        VisibilityProfile vp = obligations.visibilityProfile();
+        if (!vp.allowsAnyConfidentialCategory()) {
             return;
         }
         Map<String, Object> payload = new HashMap<>();
         payload.put("grantBasis", basis);
+        payload.put("mode", properties.getConfidentialityMode());
+        payload.put("packState", confidentialityPack.stateLabel());
         payload.put("actorId", request.actorId());
         payload.put("actorType", request.actorType());
         payload.put("subjectId", request.subjectId());
         payload.put("resourceType", request.resourceType());
         payload.put("resourceId", request.resourceId());
         payload.put("purposeOfUse", request.purposeOfUse());
-        payload.put("visibilityTier", granted.name());
+        payload.put("confidentialCategories", vp.confidentialCategories());
         payload.put("facilityId", request.facilityId() != null ? request.facilityId().toString() : null);
         payload.put("tenantId", request.tenantId() != null ? request.tenantId().toString() : null);
         payload.put("correlationId", request.correlationId() != null ? request.correlationId().toString() : null);

@@ -45,14 +45,17 @@ class ResourceSensitivityClassifierTest {
     }
 
     @Test
-    @DisplayName("SPECIALLY_PROTECTED gets its own ceiling, not the full-clinical one")
-    void speciallyProtected_hasADistinctCeiling() {
-        DataVisibilityTier protectedCeiling =
-                ResourceSensitivityClassifier.maxTierForResource("confidential-encounters");
-
-        assertEquals(DataVisibilityTier.SPECIALLY_PROTECTED_CLINICAL, protectedCeiling);
-        assertNotEquals(ResourceSensitivityClassifier.maxTierForResource("encounters"), protectedCeiling,
-                "sharing a ceiling with ordinary clinical data is precisely what made the class inert");
+    @DisplayName("the confidential lane shares the full-clinical CEILING — confidentiality is not a tier")
+    void speciallyProtected_sharesTheTierCeilingByDesign() {
+        // The tier bounds how much ordinary clinical detail may flow, and protected content is full
+        // clinical detail, so the ceiling is the same. Confidentiality rides a separate axis (the
+        // confidentialCategories obligation) because a tier is a total order: putting protected
+        // content above FULL_IDENTIFIED_CLINICAL would assert that a safeguarding grant implies
+        // access to the entire clinical record, which is exactly what must not be true.
+        assertEquals(DataVisibilityTier.FULL_IDENTIFIED_CLINICAL,
+                ResourceSensitivityClassifier.maxTierForResource("confidential-encounters"));
+        assertEquals(ResourceSensitivityClassifier.maxTierForResource("encounters"),
+                ResourceSensitivityClassifier.maxTierForResource("confidential-encounters"));
     }
 
     @Test

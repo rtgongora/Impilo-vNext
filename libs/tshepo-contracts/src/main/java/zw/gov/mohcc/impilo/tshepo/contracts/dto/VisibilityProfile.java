@@ -11,6 +11,20 @@ import java.util.List;
 /**
  * Data visibility and representation policy for one authorized request.
  * Serialized inside {@link Obligations} and mirrored as flat trust headers for PEPs.
+ *
+ * <h2>Three orthogonal axes</h2>
+ * <p>{@code visibilityTier} is an ordered ladder of <em>how much</em> may be disclosed.
+ * {@code piiAccess} and {@code clinicalAccess} are separate because they are separate questions.
+ * {@code confidentialCategories} is the third such axis: <em>which categories of specially-protected
+ * content</em> this requester may receive.</p>
+ *
+ * <p>It is deliberately NOT a rung on the tier ladder. A tier is a total order, so a
+ * "specially-protected" tier above {@code FULL_IDENTIFIED_CLINICAL} would assert that reaching
+ * confidential content implies reaching everything below it — which is wrong for the two cases that
+ * matter: a safeguarding lead who should read the safeguarding disclosure but not the full clinical
+ * record, and a sexual-health nurse who should not thereby reach the mental-health notes.
+ * Confidentiality is also <em>relational</em> ("protected from the guardian, not from the person"),
+ * which is not a disclosure level at all.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record VisibilityProfile(
@@ -24,8 +38,64 @@ public record VisibilityProfile(
         List<String> suppressFields,
         List<String> pseudonymiseFields,
         String exportPolicy,
-        Boolean drillDownAllowed
+        Boolean drillDownAllowed,
+        /**
+         * Categories of {@code SPECIALLY_PROTECTED} content this requester may receive (see the
+         * governed confidential-category value set). Null or empty means none — the default, so
+         * protected content is withheld unless a decision explicitly granted the category.
+         */
+        List<String> confidentialCategories
 ) {
+    /**
+     * Pre-confidentiality arity, kept so the existing construction sites (and any deserialiser
+     * pinned to the old shape) compile and behave unchanged: no granted categories.
+     */
+    public VisibilityProfile(
+            String visibilityTier,
+            String piiAccess,
+            String clinicalAccess,
+            Boolean aggregateOnly,
+            String resourceSensitivityClass,
+            String escalationGrantId,
+            String workflowContext,
+            List<String> suppressFields,
+            List<String> pseudonymiseFields,
+            String exportPolicy,
+            Boolean drillDownAllowed) {
+        this(visibilityTier, piiAccess, clinicalAccess, aggregateOnly, resourceSensitivityClass,
+                escalationGrantId, workflowContext, suppressFields, pseudonymiseFields,
+                exportPolicy, drillDownAllowed, null);
+    }
+
+    /**
+     * Whether this requester may receive content in the given confidential category.
+     * Fail-closed: no granted categories means no protected content.
+     */
+    public boolean allowsConfidentialCategory(String category) {
+        if (category == null || category.isBlank()
+                || confidentialCategories == null || confidentialCategories.isEmpty()) {
+            return false;
+        }
+        String wanted = category.trim().toUpperCase(java.util.Locale.ROOT);
+        for (String granted : confidentialCategories) {
+            if (granted == null) {
+                continue;
+            }
+            String g = granted.trim().toUpperCase(java.util.Locale.ROOT);
+            // "*" is the whole-set grant used for self-access and the audited emergency waiver,
+            // where enumerating categories would add nothing but a chance to miss one.
+            if (g.equals("*") || g.equals(wanted)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Whether any protected content at all is reachable by this requester. */
+    public boolean allowsAnyConfidentialCategory() {
+        return confidentialCategories != null && !confidentialCategories.isEmpty();
+    }
+
     public static VisibilityProfile legacyUnrestricted() {
         return new VisibilityProfile(
                 null, null, null, null, null, null, null, null, null, null, null);
@@ -64,6 +134,7 @@ public record VisibilityProfile(
             b.pseudonymiseFields = seed.pseudonymiseFields();
             b.exportPolicy = seed.exportPolicy();
             b.drillDownAllowed = seed.drillDownAllowed();
+            b.confidentialCategories = seed.confidentialCategories();
         }
         return b;
     }
@@ -80,6 +151,7 @@ public record VisibilityProfile(
         private List<String> pseudonymiseFields;
         private String exportPolicy;
         private Boolean drillDownAllowed;
+        private List<String> confidentialCategories;
 
         public Builder visibilityTier(String v) {
             this.visibilityTier = v;
@@ -136,11 +208,17 @@ public record VisibilityProfile(
             return this;
         }
 
+        public Builder confidentialCategories(List<String> v) {
+            this.confidentialCategories = v;
+            return this;
+        }
+
         public VisibilityProfile buildBare() {
             return new VisibilityProfile(
                     visibilityTier, piiAccess, clinicalAccess, aggregateOnly,
                     resourceSensitivityClass, escalationGrantId, workflowContext,
-                    suppressFields, pseudonymiseFields, exportPolicy, drillDownAllowed);
+                    suppressFields, pseudonymiseFields, exportPolicy, drillDownAllowed,
+                    confidentialCategories);
         }
 
         public void capVisibilityTier(DataVisibilityTier cap) {
@@ -161,24 +239,32 @@ public record VisibilityProfile(
         }
 
         /**
-         * Raise the tier to at least {@code floor}, syncing the access levels that a higher tier
-         * implies. The mirror of {@link #capVisibilityTier}, for a grant the PDP has decided the
-         * actor holds (e.g. the subject reading their own specially-protected record). Unlike
-         * {@link #liftWithEscalation} it stamps no grant token — there is no workflow escalation
-         * behind it, just an entitlement.
+         * Grant confidential categories, unioned with anything already granted. A grant of
+         * {@code "*"} means every category (self-access, audited emergency waiver).
          */
-        public void raiseVisibilityTier(DataVisibilityTier floor) {
-            DataVisibilityTier current = DataVisibilityTier.fromString(
-                    visibilityTier != null ? visibilityTier : DataVisibilityTier.AGGREGATE_ONLY.name());
-            DataVisibilityTier raised = DataVisibilityTier.max(current, floor);
-            visibilityTier = raised.name();
-            if (raised.allowsRowLevel()) {
-                aggregateOnly = false;
+        public void grantConfidentialCategories(List<String> categories) {
+            if (categories == null || categories.isEmpty()) {
+                return;
             }
-            if (raised.allowsFullClinical()) {
-                clinicalAccess = ClinicalAccessLevel.FULL.name();
-                piiAccess = PiiAccessLevel.FULL.name();
+            List<String> merged = new java.util.ArrayList<>();
+            if (confidentialCategories != null) {
+                merged.addAll(confidentialCategories);
             }
+            for (String c : categories) {
+                if (c != null && !c.isBlank() && !merged.contains(c)) {
+                    merged.add(c);
+                }
+            }
+            confidentialCategories = List.copyOf(merged);
+        }
+
+        /**
+         * Withdraw every confidential-category grant. The clamp applied when a decision found no
+         * entitlement — it must run last, because a rule overlay or an escalation grant can add
+         * categories and this is the one revocation that has to win.
+         */
+        public void revokeConfidentialCategories() {
+            confidentialCategories = null;
         }
 
         public void liftWithEscalation(DataVisibilityTier grantCeiling, String grantToken, String workflow) {
@@ -194,9 +280,7 @@ public record VisibilityProfile(
             if (lifted.disclosureLevel() >= DataVisibilityTier.IDENTIFIED_LIMITED_CLINICAL.disclosureLevel()) {
                 clinicalAccess = ClinicalAccessLevel.SUMMARY.name();
             }
-            // allowsFullClinical() rather than == FULL_IDENTIFIED_CLINICAL: the strictly higher
-            // SPECIALLY_PROTECTED_CLINICAL tier is a superset and must not fall back to SUMMARY.
-            if (lifted.allowsFullClinical()) {
+            if (lifted == DataVisibilityTier.FULL_IDENTIFIED_CLINICAL) {
                 clinicalAccess = ClinicalAccessLevel.FULL.name();
                 piiAccess = PiiAccessLevel.FULL.name();
             }
@@ -206,7 +290,8 @@ public record VisibilityProfile(
             return new VisibilityProfile(
                     visibilityTier, piiAccess, clinicalAccess, aggregateOnly,
                     resourceSensitivityClass, escalationGrantId, workflowContext,
-                    suppressFields, pseudonymiseFields, exportPolicy, drillDownAllowed);
+                    suppressFields, pseudonymiseFields, exportPolicy, drillDownAllowed,
+                    confidentialCategories);
         }
     }
 }

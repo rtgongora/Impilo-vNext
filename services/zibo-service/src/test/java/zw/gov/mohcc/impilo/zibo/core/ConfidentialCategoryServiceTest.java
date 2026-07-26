@@ -62,9 +62,17 @@ class ConfidentialCategoryServiceTest {
 
         var result = service.classifyCode(TENANT, ICD10, "B20.7");
 
-        assertTrue(result.confidential());
-        assertEquals("SPECIALLY_PROTECTED", result.sensitivityClass());
-        assertEquals(List.of("HIV"), result.categories());
+        assertEquals(List.of("HIV"), result.categories(),
+                "the governed map must report what it matched, so the seed can be reviewed");
+        assertEquals(ConfidentialCategoryService.CATEGORY_MAP_RATIFIED, result.confidential());
+        if (ConfidentialCategoryService.CATEGORY_MAP_RATIFIED) {
+            assertEquals("SPECIALLY_PROTECTED", result.sensitivityClass());
+        } else {
+            assertNull(result.sensitivityClass(),
+                    "while the map is unratified no class is handed back to stamp — a record "
+                            + "carrying a protection label that does not protect it is the failure "
+                            + "this seam exists to prevent");
+        }
     }
 
     @Test
@@ -100,10 +108,9 @@ class ConfidentialCategoryServiceTest {
                 new ConfidentialCategoryService.CodedEntry(ICD10, "J02.9"),
                 new ConfidentialCategoryService.CodedEntry(ICD10, "B20.1")));
 
-        assertTrue(result.confidential(),
+        assertEquals(List.of("HIV"), result.categories(),
                 "a consultation that touched HIV care does not become ordinary because it also "
                         + "recorded a sore throat");
-        assertEquals(List.of("HIV"), result.categories());
     }
 
     @Test
@@ -151,7 +158,8 @@ class ConfidentialCategoryServiceTest {
     void matchingIsNormalised() {
         stubGovernedMap(row("b20", "HIV"));
 
-        assertTrue(service.classifyCode(TENANT, " " + ICD10.toUpperCase() + " ", "B20.9").confidential());
+        assertEquals(List.of("HIV"),
+                service.classifyCode(TENANT, " " + ICD10.toUpperCase() + " ", "B20.9").categories());
     }
 
     @Test
@@ -163,6 +171,16 @@ class ConfidentialCategoryServiceTest {
         stubGovernedMap(row("B20", "HIV"));
         assertFalse(service.classify(TENANT, List.of(
                 new ConfidentialCategoryService.CodedEntry(ICD10, "  "))).confidential());
+    }
+
+    @Test
+    @DisplayName("the shipped map is unratified, so it stamps nothing")
+    void shippedMapIsUnratified() {
+        assertFalse(ConfidentialCategoryService.CATEGORY_MAP_RATIFIED,
+                "the code-to-category map is an engineering seed pending MoHCC ratification. Flip "
+                        + "this only together with the tshepo-authz policy pack and the V048 rule "
+                        + "activation — they are one governance act, not three.");
+        assertFalse(service.isRatified());
     }
 
     @Test

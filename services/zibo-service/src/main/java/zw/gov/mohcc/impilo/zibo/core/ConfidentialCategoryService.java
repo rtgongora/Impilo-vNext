@@ -50,6 +50,21 @@ public class ConfidentialCategoryService {
     /** The sensitivity class a clinical record must carry when any of its codes is confidential. */
     public static final String PROTECTED_SENSITIVITY_CLASS = "SPECIALLY_PROTECTED";
 
+    /**
+     * Whether the seeded map has been ratified. While false the service still reports the categories
+     * it matched — so the content can be reviewed, and a governance surface can show what ratifying
+     * would do — but it returns NO sensitivity class to stamp.
+     *
+     * <p>That distinction is the point. The trust plane's enforcement is inert until MoHCC ratifies
+     * the policy pack, so a record stamped SPECIALLY_PROTECTED today would carry a label that does
+     * not protect it. Handing back a stampable class before enforcement is live would manufacture
+     * exactly the false assurance this whole seam exists to remove.</p>
+     *
+     * <p>Flip to true only together with the tshepo-authz policy pack ratification and the V048 rule
+     * activation. They are one governance act, not three.</p>
+     */
+    public static final boolean CATEGORY_MAP_RATIFIED = false;
+
     private final MappingIndexRepository mappingIndexRepository;
 
     public ConfidentialCategoryService(MappingIndexRepository mappingIndexRepository) {
@@ -62,8 +77,11 @@ public class ConfidentialCategoryService {
     /**
      * The governed verdict for a set of coded entries.
      *
-     * @param confidential          whether any entry falls in a confidential category
-     * @param sensitivityClass      the class to stamp on the record, or {@code null} when not confidential
+     * @param confidential          whether the record should be treated as confidential. FALSE while
+     *                              the governed map is unratified even when categories matched — read
+     *                              {@code categories} to see what the seed would classify
+     * @param sensitivityClass      the class to stamp, or {@code null} when not confidential OR when
+     *                              the governed map is not yet ratified (see {@link #CATEGORY_MAP_RATIFIED})
      * @param categories            every confidential category matched, in first-matched order
      * @param unmatchedCodeSystems  code systems present in the request that the governed map does not
      *                              cover. Reported rather than swallowed: an uncovered code system is
@@ -80,7 +98,14 @@ public class ConfidentialCategoryService {
         }
 
         static ClassificationResult protectedAs(List<String> categories, List<String> unmatchedCodeSystems) {
-            return new ClassificationResult(true, PROTECTED_SENSITIVITY_CLASS, categories, unmatchedCodeSystems);
+            // sensitivityClass is withheld while the map is unratified: the caller learns WHICH
+            // categories matched but is given nothing to stamp, because the enforcement that would
+            // make the stamp meaningful is not live yet.
+            return new ClassificationResult(
+                    CATEGORY_MAP_RATIFIED,
+                    CATEGORY_MAP_RATIFIED ? PROTECTED_SENSITIVITY_CLASS : null,
+                    categories,
+                    unmatchedCodeSystems);
         }
     }
 
@@ -143,6 +168,11 @@ public class ConfidentialCategoryService {
     @Transactional(readOnly = true)
     public ClassificationResult classifyCode(UUID tenantId, String system, String code) {
         return classify(tenantId, List.of(new CodedEntry(system, code)));
+    }
+
+    /** Whether the governed map may drive record stamping. */
+    public boolean isRatified() {
+        return CATEGORY_MAP_RATIFIED;
     }
 
     /** The governed category vocabulary in use for this tenant (for review surfaces). */
