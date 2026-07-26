@@ -44,6 +44,26 @@ Consequences that are not optional:
 
   This is how `pct` **V060** was found (see §3c) — `git log` showed nothing. Contributed by the RMNP
   lane, 2026-07-26.
+- **Foreign files are routinely already staged when you go to commit.** The RMNP lane ran `git add`
+  on its own paths and found `V060__problem_severity.sql` and a `ProblemServiceTest` sitting in
+  `git diff --cached --name-only` from the problem-list lane. `git commit -- <explicit paths>` kept
+  them out **and left them staged for their owner**, which is the behaviour you want; a bare
+  `git commit` would have swallowed both and produced an entirely plausible-looking commit. Run
+  `git diff --cached --name-only` before committing and `git show --stat HEAD` before pushing, and
+  compare the **count** against what you intended — a silently-included or silently-skipped file
+  still produces a plausible stat block.
+- **`git pull` is not reliable here; `git fetch` + explicit ff-only merge is.** Plain
+  `git pull --ff-only` fails with `fatal: Cannot fast-forward to multiple branches` when a peer
+  fetches concurrently and writes a multi-branch `FETCH_HEAD` under you; `git pull --rebase` fails
+  outright because the shared tree almost always contains another session's uncommitted work. Use:
+
+  ```
+  git fetch origin && git merge --ff-only origin/$(git branch --show-current)
+  ```
+
+  And note the structural shortcut: sessions in this tree **share one `.git`**, so a peer's commits
+  are already in your `HEAD` — no fetch is needed at all to push, and `git push` is a fast-forward.
+  Both hazards confirmed independently by the RMNP lane.
 
 ## 2. Lane ownership
 
