@@ -45,6 +45,7 @@ class HpaEnrichmentImportServiceTest {
     @Mock FacilityRepository facilityRepository;
     @Mock FacilityIdentifierRepository identifierRepository;
     @Mock FacilityContactRepository contactRepository;
+    @Mock FacilitySourceLegitimacyService sourceLegitimacyService;
     @Mock PlatformTransactionManager transactionManager;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -56,7 +57,7 @@ class HpaEnrichmentImportServiceTest {
         lenient().when(transactionManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         return new HpaEnrichmentImportService(
                 jdbc, objectMapper, matchService, facilityRepository, identifierRepository,
-                contactRepository, transactionManager);
+                contactRepository, sourceLegitimacyService, transactionManager);
     }
 
     private static String record(long id, String name) {

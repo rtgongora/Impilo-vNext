@@ -33,11 +33,39 @@ public class HpaImportController {
     private static final Logger log = LoggerFactory.getLogger(HpaImportController.class);
 
     private final HpaEnrichmentImportService importService;
+    private final zw.gov.mohcc.impilo.tuso.core.HpaLegitimacyBackfillService legitimacyBackfillService;
     private final JdbcTemplate jdbc;
 
-    public HpaImportController(HpaEnrichmentImportService importService, JdbcTemplate jdbc) {
+    public HpaImportController(HpaEnrichmentImportService importService,
+                               zw.gov.mohcc.impilo.tuso.core.HpaLegitimacyBackfillService legitimacyBackfillService,
+                               JdbcTemplate jdbc) {
         this.importService = importService;
+        this.legitimacyBackfillService = legitimacyBackfillService;
         this.jdbc = jdbc;
+    }
+
+    /** HAR W1 — backfill the regulator's legitimacy verdict for already-imported HPA facilities. */
+    public record LegitimacyBackfillRequest(Integer limit, Boolean dryRun, String tenantId) {}
+
+    @PostMapping("/backfill-legitimacy")
+    public ResponseEntity<ApiResponse<zw.gov.mohcc.impilo.tuso.core.HpaLegitimacyBackfillService.BackfillResult>>
+            backfillLegitimacy(@RequestBody(required = false) LegitimacyBackfillRequest request) {
+        var ctx = zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.require();
+        int limit = request == null || request.limit() == null ? 500 : request.limit();
+        boolean dryRun = request != null && Boolean.TRUE.equals(request.dryRun());
+        java.util.UUID tenantId = request == null ? null : tenant(request.tenantId());
+        log.info("HAR W1 legitimacy backfill limit={} dryRun={} correlationId={}",
+                limit, dryRun, ctx.correlationId());
+        var result = legitimacyBackfillService.backfill(
+                tenantId != null ? tenantId : ctx.tenantId(), ctx.actorId(), limit, dryRun);
+        return ResponseEntity.ok(ApiResponse.ok(result, correlationId()));
+    }
+
+    @GetMapping("/legitimacy-summary")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> legitimacySummary() {
+        var ctx = zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(
+                legitimacyBackfillService.summary(ctx.tenantId()), correlationId()));
     }
 
     public record HpaImportApiRequest(String feedPath, Boolean dryRun, String tenantId, String feedChecksum) {}

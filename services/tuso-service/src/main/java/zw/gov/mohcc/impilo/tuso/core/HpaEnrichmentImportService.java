@@ -10,6 +10,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityLegitimacySource;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityLegitimacyStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityContactEntity;
@@ -25,6 +27,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -85,6 +88,7 @@ public class HpaEnrichmentImportService {
     private final FacilityRepository facilityRepository;
     private final FacilityIdentifierRepository identifierRepository;
     private final FacilityContactRepository contactRepository;
+    private final FacilitySourceLegitimacyService sourceLegitimacyService;
     private final TransactionTemplate txTemplate;
 
     public HpaEnrichmentImportService(JdbcTemplate jdbc,
@@ -93,6 +97,7 @@ public class HpaEnrichmentImportService {
                                       FacilityRepository facilityRepository,
                                       FacilityIdentifierRepository identifierRepository,
                                       FacilityContactRepository contactRepository,
+                                      FacilitySourceLegitimacyService sourceLegitimacyService,
                                       PlatformTransactionManager transactionManager) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
@@ -100,6 +105,7 @@ public class HpaEnrichmentImportService {
         this.facilityRepository = facilityRepository;
         this.identifierRepository = identifierRepository;
         this.contactRepository = contactRepository;
+        this.sourceLegitimacyService = sourceLegitimacyService;
         this.txTemplate = new TransactionTemplate(transactionManager);
     }
 
@@ -303,6 +309,65 @@ public class HpaEnrichmentImportService {
 
     // ── Canonical writes (enrich / create) ──────────────────────────────────
 
+    /**
+     * Stamp the two source-legitimacy verdicts an HPA listing warrants (HAR W1), mirroring
+     * {@code FacilityMasterImportService.stampSourceLegitimacy}.
+     *
+     * <p><b>HPA_LEGAL</b> carries the statutory registrar's own verdict, derived from the feed's
+     * {@code regulatory_status}; it allows platform operation only when the registration is current.
+     * <b>PLATFORM_OPERATIONAL</b> records, honestly, that Impilo has not verified that this
+     * institution is operating.</p>
+     *
+     * <p>The composite therefore stays {@code platform_access_allowed = false} — and that is the
+     * correct answer, not a compromise. The rule is a veto lattice ({@code !anyDenies && anyAllows}),
+     * and every master-pack facility sits in exactly this position too, with the same
+     * PLATFORM_OPERATIONAL denier. An HPA-listed facility becomes a peer of the Ministry's list with
+     * a different allower — the regulator's verdict is now citable, machine-readable and reviewable,
+     * while no operational capability is granted.</p>
+     */
+    private void stampHpaLegitimacy(FacilityEntity facility, JsonNode hpa, String regNum,
+                                    String actorId, UUID tenantId) {
+        String correlationId = BUNDLE_ID;
+        FacilityLegitimacyStatus hpaStatus = hpaLegitimacyStatus(text(hpa, "regulatory_status"));
+        sourceLegitimacyService.stampFromImport(facility,
+                FacilityLegitimacySource.HPA_LEGAL,
+                hpaStatus,
+                hpaStatus == FacilityLegitimacyStatus.REGISTERED_CURRENT,
+                regNum == null || regNum.isBlank()
+                        ? SYS_HPA_INSTITUTION_ID + ":" + facility.getFacilityCode()
+                        : SYS_HPA_REGISTRATION_NUMBER + ":" + regNum,
+                "Listed on the HPA institution register (" + BUNDLE_ID + ", as at "
+                        + SOURCE_EFFECTIVE_DATE + ")",
+                actorId, tenantId, correlationId);
+
+        sourceLegitimacyService.stampFromImport(facility,
+                FacilityLegitimacySource.PLATFORM_OPERATIONAL,
+                FacilityLegitimacyStatus.PENDING_VERIFICATION,
+                false,
+                BUNDLE_ID,
+                "Regulatory listing only — the regulator does not assert an operating status and "
+                        + "the platform has not verified one",
+                actorId, tenantId, correlationId);
+    }
+
+    /** Map the HPA feed's regulatory_status onto the platform's legitimacy vocabulary. */
+    static FacilityLegitimacyStatus hpaLegitimacyStatus(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return FacilityLegitimacyStatus.PENDING_VERIFICATION;
+        }
+        String s = raw.trim().toUpperCase(Locale.ROOT).replace(' ', '_').replace('-', '_');
+        return switch (s) {
+            case "REGISTERED", "REGISTERED_CURRENT", "CURRENT", "ACTIVE", "VALID" ->
+                    FacilityLegitimacyStatus.REGISTERED_CURRENT;
+            case "EXPIRED", "LAPSED" -> FacilityLegitimacyStatus.EXPIRED;
+            case "SUSPENDED" -> FacilityLegitimacyStatus.SUSPENDED;
+            case "NOT_COMPLIANT", "NON_COMPLIANT", "KNOWN_NOT_COMPLIANT" ->
+                    FacilityLegitimacyStatus.KNOWN_NOT_COMPLIANT;
+            case "NOT_FOUND" -> FacilityLegitimacyStatus.NOT_FOUND;
+            default -> FacilityLegitimacyStatus.PENDING_VERIFICATION;
+        };
+    }
+
     private void enrichExisting(UUID tenantId, String actorId, long batchId, Long facilityId,
                                 JsonNode hpa, String srk, long institutionId, String hpaIdValue, String regNum,
                                 JsonNode legacyEnrichment) {
@@ -376,6 +441,10 @@ public class HpaEnrichmentImportService {
         assertField(tenantId, batchId, facilityId, "location.province", text(hpa, "province"), "HPA", srk, "REGULATOR_ASSERTED", "PUBLIC");
         setProgressiveState(tenantId, facilityId, "REGULATOR_LISTED", "HPA", srk);
         setProgressiveState(tenantId, facilityId, "PUBLICLY_VISIBLE", "HPA", srk);
+        // HAR W1 — record the statutory registrar's verdict where the platform reads it. Without
+        // this the composite reports "no source legitimacy recorded… not granted by default", which
+        // is false for a facility HPA has affirmatively listed.
+        stampHpaLegitimacy(facility, hpa, regNum, actorId, tenantId);
         if (unresolvedSite) {
             dataGapTask(tenantId, batchId, facilityId, "VERIFICATION", "location",
                     "Resolve or link the physical site for this establishment", "STEWARD", "HIGH");
