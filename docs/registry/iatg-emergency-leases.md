@@ -421,6 +421,34 @@ Their four commitments, which this pack builds against:
    handshake is a diagnosis nobody made.
 4. **No timeout discharges responsibility** — a patient nobody has accepted is emergency's patient.
 
+**The link column is fact, not assumption — `pct` V101 has landed.**
+`pct_medical_episodes.emergency_episode_id UUID NULL`, with a composite partial index
+`idx_pct_medical_episodes_emergency (tenant_id, emergency_episode_id) WHERE emergency_episode_id IS
+NOT NULL`. Verified on disk. **No foreign key, deliberately** — `pct.emergency_episode` does not
+exist yet and a hard constraint would couple the two lanes' deploy order in both directions. It is a
+documented soft reference, validated in application code until V200 lands.
+
+**Decision when V200 lands: promote it to a real FK with `ON DELETE RESTRICT`.** Both tables live in
+the `pct` schema and the same service, so there is no cross-service coupling to trade away, and a
+dangling `emergency_episode_id` is precisely the orphan this pack's CC-5 discipline exists to reject.
+`RESTRICT` not `CASCADE`, consistent with the standing rule that nothing cascades into or out of the
+emergency episode. Merging is safe under an FK because a merged episode is marked `MERGED` and never
+deleted. The constraint is contingent on this pack's table, so this pack writes it — but
+`pct_medical_episodes` belongs to the Adult Medicine lane, so it goes in under a handoff rather than
+unilaterally.
+
+Two enforced behaviours on their side that this pack's handover must respect:
+- **Closing a medical episode requires an explicit reason and will not default one.** `COMPLETED`,
+  `DIED`, `TRANSFERRED`, `LOST_TO_FOLLOW_UP`, `PATIENT_DECLINED` all leave status `FINISHED`;
+  defaulting to `COMPLETED` would record a good outcome for a patient who was lost and every outcome
+  indicator would inherit it. If an emergency disposition ever closes a medical episode it must say
+  which — and the same discipline applies in reverse to this pack's own disposition outcomes.
+- **Attaching a problem requires one that already exists and belongs to the same patient.** The
+  service refuses to create a problem implicitly, because that would be a second write path into the
+  problem list bypassing the duplicate guard. This is the mechanical reason behind
+  "references, not content", and it is now enforced rather than agreed — a handover carrying free
+  text would be rejected.
+
 **What the handover row must carry, and nothing more:** `emergency_episode_id`, `subject_cpid`,
 `journey_id`, the problems raised **as `pct_problems` ids rather than free text**, the disposition,
 and the requesting clinician.
