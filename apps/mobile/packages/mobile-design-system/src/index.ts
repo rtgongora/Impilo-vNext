@@ -15,7 +15,7 @@ export type { TextStyle } from "./tokens/typography";
 export { borderRadius, shadows, neon, glass, tokens } from "./tokens/index";
 
 // Theme
-export { ThemeProvider, useTheme } from "./theme/ThemeProvider";
+export { ThemeProvider, useTheme, useOptionalTheme, lightTheme, darkTheme } from "./theme/ThemeProvider";
 export type { Theme, ThemeMode } from "./theme/ThemeProvider";
 
 // Future-Realism primitives

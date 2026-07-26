@@ -35,7 +35,7 @@ export interface Theme {
   accentColor?: string;
 }
 
-const lightTheme: Theme = {
+export const lightTheme: Theme = {
   mode: "light",
   resolvedMode: "light",
   colors: {
@@ -60,7 +60,7 @@ const lightTheme: Theme = {
   },
 };
 
-const darkTheme: Theme = {
+export const darkTheme: Theme = {
   mode: "dark",
   resolvedMode: "dark",
   colors: {
@@ -120,7 +120,15 @@ export function ThemeProvider({
       return {
         ...base,
         accentColor: accent,
-        colors: { ...base.colors, primary: accent },
+        colors: {
+          ...base.colors,
+          primary: accent,
+          // Light tint of the accent for badge/chip containers, so an app's
+          // brand color flows into every primary-tagged element, not just
+          // solid-fill buttons. "1F" is ~12% alpha appended to a 6-digit hex.
+          primaryContainer: `${accent}1F`,
+          onPrimary: "#FFFFFF",
+        },
       };
     }
     return base;
@@ -140,4 +148,25 @@ export function useTheme(): ThemeContextValue {
     throw new Error("useTheme must be used within a ThemeProvider");
   }
   return ctx;
+}
+
+const NOOP_SET_MODE: ThemeContextValue["setMode"] = () => {};
+const NOOP_SET_ACCENT: ThemeContextValue["setAccentColor"] = () => {};
+
+/**
+ * Same shape as useTheme(), but falls back to lightTheme instead of throwing
+ * when there is no ancestor ThemeProvider. Design-system PRIMITIVES (Button,
+ * Badge, Card) use this rather than useTheme() so that:
+ *   - inside an app (App.tsx mounts ThemeProvider) they pick up the real,
+ *     possibly per-app accentColor, and
+ *   - in isolated unit tests that render a component directly, with no
+ *     provider in the tree, they degrade to the same default theme rather
+ *     than crashing every test that touches a Button/Badge/Card.
+ * Real screen-level consumers that need a hard guarantee of provider presence
+ * should keep using useTheme().
+ */
+export function useOptionalTheme(): ThemeContextValue {
+  const ctx = useContext(ThemeContext);
+  if (ctx) return ctx;
+  return { theme: lightTheme, mode: "light", setMode: NOOP_SET_MODE, setAccentColor: NOOP_SET_ACCENT };
 }

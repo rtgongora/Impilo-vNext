@@ -16,6 +16,9 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { useOptionalTheme } from "../theme/ThemeProvider";
+import { colors } from "../tokens/colors";
+import type { Theme } from "../theme/ThemeProvider";
 
 export type ButtonVariant =
   | "primary"
@@ -42,14 +45,27 @@ export interface ButtonProps {
   testID?: string;
 }
 
-const VARIANT_STYLES: Record<ButtonVariant, { bg: string; text: string; border?: string }> = {
-  primary:     { bg: "#059669", text: "#FFFFFF" },
-  secondary:   { bg: "#1E40AF", text: "#FFFFFF" },
-  outline:     { bg: "transparent", text: "#059669", border: "#059669" },
-  ghost:       { bg: "transparent", text: "#374151" },
-  destructive: { bg: "#DC2626", text: "#FFFFFF" },
-  default:     { bg: "#6B7280", text: "#FFFFFF" },
-};
+/**
+ * Variant colors, split deliberately into two kinds:
+ *   - BRAND-TIED (primary, outline): resolve from theme.colors.primary, so
+ *     Citizen and Provider render their own identity through the same
+ *     component. This is what unblocks apps/mobile visual divergence — see
+ *     docs/design/mobile-visual-redesign-brief.md finding #2.
+ *   - UNIVERSAL/NEUTRAL (secondary, ghost, destructive, default): these carry
+ *     fixed UI semantics ("a de-emphasised action", "a dangerous action") that
+ *     must NOT vary by app, so they stay pinned to neutral/error tokens rather
+ *     than to the brand accent. Only actual brand elements should diverge.
+ */
+function getVariantStyles(theme: Theme): Record<ButtonVariant, { bg: string; text: string; border?: string }> {
+  return {
+    primary:     { bg: theme.colors.primary, text: theme.colors.onPrimary },
+    secondary:   { bg: colors.neutral[700], text: "#FFFFFF" },
+    outline:     { bg: "transparent", text: theme.colors.primary, border: theme.colors.primary },
+    ghost:       { bg: "transparent", text: colors.neutral[700] },
+    destructive: { bg: theme.colors.error, text: "#FFFFFF" },
+    default:     { bg: colors.neutral[500], text: "#FFFFFF" },
+  };
+}
 
 const SIZE_STYLES: Record<ButtonSize, { py: number; px: number; fontSize: number; radius: number }> = {
   sm:    { py: 6,  px: 12, fontSize: 13, radius: 8  },
@@ -73,9 +89,10 @@ export function Button({
   accessibilityLabel,
   testID,
 }: ButtonProps) {
+  const { theme } = useOptionalTheme();
   const isDisabled = disabled || loading;
   const resolvedTitle = title ?? label ?? "";
-  const vs = VARIANT_STYLES[variant];
+  const vs = getVariantStyles(theme)[variant];
   const ss = SIZE_STYLES[size];
 
   return (
