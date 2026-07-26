@@ -59,11 +59,20 @@ export interface ButtonProps {
 function getVariantStyles(theme: Theme): Record<ButtonVariant, { bg: string; text: string; border?: string }> {
   return {
     primary:     { bg: theme.colors.primary, text: theme.colors.onPrimary },
-    secondary:   { bg: colors.neutral[700], text: "#FFFFFF" },
+    // Deliberately gray, not brand-blue like the original hardcoded #1E40AF —
+    // matches how "secondary" is actually used (Cancel/Close/Sign Out — a
+    // de-emphasised action), but using colors.gray (Tailwind, matches the rest
+    // of the app) rather than colors.neutral (Material, matches nothing).
+    secondary:   { bg: colors.gray[700], text: "#FFFFFF" },
     outline:     { bg: "transparent", text: theme.colors.primary, border: theme.colors.primary },
-    ghost:       { bg: "transparent", text: colors.neutral[700] },
-    destructive: { bg: theme.colors.error, text: "#FFFFFF" },
-    default:     { bg: colors.neutral[500], text: "#FFFFFF" },
+    // Exact original value (#374151) — see colors.ts `gray` for why this is
+    // NOT colors.neutral[700] (#616161, a visibly different gray).
+    ghost:       { bg: "transparent", text: colors.gray[700] },
+    // Exact original value (#DC2626) — NOT theme.colors.error (#F44336, the
+    // orphaned/unused semantic red). See colors.ts `ui.error`.
+    destructive: { bg: colors.ui.error.main, text: "#FFFFFF" },
+    // Exact original value (#6B7280) — NOT colors.neutral[500] (#9E9E9E).
+    default:     { bg: colors.gray[500], text: "#FFFFFF" },
   };
 }
 
