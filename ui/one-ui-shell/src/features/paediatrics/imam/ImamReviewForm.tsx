@@ -4,6 +4,7 @@ import React from "react";
 import { SegmentedControl } from "shared-ui";
 import type { ImamAssessment, ImamEpisode } from "@/hooks/queries/useImam";
 import { useRecordImamVisit } from "@/hooks/queries/useImam";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 /**
  * Recording one scheduled review.
@@ -27,6 +28,9 @@ type Attendance = "ATTENDED" | "MISSED";
 
 export function ImamReviewForm({ episode, assessment, onRecorded }: ImamReviewFormProps) {
   const record = useRecordImamVisit();
+  // The author travels with the write. pct-service refuses a clinical record it cannot attribute
+  // to a person, and "unknown" is not an author — it is the absence of one, written down.
+  const author = useAuthStore((state) => state.user?.id ?? null);
 
   const [attendance, setAttendance] = React.useState<Attendance>("ATTENDED");
   const [muac, setMuac] = React.useState("");
@@ -62,6 +66,7 @@ export function ImamReviewForm({ episode, assessment, onRecorded }: ImamReviewFo
         episodeId: episode.id,
         patientId: episode.patientId,
         attended,
+        recordedBy: author,
         visitDate: attended ? new Date().toISOString() : null,
         scheduledFor: attended ? null : episode.nextReviewDue,
         encounterId: episode.encounterId,

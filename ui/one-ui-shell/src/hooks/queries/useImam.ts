@@ -466,6 +466,8 @@ export interface EnrolImamPayload {
   admissionAppetiteTest?: string | null;
   medicalComplication?: boolean | null;
   admissionComplications?: string | null;
+  /** Who is enrolling. PCT refuses a clinical write it cannot attribute to a person. */
+  recordedBy?: string | null;
 }
 
 export function useEnrolImam() {
@@ -477,6 +479,7 @@ export function useEnrolImam() {
         journey_id: payload.journeyId ?? null,
         encounter_id: payload.encounterId ?? null,
         facility_id: payload.facilityId ?? null,
+        enrolled_by: payload.recordedBy ?? null,
         source_classification: payload.sourceClassification ?? null,
         programme: payload.programme ?? null,
         admission_age_days: payload.admissionAgeDays ?? null,
@@ -511,6 +514,7 @@ export interface RecordImamVisitPayload {
   dangerSignsPresent?: boolean | null;
   rutfSachetsIssued?: number | null;
   clinicalNote?: string | null;
+  recordedBy?: string | null;
 }
 
 export function useRecordImamVisit() {
@@ -521,6 +525,7 @@ export function useRecordImamVisit() {
         `/internal/v1/imam/episodes/${encodeURIComponent(payload.episodeId)}/visits`,
         {
           attended: payload.attended,
+          recorded_by: payload.recordedBy ?? null,
           visit_date: payload.attended ? (payload.visitDate ?? new Date().toISOString()) : null,
           scheduled_for: payload.scheduledFor ?? null,
           encounter_id: payload.encounterId ?? null,
@@ -551,6 +556,7 @@ export interface CloseImamEpisodePayload {
   outcomeAt?: string | null;
   outcomeNote?: string | null;
   dischargeOverrideReason?: string | null;
+  recordedBy?: string | null;
 }
 
 export function useCloseImamEpisode() {
@@ -561,6 +567,7 @@ export function useCloseImamEpisode() {
         `/internal/v1/imam/episodes/${encodeURIComponent(payload.episodeId)}/outcome`,
         {
           outcome: payload.outcome,
+          outcome_by: payload.recordedBy ?? null,
           outcome_at: payload.outcomeAt ?? new Date().toISOString(),
           outcome_note: payload.outcomeNote ?? null,
           discharge_override_reason: payload.dischargeOverrideReason ?? null,

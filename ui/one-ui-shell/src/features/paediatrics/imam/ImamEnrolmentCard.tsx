@@ -3,6 +3,7 @@
 import React from "react";
 import { SegmentedControl } from "shared-ui";
 import { useEnrolImam } from "@/hooks/queries/useImam";
+import { useAuthStore } from "@/hooks/useAuthStore";
 import { CLASSIFICATION_LABELS, classificationLabel } from "./imam-presentation";
 
 /**
@@ -41,6 +42,7 @@ export function ImamEnrolmentCard({
   onEnrolled,
 }: ImamEnrolmentCardProps) {
   const enrol = useEnrolImam();
+  const author = useAuthStore((state) => state.user?.id ?? null);
   const [classification, setClassification] = React.useState("");
   const [muac, setMuac] = React.useState(
     typeof suggestedMuacCm === "number" ? String(suggestedMuacCm) : "",
@@ -73,6 +75,7 @@ export function ImamEnrolmentCard({
     try {
       const episode = await enrol.mutateAsync({
         patientId,
+        recordedBy: author,
         journeyId,
         encounterId,
         facilityId,

@@ -208,7 +208,7 @@ public class ImamService {
         episode.setProgramme(programme);
         episode.setStatus("ACTIVE");
         episode.setEnrolledAt(enrolledAt);
-        episode.setEnrolledBy(firstNonBlank(str(body.get("enrolled_by"), body.get("recorded_by")), ctx.actorId()));
+        episode.setEnrolledBy(requireAuthor(ctx, str(body.get("enrolled_by"), body.get("recorded_by"))));
         episode.setEnrolmentSource(upperOr(str(body.get("enrolment_source"), body.get("enrolmentSource")),
                 classification != null ? "IMNCI_CLASSIFICATION" : "DIRECT"));
         episode.setSourceClassification(classification);
@@ -294,7 +294,7 @@ public class ImamService {
         visit.setVisitNumber(nextNumber);
         visit.setScheduledFor(date(str(in.get("scheduled_for"), in.get("scheduledFor"))));
         visit.setAttended(attended);
-        visit.setRecordedBy(firstNonBlank(str(in.get("recorded_by")), ctx.actorId()));
+        visit.setRecordedBy(requireAuthor(ctx, str(in.get("recorded_by"))));
 
         if (attended) {
             visit.setVisitDate(timestamp(str(in.get("visit_date"), in.get("visitDate"))));
@@ -446,7 +446,7 @@ public class ImamService {
         episode.setStatus("CLOSED");
         episode.setOutcome(outcome);
         episode.setOutcomeAt(outcomeAt);
-        episode.setOutcomeBy(firstNonBlank(str(in.get("outcome_by"), in.get("recorded_by")), ctx.actorId()));
+        episode.setOutcomeBy(requireAuthor(ctx, str(in.get("outcome_by"), in.get("recorded_by"))));
         episode.setOutcomeNote(str(in.get("outcome_note"), in.get("note")));
         episode.setDischargeMuacCm(firstNonNull(decimal(in.get("discharge_muac_cm"), in.get("muac_cm")),
                 lastAttended == null ? null : lastAttended.getMuacCm()));
@@ -625,6 +625,32 @@ public class ImamService {
     }
 
     // ── coercion ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Who is writing this record.
+     *
+     * <p>A clinical record with no author is not a record — you cannot ask the person who wrote it
+     * what they saw, and you cannot tell whether the child was reviewed by a nurse or by a data
+     * clerk copying a register. The columns are NOT NULL for that reason, and this resolves the
+     * author before the insert so the caller is told what is missing rather than receiving a
+     * constraint violation as a 500, which says nothing they can act on.</p>
+     *
+     * <p>Found by deploying: the trust context carries no actor on an estate that does not enforce
+     * bearer authentication, and the first review recorded through the BFF died on the constraint.</p>
+     */
+    private static String requireAuthor(TrustContext ctx, String... supplied) {
+        String author = firstNonBlank(supplied);
+        if (author == null) {
+            author = ctx.actorId();
+        }
+        if (author == null || author.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "This write has no identifiable author: neither the request nor the trust context "
+                            + "names who is recording it. A clinical record must carry the person who "
+                            + "made it — supply recorded_by, or call with an actor context.");
+        }
+        return author;
+    }
 
     private static Object nullSafe(Object value) {
         return value == null ? "" : value;

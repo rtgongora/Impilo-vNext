@@ -360,6 +360,45 @@ class ImamServiceTest {
     }
 
     @Test
+    void aWriteWithNoIdentifiableAuthorIsRejectedBeforeItReachesTheDatabase() {
+        // Caught by deploying: with no actor on the trust context the insert died on the NOT NULL
+        // constraint and the clinician got a 500 that told them nothing. A clinical record with no
+        // author is not a record — you cannot ask whoever wrote it what they saw.
+        ImamEpisodeEntity episode = episode("OTP");
+        stored(episode);
+        TrustContext anonymous = new TrustContext(
+                TENANT, null, "PROVIDER", "TREATMENT", null,
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, AccessMode.INTERNAL);
+
+        assertThatThrownBy(() -> runAs(anonymous, () ->
+                imamService.recordVisit(episode.getImamEpisodeId(), body(b -> b.put("muac_cm", "11.9")))))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("no identifiable author");
+
+        verify(visitRepository, never()).save(any());
+    }
+
+    @Test
+    void anExplicitRecordedByStandsInForAMissingActorContext() {
+        // An offline pack or a register-entry job legitimately names its own author.
+        ImamEpisodeEntity episode = episode("OTP");
+        stored(episode);
+        progress(Map.of("discharge_eligible", false, "attendance_status", "ATTENDING"));
+        TrustContext anonymous = new TrustContext(
+                TENANT, null, "PROVIDER", "TREATMENT", null,
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, AccessMode.INTERNAL);
+
+        ImamVisitEntity visit = runAs(anonymous, () ->
+                imamService.recordVisit(episode.getImamEpisodeId(), body(b -> {
+                    b.put("visit_date", "2026-06-08T09:00:00Z");
+                    b.put("muac_cm", "11.9");
+                    b.put("recorded_by", "nurse.chienda");
+                })));
+
+        assertThat(visit.getRecordedBy()).isEqualTo("nurse.chienda");
+    }
+
+    @Test
     void anUnknownOutcomeIsRejectedRatherThanStored() {
         ImamEpisodeEntity episode = episode("OTP");
         stored(episode);
@@ -489,8 +528,12 @@ class ImamServiceTest {
     }
 
     private <T> T run(Supplier<T> action) {
+        return runAs(context, action);
+    }
+
+    private <T> T runAs(TrustContext ctx, Supplier<T> action) {
         try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
-            holder.when(TrustContextHolder::require).thenReturn(context);
+            holder.when(TrustContextHolder::require).thenReturn(ctx);
             return action.get();
         }
     }

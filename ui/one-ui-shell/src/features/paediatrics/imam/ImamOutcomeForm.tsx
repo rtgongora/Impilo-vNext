@@ -3,6 +3,7 @@
 import React from "react";
 import type { ImamAssessment, ImamEpisode } from "@/hooks/queries/useImam";
 import { useCloseImamEpisode } from "@/hooks/queries/useImam";
+import { useAuthStore } from "@/hooks/useAuthStore";
 import { OUTCOME_OPTIONS, overrideReasonPrompt, requiresOverrideReason } from "./imam-presentation";
 
 /**
@@ -25,6 +26,7 @@ export interface ImamOutcomeFormProps {
 
 export function ImamOutcomeForm({ episode, assessment, onClosed }: ImamOutcomeFormProps) {
   const close = useCloseImamEpisode();
+  const author = useAuthStore((state) => state.user?.id ?? null);
   const [outcome, setOutcome] = React.useState("");
   const [reason, setReason] = React.useState("");
   const [note, setNote] = React.useState("");
@@ -49,6 +51,7 @@ export function ImamOutcomeForm({ episode, assessment, onClosed }: ImamOutcomeFo
         episodeId: episode.id,
         patientId: episode.patientId,
         outcome,
+        recordedBy: author,
         outcomeAt: new Date().toISOString(),
         outcomeNote: note.trim() || null,
         dischargeOverrideReason: needsReason ? reason.trim() : null,
