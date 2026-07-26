@@ -16,6 +16,7 @@ CHECKS=(
   check-backend-frontend-parity.sh
   check-mobile-parity.sh
   check-madi-surfacing.sh
+  check-care-continuum-doctrine.sh
 )
 
 FAIL=0
