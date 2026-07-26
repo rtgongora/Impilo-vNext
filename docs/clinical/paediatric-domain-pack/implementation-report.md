@@ -1,8 +1,11 @@
 # Paediatric Clinical Domain Pack — Implementation Report
 
-**Status as of 2026-07-26.** Waves 1 and 2 are implemented, tested and pushed, along with the first
-slice of Wave 3. The rest of Waves 3–5 are designed and outstanding. Everything clinical shipped so far is `ENGINEERING_SEED` and requires
-MoHCC and paediatric specialist ratification before it is used to drive care.
+**Status as of 2026-07-26.** Waves 1, 2 and 4 are implemented, tested, deployed and live-proven,
+along with Wave 3's capture and workspace slices and Wave 5's IMAM episodes (§4b). Remaining:
+the plotted growth chart and the "what is due today" composition, paediatric surgery, the
+adolescent confidential pathway (blocked — see §5), the remaining body-map instruments, and PWA
+offline. Everything clinical shipped so far is `ENGINEERING_SEED` and requires MoHCC and paediatric
+specialist ratification before it is used to drive care.
 
 ---
 
@@ -105,14 +108,15 @@ way clinical software kills people quietly:
 | Suite | Tests | Status |
 |---|---|---|
 | `libs/paediatric-domain` | 77 | green |
-| `pct-service` | 259 | green |
+| `pct-service` | 315 | green |
 | `inpatient-service` | 134 | green |
-| `clinical-knowledge-platform-service` | 205 | green |
+| `clinical-knowledge-platform-service` | 368 | green |
 | `one-ui-shell` clinical-forms + shared-ui | 56 | green |
 
-Two governance gates run clinical content against the live engines: `PaediatricRuleContentTest`
-executes every danger-sign rule's own fixtures, and `DoseCalculationServiceTest` executes every
-dosing rule's. A content edit that changes clinical behaviour fails the build before it can reach
+Three governance gates run clinical content against the live engines: `PaediatricRuleContentTest`
+executes every danger-sign rule's own fixtures, `DoseCalculationServiceTest` executes every
+dosing rule's, and `ImamProgrammeServiceTest` executes the IMAM pack's nineteen admission,
+discharge, attendance and escalation fixtures. A content edit that changes clinical behaviour fails the build before it can reach
 a patient. Both also assert that every rule cites a source, names a required action, declares the
 observations it needs, and does not claim ratification it does not have.
 
@@ -129,7 +133,7 @@ every age from birth and asserts a band exists.
 |---|---|
 | **2. Sick newborn (10-day-old, poor feeding, hypothermia)** | **Backend complete and live-proven.** Both CDS layers now answer, and they agree: the danger-sign engine raises possible serious bacterial infection (critical, non-overridable, referral required), and the young-infant classification chart independently returns the same category as pink with an urgent-referral disposition and the neonatal antibiotic first dose at the head of the plan. Neonatal dose restrictions apply; the birth record and neonatal admission exist. No UI. |
 | **1. Sick 14-month-old (fever, cough, poor feeding)** | **Backend complete and live-proven.** Danger signs, age-banded vitals, growth with z-scores and faltering, safe dose calculation, and now the IMNCI assess-and-classify tables. Proven on the estate: chest indrawing with a positive malaria test, MUAC 11.9 and some palmar pallor returns severe pneumonia (pink), malaria, moderate acute malnutrition and anaemia, with an urgent-referral disposition and a severity-ordered treatment plan. Missing: immunisation forecast, Dura stock check, Khuluma caregiver instructions, UI. |
-| **3. Growth monitoring visit** | **Partial.** Measurement capture, WHO scoring, faltering detection and IMAM eligibility signalling work. Missing: the "what is due today" composition, the plotted chart, IMAM referral creation. |
+| **3. Growth monitoring visit** | **Partial.** Measurement capture, WHO scoring, faltering detection and IMAM eligibility signalling work, and a child found malnourished can now be enrolled into treatment (see §4b). Missing: the "what is due today" composition and the plotted chart. |
 | **4. Paediatric surgical emergency** | **Not started.** Existing theatre and inpatient spines are reusable; the surgical-abdomen pathway and paediatric surgical clerking are not built. |
 | **5. Confidential adolescent visit** | **Not started.** The TSHEPO `SPECIALLY_PROTECTED` sensitivity class exists but has never been assigned; caregiver-context gating is designed, not built. |
 
@@ -161,6 +165,101 @@ and the required action are identical either way, so this is not a safety defect
 list under-reports what actually qualified, which matters when a clinician reviews why a rule
 fired. The fix is to keep evaluating for evidence collection while still short-circuiting the
 verdict.
+
+---
+
+## 4b. IMAM — the classification engine's instruction becomes a treatment
+
+The IMNCI classification engine has been deployed and live-proven since Wave 4, and it returns
+three nutrition classifications, each of which ends in an instruction: admit for inpatient
+therapeutic care, enrol in outpatient therapeutic care with ready-to-use therapeutic food and
+review weekly, enrol in supplementary feeding and review in 14 days. **There was nowhere to enrol
+them.** No episode, no programme, no admission, no discharge criteria, no weekly review, no
+defaulter tracing. The engine issued an instruction the system could not carry out — the same shape
+as the growth, maternity and observation verticals, where every layer reported success and nothing
+landed.
+
+**The split.** The clinical knowledge platform owns the protocol as governed content
+(`clinical/imam-programme.json`, `POST /internal/v1/clinical/paediatric/imam/{eligibility,progress}`);
+pct-service owns the record (`V058`/`V059`, `/v1/imam/**`); experience-bff proxies it. The engine is
+stateless in the same way as the growth and immunisation engines — PCT supplies the episode and its
+reviews and gets a verdict — so a protocol revision is a reviewable content diff and the same
+evaluation runs unchanged against an offline copy.
+
+**The criterion the wave exists for.** WHO discharge is a mid-upper-arm circumference at or above
+12.5 cm **sustained across two consecutive reviews**, with no bilateral pitting oedema for fourteen
+days. The "sustained" clause is not a tuning parameter: a tape held a centimetre high, a different
+measurer, or a child who tensed their arm all produce one good reading, and discharging on it stops
+treatment for a child who is still wasted. A test asserts no programme in the pack can be edited
+down to a single measurement.
+
+Three refusals are structural rather than left to callers:
+
+1. **A cure is never certified on criteria that were not met.** Closing an episode as CURED needs
+   either an assessment saying the criteria are met or a stated override reason. A clinician may
+   still discharge a child who has not met them — there are good reasons to, and blocking it would
+   be blocking care — but the reason is stored on the episode, so a programme's cure rate cannot be
+   inflated by discharges nobody had to justify.
+2. **A degraded assessment is never a negative finding.** If the knowledge platform is unreachable
+   the review is still recorded, `discharge_eligible` stays null and the reason is stored. Null
+   means nobody evaluated it; it must never read as "not ready", which is a statement about the
+   child rather than about the network.
+3. **Silence is never reassurance.** An episode with no recorded review reports as a defaulter with
+   a tracing action and the sentence "an episode with no recorded review is not a child doing well",
+   never as progressing. On the tracing worklist those children are flagged separately, because a
+   count of missed visits alone does not distinguish the child seen once from the child never seen.
+
+**Tracing fires before the child is a defaulter.** One missed review raises tracing; two meet the
+defaulter definition. By the time a child meets the defaulter definition the window in which a home
+visit brings them back has usually closed, so a single threshold would always be the wrong one.
+
+**Live-proven on the preview estate**, on real rows in `pct_imam_episodes` and `pct_imam_visits`:
+
+- A child classified `UNCOMPLICATED_SEVERE_ACUTE_MALNUTRITION` enrolled straight from the
+  classification into OTP, with the review interval, ration, defaulter thresholds and pack version
+  (`engineering-seed-1.0.0`, `ENGINEERING_SEED`) stamped on the episode from the governed content.
+- A second open episode for the same child refused with 409.
+- **The discharge rule, both ways.** MUAC 12.6 cm at review 1 → not dischargeable,
+  `MUAC_SUSTAINED, MINIMUM_STAY` unmet, "a single measurement above the cut-off can be a
+  mis-measurement and must not discharge a child". MUAC 12.7 cm at review 2 → dischargeable, and the
+  episode closed as CURED carrying all four criteria and their evidence.
+- A CURED outcome attempted at review 1 refused with 422.
+- The defaulter worklist banding two children — `TRACE_REQUIRED` at one missed review as of 19 July,
+  `DEFAULTER` at two as of 26 July — with the never-reviewed child flagged.
+- `IMAM_EPISODE_ENROLLED`, `IMAM_VISIT_RECORDED`, `IMAM_EPISODE_CLOSED` and
+  `IMAM_TRACING_REQUIRED` all published on their own Kafka topics.
+
+**Deploying caught three defects the tests could not**, which is now the fourth time in this
+programme:
+
+- **The knowledge platform authenticates services, not just users.** Every eligibility and progress
+  call returned 401, and the degradation path worked exactly as designed — the write proceeded and
+  the assessment was recorded as unavailable — so the feature failed safe and *completely silently*:
+  every enrolment came back "protocol unreachable". No test could have seen it, because the tests
+  mock the client. pct-service now obtains its own `client_credentials` token; it cannot borrow the
+  user's, since the same evaluation runs from Kafka consumers and scheduled jobs with no user
+  present. **Mocking the client mocks away the authentication.**
+- **Discharge was judged as of today rather than as of the stated discharge date.** A discharge
+  backfilled on Monday from Friday's register was evaluated against today, so the intervening days
+  counted as a gap in observation and a properly earned cure was refused.
+- **Defaulter tracing only fired when a human recorded the absence.** A child who simply stops
+  coming, and for whom nobody creates the missed-visit row, produced no event at all — precisely the
+  child the feature exists for. An hourly sweep now raises the event from elapsed time, idempotent
+  per crossing (`V059`), and it was proven live raising `DEFAULTER` for two children nobody had
+  recorded anything about, one of them never reviewed since enrolment.
+
+**A build-script trap worth knowing.** `scripts/full-boot/_full-boot-common.sh` defaults
+`REPO_PATH` to `/opt/impilo/repos/Impilo-vNext`, so building images from a git worktree silently
+Dockerises the *main checkout's* jars. The first deployment shipped another session's code and
+reported `pass=2`. Pass `REPO_PATH=$PWD`.
+
+**Still an engineering seed.** The admission routes, discharge criteria, defaulter definition,
+maximum length of stay and the RUTF/RUSF ration table are `ENGINEERING_SEED` /
+`PENDING_MOHCC_RATIFICATION` and must be confirmed against the national IMAM protocol before they
+drive treatment. Nineteen content fixtures execute against the live engine as a build gate.
+
+**Not built:** a UI. The BFF contract and the tracing worklist exist and are reachable; no
+paediatric screen consumes them yet.
 
 ---
 
@@ -359,12 +458,13 @@ enforcement seam has to land first:
 4. Every access and every refusal must be audited, because a confidentiality control nobody can
    review is not a control.
 
-Remaining Wave 5 items — paediatric surgery, IMAM episodes end to end, the remaining body-map
-instruments, 5–19 year LMS data acquisition, and PWA offline — are independent of this and can
-proceed in any order.
+Remaining Wave 5 items — paediatric surgery, the remaining body-map instruments, 5–19 year LMS data
+acquisition, and PWA offline — are independent of this and can proceed in any order.
+**IMAM episodes end to end are done and live-proven** (§4b).
 
-**Wave 5+.** Paediatric surgery, nutrition/IMAM episodes end to end, the adolescent confidential
-pathway, the remaining body-map instruments, quality and surveillance analytics.
+**Wave 5+.** Paediatric surgery, the adolescent confidential pathway (blocked on the
+`SPECIALLY_PROTECTED` enforcement seam above), the remaining body-map instruments, an IMAM
+experience surface, quality and surveillance analytics.
 
 ---
 
@@ -416,4 +516,6 @@ birthdays complete a month late rather than early, so a minimum-age gate never o
 | Early warning and neonatal admission | `services/inpatient-service/.../core/`, migration V066, `resources/clinical/ews-thresholds.json` |
 | Rules framework and danger signs | `services/clinical-knowledge-platform-service/.../rules/tabular/`, `.../danger/`, migration V006 |
 | Dosing | `services/clinical-knowledge-platform-service/.../prescribing/` |
+| IMAM programme knowledge | `services/clinical-knowledge-platform-service/.../imam/`, `resources/clinical/imam-programme.json` |
+| IMAM episode record | `services/pct-service/.../core/clinical/Imam*.java`, migrations V058–V059 |
 | Clinical content | `services/*/src/main/resources/clinical/*.json` |
