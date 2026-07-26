@@ -248,8 +248,37 @@ not by dose numbering**: treating "dose 1 follows dose 0" as a dependency strand
 primary series behind a birth dose that can no longer be given, which would have affected every
 baby not born in a facility.
 
-Remaining: growth intelligence in the knowledge platform; `pct_observations` and the BUTANO
-Observation/Immunization write path; deepened form content; and migrating the locally declared
+The **observation registry (`pct_observations`) and the BUTANO write path** are built. This closed
+a third broken vertical: `FormExtractionService` already extracted observation values, recorded
+them as `PENDING` and emitted an event, but no observations table existed and nothing consumed the
+event — its own comment said "No direct PCT→BUTANO Observation write method exists". The registry's
+defining feature is `data_absent_reason`: a row may carry no value and a reason instead, which is
+the difference between "the temperature is normal" and "nobody took the temperature". A database
+CHECK enforces value-or-reason and the service rejects the ambiguous case with a 400.
+
+The SHR boundary is enforced at the consumer rather than trusted of the producer. The mapping
+copies an explicit list of coded fields, so a producer that later began leaking a name, date of
+birth or national identifier could still not write one into the shared record; a test feeds a
+deliberately contaminated payload through and asserts none of it survives.
+
+**Honest status of the last hop.** PCT is deployed and live-proven. The BUTANO consumer is built
+and unit-proven (11 boundary tests) but the Kafka hop has **not** been demonstrated end to end,
+for an environment reason rather than a code one: `SPRING_KAFKA_LISTENER_AUTO_STARTUP=false` is the
+estate default and `butano-service` is not in the opt-in list, so no BUTANO consumer has ever run
+on preview — not identity, consent, imaging or observations. The shared record currently holds one
+Patient resource and nothing else, which is the visible consequence. Enabling BUTANO's listeners is
+a one-line opt-in following the pattern already documented in `values-full-preview.yaml`, but it
+starts identity, consent and imaging consumption across the estate, so it is a deployment decision
+rather than something this lane should switch on unilaterally.
+
+Proving the vertical also caught a real integration bug: `OutboxPublisher.routeTopic` had no case
+for `pct.observation.recorded`, so it fell through to the `pct.events` catch-all while BUTANO
+subscribed to the specific topic. The event published successfully to a topic nobody was listening
+on, with every individual step reporting success. **Adding a cross-service event means adding a
+route case — the route is the contract.**
+
+Remaining: growth intelligence in the knowledge platform; enabling the BUTANO listeners and
+proving the hop; deepened form content; and migrating the locally declared
 antigen codes onto a governed Zibo value set once zibo-service holds a vaccine terminology (it
 holds none today, which is why the schedule declares its own code system with a documented
 migration point).
