@@ -92,11 +92,9 @@ class DownstreamRouteContractTest {
             // MobileDischargeController) now call inpatient-service directly instead of paying a
             // doomed pct round-trip and falling through a catch block.
             //
-            //   LIVE AND BROKEN — real callers on a path nobody serves. /v1/vitals has been
-            //   repaired (the vitals surface now reads and writes pct's /v1/observations spine via
-            //   VitalsObservationBridge); /v1/records remains until the patient-document capability
-            //   lands, and deleting it would hide exactly the incompleteness the rule is about.
-            "PctServiceClient -> /v1/records",
+            //   The two live-and-broken prefixes that used to sit here are repaired: /v1/vitals
+            //   reads and writes pct's /v1/observations spine via VitalsObservationBridge, and
+            //   /v1/records became the pct patient-document index (/v1/patient-documents, V130).
 
             // ── Adult Medicine lane (mine) ───────────────────────────────────────
             // The structured-history vertical: social, family, functional, procedures and advance

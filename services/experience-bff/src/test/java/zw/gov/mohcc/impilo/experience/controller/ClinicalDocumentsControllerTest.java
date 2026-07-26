@@ -30,6 +30,18 @@ class ClinicalDocumentsControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals("req-1", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+
+        // The composed row: JSON:API envelope, both dialects inside attributes — the read hooks
+        // type camelCase (documentType/createdAt) while the create contract is snake_case.
+        var rows = (java.util.List<?>) response.getBody().get("data");
+        assertEquals(1, rows.size());
+        Map<?, ?> row = (Map<?, ?>) rows.get(0);
+        assertEquals("rec-1", row.get("id"));
+        assertEquals("clinical_document", row.get("type"));
+        Map<?, ?> attributes = (Map<?, ?>) row.get("attributes");
+        assertEquals("LAB_REPORT", attributes.get("documentType"));
+        assertEquals("LAB_REPORT", attributes.get("document_type"));
+        assertNotNull(attributes.get("createdAt"));
     }
 
     @Test
@@ -76,16 +88,24 @@ class ClinicalDocumentsControllerTest {
     private static final class StubPctClient extends PctServiceClient {
         StubPctClient() { super(new RestTemplate(), endpoints(), mapper); }
 
-        @Override public JsonNode getPatientRecords(String cpid, String documentType, int page, int size) {
+        @Override public JsonNode listPatientDocuments(String cpid, String documentType) {
             ArrayNode arr = mapper.createArrayNode();
-            arr.add(mapper.createObjectNode().put("id", "rec-1").put("type", "LAB_REPORT"));
+            arr.add(mapper.createObjectNode()
+                    .put("document_id", "rec-1")
+                    .put("patient_id", cpid)
+                    .put("document_type", "LAB_REPORT")
+                    .put("title", "FBC")
+                    .put("storage_key", "key-1")
+                    .put("recorded_at", "2026-07-26T10:00:00+02:00")
+                    .put("status", "ACTIVE"));
             return arr;
         }
 
-        @Override public JsonNode createPatientRecord(Map<String, Object> body) {
+        @Override public JsonNode createPatientDocument(Map<String, Object> body) {
             ObjectNode node = mapper.createObjectNode();
-            node.put("id", "rec-new");
+            node.put("document_id", "rec-new");
             node.put("title", body.get("title").toString());
+            node.put("document_type", String.valueOf(body.get("document_type")));
             return node;
         }
     }

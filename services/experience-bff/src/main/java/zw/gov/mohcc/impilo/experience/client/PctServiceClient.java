@@ -425,36 +425,46 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    /**
-     * Get clinical records/documents for a patient.
-     */
-    public JsonNode getPatientRecords(String cpid, String documentType, int page, int size) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/patient/" + cpid + "/records")
-                .queryParam("page", page)
-                .queryParam("size", size);
-        if (documentType != null) builder.queryParam("documentType", documentType);
-        log.debug("PCT: Getting records for patient={}...",
+    // ── Patient documents (the UI calls these "records" / "clinical documents") ──
+    //
+    // This client previously called /v1/records and /v1/patient/{cpid}/records — paths
+    // pct-service has never served, so every clinical-documents list rendered empty and the
+    // citizen's own-record fetch always failed. pct now owns the patient document index at
+    // /v1/patient-documents (pct_patient_documents, V130); the bytes stay in document-service.
+
+    /** Documents for a subject, newest first, optionally narrowed by type. Unpaged from pct. */
+    public JsonNode listPatientDocuments(String cpid, String documentType) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/patient-documents")
+                .queryParam("patient_id", cpid);
+        if (documentType != null && !documentType.isBlank()) {
+            builder.queryParam("document_type", documentType);
+        }
+        log.debug("PCT: Listing patient documents for patient={}...",
                 cpid.substring(0, Math.min(8, cpid.length())));
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
         return extractData(response);
     }
 
     /**
-     * Get a single clinical record by ID.
+     * One document by id. When {@code subjectCpid} is supplied pct binds the read to that
+     * subject and answers 404 on a mismatch — the citizen-facing path passes the caller's own
+     * CPID here so a person can only ever fetch their own record.
      */
-    public JsonNode getPatientRecord(String recordId) {
-        String url = baseUrl + "/v1/records/" + recordId;
-        log.debug("PCT: Getting record id={}", recordId);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+    public JsonNode getPatientDocument(String documentId, String subjectCpid) {
+        UriComponentsBuilder builder =
+                UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/patient-documents/" + documentId);
+        if (subjectCpid != null && !subjectCpid.isBlank()) {
+            builder.queryParam("subject_cpid", subjectCpid);
+        }
+        log.debug("PCT: Getting patient document id={}", documentId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
         return extractData(response);
     }
 
-    /**
-     * Create a clinical record (document metadata) in PCT.
-     */
-    public JsonNode createPatientRecord(Map<String, Object> body) {
-        String url = baseUrl + "/v1/records";
-        log.info("PCT: Creating clinical record for patient={}", body.get("patient_id"));
+    /** Create a patient document index entry (metadata; the bytes live in document-service). */
+    public JsonNode createPatientDocument(Map<String, Object> body) {
+        String url = baseUrl + "/v1/patient-documents";
+        log.info("PCT: Creating patient document for patient={}", body.get("patient_id"));
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }

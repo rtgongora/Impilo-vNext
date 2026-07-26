@@ -64,20 +64,67 @@ public class ClinicalDocumentsController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
         try {
-            JsonNode data = pctClient.getPatientRecords(patientId, null, page, size);
+            JsonNode data = pctClient.listPatientDocuments(patientId, null);
+            List<Map<String, Object>> rows = new java.util.ArrayList<>();
+            if (data != null && data.isArray()) {
+                data.forEach(doc -> rows.add(documentRow(doc)));
+            }
+            int from = Math.min(Math.max(page, 0) * Math.max(size, 1), rows.size());
+            int to = Math.min(from + Math.max(size, 1), rows.size());
             return ResponseEntity.ok(Map.of(
-                    "data", data != null ? data : List.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                    "data", rows.subList(from, to),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                            "page", Map.of("number", page, "size", size,
+                                    "total_elements", rows.size(),
+                                    "total_pages", (rows.size() + Math.max(size, 1) - 1) / Math.max(size, 1)))));
         } catch (Exception e) {
             // An empty 200 here reads as "this patient has no records on file", which is an
             // affirmative finding and would be a fabricated one. Fail loudly instead.
-            log.error("PCT getPatientRecords failed for patient={}: {}", patientId, e.getMessage());
+            log.error("PCT listPatientDocuments failed for patient={}: {}", patientId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                     "error", "clinical_documents_unavailable",
                     "message", "Clinical documents could not be retrieved. Do not treat this as an "
                                + "absence of documents.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
+    }
+
+    /**
+     * pct document → the JSON:API row the shell reads. Both dialects inside {@code attributes}
+     * because the read hooks type camelCase while the create contract is snake_case, and neither
+     * side has ever seen live data to prove a single spelling.
+     */
+    static Map<String, Object> documentRow(JsonNode doc) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        putBoth(attributes, "patient_id", "patientId", text(doc, "patient_id"));
+        putBoth(attributes, "encounter_id", "encounterId", text(doc, "encounter_id"));
+        putBoth(attributes, "document_type", "documentType", text(doc, "document_type"));
+        attributes.put("title", text(doc, "title"));
+        attributes.put("description", text(doc, "description"));
+        putBoth(attributes, "mime_type", "mimeType", text(doc, "mime_type"));
+        putBoth(attributes, "file_size", "fileSize",
+                doc.hasNonNull("file_size") ? doc.get("file_size").asLong() : null);
+        putBoth(attributes, "storage_key", "storageKey", text(doc, "storage_key"));
+        putBoth(attributes, "document_object_id", "documentObjectId", text(doc, "document_object_id"));
+        putBoth(attributes, "uploaded_by", "uploadedBy", text(doc, "uploaded_by"));
+        attributes.put("status", text(doc, "status"));
+        putBoth(attributes, "created_at", "createdAt", text(doc, "recorded_at"));
+        putBoth(attributes, "recorded_at", "recordedAt", text(doc, "recorded_at"));
+
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", text(doc, "document_id"));
+        row.put("type", "clinical_document");
+        row.put("attributes", attributes);
+        return row;
+    }
+
+    private static void putBoth(Map<String, Object> attributes, String snake, String camel, Object value) {
+        attributes.put(snake, value);
+        attributes.put(camel, value);
+    }
+
+    private static String text(JsonNode node, String key) {
+        return node.hasNonNull(key) && !node.get(key).asText().isBlank() ? node.get(key).asText() : null;
     }
 
     @PostMapping
@@ -99,8 +146,11 @@ public class ClinicalDocumentsController {
         body.put("file_size", request.file_size());
         body.put("storage_key", request.storage_key());
         body.put("uploaded_by", request.uploaded_by());
+        // The object id goes into the index too — it is what makes signed-URL enrichment
+        // possible on later reads without guessing at storage keys.
+        body.put("document_object_id", request.document_object_id());
 
-        JsonNode created = pctClient.createPatientRecord(body);
+        JsonNode created = pctClient.createPatientDocument(body);
 
         Map<String, Object> meta = new LinkedHashMap<>(Map.of(
                 "request_id", requestId,
@@ -123,7 +173,7 @@ public class ClinicalDocumentsController {
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "data", created != null ? created : Map.of(),
+                "data", created != null ? documentRow(created) : Map.of(),
                 "meta", meta));
     }
 
