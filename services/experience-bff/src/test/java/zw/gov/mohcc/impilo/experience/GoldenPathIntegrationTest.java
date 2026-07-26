@@ -38,17 +38,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(DockerOrExternalPostgresCondition.class)
 class GoldenPathIntegrationTest {
 
-    private static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
-
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        REDIS.configure(registry);
+        ExperienceBffTestRedisSupport.configure(GoldenPathIntegrationTest.class, registry);
         ExperienceBffSovereignWireMockSupport.register(registry);
-    }
-
-    @AfterAll
-    static void stopRedis() {
-        REDIS.stop();
     }
 
     @Autowired private MockMvc mvc;

@@ -1,7 +1,6 @@
 package zw.gov.mohcc.impilo.experience;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,18 +31,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(DockerOrExternalPostgresCondition.class)
 class MobileProviderTier2ResponseShapeIT {
 
-    private static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
-
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        REDIS.configure(registry);
+        ExperienceBffTestRedisSupport.configure(MobileProviderTier2ResponseShapeIT.class, registry);
         ExperienceBffReportingWireMockSupport.register(registry);
         ExperienceBffSovereignWireMockSupport.register(registry);
-    }
-
-    @AfterAll
-    static void stopRedis() {
-        REDIS.stop();
     }
 
     private static final String TENANT_ID = "tenant-moh-zw";
