@@ -140,6 +140,60 @@ It is PCT-anchored per care-continuum doctrine CC-5, references
 `inpatient.procedure_episode` for each operation, and consumes `procedures-service` for the
 catalogue. It is **not** a second theatre workflow and must never create one.
 
+### 5a. AMENDMENT 2026-07-26 — CC-2 narrows `surgery-service`
+
+Decision 5 as originally written would have violated CC-2. Found by verifying a doctrine citation
+the emergency lane made about a different question (who owns a serial burn assessment); the
+citation was correct, and checking it showed it lands harder here than there.
+
+**CC-2 verbatim, on what a component MUST NOT own:**
+
+> person-level longitudinal clinical registries (problems, care plans, allergies, growth,
+> immunisation doses, birth/death summaries) — these are PCT's
+>
+> the clinical **decision** that opens or closes a phase of care — the admission handshake is the
+> model: PCT owns the admission decision, inpatient owns the physical census
+
+Four items in decision 5 fall on the wrong side of that, and PCT already has the structures:
+`pct_problems` carries `diagnostic_certainty`, severity (V060), `last_recurrence_at`, `evidence`,
+`review_date` and — decisively — **`responsible_service`**. `pct_care_plans` and
+`pct_care_plan_goals` exist. Building `surgical_condition`, a surveillance plan, an outcome
+registry and a decision-to-operate record inside `surgery-service` would have been four duplicate
+person-level registries, which is exactly what this ADR's own guardrails forbid.
+
+**Corrected split.**
+
+`surgery-service` **MUST NOT own** — these are PCT's, and surgery attaches to them:
+
+| Concept | PCT owner | How surgery participates |
+|---|---|---|
+| Surgical condition, diagnosis, certainty, severity, staging, recurrence | `pct_problems` | writes with `responsible_service = surgery`; staging as problem attributes |
+| Surveillance plan | `pct_care_plans` + `pct_care_plan_goals` | proposes and executes; does not own |
+| The decision that opens or closes a phase of care | PCT, per the admission-handshake model | owns the surgical *reasoning* and the options considered; PCT records the decision |
+| Functional outcome, patient-reported outcome | PCT person-level | contributes measurements |
+| Serial burn assessment | `pct.burn_assessment` (emergency lane, pct V2xx) | writes through it; no parallel acute copy |
+
+`surgery-service` **MAY own** — operational and phase truth of surgical care:
+
+surgical episode as a *management course record* that **attaches to** PCT journeys and never
+contains them · structured surgical assessment content · operative indication and the
+non-operative options weighed · prehabilitation and optimisation execution · planned-versus-
+performed reconciliation · complication pathway **instances** as workflow, with the resulting
+problem landing in `pct_problems` · waiting-list clinical revalidation state · the fifteen
+specialty extensions, their indications, operative content, templates and maps.
+
+**The line is containment versus attachment.** CC-5 requires every clinical episode to carry a
+resolvable PCT anchor, which presumes components may own clinical episodes; `inpatient` owns
+`procedure_episode` and `daidzai` owns the trauma spine under delegation. A surgical episode is
+legitimate precisely so long as it references journeys and person-level facts rather than holding
+them.
+
+This narrows the service substantially and improves it. It also changes S1 from "build a surgical
+disease model" to "extend PCT's problem and care-plan model with surgical semantics, and own the
+surgical management record" — which is the same shape the paediatric pack took, where growth,
+immunisation and newborn records are PCT-owned person-level registries and the pack owns the
+decision support and the workflow.
+
 ### 6. Boundary statement
 
 | Domain | Owns |
