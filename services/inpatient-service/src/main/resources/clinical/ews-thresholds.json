@@ -119,9 +119,9 @@
           }
         },
         {
-          "id": "SCHOOL_AGE_5_11Y",
+          "id": "SCHOOL_AGE_5_12Y",
           "minAgeDays": 1825,
-          "maxAgeDays": 4382,
+          "maxAgeDays": 4744,
           "parameters": {
             "respiratoryRate": [
               {"max": 11, "points": 3},

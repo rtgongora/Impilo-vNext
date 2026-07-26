@@ -29,7 +29,7 @@ class EwsCalculatorEngineTest {
         assertThat(infant.scoreType()).isEqualTo(EwsCalculatorEngine.SCORE_TYPE_PEWS);
         assertThat(child.scoreType()).isEqualTo(EwsCalculatorEngine.SCORE_TYPE_PEWS);
         assertThat(infant.ageBandId()).isEqualTo("INFANT_0_11M");
-        assertThat(child.ageBandId()).isEqualTo("SCHOOL_AGE_5_11Y");
+        assertThat(child.ageBandId()).isEqualTo("SCHOOL_AGE_5_12Y");
         assertThat(child.totalScore()).isGreaterThan(infant.totalScore());
         assertThat(infant.totalScore()).isZero();
     }
@@ -157,7 +157,20 @@ class EwsCalculatorEngineTest {
         assertThat(engine.calculate(null, 364, observations(120, 30, 97)).ageBandId()).isEqualTo("INFANT_0_11M");
         assertThat(engine.calculate(null, 365, observations(120, 30, 97)).ageBandId()).isEqualTo("YOUNG_CHILD_1_4Y");
         assertThat(engine.calculate(null, 1824, observations(120, 30, 97)).ageBandId()).isEqualTo("YOUNG_CHILD_1_4Y");
-        assertThat(engine.calculate(null, 1825, observations(120, 30, 97)).ageBandId()).isEqualTo("SCHOOL_AGE_5_11Y");
+        assertThat(engine.calculate(null, 1825, observations(120, 30, 97)).ageBandId()).isEqualTo("SCHOOL_AGE_5_12Y");
+    }
+
+    @Test
+    void everyAgeBelowThirteenHasABandSoNoChildFallsThroughUnscored() {
+        // A gap between bands would return "not calculable" for a real patient, which reads as
+        // a data problem rather than what it is: a hole in the threshold content.
+        for (int ageDays = 0; ageDays < EwsCalculatorEngine.ADULT_SCORE_FROM_AGE_YEARS * 365; ageDays++) {
+            var calculation = engine.calculate(null, ageDays, observations(120, 30, 97));
+            assertThat(calculation.calculable())
+                    .as("age %d days must fall in a paediatric band", ageDays)
+                    .isTrue();
+            assertThat(calculation.ageBandId()).isNotNull();
+        }
     }
 
     @Test

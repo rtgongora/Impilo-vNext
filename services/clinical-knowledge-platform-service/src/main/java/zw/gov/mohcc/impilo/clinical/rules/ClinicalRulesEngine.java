@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import zw.gov.mohcc.impilo.paediatrics.vitals.VitalAlertThresholds;
 
 /**
  * Deterministic clinical rule evaluation — no LLM. Rules are versioned in-database for metadata;
@@ -281,7 +282,18 @@ public class ClinicalRulesEngine {
 
     /**
      * Vital-sign threshold alerts. Each fires only when the relevant vital is actually present
-     * (never inferred). SpO2/hypoxaemia is implemented but dormant until SpO2 is captured upstream.
+     * (never inferred).
+     *
+     * <p>Heart-rate and blood-pressure thresholds are age-banded. Adult cut-offs applied to a
+     * child fail in both directions at once: a tachycardia alert at 120 bpm fires on nearly
+     * every well infant, and an alert stream that is usually wrong stops being read; while a
+     * bradycardia alert at 50 bpm stays silent for a neonate whose rate has fallen to 80,
+     * which is a peri-arrest finding. Where the patient's age is unknown the adult thresholds
+     * are used and the alert says so, because the alternative — guessing that an
+     * unknown-age patient is a child — is worse.</p>
+     *
+     * <p>Oxygen saturation and temperature use a single threshold across ages, which is
+     * clinically appropriate for both.</p>
      */
     private List<RuleAlert> vitalsRules(ClinicalEvaluationContext ctx) {
         List<RuleAlert> out = new ArrayList<>();
@@ -289,16 +301,41 @@ public class ClinicalRulesEngine {
         if (v == null) {
             return out;
         }
-        boolean htnCrisis = (v.systolicBp() != null && v.systolicBp() >= 180)
-                || (v.diastolicBp() != null && v.diastolicBp() >= 120);
+
+        VitalAlertThresholds.Band band = VitalAlertThresholds.bandFor(ctx.ageYears(), ctx.ageDays());
+        boolean ageKnown = band != null;
+        boolean paediatric = ageKnown && !VitalAlertThresholds.adultThresholdsApply(ctx.ageYears(), ctx.ageDays());
+        String ageQualifier = ageKnown
+                ? " (thresholds for " + band.id() + ")"
+                : " (age unknown — adult thresholds applied)";
+
+        int tachycardiaAbove = paediatric ? band.tachycardiaAbove() : 120;
+        int bradycardiaBelow = paediatric ? band.bradycardiaBelow() : 50;
+        int hypertensiveSystolic = paediatric ? band.hypertensiveSystolicAtOrAbove() : 180;
+
+        boolean htnCrisis = (v.systolicBp() != null && v.systolicBp() >= hypertensiveSystolic)
+                || (!paediatric && v.diastolicBp() != null && v.diastolicBp() >= 120);
         if (htnCrisis) {
             out.add(new RuleAlert(
                     "VITALS_HYPERTENSIVE_CRISIS",
                     "CRITICAL",
-                    "Severely elevated blood pressure (≥180/120 mmHg) — assess for hypertensive emergency.",
-                    "Blood pressure at or above the hypertensive-crisis threshold.",
+                    "Severely elevated blood pressure (systolic ≥ " + hypertensiveSystolic
+                            + " mmHg) — assess for hypertensive emergency.",
+                    "Blood pressure at or above the hypertensive-crisis threshold" + ageQualifier + ".",
                     true,
                     true
+            ));
+        }
+        if (paediatric && v.systolicBp() != null && v.systolicBp() < band.hypotensiveSystolicBelow()) {
+            // Hypotension in a child is a late sign of shock: they compensate until they do not.
+            out.add(new RuleAlert(
+                    "VITALS_PAEDIATRIC_HYPOTENSION",
+                    "CRITICAL",
+                    "Systolic blood pressure below " + band.hypotensiveSystolicBelow()
+                            + " mmHg for this age — treat as decompensated shock.",
+                    "Hypotension is a late sign in children; compensation fails abruptly" + ageQualifier + ".",
+                    true,
+                    false
             ));
         }
         if (v.spo2() != null && v.spo2() < 92) {
@@ -311,23 +348,25 @@ public class ClinicalRulesEngine {
                     true
             ));
         }
-        if (v.heartRate() != null && v.heartRate() > 120) {
+        if (v.heartRate() != null && v.heartRate() > tachycardiaAbove) {
             out.add(new RuleAlert(
                     "VITALS_TACHYCARDIA",
                     "HIGH",
-                    "Tachycardia (heart rate > 120 bpm) — correlate with clinical state.",
-                    "Heart rate above the tachycardia threshold.",
+                    "Tachycardia (heart rate > " + tachycardiaAbove + " bpm) — correlate with clinical state.",
+                    "Heart rate above the tachycardia threshold" + ageQualifier + ".",
                     false,
                     true
             ));
         }
-        if (v.heartRate() != null && v.heartRate() < 50) {
+        if (v.heartRate() != null && v.heartRate() < bradycardiaBelow) {
             out.add(new RuleAlert(
                     "VITALS_BRADYCARDIA",
-                    "HIGH",
-                    "Bradycardia (heart rate < 50 bpm) — correlate with symptoms and medications.",
-                    "Heart rate below the bradycardia threshold.",
-                    false,
+                    paediatric ? "CRITICAL" : "HIGH",
+                    "Bradycardia (heart rate < " + bradycardiaBelow + " bpm) — correlate with symptoms"
+                            + (paediatric ? " and assess airway and breathing first." : " and medications."),
+                    "Heart rate below the bradycardia threshold" + ageQualifier
+                            + (paediatric ? ". In a child bradycardia is usually hypoxic and pre-terminal." : "."),
+                    paediatric,
                     true
             ));
         }
@@ -338,6 +377,19 @@ public class ClinicalRulesEngine {
                     "Fever (temperature ≥ 38.5°C) — consider sepsis screening per local protocol.",
                     "Temperature at or above the fever threshold.",
                     false,
+                    true
+            ));
+        }
+        if (paediatric && v.temperatureC() != null && v.temperatureC() < 35.5) {
+            // Hypothermia in a small infant is a danger sign, not simply a cold room.
+            out.add(new RuleAlert(
+                    "VITALS_PAEDIATRIC_HYPOTHERMIA",
+                    "HIGH",
+                    "Temperature below 35.5°C — in a young child this is a danger sign; warm and assess for"
+                            + " serious infection.",
+                    "Hypothermia in a child suggests serious infection rather than ambient cooling"
+                            + ageQualifier + ".",
+                    true,
                     true
             ));
         }

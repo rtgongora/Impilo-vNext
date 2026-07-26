@@ -66,6 +66,12 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
+        <!-- Paediatric age bands for age-aware clinical rules -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>paediatric-domain</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
             <artifactId>shared-core</artifactId>
