@@ -158,7 +158,9 @@ export function PublicLanding() {
             without signing in.
           </p>
         </div>
-        <div className="mt-6">
+        {/* The launcher's own container queries can't resolve their own width here,
+            so drive the columns from the viewport for this full-width section. */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 [&_.public-service-launcher]:contents">
           <AdaptiveServiceLauncher actions={CATEGORY_LAUNCHER} compact />
         </div>
       </section>
