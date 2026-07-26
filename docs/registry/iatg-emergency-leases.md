@@ -148,10 +148,24 @@ clean boot would not have been. **The trap is invisible in any environment where
 is already deployed** — which is every environment except a fresh one, and a fresh one is what a
 full-boot is.
 
-**THE RULE: a cross-lane foreign key belongs in the band of the lane that owns the REFERENCED table,
-never the referencing one.** So an FK onto `pct.emergency_episode` is written in the V2xx block by
-this pack, even when the referencing table belongs to another lane. The referencing lane keeps a
-pointer in its own block saying where the constraint lives and why, so table history stays readable.
+**THE RULE: a cross-lane migration must not DEPEND ON an object owned by a higher band. Any such
+dependency lives in the band of the lane that owns the depended-on object, never the depending one.**
+
+Stated as "depend on" rather than "reference" at the Adult Medicine lane's suggestion, because it is
+the same failure in several disguises: a foreign key, an `INSERT` referencing a higher-band table, an
+`ALTER` of one, or a seed row whose lookup resolves against one — all fail identically and all for the
+same reason. "Reference" reads as being about foreign keys and would have let the next case through.
+
+So an FK onto `pct.emergency_episode` is written in the V2xx block by this pack, even when the
+referencing table belongs to another lane. The referencing lane keeps a pointer in its own block
+saying where the constraint lives and why, so table history stays readable rather than looking
+forgotten.
+
+**Closed, 2026-07-26:** V108 withdrawn (`ac620b355`), rewritten as **`V201__medical_episode_emergency_fk.sql`**
+carrying the Adult Medicine lane's rationale verbatim. Verified on a clean Postgres in Flyway order,
+with the negative control the original lacked: V200 then V201 both apply; a dangling
+`emergency_episode_id` is rejected by name; a real reference is accepted; and `pg_constraint.convalidated`
+is `t`, so the constraint is validated rather than left `NOT VALID`.
 
 This cost is mine: I proposed the band convention (§3) without thinking the dependency direction
 through, and a peer lane inherited the consequence. Recorded prominently because it binds every lane
