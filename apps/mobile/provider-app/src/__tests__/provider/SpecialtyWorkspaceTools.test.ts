@@ -54,6 +54,36 @@ describe("burns workspace tools", () => {
   });
 });
 
+describe("obstetrics: partograph and CTG route to the governed instruments, not notes", () => {
+  // docs/clinical/rmnp/partograph-ctg-mobile-contract.md §7: "a replacement is not done when
+  // it renders and persists — it is done when the thing it replaced can no longer be reached."
+  // Partograph was a notes box only because it is tools[0] in specialtyWorkspaces.ts; these
+  // assertions must keep failing if that routing ever regresses back to "notes".
+  it("routes Partograph to the governed partograph workspace regardless of index", () => {
+    expect(formKindForTool("Partograph", 0, "obstetrics")).toBe("partograph");
+    // Name match, not index match — a reordered tools array must not silently regress this.
+    expect(formKindForTool("Partograph", 4, "obstetrics")).toBe("partograph");
+  });
+
+  it("routes CTG Interpretation to the governed CTG workspace regardless of index", () => {
+    expect(formKindForTool("CTG Interpretation", 1, "obstetrics")).toBe("ctg");
+    expect(formKindForTool("CTG Interpretation", 5, "obstetrics")).toBe("ctg");
+  });
+
+  it("never falls through to notes, sum, or soon for these two tools", () => {
+    const OBSTETRICS = getSpecialtyById("obstetrics");
+    const kinds = (OBSTETRICS?.tools ?? []).map((tool, index) => formKindForTool(tool, index, "obstetrics"));
+    expect(kinds[0]).not.toBe("notes");
+    expect(kinds[1]).not.toBe("notes");
+  });
+
+  it("leaves Bishop Score and the other obstetrics tools on their existing fallback", () => {
+    // Out of scope for this pass (docs/clinical/rmnp/partograph-ctg-mobile-contract.md §6):
+    // Bishop lands with the labour-and-delivery wave, not this one.
+    expect(formKindForTool("Bishop Score", 2, "obstetrics")).toBe("notes");
+  });
+});
+
 describe("unrelated specialty tools are unaffected", () => {
   it("keeps the chemotherapy BSA dose calculator", () => {
     expect(formKindForTool("Dose Calculator (BSA)", 1, "chemo")).toBe("bsa");

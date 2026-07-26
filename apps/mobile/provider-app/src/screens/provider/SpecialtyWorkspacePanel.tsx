@@ -12,13 +12,23 @@ import {
 } from "react-native";
 import type { SpecialtyWorkspaceDef } from "../../data/specialtyWorkspaces";
 import { DictationAssistButton, colors } from "@impilo/mobile-design-system";
+import { PartographWorkspace, CtgWorkspace } from "./MaternityWorkspaces";
 
 type Props = {
   workspace: SpecialtyWorkspaceDef;
   onBack: () => void;
 };
 
-type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withheld";
+type ToolFormKind =
+  | "bsa"
+  | "ktv"
+  | "notes"
+  | "checklist"
+  | "sum"
+  | "soon"
+  | "withheld"
+  | "partograph"
+  | "ctg";
 
 /**
  * Burns arithmetic is withheld from this app.
@@ -62,8 +72,21 @@ const WITHHELD_BURNS_ARITHMETIC = [
  */
 const NO_GENERIC_CALCULATOR_WORKSPACES = new Set(["burns"]);
 
+/**
+ * Governed maternal instruments, backed by pct-service V056 and the RMNP pack's mobile contract
+ * (docs/clinical/rmnp/partograph-ctg-mobile-contract.md). Matched by name rather than index —
+ * unlike the fallbacks below, these two no longer depend on where they happen to sit in
+ * `specialtyWorkspaces.ts`'s tool array, so reordering that array cannot silently regress them
+ * back to the generic notes box.
+ */
+const GOVERNED_MATERNAL_INSTRUMENTS: Record<string, ToolFormKind> = {
+  partograph: "partograph",
+  "ctg interpretation": "ctg",
+};
+
 export function formKindForTool(toolName: string, index: number, workspaceId: string): ToolFormKind {
   const t = toolName.toLowerCase();
+  if (t in GOVERNED_MATERNAL_INSTRUMENTS) return GOVERNED_MATERNAL_INSTRUMENTS[t];
   if (WITHHELD_BURNS_ARITHMETIC.some((token) => t.includes(token))) return "withheld";
   if (index >= 4) return "soon";
   if (t.includes("bsa")) return "bsa";
@@ -209,6 +232,24 @@ function ToolModalBody({
         <Text style={styles.modalDesc}>Full clinical workflow for this tool is not implemented yet. Use the experience EHR or document in SOAP for now.</Text>
         <TouchableOpacity style={styles.primaryBtn} onPress={onClose}>
           <Text style={styles.primaryBtnText}>Close</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
+
+  // Partograph and CTG get their own bounded-height container rather than the generic 360px
+  // ScrollView below: both carry a running observation/annotation list plus a governed form,
+  // which the toy calculators below never needed room for.
+  if (kind === "partograph" || kind === "ctg") {
+    return (
+      <>
+        <Text style={styles.modalTitle}>{toolName}</Text>
+        <Text style={styles.modalMeta}>{workspaceName}</Text>
+        <View style={{ height: 480 }}>
+          {kind === "partograph" ? <PartographWorkspace /> : <CtgWorkspace />}
+        </View>
+        <TouchableOpacity style={styles.secondaryBtn} onPress={onClose}>
+          <Text style={styles.secondaryBtnText}>Close</Text>
         </TouchableOpacity>
       </>
     );
