@@ -77,6 +77,16 @@ spec:
                 secretKeyRef:
                   name: impilo-app-secrets
                   key: keycloak-backend-secret
+            # Traefik terminates TLS at the edge and forwards plain HTTP to this
+            # pod. Without this, Keycloak advertises the scheme it sees on the
+            # wire — `issuer: http://impilo.mohcc.gov.zw/realms/impilo` — and any
+            # client doing strict issuer/`iss` validation (mobile PKCE especially,
+            # and anything building redirect URIs from discovery) fails AFTER a
+            # successful credential check, which misreads as "login broken" while
+            # discovery returns 200. `xforwarded` makes Keycloak honour Traefik's
+            # X-Forwarded-Proto/Host so it advertises https.
+            - name: KC_PROXY_HEADERS
+              value: "xforwarded"
             - name: KC_HEALTH_ENABLED
               value: "true"
             - name: KC_METRICS_ENABLED

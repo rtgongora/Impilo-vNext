@@ -658,17 +658,17 @@
       ]
     }
   ],
-  "webAuthnPasswordlessPolicyRpEntityName": "Impilo Health OS",
-  "webAuthnPasswordlessPolicyRpId": "",
-  "webAuthnPasswordlessPolicySignatureAlgorithms": [ "ES256", "RS256" ],
-  "webAuthnPasswordlessPolicyAttestationConveyancePreference": "not specified",
-  "webAuthnPasswordlessPolicyAuthenticatorAttachment": "not specified",
-  "webAuthnPasswordlessPolicyRequireResidentKey": "Yes",
-  "webAuthnPasswordlessPolicyUserVerificationRequirement": "required",
-  "webAuthnPasswordlessPolicyCreateTimeout": 0,
-  "webAuthnPasswordlessPolicyAvoidSameAuthenticatorRegister": false,
-  "webAuthnPasswordlessPolicyAcceptableAaguids": [],
-  "webAuthnPasswordlessPolicyExtraOrigins": [],
+  "webAuthnPolicyPasswordlessRpEntityName": "Impilo Health OS",
+  "webAuthnPolicyPasswordlessRpId": "",
+  "webAuthnPolicyPasswordlessSignatureAlgorithms": [ "ES256", "RS256" ],
+  "webAuthnPolicyPasswordlessAttestationConveyancePreference": "not specified",
+  "webAuthnPolicyPasswordlessAuthenticatorAttachment": "not specified",
+  "webAuthnPolicyPasswordlessRequireResidentKey": "Yes",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "webAuthnPolicyPasswordlessCreateTimeout": 0,
+  "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister": false,
+  "webAuthnPolicyPasswordlessAcceptableAaguids": [],
+  "webAuthnPolicyPasswordlessExtraOrigins": [],
   "requiredActions": [
     {
       "alias": "webauthn-register-passwordless",

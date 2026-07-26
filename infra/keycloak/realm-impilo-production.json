@@ -1221,28 +1221,33 @@
       "config": {
         "hideOnLoginPage": "true"
       }
-    },
-    {
-      "alias": "facility-ldap",
-      "providerId": "ldap",
-      "enabled": false,
-      "displayName": "Facility directory LDAP \u2014 configure",
-      "config": {
-        "vendor": "other"
-      }
     }
   ],
-  "webAuthnPasswordlessPolicyRpEntityName": "Impilo Health OS",
-  "webAuthnPasswordlessPolicyRpId": "",
-  "webAuthnPasswordlessPolicySignatureAlgorithms": [ "ES256", "RS256" ],
-  "webAuthnPasswordlessPolicyAttestationConveyancePreference": "not specified",
-  "webAuthnPasswordlessPolicyAuthenticatorAttachment": "not specified",
-  "webAuthnPasswordlessPolicyRequireResidentKey": "Yes",
-  "webAuthnPasswordlessPolicyUserVerificationRequirement": "required",
-  "webAuthnPasswordlessPolicyCreateTimeout": 0,
-  "webAuthnPasswordlessPolicyAvoidSameAuthenticatorRegister": false,
-  "webAuthnPasswordlessPolicyAcceptableAaguids": [],
-  "webAuthnPasswordlessPolicyExtraOrigins": [],
+  "components": {
+    "org.keycloak.storage.UserStorageProvider": [
+      {
+        "name": "facility-ldap",
+        "providerId": "ldap",
+        "config": {
+          "enabled": [ "false" ],
+          "vendor": [ "other" ],
+          "importEnabled": [ "true" ],
+          "editMode": [ "READ_ONLY" ]
+        }
+      }
+    ]
+  },
+  "webAuthnPolicyPasswordlessRpEntityName": "Impilo Health OS",
+  "webAuthnPolicyPasswordlessRpId": "",
+  "webAuthnPolicyPasswordlessSignatureAlgorithms": [ "ES256", "RS256" ],
+  "webAuthnPolicyPasswordlessAttestationConveyancePreference": "not specified",
+  "webAuthnPolicyPasswordlessAuthenticatorAttachment": "not specified",
+  "webAuthnPolicyPasswordlessRequireResidentKey": "Yes",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "webAuthnPolicyPasswordlessCreateTimeout": 0,
+  "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister": false,
+  "webAuthnPolicyPasswordlessAcceptableAaguids": [],
+  "webAuthnPolicyPasswordlessExtraOrigins": [],
   "requiredActions": [
     {
       "alias": "webauthn-register-passwordless",
