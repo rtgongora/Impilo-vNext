@@ -84,15 +84,25 @@ import static org.assertj.core.api.Assertions.fail;
  * {@code 'khuluma-conversation'} for routes that yield {@code 'conversations'} and left the
  * Khuluma hub denied for its whole life.
  *
- * <p><b>{@code role} is deliberately still not guarded</b>, and the reason is worth recording so
- * nobody "fixes" it with something worse. Roles have no single declaration: they arrive from the
- * Keycloak realm, from the Vashandi role-template catalog, and from provider registries. Measured
- * against the realm alone, 14 of 52 seeded roles look unknown — mostly false alarms. The only
- * anchor broad enough to avoid those, "any upper-snake literal in the codebase", matches over
- * 7,000 strings and would pass essentially anything. A guard that cries wolf gets muted, and a
- * guard that proves nothing is worse than an honest gap. Three seeded roles
- * ({@code HPA_OVERSIGHT_OFFICER}, {@code PROVINCIAL_COORDINATOR}, {@code WARD_MANAGER}) match
- * neither the realm nor any code literal and are worth a human look.
+ * <p><b>{@code role} is deliberately not guarded — but the gap is measured, not assumed.</b> Role
+ * has the same reachability question as the others: {@code policy_rule.role} must appear in
+ * {@code request.roles()}, which is Keycloak's {@code realm_access.roles} plus what the
+ * WORK_CONTEXT duty token folds in (the raw roleTemplateId and its canonical role from
+ * {@code role_template_catalog}). Anchored on the realm exports together with that catalog, 12 of
+ * 52 seeded roles are unaccounted for, over 55 rows.
+ *
+ * <p>What stops that becoming a guard is precision, and it was checked case by case rather than
+ * guessed. Some flags are real: {@code SURGEON} and {@code ANAESTHETIST} were theatre <em>case-team</em>
+ * roles (a per-case CHECK constraint in vashandi V007), never identity roles, leaving 41 rows of
+ * theatre authorisation unmatched — now fixed by declaring them as realm roles. But
+ * {@code REGISTRY_ADMIN} is referenced in 34 source files and is plainly a real role that is merely
+ * missing from the checked-in realm export. The anchor is therefore lossy in a way that would
+ * produce false build failures, and the realm JSON is known to drift from the live realm. A guard
+ * that cries wolf gets muted; an honest gap is better. The alternative anchor — "any upper-snake
+ * literal in the codebase" — matches over 7,000 strings and would pass essentially anything.
+ *
+ * <p>Reconciling the realm export against the live realm is what would make this guardable. Until
+ * then the residue is documented in V051 rather than left for someone to rediscover.
  */
 @DisplayName("policy_rule seeds stay inside the runtime's closed vocabularies")
 class PolicyRuleSeedVocabularyTest {
