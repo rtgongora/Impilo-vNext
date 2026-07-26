@@ -302,6 +302,44 @@ they saw. The forms send the signed-in user, and deliberately do not fall back t
 string "unknown" the way the growth page does — "unknown" is not an author, it is the absence of one
 written into the record where it can never be questioned.
 
+### Flyway out-of-order, and the verified list of what flipping it applies
+
+`pct-service` is written by six programmes and each holds a reserved *band* of migration numbers
+(RMNP V058–V069, Emergency V070–V099 + V200s, Adult Medicine V100–V129, Surgery V300–V329,
+Paediatrics V400–V429). Bands mean a lane routinely adds a migration numerically below one another
+lane has already applied. Flyway's default refuses those, and with `validate-on-migrate` already
+off it does not complain — it just never runs them.
+
+Proven on `impilo-full-preview` (pod `postgres-5587b4689c-qzq6z`, database `pct`, schema `pct`),
+both directions on the same database:
+
+| | history | tables |
+|---|---|---|
+| `out-of-order` off (default) | `100, 101, 102, 103, 200, 400, 401` — no `106` | none of V106's six exist |
+| `out-of-order: true` | `…, 400, 401, 106` — applied out of order, as intended | all six present |
+
+The service booted green with zero errors in *both* states. Green service, merged code, missing
+tables, nothing in any log.
+
+**Verified list of what the flip applies next**, computed as the jar's migration set minus the
+applied set rather than assumed: **V107** (`medication_reconciliation` —
+`pct_medication_reconciliations`, `pct_medication_reconciliation_items`) and **V108**
+(`medical_episode_emergency_fk`). Nothing else is outstanding.
+
+**V108 is a cross-band dependency and will fail on any fresh database.** It adds a foreign key from
+`pct_medical_episodes` (Adult Medicine, V100s) to `emergency_episode`, which is created by V200
+(Emergency). A fresh database applies strictly ascending, so V108 runs before V200 and the target
+does not exist. Reproduced on a scratch database:
+
+```
+ERROR:  relation "emergency_episode" does not exist
+```
+
+This is not caused by out-of-order and is not fixed by it — but the flip does *hide* it, because on
+the estate V200 has already applied and V108 therefore succeeds. Owned by the Adult Medicine and
+Emergency lanes; raised with the coordinator rather than fixed here, because the correct resolution
+(move the FK into the higher band, or drop it) is theirs to choose.
+
 **Not built:** nothing in this vertical. The screens are deployed to the preview estate and the
 data path under them is proven; what has not been done is a human walking the rendered pages.
 

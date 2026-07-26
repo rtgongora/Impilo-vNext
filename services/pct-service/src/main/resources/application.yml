@@ -41,6 +41,13 @@ spring:
     #
     # The band convention cannot work without this. Turning it off again silently un-ships every
     # migration whose number is below the current maximum.
+    #
+    # What this does NOT license: a migration in one band may never depend on a migration in
+    # another. Lease law forbids it (it is why Adult Medicine's V101 deliberately carries no
+    # foreign key to emergency_episode), and the reason is that out-of-order only relaxes ordering
+    # on a database where the higher number has *already* applied. A fresh database still applies
+    # strictly ascending, so a cross-band dependency boots fine on the estate and fails on every
+    # new environment — the worst possible place to find it.
     out-of-order: true
   data:
     redis:
