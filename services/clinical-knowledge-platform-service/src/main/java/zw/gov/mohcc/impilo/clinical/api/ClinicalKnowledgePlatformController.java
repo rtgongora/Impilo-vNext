@@ -56,6 +56,10 @@ public class ClinicalKnowledgePlatformController {
     @org.springframework.beans.factory.annotation.Autowired
     private zw.gov.mohcc.impilo.clinical.classification.ImnciClassificationService imnciClassificationService;
 
+    /** EPI immunisation forecasting. Field-injected on the same convention. */
+    @org.springframework.beans.factory.annotation.Autowired
+    private zw.gov.mohcc.impilo.clinical.immunisation.EpiForecastService epiForecastService;
+
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
             PrescribingEvaluationService prescribingEvaluationService,
@@ -207,6 +211,73 @@ public class ClinicalKnowledgePlatformController {
         data.put("content_source", assessment.contentSource());
         data.put("approval_status", assessment.approvalStatus());
         data.put("note", assessment.note());
+        return ResponseEntity.ok(Map.of("data", data));
+    }
+
+    /**
+     * Forecasts the child's immunisation schedule from their date of birth and the doses already
+     * recorded against them.
+     *
+     * <p>Stateless by design: the dose history is clinical record and belongs to pct-service, so
+     * the caller supplies it. The response states, per dose, not only whether it is due but why —
+     * a dose can be withheld because the child is too young, because the minimum interval since the
+     * previous dose has not elapsed, or because the window has closed for safety, and those need
+     * different actions from the health worker.</p>
+     */
+    @PostMapping("/paediatric/immunisation/forecast")
+    public ResponseEntity<Map<String, Object>> immunisationForecast(@RequestBody Map<String, Object> body) {
+        Object dobRaw = body.get("date_of_birth") != null ? body.get("date_of_birth") : body.get("dateOfBirth");
+        if (dobRaw == null) {
+            // Without a date of birth every age and interval gate is unresolvable. Guessing would
+            // produce a forecast that looks authoritative and is arbitrary.
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "date_of_birth_required",
+                    "message", "An immunisation forecast is entirely a function of age and interval; "
+                               + "without a date of birth no dose can be scheduled."));
+        }
+        java.time.LocalDate dob = java.time.LocalDate.parse(String.valueOf(dobRaw).substring(0, 10));
+        Object asOfRaw = body.get("as_of") != null ? body.get("as_of") : body.get("asOf");
+        java.time.LocalDate asOf = asOfRaw == null ? java.time.LocalDate.now()
+                : java.time.LocalDate.parse(String.valueOf(asOfRaw).substring(0, 10));
+        String sex = body.get("sex") != null ? String.valueOf(body.get("sex")) : null;
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> doses = body.get("doses") instanceof List<?> l
+                ? (List<Map<String, Object>>) (List<?>) l : List.of();
+
+        var forecast = epiForecastService.forecast(dob, sex, doses, asOf);
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (var r : forecast.rows()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("series", r.series());
+            m.put("antigen", r.antigenName());
+            m.put("dose_number", r.doseNumber());
+            m.put("status", r.status().name());
+            m.put("actionable_today", r.actionableToday());
+            m.put("earliest_date", String.valueOf(r.earliestDate()));
+            m.put("recommended_date", String.valueOf(r.recommendedDate()));
+            m.put("overdue_after", r.overdueAfter() == null ? null : String.valueOf(r.overdueAfter()));
+            m.put("latest_useful_date", r.latestUsefulDate() == null ? null : String.valueOf(r.latestUsefulDate()));
+            m.put("days_overdue", r.daysOverdue());
+            m.put("given_on", r.givenOn() == null ? null : String.valueOf(r.givenOn()));
+            m.put("rationale", r.rationale());
+            rows.add(m);
+        }
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("date_of_birth", String.valueOf(forecast.dateOfBirth()));
+        data.put("as_of", String.valueOf(forecast.asOf()));
+        data.put("age_days", forecast.ageDays());
+        data.put("doses", rows);
+        data.put("due_now", forecast.dueNow().stream()
+                .map(r -> r.series() + " dose " + r.doseNumber()).toList());
+        data.put("any_overdue", forecast.anyOverdue());
+        data.put("provisional", forecast.provisional());
+        data.put("provisional_reasons", forecast.provisionalReasons());
+        data.put("schedule_id", forecast.scheduleId());
+        data.put("schedule_version", forecast.scheduleVersion());
+        data.put("approval_status", forecast.approvalStatus());
+        data.put("note", forecast.note());
         return ResponseEntity.ok(Map.of("data", data));
     }
 

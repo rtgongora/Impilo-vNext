@@ -1,0 +1,132 @@
+{
+  "scheduleId": "impilo.zw.epi.routine",
+  "name": "Zimbabwe Expanded Programme on Immunisation — routine childhood schedule",
+  "version": "engineering-seed-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_EPI_PROGRAMME_RATIFICATION",
+  "codeSystem": "impilo-epi-antigen",
+  "provenance": "Antigens, ages and intervals follow the Zimbabwe EPI routine childhood schedule and WHO position papers. Minimum intervals and minimum ages are WHO's, and the rotavirus age ceilings follow the WHO position paper on rotavirus vaccines. This is an engineering seed and is NOT a ratified national schedule: the EPI programme revises antigens and timings, and any change here must come from the programme, not from code. See docs/clinical-governance/edliz-engineering-seed-policy.md.",
+  "codeSystemNote": "Antigen codes are declared locally because zibo-service does not yet hold a vaccine terminology. When it does, these codes become the local mapping and the codeSystem field points at the governed Zibo value set. The forecast engine never invents a code; it uses the series identifier recorded against the dose.",
+
+  "antigens": [
+    {
+      "series": "BCG",
+      "name": "BCG",
+      "protectsAgainst": "Tuberculosis (severe childhood forms)",
+      "route": "INTRADERMAL",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAgeDays": 0,
+          "minimumAgeDays": 0,
+          "overdueAfterAgeDays": 28,
+          "latestUsefulAgeDays": 365,
+          "note": "Given at birth or at the first contact. Beyond one year the benefit falls and BCG is not routinely given."
+        }
+      ]
+    },
+    {
+      "series": "OPV",
+      "name": "Oral polio vaccine",
+      "protectsAgainst": "Poliomyelitis",
+      "route": "ORAL",
+      "doses": [
+        {
+          "doseNumber": 0,
+          "recommendedAgeDays": 0,
+          "minimumAgeDays": 0,
+          "overdueAfterAgeDays": 14,
+          "latestUsefulAgeDays": 14,
+          "note": "The birth dose is only given in the first two weeks. After that it is not repeated; the child continues with doses 1 to 3."
+        },
+        {"doseNumber": 1, "recommendedAgeDays": 42, "minimumAgeDays": 42, "overdueAfterAgeDays": 70},
+        {"doseNumber": 2, "recommendedAgeDays": 70, "minimumAgeDays": 70, "minimumIntervalDays": 28, "overdueAfterAgeDays": 98},
+        {"doseNumber": 3, "recommendedAgeDays": 98, "minimumAgeDays": 98, "minimumIntervalDays": 28, "overdueAfterAgeDays": 126}
+      ]
+    },
+    {
+      "series": "IPV",
+      "name": "Inactivated polio vaccine",
+      "protectsAgainst": "Poliomyelitis",
+      "route": "INTRAMUSCULAR",
+      "doses": [
+        {"doseNumber": 1, "recommendedAgeDays": 98, "minimumAgeDays": 98, "overdueAfterAgeDays": 126}
+      ]
+    },
+    {
+      "series": "PENTA",
+      "name": "Pentavalent (DTP-HepB-Hib)",
+      "protectsAgainst": "Diphtheria, tetanus, pertussis, hepatitis B and Haemophilus influenzae type b",
+      "route": "INTRAMUSCULAR",
+      "doses": [
+        {"doseNumber": 1, "recommendedAgeDays": 42, "minimumAgeDays": 42, "overdueAfterAgeDays": 70},
+        {"doseNumber": 2, "recommendedAgeDays": 70, "minimumAgeDays": 70, "minimumIntervalDays": 28, "overdueAfterAgeDays": 98},
+        {"doseNumber": 3, "recommendedAgeDays": 98, "minimumAgeDays": 98, "minimumIntervalDays": 28, "overdueAfterAgeDays": 126}
+      ]
+    },
+    {
+      "series": "PCV",
+      "name": "Pneumococcal conjugate vaccine",
+      "protectsAgainst": "Invasive pneumococcal disease and pneumonia",
+      "route": "INTRAMUSCULAR",
+      "doses": [
+        {"doseNumber": 1, "recommendedAgeDays": 42, "minimumAgeDays": 42, "overdueAfterAgeDays": 70},
+        {"doseNumber": 2, "recommendedAgeDays": 70, "minimumAgeDays": 70, "minimumIntervalDays": 28, "overdueAfterAgeDays": 98},
+        {"doseNumber": 3, "recommendedAgeDays": 98, "minimumAgeDays": 98, "minimumIntervalDays": 28, "overdueAfterAgeDays": 126}
+      ]
+    },
+    {
+      "series": "ROTA",
+      "name": "Rotavirus vaccine",
+      "protectsAgainst": "Severe rotavirus gastroenteritis",
+      "route": "ORAL",
+      "safetyNote": "Rotavirus vaccine has age ceilings that are a safety limit, not a convenience: the small excess risk of intussusception rises with age at first dose. A first dose must not be started after 15 weeks and no dose is given after 32 weeks, even if the course is incomplete. An incomplete rotavirus course is closed, never caught up.",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAgeDays": 42,
+          "minimumAgeDays": 42,
+          "overdueAfterAgeDays": 70,
+          "latestUsefulAgeDays": 105,
+          "note": "Not to be started after 15 weeks of age."
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAgeDays": 70,
+          "minimumAgeDays": 70,
+          "minimumIntervalDays": 28,
+          "overdueAfterAgeDays": 98,
+          "latestUsefulAgeDays": 224,
+          "note": "Not to be given after 32 weeks of age."
+        }
+      ]
+    },
+    {
+      "series": "MR",
+      "name": "Measles-rubella vaccine",
+      "protectsAgainst": "Measles and rubella",
+      "route": "SUBCUTANEOUS",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAgeDays": 270,
+          "minimumAgeDays": 270,
+          "overdueAfterAgeDays": 300,
+          "note": "Given from 9 months. A dose given before 9 months (for example in an outbreak response) does not count towards the routine two doses and must be repeated."
+        },
+        {"doseNumber": 2, "recommendedAgeDays": 548, "minimumAgeDays": 548, "minimumIntervalDays": 28, "overdueAfterAgeDays": 578}
+      ]
+    },
+    {
+      "series": "HPV",
+      "name": "Human papillomavirus vaccine",
+      "protectsAgainst": "Cervical cancer",
+      "route": "INTRAMUSCULAR",
+      "appliesToSex": "FEMALE",
+      "doses": [
+        {"doseNumber": 1, "recommendedAgeDays": 3650, "minimumAgeDays": 3285, "overdueAfterAgeDays": 5110},
+        {"doseNumber": 2, "recommendedAgeDays": 3832, "minimumAgeDays": 3467, "minimumIntervalDays": 168, "overdueAfterAgeDays": 5110}
+      ]
+    }
+  ]
+}
