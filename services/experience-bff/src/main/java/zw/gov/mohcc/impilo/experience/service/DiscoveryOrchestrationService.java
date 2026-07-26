@@ -138,7 +138,7 @@ public class DiscoveryOrchestrationService {
                 for (FindCareOrchestrationService.CareResult f : res.results()) {
                     List<String> meta = new ArrayList<>();
                     meta.add(f.serviceMatch() && f.matchedService() != null
-                            ? "Offers " + f.matchedService() : "In directory");
+                            ? "Offers " + humanize(f.matchedService()) : "In directory");
                     if (f.operationalStatusUnverified()) {
                         meta.add("Hours not verified");
                     }
