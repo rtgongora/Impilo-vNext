@@ -17,6 +17,7 @@ CHECKS=(
   check-mobile-parity.sh
   check-madi-surfacing.sh
   check-care-continuum-doctrine.sh
+  check-imnci-capture-coverage.sh
 )
 
 FAIL=0

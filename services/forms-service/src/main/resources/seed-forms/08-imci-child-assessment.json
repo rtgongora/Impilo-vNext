@@ -1,75 +1,812 @@
 {
   "formKey": "impilo.child.imci.v1",
-  "name": "Child Health (IMCI) Assessment",
-  "description": "IMCI-style under-5 assessment: danger signs, main symptoms, classification, treatment. Age-restricted (< 5 years). Exemplar.",
+  "name": "Child Health (IMNCI) Assessment",
+  "description": "IMNCI-compatible under-five assessment: general danger signs, the main symptom branches, nutrition and anaemia, immunisation status, and classification kept separate from diagnosis. Field ids match the fact keys of the paediatric danger-sign engine so answers can be evaluated without remapping. ENGINEERING SEED — requires MoHCC ratification against the Zimbabwe national IMNCI adaptation before clinical use.",
   "formType": "PROGRAMME_VISIT",
-  "careSettings": ["OUTPATIENT", "COMMUNITY", "OUTREACH"],
-  "careStages": ["ASSESSMENT", "CONSULTATION"],
-  "specialties": ["PAEDIATRICS", "NURSING", "GENERAL"],
-  "encounterTypes": ["CHILD_HEALTH", "IMCI", "OPD"],
-  "encounterContexts": ["outpatient", "community"],
+  "careSettings": [
+    "OUTPATIENT",
+    "COMMUNITY",
+    "OUTREACH"
+  ],
+  "careStages": [
+    "ASSESSMENT",
+    "CONSULTATION"
+  ],
+  "specialties": [
+    "PAEDIATRICS",
+    "NURSING",
+    "GENERAL"
+  ],
+  "encounterTypes": [
+    "CHILD_HEALTH",
+    "IMCI",
+    "OPD"
+  ],
+  "encounterContexts": [
+    "outpatient",
+    "community"
+  ],
   "requiredWorkflow": "ASSESS",
   "obligationDefault": "MANDATORY",
-  "permittedCadres": ["NURSE", "CLINICAL_OFFICER", "PHYSICIAN", "COMMUNITY"],
+  "permittedCadres": [
+    "NURSE",
+    "CLINICAL_OFFICER",
+    "PHYSICIAN",
+    "COMMUNITY"
+  ],
   "minAgeMonths": 0,
   "maxAgeMonths": 60,
   "sexApplicability": "ALL",
-  "programmeApplicability": ["IMCI", "CHILD_HEALTH"],
+  "programmeApplicability": [
+    "IMCI",
+    "CHILD_HEALTH"
+  ],
   "requiresCountersign": false,
   "offlineCapable": true,
   "sensitivity": "STANDARD",
   "governanceAuthor": "MOHCC",
-  "sourceGuideline": "WHO IMCI (exemplar subset)",
+  "sourceGuideline": "WHO IMNCI — assess and classify the sick child aged 2 months to 5 years (engineering seed)",
   "publish": true,
   "resourceMappings": {
     "mappings": [
-      {"linkId": "muac", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8352-7", "display": "Mid-upper arm circumference"}, "unit": "cm"},
-      {"linkId": "classification", "resourceType": "CONDITION", "routeTarget": "PCT_PROBLEM", "category": "DIAGNOSIS"}
+      {
+        "linkId": "muacCm",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8352-7",
+          "display": "Mid-upper arm circumference"
+        },
+        "unit": "cm"
+      },
+      {
+        "linkId": "weightKg",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "29463-7",
+          "display": "Body weight"
+        },
+        "unit": "kg"
+      },
+      {
+        "linkId": "vitals.respiratoryRate",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "9279-1",
+          "display": "Respiratory rate"
+        },
+        "unit": "breaths/min"
+      },
+      {
+        "linkId": "guidelineClassification",
+        "resourceType": "CONDITION",
+        "routeTarget": "PCT_PROBLEM",
+        "category": "GUIDELINE_CLASSIFICATION"
+      },
+      {
+        "linkId": "workingDiagnosis",
+        "resourceType": "CONDITION",
+        "routeTarget": "PCT_PROBLEM",
+        "category": "WORKING_DIAGNOSIS"
+      }
     ]
   },
   "definition": {
     "id": "impilo.child.imci.v1",
-    "version": "1.0.0",
-    "title": "Child Health (IMCI) Assessment",
-    "description": "IMCI under-5 assessment.",
+    "version": "2.0.0",
+    "title": "Child Health (IMNCI) Assessment",
+    "description": "IMNCI-compatible under-five assessment: general danger signs, the main symptom branches, nutrition and anaemia, immunisation status, and classification kept separate from diagnosis. Field ids match the fact keys of the paediatric danger-sign engine so answers can be evaluated without remapping. ENGINEERING SEED — requires MoHCC ratification against the Zimbabwe national IMNCI adaptation before clinical use.",
     "healthDomain": "CHILD",
     "programme": "IMCI",
-    "encounterTypes": ["CHILD_HEALTH", "IMCI", "OPD"],
+    "encounterTypes": [
+      "CHILD_HEALTH",
+      "IMCI",
+      "OPD"
+    ],
     "minAgeMonths": 0,
     "maxAgeMonths": 60,
     "sexApplicability": "ALL",
-    "providerRoles": ["NURSE", "CLINICAL_OFFICER", "DOCTOR"],
+    "providerRoles": [
+      "NURSE",
+      "CLINICAL_OFFICER",
+      "DOCTOR"
+    ],
     "offlineCapable": true,
-    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "audit": {
+      "dataCustodian": "MOHCC",
+      "sensitivity": "STANDARD"
+    },
     "sections": [
       {
         "id": "danger",
         "title": "General danger signs",
+        "description": "Ask and check all four in every sick child, whatever the presenting complaint. A sign that was not assessed is recorded as not assessed — it is never treated as absent.",
         "fields": [
-          {"id": "dangerSigns", "linkId": "dangerSigns", "label": "General danger signs", "kind": "coded_multi", "options": [
-            {"code": "NOT_DRINKING", "display": "Not able to drink / breastfeed"},
-            {"code": "VOMITS_ALL", "display": "Vomits everything"},
-            {"code": "CONVULSIONS", "display": "Convulsions"},
-            {"code": "LETHARGIC", "display": "Lethargic / unconscious"}
-          ]}
+          {
+            "id": "unableToDrinkOrBreastfeed",
+            "linkId": "unableToDrinkOrBreastfeed",
+            "label": "Unable to drink or breastfeed",
+            "kind": "clinical_assertion",
+            "validation": {
+              "required": true
+            }
+          },
+          {
+            "id": "vomitsEverything",
+            "linkId": "vomitsEverything",
+            "label": "Vomits everything",
+            "kind": "clinical_assertion",
+            "validation": {
+              "required": true
+            }
+          },
+          {
+            "id": "convulsions",
+            "linkId": "convulsions",
+            "label": "Convulsions (this illness)",
+            "kind": "clinical_assertion",
+            "validation": {
+              "required": true
+            }
+          },
+          {
+            "id": "lethargicOrUnconscious",
+            "linkId": "lethargicOrUnconscious",
+            "label": "Lethargic or unconscious",
+            "kind": "clinical_assertion",
+            "validation": {
+              "required": true
+            }
+          },
+          {
+            "id": "consciousness",
+            "linkId": "consciousness",
+            "label": "Conscious level",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "ALERT",
+                "display": "Alert"
+              },
+              {
+                "code": "IRRITABLE",
+                "display": "Irritable"
+              },
+              {
+                "code": "SLEEPING",
+                "display": "Sleeping"
+              },
+              {
+                "code": "VOICE",
+                "display": "Responds to voice"
+              },
+              {
+                "code": "PAIN",
+                "display": "Responds to pain only"
+              },
+              {
+                "code": "UNRESPONSIVE",
+                "display": "Unresponsive"
+              }
+            ]
+          },
+          {
+            "id": "movesOnlyWhenStimulated",
+            "linkId": "movesOnlyWhenStimulated",
+            "label": "Moves only when stimulated",
+            "kind": "clinical_assertion",
+            "description": "The young-infant equivalent of lethargy; one of the signs of possible serious bacterial infection."
+          }
         ]
       },
       {
-        "id": "symptoms",
-        "title": "Main symptoms",
+        "id": "emergency",
+        "title": "Emergency signs (ETAT)",
+        "description": "Checked first in a child who looks unwell. Any of these needs treatment before the assessment continues.",
         "fields": [
-          {"id": "cough", "linkId": "cough", "label": "Cough / difficult breathing", "kind": "boolean"},
-          {"id": "diarrhoea", "linkId": "diarrhoea", "label": "Diarrhoea", "kind": "boolean"},
-          {"id": "fever", "linkId": "fever", "label": "Fever", "kind": "boolean"},
-          {"id": "muac", "linkId": "muac", "label": "MUAC", "kind": "numeric_with_unit", "unit": "cm", "validation": {"min": 5, "max": 30}}
+          {
+            "id": "convulsingNow",
+            "linkId": "convulsingNow",
+            "label": "Convulsing right now",
+            "kind": "clinical_assertion",
+            "description": "Distinct from a convulsion earlier in this illness — a child fitting now needs treatment before the assessment continues."
+          },
+          {
+            "id": "airwayObstruction",
+            "linkId": "airwayObstruction",
+            "label": "Obstructed breathing",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "stridorAtRest",
+            "linkId": "stridorAtRest",
+            "label": "Stridor at rest",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "centralCyanosis",
+            "linkId": "centralCyanosis",
+            "label": "Central cyanosis",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "severeChestIndrawing",
+            "linkId": "severeChestIndrawing",
+            "label": "Severe chest indrawing",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "grunting",
+            "linkId": "grunting",
+            "label": "Grunting",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "capillaryRefillSeconds",
+            "linkId": "capillaryRefillSeconds",
+            "label": "Capillary refill",
+            "kind": "numeric_with_unit",
+            "unit": "seconds",
+            "validation": {
+              "min": 0,
+              "max": 15
+            }
+          },
+          {
+            "id": "coldHands",
+            "linkId": "coldHands",
+            "label": "Cold hands",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "weakFastPulse",
+            "linkId": "weakFastPulse",
+            "label": "Weak and fast pulse",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "bloodGlucoseMmol",
+            "linkId": "bloodGlucoseMmol",
+            "label": "Blood glucose",
+            "kind": "numeric_with_unit",
+            "unit": "mmol/L",
+            "validation": {
+              "min": 0,
+              "max": 40
+            },
+            "description": "Check in any child with reduced conscious level, convulsions or severe malnutrition."
+          }
+        ]
+      },
+      {
+        "id": "cough",
+        "title": "Cough or difficult breathing",
+        "fields": [
+          {
+            "id": "cough",
+            "linkId": "cough",
+            "label": "Cough or difficult breathing",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "coughDurationDays",
+            "linkId": "coughDurationDays",
+            "label": "For how long",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "validation": {
+              "min": 0,
+              "max": 365
+            }
+          },
+          {
+            "id": "vitals.respiratoryRate",
+            "linkId": "vitals.respiratoryRate",
+            "label": "Respiratory rate",
+            "kind": "numeric_with_unit",
+            "unit": "breaths/min",
+            "validation": {
+              "min": 0,
+              "max": 120
+            },
+            "description": "Count for a full minute while the child is calm. The fast-breathing threshold depends on age."
+          },
+          {
+            "id": "vitals.oxygenSaturation",
+            "linkId": "vitals.oxygenSaturation",
+            "label": "Oxygen saturation",
+            "kind": "numeric_with_unit",
+            "unit": "%",
+            "validation": {
+              "min": 50,
+              "max": 100
+            }
+          },
+          {
+            "id": "wheeze",
+            "linkId": "wheeze",
+            "label": "Wheeze",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "chestFindings",
+            "linkId": "chestFindings",
+            "label": "Chest examination",
+            "kind": "body_map",
+            "bodyMapInstrument": "respiratory",
+            "description": "Mark auscultation and percussion findings by zone."
+          }
+        ]
+      },
+      {
+        "id": "diarrhoea",
+        "title": "Diarrhoea",
+        "fields": [
+          {
+            "id": "diarrhoea",
+            "linkId": "diarrhoea",
+            "label": "Diarrhoea",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "diarrhoeaDurationDays",
+            "linkId": "diarrhoeaDurationDays",
+            "label": "For how long",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "validation": {
+              "min": 0,
+              "max": 365
+            }
+          },
+          {
+            "id": "bloodInStool",
+            "linkId": "bloodInStool",
+            "label": "Blood in the stool",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "sunkenEyes",
+            "linkId": "sunkenEyes",
+            "label": "Sunken eyes",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "skinPinchSlow",
+            "linkId": "skinPinchSlow",
+            "label": "Skin pinch goes back slowly",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "drinkingEagerly",
+            "linkId": "drinkingEagerly",
+            "label": "Drinking eagerly, thirsty",
+            "kind": "clinical_assertion"
+          }
+        ]
+      },
+      {
+        "id": "fever",
+        "title": "Fever",
+        "fields": [
+          {
+            "id": "fever",
+            "linkId": "fever",
+            "label": "Fever (by history or felt hot or measured)",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "vitals.temperature",
+            "linkId": "vitals.temperature",
+            "label": "Temperature",
+            "kind": "numeric_with_unit",
+            "unit": "°C",
+            "validation": {
+              "min": 25,
+              "max": 45
+            }
+          },
+          {
+            "id": "feverDurationDays",
+            "linkId": "feverDurationDays",
+            "label": "For how long",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "validation": {
+              "min": 0,
+              "max": 365
+            }
+          },
+          {
+            "id": "malariaRisk",
+            "linkId": "malariaRisk",
+            "label": "Malaria risk — lives in or travelled to a malaria area",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "malariaTestResult",
+            "linkId": "malariaTestResult",
+            "label": "Malaria test result",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "POSITIVE",
+                "display": "Positive"
+              },
+              {
+                "code": "NEGATIVE",
+                "display": "Negative"
+              },
+              {
+                "code": "NOT_DONE",
+                "display": "Not done"
+              },
+              {
+                "code": "PENDING",
+                "display": "Pending"
+              }
+            ]
+          },
+          {
+            "id": "stiffNeck",
+            "linkId": "stiffNeck",
+            "label": "Stiff neck",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "generalisedRash",
+            "linkId": "generalisedRash",
+            "label": "Generalised rash",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "measlesEyeOrMouthSigns",
+            "linkId": "measlesEyeOrMouthSigns",
+            "label": "Red eyes or mouth ulcers",
+            "kind": "clinical_assertion"
+          }
+        ]
+      },
+      {
+        "id": "ear",
+        "title": "Ear problem",
+        "fields": [
+          {
+            "id": "earProblem",
+            "linkId": "earProblem",
+            "label": "Ear problem",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "earPain",
+            "linkId": "earPain",
+            "label": "Ear pain",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "earDischarge",
+            "linkId": "earDischarge",
+            "label": "Ear discharge",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "earDischargeDurationDays",
+            "linkId": "earDischargeDurationDays",
+            "label": "Discharge for how long",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "validation": {
+              "min": 0,
+              "max": 365
+            }
+          },
+          {
+            "id": "tenderSwellingBehindEar",
+            "linkId": "tenderSwellingBehindEar",
+            "label": "Tender swelling behind the ear",
+            "kind": "clinical_assertion"
+          }
+        ]
+      },
+      {
+        "id": "nutrition",
+        "title": "Nutrition and anaemia",
+        "description": "Assessed in every child, not only where malnutrition is suspected.",
+        "fields": [
+          {
+            "id": "weightKg",
+            "linkId": "weightKg",
+            "label": "Weight",
+            "kind": "numeric_with_unit",
+            "unit": "kg",
+            "validation": {
+              "min": 0.5,
+              "max": 60
+            }
+          },
+          {
+            "id": "muacCm",
+            "linkId": "muacCm",
+            "label": "Mid-upper arm circumference",
+            "kind": "numeric_with_unit",
+            "unit": "cm",
+            "validation": {
+              "min": 5,
+              "max": 30
+            },
+            "description": "Interpretable from 6 to 59 months."
+          },
+          {
+            "id": "bilateralPittingOedema",
+            "linkId": "bilateralPittingOedema",
+            "label": "Bilateral pitting oedema",
+            "kind": "clinical_assertion",
+            "description": "Present means severe acute malnutrition whatever the measurements show."
+          },
+          {
+            "id": "visibleSevereWasting",
+            "linkId": "visibleSevereWasting",
+            "label": "Visible severe wasting",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "palmarPallor",
+            "linkId": "palmarPallor",
+            "label": "Palmar pallor",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "appetiteTest",
+            "linkId": "appetiteTest",
+            "label": "Appetite test",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PASSED",
+                "display": "Passed"
+              },
+              {
+                "code": "FAILED",
+                "display": "Failed"
+              },
+              {
+                "code": "NOT_DONE",
+                "display": "Not done"
+              }
+            ]
+          },
+          {
+            "id": "feeding",
+            "linkId": "feeding",
+            "label": "Feeding",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "WELL",
+                "display": "Feeding well"
+              },
+              {
+                "code": "POOR",
+                "display": "Feeding poorly"
+              },
+              {
+                "code": "NONE",
+                "display": "Not feeding"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "immunisation",
+        "title": "Immunisation and preventive care",
+        "description": "Checked at every contact — a sick-child visit is an opportunity to catch up.",
+        "fields": [
+          {
+            "id": "immunisationStatusChecked",
+            "linkId": "immunisationStatusChecked",
+            "label": "Immunisation status checked against the card",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "YES_UP_TO_DATE",
+                "display": "Checked — up to date"
+              },
+              {
+                "code": "YES_DOSES_DUE",
+                "display": "Checked — doses due"
+              },
+              {
+                "code": "CARD_UNAVAILABLE",
+                "display": "Card not available"
+              },
+              {
+                "code": "NOT_CHECKED",
+                "display": "Not checked"
+              }
+            ]
+          },
+          {
+            "id": "vitaminADue",
+            "linkId": "vitaminADue",
+            "label": "Vitamin A due",
+            "kind": "clinical_assertion"
+          },
+          {
+            "id": "dewormingDue",
+            "linkId": "dewormingDue",
+            "label": "Deworming due",
+            "kind": "clinical_assertion"
+          }
         ]
       },
       {
         "id": "classify",
-        "title": "Classification & treatment",
+        "title": "Classification and plan",
+        "description": "A guideline classification is not a diagnosis. Both are recorded, and they are kept apart.",
         "fields": [
-          {"id": "classification", "linkId": "classification", "label": "Classification", "kind": "text", "validation": {"required": true}},
-          {"id": "treatment", "linkId": "treatment", "label": "Treatment / plan", "kind": "text", "validation": {"required": true}}
+          {
+            "id": "guidelineClassification",
+            "linkId": "guidelineClassification",
+            "label": "IMNCI classification(s)",
+            "kind": "coded_multi",
+            "description": "The classification the guideline produces from the findings above.",
+            "options": [
+              {
+                "code": "VERY_SEVERE_DISEASE",
+                "display": "Very severe disease"
+              },
+              {
+                "code": "SEVERE_PNEUMONIA",
+                "display": "Severe pneumonia or very severe disease"
+              },
+              {
+                "code": "PNEUMONIA",
+                "display": "Pneumonia"
+              },
+              {
+                "code": "COUGH_NO_PNEUMONIA",
+                "display": "Cough or cold — no pneumonia"
+              },
+              {
+                "code": "SEVERE_DEHYDRATION",
+                "display": "Severe dehydration"
+              },
+              {
+                "code": "SOME_DEHYDRATION",
+                "display": "Some dehydration"
+              },
+              {
+                "code": "NO_DEHYDRATION",
+                "display": "No dehydration"
+              },
+              {
+                "code": "DYSENTERY",
+                "display": "Dysentery"
+              },
+              {
+                "code": "PERSISTENT_DIARRHOEA",
+                "display": "Persistent diarrhoea"
+              },
+              {
+                "code": "VERY_SEVERE_FEBRILE_DISEASE",
+                "display": "Very severe febrile disease"
+              },
+              {
+                "code": "MALARIA",
+                "display": "Malaria"
+              },
+              {
+                "code": "MEASLES",
+                "display": "Measles"
+              },
+              {
+                "code": "MASTOIDITIS",
+                "display": "Mastoiditis"
+              },
+              {
+                "code": "ACUTE_EAR_INFECTION",
+                "display": "Acute ear infection"
+              },
+              {
+                "code": "SEVERE_ACUTE_MALNUTRITION",
+                "display": "Severe acute malnutrition"
+              },
+              {
+                "code": "MODERATE_ACUTE_MALNUTRITION",
+                "display": "Moderate acute malnutrition"
+              },
+              {
+                "code": "ANAEMIA",
+                "display": "Anaemia"
+              },
+              {
+                "code": "NO_CLASSIFICATION",
+                "display": "No classification met"
+              }
+            ]
+          },
+          {
+            "id": "workingDiagnosis",
+            "linkId": "workingDiagnosis",
+            "label": "Working diagnosis",
+            "kind": "text",
+            "description": "The clinician's own view, which may differ from the classification."
+          },
+          {
+            "id": "disposition",
+            "linkId": "disposition",
+            "label": "Disposition",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "TREAT_HERE",
+                "display": "Treat here"
+              },
+              {
+                "code": "REFER_URGENTLY",
+                "display": "Refer urgently"
+              },
+              {
+                "code": "REFER_ROUTINE",
+                "display": "Refer, not urgent"
+              },
+              {
+                "code": "ADMIT",
+                "display": "Admit"
+              }
+            ]
+          },
+          {
+            "id": "followUpDays",
+            "linkId": "followUpDays",
+            "label": "Follow up in",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "validation": {
+              "min": 0,
+              "max": 90
+            }
+          },
+          {
+            "id": "counsellingGiven",
+            "linkId": "counsellingGiven",
+            "label": "Caregiver counselling given",
+            "kind": "coded_multi",
+            "options": [
+              {
+                "code": "DANGER_SIGNS",
+                "display": "When to return immediately"
+              },
+              {
+                "code": "FEEDING",
+                "display": "Feeding"
+              },
+              {
+                "code": "FLUIDS",
+                "display": "Fluids"
+              },
+              {
+                "code": "MEDICINE_USE",
+                "display": "How to give the medicine"
+              },
+              {
+                "code": "FOLLOW_UP",
+                "display": "When to come back"
+              }
+            ]
+          },
+          {
+            "id": "clinicalNote",
+            "linkId": "clinicalNote",
+            "label": "Clinical note",
+            "kind": "text"
+          }
         ]
       }
     ]
