@@ -316,6 +316,15 @@ public class ServiceClientConfig {
                 // Duty proof: the signed WORK_CONTEXT token the PDP introspects to make the
                 // operational context above authoritative (validated, not merely trusted).
                 forwardHeader(inbound, request, CompanionHeaders.WORK_CONTEXT_TOKEN);
+                // Clinical episode correlation. The shell sets X-Trauma-Episode-ID on every
+                // resuscitation, ED and blood write (ui/one-ui-shell/src/hooks/queries/useEmergency.ts),
+                // and pct/inpatient/madi all read it via @RequestHeader — but until this line existed
+                // the BFF silently dropped it, so every resus event reached inpatient-service with no
+                // episode id and the cross-service episode timeline was built from nothing. The
+                // existing shell-side test only asserted the shell SET the header, which is why the
+                // gap survived. Forward, do not synthesize: this header is a correlation id minted
+                // upstream by daidzai/PCT, never by the BFF.
+                forwardHeader(inbound, request, CompanionHeaders.TRAUMA_EPISODE_ID);
                 // Idempotency keys are scoped to ONE mutation: when a BFF handler fans
                 // out to several downstream mutations it must set distinct keys, and
                 // blind forwarding would clobber them (downstream then 409s the second

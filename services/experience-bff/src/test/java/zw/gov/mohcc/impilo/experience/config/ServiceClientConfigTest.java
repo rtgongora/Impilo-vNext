@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class ServiceClientConfigTest {
 
@@ -45,6 +46,46 @@ class ServiceClientConfigTest {
         assertEquals("shift-1", outbound.getHeaders().getFirst(CompanionHeaders.SHIFT_ID));
         assertEquals("idem-1", outbound.getHeaders().getFirst(CompanionHeaders.IDEMPOTENCY_KEY));
         assertEquals("5000", outbound.getHeaders().getFirst(CompanionHeaders.CLIENT_TIMEOUT_MS));
+    }
+
+    /**
+     * The clinical episode correlation id must survive the BFF hop.
+     *
+     * <p>Regression test for a live defect: the shell set {@code X-Trauma-Episode-ID} on every
+     * resuscitation, ED and blood write and pct/inpatient/madi all read it, but the BFF never
+     * forwarded it — so every resus event reached inpatient-service unstamped and the cross-service
+     * episode timeline was assembled from nothing. The pre-existing shell-side test asserted only
+     * that the shell SET the header, which is exactly why the gap survived review.
+     */
+    @Test
+    void trustForwarderCopiesTraumaEpisodeCorrelationId() throws IOException {
+        ServiceClientConfig config = new ServiceClientConfig();
+        MockHttpServletRequest inbound = (MockHttpServletRequest) requestWithHeaders();
+        inbound.addHeader(CompanionHeaders.TRAUMA_EPISODE_ID, "episode-77");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
+
+        MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.POST, java.net.URI.create("http://example.test"));
+        config.trustHeaderForwardingInterceptor().intercept(outbound, new byte[0], (request, body) ->
+                new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
+
+        assertEquals("episode-77", outbound.getHeaders().getFirst(CompanionHeaders.TRAUMA_EPISODE_ID));
+    }
+
+    /**
+     * The BFF forwards the episode id, it never invents one. An absent correlation id must stay
+     * absent so a downstream service can tell "no episode" from "some episode the BFF guessed".
+     */
+    @Test
+    void trustForwarderDoesNotSynthesizeAnAbsentEpisodeId() throws IOException {
+        ServiceClientConfig config = new ServiceClientConfig();
+        RequestContextHolder.setRequestAttributes(
+                new ServletRequestAttributes((MockHttpServletRequest) requestWithHeaders()));
+
+        MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.POST, java.net.URI.create("http://example.test"));
+        config.trustHeaderForwardingInterceptor().intercept(outbound, new byte[0], (request, body) ->
+                new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
+
+        assertNull(outbound.getHeaders().getFirst(CompanionHeaders.TRAUMA_EPISODE_ID));
     }
 
     private HttpServletRequest requestWithHeaders() {
