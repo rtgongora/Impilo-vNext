@@ -112,6 +112,13 @@ public class DiscoveryOrchestrationService {
             if (cat.equals("pharmacy")) query = "pharmacy";
             else if (cat.equals("diagnostics")) query = "laboratory";
         }
+        // The find-care lane needs a need or a location — it does not enumerate the whole
+        // registry. Without either, prompt honestly instead of reporting a false outage.
+        boolean hasInput = (query != null && !query.isBlank()) || (lat != null && !lat.isBlank());
+        if (!hasInput) {
+            notes.add("Search a service or share your location to see facilities and care near you.");
+            return;
+        }
         int perSource = all ? ALL_PER_SOURCE : Math.max(1, size);
         try {
             FindCareOrchestrationService.CareSearchResponse res =
