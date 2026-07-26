@@ -69,9 +69,13 @@ public class ClinicalDocumentsController {
                     "data", data != null ? data : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT getPatientRecords failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty 200 here reads as "this patient has no records on file", which is an
+            // affirmative finding and would be a fabricated one. Fail loudly instead.
+            log.error("PCT getPatientRecords failed for patient={}: {}", patientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "clinical_documents_unavailable",
+                    "message", "Clinical documents could not be retrieved. Do not treat this as an "
+                               + "absence of documents.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

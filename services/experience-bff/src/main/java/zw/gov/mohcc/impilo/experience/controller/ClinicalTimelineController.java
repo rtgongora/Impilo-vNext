@@ -52,7 +52,15 @@ public class ClinicalTimelineController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "encounter_id must be a numeric PCT encounter id when patient_id is omitted");
             } catch (Exception e) {
-                log.warn("PCT getEncounter for timeline failed: {}", e.getMessage());
+                // Falling through would render an empty timeline for what is actually an
+                // upstream outage — the same shape a patient with no history produces.
+                log.error("PCT getEncounter for timeline failed for encounter={}: {}",
+                        encounterId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "timeline_unavailable",
+                        "message", "The encounter could not be resolved because PCT is "
+                                   + "unreachable. Do not treat this as an absence of history.",
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
 
@@ -67,9 +75,13 @@ public class ClinicalTimelineController {
                     "data", pctData != null ? pctData : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT getPatientTimeline failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty 200 here reads as "this patient has no clinical history", which is an
+            // affirmative finding and would be a fabricated one. Fail loudly instead.
+            log.error("PCT getPatientTimeline failed for patient={}: {}", cpid, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "timeline_unavailable",
+                    "message", "The clinical timeline could not be retrieved. Do not treat this "
+                               + "as an absence of history.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

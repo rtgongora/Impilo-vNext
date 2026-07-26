@@ -67,6 +67,21 @@ public class StructuredHistoryController {
         return d == null ? null : d.toLocalDate().toString();
     }
 
+    /**
+     * Every endpoint here falls through to an empty (or demo-patient) history when the upstream
+     * has nothing to say. That fallback is only honest when the upstream actually answered — a
+     * failed call rendered as an empty history is an affirmative clinical claim ("no surgery",
+     * "no advance directive") made at the moment the system knows least. Failures land here
+     * instead.
+     */
+    private static ResponseEntity<Map<String, Object>> upstreamUnavailable(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", code,
+                "message", message,
+                "meta", meta(requestId, correlationId)));
+    }
+
     @GetMapping("/social-history")
     public ResponseEntity<Map<String, Object>> socialHistory(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -83,7 +98,10 @@ public class StructuredHistoryController {
                 return ResponseEntity.ok(body);
             }
         } catch (Exception e) {
-            log.warn("PCT getSocialHistory failed: {}", e.getMessage());
+            log.error("PCT getSocialHistory failed for patient={}: {}", patientIdParam, e.getMessage());
+            return upstreamUnavailable("social_history_unavailable",
+                    "Social history could not be retrieved. Do not treat this as an absence of "
+                    + "social history.", requestId, correlationId);
         }
         return demoSocialHistory(patientIdParam, requestId, correlationId);
     }
@@ -117,7 +135,10 @@ public class StructuredHistoryController {
                 return ResponseEntity.ok(body);
             }
         } catch (Exception e) {
-            log.warn("PCT getFamilyHistory failed: {}", e.getMessage());
+            log.error("PCT getFamilyHistory failed for patient={}: {}", patientIdParam, e.getMessage());
+            return upstreamUnavailable("family_history_unavailable",
+                    "Family history could not be retrieved. Do not treat this as an absence of "
+                    + "family history.", requestId, correlationId);
         }
         return demoFamilyHistory(patientIdParam, requestId, correlationId);
     }
@@ -158,7 +179,11 @@ public class StructuredHistoryController {
                 return ResponseEntity.ok(body);
             }
         } catch (Exception e) {
-            log.warn("PCT getFunctionalAssessments failed: {}", e.getMessage());
+            log.error("PCT getFunctionalAssessments failed for patient={}: {}",
+                    patientIdParam, e.getMessage());
+            return upstreamUnavailable("functional_assessments_unavailable",
+                    "Functional assessments could not be retrieved. Do not treat this as an "
+                    + "absence of assessments.", requestId, correlationId);
         }
         return demoFunctionalAssessments(patientIdParam, requestId, correlationId);
     }
@@ -193,6 +218,10 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
         parsePatientId(patientIdParam);
+        // Procedures are assembled from two sources. A source that could not be reached leaves a
+        // hole we cannot see into, so an empty result is only reportable when both sources
+        // actually answered — otherwise "no surgical history" would be a fabricated finding.
+        boolean sourceUnreachable = false;
         try {
             JsonNode inpatientData = inpatientClient.listProcedureHistory(patientIdParam);
             if (inpatientData != null && inpatientData.isArray() && !inpatientData.isEmpty()) {
@@ -202,7 +231,9 @@ public class StructuredHistoryController {
                 return ResponseEntity.ok(body);
             }
         } catch (Exception e) {
-            log.warn("Inpatient listProcedureHistory failed: {}", e.getMessage());
+            sourceUnreachable = true;
+            log.error("Inpatient listProcedureHistory failed for patient={}: {}",
+                    patientIdParam, e.getMessage());
         }
         try {
             JsonNode pctData = pctClient.getProcedures(patientIdParam);
@@ -213,7 +244,13 @@ public class StructuredHistoryController {
                 return ResponseEntity.ok(body);
             }
         } catch (Exception e) {
-            log.warn("PCT getProcedures failed: {}", e.getMessage());
+            sourceUnreachable = true;
+            log.error("PCT getProcedures failed for patient={}: {}", patientIdParam, e.getMessage());
+        }
+        if (sourceUnreachable) {
+            return upstreamUnavailable("procedure_history_unavailable",
+                    "Procedure history could not be retrieved. Do not treat this as an absence "
+                    + "of procedures.", requestId, correlationId);
         }
         return demoProcedures(patientIdParam, requestId, correlationId);
     }
@@ -247,7 +284,13 @@ public class StructuredHistoryController {
                 return ResponseEntity.ok(body);
             }
         } catch (Exception e) {
-            log.warn("PCT getAdvanceDirectives failed: {}", e.getMessage());
+            // An empty 200 here reads as "this patient has no advance directive on file", which
+            // is the finding a resuscitation decision turns on. Never fabricate it.
+            log.error("PCT getAdvanceDirectives failed for patient={}: {}",
+                    patientIdParam, e.getMessage());
+            return upstreamUnavailable("advance_directives_unavailable",
+                    "Advance directives could not be retrieved. Do not treat this as an absence "
+                    + "of a directive.", requestId, correlationId);
         }
         return demoAdvanceDirectives(patientIdParam, requestId, correlationId);
     }
