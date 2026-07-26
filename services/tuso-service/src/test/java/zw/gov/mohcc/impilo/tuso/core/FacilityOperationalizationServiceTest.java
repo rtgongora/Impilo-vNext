@@ -97,7 +97,11 @@ class FacilityOperationalizationServiceTest {
         assertThat(result.processed()).isEqualTo(1);
         assertThat(result.workspacesCreated()).isEqualTo(1);
         assertThat(result.servicePointsCreated()).isEqualTo(1);
-        assertThat(result.capabilitiesCreated()).isEqualTo(2); // OPD + MATERNITY for an RHC
+        // HAR S3 — OPD only. A rural health centre is not evidence of a maternity service: the
+        // inference used to hold for RURAL_HEALTH_CENTRE/CLINIC and was removed, because "clinic"
+        // in the HPA register covers dental, optometry and radiology practices, and a wrong
+        // maternity claim is a promise a woman in labour would travel on.
+        assertThat(result.capabilitiesCreated()).isEqualTo(1);
         assertThat(result.readinessCreated()).isEqualTo(1);
         assertThat(result.failed()).isZero();
         verify(workspaceService).createWorkspace(eq(10L), any());
