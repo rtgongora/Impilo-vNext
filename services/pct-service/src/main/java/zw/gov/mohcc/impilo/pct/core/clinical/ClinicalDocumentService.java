@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ClinicalDocumentEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.ClinicalDocumentRepository;
@@ -76,14 +78,20 @@ public class ClinicalDocumentService {
     @Transactional(readOnly = true)
     public ClinicalDocumentEntity get(UUID documentId, String subjectCpid) {
         TrustContext ctx = TrustContextHolder.require();
+        // All three misses answer the same 404. They used to raise IllegalArgumentException, which
+        // Spring renders as a 500 — and a 500 for "wrong tenant" beside a 404 for "no such id"
+        // tells a caller which document ids exist, which is precisely what the subject binding is
+        // here to withhold. One status, one message, no oracle.
         ClinicalDocumentEntity d = documentRepository.findById(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("Document not found: " + documentId));
+                .orElseThrow(() -> notFound(documentId));
         if (!d.getTenantId().equals(ctx.tenantId())) {
-            throw new IllegalArgumentException("Document not found: " + documentId);
+            throw notFound(documentId);
         }
         if (subjectCpid != null && !subjectCpid.isBlank()) {
             if (!subjectCpid.trim().equals(d.getSubjectCpid())) {
-                throw new IllegalArgumentException("Document not found: " + documentId);
+                log.warn("Clinical document read refused: subject binding {} does not match document {}",
+                        subjectCpid, documentId);
+                throw notFound(documentId);
             }
             return d;
         }
@@ -131,6 +139,10 @@ public class ClinicalDocumentService {
         log.info("pct.clinical_document.indexed id={} subject={} type={} by={} correlationId={}",
                 d.getDocumentId(), d.getSubjectCpid(), d.getDocumentType(), ctx.actorId(), ctx.correlationId());
         return d;
+    }
+
+    private static ResponseStatusException notFound(UUID documentId) {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId);
     }
 
     private static String requireStatus(String status) {
