@@ -182,7 +182,7 @@ landed.
 
 **The split.** The clinical knowledge platform owns the protocol as governed content
 (`clinical/imam-programme.json`, `POST /internal/v1/clinical/paediatric/imam/{eligibility,progress}`);
-pct-service owns the record (`V058`/`V059`, `/v1/imam/**`); experience-bff proxies it. The engine is
+pct-service owns the record (`V102`/`V103`, `/v1/imam/**`); experience-bff proxies it. The engine is
 stateless in the same way as the growth and immunisation engines — PCT supplies the episode and its
 reviews and gets a verdict — so a protocol revision is a reviewable content diff and the same
 evaluation runs unchanged against an offline copy.
@@ -246,7 +246,7 @@ programme:
 - **Defaulter tracing only fired when a human recorded the absence.** A child who simply stops
   coming, and for whom nobody creates the missed-visit row, produced no event at all — precisely the
   child the feature exists for. An hourly sweep now raises the event from elapsed time, idempotent
-  per crossing (`V059`), and it was proven live raising `DEFAULTER` for two children nobody had
+  per crossing (`V103`), and it was proven live raising `DEFAULTER` for two children nobody had
   recorded anything about, one of them never reviewed since enrolment.
 
 **A build-script trap worth knowing.** `scripts/full-boot/_full-boot-common.sh` defaults
@@ -561,5 +561,5 @@ birthdays complete a month late rather than early, so a minimum-age gate never o
 | Rules framework and danger signs | `services/clinical-knowledge-platform-service/.../rules/tabular/`, `.../danger/`, migration V006 |
 | Dosing | `services/clinical-knowledge-platform-service/.../prescribing/` |
 | IMAM programme knowledge | `services/clinical-knowledge-platform-service/.../imam/`, `resources/clinical/imam-programme.json` |
-| IMAM episode record | `services/pct-service/.../core/clinical/Imam*.java`, migrations V058–V059 |
+| IMAM episode record | `services/pct-service/.../core/clinical/Imam*.java`, migrations V102–V103 |
 | Clinical content | `services/*/src/main/resources/clinical/*.json` |
