@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TabBar, useOptionalTheme } from "@impilo/mobile-design-system";
+import { TabBar, useOptionalTheme, colors } from "@impilo/mobile-design-system";
 import { ProviderDashboardScreen } from "../screens/provider/ProviderDashboardScreen";
 import { PatientLookupScreen } from "../screens/provider/PatientLookupScreen";
 import { ResultsViewScreen } from "../screens/provider/ResultsViewScreen";
@@ -31,7 +31,7 @@ export function ProviderTabs() {
   const { theme } = useOptionalTheme();
   const tabIcon = useCallback(
     (name: string, isActive: boolean): React.ReactNode => (
-      <Ionicons name={name as never} size={22} color={isActive ? theme.colors.primary : "#9CA3AF"} />
+      <Ionicons name={name as never} size={22} color={isActive ? theme.colors.primary : colors.gray[400]} />
     ),
     [theme.colors.primary]
   );

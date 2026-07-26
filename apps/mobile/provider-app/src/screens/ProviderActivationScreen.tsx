@@ -12,7 +12,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@impilo/mobile-auth";
-import { Screen, Header, Button, TextField, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, TextField, Badge, colors } from "@impilo/mobile-design-system";
 
 export function ProviderActivationScreen() {
   const auth = useAuth();
@@ -78,14 +78,14 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   bannerTitle: { fontSize: 14, fontWeight: "800", color: "#1E3A8A" },
-  sub: { fontSize: 13, color: "#4B5563", lineHeight: 18 },
+  sub: { fontSize: 13, color: colors.gray[600], lineHeight: 18 },
   card: {
     marginTop: 6,
     gap: 12,
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     padding: 14,
   },
 });

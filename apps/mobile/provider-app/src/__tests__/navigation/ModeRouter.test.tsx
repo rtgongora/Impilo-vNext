@@ -62,10 +62,14 @@ vi.mock("@impilo/mobile-auth", () => ({
   useAuth: () => ({ user: { sub: "user-1", realm_access: { roles: ["provider"] } } }),
 }));
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
   Button: (props: { title: string; testID?: string; onPress: () => void }) =>
     React.createElement("button", { "data-testid": props.testID, onClick: props.onPress }, props.title),
-}));
+  };
+});
 
 import { ModeRouter } from "../../navigation/ModeRouter";
 

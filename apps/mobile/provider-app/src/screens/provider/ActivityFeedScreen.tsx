@@ -6,7 +6,7 @@
 
 import React, { useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { Screen, Header, Card, CardBody, Badge, LoadingSpinner, EmptyState, ErrorState } from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useMyTimeline, type TimelineEvent } from "@impilo/mobile-timeline";
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   summary: {
     marginTop: 4,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   subjectName: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   loadMoreContainer: {
     alignItems: "center",

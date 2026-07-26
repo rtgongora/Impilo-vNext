@@ -3,7 +3,7 @@
  */
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, ScrollView, StyleSheet, Alert, TouchableOpacity } from "react-native";
-import { Screen, Header, Button } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchZwDistricts, fetchZwWards, registerPatient } from "../../services/queueService";
 
@@ -181,13 +181,13 @@ export function PatientRegistrationScreen({ embedded, onRegistered }: PatientReg
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 8 },
-  label: { fontSize: 13, fontWeight: "600", color: "#374151" },
-  hint: { fontSize: 11, color: "#6B7280" },
-  section: { marginTop: 8, fontSize: 14, fontWeight: "700", color: "#111827" },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 12, fontSize: 14 },
+  label: { fontSize: 13, fontWeight: "600", color: colors.gray[700] },
+  hint: { fontSize: 11, color: colors.gray[500] },
+  section: { marginTop: 8, fontSize: 14, fontWeight: "700", color: colors.gray[900] },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 12, fontSize: 14 },
   row: { flexDirection: "row", gap: 8 },
   chips: { flexGrow: 0, marginVertical: 4 },
-  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: "#F3F4F6", marginRight: 8 },
+  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.gray[100], marginRight: 8 },
   chipOn: { backgroundColor: "#DBEAFE" },
-  chipText: { fontSize: 12, color: "#1F2937" },
+  chipText: { fontSize: 12, color: colors.gray[800] },
 });

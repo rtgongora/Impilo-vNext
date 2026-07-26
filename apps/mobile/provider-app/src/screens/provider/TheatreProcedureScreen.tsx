@@ -3,7 +3,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEncounterStore } from "../../stores/encounterStore";
 import {
@@ -217,15 +217,15 @@ export function TheatreProcedureScreen() {
 const s = StyleSheet.create({
   wrap: { flex: 1 },
   pad: { padding: 16, gap: 10, paddingBottom: 40 },
-  hint: { padding: 24, color: "#6B7280" },
+  hint: { padding: 24, color: colors.gray[500] },
   section: { gap: 10 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  sub: { fontSize: 14, fontWeight: "600", marginTop: 8, color: "#374151" },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  sub: { fontSize: 14, fontWeight: "600", marginTop: 8, color: colors.gray[700] },
   back: { color: "#2563EB", marginBottom: 8 },
-  card: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#E5E7EB", flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  card: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.gray[200], flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   cardTitle: { fontWeight: "600" },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, minHeight: 80, textAlignVertical: "top" },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, minHeight: 80, textAlignVertical: "top" },
   asaRow: { flexDirection: "row", gap: 8 },
-  asaBtn: { padding: 8, borderRadius: 8, borderWidth: 1, borderColor: "#D1D5DB" },
-  asaActive: { backgroundColor: "#D1FAE5", borderColor: "#22C55E" },
+  asaBtn: { padding: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.gray[300] },
+  asaActive: { backgroundColor: colors.ui.success.light, borderColor: colors.ui.success.main },
 });

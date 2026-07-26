@@ -17,9 +17,11 @@ const serviceMocks = vi.hoisted(() => ({
 
 vi.mock("../../services/telemedicineService", () => serviceMocks);
 
-vi.mock("@impilo/mobile-design-system", async () => {
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
   const React = await import("react");
   return {
+    ...actual,
     Screen: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children),
     Header: ({ title }: { title: string }) => React.createElement("header", null, title),
     Card: ({ children }: { children: React.ReactNode }) => React.createElement("section", null, children),

@@ -4,16 +4,16 @@
  */
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet } from "react-native";
-import { Screen, Header, Button, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, colors } from "@impilo/mobile-design-system";
 import { edActivateTrauma, edTraumaSurvey, openEdVisit } from "../../services/edService";
 
 type Phase = "ACTIVATION" | "PRIMARY" | "INTERVENTIONS" | "SECONDARY" | "SUMMARY";
 
 const ABCDE: Record<string, { label: string; color: string; items: string[] }> = {
-  A: { label: "Airway", color: "#DC2626", items: ["Airway patent", "Airway compromised — intervention needed", "C-spine immobilisation maintained"] },
+  A: { label: "Airway", color: colors.ui.error.main, items: ["Airway patent", "Airway compromised — intervention needed", "C-spine immobilisation maintained"] },
   B: { label: "Breathing", color: "#F97316", items: ["Breathing adequate", "Equal chest expansion", "Breath sounds equal bilaterally", "High-flow oxygen applied"] },
   C: { label: "Circulation", color: "#EAB308", items: ["Pulse present", "IV access established", "Visible bleeding controlled", "Fluid resuscitation initiated"] },
-  D: { label: "Disability", color: "#22C55E", items: ["GCS assessed", "Pupils checked", "Limb movement assessed", "Blood glucose checked"] },
+  D: { label: "Disability", color: colors.ui.success.main, items: ["GCS assessed", "Pupils checked", "Limb movement assessed", "Blood glucose checked"] },
   E: { label: "Exposure", color: "#3B82F6", items: ["Patient fully exposed", "Log roll performed", "Hypothermia prevention measures", "Temperature measured"] },
 };
 
@@ -194,42 +194,42 @@ export function TraumaScreen() {
 }
 
 const st = StyleSheet.create({
-  timerBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1F2937", padding: 12 },
+  timerBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: colors.gray[800], padding: 12 },
   elapsed: { color: "#FFF", fontSize: 24, fontWeight: "900", fontVariant: ["tabular-nums"] },
   scroll: { flex: 1 },
   pad: { padding: 16, gap: 12, paddingBottom: 32 },
   section: { gap: 10 },
-  title: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  label: { fontSize: 13, fontWeight: "600", color: "#374151" },
-  hint: { fontSize: 13, color: "#6B7280" },
+  title: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  label: { fontSize: 13, fontWeight: "600", color: colors.gray[700] },
+  hint: { fontSize: 13, color: colors.gray[500] },
   chipRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
-  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: "#E5E7EB" },
-  chipActive: { backgroundColor: "#DC2626" },
-  chipText: { fontSize: 11, color: "#374151" },
+  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: colors.gray[200] },
+  chipActive: { backgroundColor: colors.ui.error.main },
+  chipText: { fontSize: 11, color: colors.gray[700] },
   chipTextActive: { color: "#FFF" },
-  levelBtn: { flex: 1, padding: 12, borderRadius: 8, borderWidth: 2, borderColor: "#E5E7EB", alignItems: "center" },
-  levelActive: { borderColor: "#DC2626", backgroundColor: "#FEF2F2" },
-  levelText: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
-  levelTextActive: { color: "#DC2626" },
+  levelBtn: { flex: 1, padding: 12, borderRadius: 8, borderWidth: 2, borderColor: colors.gray[200], alignItems: "center" },
+  levelActive: { borderColor: colors.ui.error.main, backgroundColor: "#FEF2F2" },
+  levelText: { fontSize: 14, fontWeight: "600", color: colors.gray[500] },
+  levelTextActive: { color: colors.ui.error.main },
   roleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  roleLabel: { width: 120, fontSize: 13, fontWeight: "500", color: "#374151" },
-  roleInput: { flex: 1, borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 8, fontSize: 13 },
-  vitalsBar: { flexDirection: "row", gap: 4, backgroundColor: "#111827", borderRadius: 8, padding: 8 },
-  vitalInput: { flex: 1, backgroundColor: "#374151", borderRadius: 6, padding: 8, fontSize: 13, color: "#FFF", textAlign: "center" },
+  roleLabel: { width: 120, fontSize: 13, fontWeight: "500", color: colors.gray[700] },
+  roleInput: { flex: 1, borderWidth: 1, borderColor: colors.gray[300], borderRadius: 6, padding: 8, fontSize: 13 },
+  vitalsBar: { flexDirection: "row", gap: 4, backgroundColor: colors.gray[900], borderRadius: 8, padding: 8 },
+  vitalInput: { flex: 1, backgroundColor: colors.gray[700], borderRadius: 6, padding: 8, fontSize: 13, color: "#FFF", textAlign: "center" },
   abcdeSection: { borderLeftWidth: 4, borderRadius: 8, overflow: "hidden" },
   abcdeHeader: { flexDirection: "row", alignItems: "center", gap: 8, padding: 10 },
   abcdeLetter: { fontSize: 20, fontWeight: "900", width: 28 },
-  abcdeLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: "#111827" },
-  abcdeCount: { fontSize: 12, color: "#6B7280", fontWeight: "600" },
+  abcdeLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  abcdeCount: { fontSize: 12, color: colors.gray[500], fontWeight: "600" },
   checkRow: { flexDirection: "row", alignItems: "center", gap: 10, padding: 10, paddingLeft: 16 },
-  checkbox: { width: 22, height: 22, borderWidth: 2, borderColor: "#D1D5DB", borderRadius: 4, alignItems: "center", justifyContent: "center" },
-  checkboxChecked: { backgroundColor: "#22C55E", borderColor: "#22C55E" },
+  checkbox: { width: 22, height: 22, borderWidth: 2, borderColor: colors.gray[300], borderRadius: 4, alignItems: "center", justifyContent: "center" },
+  checkboxChecked: { backgroundColor: colors.ui.success.main, borderColor: colors.ui.success.main },
   checkmark: { color: "#FFF", fontSize: 14, fontWeight: "700" },
-  checkText: { fontSize: 13, color: "#374151", flex: 1 },
-  checkTextDone: { textDecorationLine: "line-through", color: "#9CA3AF" },
+  checkText: { fontSize: 13, color: colors.gray[700], flex: 1 },
+  checkTextDone: { textDecorationLine: "line-through", color: colors.gray[400] },
   regionCard: { gap: 4 },
-  regionLabel: { fontSize: 13, fontWeight: "600", color: "#374151" },
-  regionInput: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 8, fontSize: 13, minHeight: 40 },
-  summaryCard: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 6 },
-  summaryItem: { fontSize: 14, color: "#374151" },
+  regionLabel: { fontSize: 13, fontWeight: "600", color: colors.gray[700] },
+  regionInput: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 6, padding: 8, fontSize: 13, minHeight: 40 },
+  summaryCard: { backgroundColor: colors.gray[50], borderRadius: 12, padding: 16, gap: 6 },
+  summaryItem: { fontSize: 14, color: colors.gray[700] },
 });

@@ -1,15 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Screen,
-  Header,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   discoverEvents,
   join,
@@ -299,26 +291,26 @@ export function ProviderLiveHubScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { flex: 1, backgroundColor: colors.gray[50] },
   content: { padding: 16, gap: 12 },
-  intro: { fontSize: 14, color: "#4B5563", lineHeight: 20 },
+  intro: { fontSize: 14, color: colors.gray[600], lineHeight: 20 },
   tabRow: { flexDirection: "row", gap: 8, paddingVertical: 4 },
-  tabPill: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: "#F3F4F6" },
+  tabPill: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: colors.gray[100] },
   tabPillActive: { backgroundColor: "#EDE9FE" },
-  tabText: { fontSize: 12, color: "#6B7280", fontWeight: "500" },
+  tabText: { fontSize: 12, color: colors.gray[500], fontWeight: "500" },
   tabTextActive: { color: "#6D28D9", fontWeight: "600" },
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     gap: 6,
   },
   cardSelected: { borderColor: "#8B5CF6", backgroundColor: "#FAF5FF" },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 8 },
-  cardTitle: { flex: 1, fontSize: 15, fontWeight: "600", color: "#111827" },
-  cardMeta: { fontSize: 12, color: "#6B7280" },
+  cardTitle: { flex: 1, fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  cardMeta: { fontSize: 12, color: colors.gray[500] },
   row: { flexDirection: "row", gap: 8, marginTop: 4 },
-  hint: { fontSize: 13, color: "#6B7280" },
+  hint: { fontSize: 13, color: colors.gray[500] },
 });

@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Card, CardBody } from "@impilo/mobile-design-system";
+import { Button, Card, CardBody, colors } from "@impilo/mobile-design-system";
 import { ProfessionalHubBody } from "../../components/ProfessionalHubBody";
 import { fetchAdminRegistryHub, type AdminRegistrySection } from "../../services/adminRegistryService";
 import {
@@ -528,29 +528,29 @@ function RegistryOperationsPanel() {
 
 const styles = StyleSheet.create({
   panel: { gap: 10 },
-  panelTitle: { fontSize: 16, fontWeight: "800", color: "#111827" },
-  hint: { fontSize: 12, color: "#6B7280", lineHeight: 17 },
+  panelTitle: { fontSize: 16, fontWeight: "800", color: colors.gray[900] },
+  hint: { fontSize: 12, color: colors.gray[500], lineHeight: 17 },
   grid: { gap: 8 },
   familyGrid: { gap: 8 },
   familyCard: { borderWidth: 1, borderColor: "#E0E7FF", borderRadius: 10, padding: 10, backgroundColor: "#EEF2FF" },
   familyTitle: { fontSize: 12, fontWeight: "800", color: "#312E81" },
   familyStatus: { fontSize: 11, color: "#4F46E5", marginTop: 2 },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
   textArea: {
     minHeight: 88,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 10,
     fontSize: 12,
     fontFamily: "monospace",
     textAlignVertical: "top",
   },
-  label: { fontSize: 12, fontWeight: "700", color: "#374151", marginTop: 4 },
-  resultRow: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 8, backgroundColor: "#F9FAFB" },
-  resultTitle: { fontSize: 12, fontWeight: "700", color: "#111827" },
-  resultMeta: { fontSize: 11, color: "#6B7280", marginTop: 2 },
+  label: { fontSize: 12, fontWeight: "700", color: colors.gray[700], marginTop: 4 },
+  resultRow: { borderWidth: 1, borderColor: colors.gray[200], borderRadius: 8, padding: 8, backgroundColor: colors.gray[50] },
+  resultTitle: { fontSize: 12, fontWeight: "700", color: colors.gray[900] },
+  resultMeta: { fontSize: 11, color: colors.gray[500], marginTop: 2 },
   error: { fontSize: 12, color: "#B91C1C" },
-  warning: { fontSize: 12, color: "#92400E" },
-  preview: { fontSize: 11, color: "#374151", backgroundColor: "#F3F4F6", borderRadius: 8, padding: 8 },
+  warning: { fontSize: 12, color: colors.ui.warning.text },
+  preview: { fontSize: 11, color: colors.gray[700], backgroundColor: colors.gray[100], borderRadius: 8, padding: 8 },
 });

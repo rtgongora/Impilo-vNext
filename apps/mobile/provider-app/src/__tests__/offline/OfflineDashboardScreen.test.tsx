@@ -5,7 +5,10 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
   Screen: ({ children }: any) => children,
   Header: ({ title }: any) => title,
   Card: ({ children }: any) => children,
@@ -16,7 +19,8 @@ vi.mock("@impilo/mobile-design-system", () => ({
   TextField: () => null,
   LoadingSpinner: () => null,
   ErrorState: ({ title }: any) => title,
-}));
+  };
+});
 
 vi.mock("@impilo/mobile-offline", () => ({
   useSyncEngine: vi.fn().mockReturnValue({ status: "idle", pendingCount: 0, lastSyncAt: null, triggerSync: vi.fn() }),

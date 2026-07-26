@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TextInput } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Card, CardBody, FeatureMaturityBadge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Button, Card, CardBody, FeatureMaturityBadge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import {
   assignDispatchTask,
@@ -420,12 +420,12 @@ const styles = StyleSheet.create({
   },
   bannerText: {
     fontSize: 12,
-    color: "#4B5563",
+    color: colors.gray[600],
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 6,
   },
   row: {
@@ -445,37 +445,37 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: "#374151",
+    color: colors.gray[700],
   },
   value: {
     fontSize: 12,
-    color: "#1F2937",
+    color: colors.gray[800],
     fontWeight: "600",
   },
   hint: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 10,
     fontSize: 12,
-    color: "#111827",
+    color: colors.gray[900],
     marginTop: 4,
     marginBottom: 8,
     backgroundColor: "#FFFFFF",
   },
   textArea: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     minHeight: 108,
     padding: 10,
     fontSize: 12,
-    color: "#111827",
+    color: colors.gray[900],
     marginTop: 4,
     marginBottom: 8,
     backgroundColor: "#FFFFFF",
@@ -490,6 +490,6 @@ const styles = StyleSheet.create({
   feedback: {
     marginTop: 8,
     fontSize: 12,
-    color: "#1F2937",
+    color: colors.gray[800],
   },
 });

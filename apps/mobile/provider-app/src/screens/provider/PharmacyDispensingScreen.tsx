@@ -3,7 +3,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Screen, Header, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authStore } from "@impilo/mobile-auth";
 import { fetchPendingDispensing, dispense, verifyFiveRights } from "../../services/queueService";
@@ -111,7 +111,7 @@ export function PharmacyDispensingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, gap: 8 },
-  title: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  title: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
   card: {
     flexDirection: "row",
     backgroundColor: "#FFF",
@@ -119,14 +119,14 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
   },
-  medName: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  meta: { fontSize: 12, color: "#6B7280" },
+  medName: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  meta: { fontSize: 12, color: colors.gray[500] },
   verified: { fontSize: 11, color: "#059669", marginTop: 4, fontWeight: "600" },
   actions: { gap: 4, justifyContent: "center" },
-  verifyBtn: { backgroundColor: "#F59E0B", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
-  dispenseBtn: { backgroundColor: "#22C55E", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
-  dispenseBtnDisabled: { backgroundColor: "#9CA3AF" },
+  verifyBtn: { backgroundColor: colors.ui.warning.main, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
+  dispenseBtn: { backgroundColor: colors.ui.success.main, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
+  dispenseBtnDisabled: { backgroundColor: colors.gray[400] },
   btnText: { color: "#FFF", fontSize: 11, fontWeight: "600", textAlign: "center" },
 });

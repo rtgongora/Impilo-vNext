@@ -34,10 +34,14 @@ vi.mock("@impilo/mobile-auth", () => ({
   },
 }));
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
   LoadingSpinner: ({ size }: { size: string }) =>
     React.createElement("div", { "data-testid": "loading-spinner", "data-size": size }),
-}));
+  };
+});
 
 vi.mock("../../stores/appStore", () => ({
   useAppStore: () => ({

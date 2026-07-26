@@ -9,18 +9,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import type { BadgeVariant } from "@impilo/mobile-design-system";
 import {
   fetchControlTowerAggregate,
@@ -222,21 +211,21 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   scrollArea: { flex: 1 },
   scrollContent: { gap: 12, paddingBottom: 16 },
-  sectionLabel: { fontSize: 13, fontWeight: "700", color: "#6B7280" },
+  sectionLabel: { fontSize: 13, fontWeight: "700", color: colors.gray[500] },
   listRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   relList: { gap: 12 },
   relRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   relInfo: { flex: 1, gap: 2 },
-  boldText: { fontWeight: "700", color: "#111827" },
-  detailText: { fontSize: 13, color: "#6B7280" },
+  boldText: { fontWeight: "700", color: colors.gray[900] },
+  detailText: { fontSize: 13, color: colors.gray[500] },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 8,
-    color: "#111827",
+    color: colors.gray[900],
   },
   refreshContainer: { marginTop: 8 },
 });

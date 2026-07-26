@@ -7,7 +7,7 @@
 import React, { useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TabBar } from "@impilo/mobile-design-system";
+import { TabBar, colors } from "@impilo/mobile-design-system";
 import { CourierDashboardScreen } from "../screens/courier/CourierDashboardScreen";
 import { CourierProofScreen } from "../screens/courier/CourierProofScreen";
 import { NotificationsScreen } from "../screens/NotificationsScreen";
@@ -53,7 +53,7 @@ export function CourierTabs() {
             <Ionicons
               name={(activeTab === t.key ? t.activeIcon : t.inactiveIcon) as never}
               size={22}
-              color={activeTab === t.key ? ACCENT : "#9CA3AF"}
+              color={activeTab === t.key ? ACCENT : colors.gray[400]}
             />
           ),
         }))}

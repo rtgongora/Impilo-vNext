@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import type { SpecialtyWorkspaceDef } from "../../data/specialtyWorkspaces";
-import { DictationAssistButton } from "@impilo/mobile-design-system";
+import { DictationAssistButton, colors } from "@impilo/mobile-design-system";
 
 type Props = {
   workspace: SpecialtyWorkspaceDef;
@@ -319,9 +319,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconBadgeText: { fontSize: 18, fontWeight: "800", color: "#1D4ED8" },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  sub: { fontSize: 12, color: "#6B7280", marginTop: 2 },
-  sectionLabel: { fontSize: 13, fontWeight: "600", color: "#374151", marginTop: 4 },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  sub: { fontSize: 12, color: colors.gray[500], marginTop: 2 },
+  sectionLabel: { fontSize: 13, fontWeight: "600", color: colors.gray[700], marginTop: 4 },
   quickRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   quickChip: {
     paddingHorizontal: 12,
@@ -332,15 +332,15 @@ const styles = StyleSheet.create({
   quickChipText: { fontSize: 12, fontWeight: "600", color: "#4338CA" },
   toolList: { flex: 1 },
   toolCard: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
   },
-  toolTitle: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  toolHint: { fontSize: 12, color: "#6B7280", marginTop: 4 },
+  toolTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  toolHint: { fontSize: 12, color: colors.gray[500], marginTop: 4 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
   modalSheet: {
     backgroundColor: "#fff",
@@ -350,9 +350,9 @@ const styles = StyleSheet.create({
     gap: 12,
     maxHeight: "88%",
   },
-  modalTitle: { fontSize: 17, fontWeight: "700", color: "#111827" },
-  modalMeta: { fontSize: 12, color: "#6B7280" },
-  modalDesc: { fontSize: 14, color: "#4B5563", lineHeight: 20 },
+  modalTitle: { fontSize: 17, fontWeight: "700", color: colors.gray[900] },
+  modalMeta: { fontSize: 12, color: colors.gray[500] },
+  modalDesc: { fontSize: 14, color: colors.gray[600], lineHeight: 20 },
   formBlock: { gap: 10 },
   notesLabelRow: {
     flexDirection: "row",
@@ -360,17 +360,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
-  formLabel: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  inputLabel: { fontSize: 12, fontWeight: "600", color: "#374151" },
+  formLabel: { fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  inputLabel: { fontSize: 12, fontWeight: "600", color: colors.gray[700] },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 10,
     fontSize: 14,
   },
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  switchLabel: { flex: 1, fontSize: 13, color: "#374151" },
+  switchLabel: { flex: 1, fontSize: 13, color: colors.gray[700] },
   result: { fontSize: 14, fontWeight: "600", color: "#009739" },
   primaryBtn: { backgroundColor: "#2563EB", borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: 4 },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },

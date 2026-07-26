@@ -7,7 +7,7 @@
 import React, { useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TabBar, useOptionalTheme } from "@impilo/mobile-design-system";
+import { TabBar, useOptionalTheme, colors } from "@impilo/mobile-design-system";
 import { OutreachDashboardScreen } from "../screens/outreach/OutreachDashboardScreen";
 import { HouseholdListScreen } from "../screens/outreach/HouseholdListScreen";
 import { ScreeningScreen } from "../screens/outreach/ScreeningScreen";
@@ -59,7 +59,7 @@ export function OutreachTabs() {
             <Ionicons
               name={(activeTab === t.key ? t.activeIcon : t.inactiveIcon) as never}
               size={22}
-              color={activeTab === t.key ? theme.colors.primary : "#9CA3AF"}
+              color={activeTab === t.key ? theme.colors.primary : colors.gray[400]}
             />
           ),
         }))}

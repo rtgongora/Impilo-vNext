@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { colors } from "@impilo/mobile-design-system";
 import {
   View,
   Text,
@@ -241,13 +242,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 20,
   },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
     marginBottom: 6,
     marginTop: 12,
   },
@@ -261,8 +262,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    backgroundColor: "#F9FAFB",
+    borderColor: colors.gray[300],
+    backgroundColor: colors.gray[50],
   },
   pickerOptionSelected: {
     borderColor: "#2563EB",
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
   },
   pickerOptionText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   pickerOptionTextSelected: {
     color: "#2563EB",
@@ -278,12 +279,12 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 12,
     fontSize: 15,
-    color: "#111827",
-    backgroundColor: "#F9FAFB",
+    color: colors.gray[900],
+    backgroundColor: colors.gray[50],
     textAlignVertical: "top",
   },
   inputTall: {

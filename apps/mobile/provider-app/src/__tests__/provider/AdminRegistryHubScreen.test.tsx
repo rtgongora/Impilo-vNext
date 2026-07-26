@@ -40,9 +40,11 @@ const registryMocks = vi.hoisted(() => ({
   probeRegistryServiceHealth: vi.fn(),
 }));
 
-vi.mock("@impilo/mobile-design-system", async () => {
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
   const React = await import("react");
   return {
+    ...actual,
     Card: ({ children }: { children: React.ReactNode }) => React.createElement("section", null, children),
     CardBody: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children),
     Badge: ({ children }: { children: React.ReactNode }) => React.createElement("span", null, children),

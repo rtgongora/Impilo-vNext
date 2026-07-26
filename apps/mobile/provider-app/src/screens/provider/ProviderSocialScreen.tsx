@@ -8,19 +8,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-  TextField,
-  Select,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, TextField, Select, colors } from "@impilo/mobile-design-system";
 import {
   createProviderPost,
   fetchProviderCommunities,
@@ -330,14 +318,14 @@ const styles = StyleSheet.create({
   postHeader: { flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 8 },
   avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#1E40AF", alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#fff", fontWeight: "700" },
-  authorName: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  meta: { fontSize: 11, color: "#6B7280" },
-  title: { fontSize: 16, fontWeight: "600", color: "#111827", marginTop: 2 },
-  postBody: { fontSize: 14, color: "#374151", lineHeight: 20, marginTop: 4 },
+  authorName: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  meta: { fontSize: 11, color: colors.gray[500] },
+  title: { fontSize: 16, fontWeight: "600", color: colors.gray[900], marginTop: 2 },
+  postBody: { fontSize: 14, color: colors.gray[700], lineHeight: 20, marginTop: 4 },
   topicRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
   topic: { paddingHorizontal: 8, paddingVertical: 2, backgroundColor: "#E0E7FF", borderRadius: 999 },
   topicText: { fontSize: 11, color: "#3730A3" },
-  actionsRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 12, borderTopWidth: 1, borderTopColor: "#F3F4F6", paddingTop: 8 },
-  commentsText: { fontSize: 12, color: "#6B7280", flex: 1 },
-  hint: { fontSize: 12, color: "#6B7280" },
+  actionsRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 12, borderTopWidth: 1, borderTopColor: colors.gray[100], paddingTop: 8 },
+  commentsText: { fontSize: 12, color: colors.gray[500], flex: 1 },
+  hint: { fontSize: 12, color: colors.gray[500] },
 });

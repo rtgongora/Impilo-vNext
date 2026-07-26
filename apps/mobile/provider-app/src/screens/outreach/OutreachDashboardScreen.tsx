@@ -1,16 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useAppStore } from "../../stores/appStore";
 import { getHouseholds } from "../../services/householdService";
 import { getMyTasks } from "../../services/taskService";
@@ -18,10 +9,10 @@ import { useSyncEngine } from "@impilo/mobile-offline";
 import type { Household, Task } from "../../types";
 
 const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "#DC2626",
-  HIGH: "#F59E0B",
+  URGENT: colors.ui.error.main,
+  HIGH: colors.ui.warning.main,
   NORMAL: "#3B82F6",
-  LOW: "#6B7280",
+  LOW: colors.gray[500],
 };
 
 export function OutreachDashboardScreen() {
@@ -99,9 +90,9 @@ export function OutreachDashboardScreen() {
               <Ionicons
                 name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
                 size={14}
-                color={isOnline ? "#FEF3C7" : "#FEE2E2"}
+                color={isOnline ? colors.ui.warning.light : colors.ui.error.light}
               />
-              <Text style={[styles.syncChipText, { color: isOnline ? "#FEF3C7" : "#FEE2E2" }]}>
+              <Text style={[styles.syncChipText, { color: isOnline ? colors.ui.warning.light : colors.ui.error.light }]}>
                 {isOnline ? `${pendingCount} pending` : "Offline"}
               </Text>
             </View>
@@ -124,45 +115,45 @@ export function OutreachDashboardScreen() {
             <Text style={styles.tileLabel}>Today's Tasks</Text>
           </View>
           <View style={styles.tileCard}>
-            <View style={[styles.tileIconCircle, { backgroundColor: overdueVisits.length > 0 ? "#FEE2E2" : "#F3F4F6" }]}>
-              <Ionicons name="time-outline" size={20} color={overdueVisits.length > 0 ? "#DC2626" : "#9CA3AF"} />
+            <View style={[styles.tileIconCircle, { backgroundColor: overdueVisits.length > 0 ? colors.ui.error.light : colors.gray[100] }]}>
+              <Ionicons name="time-outline" size={20} color={overdueVisits.length > 0 ? colors.ui.error.main : colors.gray[400]} />
             </View>
-            <Text style={[styles.tileValue, { color: overdueVisits.length > 0 ? "#DC2626" : "#111827" }]}>{String(overdueVisits.length)}</Text>
+            <Text style={[styles.tileValue, { color: overdueVisits.length > 0 ? colors.ui.error.main : colors.gray[900] }]}>{String(overdueVisits.length)}</Text>
             <Text style={styles.tileLabel}>Overdue Visits</Text>
           </View>
           <View style={styles.tileCard}>
-            <View style={[styles.tileIconCircle, { backgroundColor: highRisk.length > 0 ? "#FEF3C7" : "#F3F4F6" }]}>
-              <Ionicons name="warning-outline" size={20} color={highRisk.length > 0 ? "#F59E0B" : "#9CA3AF"} />
+            <View style={[styles.tileIconCircle, { backgroundColor: highRisk.length > 0 ? colors.ui.warning.light : colors.gray[100] }]}>
+              <Ionicons name="warning-outline" size={20} color={highRisk.length > 0 ? colors.ui.warning.main : colors.gray[400]} />
             </View>
-            <Text style={[styles.tileValue, { color: highRisk.length > 0 ? "#F59E0B" : "#111827" }]}>{String(highRisk.length)}</Text>
+            <Text style={[styles.tileValue, { color: highRisk.length > 0 ? colors.ui.warning.main : colors.gray[900] }]}>{String(highRisk.length)}</Text>
             <Text style={styles.tileLabel}>High Risk</Text>
           </View>
         </View>
 
         <View style={styles.sectionHeader}>
-          <Ionicons name="calendar-outline" size={16} color="#374151" />
+          <Ionicons name="calendar-outline" size={16} color={colors.gray[700]} />
           <Text style={styles.sectionHeaderText}>Today's Schedule</Text>
         </View>
 
         {todayTasks.length === 0 ? (
           <View style={styles.emptySchedule}>
-            <Ionicons name="checkmark-circle-outline" size={32} color="#D1D5DB" />
+            <Ionicons name="checkmark-circle-outline" size={32} color={colors.gray[300]} />
             <Text style={styles.emptyScheduleText}>No outreach tasks for today</Text>
           </View>
         ) : (
           todayTasks.map((task) => (
             <View
               key={task.id}
-              style={[styles.taskCard, { borderLeftColor: PRIORITY_COLORS[task.priority] ?? "#6B7280" }]}
+              style={[styles.taskCard, { borderLeftColor: PRIORITY_COLORS[task.priority] ?? colors.gray[500] }]}
               testID={`outreach-task-${task.id}`}
             >
               <View style={styles.taskCardInner}>
-                <View style={[styles.taskDot, { backgroundColor: PRIORITY_COLORS[task.priority] ?? "#6B7280" }]} />
+                <View style={[styles.taskDot, { backgroundColor: PRIORITY_COLORS[task.priority] ?? colors.gray[500] }]} />
                 <View style={styles.taskContent}>
                   <Text style={styles.taskTitle}>{task.title}</Text>
                   {task.patientName && (
                     <View style={styles.taskPatientRow}>
-                      <Ionicons name="person-outline" size={11} color="#9CA3AF" />
+                      <Ionicons name="person-outline" size={11} color={colors.gray[400]} />
                       <Text style={styles.taskPatient}>{task.patientName}</Text>
                     </View>
                   )}
@@ -283,7 +274,7 @@ const styles = StyleSheet.create({
   },
   tileLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
   },
   sectionHeader: {
@@ -295,7 +286,7 @@ const styles = StyleSheet.create({
   sectionHeaderText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   emptySchedule: {
     alignItems: "center",
@@ -303,7 +294,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyScheduleText: {
-    color: "#9CA3AF",
+    color: colors.gray[400],
     fontSize: 14,
   },
   taskCard: {
@@ -335,7 +326,7 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   taskPatientRow: {
     flexDirection: "row",
@@ -344,7 +335,7 @@ const styles = StyleSheet.create({
   },
   taskPatient: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   refreshButton: {
     flexDirection: "row",

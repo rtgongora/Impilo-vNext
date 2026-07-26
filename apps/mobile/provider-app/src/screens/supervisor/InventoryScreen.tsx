@@ -16,18 +16,7 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchInventoryOnHand,
   fetchStockAlertsList,
@@ -348,7 +337,7 @@ const styles = StyleSheet.create({
   alertBannerText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#991B1B",
+    color: colors.ui.error.text,
   },
   toggleRow: {
     flexDirection: "row",
@@ -374,16 +363,16 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   itemCategory: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   itemQty: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   alertRow: {
     flexDirection: "row",
@@ -397,11 +386,11 @@ const styles = StyleSheet.create({
   alertItemName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   alertDetail: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   alertBadges: {
     alignItems: "flex-end",
@@ -413,23 +402,23 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   formLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 10,
     fontSize: 14,
   },
   textArea: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 12,
     fontSize: 14,

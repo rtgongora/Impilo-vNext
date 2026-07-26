@@ -4,16 +4,7 @@
 
 import React, { useState, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useConflicts } from "@impilo/mobile-offline";
 import type { ConflictRecord, ConflictResolution } from "@impilo/mobile-offline";
 import type { ConflictItem } from "../../types";
@@ -139,11 +130,11 @@ const styles = StyleSheet.create({
   },
   resourceText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   metaText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   diffTable: {
     marginVertical: 12,
@@ -151,7 +142,7 @@ const styles = StyleSheet.create({
   diffHeaderRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.gray[200],
   },
   diffRow: {
     flexDirection: "row",
@@ -178,7 +169,7 @@ const styles = StyleSheet.create({
     color: "#3B82F6",
   },
   serverValue: {
-    color: "#F59E0B",
+    color: colors.ui.warning.main,
   },
   resolutionRow: {
     flexDirection: "row",

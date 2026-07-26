@@ -1,18 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  TextField,
-  Badge,
-  Avatar,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, TextField, Badge, Avatar, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { searchPatients } from "../../services/patientService";
 import { createEncounter } from "../../services/encounterService";
 import { encounterStore } from "../../stores/encounterStore";
@@ -72,7 +61,7 @@ export function PatientLookupScreen() {
       <ScrollView testID="patient-lookup-screen" style={styles.container} contentContainerStyle={styles.contentContainer}>
         <View style={[styles.searchCard, isFocused && styles.searchCardFocused]}>
           <View style={styles.searchInputRow}>
-            <Ionicons name="search-outline" size={20} color={isFocused ? "#1E40AF" : "#9CA3AF"} style={styles.searchIcon} />
+            <Ionicons name="search-outline" size={20} color={isFocused ? "#1E40AF" : colors.gray[400]} style={styles.searchIcon} />
             <TextField
               label=""
               value={query}
@@ -114,7 +103,7 @@ export function PatientLookupScreen() {
                 style={styles.registrationClose}
                 testID="close-registration-btn"
               >
-                <Ionicons name="close" size={20} color="#6B7280" />
+                <Ionicons name="close" size={20} color={colors.gray[500]} />
               </TouchableOpacity>
             </View>
             <CardBody>
@@ -138,7 +127,7 @@ export function PatientLookupScreen() {
         ) : patients.length === 0 && query ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-              <Ionicons name="search-outline" size={40} color="#9CA3AF" />
+              <Ionicons name="search-outline" size={40} color={colors.gray[400]} />
             </View>
             <Text style={styles.emptyTitle}>No patients found</Text>
             <Text style={styles.emptySubtitle}>Try a different name, NID, or CPID</Text>
@@ -157,13 +146,13 @@ export function PatientLookupScreen() {
                     {`${patient.givenName} ${patient.familyName}`}
                   </Text>
                   <View style={styles.metaRow}>
-                    <Ionicons name="card-outline" size={12} color="#6B7280" />
+                    <Ionicons name="card-outline" size={12} color={colors.gray[500]} />
                     <Text style={styles.metaText}>{patient.nationalId}</Text>
                   </View>
                   <View style={styles.metaRow}>
-                    <Ionicons name="person-outline" size={12} color="#6B7280" />
+                    <Ionicons name="person-outline" size={12} color={colors.gray[500]} />
                     <Text style={styles.metaText}>{patient.sex}</Text>
-                    <Ionicons name="calendar-outline" size={12} color="#6B7280" style={styles.metaIconSpaced} />
+                    <Ionicons name="calendar-outline" size={12} color={colors.gray[500]} style={styles.metaIconSpaced} />
                     <Text style={styles.metaText}>{patient.dateOfBirth}</Text>
                   </View>
                   <Text style={styles.cpidText}>{`CPID: ${patient.cpid}`}</Text>
@@ -232,7 +221,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     padding: 12,
     marginBottom: 16,
     flexDirection: "row",
@@ -288,7 +277,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -296,11 +285,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   emptySubtitle: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   patientCard: {
     backgroundColor: "#FFFFFF",
@@ -326,7 +315,7 @@ const styles = StyleSheet.create({
   patientName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 2,
   },
   metaRow: {
@@ -336,20 +325,20 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   metaIconSpaced: {
     marginLeft: 8,
   },
   cpidText: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     fontFamily: "monospace",
     marginTop: 2,
   },
   journeyHint: {
     marginTop: 4,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontSize: 11,
   },
   startVisitButton: {
@@ -402,7 +391,7 @@ const styles = StyleSheet.create({
   registrationTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   registrationClose: {
     padding: 6,

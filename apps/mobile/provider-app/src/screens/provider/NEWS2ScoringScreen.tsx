@@ -4,7 +4,7 @@
  */
 import React, { useState, useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, colors } from "@impilo/mobile-design-system";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useEncounterStore } from "../../stores/encounterStore";
@@ -18,19 +18,19 @@ interface NEWS2Param {
 
 const PARAMS: NEWS2Param[] = [
   { id: "respiratoryRate", label: "Respiratory Rate", unit: "breaths/min",
-    ranges: [{ score: 0, label: "12-20", color: "#22C55E" }, { score: 1, label: "9-11", color: "#F59E0B" }, { score: 2, label: "21-24", color: "#F97316" }, { score: 3, label: "≤8 or ≥25", color: "#DC2626" }] },
+    ranges: [{ score: 0, label: "12-20", color: colors.ui.success.main }, { score: 1, label: "9-11", color: colors.ui.warning.main }, { score: 2, label: "21-24", color: "#F97316" }, { score: 3, label: "≤8 or ≥25", color: colors.ui.error.main }] },
   { id: "spo2", label: "SpO₂ (Scale 1)", unit: "%",
-    ranges: [{ score: 0, label: "≥96", color: "#22C55E" }, { score: 1, label: "94-95", color: "#F59E0B" }, { score: 2, label: "92-93", color: "#F97316" }, { score: 3, label: "≤91", color: "#DC2626" }] },
+    ranges: [{ score: 0, label: "≥96", color: colors.ui.success.main }, { score: 1, label: "94-95", color: colors.ui.warning.main }, { score: 2, label: "92-93", color: "#F97316" }, { score: 3, label: "≤91", color: colors.ui.error.main }] },
   { id: "airOrOxygen", label: "Air or Oxygen", unit: "",
-    ranges: [{ score: 0, label: "Air", color: "#22C55E" }, { score: 2, label: "Oxygen", color: "#F97316" }] },
+    ranges: [{ score: 0, label: "Air", color: colors.ui.success.main }, { score: 2, label: "Oxygen", color: "#F97316" }] },
   { id: "systolicBP", label: "Systolic BP", unit: "mmHg",
-    ranges: [{ score: 0, label: "111-219", color: "#22C55E" }, { score: 1, label: "101-110", color: "#F59E0B" }, { score: 2, label: "91-100", color: "#F97316" }, { score: 3, label: "≤90 or ≥220", color: "#DC2626" }] },
+    ranges: [{ score: 0, label: "111-219", color: colors.ui.success.main }, { score: 1, label: "101-110", color: colors.ui.warning.main }, { score: 2, label: "91-100", color: "#F97316" }, { score: 3, label: "≤90 or ≥220", color: colors.ui.error.main }] },
   { id: "heartRate", label: "Heart Rate", unit: "bpm",
-    ranges: [{ score: 0, label: "51-90", color: "#22C55E" }, { score: 1, label: "41-50 or 91-110", color: "#F59E0B" }, { score: 2, label: "111-130", color: "#F97316" }, { score: 3, label: "≤40 or ≥131", color: "#DC2626" }] },
+    ranges: [{ score: 0, label: "51-90", color: colors.ui.success.main }, { score: 1, label: "41-50 or 91-110", color: colors.ui.warning.main }, { score: 2, label: "111-130", color: "#F97316" }, { score: 3, label: "≤40 or ≥131", color: colors.ui.error.main }] },
   { id: "consciousness", label: "Consciousness", unit: "ACVPU",
-    ranges: [{ score: 0, label: "Alert", color: "#22C55E" }, { score: 3, label: "C, V, P, or U", color: "#DC2626" }] },
+    ranges: [{ score: 0, label: "Alert", color: colors.ui.success.main }, { score: 3, label: "C, V, P, or U", color: colors.ui.error.main }] },
   { id: "temperature", label: "Temperature", unit: "°C",
-    ranges: [{ score: 0, label: "36.1-38.0", color: "#22C55E" }, { score: 1, label: "35.1-36.0 or 38.1-39.0", color: "#F59E0B" }, { score: 2, label: "≥39.1", color: "#F97316" }, { score: 3, label: "≤35.0", color: "#DC2626" }] },
+    ranges: [{ score: 0, label: "36.1-38.0", color: colors.ui.success.main }, { score: 1, label: "35.1-36.0 or 38.1-39.0", color: colors.ui.warning.main }, { score: 2, label: "≥39.1", color: "#F97316" }, { score: 3, label: "≤35.0", color: colors.ui.error.main }] },
 ];
 
 export function NEWS2ScoringScreen() {
@@ -42,7 +42,7 @@ export function NEWS2ScoringScreen() {
   const riskLevel = total >= 7 ? "HIGH" : total >= 5 || consciousnessScore === 3 ? "MEDIUM" : total >= 1 ? "LOW" : "NONE";
   const escalation = total >= 7 || consciousnessScore === 3;
 
-  const riskColors: Record<string, string> = { NONE: "#22C55E", LOW: "#3B82F6", MEDIUM: "#F59E0B", HIGH: "#DC2626" };
+  const riskColors: Record<string, string> = { NONE: colors.ui.success.main, LOW: "#3B82F6", MEDIUM: colors.ui.warning.main, HIGH: colors.ui.error.main };
 
   const mutation = useMutation({
     mutationFn: () => apiClient.post("/internal/v1/ews/news2", {
@@ -105,12 +105,12 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 12, paddingBottom: 32 },
   scoreCard: { alignItems: "center", padding: 20, borderRadius: 16, borderWidth: 3, backgroundColor: "#FFF" },
   totalScore: { fontSize: 56, fontWeight: "900" },
-  riskLabel: { fontSize: 16, fontWeight: "700", color: "#374151" },
+  riskLabel: { fontSize: 16, fontWeight: "700", color: colors.gray[700] },
   paramCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 12, gap: 8 },
-  paramLabel: { fontSize: 14, fontWeight: "600", color: "#111827" },
+  paramLabel: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
   scoreRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
   scoreBtn: { flex: 1, minWidth: 70, borderWidth: 2, borderRadius: 8, padding: 8, alignItems: "center" },
-  scoreBtnScore: { fontSize: 18, fontWeight: "700", color: "#374151" },
-  scoreBtnLabel: { fontSize: 9, color: "#6B7280", textAlign: "center" },
-  hint: { textAlign: "center", fontSize: 12, color: "#9CA3AF" },
+  scoreBtnScore: { fontSize: 18, fontWeight: "700", color: colors.gray[700] },
+  scoreBtnLabel: { fontSize: 9, color: colors.gray[500], textAlign: "center" },
+  hint: { textAlign: "center", fontSize: 12, color: colors.gray[400] },
 });

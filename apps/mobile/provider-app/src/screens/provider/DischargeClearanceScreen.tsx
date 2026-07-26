@@ -4,7 +4,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, colors as dsColors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useEncounterStore } from "../../stores/encounterStore";
@@ -127,9 +127,9 @@ function ClearanceItem({ id, type, icon, description, status, clearedBy, cleared
   const [reason, setReason] = useState("");
 
   const statusColors: Record<string, { bg: string; border: string; text: string }> = {
-    PENDING: { bg: "#FFF", border: "#E5E7EB", text: "#6B7280" },
-    CLEARED: { bg: "#F0FDF4", border: "#22C55E", text: "#16A34A" },
-    WAIVED: { bg: "#FFFBEB", border: "#F59E0B", text: "#D97706" },
+    PENDING: { bg: "#FFF", border: dsColors.gray[200], text: dsColors.gray[500] },
+    CLEARED: { bg: "#F0FDF4", border: dsColors.ui.success.main, text: "#16A34A" },
+    WAIVED: { bg: "#FFFBEB", border: dsColors.ui.warning.main, text: "#D97706" },
   };
   const colors = statusColors[status] ?? statusColors.PENDING;
 
@@ -176,26 +176,26 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 10, paddingBottom: 32 },
   center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 32, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#374151" },
-  emptyText: { fontSize: 14, color: "#6B7280", textAlign: "center" },
-  progressCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, gap: 8, borderWidth: 1, borderColor: "#E5E7EB" },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: dsColors.gray[700] },
+  emptyText: { fontSize: 14, color: dsColors.gray[500], textAlign: "center" },
+  progressCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, gap: 8, borderWidth: 1, borderColor: dsColors.gray[200] },
   progressHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  progressTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  progressTitle: { fontSize: 16, fontWeight: "700", color: dsColors.gray[900] },
   progressPercent: { fontSize: 24, fontWeight: "900", color: "#2563EB" },
-  progressBarBg: { height: 8, backgroundColor: "#E5E7EB", borderRadius: 4 },
-  progressBarFill: { height: 8, backgroundColor: "#22C55E", borderRadius: 4 },
-  progressDetail: { fontSize: 12, color: "#6B7280" },
+  progressBarBg: { height: 8, backgroundColor: dsColors.gray[200], borderRadius: 4 },
+  progressBarFill: { height: 8, backgroundColor: dsColors.ui.success.main, borderRadius: 4 },
+  progressDetail: { fontSize: 12, color: dsColors.gray[500] },
   clearanceCard: { borderRadius: 12, padding: 12, borderWidth: 2, gap: 8 },
   clearanceHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   clearanceIcon: { fontSize: 24 },
-  clearanceType: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  clearanceDesc: { fontSize: 12, color: "#6B7280", lineHeight: 16 },
-  clearanceMeta: { fontSize: 11, color: "#9CA3AF", marginLeft: 34 },
+  clearanceType: { fontSize: 14, fontWeight: "700", color: dsColors.gray[900] },
+  clearanceDesc: { fontSize: 12, color: dsColors.gray[500], lineHeight: 16 },
+  clearanceMeta: { fontSize: 11, color: dsColors.gray[400], marginLeft: 34 },
   clearanceActions: { flexDirection: "row", gap: 8, marginLeft: 34 },
-  clearBtn: { backgroundColor: "#22C55E", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  clearBtn: { backgroundColor: dsColors.ui.success.main, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   clearBtnText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
-  waiveBtn: { backgroundColor: "#F3F4F6", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  waiveBtnText: { color: "#6B7280", fontSize: 13, fontWeight: "600" },
+  waiveBtn: { backgroundColor: dsColors.gray[100], paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  waiveBtnText: { color: dsColors.gray[500], fontSize: 13, fontWeight: "600" },
   waiveForm: { gap: 6, marginLeft: 34 },
-  waiveInput: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 8, fontSize: 13 },
+  waiveInput: { borderWidth: 1, borderColor: dsColors.gray[300], borderRadius: 6, padding: 8, fontSize: 13 },
 });

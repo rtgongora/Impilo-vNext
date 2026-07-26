@@ -8,20 +8,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@impilo/mobile-auth";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  CardHeader,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-  DashboardSection,
-  ServiceCard,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, CardHeader, Button, Badge, LoadingSpinner, EmptyState, ErrorState, DashboardSection, ServiceCard, colors } from "@impilo/mobile-design-system";
 import { buildProviderServiceCards } from "../../navigation/providerServiceNavigation";
 import { useCommunicationDashboard } from "@impilo/mobile-messaging";
 import { appStore, useAppStore } from "../../stores/appStore";
@@ -57,10 +44,10 @@ const LAUNCH_ACTIONS: Array<{
   bg: string;
 }> = [
   { key: "fundo-learning", title: "Fundo Learning", subtitle: "Prioritize training, CPD and required modules", target: "apps", icon: "school-outline", color: "#0E7490", bg: "#CFFAFE" },
-  { key: "find-patient", title: "Find Patient", subtitle: "Search and start a new encounter", target: "patients", icon: "search-outline", color: "#059669", bg: "#D1FAE5" },
+  { key: "find-patient", title: "Find Patient", subtitle: "Search and start a new encounter", target: "patients", icon: "search-outline", color: "#059669", bg: colors.ui.success.light },
   { key: "queue",        title: "Open Queue",   subtitle: "Pick up the next waiting patient",  target: "queue",    icon: "people-outline", color: BLUE, bg: "#DBEAFE" },
   { key: "results",      title: "Lab Results",  subtitle: "Check new lab and imaging output",  target: "results",  icon: "flask-outline",  color: "#7C3AED", bg: "#EDE9FE" },
-  { key: "tools",        title: "Clinical Tools", subtitle: "Notes, plans, CDS, and handoff", target: "tools",    icon: "construct-outline", color: "#D97706", bg: "#FEF3C7" },
+  { key: "tools",        title: "Clinical Tools", subtitle: "Notes, plans, CDS, and handoff", target: "tools",    icon: "construct-outline", color: "#D97706", bg: colors.ui.warning.light },
 ];
 
 const PRIORITY_VARIANT: Record<string, string> = {
@@ -255,10 +242,10 @@ export function ProviderDashboardScreen() {
         {/* Summary metrics */}
         <View style={styles.metricsRow}>
           {[
-            { label: "Pending", value: pendingTasks.length, color: "#111827", icon: "list" },
+            { label: "Pending", value: pendingTasks.length, color: colors.gray[900], icon: "list" },
             { label: "Seen Today", value: metrics?.patientsSeenToday ?? openEncounters.length, color: "#059669", icon: "checkmark-circle" },
-            { label: "Open Visits", value: metrics?.encountersOpen ?? overdueTasks.length, color: overdueTasks.length > 0 ? "#DC2626" : "#111827", icon: "medical" },
-            { label: "Stock Alerts", value: metrics?.stockAlerts ?? 0, color: (metrics?.stockAlerts ?? 0) > 0 ? "#DC2626" : "#111827", icon: "warning" },
+            { label: "Open Visits", value: metrics?.encountersOpen ?? overdueTasks.length, color: overdueTasks.length > 0 ? colors.ui.error.main : colors.gray[900], icon: "medical" },
+            { label: "Stock Alerts", value: metrics?.stockAlerts ?? 0, color: (metrics?.stockAlerts ?? 0) > 0 ? colors.ui.error.main : colors.gray[900], icon: "warning" },
           ].map((m) => (
             <Card key={m.label} variant="elevated" padding="sm" style={styles.metricCard}>
               <CardBody>
@@ -330,7 +317,7 @@ export function ProviderDashboardScreen() {
               onPress={() => setProviderTab("encounter")}
               testID="launch-resume-encounter"
             >
-              <View style={[styles.launchIconCircle, { backgroundColor: "#D1FAE5" }]}>
+              <View style={[styles.launchIconCircle, { backgroundColor: colors.ui.success.light }]}>
                 <Ionicons name="pulse" size={22} color="#059669" />
               </View>
               <Text style={[styles.launchTitle, { color: "#059669" }]}>Resume</Text>
@@ -376,7 +363,7 @@ export function ProviderDashboardScreen() {
             {
               label: "Overdue",
               value: learningSummary?.overdue ?? 0,
-              color: (learningSummary?.overdue ?? 0) > 0 ? "#DC2626" : "#111827",
+              color: (learningSummary?.overdue ?? 0) > 0 ? colors.ui.error.main : colors.gray[900],
               icon: "time-outline",
               focus: "overdue" as const,
             },
@@ -537,7 +524,7 @@ export function ProviderDashboardScreen() {
                       <Text style={styles.taskTitle}>{task.title}</Text>
                       {task.patientName ? (
                         <View style={styles.taskMeta}>
-                          <Ionicons name="person-outline" size={12} color="#6B7280" />
+                          <Ionicons name="person-outline" size={12} color={colors.gray[500]} />
                           <Text style={styles.taskPatient}>{task.patientName}</Text>
                         </View>
                       ) : null}
@@ -696,30 +683,30 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 10,
-    color: "#6B7280",
+    color: colors.gray[500],
     textAlign: "center",
   },
   metricHint: {
     fontSize: 10,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
   },
   commsWarning: {
     borderWidth: 1,
     borderColor: "#FCD34D",
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.ui.warning.light,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
   commsWarningText: {
     fontSize: 11,
-    color: "#92400E",
+    color: colors.ui.warning.text,
   },
   sectionLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginTop: 4,
@@ -762,7 +749,7 @@ const styles = StyleSheet.create({
   },
   launchSubtitle: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
     lineHeight: 16,
   },
   taskRow: {
@@ -777,7 +764,7 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   taskMeta: {
     flexDirection: "row",
@@ -786,11 +773,11 @@ const styles = StyleSheet.create({
   },
   taskPatient: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   taskDue: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   worklistSummaryRow: {
     flexDirection: "row",
@@ -838,7 +825,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
   },
   supportChipSos: {
     borderColor: "#FECACA",
@@ -847,6 +834,6 @@ const styles = StyleSheet.create({
   supportChipText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#1F2937",
+    color: colors.gray[800],
   },
 });

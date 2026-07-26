@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Pressable, Alert, Linking } from "react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Card, CardBody, FeatureMaturityBadge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Card, CardBody, FeatureMaturityBadge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import {
   applyCoreTransactionAction,
   fetchNompiloContext,
@@ -184,19 +184,19 @@ const styles = StyleSheet.create({
   },
   bannerText: {
     fontSize: 12,
-    color: "#4B5563",
+    color: colors.gray[600],
   },
   title: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   titleSelected: {
     color: "#1D4ED8",
   },
   meta: {
     fontSize: 12,
-    color: "#4B5563",
+    color: colors.gray[600],
     marginTop: 4,
   },
   nextAction: {
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   handoffTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#065F46",
+    color: colors.ui.success.text,
   },
   handoffButton: {
     alignSelf: "flex-start",

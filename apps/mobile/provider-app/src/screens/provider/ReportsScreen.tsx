@@ -9,18 +9,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchReportList, fetchReportData } from "../../services/reportService";
 import type { ReportSummary, ReportData, ReportCategory } from "../../types";
 
@@ -247,7 +236,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   filterChipActive: {
     backgroundColor: "#2563EB",
@@ -255,7 +244,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   filterChipTextActive: {
     color: "#FFFFFF",
@@ -280,19 +269,19 @@ const styles = StyleSheet.create({
   reportName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   reportDesc: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   reportMeta: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   generatedAt: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginVertical: 8,
   },
   entryRow: {
@@ -303,13 +292,13 @@ const styles = StyleSheet.create({
   entryKey: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
     flex: 1,
   },
   entryValue: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.gray[900],
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,

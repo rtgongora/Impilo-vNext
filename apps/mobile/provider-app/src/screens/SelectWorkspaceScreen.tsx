@@ -8,17 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useAuth } from "@impilo/mobile-auth";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  TextField,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useAppStore, appStore } from "../stores/appStore";
 
 interface Workspace {
@@ -126,7 +116,7 @@ const styles = StyleSheet.create({
   listContainer: { marginTop: 16 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   info: { flex: 1 },
-  name: { fontWeight: "700", color: "#111827" },
-  meta: { fontSize: 13, color: "#6B7280", marginTop: 4 },
+  name: { fontWeight: "700", color: colors.gray[900] },
+  meta: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
 });
 

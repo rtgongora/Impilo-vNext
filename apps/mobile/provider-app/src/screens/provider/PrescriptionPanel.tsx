@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { View, StyleSheet, Text } from "react-native";
-import { Card, CardBody, Button, TextField, RxCard, ErrorState } from "@impilo/mobile-design-system";
+import { Card, CardBody, Button, TextField, RxCard, ErrorState, colors } from "@impilo/mobile-design-system";
 import { createPrescription, cancelPrescription, getPrescriptionsForPatient } from "../../services/prescriptionService";
 import { checkDrugInteractions } from "../../services/queueService";
 import { encounterStore, useEncounterStore } from "../../stores/encounterStore";
@@ -254,13 +254,13 @@ const styles = StyleSheet.create({
   },
   interactionInfo: {
     fontSize: 12,
-    color: "#065F46",
+    color: colors.ui.success.text,
     marginTop: 8,
   },
   warningBox: {
     marginTop: 8,
     borderWidth: 1,
-    borderColor: "#F59E0B",
+    borderColor: colors.ui.warning.main,
     backgroundColor: "#FFFBEB",
     borderRadius: 8,
     padding: 8,
@@ -268,6 +268,6 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: 12,
-    color: "#92400E",
+    color: colors.ui.warning.text,
   },
 });

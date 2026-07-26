@@ -9,18 +9,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import type { BadgeVariant } from "@impilo/mobile-design-system";
 import {
   acknowledgeAlert,
@@ -217,17 +206,17 @@ const styles = StyleSheet.create({
   scrollContent: { gap: 12, paddingBottom: 16 },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 16 },
   statItem: { width: "45%", alignItems: "center", paddingVertical: 12 },
-  statValue: { fontSize: 28, fontWeight: "900", color: "#111827" },
-  statLabel: { fontSize: 13, color: "#6B7280", marginTop: 4 },
+  statValue: { fontSize: 28, fontWeight: "900", color: colors.gray[900] },
+  statLabel: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
   listRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   listRowInfo: { flex: 1, gap: 2 },
-  boldText: { fontWeight: "700", color: "#111827" },
-  detailText: { fontSize: 13, color: "#6B7280" },
+  boldText: { fontWeight: "700", color: colors.gray[900] },
+  detailText: { fontSize: 13, color: colors.gray[500] },
   alertList: { gap: 12 },
   alertRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
   alertInfo: { flex: 1, gap: 2 },
   alertTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  auditTime: { fontSize: 11, color: "#9CA3AF", fontWeight: "600" },
-  footerNote: { fontSize: 12, color: "#9CA3AF", textAlign: "center", marginTop: 8 },
+  auditTime: { fontSize: 11, color: colors.gray[400], fontWeight: "600" },
+  footerNote: { fontSize: 12, color: colors.gray[400], textAlign: "center", marginTop: 8 },
   refreshContainer: { marginTop: 8 },
 });

@@ -9,19 +9,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useAuth } from "@impilo/mobile-auth";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  TextField,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-  FacilityUnconfirmedTag,
-  isUnconfirmedFacility,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, EmptyState, ErrorState, FacilityUnconfirmedTag, isUnconfirmedFacility, colors } from "@impilo/mobile-design-system";
 import { appStore } from "../stores/appStore";
 
 interface Facility {
@@ -211,7 +199,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   noticeBody: { gap: 8 },
-  noticeTitle: { fontSize: 15, fontWeight: "700", color: "#92400E" },
+  noticeTitle: { fontSize: 15, fontWeight: "700", color: colors.ui.warning.text },
   noticeText: { fontSize: 13, color: "#78350F", lineHeight: 19 },
   noticeActions: { flexDirection: "row", gap: 8, marginTop: 4 },
   facilityName: {
@@ -219,7 +207,7 @@ const styles = StyleSheet.create({
   },
   facilityDetail: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
 });

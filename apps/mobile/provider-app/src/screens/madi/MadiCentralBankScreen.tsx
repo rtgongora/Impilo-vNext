@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Alert } from "react-native";
-import { LoadingSpinner, EmptyState, ErrorState, Button, Badge } from "@impilo/mobile-design-system";
+import { LoadingSpinner, EmptyState, ErrorState, Button, Badge, colors } from "@impilo/mobile-design-system";
 import {
   approveEmergencyRedistribution,
   emergencyRedistributionId,
@@ -186,8 +186,8 @@ export function MadiCentralBankScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 32, gap: 12 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  subtitle: { fontSize: 13, color: "#6B7280", marginBottom: 4 },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  subtitle: { fontSize: 13, color: colors.gray[500], marginBottom: 4 },
   kpiRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   kpiCard: {
     flex: 1,
@@ -196,22 +196,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
   },
-  kpiLabel: { fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: "600" },
-  kpiValue: { fontSize: 24, fontWeight: "700", color: "#111827", marginTop: 4 },
-  hint: { fontSize: 13, color: "#9CA3AF" },
-  sectionTitle: { fontSize: 15, fontWeight: "600", color: "#111827", marginTop: 8 },
+  kpiLabel: { fontSize: 10, textTransform: "uppercase", color: colors.gray[500], fontWeight: "600" },
+  kpiValue: { fontSize: 24, fontWeight: "700", color: colors.gray[900], marginTop: 4 },
+  hint: { fontSize: 13, color: colors.gray[400] },
+  sectionTitle: { fontSize: 15, fontWeight: "600", color: colors.gray[900], marginTop: 8 },
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     gap: 4,
   },
-  cardTitle: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  meta: { fontSize: 12, color: "#6B7280" },
+  cardTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  meta: { fontSize: 12, color: colors.gray[500] },
   warn: { fontSize: 12, color: "#B45309" },
   actions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8, gap: 8 },
 });

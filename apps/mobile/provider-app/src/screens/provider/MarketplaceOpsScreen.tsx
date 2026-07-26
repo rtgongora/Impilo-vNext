@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { Screen, Header, Card, CardBody, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useAppStore } from "../../stores/appStore";
 import { deliveryAction, listAssignedDeliveries, type ProviderDelivery } from "../../services/deliveryService";
 
@@ -87,12 +87,12 @@ export function MarketplaceOpsScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: 16, gap: 12 },
-  title: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  sub: { fontSize: 13, color: "#6B7280", marginTop: 6 },
+  title: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  sub: { fontSize: 13, color: colors.gray[500], marginTop: 6 },
   badges: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10, alignItems: "center" },
-  action: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, backgroundColor: "#E5E7EB" },
-  actionText: { fontSize: 12, fontWeight: "600", color: "#111827" },
+  action: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, backgroundColor: colors.gray[200] },
+  actionText: { fontSize: 12, fontWeight: "600", color: colors.gray[900] },
   offline: { marginTop: 8, fontSize: 12, color: "#B45309" },
   loading: { alignItems: "center", paddingVertical: 12 },
 });

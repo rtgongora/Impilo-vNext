@@ -13,18 +13,7 @@ import {
   ScrollView,
   Pressable,
 } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  CardHeader,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, CardHeader, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { apiClient } from "@impilo/mobile-api-client";
 import type { LabOrderStatus } from "../../types";
 
@@ -261,7 +250,7 @@ export function ResultsViewScreen() {
           <Card>
             <CardBody>
               <View style={styles.tileCenter}>
-                <Text style={[styles.tileNumber, { color: "#DC2626" }]}>
+                <Text style={[styles.tileNumber, { color: colors.ui.error.main }]}>
                   {String(results.filter((r) => r.results.some((p) => p.isAbnormal)).length)}
                 </Text>
                 <Text style={styles.tileLabel}>Abnormal</Text>
@@ -446,7 +435,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   filterButtonActive: {
     backgroundColor: "#2563EB",
@@ -454,7 +443,7 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#374151",
+    color: colors.gray[700],
   },
   filterTextActive: {
     color: "#FFFFFF",
@@ -473,7 +462,7 @@ const styles = StyleSheet.create({
   },
   tileLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   errorBanner: {
     backgroundColor: "#FEF2F2",
@@ -482,7 +471,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   errorText: {
-    color: "#DC2626",
+    color: colors.ui.error.main,
     fontSize: 13,
   },
   resultHeader: {
@@ -502,7 +491,7 @@ const styles = StyleSheet.create({
   },
   patientName: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
   metaRow: {
@@ -513,13 +502,13 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   detailContainer: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: colors.gray[200],
   },
   detailRow: {
     flexDirection: "row",
@@ -529,7 +518,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     flex: 1,
   },
   detailValue: {
@@ -543,18 +532,18 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.gray[200],
   },
   paramHeaderText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   paramRow: {
     flexDirection: "row",
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.gray[100],
   },
   paramRowAbnormal: {
     backgroundColor: "#FEF2F2",
@@ -568,12 +557,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   abnormalValue: {
-    color: "#DC2626",
+    color: colors.ui.error.main,
     fontWeight: "700",
   },
   noParams: {
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 8,
     fontStyle: "italic",
   },

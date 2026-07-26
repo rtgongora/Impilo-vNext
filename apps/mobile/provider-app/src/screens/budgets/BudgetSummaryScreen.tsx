@@ -9,7 +9,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
-import { Card, CardHeader, CardBody, Button, Badge } from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Button, Badge, colors } from "@impilo/mobile-design-system";
 import {
   listBudgets,
   getVariance,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   badgeRow: { marginTop: 10 },
-  driver: { marginTop: 8, color: "#374151", fontSize: 12 },
+  driver: { marginTop: 8, color: colors.gray[700], fontSize: 12 },
   approve: { marginTop: 16 },
   error: { color: "#dc2626", marginTop: 8 },
 });

@@ -3,7 +3,7 @@
  */
 import React, { useCallback, useState } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   listEdVisits,
@@ -247,24 +247,24 @@ export function EdVisitScreen() {
 }
 
 const s = StyleSheet.create({
-  tabBar: { maxHeight: 44, borderBottomWidth: 1, borderColor: "#E5E7EB" },
+  tabBar: { maxHeight: 44, borderBottomWidth: 1, borderColor: colors.gray[200] },
   tabPad: { paddingHorizontal: 8, alignItems: "center" },
   tab: { paddingHorizontal: 12, paddingVertical: 10, marginRight: 4 },
-  activeTab: { borderBottomWidth: 2, borderColor: "#DC2626" },
-  tabText: { fontSize: 13, color: "#6B7280" },
-  activeTabText: { color: "#DC2626", fontWeight: "600" },
+  activeTab: { borderBottomWidth: 2, borderColor: colors.ui.error.main },
+  tabText: { fontSize: 13, color: colors.gray[500] },
+  activeTabText: { color: colors.ui.error.main, fontWeight: "600" },
   content: { flex: 1 },
   pad: { padding: 16, gap: 8 },
   section: { gap: 10 },
   h2: { fontSize: 16, fontWeight: "600" },
-  label: { fontSize: 13, color: "#374151" },
-  muted: { fontSize: 12, color: "#6B7280" },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
+  label: { fontSize: 13, color: colors.gray[700] },
+  muted: { fontSize: 12, color: colors.gray[500] },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: "#F3F4F6" },
-  chipOn: { backgroundColor: "#FEE2E2" },
+  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.gray[100] },
+  chipOn: { backgroundColor: colors.ui.error.light },
   chipText: { fontSize: 12 },
-  card: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 10, marginBottom: 6 },
+  card: { borderWidth: 1, borderColor: colors.gray[200], borderRadius: 8, padding: 10, marginBottom: 6 },
   cardTitle: { fontWeight: "600", fontSize: 14 },
   checkRow: { paddingVertical: 4 },
 });

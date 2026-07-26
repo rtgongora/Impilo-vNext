@@ -9,7 +9,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Card, CardHeader, CardBody, Badge, LoadingSpinner, EmptyState, ErrorState } from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   resolveCadreDecision,
   type CadreDecision,
@@ -125,8 +125,8 @@ const styles = StyleSheet.create({
   container: { gap: 12 },
   actionList: { gap: 8 },
   actionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  actionLabel: { fontSize: 14, color: "#111827", fontWeight: "600" },
-  actionDisabled: { color: "#9CA3AF", fontWeight: "400" },
-  disabledNote: { fontSize: 13, color: "#9CA3AF" },
-  auditRef: { fontSize: 11, color: "#9CA3AF", marginTop: 4 },
+  actionLabel: { fontSize: 14, color: colors.gray[900], fontWeight: "600" },
+  actionDisabled: { color: colors.gray[400], fontWeight: "400" },
+  disabledNote: { fontSize: 13, color: colors.gray[400] },
+  auditRef: { fontSize: 11, color: colors.gray[400], marginTop: 4 },
 });

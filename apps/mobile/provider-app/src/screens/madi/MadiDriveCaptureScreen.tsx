@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { Screen, Header, Button, TextField, Select, LoadingSpinner, EmptyState, ErrorState, Badge, Card, CardBody } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, TextField, Select, LoadingSpinner, EmptyState, ErrorState, Badge, Card, CardBody, colors } from "@impilo/mobile-design-system";
 import { getOfflineStorage } from "@impilo/mobile-offline";
 import {
   fetchOperationalDrives,
@@ -208,18 +208,18 @@ export function MadiDriveCaptureScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 12 },
-  pendingBanner: { backgroundColor: "#FEF3C7", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "#FCD34D" },
-  pendingText: { fontSize: 12, color: "#92400E" },
+  pendingBanner: { backgroundColor: colors.ui.warning.light, borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "#FCD34D" },
+  pendingText: { fontSize: 12, color: colors.ui.warning.text },
   conflictSection: { gap: 8 },
   conflictTitle: { fontSize: 14, fontWeight: "600", marginBottom: 4 },
   diffBlock: { marginVertical: 8 },
-  diffLabel: { fontSize: 11, fontWeight: "600", color: "#6B7280" },
-  diffValue: { fontSize: 11, color: "#374151", fontFamily: "monospace" },
+  diffLabel: { fontSize: 11, fontWeight: "600", color: colors.gray[500] },
+  diffValue: { fontSize: 11, color: colors.gray[700], fontFamily: "monospace" },
   resolutionRow: { gap: 6, marginTop: 8 },
-  card: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", gap: 6 },
-  cardSelected: { borderColor: "#DC2626", backgroundColor: "#FEF2F2" },
+  card: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.gray[200], gap: 6 },
+  cardSelected: { borderColor: colors.ui.error.main, backgroundColor: "#FEF2F2" },
   title: { fontSize: 15, fontWeight: "600" },
-  meta: { fontSize: 12, color: "#6B7280" },
+  meta: { fontSize: 12, color: colors.gray[500] },
   form: { gap: 10, marginTop: 8 },
   sectionTitle: { fontSize: 14, fontWeight: "600" },
   message: { fontSize: 13, color: "#059669" },

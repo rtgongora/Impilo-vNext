@@ -5,7 +5,10 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
   Screen: ({ children }: any) => children,
   Header: ({ title }: any) => title,
   Card: ({ children }: any) => children,
@@ -16,7 +19,8 @@ vi.mock("@impilo/mobile-design-system", () => ({
   LoadingSpinner: () => null,
   EmptyState: ({ title }: any) => title,
   ErrorState: ({ title }: any) => title,
-}));
+  };
+});
 
 vi.mock("../../services/controlTowerService", () => ({
   fetchControlTowerAggregate: vi.fn().mockResolvedValue({

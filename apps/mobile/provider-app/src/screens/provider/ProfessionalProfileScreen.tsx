@@ -14,18 +14,7 @@ import {
   Pressable,
   TextInput,
 } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  CardHeader,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, CardHeader, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   getProfile,
   getNotices,
@@ -191,7 +180,7 @@ export function ProfessionalProfileScreen() {
                 style={[
                   styles.value,
                   new Date(profile.licenseExpiry) < new Date()
-                    ? { color: "#DC2626" }
+                    ? { color: colors.ui.error.main }
                     : undefined,
                 ]}
               >
@@ -356,7 +345,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     flex: 1,
   },
   value: {
@@ -370,7 +359,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -398,7 +387,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   errorText: {
-    color: "#DC2626",
+    color: colors.ui.error.main,
     fontSize: 13,
     marginBottom: 8,
   },
@@ -409,7 +398,7 @@ const styles = StyleSheet.create({
   },
   noticeDate: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   noticeTitle: {
     fontSize: 15,
@@ -418,12 +407,12 @@ const styles = StyleSheet.create({
   },
   noticeBody: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.gray[700],
     marginTop: 4,
   },
   noticeExpiry: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 4,
   },
   refreshContainer: {

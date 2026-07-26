@@ -13,18 +13,7 @@ import {
   ScrollView,
   Pressable,
 } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  CardHeader,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, CardHeader, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getSchedule, type Shift } from "../../services/profileService";
 
 const STATUS_VARIANT: Record<string, "destructive" | "warning" | "secondary" | "outline"> = {
@@ -269,7 +258,7 @@ const styles = StyleSheet.create({
   shiftTypeSecondary: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
   shiftTime: {
@@ -278,12 +267,12 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
   },
   dateText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   shiftDetail: {
     flexDirection: "row",
@@ -294,7 +283,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     flex: 1,
   },
   value: {
@@ -306,18 +295,18 @@ const styles = StyleSheet.create({
   notesContainer: {
     marginTop: 8,
     padding: 8,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
     borderRadius: 6,
   },
   notesLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "600",
     marginBottom: 2,
   },
   notesText: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
   },
   handoverContainer: {
     marginTop: 12,
@@ -336,12 +325,12 @@ const styles = StyleSheet.create({
   },
   completedTime: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 4,
   },
   completedFacility: {
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 2,
   },
   refreshContainer: {

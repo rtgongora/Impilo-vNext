@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Badge, Button, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Badge, Button, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acknowledgeWardAlert, listWardAlerts } from "../../services/inpatientService";
 
@@ -77,15 +77,15 @@ export function WardAlertsScreen({ wardId = DEMO_WARD_ID }: { wardId?: string })
 const s = StyleSheet.create({
   wrap: { flex: 1, gap: 12 },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
   list: { marginTop: 8 },
-  empty: { color: "#6B7280", textAlign: "center", marginTop: 24 },
+  empty: { color: colors.gray[500], textAlign: "center", marginTop: 24 },
   card: { backgroundColor: "#FFF7ED", borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#FDBA74" },
   cardTop: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  time: { fontSize: 12, color: "#6B7280" },
-  patient: { fontSize: 15, fontWeight: "600", color: "#1F2937" },
-  meta: { fontSize: 12, color: "#6B7280", marginTop: 2 },
-  message: { fontSize: 14, color: "#374151", marginTop: 8 },
+  time: { fontSize: 12, color: colors.gray[500] },
+  patient: { fontSize: 15, fontWeight: "600", color: colors.gray[800] },
+  meta: { fontSize: 12, color: colors.gray[500], marginTop: 2 },
+  message: { fontSize: 14, color: colors.gray[700], marginTop: 8 },
   ackBtn: { marginTop: 10, alignSelf: "flex-start", backgroundColor: "#EA580C", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
   ackText: { color: "#fff", fontWeight: "600", fontSize: 13 },
 });

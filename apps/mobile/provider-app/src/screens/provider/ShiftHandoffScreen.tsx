@@ -4,17 +4,17 @@
  */
 import React, { useState } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Alert, Share } from "react-native";
-import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useAppStore } from "../../stores/appStore";
 import { submitHandover } from "../../services/inpatientService";
 
 const ACUITY_LEVELS = [
-  { level: "CRITICAL", color: "#DC2626", label: "Critical" },
-  { level: "HIGH", color: "#F59E0B", label: "High" },
+  { level: "CRITICAL", color: colors.ui.error.main, label: "Critical" },
+  { level: "HIGH", color: colors.ui.warning.main, label: "High" },
   { level: "MODERATE", color: "#3B82F6", label: "Moderate" },
-  { level: "STABLE", color: "#22C55E", label: "Stable" },
+  { level: "STABLE", color: colors.ui.success.main, label: "Stable" },
 ];
 
 interface PatientHandoff {
@@ -119,9 +119,9 @@ export function ShiftHandoffScreen() {
         {/* Summary stats */}
         <View style={st.statsRow}>
           <View style={st.statCard}><Text style={st.statNum}>{stats.total}</Text><Text style={st.statLabel}>Total</Text></View>
-          <View style={[st.statCard, { borderLeftColor: "#DC2626" }]}><Text style={[st.statNum, { color: "#DC2626" }]}>{stats.critical}</Text><Text style={st.statLabel}>Critical</Text></View>
-          <View style={[st.statCard, { borderLeftColor: "#F59E0B" }]}><Text style={[st.statNum, { color: "#F59E0B" }]}>{stats.high}</Text><Text style={st.statLabel}>High</Text></View>
-          <View style={[st.statCard, { borderLeftColor: "#22C55E" }]}><Text style={[st.statNum, { color: "#22C55E" }]}>{stats.stable}</Text><Text style={st.statLabel}>Stable</Text></View>
+          <View style={[st.statCard, { borderLeftColor: colors.ui.error.main }]}><Text style={[st.statNum, { color: colors.ui.error.main }]}>{stats.critical}</Text><Text style={st.statLabel}>Critical</Text></View>
+          <View style={[st.statCard, { borderLeftColor: colors.ui.warning.main }]}><Text style={[st.statNum, { color: colors.ui.warning.main }]}>{stats.high}</Text><Text style={st.statLabel}>High</Text></View>
+          <View style={[st.statCard, { borderLeftColor: colors.ui.success.main }]}><Text style={[st.statNum, { color: colors.ui.success.main }]}>{stats.stable}</Text><Text style={st.statLabel}>Stable</Text></View>
         </View>
 
         {/* Patient cards */}
@@ -129,7 +129,7 @@ export function ShiftHandoffScreen() {
         {patients.map((p) => {
           const selected = selectedPatients.has(p.id);
           const acuityConfig = ACUITY_LEVELS.find((a) => a.level === p.acuity) ?? ACUITY_LEVELS[3];
-          const vitalColors: Record<string, string> = { STABLE: "#22C55E", CONCERNING: "#F59E0B", CRITICAL: "#DC2626" };
+          const vitalColors: Record<string, string> = { STABLE: colors.ui.success.main, CONCERNING: colors.ui.warning.main, CRITICAL: colors.ui.error.main };
 
           return (
             <TouchableOpacity key={p.id} onPress={() => togglePatient(p.id)}
@@ -167,12 +167,12 @@ export function ShiftHandoffScreen() {
         <Text style={st.sectionTitle}>SBAR Handoff Notes</Text>
         <View style={st.sbarCard}>
           <View style={st.sbarRow}>
-            <View style={[st.sbarLabel, { backgroundColor: "#DC2626" }]}><Text style={st.sbarLabelText}>S</Text></View>
+            <View style={[st.sbarLabel, { backgroundColor: colors.ui.error.main }]}><Text style={st.sbarLabelText}>S</Text></View>
             <TextInput style={st.sbarInput} placeholder="Situation — What is happening now?" value={sbarNotes.situation}
               onChangeText={(v) => setSbarNotes({ ...sbarNotes, situation: v })} multiline />
           </View>
           <View style={st.sbarRow}>
-            <View style={[st.sbarLabel, { backgroundColor: "#F59E0B" }]}><Text style={st.sbarLabelText}>B</Text></View>
+            <View style={[st.sbarLabel, { backgroundColor: colors.ui.warning.main }]}><Text style={st.sbarLabelText}>B</Text></View>
             <TextInput style={st.sbarInput} placeholder="Background — What is the clinical context?" value={sbarNotes.background}
               onChangeText={(v) => setSbarNotes({ ...sbarNotes, background: v })} multiline />
           </View>
@@ -182,7 +182,7 @@ export function ShiftHandoffScreen() {
               onChangeText={(v) => setSbarNotes({ ...sbarNotes, assessment: v })} multiline />
           </View>
           <View style={st.sbarRow}>
-            <View style={[st.sbarLabel, { backgroundColor: "#22C55E" }]}><Text style={st.sbarLabelText}>R</Text></View>
+            <View style={[st.sbarLabel, { backgroundColor: colors.ui.success.main }]}><Text style={st.sbarLabelText}>R</Text></View>
             <TextInput style={st.sbarInput} placeholder="Recommendation — What do you recommend?" value={sbarNotes.recommendation}
               onChangeText={(v) => setSbarNotes({ ...sbarNotes, recommendation: v })} multiline />
           </View>
@@ -207,31 +207,31 @@ const st = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 12, paddingBottom: 32 },
   statsRow: { flexDirection: "row", gap: 8 },
-  statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 8, padding: 10, alignItems: "center", borderLeftWidth: 3, borderLeftColor: "#E5E7EB" },
-  statNum: { fontSize: 22, fontWeight: "900", color: "#111827" },
-  statLabel: { fontSize: 10, color: "#6B7280" },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  patientCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 14, borderLeftWidth: 4, gap: 6, borderWidth: 1, borderColor: "#E5E7EB" },
+  statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 8, padding: 10, alignItems: "center", borderLeftWidth: 3, borderLeftColor: colors.gray[200] },
+  statNum: { fontSize: 22, fontWeight: "900", color: colors.gray[900] },
+  statLabel: { fontSize: 10, color: colors.gray[500] },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: colors.gray[900] },
+  patientCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 14, borderLeftWidth: 4, gap: 6, borderWidth: 1, borderColor: colors.gray[200] },
   patientSelected: { borderColor: "#2563EB", backgroundColor: "#EFF6FF" },
   patientHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
-  selectRing: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: "#D1D5DB", alignItems: "center", justifyContent: "center" },
+  selectRing: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: colors.gray[300], alignItems: "center", justifyContent: "center" },
   checkmark: { color: "#FFF", fontSize: 14, fontWeight: "700" },
-  patientName: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  patientMeta: { fontSize: 11, color: "#6B7280" },
-  diagnosis: { fontSize: 13, color: "#374151" },
+  patientName: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  patientMeta: { fontSize: 11, color: colors.gray[500] },
+  diagnosis: { fontSize: 13, color: colors.gray[700] },
   patientFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   vitalIndicator: { flexDirection: "row", alignItems: "center", gap: 4 },
   vitalDot: { width: 8, height: 8, borderRadius: 4 },
-  vitalText: { fontSize: 11, color: "#6B7280" },
-  taskCount: { fontSize: 11, color: "#F59E0B", fontWeight: "600" },
-  medsText: { fontSize: 11, color: "#6B7280" },
+  vitalText: { fontSize: 11, color: colors.gray[500] },
+  taskCount: { fontSize: 11, color: colors.ui.warning.main, fontWeight: "600" },
+  medsText: { fontSize: 11, color: colors.gray[500] },
   empty: { paddingVertical: 20, alignItems: "center" },
-  emptyText: { color: "#9CA3AF", fontSize: 13 },
+  emptyText: { color: colors.gray[400], fontSize: 13 },
   sbarCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 12, gap: 10 },
   sbarRow: { flexDirection: "row", gap: 8 },
   sbarLabel: { width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   sbarLabelText: { color: "#FFF", fontSize: 16, fontWeight: "900" },
-  sbarInput: { flex: 1, borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 10, fontSize: 13, minHeight: 44, textAlignVertical: "top" },
-  generalNotes: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 12, fontSize: 13, minHeight: 80, textAlignVertical: "top", backgroundColor: "#FFF" },
+  sbarInput: { flex: 1, borderWidth: 1, borderColor: colors.gray[200], borderRadius: 8, padding: 10, fontSize: 13, minHeight: 44, textAlignVertical: "top" },
+  generalNotes: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 12, fontSize: 13, minHeight: 80, textAlignVertical: "top", backgroundColor: "#FFF" },
   actions: { flexDirection: "row", gap: 8 },
 });

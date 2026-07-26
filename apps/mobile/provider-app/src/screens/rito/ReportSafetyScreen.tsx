@@ -6,15 +6,7 @@
 
 import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-} from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Button, Badge, TextField, Select, colors } from "@impilo/mobile-design-system";
 import { reportIncident } from "../../services/ritoSafetyService";
 import type {
   RitoSafetyCase,
@@ -172,25 +164,25 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   subText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   formContainer: {
     gap: 14,
   },
   errorText: {
     fontSize: 13,
-    color: "#DC2626",
+    color: colors.ui.error.main,
   },
   successBody: {
     gap: 14,
   },
   successText: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.gray[700],
   },
   row: {
     flexDirection: "row",
@@ -199,7 +191,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
   },
 });

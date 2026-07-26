@@ -6,15 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import {
-  Card,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { myCases, currentProviderActorId } from "../../services/ritoSafetyService";
 import type { RitoSafetyCase } from "../../services/ritoSafetyService";
 
@@ -133,7 +125,7 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   badgeRow: {
     flexDirection: "row",
@@ -146,7 +138,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
   },
   metaRow: {
     flexDirection: "row",
@@ -157,11 +149,11 @@ const styles = StyleSheet.create({
   },
   reference: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   date: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 4,
   },
 });

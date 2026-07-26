@@ -9,19 +9,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-  TextField,
-  Select,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, TextField, Select, colors } from "@impilo/mobile-design-system";
 import {
   actOnReport,
   fetchEngagementSummary,
@@ -397,12 +385,12 @@ const styles = StyleSheet.create({
   body: { padding: 12, gap: 12 },
   label: { fontSize: 13, fontWeight: "600", marginTop: 8, marginBottom: 4 },
   status: { marginTop: 8, fontSize: 13, color: "#1E40AF" },
-  note: { fontSize: 12, color: "#6B7280", marginBottom: 8 },
-  backlog: { fontSize: 13, color: "#6B7280", marginBottom: 4 },
+  note: { fontSize: 12, color: colors.gray[500], marginBottom: 8 },
+  backlog: { fontSize: 13, color: colors.gray[500], marginBottom: 4 },
   detail: { fontSize: 14, marginVertical: 6 },
-  mono: { fontFamily: "monospace", fontSize: 11, color: "#6B7280" },
+  mono: { fontFamily: "monospace", fontSize: 11, color: colors.gray[500] },
   actionsRow: { marginTop: 8 },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  metricLabel: { fontSize: 14, color: "#374151" },
+  metricLabel: { fontSize: 14, color: colors.gray[700] },
   metricValue: { fontSize: 18, fontWeight: "700" },
 });

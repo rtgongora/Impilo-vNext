@@ -4,7 +4,7 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Screen, Header, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import {
   createFieldTask,
@@ -144,14 +144,14 @@ const styles = StyleSheet.create({
   kpiRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
   kpi: { flex: 1, backgroundColor: "#F0FDF4", borderRadius: 8, padding: 10, borderWidth: 1, borderColor: "#BBF7D0" },
   kpiValue: { fontSize: 18, fontWeight: "700", color: "#166534" },
-  kpiLabel: { fontSize: 10, color: "#4B5563", marginTop: 2 },
-  empty: { textAlign: "center", color: "#6B7280", marginTop: 24, fontSize: 14 },
-  card: { backgroundColor: "#FFF", borderRadius: 10, borderWidth: 1, borderColor: "#E5E7EB", padding: 12, marginBottom: 10 },
-  cardTitle: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  cardMeta: { fontSize: 12, color: "#6B7280", marginTop: 4 },
+  kpiLabel: { fontSize: 10, color: colors.gray[600], marginTop: 2 },
+  empty: { textAlign: "center", color: colors.gray[500], marginTop: 24, fontSize: 14 },
+  card: { backgroundColor: "#FFF", borderRadius: 10, borderWidth: 1, borderColor: colors.gray[200], padding: 12, marginBottom: 10 },
+  cardTitle: { fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  cardMeta: { fontSize: 12, color: colors.gray[500], marginTop: 4 },
   advanceBtn: { marginTop: 8 },
   advanceText: { fontSize: 12, color: "#1D4ED8", fontWeight: "600" },
-  done: { fontSize: 11, color: "#9CA3AF", marginTop: 8 },
+  done: { fontSize: 11, color: colors.gray[400], marginTop: 8 },
   createBtn: {
     alignSelf: "flex-start",
     backgroundColor: "#047857",

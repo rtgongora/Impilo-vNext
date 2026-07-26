@@ -8,7 +8,7 @@
 import React, { useCallback } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
-import { Button } from "@impilo/mobile-design-system";
+import { Button, colors } from "@impilo/mobile-design-system";
 import { appStore, useAppStore } from "../stores/appStore";
 import type { AppMode } from "../types";
 
@@ -74,8 +74,8 @@ export function ModeSwitcher() {
 const styles = StyleSheet.create({
   container: {
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    borderBottomColor: colors.gray[200],
+    backgroundColor: colors.gray[50],
     paddingVertical: 8,
     paddingHorizontal: 16,
   },

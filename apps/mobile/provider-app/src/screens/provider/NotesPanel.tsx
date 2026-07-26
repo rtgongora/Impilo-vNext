@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
-import { Card, CardBody, Button, ErrorState } from "@impilo/mobile-design-system";
+import { Card, CardBody, Button, ErrorState, colors } from "@impilo/mobile-design-system";
 import { addEncounterNotes } from "../../services/encounterService";
 import { useEncounterStore } from "../../stores/encounterStore";
 
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     minHeight: 200,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     fontSize: 14,
   },
