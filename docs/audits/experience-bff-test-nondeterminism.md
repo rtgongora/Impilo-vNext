@@ -114,40 +114,86 @@ Found while running this down; the first is fixed, the rest are reported, not ch
   subclasses a client to stub it — a missed overload is now a fast connection-refused rather than
   a live call, but it is still not the stub the test author intended.
 
-- **The Docker probe silently deletes 44 integration tests.**
-  `DockerOrExternalPostgresCondition` disables `GoldenPathIntegrationTest`,
-  `ExperienceV11ComplianceTest`, `RbacIntegrationTest`, `StaffingApiIntegrationTest`,
-  `StructuredHistoryApiIntegrationTest` and `ExperienceBffIntegrationTest` when
-  `DockerClientFactory` and a 25-second `docker info` subprocess both fail. The build then reports
-  success. A transient daemon hiccup — or a machine without Docker — removes every integration
-  test from the only gate on this service and says nothing. This should fail loudly with an
-  explicit opt-out (`EXPERIENCE_BFF_SKIP_INTEGRATION=1`) rather than skip by default, but that is
-  a policy change to the gate and is left for a decision.
-
-- **Six Redis containers per run, each stopped while its Spring context stays alive.** Each of the
-  six classes starts its own Testcontainers Redis in `@DynamicPropertySource` and stops it in
-  `@AfterAll`, while the Spring context that uses it stays in the TestContext cache for the rest
-  of the JVM. Testcontainers assigns random host ports, so a container started later can be given
-  the port a stopped one just released. This is six container lifecycles where one would do, and
-  each is a fresh chance to time out under docker-daemon or disk load. **Not changed**: collapsing
-  to one shared container would trade this for cross-class state leakage through Redis unless the
-  store is flushed between classes, and that is a real isolation change to make deliberately
-  rather than on the way past.
+- **The Docker probe silently deleted 44 integration tests** — *fixed.* See below.
 
 - **`*IT.java` classes never run.** `GoldenContractIT`, `ImagingExperienceWireMockIT` and
   `MobileProviderTier2ResponseShapeIT` are `@SpringBootTest` classes that surefire does not pick
-  up and no failsafe execution runs — the known repo-wide dead-`*IT*` pattern.
+  up and no failsafe execution runs — the known repo-wide dead-`*IT*` pattern. Not changed here:
+  those three have been rewired alongside the six live classes so they do not rot further, but
+  making them execute is a separate decision about the gate's scope.
 
-## What is *not* explained
+# Run 1 — `Errors: 20, Skipped: 2`
 
-Run 1 of the original evidence — `Errors: 20, Skipped: 2` — was **not** reproduced. The arithmetic
-identifies it confidently: the stable skip count is 4 (two `@Disabled` methods in
-`ExperienceBffIntegrationTest`, two in the `@Disabled` nested `ExperienceV11ComplianceTest$OutboxFields`),
-and `ExperienceV11ComplianceTest` has 7 tests to `GoldenPathIntegrationTest`'s 13. A class-level
-failure in both — which reports the nested class's two skips as errors instead — gives exactly
-20 errors and exactly `Skipped: 2`, with the total unchanged at 1205.
+The first diagnosis pass inferred this from arithmetic and **got it wrong**. The inference was
+that `ExperienceV11ComplianceTest` (7) + `GoldenPathIntegrationTest` (13) failing at class level
+gives 20 errors, and that the nested `@Disabled` `ExperienceV11ComplianceTest$OutboxFields` would
+report its two skips as errors. Simulating the failure showed otherwise: that combination yields
+`Errors: 18, Skipped: 4`. A nested `@Disabled` class is never entered when its parent's context
+fails, so its skips survive.
 
-A class-level failure of that shape is a context-load failure, and the only thing in these classes
-that can fail at context-load time is `redis.start()`. That points at the Testcontainers churn
-described above, not at the loopback — so **the fix landed here does not address run 1**. It
-remains a live risk until the container lifecycle is consolidated.
+Forcing a `redis.start()` failure in all six classes and reading the surefire XML gives the real
+per-class accounting:
+
+| Class | Tests | On context-load failure |
+|---|---|---|
+| `ExperienceBffIntegrationTest` | 10 | **10 errors, 0 skips** — its two `@Disabled` *methods* become errors |
+| `GoldenPathIntegrationTest` | 13 | 13 errors |
+| `RbacIntegrationTest` | 8 | 8 errors |
+| `ExperienceV11ComplianceTest` | 7 | 5 errors, 2 skips preserved (nested `@Disabled` class not entered) |
+| `StaffingApiIntegrationTest` | 4 | 4 errors |
+| `StructuredHistoryApiIntegrationTest` | 2 | 2 errors |
+
+Only `ExperienceBffIntegrationTest` can move the skip count from 4 to 2, so it must be in the
+set; the remaining 10 errors have exactly one decomposition over `{5, 13, 8, 4, 2}` — `8 + 2`.
+
+> **Run 1 was `ExperienceBffIntegrationTest` (10) + `RbacIntegrationTest` (8) +
+> `StructuredHistoryApiIntegrationTest` (2) = 20 errors, `Skipped: 4 → 2`, total unchanged at 1205.**
+
+Surefire's run order is `GoldenPath → Staffing → ExperienceBffIntegrationTest →
+StructuredHistory → Rbac`. The three implicated classes are **consecutive and the last three** —
+consistent with a Docker daemon that degraded partway through the run and stayed degraded, which
+is exactly what six per-class container starts expose and one shared container does not.
+
+## Second wave of fixes
+
+**One Redis container per JVM, one database per class.** The six classes no longer each start and
+stop their own container. A single container starts once and is reaped by Ryuk at JVM exit — one
+start to fail instead of six, and a failure that is total and obvious rather than partial and
+ordering-dependent. Stopping in `@AfterAll` is gone too: it killed the container while the Spring
+context pointing at it stayed in the TestContext cache, and with random host-port mapping a later
+container could be handed the port a stopped one had just released.
+
+Isolation is not sacrificed to get this. Sharing one server would leak idempotency keys,
+rate-limiter counters and OTPs between classes — trading a startup hazard for an ordering hazard —
+so each class gets its own Redis logical database. Verified against an external Redis: after a run,
+keys sit in `db0`, `db1`, `db2`, `db3` and `db5`, where every class previously shared `db0`.
+
+**The gate fails loudly when the environment is missing.** `DockerOrExternalPostgresCondition`
+became `IntegrationEnvironmentCondition` (there is no Postgres in this service, and the behaviour
+is no longer "skip if unsupported"). With no Docker and no external Redis it now throws with a
+message naming all three ways out, instead of disabling 44 tests and exiting 0.
+
+Skipping is still available but must be asked for: `EXPERIENCE_BFF_SKIP_INTEGRATION=true`. That
+check runs **first**, so it is honoured on a machine that does have Docker — checked last, as it
+was first written, it would only have applied once the environment was already broken, which is
+not an opt-out.
+
+Both behaviours were proven by forcing them, not by reading the code:
+
+| Condition | Before | After |
+|---|---|---|
+| No Docker, no external Redis, no opt-out | 44 skipped, **exit 0** | 6 errors, **exit 1**, message names the fix |
+| `EXPERIENCE_BFF_SKIP_INTEGRATION=true`, Docker present | ignored, tests ran | 40 skipped, no container started, exit 0 |
+
+CI (`ci.yml`, `backend-test`) runs on `ubuntu-latest` with Docker present and sets neither the
+external-Redis nor the skip variable, so it keeps running all 44 through Testcontainers.
+
+**Final proof:** five consecutive full-suite runs with all 94 dev ports occupied by stubs —
+`Tests run: 1216, Failures: 0, Errors: 0, Skipped: 4`, exit 0, **one** Redis container per run
+(six before).
+
+Test-count accounting, so the total is not a mystery: 1205 at `8301c2d2e`, +2 from
+`FacilityResourceMappingTest` landed since, +4 for the closed-loopback post-processor's tests,
++1 for the per-class Redis database allocation, +4 net for the condition's tests (7 replacing 3).
+`Skipped: 4` throughout is the by-design set — two `@Disabled` methods in
+`ExperienceBffIntegrationTest`, two in the `@Disabled` nested `ExperienceV11ComplianceTest$OutboxFields`.
