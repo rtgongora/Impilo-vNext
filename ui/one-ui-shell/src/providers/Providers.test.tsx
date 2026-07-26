@@ -53,6 +53,9 @@ Object.defineProperty(document, "cookie", {
   set: vi.fn(),
 });
 
+const FUTURE_EXPIRY = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+const PAST_EXPIRY = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
 const authUser = {
   id: "user-1",
   email: "clinician@impilo.health",
@@ -107,7 +110,10 @@ describe("Providers", () => {
   });
 
   it("hydrates only valid facility, workspace, and shift continuity for an authenticated session", async () => {
-    sessionStorageMock.setItem("exp:expires_at", "2026-04-10T08:00:00Z");
+    // Relative, not a literal date. This test previously pinned 2026-04-10 and began
+    // failing the moment that passed — a green suite that quietly rots into a red one.
+    sessionStorageMock.setItem("exp:auth_token", "token-1");
+    sessionStorageMock.setItem("exp:expires_at", FUTURE_EXPIRY);
     sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
     sessionStorageMock.setItem("exp:facility", JSON.stringify({
       id: "facility-1",
@@ -140,12 +146,62 @@ describe("Providers", () => {
     await waitFor(() => {
       expect(useFacilityStore.getState().facility?.id).toBe("facility-1");
     });
-    expect(useAuthStore.getState().token).toBeNull();
+    expect(useAuthStore.getState().token).toBe("token-1");
     expect(useAuthStore.getState().refreshToken).toBeNull();
-    expect(useAuthStore.getState().expiresAt).toBe("2026-04-10T08:00:00Z");
+    expect(useAuthStore.getState().expiresAt).toBe(FUTURE_EXPIRY);
     expect(useWorkspaceStore.getState().workspace).toBeNull();
     expect(useShiftStore.getState().shift).toBeNull();
     expect(sessionStorageMock.getItem("exp:workspace")).toBeNull();
     expect(sessionStorageMock.getItem("exp:shift")).toBeNull();
+  });
+
+  // The two properties a2a2e75de introduced when it replaced
+  // `userStr && (token || hasSessionCookie)` with `userStr && token && !isExpired`.
+  // document.cookie is mocked to "exp_has_session=1" for every test in this file, so
+  // the first case is exactly the stale-cookie resurrection the change set out to stop.
+
+  it("refuses to hydrate from a session cookie when no token is stored", async () => {
+    sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
+    sessionStorageMock.setItem("exp:expires_at", FUTURE_EXPIRY);
+    sessionStorageMock.setItem("exp:facility", JSON.stringify({
+      id: "facility-1",
+      name: "Central Hospital",
+      code: "CH",
+      facilityType: "Hospital",
+      capabilities: ["queue"],
+    }));
+
+    render(
+      <Providers>
+        <div>ready</div>
+      </Providers>,
+    );
+    await screen.findByText("ready");
+
+    expect(useAuthStore.getState().token).toBeNull();
+    expect(useFacilityStore.getState().facility).toBeNull();
+  });
+
+  it("refuses to hydrate an expired session even with a token", async () => {
+    sessionStorageMock.setItem("exp:auth_token", "token-1");
+    sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
+    sessionStorageMock.setItem("exp:expires_at", PAST_EXPIRY);
+    sessionStorageMock.setItem("exp:facility", JSON.stringify({
+      id: "facility-1",
+      name: "Central Hospital",
+      code: "CH",
+      facilityType: "Hospital",
+      capabilities: ["queue"],
+    }));
+
+    render(
+      <Providers>
+        <div>ready</div>
+      </Providers>,
+    );
+    await screen.findByText("ready");
+
+    expect(useAuthStore.getState().token).toBeNull();
+    expect(useFacilityStore.getState().facility).toBeNull();
   });
 });
