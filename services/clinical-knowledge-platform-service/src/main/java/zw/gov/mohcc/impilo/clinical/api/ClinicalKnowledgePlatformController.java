@@ -44,6 +44,13 @@ public class ClinicalKnowledgePlatformController {
     private final InterpretationEvaluationService interpretationEvaluationService;
     private final zw.gov.mohcc.impilo.clinical.rules.RuleGovernanceService ruleGovernanceService;
 
+    /**
+     * Paediatric danger-sign evaluation. Field-injected so the shared constructor stays a
+     * stable merge surface, matching the convention used elsewhere in the clinical plane.
+     */
+    @org.springframework.beans.factory.annotation.Autowired
+    private zw.gov.mohcc.impilo.clinical.danger.DangerSignEvaluationService dangerSignEvaluationService;
+
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
             PrescribingEvaluationService prescribingEvaluationService,
@@ -118,6 +125,24 @@ public class ClinicalKnowledgePlatformController {
      * Context-aware interpretation of vitals/labs against patient-appropriate reference intervals, plus
      * the deterministic rules that fire on the interpreted picture. Auditable + advisory.
      */
+    /**
+     * Paediatric danger signs — the ETAT emergency signs, the IMNCI general danger signs, and
+     * the young-infant signs of possible serious bacterial infection.
+     *
+     * <p>The response separates what fired from what was never looked at: a result with
+     * unassessed signs is marked incomplete, because a clean answer built on unasked questions
+     * is the most dangerous output this endpoint could give.</p>
+     */
+    @PostMapping("/paediatric/danger-signs/evaluate")
+    public ResponseEntity<Map<String, Object>> paediatricDangerSigns(@RequestBody Map<String, Object> body) {
+        Integer ageDays = body.get("ageDays") instanceof Number n ? n.intValue() : null;
+        if (ageDays == null && body.get("age_days") instanceof Number n2) {
+            ageDays = n2.intValue();
+        }
+        var assessment = dangerSignEvaluationService.evaluate(ageDays, body);
+        return ResponseEntity.ok(Map.of("data", assessment.toMap()));
+    }
+
     @PostMapping("/interpretation/evaluate")
     public ResponseEntity<Map<String, Object>> interpretationEvaluate(
             @RequestHeader(value = "x-actor-id", defaultValue = "anonymous") String actorId,

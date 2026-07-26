@@ -1,0 +1,298 @@
+{
+  "packId": "impilo.paediatric.danger-signs",
+  "version": "engineering-seed-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": "Signs and actions follow WHO Emergency Triage Assessment and Treatment (ETAT), the IMNCI general danger signs, and the WHO young-infant (possible serious bacterial infection) assessment. Thresholds and wording are an engineering seed and are NOT a ratified national protocol; they require MoHCC and paediatric specialist sign-off before they drive care. See docs/clinical-governance/edliz-engineering-seed-policy.md.",
+  "rules": [
+
+    {
+      "code": "ETAT_AIRWAY_COMPROMISE",
+      "name": "Obstructed or threatened airway",
+      "layer": "DANGER_SIGN",
+      "ruleType": "ETAT_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": false,
+      "ageMinDays": 0,
+      "ageMaxDays": 6574,
+      "requiredInputs": ["airwayObstruction", "stridorAtRest", "centralCyanosis"],
+      "logic": {
+        "any": [
+          {"finding": "airwayObstruction", "present": true},
+          {"finding": "stridorAtRest", "present": true},
+          {"finding": "centralCyanosis", "present": true}
+        ]
+      },
+      "message": "Airway or breathing emergency — manage the airway now.",
+      "explanation": "Obstructed breathing, stridor at rest or central cyanosis is an ETAT emergency sign requiring immediate airway management before any further assessment.",
+      "requiredAction": "Open and clear the airway, give oxygen, and call for senior help. Do not continue the assessment first.",
+      "monitoringInstruction": "Continuous observation with pulse oximetry until the airway is secure.",
+      "sourceRefs": ["WHO ETAT — emergency signs (airway and breathing)"],
+      "testCases": [
+        {"name": "stridor at rest fires", "facts": {"ageDays": 400, "stridorAtRest": "PRESENT"}, "expectFires": true},
+        {"name": "all signs absent does not fire", "facts": {"ageDays": 400, "airwayObstruction": "ABSENT", "stridorAtRest": "ABSENT", "centralCyanosis": "ABSENT"}, "expectFires": false},
+        {"name": "nothing assessed does not fire but is incomplete", "facts": {"ageDays": 400}, "expectFires": false, "expectIncomplete": true}
+      ]
+    },
+
+    {
+      "code": "ETAT_SEVERE_RESPIRATORY_DISTRESS",
+      "name": "Severe respiratory distress",
+      "layer": "DANGER_SIGN",
+      "ruleType": "ETAT_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "ageMinDays": 0,
+      "ageMaxDays": 1824,
+      "requiredInputs": ["vitals.oxygenSaturation", "severeChestIndrawing", "grunting"],
+      "logic": {
+        "any": [
+          {"input": "vitals.oxygenSaturation", "op": "lt", "value": 90},
+          {"finding": "severeChestIndrawing", "present": true},
+          {"finding": "grunting", "present": true}
+        ]
+      },
+      "message": "Severe respiratory distress — give oxygen and treat as severe pneumonia until proven otherwise.",
+      "explanation": "Oxygen saturation below 90%, severe chest indrawing or grunting indicates severe respiratory distress in a child.",
+      "requiredAction": "Give oxygen, position the child, start treatment for severe pneumonia, and arrange urgent referral if the facility cannot provide oxygen and monitoring.",
+      "monitoringInstruction": "Reassess breathing and saturation every 15 minutes until stable.",
+      "sourceRefs": ["WHO ETAT — emergency signs (breathing)", "WHO IMNCI — severe pneumonia or very severe disease"],
+      "testCases": [
+        {"name": "saturation 88 fires", "facts": {"ageDays": 400, "vitals": {"oxygenSaturation": 88}}, "expectFires": true},
+        {"name": "saturation 96 with no other sign does not fire", "facts": {"ageDays": 400, "vitals": {"oxygenSaturation": 96}, "severeChestIndrawing": "ABSENT", "grunting": "ABSENT"}, "expectFires": false},
+        {"name": "grunting alone fires", "facts": {"ageDays": 200, "grunting": "PRESENT"}, "expectFires": true}
+      ]
+    },
+
+    {
+      "code": "ETAT_SHOCK",
+      "name": "Circulatory failure",
+      "layer": "DANGER_SIGN",
+      "ruleType": "ETAT_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "ageMinDays": 0,
+      "ageMaxDays": 6574,
+      "requiredInputs": ["capillaryRefillSeconds", "coldHands", "weakFastPulse"],
+      "logic": {
+        "all": [
+          {"input": "capillaryRefillSeconds", "op": "gt", "value": 3},
+          {"finding": "coldHands", "present": true},
+          {"finding": "weakFastPulse", "present": true}
+        ]
+      },
+      "message": "Signs of shock — give fluids according to protocol now.",
+      "explanation": "Cold hands with capillary refill longer than three seconds and a weak fast pulse together indicate circulatory failure. Blood pressure falls late in children, so waiting for hypotension loses time.",
+      "requiredAction": "Give oxygen, obtain vascular access and give a fluid bolus per protocol, check glucose, and call for senior help.",
+      "monitoringInstruction": "Reassess perfusion and conscious level after each bolus.",
+      "sourceRefs": ["WHO ETAT — emergency signs (circulation)"],
+      "testCases": [
+        {"name": "all three signs fire", "facts": {"ageDays": 400, "capillaryRefillSeconds": 4, "coldHands": "PRESENT", "weakFastPulse": "PRESENT"}, "expectFires": true},
+        {"name": "cold hands alone does not fire", "facts": {"ageDays": 400, "capillaryRefillSeconds": 1, "coldHands": "PRESENT", "weakFastPulse": "ABSENT"}, "expectFires": false},
+        {"name": "unassessed pulse leaves it incomplete", "facts": {"ageDays": 400, "capillaryRefillSeconds": 4, "coldHands": "PRESENT"}, "expectFires": false, "expectIncomplete": true}
+      ]
+    },
+
+    {
+      "code": "ETAT_COMA_OR_CONVULSION",
+      "name": "Coma or active convulsion",
+      "layer": "DANGER_SIGN",
+      "ruleType": "ETAT_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "ageMinDays": 0,
+      "ageMaxDays": 6574,
+      "requiredInputs": ["consciousness", "convulsingNow"],
+      "logic": {
+        "any": [
+          {"input": "consciousness", "op": "in", "values": ["PAIN", "UNRESPONSIVE"]},
+          {"finding": "convulsingNow", "present": true}
+        ]
+      },
+      "message": "Coma or convulsion — protect the airway, check glucose, and treat the convulsion.",
+      "explanation": "A child responding only to pain or not at all, or convulsing now, is an ETAT emergency.",
+      "requiredAction": "Position the airway, give oxygen, check blood glucose immediately and treat hypoglycaemia, give an anticonvulsant if still fitting.",
+      "monitoringInstruction": "Continuous observation of airway, breathing and conscious level.",
+      "sourceRefs": ["WHO ETAT — emergency signs (coma and convulsions)"],
+      "testCases": [
+        {"name": "unresponsive fires", "facts": {"ageDays": 700, "consciousness": "UNRESPONSIVE"}, "expectFires": true},
+        {"name": "alert and not convulsing does not fire", "facts": {"ageDays": 700, "consciousness": "ALERT", "convulsingNow": "ABSENT"}, "expectFires": false}
+      ]
+    },
+
+    {
+      "code": "ETAT_SEVERE_DEHYDRATION",
+      "name": "Severe dehydration in a child with diarrhoea",
+      "layer": "DANGER_SIGN",
+      "ruleType": "ETAT_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": false,
+      "ageMinDays": 0,
+      "ageMaxDays": 1824,
+      "requiredInputs": ["diarrhoea", "sunkenEyes", "skinPinchSlow", "consciousness"],
+      "logic": {
+        "all": [
+          {"finding": "diarrhoea", "present": true},
+          {"any": [
+            {"finding": "sunkenEyes", "present": true},
+            {"finding": "skinPinchSlow", "present": true},
+            {"input": "consciousness", "op": "in", "values": ["PAIN", "UNRESPONSIVE", "IRRITABLE"]}
+          ]}
+        ]
+      },
+      "message": "Diarrhoea with signs of severe dehydration — start rehydration now.",
+      "explanation": "Diarrhoea together with sunken eyes, a slow skin pinch or altered conscious level indicates severe dehydration.",
+      "requiredAction": "Start intravenous or intraosseous rehydration per protocol; if not possible, start nasogastric rehydration and arrange urgent referral.",
+      "monitoringInstruction": "Reassess hydration and conscious level hourly during rehydration.",
+      "sourceRefs": ["WHO ETAT — emergency signs (severe dehydration)", "WHO IMNCI — diarrhoea classification"],
+      "testCases": [
+        {"name": "diarrhoea with slow skin pinch fires", "facts": {"ageDays": 400, "diarrhoea": "PRESENT", "skinPinchSlow": "PRESENT"}, "expectFires": true},
+        {"name": "no diarrhoea does not fire", "facts": {"ageDays": 400, "diarrhoea": "ABSENT", "sunkenEyes": "PRESENT"}, "expectFires": false}
+      ]
+    },
+
+    {
+      "code": "IMNCI_GENERAL_DANGER_SIGNS",
+      "name": "IMNCI general danger signs",
+      "layer": "DANGER_SIGN",
+      "ruleType": "IMNCI_GENERAL_DANGER_SIGN",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "requiredInputs": ["unableToDrinkOrBreastfeed", "vomitsEverything", "convulsions", "lethargicOrUnconscious"],
+      "logic": {
+        "any": [
+          {"finding": "unableToDrinkOrBreastfeed", "present": true},
+          {"finding": "vomitsEverything", "present": true},
+          {"finding": "convulsions", "present": true},
+          {"finding": "lethargicOrUnconscious", "present": true}
+        ]
+      },
+      "message": "General danger sign present — this child needs urgent referral after pre-referral treatment.",
+      "explanation": "Any general danger sign in a child aged two months to five years means very severe disease, whatever the presenting complaint.",
+      "requiredAction": "Give the first dose of appropriate pre-referral treatment, keep the child warm, treat hypoglycaemia, and refer urgently.",
+      "monitoringInstruction": "Do not delay referral to complete the rest of the assessment.",
+      "sourceRefs": ["WHO IMNCI — assess and classify the sick child aged 2 months to 5 years"],
+      "testCases": [
+        {"name": "vomits everything fires", "facts": {"ageDays": 400, "vomitsEverything": "PRESENT"}, "expectFires": true},
+        {"name": "all four absent does not fire", "facts": {"ageDays": 400, "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT"}, "expectFires": false},
+        {"name": "partially assessed is incomplete", "facts": {"ageDays": 400, "vomitsEverything": "ABSENT"}, "expectFires": false, "expectIncomplete": true}
+      ]
+    },
+
+    {
+      "code": "PSBI_YOUNG_INFANT",
+      "name": "Possible serious bacterial infection in a young infant",
+      "layer": "DANGER_SIGN",
+      "ruleType": "PSBI_YOUNG_INFANT_SIGN",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "ageMinDays": 0,
+      "ageMaxDays": 59,
+      "requiredInputs": [
+        "feeding", "convulsions", "movesOnlyWhenStimulated", "vitals.temperature",
+        "vitals.respiratoryRate", "severeChestIndrawing"
+      ],
+      "logic": {
+        "any": [
+          {"input": "feeding", "op": "in", "values": ["POOR", "NONE", "NOT_FEEDING"]},
+          {"finding": "convulsions", "present": true},
+          {"finding": "movesOnlyWhenStimulated", "present": true},
+          {"input": "vitals.temperature", "op": "gte", "value": 37.5},
+          {"input": "vitals.temperature", "op": "lt", "value": 35.5},
+          {"input": "vitals.respiratoryRate", "op": "gte", "value": 60},
+          {"finding": "severeChestIndrawing", "present": true}
+        ]
+      },
+      "message": "Possible serious bacterial infection in an infant under two months — start antibiotics and refer urgently.",
+      "explanation": "In the first two months of life the signs of severe infection are few and non-specific, and deterioration is rapid. Any one of poor feeding, convulsions, movement only on stimulation, fever, hypothermia, fast breathing or severe chest indrawing is treated as possible serious bacterial infection.",
+      "requiredAction": "Give the first dose of injectable antibiotics, keep the infant warm and feeding, treat hypoglycaemia, and refer urgently with the mother.",
+      "monitoringInstruction": "Keep warm and monitor breathing and feeding continuously until transfer.",
+      "sourceRefs": ["WHO IMNCI — young infant age up to 2 months", "WHO — management of possible serious bacterial infection in young infants"],
+      "testCases": [
+        {"name": "hypothermia in a ten-day-old fires", "facts": {"ageDays": 10, "vitals": {"temperature": 35.0}}, "expectFires": true},
+        {"name": "poor feeding fires", "facts": {"ageDays": 10, "feeding": "POOR"}, "expectFires": true},
+        {"name": "fast breathing at 62 fires", "facts": {"ageDays": 20, "vitals": {"respiratoryRate": 62}}, "expectFires": true},
+        {"name": "well infant with everything assessed does not fire", "facts": {"ageDays": 20, "feeding": "WELL", "convulsions": "ABSENT", "movesOnlyWhenStimulated": "ABSENT", "vitals": {"temperature": 36.8, "respiratoryRate": 45}, "severeChestIndrawing": "ABSENT"}, "expectFires": false}
+      ]
+    },
+
+    {
+      "code": "PAEDIATRIC_HYPOGLYCAEMIA",
+      "name": "Hypoglycaemia",
+      "layer": "DANGER_SIGN",
+      "ruleType": "ETAT_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": false,
+      "ageMinDays": 0,
+      "ageMaxDays": 6574,
+      "requiredInputs": ["bloodGlucoseMmol"],
+      "logic": {
+        "input": "bloodGlucoseMmol", "op": "lt", "value": 2.5
+      },
+      "message": "Blood glucose below 2.5 mmol/L — treat hypoglycaemia immediately.",
+      "explanation": "Hypoglycaemia is common in sick and malnourished children and causes avoidable brain injury; it is corrected before anything else.",
+      "requiredAction": "Give glucose per protocol (intravenous dextrose, or expressed breast milk or sugar water by nasogastric tube if access is not available), then recheck.",
+      "monitoringInstruction": "Recheck blood glucose after 30 minutes and continue feeding.",
+      "sourceRefs": ["WHO ETAT — emergency treatment (hypoglycaemia)"],
+      "testCases": [
+        {"name": "glucose 1.8 fires", "facts": {"ageDays": 300, "bloodGlucoseMmol": 1.8}, "expectFires": true},
+        {"name": "glucose 5.0 does not fire", "facts": {"ageDays": 300, "bloodGlucoseMmol": 5.0}, "expectFires": false},
+        {"name": "glucose never measured is incomplete", "facts": {"ageDays": 300}, "expectFires": false, "expectIncomplete": true}
+      ]
+    },
+
+    {
+      "code": "SEVERE_ACUTE_MALNUTRITION_WITH_DANGER",
+      "name": "Severe acute malnutrition with a danger sign",
+      "layer": "DANGER_SIGN",
+      "ruleType": "ETAT_PRIORITY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "ageMinDays": 183,
+      "ageMaxDays": 1824,
+      "requiredInputs": ["muacCm", "bilateralPittingOedema", "appetiteTest"],
+      "logic": {
+        "all": [
+          {"any": [
+            {"input": "muacCm", "op": "lt", "value": 11.5},
+            {"finding": "bilateralPittingOedema", "present": true}
+          ]},
+          {"any": [
+            {"input": "appetiteTest", "op": "in", "values": ["FAILED", "NOT_PASSED"]},
+            {"finding": "lethargicOrUnconscious", "present": true},
+            {"input": "vitals.temperature", "op": "lt", "value": 35.5}
+          ]}
+        ]
+      },
+      "message": "Severe acute malnutrition with complications — admit for inpatient stabilisation.",
+      "explanation": "A child with severe acute malnutrition who fails the appetite test or has a danger sign cannot be managed as an outpatient.",
+      "requiredAction": "Admit for stabilisation: treat hypoglycaemia and hypothermia, start cautious feeding and antibiotics per protocol. Do not give a standard fluid bolus.",
+      "monitoringInstruction": "Monitor glucose, temperature and feeding closely during the stabilisation phase.",
+      "sourceRefs": ["WHO guideline on the prevention and management of wasting and nutritional oedema (2023)"],
+      "testCases": [
+        {"name": "oedema with failed appetite test fires", "facts": {"ageDays": 500, "bilateralPittingOedema": "PRESENT", "appetiteTest": "FAILED"}, "expectFires": true},
+        {"name": "low MUAC with passed appetite and no danger sign does not fire", "facts": {"ageDays": 500, "muacCm": 11.0, "bilateralPittingOedema": "ABSENT", "appetiteTest": "PASSED", "lethargicOrUnconscious": "ABSENT", "vitals": {"temperature": 36.5}}, "expectFires": false}
+      ]
+    }
+  ]
+}
