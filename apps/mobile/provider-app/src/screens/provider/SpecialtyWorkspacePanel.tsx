@@ -18,34 +18,58 @@ type Props = {
   onBack: () => void;
 };
 
-type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withdrawn";
+type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withheld";
 
-function formKindForTool(toolName: string, index: number): ToolFormKind {
-  if (index >= 4) return "soon";
+/**
+ * Burns arithmetic is withheld from this app.
+ *
+ * A Rule-of-9s form and a Parkland form used to live here, and both produced
+ * plausible-looking numbers that were clinically wrong:
+ *
+ *  - Rule of 9s used fixed *adult* region percentages with no age adjustment. Paediatric
+ *    body proportions differ substantially (a child's head is a far larger share of body
+ *    surface), which is the reason Lund–Browder is age-banded — and this app is used for
+ *    children.
+ *  - Parkland rendered `4 ml × kg × %TBSA` as a flat 24-hour total. Parkland is clocked
+ *    from the **time of injury, not arrival**, and is given as half over the first 8 hours
+ *    from injury and half over the following 16. The form had no clock input and no split,
+ *    so a patient arriving three hours after a burn — who has already spent three hours of
+ *    the first-half window — was shown a number wrong in the under-resuscitating direction.
+ *  - Neither persisted. Rule of 9s "saved" with `Alert.alert("Saved", …recorded locally)`,
+ *    telling the clinician it had been recorded while recording nothing.
+ *
+ * Acute burns %TBSA estimation and fluid resuscitation belong to the Emergency,
+ * Resuscitation and Acute Care pack and land in `libs/emergency-domain`
+ * (`docs/registry/iatg-emergency-leases.md` §5b), age-banded through
+ * `libs/paediatric-domain` using the `bandKey` convention rather than overloading
+ * `ageDays`. This app consumes that governed implementation once it exists; it does not
+ * grow a fourth one. Do not restore these forms by adding a save to the old arithmetic.
+ */
+const WITHHELD_BURNS_ARITHMETIC = [
+  "rule of 9",
+  "rule of nine",
+  "lund",
+  "tbsa",
+  "parkland",
+  "fluid resuscitation",
+  "fluid calculator",
+];
+
+/**
+ * Workspaces where the generic `sum` fallback must not stand in for a clinical tool.
+ * In Burns it labelled a two-number adder "Graft Planning", which reads as a clinical
+ * result. These fall through to the honest "not implemented" state instead.
+ */
+const NO_GENERIC_CALCULATOR_WORKSPACES = new Set(["burns"]);
+
+export function formKindForTool(toolName: string, index: number, workspaceId: string): ToolFormKind {
   const t = toolName.toLowerCase();
-  // Burns TBSA and Parkland are WITHDRAWN, not merely unimplemented — they shipped, they were
-  // used, and they produced wrong numbers a clinician could act on:
-  //
-  //  - the rule-of-9 chart used fixed ADULT body proportions in an app that treats children. A
-  //    small child's head is roughly twice the adult share of body surface, so an adult chart
-  //    UNDER-estimates a paediatric burn — and TBSA is the multiplier in the fluid calculation,
-  //    so the error propagates straight into under-resuscitation.
-  //  - Parkland returned a single 24-hour volume with no injury clock. Half that volume is due
-  //    within 8 hours OF THE BURN, not of arrival, so a patient presenting late needs the same
-  //    half in whatever remains of that window. A lone 24-hour figure invites an even infusion
-  //    and under-resuscitates exactly the patient who is already behind.
-  //  - and it claimed to save. "TBSA X% recorded locally" was an Alert, nothing was persisted.
-  //
-  // A wrong number carries more authority than no number, so these stay withdrawn until the
-  // governed implementation lands (libs/burn-domain: age-adjusted Lund-Browder + injury-clocked
-  // Parkland, with a real pct.burn_assessment write). Emergency pack W1; see
-  // docs/registry/iatg-emergency-leases.md §5b.
-  if (t.includes("rule of 9") || t.includes("rule of 9s") || t.includes("burns assessment")) return "withdrawn";
-  if (t.includes("parkland") || t.includes("fluid resuscitation")) return "withdrawn";
+  if (WITHHELD_BURNS_ARITHMETIC.some((token) => t.includes(token))) return "withheld";
+  if (index >= 4) return "soon";
   if (t.includes("bsa")) return "bsa";
   if (t.includes("kt/v") || t.includes("ktv")) return "ktv";
   if (t.includes("checklist") || t.includes("pre-chemo")) return "checklist";
-  if (index === 3) return "sum";
+  if (index === 3) return NO_GENERIC_CALCULATOR_WORKSPACES.has(workspaceId) ? "soon" : "sum";
   return "notes";
 }
 
@@ -89,12 +113,21 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
 
       <Text style={styles.sectionLabel}>Specialty tools</Text>
       <ScrollView style={styles.toolList} contentContainerStyle={{ paddingBottom: 24 }}>
-        {workspace.tools.map((tool, index) => (
-          <TouchableOpacity key={`${tool}-${index}`} style={styles.toolCard} onPress={() => setModalTool({ name: tool, index })}>
-            <Text style={styles.toolTitle}>{tool}</Text>
-            <Text style={styles.toolHint}>{index < 4 ? "Tap for workspace form" : "Coming soon overview"}</Text>
-          </TouchableOpacity>
-        ))}
+        {workspace.tools.map((tool, index) => {
+          const kind = formKindForTool(tool, index, workspace.id);
+          return (
+            <TouchableOpacity key={`${tool}-${index}`} style={styles.toolCard} onPress={() => setModalTool({ name: tool, index })}>
+              <Text style={styles.toolTitle}>{tool}</Text>
+              <Text style={[styles.toolHint, kind === "withheld" && styles.toolHintWithheld]}>
+                {kind === "withheld"
+                  ? "Unavailable — calculator withdrawn"
+                  : kind === "soon"
+                    ? "Coming soon overview"
+                    : "Tap for workspace form"}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       <Modal visible={!!modalTool} animationType="slide" transparent onRequestClose={() => setModalTool(null)}>
@@ -102,6 +135,7 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
           <View style={styles.modalSheet}>
             {modalTool && (
               <ToolModalBody
+                workspaceId={workspace.id}
                 workspaceName={workspace.name}
                 toolName={modalTool.name}
                 toolIndex={modalTool.index}
@@ -116,32 +150,46 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
 }
 
 function ToolModalBody({
+  workspaceId,
   workspaceName,
   toolName,
   toolIndex,
   onClose,
 }: {
+  workspaceId: string;
   workspaceName: string;
   toolName: string;
   toolIndex: number;
   onClose: () => void;
 }) {
-  const kind = formKindForTool(toolName, toolIndex);
+  const kind = formKindForTool(toolName, toolIndex, workspaceId);
 
-  if (kind === "withdrawn") {
+  if (kind === "withheld") {
     return (
       <>
         <Text style={styles.modalTitle}>{toolName}</Text>
-        <Text style={styles.modalDesc}>
-          This calculator has been withdrawn because it gave unsafe results. The burn-surface chart
-          used adult body proportions for every patient, which under-estimates a child&apos;s burn, and
-          the fluid estimate ignored the time of injury, which under-estimates fluid for anyone who
-          presents late. It also did not save what you entered.
-        </Text>
-        <Text style={styles.modalDesc}>
-          Use your unit&apos;s printed burn chart and fluid protocol, and record the assessment in the
-          patient&apos;s notes. A governed replacement is in development.
-        </Text>
+        <Text style={styles.modalMeta}>{workspaceName}</Text>
+        <Text style={styles.withheldBadge}>Calculator withdrawn — do not use a remembered value</Text>
+        <ScrollView style={{ maxHeight: 320 }}>
+          <Text style={styles.modalDesc}>
+            This calculator has been removed because it produced numbers that looked right and were
+            not. The %TBSA estimate used fixed adult body proportions with no age adjustment, and the
+            Parkland total was shown as a flat 24-hour volume with no injury-time clock and no
+            first-8h / second-16h split. Nothing it produced was ever saved to the record.
+          </Text>
+          <Text style={styles.modalDesc}>
+            Estimate %TBSA from an age-appropriate Lund–Browder chart, and clock fluid resuscitation
+            from the <Text style={styles.emphasis}>time of injury</Text> — not from arrival — giving
+            half the calculated volume over the first 8 hours from injury and half over the next 16.
+            Record the result in the burns chart or the encounter note, and titrate against urine
+            output.
+          </Text>
+          <Text style={styles.modalDesc}>
+            A governed, age-banded burns calculation that persists against the emergency episode is
+            being delivered by the Emergency, Resuscitation and Acute Care pack. This workspace will
+            use that one rather than keep a private copy.
+          </Text>
+        </ScrollView>
         <TouchableOpacity style={styles.primaryBtn} onPress={onClose}>
           <Text style={styles.primaryBtnText}>Close</Text>
         </TouchableOpacity>
@@ -321,6 +369,7 @@ const styles = StyleSheet.create({
   },
   toolTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
   toolHint: { fontSize: 12, color: colors.gray[500], marginTop: 4 },
+  toolHintWithheld: { color: "#B45309", fontWeight: "600" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
   modalSheet: {
     backgroundColor: "#fff",
@@ -332,7 +381,17 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontSize: 17, fontWeight: "700", color: colors.gray[900] },
   modalMeta: { fontSize: 12, color: colors.gray[500] },
-  modalDesc: { fontSize: 14, color: colors.gray[600], lineHeight: 20 },
+  modalDesc: { fontSize: 14, color: colors.gray[600], lineHeight: 20, marginBottom: 10 },
+  emphasis: { fontWeight: "700", color: colors.gray[800] },
+  withheldBadge: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#92400E",
+    backgroundColor: "#FEF3C7",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
   formBlock: { gap: 10 },
   notesLabelRow: {
     flexDirection: "row",
