@@ -143,7 +143,7 @@ Heads re-verified at `b9579561d`, **including untracked files** (§1).
 | `inventory-service` (Dura) | V014 | surgery V015–V020 | **V200–V219** | emergency kit V200–02 |
 | `rito-quality-safety-service` | V007 | trauma V010–V019 | **V200–V219** | after-action linkage V200 |
 | `notification-service` | V017 | surgery V018–V020 | **V200–V219** | emergency templates V200 |
-| `vashandi-workforce-service` | V008 | trauma V015–V024 · surgery V009–V012 | **V200–V219** | emergency roster view V200 |
+| `vashandi-workforce-service` | V008 | trauma V015–V024 (pre-convention anomaly — migrates to a hundred band at trauma's next wave) · surgery V300–V329 (surgery's own lease is authoritative; the V009–V012 previously recorded here was a stale pre-band draft — corrected by coordinator 2026-07-26) · core workforce keeps the low sequential band V001–V0xx (V009 on-call/swaps landed 2026-07-26) | **V200–V219** | emergency roster view V200 |
 | `vito-service` | V048 | trauma V035–V044 | **V200–V219** | provisional-identity hardening V200 |
 | `mental-health-service` | — | — | **V001–V030** | new service — no contention, so ordinary numbering |
 | `costing-engine-service` (COSTA) | V024 | surgery V025–V028 | **none needed** | emergency override + deferred-charge reconciliation already built (V012/V014) |
@@ -447,6 +447,31 @@ Their four commitments, which this pack builds against:
 NOT NULL`. Verified on disk. **No foreign key, deliberately** — `pct.emergency_episode` does not
 exist yet and a hard constraint would couple the two lanes' deploy order in both directions. It is a
 documented soft reference, validated in application code until V200 lands.
+
+**⚠ V200 IS NOW PUSHED (`dd540d56d`), so the FK is due — and its owner may have gone.** The Adult
+Medicine lane reserved the work and then posted a closing note, so this is recorded as an **open
+cross-pack item with no confirmed owner**. Everything needed to write it:
+
+| What | Value |
+|---|---|
+| Target | `pct.emergency_episode(episode_id)` |
+| PK shape | single-column `UUID` — their column list needs no change |
+| Deletion | **`ON DELETE RESTRICT`**, never CASCADE |
+| Rollout | `ADD CONSTRAINT ... NOT VALID`, then `VALIDATE CONSTRAINT` as a separate statement |
+| Their block | consumed through **V107**; next free is **V108** |
+| Safe because | no `emergency_episode` row is ever hard-deleted — a merge sets `MERGED` + `merged_into_id`, so RESTRICT is a backstop and not a workflow |
+
+**If the Adult Medicine lane does not resume, this pack writes it** under a coordinator handoff
+rather than leaving a soft reference indefinitely. A nullable cross-table reference with no owner and
+no constraint is exactly the orphan CC-5 exists to reject, and "someone was going to add the FK" is
+not a state anyone can audit.
+
+**Also enforced on their side, and it constrains this pack's ED write path:** their V107 models
+medication reconciliation as the comparison *event* rather than another medicine list, and
+**completion is refused while any discrepancy has no decided action.** An unfinished reconciliation
+must never read as a clean one, because "no discrepancies outstanding" is the claim completion makes.
+So an emergency admission that triggers an ADMISSION-context reconciliation cannot report it
+complete until every discrepancy is dispositioned.
 
 **Decision when V200 lands: promote it to a real FK with `ON DELETE RESTRICT`.** Both tables live in
 the `pct` schema and the same service, so there is no cross-service coupling to trade away, and a

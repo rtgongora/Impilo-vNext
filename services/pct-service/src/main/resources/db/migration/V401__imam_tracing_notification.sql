@@ -1,6 +1,6 @@
 -- Defaulter tracing must not depend on a human recording the absence.
 --
--- V104 emits IMAM_TRACING_REQUIRED when a review is recorded as missed. Proving the vertical on
+-- V400 emits IMAM_TRACING_REQUIRED when a review is recorded as missed. Proving the vertical on
 -- the estate exposed the hole in that: a child who simply stops coming, and for whom nobody
 -- creates the missed-visit row, produces no event at all. The pull-based worklist finds them, but
 -- nothing pushes — and the failure mode of this whole feature is a child nobody notices has

@@ -182,7 +182,7 @@ landed.
 
 **The split.** The clinical knowledge platform owns the protocol as governed content
 (`clinical/imam-programme.json`, `POST /internal/v1/clinical/paediatric/imam/{eligibility,progress}`);
-pct-service owns the record (`V104`/`V105`, `/v1/imam/**`); experience-bff proxies it. The engine is
+pct-service owns the record (`V400`/`V401`, `/v1/imam/**`); experience-bff proxies it. The engine is
 stateless in the same way as the growth and immunisation engines — PCT supplies the episode and its
 reviews and gets a verdict — so a protocol revision is a reviewable content diff and the same
 evaluation runs unchanged against an offline copy.
@@ -246,7 +246,7 @@ programme:
 - **Defaulter tracing only fired when a human recorded the absence.** A child who simply stops
   coming, and for whom nobody creates the missed-visit row, produced no event at all — precisely the
   child the feature exists for. An hourly sweep now raises the event from elapsed time, idempotent
-  per crossing (`V105`), and it was proven live raising `DEFAULTER` for two children nobody had
+  per crossing (`V401`), and it was proven live raising `DEFAULTER` for two children nobody had
   recorded anything about, one of them never reviewed since enrolment.
 
 **A build-script trap worth knowing.** `scripts/full-boot/_full-boot-common.sh` defaults
@@ -627,7 +627,7 @@ birthdays complete a month late rather than early, so a minimum-age gate never o
 | Rules framework and danger signs | `services/clinical-knowledge-platform-service/.../rules/tabular/`, `.../danger/`, migration V006 |
 | Dosing | `services/clinical-knowledge-platform-service/.../prescribing/` |
 | IMAM programme knowledge | `services/clinical-knowledge-platform-service/.../imam/`, `resources/clinical/imam-programme.json` |
-| IMAM episode record | `services/pct-service/.../core/clinical/Imam*.java`, migrations V104–V105 |
+| IMAM episode record | `services/pct-service/.../core/clinical/Imam*.java`, migrations V400–V401 |
 | Clinical content | `services/*/src/main/resources/clinical/*.json` |
 | Growth reference tables (WHO 2006 and Fenton 2013) | `libs/paediatric-domain/src/main/resources/growth/` |
 

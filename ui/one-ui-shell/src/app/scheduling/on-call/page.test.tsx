@@ -102,9 +102,13 @@ describe("OnCallPage", () => {
               assignment_date: "2026-04-06",
               specialty: "Internal Medicine",
               shift_kind: "24hr",
-              primary_staff_name: "Dr. Tendai Mapfumo",
+              primary_workforce_profile_id: "11111111-1111-4111-8111-111111111111",
+              primary_staff_reference: "PW-004821",
+              primary_shift_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
               primary_phone: "+263770000000",
-              backup_staff_name: "Dr. Grace Musekwa",
+              backup_workforce_profile_id: "22222222-2222-4222-8222-222222222222",
+              backup_staff_reference: "PW-009134",
+              backup_shift_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
               backup_phone: "+263770000001",
             },
           },
@@ -118,6 +122,7 @@ describe("OnCallPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Internal Medicine")).toBeInTheDocument();
     });
-    expect(screen.getByText("Dr. Tendai Mapfumo")).toBeInTheDocument();
+    // The rota shows the worker reference vashandi holds, not an invented name.
+    expect(screen.getAllByText("PW-004821").length).toBeGreaterThan(0);
   });
 });

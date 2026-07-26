@@ -60,6 +60,35 @@ public class VashandiServiceClient {
         return exchange(HttpMethod.DELETE, relativePath, Map.of(), null);
     }
 
+    // ── Staffing: roster week, on-call rota, shift swaps (V009) ──────────────
+    //
+    // Repointed off TusoServiceClient, which called /v1/staffing/* — paths no service in the
+    // estate serves, so the roster screen, on-call screen and control tower rendered empty while
+    // every layer reported success. Vashandi owns rostering (vsh_roster/vsh_shift); scheduled
+    // on-call is a projection over shifts carrying an on_call_role, not a second store.
+
+    public JsonNode getRosterWeek(String facilityId, String weekStart) {
+        return unwrap(get("/staffing/roster-week",
+                Map.of("facility_id", facilityId, "week_start", weekStart)));
+    }
+
+    public JsonNode listOnCall(String facilityId, String weekStart) {
+        return unwrap(get("/staffing/on-call",
+                Map.of("facility_id", facilityId, "week_start", weekStart)));
+    }
+
+    public JsonNode listSwapRequests(String facilityId) {
+        return unwrap(get("/staffing/on-call/swaps", Map.of("facility_id", facilityId)));
+    }
+
+    public JsonNode createSwapRequest(Object body) {
+        return unwrap(post("/staffing/on-call/swaps", body));
+    }
+
+    public JsonNode updateSwapRequest(String swapId, Object body) {
+        return unwrap(patch("/staffing/on-call/swaps/" + swapId, body));
+    }
+
     public JsonNode listWorkforceProfiles(Map<String, String> queryParams) {
         return unwrap(get("/workforce-profiles", queryParams));
     }

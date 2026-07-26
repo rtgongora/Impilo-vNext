@@ -656,54 +656,17 @@ public class TusoServiceClient {
     }
 
     // ── Staffing ──────────────────────────────────────────────────────
-
-    /** Get roster for a week. */
-    public JsonNode getRosterWeek(String facilityId, String weekStart, String workspaceId) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/staffing/roster-week")
-                .queryParam("facilityId", facilityId)
-                .queryParam("weekStart", weekStart);
-        if (workspaceId != null && !workspaceId.isBlank()) builder.queryParam("workspaceId", workspaceId);
-        log.info("TUSO: Getting roster week facilityId={}, weekStart={}", facilityId, weekStart);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
-        return extractData(response);
-    }
-
-    /** List on-call assignments for a facility/week. */
-    public JsonNode listOnCall(String facilityId, String weekStart) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/staffing/on-call")
-                .queryParam("facilityId", facilityId)
-                .queryParam("weekStart", weekStart)
-                .toUriString();
-        log.info("TUSO: Listing on-call facilityId={}, weekStart={}", facilityId, weekStart);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    /** List swap requests for a facility. */
-    public JsonNode listSwapRequests(String facilityId) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/staffing/on-call/swaps")
-                .queryParam("facilityId", facilityId)
-                .toUriString();
-        log.info("TUSO: Listing swap requests facilityId={}", facilityId);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    /** Create a swap request. */
-    public JsonNode createSwapRequest(Map<String, Object> body) {
-        String url = baseUrl + "/v1/staffing/on-call/swaps";
-        log.info("TUSO: Creating swap request");
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    /** Update a swap request (approve/decline). */
-    public JsonNode updateSwapRequest(String swapId, Map<String, Object> body) {
-        String url = baseUrl + "/v1/staffing/on-call/swaps/" + swapId;
-        log.info("TUSO: Updating swap request={}", swapId);
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
+    //
+    // getRosterWeek/listOnCall/listSwapRequests/createSwapRequest/updateSwapRequest lived here and
+    // called tuso /v1/staffing/*, which no service serves — so the roster screen, the on-call
+    // screen and the control tower rendered empty while every layer reported success.
+    //
+    // Rostering is vashandi's (vsh_roster/vsh_shift), and scheduled on-call is a projection over
+    // the shifts carrying an on_call_role rather than a separate concept. See
+    // VashandiServiceClient. Do not reintroduce a staffing call here.
+    //
+    // Note tuso DOES serve shifts, at /v1/internal/facilities/{facilityId}/… — a different lane's
+    // repoint, and not the same thing as the weekly roster read.
 
     // ── Appointments/Scheduling ───────��───────────────────────────────
 
