@@ -128,6 +128,51 @@ band is collision-proof against any lane reserving above a head, and ownership i
 from the version alone. Flyway sorts by version and gaps are free, so the cost is cosmetic and the
 safety benefit is not.
 
+### 🔴 THE BAND CONVENTION'S TRAP: a cross-lane FK must live in the OWNER's band
+
+Reserving by numeric distance solves collisions and **creates a dependency-ordering trap**. Flyway
+applies migrations in version order, so **a lane in a lower band can never reference a table created
+in a higher band** — the referencing migration runs first and the table does not exist yet.
+
+Found the hard way, 2026-07-26. The Adult Medicine lane wrote the `pct_medical_episodes` →
+`emergency_episode` foreign key at **V108** exactly as specified, dry-ran it against the preview
+schema positive *and* negative, and got green. Reproduced on a clean Postgres:
+
+```
+=== FLYWAY ORDER: V108 (FK) runs BEFORE V200 (the table) ===
+ERROR:  relation "emergency_episode" does not exist
+```
+
+Applied in the *discussed* order (V200 then V108) both succeed, which is why preview was green and a
+clean boot would not have been. **The trap is invisible in any environment where the referenced table
+is already deployed** — which is every environment except a fresh one, and a fresh one is what a
+full-boot is.
+
+**THE RULE: a cross-lane migration must not DEPEND ON an object owned by a higher band. Any such
+dependency lives in the band of the lane that owns the depended-on object, never the depending one.**
+
+Stated as "depend on" rather than "reference" at the Adult Medicine lane's suggestion, because it is
+the same failure in several disguises: a foreign key, an `INSERT` referencing a higher-band table, an
+`ALTER` of one, or a seed row whose lookup resolves against one — all fail identically and all for the
+same reason. "Reference" reads as being about foreign keys and would have let the next case through.
+
+So an FK onto `pct.emergency_episode` is written in the V2xx block by this pack, even when the
+referencing table belongs to another lane. The referencing lane keeps a pointer in its own block
+saying where the constraint lives and why, so table history stays readable rather than looking
+forgotten.
+
+**Closed, 2026-07-26:** V108 withdrawn (`ac620b355`), rewritten as **`V201__medical_episode_emergency_fk.sql`**
+carrying the Adult Medicine lane's rationale verbatim. Verified on a clean Postgres in Flyway order,
+with the negative control the original lacked: V200 then V201 both apply; a dangling
+`emergency_episode_id` is rejected by name; a real reference is accepted; and `pg_constraint.convalidated`
+is `t`, so the constraint is validated rather than left `NOT VALID`.
+
+This cost is mine: I proposed the band convention (§3) without thinking the dependency direction
+through, and a peer lane inherited the consequence. Recorded prominently because it binds every lane
+that has adopted a band, not just this pair — Adult Medicine V100s, Emergency V200s, Surgery V300s
+means **surgery can reference anything, this pack can reference Adult Medicine's tables, and neither
+of the lower bands can reference upward.**
+
 Heads re-verified at `b9579561d`, **including untracked files** (§1).
 
 | Service | Head today (incl. untracked) | Peer claims | **Emergency block** | Sub-ranges |
@@ -143,7 +188,7 @@ Heads re-verified at `b9579561d`, **including untracked files** (§1).
 | `inventory-service` (Dura) | V014 | surgery V015–V020 | **V200–V219** | emergency kit V200–02 |
 | `rito-quality-safety-service` | V007 | trauma V010–V019 | **V200–V219** | after-action linkage V200 |
 | `notification-service` | V017 | surgery V018–V020 | **V200–V219** | emergency templates V200 |
-| `vashandi-workforce-service` | V008 | trauma V015–V024 · surgery V009–V012 | **V200–V219** | emergency roster view V200 |
+| `vashandi-workforce-service` | V008 | trauma V015–V024 (pre-convention anomaly — migrates to a hundred band at trauma's next wave) · surgery V300–V329 (surgery's own lease is authoritative; the V009–V012 previously recorded here was a stale pre-band draft — corrected by coordinator 2026-07-26) · core workforce keeps the low sequential band V001–V0xx (V009 on-call/swaps landed 2026-07-26) | **V200–V219** | emergency roster view V200 |
 | `vito-service` | V048 | trauma V035–V044 | **V200–V219** | provisional-identity hardening V200 |
 | `mental-health-service` | — | — | **V001–V030** | new service — no contention, so ordinary numbering |
 | `costing-engine-service` (COSTA) | V024 | surgery V025–V028 | **none needed** | emergency override + deferred-charge reconciliation already built (V012/V014) |
@@ -447,6 +492,31 @@ Their four commitments, which this pack builds against:
 NOT NULL`. Verified on disk. **No foreign key, deliberately** — `pct.emergency_episode` does not
 exist yet and a hard constraint would couple the two lanes' deploy order in both directions. It is a
 documented soft reference, validated in application code until V200 lands.
+
+**⚠ V200 IS NOW PUSHED (`dd540d56d`), so the FK is due — and its owner may have gone.** The Adult
+Medicine lane reserved the work and then posted a closing note, so this is recorded as an **open
+cross-pack item with no confirmed owner**. Everything needed to write it:
+
+| What | Value |
+|---|---|
+| Target | `pct.emergency_episode(episode_id)` |
+| PK shape | single-column `UUID` — their column list needs no change |
+| Deletion | **`ON DELETE RESTRICT`**, never CASCADE |
+| Rollout | `ADD CONSTRAINT ... NOT VALID`, then `VALIDATE CONSTRAINT` as a separate statement |
+| Their block | consumed through **V107**; next free is **V108** |
+| Safe because | no `emergency_episode` row is ever hard-deleted — a merge sets `MERGED` + `merged_into_id`, so RESTRICT is a backstop and not a workflow |
+
+**If the Adult Medicine lane does not resume, this pack writes it** under a coordinator handoff
+rather than leaving a soft reference indefinitely. A nullable cross-table reference with no owner and
+no constraint is exactly the orphan CC-5 exists to reject, and "someone was going to add the FK" is
+not a state anyone can audit.
+
+**Also enforced on their side, and it constrains this pack's ED write path:** their V107 models
+medication reconciliation as the comparison *event* rather than another medicine list, and
+**completion is refused while any discrepancy has no decided action.** An unfinished reconciliation
+must never read as a clean one, because "no discrepancies outstanding" is the claim completion makes.
+So an emergency admission that triggers an ADMISSION-context reconciliation cannot report it
+complete until every discrepancy is dispositioned.
 
 **Decision when V200 lands: promote it to a real FK with `ON DELETE RESTRICT`.** Both tables live in
 the `pct` schema and the same service, so there is no cross-service coupling to trade away, and a

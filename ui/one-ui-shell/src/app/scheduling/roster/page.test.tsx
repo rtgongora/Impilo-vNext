@@ -82,13 +82,18 @@ describe("RosterPage", () => {
           id: "shift-1",
           type: "StaffingShift",
           attributes: {
-            user_id: "dr.mapfumo",
-            staff_display_name: "Dr. Tendai Mapfumo",
+            // Vashandi is the rostering SoR and holds no names — the worker reference is what a
+            // rota can honestly show without inventing a person's name.
+            workforce_profile_id: "11111111-1111-4111-8111-111111111111",
+            staff_reference: "PW-004821",
             facility_id: "f1000000-0000-0000-0000-000000000001",
-            workspace_id: null,
+            shift_type: "DAY",
+            on_call_role: null,
+            specialty: null,
             status: "ACTIVE",
             started_at: "2000-01-01T00:00:00.000Z",
             ended_at: null,
+            virtual_pool_id: null,
           },
         },
       ],
@@ -98,7 +103,7 @@ describe("RosterPage", () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText("Dr. Tendai Mapfumo")).toBeInTheDocument();
+      expect(screen.getByText("PW-004821")).toBeInTheDocument();
     });
   });
 });

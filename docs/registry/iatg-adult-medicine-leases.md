@@ -63,7 +63,7 @@ leases as committed rather than as first drafted.
 
 | Service | Head today | Existing claims (as committed) | **Adult Medicine block** | Sub-ranges |
 |---|---|---|---|---|
-| `pct-service` | V100 | trauma V035–V069 · RMNP V058/V059/V061–V069 · **this pack V060 + V100** · emergency V200–V239 · **paediatric/IMAM V104–V105 (carve-out, see note)** | **V100–V129 excl. V104–V105** | problem model V100–V103 (landed: V100 problems · V101 medical episode · V102 clinical documents · V103 problem links) · clerking + structured history V106–V109 · medication reconciliation V110–V112 · programme enrolment (HIV/TB/NCD) V113–V116 · chronic registers V117–V120 · reserve V121–V129 |
+| `pct-service` | V100 | trauma V035–V069 · RMNP V058/V059/V061–V069 · **this pack V060 + V100** · emergency V200–V239 · **paediatric/IMAM V104–V105 (carve-out, see note)** | **V100–V129 excl. V104–V105 (retired)** | problem model V100–V103 (landed: V100 problems · V101 medical episode · V102 clinical documents · V103 problem links) · clerking + structured history V106–V109 · medication reconciliation V110–V112 · programme enrolment (HIV/TB/NCD) V113–V116 · chronic registers V117–V120 · reserve V121–V129 |
 | `clinical-knowledge-platform-service` | V006 | surgery V007–V020 · RMNP V007–V009 · emergency V200–V229 | **V051–V080** | rule-governance + source provenance V051 · adult content tranches V052–V070 · reserve V071–V080 |
 | `inpatient-service` | V066 | trauma V035–V064 (**dead space**) · surgery V067–V080 · emergency V200–V229 | **V111–V130** | medical ward workspace V111–V114 · reserve V115–V130 |
 | `zibo-service` | V007 | surgery V008–V014 · emergency V200–V219 | **V035–V049** | adult medical value sets V035–V040 · DAK artifact registry V041–V044 |
@@ -74,16 +74,21 @@ leases as committed rather than as first drafted.
 `pct` V061–V069 remains RMNP's; this pack does **not** treat the gap between V060 and V100 as
 available.
 
-> **Coordinator amendment, 2026-07-26 (V104–V105 carve-out).** During the IMAM merge window, the IMAM
-> lane's `V058/V059` collided with RMNP's identically numbered migrations on canonical and were
-> renumbered to **V104/V105** (`V104__imam_episodes.sql`, `V105__imam_tracing_notification.sql`), which
-> landed on canonical and are applied on the preview estate. Those two numbers sat inside this pack's
-> block and its planned "medical episode" sub-range — which had in fact already landed at V101, so no
-> Adult Medicine file was displaced. Rather than force a second live flyway-history repair, the
-> coordinator cedes **V104–V105 to the paediatric/IMAM lane permanently**. This pack's next free pct
-> number is **V106**. Process note for every lane: a renumber must target numbers above ALL committed
-> lease claims (per the fleet law), or obtain an explicit carve-out like this one — and the carve-out
-> must be written into the affected lease, not just announced in a message.
+> **Coordinator amendment, 2026-07-26, second revision (V104–V105 PERMANENTLY RETIRED).** History: the
+> IMAM lane's `V058/V059` collided with RMNP's identically numbered migrations and were renumbered to
+> V104/V105 — inside this pack's block — which the first revision of this note ceded to IMAM as a
+> carve-out. IMAM has since renumbered again to **V400/V401** (joining the hundred-band convention:
+> Adult V100s · Emergency V200s · Surgery V300s · paediatric/IMAM V400s), so the carve-out is moot.
+> **V104 and V105 are retired and must never be used by any lane**: they were applied on at least one
+> estate database under the IMAM names before the rename, and a third lane reusing them is the exact
+> situation that forces the next live flyway-history repair. They are scar tissue; leave the gap.
+> This pack's block reads **V100–V129 excl. V104–V105 (retired)**; landed through V106
+> (`V106__structured_history.sql`); next free is **V107**.
+> Process notes for every lane: (1) a renumber must target numbers above ALL committed lease claims, or
+> obtain a carve-out written into the affected lease; (2) **a carve-out is valid only while the state it
+> accommodates holds** — write the condition into the note (this note's first revision went stale within
+> hours when the renumber it accommodated was itself renumbered); (3) a migration is landed when
+> `flyway_schema_history` says so on the target, not when the merge is green.
 
 > ⚠️ **Read the lease files, not the announcement messages.** The emergency lane's cross-session
 > message announced pct V070–V099, inpatient V067–V094, ckp V010–V029. Its *committed* lease says
@@ -159,6 +164,25 @@ prevent.
 - **Acuity is not carried forward as severity.** IITT priority is a property of the arrival and
   stops at the door. `pct_problems.severity` is a property of the disease and is this pack's to set.
   No fifth scale, and no silent translation between the two.
+
+> 🔴 **V108 WITHDRAWN — a cross-lane FK cannot live in the referencing lane's band.**
+> The emergency-episode foreign key was written at V108 and withdrawn before deployment. **Flyway
+> applies in version order, and V108 < V200**, so on a clean full boot the constraint would run
+> before `emergency_episode` exists: `ERROR: relation "emergency_episode" does not exist`.
+> Reproduced independently on a scratch schema. It passed a live dry-run only because the preview
+> estate already had V200 deployed — the dry-run proved the constraint *applies and bites*, and
+> never tested whether it could apply *in migration order on a clean database*. Green in one
+> environment is not green.
+>
+> **The general rule, and it binds every lane:** with one band per lane, a cross-lane foreign key
+> must live in the band of the lane that owns the **referenced** table, never the referencing one.
+> Bands solve collisions and create a dependency-ordering trap, and the trap is invisible anywhere
+> the referenced table is already deployed. Contributed by the emergency lane, whose band
+> convention surfaced it and who caught it.
+>
+> **Where the constraint now lives:** the emergency lane's block, above V200, carrying this pack's
+> migration header reasoning verbatim. `pct_medical_episodes` is still this pack's table; only the
+> constraint that references *their* table sits in *their* range, which is what the rule requires.
 
 **The FK, agreed and scheduled.** `pct_medical_episodes.emergency_episode_id` is a soft reference
 today only because `pct.emergency_episode` does not exist; a hard constraint would couple the two

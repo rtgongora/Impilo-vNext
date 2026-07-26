@@ -354,6 +354,57 @@ const DOCTRINE_OVERRIDES = new Map(
       },
     ],
     [
+      "procedures-service",
+      {
+        // Care Continuum doctrine (CC-2/CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "care-delivery",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "Canonical procedure catalogue \u2014 procedure definitions, their requirements, versions and approval state (governed national content: a change to what a procedure requires is a content release, not a deployment)",
+          "Appropriateness and duplication detection for procedure requests",
+          "Competence and privilege resolution over VARAPI registration and Vashandi assignment \u2014 including supervision requirement, trainee status and countersignature",
+          "Procedure readiness evaluation and safety-pause templates (ENGINE-NOT-STORE: this service evaluates, the executing service persists the verdict \u2014 inpatient.procedure_readiness_check and procedure_checklist_item remain the record of truth)",
+          "Sedation and anaesthesia requirement profiles (requirements side; the anaesthesia record stays inpatient)",
+          "Aftercare template generation",
+          "Procedure execution index \u2014 the request-to-executor correlation spine, so a request that never reached an executor is a query rather than an archaeology exercise",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+          "oros-service",
+          "inpatient-service",
+          "varapi-service",
+          "vashandi-workforce-service",
+          "tuso-service",
+          "zibo-service",
+          "clinical-knowledge-platform-service",
+          "pct-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "inpatient-service",
+          "surgery-service",
+          "oros-service",
+        ],
+        forbidden_responsibilities: [
+          "must-not-own-the-procedure-request-record",
+          "must-not-own-the-procedure-execution-record",
+          "must-not-store-readiness-verdicts-or-checklist-completions",
+          "must-not-own-consent",
+          "must-not-own-terminology",
+          "must-not-own-clinical-decision-logic",
+          "must-not-own-person-level-longitudinal-clinical-registries",
+          "must-not-own-the-clinical-decision-that-opens-or-closes-a-phase-of-care",
+        ],
+      },
+    ],
+    [
       "telemonitoring-service",
       {
         // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use

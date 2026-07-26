@@ -227,11 +227,22 @@ those rigs.
 
 Recorded here so they cannot be quietly dropped:
 
-- **P0 / S0** — registry rows. `docs/registry/services-registry.yaml` is generated from
-  `services/pom.xml` plus the override map in `scripts/registry/seed-registry.mjs`, and
-  `system-of-record-map.md` is generated from the YAML. So both new services get their entries
-  *with* their pom modules, mirrored into the override map, then regenerated. Adding YAML rows for
-  a module that does not exist would be dropped on the next regeneration.
+- **P0 / S0 — registry rows: DO NOT REGENERATE.** Discovered at P0. `services-registry.yaml` is
+  nominally generated from `services/pom.xml` plus the override map in
+  `scripts/registry/seed-registry.mjs`, and `system-of-record-map.md` from the YAML — but the
+  committed YAML has drifted well ahead of what the generator can reconstruct. Running
+  `node seed-registry.mjs` rewrote **894 lines for a one-service addition**, stripping curated
+  `continuum` fields, inline doctrine rationale and `must-not-*` comments from services including
+  booking, CKP, community, participation, telemonitoring and ABIS. The seeder's own comment says
+  the override map exists "so a future regeneration cannot destroy the hand-edited YAML"; it does
+  not fully succeed.
+  **Therefore: hand-edit the YAML and the SoR map, and mirror into the override map so a future
+  regeneration is less lossy than it would otherwise be.** Never commit the output of a bare
+  regeneration without diffing it for destruction first. Same applies to
+  `generate-architecture-registers.mjs`.
+  `config/full-boot-service-classification.yml` is generated *from* the registry and is currently
+  dirty with another session's uncommitted regeneration, so this programme does not touch it —
+  the new services are picked up by whoever next regenerates it from the committed registry.
 - **P0 / S0** — the `inpatient-service` system-of-record row is corrected to state that it owns
   perioperative **and procedure execution**, per the ADR.
 - **P0 / S0** — full new-service wiring: `pom.xml`, Dockerfile, image-strategy lane,

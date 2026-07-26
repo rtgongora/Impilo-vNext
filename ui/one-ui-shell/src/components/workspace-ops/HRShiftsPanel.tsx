@@ -79,9 +79,9 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
     const rows = rosterQ.data?.data ?? [];
     return rows.map((shift, index) => ({
       id: shift.id ?? String(index),
-      name: shift.attributes.staff_display_name,
+      name: shift.attributes.staff_reference ?? shift.attributes.workforce_profile_id,
       role: 'staff',
-      department: shift.attributes.workspace_id ?? 'Workspace',
+      department: shift.attributes.specialty ?? 'Workspace',
       status: shift.attributes.status === 'ACTIVE' ? 'on_shift' : 'off_shift',
       shiftType: 'day',
       hours: `${shift.attributes.started_at?.slice(11, 16) ?? '—'}-${shift.attributes.ended_at?.slice(11, 16) ?? '—'}`,
@@ -109,7 +109,8 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
       const key = `${start} - ${end}`;
       const g = groups.get(key) ?? { staff: 0, depts: new Set<string>(), start };
       g.staff += 1;
-      if (s.attributes.workspace_id) g.depts.add(s.attributes.workspace_id);
+      // vsh_shift carries no workspace; the service line is the meaningful grouping here.
+      if (s.attributes.specialty) g.depts.add(s.attributes.specialty);
       groups.set(key, g);
     }
     return Array.from(groups.entries()).map(([time, g]) => {

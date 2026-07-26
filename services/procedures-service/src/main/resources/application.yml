@@ -1,0 +1,102 @@
+server:
+  port: ${SERVER_PORT:8395}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: procedures-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:procedures}
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: procedures
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: procedures
+    baseline-on-migrate: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${KAFKA_BOOTSTRAP:localhost:9092}}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    consumer:
+      group-id: procedures-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_ISSUER:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
+
+procedures:
+  outbox:
+    poll-interval-ms: 2000
+  # Peers this service resolves requirements against. All reads; this service writes to
+  # none of them. Timeouts are deliberately short because it sits on the readiness path
+  # and a slow answer must become an honest "unknown" rather than a hung request.
+  peers:
+    oros:
+      base-url: ${OROS_SERVICE_URL:http://oros-service:8089}
+      timeout-ms: 4000
+    inpatient:
+      base-url: ${INPATIENT_SERVICE_URL:http://inpatient-service:8121}
+      timeout-ms: 4000
+    varapi:
+      base-url: ${VARAPI_SERVICE_URL:http://varapi-service:8083}
+      timeout-ms: 4000
+    vashandi:
+      base-url: ${VASHANDI_SERVICE_URL:http://vashandi-workforce-service:8167}
+      timeout-ms: 4000
+    tuso:
+      base-url: ${TUSO_SERVICE_URL:http://tuso-service:8084}
+      timeout-ms: 4000
+    zibo:
+      base-url: ${ZIBO_SERVICE_URL:http://zibo-service:8085}
+      timeout-ms: 4000
+    ckp:
+      base-url: ${CKP_SERVICE_URL:http://clinical-knowledge-platform-service:8270}
+      timeout-ms: 4000
+  readiness:
+    # Fail-safe posture (ADR decision 1 consequences). When a requirement owner cannot be
+    # reached, the verdict is NOT_READY with an UNAVAILABLE blocker naming the owner — never
+    # READY by omission. Set false only for a documented emergency-override path, never as a
+    # convenience: a permissive default here is indistinguishable from a cleared procedure.
+    unavailable-owner-blocks: ${PROCEDURES_UNAVAILABLE_OWNER_BLOCKS:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: procedures-service
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

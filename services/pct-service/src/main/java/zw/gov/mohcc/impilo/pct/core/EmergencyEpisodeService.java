@@ -1,16 +1,22 @@
 package zw.gov.mohcc.impilo.pct.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pct.domain.EmergencyEpisodeState;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyEpisodeEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EmergencyEpisodeRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -48,9 +54,20 @@ public class EmergencyEpisodeService {
             EmergencyEpisodeState.OPEN_AWAITING_ACCEPTANCE.name());
 
     private final EmergencyEpisodeRepository repository;
+    private final EventOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
-    public EmergencyEpisodeService(EmergencyEpisodeRepository repository) {
+    /**
+     * Both collaborators are PCT's own tables. The outbox is a local write in the same transaction —
+     * it is what lets this service tell peers what happened WITHOUT calling them, which is how
+     * care-first and cross-service correlation coexist.
+     */
+    public EmergencyEpisodeService(EmergencyEpisodeRepository repository,
+                                   EventOutboxRepository outboxRepository,
+                                   ObjectMapper objectMapper) {
         this.repository = repository;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
     }
 
     /** What was asked for. Peers are absent from this record on purpose — see the class comment. */
@@ -144,6 +161,7 @@ public class EmergencyEpisodeService {
         e.setLocationConfirmedAt(now);
 
         EmergencyEpisodeEntity saved = repository.save(e);
+        emit(saved, "EMERGENCY_EPISODE_OPENED", null);
         log.info("Emergency episode {} opened via {} in state {}",
                 saved.getEpisodeReference(), saved.getEntryRoute(), saved.getState());
         return new OpenEpisodeResult(saved, true, List.of());
@@ -172,7 +190,11 @@ public class EmergencyEpisodeService {
         transitionTo(e, EmergencyEpisodeState.OPEN_UNTRIAGED, now);
         e.setCurrentLocation("EMERGENCY_UNIT");
         e.setLocationConfirmedAt(now);
-        return repository.save(e);
+        EmergencyEpisodeEntity saved = repository.save(e);
+        // daidzai back-fills its continuum link from this: it is the moment the prehospital episode
+        // becomes resolvable to a PCT anchor, which is CC-5 violation V-3 closing in practice.
+        emit(saved, "EMERGENCY_EPISODE_ANCHOR_RESOLVED", null);
+        return saved;
     }
 
     /**
@@ -186,6 +208,7 @@ public class EmergencyEpisodeService {
     public EmergencyEpisodeEntity transition(UUID episodeId, UUID tenantId,
                                              EmergencyEpisodeState target, String outcome) {
         EmergencyEpisodeEntity e = load(episodeId, tenantId);
+        EmergencyEpisodeState previous = EmergencyEpisodeState.valueOf(e.getState());
         OffsetDateTime now = OffsetDateTime.now();
         transitionTo(e, target, now);
         if (target.isTerminal() && target != EmergencyEpisodeState.MERGED) {
@@ -195,7 +218,10 @@ public class EmergencyEpisodeService {
             e.setOutcome(outcome);
             e.setClosedAt(now);
         }
-        return repository.save(e);
+        EmergencyEpisodeEntity saved = repository.save(e);
+        emit(saved, target == EmergencyEpisodeState.MERGED
+                ? "EMERGENCY_EPISODE_MERGED" : "EMERGENCY_EPISODE_STATE_CHANGED", previous.name());
+        return saved;
     }
 
     private void transitionTo(EmergencyEpisodeEntity e, EmergencyEpisodeState target, OffsetDateTime now) {
@@ -261,6 +287,52 @@ public class EmergencyEpisodeService {
         if (!condition) {
             throw new IllegalArgumentException(message);
         }
+    }
+
+    /**
+     * Write a lifecycle event to PCT's outbox.
+     *
+     * <p>The payload deliberately carries no clinical content — the episode id, the state and the
+     * anchors, and nothing a consumer would be tempted to treat as the record. A consumer that needs
+     * the clinical detail reads it from the owning service; an event that carried a copy would be a
+     * second, staler answer to the same question.
+     *
+     * <p>{@code subjectCpid} is included because peers key their own repointing on it, but note it is
+     * the same attribute the identity hook rewrites — a consumer must not persist it as a join key.
+     */
+    private void emit(EmergencyEpisodeEntity e, String eventType, String previousState) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("episodeId", e.getEpisodeId().toString());
+        payload.put("episodeReference", e.getEpisodeReference());
+        payload.put("tenantId", e.getTenantId().toString());
+        payload.put("facilityId", e.getFacilityId().toString());
+        payload.put("state", e.getState());
+        payload.put("previousState", previousState);
+        payload.put("entryRoute", e.getEntryRoute());
+        payload.put("episodeClass", e.getEpisodeClass());
+        payload.put("journeyId", e.getJourneyId());
+        payload.put("encounterId", e.getEncounterId());
+        payload.put("traumaEpisodeId", e.getTraumaEpisodeId() != null ? e.getTraumaEpisodeId().toString() : null);
+        payload.put("subjectCpid", e.getSubjectCpid());
+        payload.put("identityMode", e.getIdentityMode());
+        payload.put("sensitive", e.isSensitive());
+        payload.put("outcome", e.getOutcome());
+
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType("EMERGENCY_EPISODE");
+        outbox.setAggregateId(e.getEpisodeId().toString());
+        outbox.setEventType(eventType);
+        outbox.setTenantId(e.getTenantId());
+        try {
+            outbox.setPayload(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException ex) {
+            // An unserialisable payload must not lose the event. The type and aggregate id are the
+            // parts a consumer needs to go and read the truth for itself.
+            log.error("Emergency episode {} payload could not be serialised: {}",
+                    e.getEpisodeId(), ex.getMessage());
+            outbox.setPayload("{\"episodeId\":\"" + e.getEpisodeId() + "\"}");
+        }
+        outboxRepository.save(outbox);
     }
 
     /** Reported to the caller so a clinician sees what could not be consulted. Never thrown. */

@@ -104,12 +104,12 @@ export default function OnCallPage() {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [showSwapForm, setShowSwapForm] = useState(false);
+  // A swap is raised against a rostered shift and a person, not against typed names: two staff
+  // share a name, and approving a swap changes who is clinically accountable for that window.
   const [swapForm, setSwapForm] = useState({
-    requestor_name: "",
-    requestee_name: "",
-    original_date: "",
-    swap_date: "",
-    specialty: "",
+    requesting_shift_id: "",
+    requested_profile_id: "",
+    reason: "",
   });
 
   useEffect(() => {
@@ -128,20 +128,42 @@ export default function OnCallPage() {
   const weekLabel = `${weekStart.toLocaleDateString("en-ZA", { day: "numeric", month: "short" })} — ${addDays(weekStart, 6).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}`;
 
   async function submitSwapRequest() {
-    if (!facility?.id || !swapForm.requestor_name || !swapForm.requestee_name || !swapForm.original_date || !swapForm.swap_date) {
+    if (!facility?.id || !swapForm.requesting_shift_id || !swapForm.requested_profile_id) {
       return;
     }
     await createSwap.mutateAsync({
-      facility_id: facility.id,
-      requestor_name: swapForm.requestor_name,
-      requestee_name: swapForm.requestee_name,
-      original_date: swapForm.original_date,
-      swap_date: swapForm.swap_date,
-      specialty: swapForm.specialty || null,
+      requesting_shift_id: swapForm.requesting_shift_id,
+      requested_profile_id: swapForm.requested_profile_id,
+      reason: swapForm.reason || null,
     });
-    setSwapForm({ requestor_name: "", requestee_name: "", original_date: "", swap_date: "", specialty: "" });
+    setSwapForm({ requesting_shift_id: "", requested_profile_id: "", reason: "" });
     setShowSwapForm(false);
   }
+
+  // Only shifts actually on this week's rota can be swapped, and only people actually rostered can
+  // be asked — the picker is built from the rota rather than from free text.
+  const rosteredShifts = schedule.flatMap((s) =>
+    [
+      s.attributes.primary_shift_id
+        ? {
+            shiftId: s.attributes.primary_shift_id,
+            profileId: s.attributes.primary_workforce_profile_id,
+            label: `${s.attributes.assignment_date} · ${s.attributes.specialty} · first call`,
+          }
+        : null,
+      s.attributes.backup_shift_id
+        ? {
+            shiftId: s.attributes.backup_shift_id,
+            profileId: s.attributes.backup_workforce_profile_id,
+            label: `${s.attributes.assignment_date} · ${s.attributes.specialty} · second call`,
+          }
+        : null,
+    ].filter((v): v is NonNullable<typeof v> => Boolean(v))
+  );
+
+  const selectedShiftOwner = rosteredShifts.find(
+    (r) => r.shiftId === swapForm.requesting_shift_id
+  )?.profileId;
 
   const loading = weekLoading || swapsLoading;
 
@@ -233,47 +255,53 @@ export default function OnCallPage() {
             {showSwapForm && facility?.id ? (
               <div className="rounded-lg border border-border bg-card p-4 space-y-3 text-sm">
                 <h3 className="font-medium text-foreground">New swap request</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <label className="block">
-                    <span className="text-xs text-muted-foreground">Requestor</span>
-                    <input
+                    <span className="text-xs text-muted-foreground">Shift to be covered</span>
+                    <select
                       className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
-                      value={swapForm.requestor_name}
-                      onChange={(e) => setSwapForm((f) => ({ ...f, requestor_name: e.target.value }))}
-                    />
+                      value={swapForm.requesting_shift_id}
+                      onChange={(e) =>
+                        setSwapForm((f) => ({ ...f, requesting_shift_id: e.target.value, requested_profile_id: "" }))
+                      }
+                    >
+                      <option value="">Select a rostered shift…</option>
+                      {rosteredShifts.map((r) => (
+                        <option key={r.shiftId} value={r.shiftId}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                   <label className="block">
-                    <span className="text-xs text-muted-foreground">Requestee</span>
-                    <input
+                    <span className="text-xs text-muted-foreground">Ask which colleague to cover it</span>
+                    <select
                       className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
-                      value={swapForm.requestee_name}
-                      onChange={(e) => setSwapForm((f) => ({ ...f, requestee_name: e.target.value }))}
-                    />
+                      value={swapForm.requested_profile_id}
+                      onChange={(e) => setSwapForm((f) => ({ ...f, requested_profile_id: e.target.value }))}
+                      disabled={!swapForm.requesting_shift_id}
+                    >
+                      <option value="">Select a colleague on this week&apos;s rota…</option>
+                      {[...new Map(
+                        rosteredShifts
+                          .filter((r) => r.profileId && r.profileId !== selectedShiftOwner)
+                          .map((r) => [r.profileId, r])
+                      ).values()].map((r) => (
+                        <option key={r.profileId!} value={r.profileId!}>
+                          {r.profileId}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="mt-1 block text-[11px] text-muted-foreground">
+                      The person already on that shift is not offered — a swap with oneself changes nothing.
+                    </span>
                   </label>
                   <label className="block">
-                    <span className="text-xs text-muted-foreground">Original on-call date</span>
-                    <input
-                      type="date"
-                      className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
-                      value={swapForm.original_date}
-                      onChange={(e) => setSwapForm((f) => ({ ...f, original_date: e.target.value }))}
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-xs text-muted-foreground">Swap to date</span>
-                    <input
-                      type="date"
-                      className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
-                      value={swapForm.swap_date}
-                      onChange={(e) => setSwapForm((f) => ({ ...f, swap_date: e.target.value }))}
-                    />
-                  </label>
-                  <label className="block sm:col-span-2">
-                    <span className="text-xs text-muted-foreground">Specialty (optional)</span>
+                    <span className="text-xs text-muted-foreground">Reason (optional)</span>
                     <input
                       className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
-                      value={swapForm.specialty}
-                      onChange={(e) => setSwapForm((f) => ({ ...f, specialty: e.target.value }))}
+                      value={swapForm.reason}
+                      onChange={(e) => setSwapForm((f) => ({ ...f, reason: e.target.value }))}
                     />
                   </label>
                 </div>
@@ -310,10 +338,9 @@ export default function OnCallPage() {
                   return (
                     <div key={sw.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-card rounded-lg p-3 mt-2">
                       <div className="text-xs text-muted-foreground">
-                        <span className="font-medium">{a.requestor_name}</span> wants to swap{" "}
-                        <span className="font-medium">{a.original_date}</span> with{" "}
-                        <span className="font-medium">{a.requestee_name}</span> on{" "}
-                        <span className="font-medium">{a.swap_date}</span>
+                        <span className="font-medium">{a.requesting_workforce_profile_id}</span> asks{" "}
+                        <span className="font-medium">{a.requested_workforce_profile_id}</span> to cover their shift
+                        {a.reason ? <> — {a.reason}</> : null}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <button
@@ -417,9 +444,13 @@ export default function OnCallPage() {
                             <tr key={oc.id} className="border-b border-border hover:bg-background">
                               <td className="px-4 py-3 text-foreground">{o.assignment_date}</td>
                               <td className="px-4 py-3 text-foreground">{o.specialty}</td>
-                              <td className="px-4 py-3 text-foreground">{o.primary_staff_name}</td>
-                              <td className="px-4 py-3 text-foreground">{o.backup_staff_name}</td>
-                              <td className="px-4 py-3 text-muted-foreground">{toShiftLabel(o.shift_kind)}</td>
+                              <td className="px-4 py-3 text-foreground">{o.primary_staff_reference ?? "—"}</td>
+                              <td className="px-4 py-3 text-foreground">
+                                {o.backup_staff_reference ?? (
+                                  <span className="text-amber-700">No second on call</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground">{toShiftLabel(o.shift_kind ?? "")}</td>
                             </tr>
                           );
                         })
@@ -457,10 +488,10 @@ export default function OnCallPage() {
                       const ui = mapUiSwapStatus(a.status);
                       return (
                         <tr key={sw.id} className="border-b border-border hover:bg-background transition-colors">
-                          <td className="px-4 py-3 text-foreground">{a.requestor_name}</td>
-                          <td className="px-4 py-3 text-foreground">{a.original_date}</td>
-                          <td className="px-4 py-3 text-foreground">{a.requestee_name}</td>
-                          <td className="px-4 py-3 text-foreground">{a.swap_date}</td>
+                          <td className="px-4 py-3 text-foreground">{a.requesting_workforce_profile_id}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{a.created_at?.slice(0, 10) ?? "—"}</td>
+                          <td className="px-4 py-3 text-foreground">{a.requested_workforce_profile_id}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{a.reason ?? "—"}</td>
                           <td className="px-4 py-3">
                             <span
                               className={`px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -501,7 +532,7 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
           {o.specialty}
         </span>
         <span className="text-xs text-muted-foreground flex items-center gap-1">
-          <Clock className="w-3 h-3" /> {toShiftLabel(o.shift_kind)}
+          <Clock className="w-3 h-3" /> {toShiftLabel(o.shift_kind ?? "")}
         </span>
       </div>
       <div className="mb-3">
@@ -509,13 +540,11 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary-soft text-primary flex items-center justify-center text-xs font-semibold">
-              {o.primary_staff_name
-                .split(" ")
-                .map((w) => w[0])
-                .slice(0, 2)
-                .join("")}
+              {(o.primary_staff_reference ?? "—").slice(0, 2).toUpperCase()}
             </div>
-            <span className="text-sm font-medium text-foreground">{o.primary_staff_name}</span>
+            <span className="text-sm font-medium text-foreground">
+              {o.primary_staff_reference ?? "Not rostered"}
+            </span>
           </div>
           {primaryPhone ? (
             <a href={`tel:${primaryPhone}`} className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary">
@@ -531,13 +560,12 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-neutral-100 text-muted-foreground flex items-center justify-center text-xs font-semibold">
-              {o.backup_staff_name
-                .split(" ")
-                .map((w) => w[0])
-                .slice(0, 2)
-                .join("")}
+              {(o.backup_staff_reference ?? "—").slice(0, 2).toUpperCase()}
             </div>
-            <span className="text-sm text-foreground">{o.backup_staff_name}</span>
+            {/* "Nobody is second on call tonight" is the most useful thing this card can say. */}
+            <span className="text-sm text-foreground">
+              {o.backup_staff_reference ?? <span className="text-amber-700">No second on call</span>}
+            </span>
           </div>
           {backupPhone ? (
             <a href={`tel:${backupPhone}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">

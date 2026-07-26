@@ -1,0 +1,576 @@
+{
+  "packId": "rmnp-spr-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Contraceptive initiation practice — reasonable certainty of not being pregnant, and backup contraception",
+    "primarySource": "WHO Selected Practice Recommendations for Contraceptive Use (SPR)",
+    "why": "MEC answers whether a woman may use a method. It says nothing about when she may start it, whether she needs backup contraception, or for how long. Those are the questions actually asked at the counter, and getting them wrong produces a pregnancy in a woman who believed she was protected.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The SPR text is NOT in docs/reference/who-dak/MANIFEST.json. The Family Planning DAK publishes a data dictionary and vocabulary but no decision logic, so there is no machine-readable artefact to extract these from. This pack was authored against the published recommendations rather than ingested from a pinned artefact, which is a departure from the rule this repository set itself in W1: DAK content is ingested, not paraphrased. It ships as ENGINEERING_SEED for that reason and must not be ratified until the primary text is vendored and each criterion and duration is checked against it line by line. Every rule below names the recommendation it encodes so that check is a comparison, not a rewrite."
+    }
+  },
+  "criteria": [
+    {
+      "code": "SPR_RC_NO_SIGNS_OF_PREGNANCY",
+      "role": "EXCLUSION_GATE",
+      "name": "No symptoms or signs of pregnancy",
+      "explanation": "The checklist below establishes reasonable certainty only in a woman who has no symptoms or signs of pregnancy. This is a gate, not one of the alternatives: meeting a timing criterion does not overrule a positive pregnancy sign.",
+      "requiredInputs": ["pregnancySignsOrSymptoms"],
+      "logic": {"input": "pregnancySignsOrSymptoms", "op": "eq", "value": "ABSENT"},
+      "sourceRefs": ["WHO SPR — how to be reasonably certain that a woman is not pregnant"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "A health-care provider can be reasonably certain that a woman is not pregnant if she has no symptoms or signs of pregnancy and meets any one of the listed criteria.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — how to be reasonably certain that a woman is not pregnant"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "applicablePopulation": "Women of reproductive age presenting for contraception"
+      }
+    },
+    {
+      "code": "SPR_RC_01_NO_INTERCOURSE",
+      "role": "ANY_ONE_OF",
+      "name": "No sexual intercourse since the last normal menses",
+      "requiredInputs": ["intercourseSinceLastMenses"],
+      "logic": {"input": "intercourseSinceLastMenses", "op": "eq", "value": "NO"},
+      "sourceRefs": ["WHO SPR — reasonable certainty criterion 1"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Has not had sexual intercourse since the last normal menses.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — reasonable certainty criterion 1"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "SPR_RC_02_RELIABLE_METHOD",
+      "role": "ANY_ONE_OF",
+      "name": "Has been using a reliable contraceptive method correctly and consistently",
+      "requiredInputs": ["usingReliableMethodConsistently"],
+      "logic": {"input": "usingReliableMethodConsistently", "op": "eq", "value": "YES"},
+      "sourceRefs": ["WHO SPR — reasonable certainty criterion 2"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Has been using a reliable contraceptive method correctly and consistently.",
+        "nationalStatement": "Adopted as published. Captured as a single clinician judgement rather than derived from the method record, because correct and consistent use is a conversation, not a dispensing history — a woman may hold a valid implant record and a full pill pack she never took.",
+        "evidenceRefs": ["WHO SPR — reasonable certainty criterion 2"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "SPR_RC_03_WITHIN_7_DAYS_OF_MENSES",
+      "role": "ANY_ONE_OF",
+      "name": "Within the first 7 days after the start of normal menses",
+      "explanation": "daysSinceMensesOnset counts days elapsed, so the day bleeding started is 0 and the seventh day is 6. The off-by-one matters: read the other way it would extend reasonable certainty by a day past what the recommendation allows.",
+      "requiredInputs": ["daysSinceMensesOnset"],
+      "logic": {"input": "daysSinceMensesOnset", "op": "lte", "value": 6},
+      "sourceRefs": ["WHO SPR — reasonable certainty criterion 3"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Is within the first 7 days after the start of normal menses.",
+        "nationalStatement": "Adopted as published, with the day count defined as elapsed days from onset so that the boundary is unambiguous at the point of entry.",
+        "evidenceRefs": ["WHO SPR — reasonable certainty criterion 3"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "SPR_RC_04_WITHIN_4_WEEKS_POSTPARTUM",
+      "role": "ANY_ONE_OF",
+      "name": "Within 4 weeks postpartum and not breastfeeding",
+      "explanation": "The breastfeeding qualifier is part of the criterion, not decoration. A breastfeeding woman at three weeks postpartum is covered by criterion 6 with its own conditions; she is not covered by this one.",
+      "requiredInputs": ["daysPostpartum", "breastfeedingStatus"],
+      "logic": {
+        "all": [
+          {"input": "daysPostpartum", "op": "lte", "value": 28},
+          {"input": "breastfeedingStatus", "op": "eq", "value": "NONE"}
+        ]
+      },
+      "sourceRefs": ["WHO SPR — reasonable certainty criterion 4"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Is within 4 weeks postpartum, for non-breastfeeding women.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — reasonable certainty criterion 4"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "SPR_RC_05_WITHIN_7_DAYS_OF_PREGNANCY_END",
+      "role": "ANY_ONE_OF",
+      "name": "Within the first 7 days after abortion or miscarriage",
+      "requiredInputs": ["daysSincePregnancyEnd"],
+      "logic": {"input": "daysSincePregnancyEnd", "op": "lte", "value": 6},
+      "sourceRefs": ["WHO SPR — reasonable certainty criterion 5"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Is within the first 7 days post-abortion or miscarriage.",
+        "nationalStatement": "Adopted as published. The field is worded so it can be answered after any end of pregnancy, however it ended, because post-abortion contraception must be offered without the woman first having to disclose which it was.",
+        "evidenceRefs": ["WHO SPR — reasonable certainty criterion 5"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "SPR_RC_06_LAM_CONDITIONS_MET",
+      "role": "ANY_ONE_OF",
+      "name": "Fully or nearly fully breastfeeding, amenorrhoeic, and less than 6 months postpartum",
+      "explanation": "All three conditions together. Any one of them alone is not this criterion, and lactational amenorrhoea with returned menses is not contraception.",
+      "requiredInputs": ["breastfeedingStatus", "amenorrhoeicSinceDelivery", "daysPostpartum"],
+      "logic": {
+        "all": [
+          {"input": "breastfeedingStatus", "op": "in", "values": ["FULL", "NEARLY_FULL"]},
+          {"input": "amenorrhoeicSinceDelivery", "op": "eq", "value": "YES"},
+          {"input": "daysPostpartum", "op": "lt", "value": 183}
+        ]
+      },
+      "sourceRefs": ["WHO SPR — reasonable certainty criterion 6"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Is fully or nearly fully breastfeeding, amenorrhoeic, and less than 6 months postpartum.",
+        "nationalStatement": "Adopted as published, with 6 months rendered as 183 days.",
+        "evidenceRefs": ["WHO SPR — reasonable certainty criterion 6"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    }
+  ],
+  "rules": [
+    {
+      "code": "SPR_BACKUP_NONE_COC",
+      "name": "Combined oral contraceptive started within 5 days of menses onset — no backup needed",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "LOW",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["COMBINED_ORAL_PILL"]},
+          {"input": "daysSinceMensesOnset", "op": "lte", "value": 4}
+        ]
+      },
+      "message": "No backup contraception is needed — she is protected from today.",
+      "explanation": "Started within 5 days of the onset of menses, the combined oral contraceptive is effective immediately.",
+      "requiredAction": "Give the first pack today and confirm she knows the daily timing. No abstinence or condom period is required.",
+      "sourceRefs": ["WHO SPR — when to start combined hormonal contraceptives"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Combined hormonal contraception started within 5 days of menses onset requires no additional contraceptive protection.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — when to start combined hormonal contraceptives"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "day 2 of menses needs no backup", "facts": {"methodChosen": "COMBINED_ORAL_PILL", "daysSinceMensesOnset": 2}, "expectFires": true},
+        {"name": "day 9 does not take this branch", "facts": {"methodChosen": "COMBINED_ORAL_PILL", "daysSinceMensesOnset": 9}, "expectFires": false},
+        {"name": "an unknown cycle day never reaches no-backup", "facts": {"methodChosen": "COMBINED_ORAL_PILL"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_7D_COC",
+      "name": "Combined oral contraceptive started later than 5 days after menses onset",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["COMBINED_ORAL_PILL"]},
+          {"input": "daysSinceMensesOnset", "op": "gt", "value": 4}
+        ]
+      },
+      "message": "Backup contraception is needed for the next 7 days.",
+      "explanation": "Started more than 5 days after the onset of menses, the combined oral contraceptive takes 7 days to become reliably effective.",
+      "requiredAction": "Give the first pack today and supply condoms for 7 days, or advise abstinence for 7 days. Say the number of days out loud — 'use condoms for a week' is what she will remember.",
+      "sourceRefs": ["WHO SPR — when to start combined hormonal contraceptives"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "If started more than 5 days after menses onset, additional contraceptive protection is needed for the first 7 days.",
+        "nationalStatement": "Adopted as published, with condom supply named explicitly in the action so that backup is dispensed rather than only advised.",
+        "evidenceRefs": ["WHO SPR — when to start combined hormonal contraceptives"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "day 9 needs 7 days of backup", "facts": {"methodChosen": "COMBINED_ORAL_PILL", "daysSinceMensesOnset": 9}, "expectFires": true},
+        {"name": "day 2 does not", "facts": {"methodChosen": "COMBINED_ORAL_PILL", "daysSinceMensesOnset": 2}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_UNKNOWN_COC",
+      "name": "Combined oral contraceptive with the cycle day not established",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["COMBINED_ORAL_PILL"]},
+          {"input": "daysSinceMensesOnset", "op": "absent"}
+        ]
+      },
+      "message": "The date of her last menses is not recorded — advise backup contraception for 7 days.",
+      "explanation": "Without the cycle day neither the no-backup nor the 7-day branch can be evaluated. Both would stay silent, and a screen showing no backup advice is indistinguishable from one showing that none is needed. Seven days of unnecessary condom use costs nothing; the omission costs a pregnancy.",
+      "requiredAction": "Supply condoms for 7 days and record the date of her last menstrual period if she can give it.",
+      "sourceRefs": ["WHO SPR — when to start combined hormonal contraceptives"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "The recommendation is stated for known cycle timing and does not address the case where the last menstrual period is unknown.",
+        "nationalStatement": "Where the cycle day is not established, treat as requiring the full backup period.",
+        "rationale": "Two complementary rules both evaluate to unknown when the cycle day is missing, so neither fires and the guidance panel renders empty. An empty panel reads as reassurance. The asymmetry of harm is decisive: advising backup that was not needed wastes condoms, omitting backup that was needed produces an unintended pregnancy in a woman who was told she was protected.",
+        "evidenceRefs": ["WHO SPR — when to start combined hormonal contraceptives"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "missing cycle day still produces advice", "facts": {"methodChosen": "COMBINED_ORAL_PILL"}, "expectFires": true},
+        {"name": "a known cycle day uses the real branch instead", "facts": {"methodChosen": "COMBINED_ORAL_PILL", "daysSinceMensesOnset": 2}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_NONE_POP",
+      "name": "Progestogen-only pill started within 5 days of menses onset — no backup needed",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "LOW",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["PROGESTOGEN_ONLY_PILL"]},
+          {"input": "daysSinceMensesOnset", "op": "lte", "value": 4}
+        ]
+      },
+      "message": "No backup contraception is needed — she is protected from today.",
+      "explanation": "Started within 5 days of the onset of menses, the progestogen-only pill is effective immediately.",
+      "requiredAction": "Give the first pack today and confirm she understands that the progestogen-only pill must be taken at the same time each day.",
+      "sourceRefs": ["WHO SPR — when to start progestogen-only pills"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Progestogen-only pills started within 5 days of menses onset require no additional contraceptive protection.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — when to start progestogen-only pills"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "day 1 needs no backup", "facts": {"methodChosen": "PROGESTOGEN_ONLY_PILL", "daysSinceMensesOnset": 1}, "expectFires": true},
+        {"name": "day 10 does not", "facts": {"methodChosen": "PROGESTOGEN_ONLY_PILL", "daysSinceMensesOnset": 10}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_2D_POP",
+      "name": "Progestogen-only pill started later than 5 days after menses onset",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["PROGESTOGEN_ONLY_PILL"]},
+          {"input": "daysSinceMensesOnset", "op": "gt", "value": 4}
+        ]
+      },
+      "message": "Backup contraception is needed for the next 2 days.",
+      "explanation": "The progestogen-only pill thickens cervical mucus within about 48 hours, so the backup period is 2 days rather than the 7 required for combined pills.",
+      "requiredAction": "Give the first pack today and supply condoms for 2 days, or advise abstinence for 2 days.",
+      "sourceRefs": ["WHO SPR — when to start progestogen-only pills"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "If started more than 5 days after menses onset, additional contraceptive protection is needed for the first 2 days.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — when to start progestogen-only pills"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "day 10 needs 2 days of backup", "facts": {"methodChosen": "PROGESTOGEN_ONLY_PILL", "daysSinceMensesOnset": 10}, "expectFires": true},
+        {"name": "the pill backup period is not the combined one", "facts": {"methodChosen": "COMBINED_ORAL_PILL", "daysSinceMensesOnset": 10}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_UNKNOWN_POP",
+      "name": "Progestogen-only pill with the cycle day not established",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["PROGESTOGEN_ONLY_PILL"]},
+          {"input": "daysSinceMensesOnset", "op": "absent"}
+        ]
+      },
+      "message": "The date of her last menses is not recorded — advise backup contraception for 2 days.",
+      "explanation": "Neither timing branch can be evaluated without the cycle day, and silence would read as no backup being needed.",
+      "requiredAction": "Supply condoms for 2 days and record the date of her last menstrual period if she can give it.",
+      "sourceRefs": ["WHO SPR — when to start progestogen-only pills"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "The recommendation is stated for known cycle timing and does not address an unknown last menstrual period.",
+        "nationalStatement": "Where the cycle day is not established, treat as requiring the full backup period.",
+        "rationale": "Same asymmetry as the combined pill: the cost of unnecessary backup is two days of condoms, the cost of omitted backup is an unintended pregnancy.",
+        "evidenceRefs": ["WHO SPR — when to start progestogen-only pills"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "missing cycle day still produces advice", "facts": {"methodChosen": "PROGESTOGEN_ONLY_PILL"}, "expectFires": true}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_NONE_INJECTABLE",
+      "name": "Injectable started within 7 days of menses onset — no backup needed",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "LOW",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["INJECTABLE_DMPA_IM", "INJECTABLE_DMPA_SC", "INJECTABLE_NET_EN"]},
+          {"input": "daysSinceMensesOnset", "op": "lte", "value": 6}
+        ]
+      },
+      "message": "No backup contraception is needed — she is protected from today.",
+      "explanation": "A progestogen-only injectable given within 7 days of the onset of menses is effective immediately.",
+      "requiredAction": "Give the injection today and book the reinjection date before she leaves.",
+      "sourceRefs": ["WHO SPR — when to start progestogen-only injectables"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Progestogen-only injectables started within 7 days of menses onset require no additional contraceptive protection.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — when to start progestogen-only injectables"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "DMPA on day 3 needs no backup", "facts": {"methodChosen": "INJECTABLE_DMPA_IM", "daysSinceMensesOnset": 3}, "expectFires": true},
+        {"name": "the injectable window is wider than the pill window", "facts": {"methodChosen": "INJECTABLE_DMPA_SC", "daysSinceMensesOnset": 6}, "expectFires": true},
+        {"name": "day 8 does not", "facts": {"methodChosen": "INJECTABLE_NET_EN", "daysSinceMensesOnset": 8}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_7D_INJECTABLE",
+      "name": "Injectable started later than 7 days after menses onset",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["INJECTABLE_DMPA_IM", "INJECTABLE_DMPA_SC", "INJECTABLE_NET_EN"]},
+          {"input": "daysSinceMensesOnset", "op": "gt", "value": 6}
+        ]
+      },
+      "message": "Backup contraception is needed for the next 7 days.",
+      "explanation": "Given more than 7 days after the onset of menses, the injectable takes 7 days to become reliably effective.",
+      "requiredAction": "Give the injection today, supply condoms for 7 days, and book the reinjection date before she leaves.",
+      "sourceRefs": ["WHO SPR — when to start progestogen-only injectables"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "If started more than 7 days after menses onset, additional contraceptive protection is needed for the first 7 days.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — when to start progestogen-only injectables"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "day 12 needs 7 days of backup", "facts": {"methodChosen": "INJECTABLE_DMPA_IM", "daysSinceMensesOnset": 12}, "expectFires": true}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_UNKNOWN_INJECTABLE",
+      "name": "Injectable with the cycle day not established",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["INJECTABLE_DMPA_IM", "INJECTABLE_DMPA_SC", "INJECTABLE_NET_EN"]},
+          {"input": "daysSinceMensesOnset", "op": "absent"}
+        ]
+      },
+      "message": "The date of her last menses is not recorded — advise backup contraception for 7 days.",
+      "explanation": "Neither timing branch can be evaluated without the cycle day, and silence would read as no backup being needed.",
+      "requiredAction": "Give the injection, supply condoms for 7 days, and record the date of her last menstrual period if she can give it.",
+      "sourceRefs": ["WHO SPR — when to start progestogen-only injectables"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "The recommendation is stated for known cycle timing and does not address an unknown last menstrual period.",
+        "nationalStatement": "Where the cycle day is not established, treat as requiring the full backup period.",
+        "rationale": "An injectable is given once and she leaves. There is no second chance to correct the advice before the protection gap has passed.",
+        "evidenceRefs": ["WHO SPR — when to start progestogen-only injectables"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "missing cycle day still produces advice", "facts": {"methodChosen": "INJECTABLE_DMPA_SC"}, "expectFires": true}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_NONE_LARC_HORMONAL",
+      "name": "Implant or levonorgestrel IUS placed within 7 days of menses onset — no backup needed",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "LOW",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["IMPLANT_LEVONORGESTREL_2ROD", "IMPLANT_ETONOGESTREL_1ROD", "IUS_LEVONORGESTREL"]},
+          {"input": "daysSinceMensesOnset", "op": "lte", "value": 6}
+        ]
+      },
+      "message": "No backup contraception is needed — she is protected from today.",
+      "explanation": "An implant or levonorgestrel intrauterine system placed within 7 days of the onset of menses is effective immediately.",
+      "requiredAction": "Record the insertion date and the removal-due date, and give her something in writing that carries both.",
+      "sourceRefs": ["WHO SPR — when to start implants and the levonorgestrel intrauterine system"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Implants and the LNG-IUD started within 7 days of menses onset require no additional contraceptive protection.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SPR — when to start implants and the levonorgestrel intrauterine system"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "implant on day 4 needs no backup", "facts": {"methodChosen": "IMPLANT_ETONOGESTREL_1ROD", "daysSinceMensesOnset": 4}, "expectFires": true}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_7D_LARC_HORMONAL",
+      "name": "Implant or levonorgestrel IUS placed later than 7 days after menses onset",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["IMPLANT_LEVONORGESTREL_2ROD", "IMPLANT_ETONOGESTREL_1ROD", "IUS_LEVONORGESTREL"]},
+          {"input": "daysSinceMensesOnset", "op": "gt", "value": 6}
+        ]
+      },
+      "message": "Backup contraception is needed for the next 7 days.",
+      "explanation": "Placed more than 7 days after the onset of menses, the implant or levonorgestrel intrauterine system takes 7 days to become reliably effective. The device being in place is not the same as it working.",
+      "requiredAction": "Supply condoms for 7 days and record the insertion and removal-due dates.",
+      "sourceRefs": ["WHO SPR — when to start implants and the levonorgestrel intrauterine system"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "If started more than 7 days after menses onset, additional contraceptive protection is needed for the first 7 days.",
+        "nationalStatement": "Adopted as published, with the explanation stating plainly that a placed device is not yet an effective one — the visible procedure is what a woman will take as the moment protection began.",
+        "evidenceRefs": ["WHO SPR — when to start implants and the levonorgestrel intrauterine system"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "IUS on day 15 needs 7 days of backup", "facts": {"methodChosen": "IUS_LEVONORGESTREL", "daysSinceMensesOnset": 15}, "expectFires": true}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_UNKNOWN_LARC_HORMONAL",
+      "name": "Implant or levonorgestrel IUS with the cycle day not established",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["methodChosen", "daysSinceMensesOnset"],
+      "logic": {
+        "all": [
+          {"input": "methodChosen", "op": "in", "values": ["IMPLANT_LEVONORGESTREL_2ROD", "IMPLANT_ETONOGESTREL_1ROD", "IUS_LEVONORGESTREL"]},
+          {"input": "daysSinceMensesOnset", "op": "absent"}
+        ]
+      },
+      "message": "The date of her last menses is not recorded — advise backup contraception for 7 days.",
+      "explanation": "Neither timing branch can be evaluated without the cycle day, and silence would read as no backup being needed.",
+      "requiredAction": "Supply condoms for 7 days and record the date of her last menstrual period if she can give it.",
+      "sourceRefs": ["WHO SPR — when to start implants and the levonorgestrel intrauterine system"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "The recommendation is stated for known cycle timing and does not address an unknown last menstrual period.",
+        "nationalStatement": "Where the cycle day is not established, treat as requiring the full backup period.",
+        "rationale": "A woman who has just had a device inserted is the least likely of all to believe she needs condoms. The advice has to be given explicitly or it will not be inferred.",
+        "evidenceRefs": ["WHO SPR — when to start implants and the levonorgestrel intrauterine system"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "missing cycle day still produces advice", "facts": {"methodChosen": "IMPLANT_LEVONORGESTREL_2ROD"}, "expectFires": true}
+      ]
+    },
+    {
+      "code": "SPR_BACKUP_NONE_COPPER_IUD",
+      "name": "Copper intrauterine device — effective immediately, no backup at any point in the cycle",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "BACKUP_CONTRACEPTION",
+      "severity": "LOW",
+      "requiredInputs": ["methodChosen"],
+      "logic": {"input": "methodChosen", "op": "in", "values": ["IUD_COPPER_T380A", "EMERGENCY_COPPER_IUD"]},
+      "message": "No backup contraception is needed — the copper device is effective from insertion.",
+      "explanation": "The copper intrauterine device works on contact and is effective immediately regardless of where she is in her cycle. It is the only method here with no backup period at all, which is also why it is the emergency contraceptive of choice.",
+      "requiredAction": "Record the insertion date and the removal-due date, and teach her to check the threads.",
+      "sourceRefs": ["WHO SPR — when to start the copper-bearing intrauterine device"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The copper-bearing IUD is effective immediately and requires no additional contraceptive protection.",
+        "nationalStatement": "Adopted as published. Deliberately written without a cycle-day condition rather than with one that is always satisfied, so that a missing last menstrual period cannot make this rule silent.",
+        "evidenceRefs": ["WHO SPR — when to start the copper-bearing intrauterine device"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "copper IUD needs no backup on any day", "facts": {"methodChosen": "IUD_COPPER_T380A", "daysSinceMensesOnset": 22}, "expectFires": true},
+        {"name": "copper IUD needs no backup with the cycle day unknown either", "facts": {"methodChosen": "IUD_COPPER_T380A"}, "expectFires": true}
+      ]
+    },
+    {
+      "code": "SPR_PREGNANCY_UNCERTAIN_DO_NOT_DENY",
+      "name": "Pregnancy could not be excluded — do not deny contraception for it",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "ACCESS_SAFEGUARD",
+      "severity": "MEDIUM",
+      "requiredInputs": ["pregnancyCertainty"],
+      "logic": {"input": "pregnancyCertainty", "op": "in", "values": ["NOT_ESTABLISHED", "CANNOT_DETERMINE"]},
+      "message": "Pregnancy cannot be excluded today. This is not a reason to send her away without a method.",
+      "explanation": "Reasonable certainty could not be established from the checklist. A pregnancy test settles it where one is available, but the absence of a test is a supply problem, not a clinical contraindication — turning her away carries its own risk of the pregnancy she came to prevent.",
+      "requiredAction": "Offer a pregnancy test if one is available. If it is not, a short-acting hormonal method may still be started today with backup contraception and a return visit; do not defer her on the test alone.",
+      "monitoringInstruction": "Ask her to return if her next expected menses does not come.",
+      "sourceRefs": ["WHO SPR — how to be reasonably certain that a woman is not pregnant"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "A woman should not be denied a contraceptive method solely because a pregnancy test is unavailable.",
+        "nationalStatement": "Adopted as published, and surfaced as an explicit alert rather than as background guidance.",
+        "evidenceRefs": ["WHO SPR — how to be reasonably certain that a woman is not pregnant"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "unresolved certainty raises the safeguard", "facts": {"pregnancyCertainty": "CANNOT_DETERMINE"}, "expectFires": true},
+        {"name": "established certainty does not", "facts": {"pregnancyCertainty": "ESTABLISHED"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SPR_LARC_DEFER_IF_PREGNANCY_UNCERTAIN",
+      "name": "Defer intrauterine insertion until pregnancy is excluded",
+      "layer": "CONTRACEPTIVE_INITIATION",
+      "ruleType": "ACCESS_SAFEGUARD",
+      "severity": "HIGH",
+      "referralRequired": false,
+      "requiredInputs": ["pregnancyCertainty", "methodChosen"],
+      "logic": {
+        "all": [
+          {"input": "pregnancyCertainty", "op": "in", "values": ["NOT_ESTABLISHED", "CANNOT_DETERMINE"]},
+          {"input": "methodChosen", "op": "in", "values": ["IUD_COPPER_T380A", "IUS_LEVONORGESTREL"]}
+        ]
+      },
+      "message": "Do not insert an intrauterine device today — pregnancy has not been excluded.",
+      "explanation": "This qualifies the safeguard above rather than contradicting it. She should not be sent away, but insertion into a pregnant uterus is the one initiation that cannot be undone by stopping the method, and pregnancy is a category 4 for intrauterine devices. The device is deferred; contraception is not.",
+      "requiredAction": "Start a short-acting method today as a bridge, give her a return date for insertion, and record the plan so the next clinician knows an insertion is owed rather than declined.",
+      "sourceRefs": [
+        "WHO SPR — when to start the copper-bearing intrauterine device",
+        "WHO MEC — pregnancy, intrauterine devices"
+      ],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "Intrauterine devices should not be inserted when the woman is pregnant; insertion requires reasonable certainty that she is not.",
+        "nationalStatement": "Where reasonable certainty is not established, defer insertion, start a bridging method the same day, and record the deferred insertion as owed.",
+        "rationale": "The do-not-deny safeguard is correct and, standing alone next to an intrauterine method, reads as permission to insert. Naming the bridging method and the return date turns a deferral into a plan; without them a deferral is a refusal with a softer word, and she does not come back.",
+        "evidenceRefs": [
+          "WHO SPR — when to start the copper-bearing intrauterine device",
+          "WHO MEC — pregnancy, intrauterine devices"
+        ],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "IUD insertion is deferred when pregnancy is not excluded", "facts": {"pregnancyCertainty": "CANNOT_DETERMINE", "methodChosen": "IUD_COPPER_T380A"}, "expectFires": true},
+        {"name": "an implant is not deferred", "facts": {"pregnancyCertainty": "CANNOT_DETERMINE", "methodChosen": "IMPLANT_ETONOGESTREL_1ROD"}, "expectFires": false},
+        {"name": "established certainty allows insertion", "facts": {"pregnancyCertainty": "ESTABLISHED", "methodChosen": "IUD_COPPER_T380A"}, "expectFires": false}
+      ]
+    }
+  ]
+}

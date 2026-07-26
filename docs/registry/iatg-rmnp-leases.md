@@ -32,12 +32,48 @@ Heads verified on disk immediately before publishing this file.
 
 | Service | Head today | **RMNP block** | Planned use |
 |---|---|---|---|
-| `pct-service` | V060 | **V058, V059, V061–V069** (V060 excluded — see §2a) | intention + contraception V058 · pregnancy episode + dating revisions V059 · fetuses V061 · ANC contacts V062 · delivery records V063 · postnatal + lactation V064 · loss + termination V065 · obstetric emergencies V066 · confidentiality V067 · constraint validation V068 · reserve V069 |
+| `pct-service` | V401 | **V058, V059, V061 (landed) + V430–V459 (everything from here)** — see §2c | intention V058 · pregnancy episode + dating revisions V059 · fetuses V061 · **contraception V430** · ANC contacts V431 · delivery records V432 · postnatal + lactation V433 · loss + termination V434 · obstetric emergencies V435 · confidentiality V436 · constraint validation V437 · reserve V438–V459 |
 | `clinical-knowledge-platform-service` | V006 | **V041–V050** (see §2b) | rule-definition rows + source-document provenance V041 · national policy parameters V042 · reserve V043–50 |
 | `forms-service` | V002 | **V003–V006** | form applicability columns if the ANC/PNC/FP seeds need them |
 | `tshepo-authz-service` | V047 | **V048–V052** | SRH sensitivity assignment + adolescent consent policy seeds |
 | `vito-service` | V048 | **V055–V059** | mother↔child relationship types, the missing read, idempotency (below the Emergency lane's V060) |
 | `ubomi-service` | V005 | **V006–V008** | stillbirth / fetal-death civil notification |
+
+### 2c. Why RMNP abandoned V062–V069 and moved to V430–V459
+
+**V062–V069 is abandoned dead space. Every RMNP migration from V430 takes a number in V430–V459.**
+
+RMNP's band is registered as **V430–V459**, alongside Paediatrics/IMAM V400–V429, Emergency
+V070–V099 + V200s, Adult Medicine V100–V129 and Surgery V300–V329. Contraception landed as **V430**.
+
+The band convention works only because `spring.flyway.out-of-order: true` is set in **pct's own
+`application.yml`** (landed 2026-07-26 ~18:29). Bands mean a lane routinely adds a migration
+numerically below one another lane has already applied, and Flyway's default silently refuses exactly
+those. With `validate-on-migrate: false` it does not even complain — it never runs them, and the
+service boots green with the table missing. That is how V058 and V059 of this pack were lost earlier
+the same day, before the flag was turned on.
+
+**A correction worth keeping, because the reasoning is reusable.** This section originally asserted
+that pct did *not* set `out-of-order`, and treated a `V106` that applied after `V401` as an
+unexplained anomaly that nobody should build on. The flag *was* set — in the service configuration
+inside the jar, not in `values-full-preview.yaml`, which is where the search stopped. So the V106
+observation was the flag working as designed, not an anomaly.
+
+Two things survive the correction, and one does not:
+
+- **Survives:** the number. V430 is right under the band convention regardless.
+- **Survives:** the reasoning that got there. Declining to build on a behaviour nobody could explain
+  was correct as a decision procedure even though the premise was wrong, and the cost asymmetry
+  argument still holds for any lane weighing the same choice.
+- **Does not survive:** "check whether your own sub-401 lease is unsafe." With out-of-order on, a
+  correctly-banded low number applies fine. `V107__medication_reconciliation.sql` is known-pending
+  and applies cleanly on the next rollout. `V108__medical_episode_emergency_fk.sql` no longer
+  exists — withdrawn and re-landed as `V201` in Emergency's band; the on-disk scan that flagged it
+  crossed with the withdrawal.
+
+**The durable lesson is where to look, not what was found.** A Flyway setting can live in the service
+jar, in Helm values, or in the pod environment, and a search that covers two of the three returns a
+confident wrong answer. Check `application.yml` in the service before concluding a flag is unset.
 
 ### 2a. pct V060 is not ours, and it is not committed
 

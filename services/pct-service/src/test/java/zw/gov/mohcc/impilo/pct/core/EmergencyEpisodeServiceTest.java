@@ -29,12 +29,14 @@ class EmergencyEpisodeServiceTest {
     private static final UUID FACILITY = UUID.fromString("00000000-0000-4000-8000-000000000002");
 
     private InMemoryRepo repo;
+    private CountingOutbox outbox;
     private EmergencyEpisodeService service;
 
     @BeforeEach
     void setUp() {
         repo = new InMemoryRepo();
-        service = new EmergencyEpisodeService(repo);
+        outbox = new CountingOutbox();
+        service = new EmergencyEpisodeService(repo, outbox, new com.fasterxml.jackson.databind.ObjectMapper());
     }
 
     /**
@@ -50,9 +52,52 @@ class EmergencyEpisodeServiceTest {
         assertTrue(result.created());
         assertNotNull(result.episode().getEpisodeId());
         assertEquals(1, repo.store.size());
-        // The service has exactly one collaborator, and it is its own table.
-        assertEquals(1, EmergencyEpisodeService.class.getDeclaredConstructors()[0].getParameterCount(),
-                "a second collaborator here would be a service that can block an emergency registration");
+        // Care-first asserted structurally: every constructor parameter is one of PCT's own tables or
+        // a serialiser. A *ServiceClient here would be a peer able to block an emergency registration.
+        for (var p : EmergencyEpisodeService.class.getDeclaredConstructors()[0].getParameterTypes()) {
+            assertFalse(p.getSimpleName().endsWith("ServiceClient") || p.getSimpleName().endsWith("Client"),
+                    "EmergencyEpisodeService must not depend on " + p.getSimpleName()
+                            + " — a peer client here can block an emergency registration");
+        }
+    }
+
+    @Test
+    @DisplayName("opening emits a routed lifecycle event, in the same transaction")
+    void openingEmitsALifecycleEvent() {
+        service.open(walkIn().journeyId("J1").build());
+
+        assertEquals(1, outbox.events.size());
+        var ev = outbox.events.get(0);
+        assertEquals("EMERGENCY_EPISODE_OPENED", ev.getEventType());
+        assertEquals("EMERGENCY_EPISODE", ev.getAggregateType());
+        // That this type actually ROUTES to a topic a consumer subscribes to is asserted in
+        // ClinicalEventTopicInventoryTest, which owns that layer. Split deliberately: this test
+        // proves the emit happened, that one proves it is addressable. An emit with no route is the
+        // defect that hid pct.ed.critical_result for the life of the ED diagnostics lane.
+    }
+
+    @Test
+    @DisplayName("the event payload carries correlation, not a copy of the clinical record")
+    void eventPayloadCarriesNoClinicalContent() {
+        service.open(walkIn().journeyId("J1").build());
+        String payload = outbox.events.get(0).getPayload();
+
+        assertTrue(payload.contains("episodeId"));
+        assertTrue(payload.contains("journeyId"));
+        // A copy of the acuity or the disposition here would be a second, staler answer to a
+        // question another table already owns.
+        assertFalse(payload.contains("acuity"), payload);
+        assertFalse(payload.contains("disposition"), payload);
+    }
+
+    @Test
+    @DisplayName("a replay emits nothing, because nothing happened")
+    void aReplayEmitsNoEvent() {
+        service.open(ambulance("ems-9").build());
+        int after = outbox.events.size();
+        service.open(ambulance("ems-9").build());
+        assertEquals(after, outbox.events.size(),
+                "a replayed pre-alert is not a new episode and must not look like one to consumers");
     }
 
     @Test
@@ -242,6 +287,45 @@ class EmergencyEpisodeServiceTest {
                     TENANT, FACILITY, entryRoute, entrySourceService, entrySourceRef, null,
                     null, subjectCpid, journeyId, null, null, emergencyCaseId, false, null, "actor-1");
         }
+    }
+
+    /** Captures what the service told the estate. */
+    private static final class CountingOutbox implements zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository {
+        private final List<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> events = new ArrayList<>();
+
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> S save(S e) {
+            events.add(e); return e;
+        }
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> findTop100ByPublishedAtIsNullOrderByCreatedAtAsc() { return List.of(); }
+        @Override public void flush() { }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> S saveAndFlush(S e) { return save(e); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> List<S> saveAllAndFlush(Iterable<S> es) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAllInBatch(Iterable<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> es) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAllByIdInBatch(Iterable<Long> ids) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAllInBatch() { throw new UnsupportedOperationException(); }
+        @Override public zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity getOne(Long id) { throw new UnsupportedOperationException(); }
+        @Override public zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity getById(Long id) { throw new UnsupportedOperationException(); }
+        @Override public zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity getReferenceById(Long id) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> List<S> findAll(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> List<S> findAll(org.springframework.data.domain.Example<S> ex, org.springframework.data.domain.Sort s) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> List<S> saveAll(Iterable<S> es) { throw new UnsupportedOperationException(); }
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> findAll() { return new ArrayList<>(events); }
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> findAllById(Iterable<Long> ids) { throw new UnsupportedOperationException(); }
+        @Override public Optional<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> findById(Long id) { return Optional.empty(); }
+        @Override public boolean existsById(Long id) { return false; }
+        @Override public long count() { return events.size(); }
+        @Override public void deleteById(Long id) { throw new UnsupportedOperationException(); }
+        @Override public void delete(zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity e) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAllById(Iterable<? extends Long> ids) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAll(Iterable<? extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> es) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAll() { throw new UnsupportedOperationException(); }
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> findAll(org.springframework.data.domain.Sort s) { throw new UnsupportedOperationException(); }
+        @Override public org.springframework.data.domain.Page<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> findAll(org.springframework.data.domain.Pageable p) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> Optional<S> findOne(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> org.springframework.data.domain.Page<S> findAll(org.springframework.data.domain.Example<S> ex, org.springframework.data.domain.Pageable p) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> long count(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> boolean exists(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity, R> R findBy(org.springframework.data.domain.Example<S> ex, java.util.function.Function<org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery<S>, R> f) { throw new UnsupportedOperationException(); }
     }
 
     /**

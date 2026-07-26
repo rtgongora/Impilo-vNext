@@ -71,8 +71,6 @@ class DownstreamRouteContractTest {
      *       dead. Being completed in vashandi, which owns {@code vsh_roster}/{@code vsh_shift}.
      *       ({@code /v1/wards} was on this list and is fixed — ward create now goes to
      *       inpatient-service, where ward reads already went.)</li>
-     *   <li><b>Adult Medicine {@code /v1/ehr}</b> — the structured-history vertical, owed a system
-     *       of record by that pack's W2. Its responses already name the owning lane and wave.</li>
      *   <li><b>FHIR gateway</b> — proxied to HAPI rather than declared as Spring routes, so the
      *       scanner cannot see them. Verify before removing this line.</li>
      *   <li><b>Nhume {@code /internal/v1}</b> — a bare prefix from a concatenated path; the
@@ -81,16 +79,18 @@ class DownstreamRouteContractTest {
      */
     private static final Set<String> BASELINE = Set.of(
             // ── Workforce / facility lane ────────────────────────────────────────
-            // tuso-service serves shifts at /v1/internal/facilities/{facilityId}/…; nothing in the
-            // estate serves /v1/staffing at all, so the roster-week read, the on-call roster and
-            // swaps are dead. Being completed in vashandi (vsh_roster/vsh_shift), which owns them.
+            // tuso-service serves shifts at /v1/internal/facilities/{facilityId}/… — a repoint
+            // owned by another lane.
             //
-            // /v1/wards is FIXED and gone from this list: hospital wards are inpatient-service's
-            // (inpatient.ward), which is also where the BFF already read them from, so ward create
-            // was repointed there rather than built in tuso. Tuso's `wards` are zw_admin_ward —
-            // electoral wards on the geography API — a different thing wearing the same word.
+            // /v1/wards and /v1/staffing are both FIXED and gone from this list:
+            //   * hospital wards are inpatient-service's (inpatient.ward), which is also where the
+            //     BFF already read them from, so ward create was repointed there rather than built
+            //     in tuso. Tuso's `wards` are zw_admin_ward — electoral wards on the geography
+            //     API — a different thing wearing the same word.
+            //   * rostering is vashandi's (vsh_roster/vsh_shift), and scheduled on-call is a
+            //     projection over shifts carrying an on_call_role, not a rival concept beside the
+            //     virtual-pool duty read.
             "TusoServiceClient -> /v1/shifts",
-            "TusoServiceClient -> /v1/staffing",
 
             // /v1/vitals was on this list and is FIXED: the vitals surface now reads and writes
             // pct's observation spine (/v1/observations, LOINC-coded) via VitalsObservationBridge,
@@ -98,10 +98,6 @@ class DownstreamRouteContractTest {
             // existed. /v1/records was fixed alongside by the clinical-documents completion
             // (pct ClinicalDocumentController, V102).
 
-            // ── Adult Medicine lane (mine) ───────────────────────────────────────
-            // /v1/ehr — the structured-history vertical. W2 builds the system of record; this line
-            // goes when it lands. Every response already names this lane and wave.
-            "PctServiceClient -> /v1/ehr",
 
             // ── Not resolvable by a static scan ──────────────────────────────────
             // Proxied to HAPI rather than declared as Spring routes.
