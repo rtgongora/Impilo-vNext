@@ -148,9 +148,29 @@ same value twice, one facility. Derived files add `legacy_locality_name` and `pr
 5,400 rows.
 
 **Conclusion: HPA's register never recorded coordinates.** The ETL lost nothing; the bundle's counts
-equal the source's. But **2,227 street addresses do exist and were never ingested** —
-`HpaLocationImportService` reads locality/address only when a `legacy_enrichment` block is present
-and silently drops the rest. That is an importer gap, not a source gap.
+equal the source's.
+
+**Correction (2026-07-26, after this report was first written).** An earlier version of this section
+said the 2,227 street addresses "were never ingested" because `HpaLocationImportService` reads an
+address only when a `legacy_enrichment` block is present. Two of us reached that conclusion
+independently from `address_line1 = 0` on all 6,322 live rows, and a PO decision was taken on it.
+**It was wrong.** The feed carries 6,327 rows of which 2,294 have a `legacy_enrichment` block, and
+2,281 of those carry a `physical_address` — so the gate drops nothing. The original INSERT bound its
+parameters positionally and the address landed in **`description`**:
+
+```
+INSERT INTO ndila_locations (..., name, description, location_type, ...)
+VALUES                      (..., ?,    ?,           'HEALTH_FACILITY', ...)
+                                  name  address  ← misfiled
+```
+
+Live confirms it: 2,281 HPA rows carry a `description`, every sample a street address
+("7 Baines Avenue, Suite 8, Westend Clinic Extension, Harare"). Nothing was lost — it was misfiled.
+Recovered as a column move in ndila `V007`, not a re-import. The W4 importer change already writes
+`address_line1` correctly, so future imports need no fix.
+
+The real remaining gap is different and smaller: the feed carries a locality for only 2,294 rows,
+while the underlying CSV has 5,400. That is a gap in how the feed was joined, not in the importer.
 
 ## 7. Known defects in this work
 
