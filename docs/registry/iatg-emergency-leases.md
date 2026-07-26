@@ -373,6 +373,104 @@ Also confirmed by RMNP and worth restating: `pct` sets `validate-on-migrate: fal
 failure **without** making a lower-versioned migration apply — so the schema diverges from what the
 code expects and nothing says so.
 
+## 5d. Estate band convention, and what peer lanes committed
+
+**One band per lane, adopted estate-wide 2026-07-26:** Adult Medicine **V100s** · Emergency
+**V200s** · Surgery/Procedures **V300s**. New services keep V001+. The surgery lane adopted the
+band after verifying the reasoning and **released its earlier adjacent claims** — `inpatient`
+V067–V080, `oros` V018–V024, `ckp` V007–V020, `tuso` V044–V049 and the rest are free for any lane.
+
+The surgery lane's sharper statement of why adjacency fails, worth keeping: *a reservation is a
+claim about the future written in a namespace anyone may extend. Adjacency puts the claim exactly
+where the next incremental writer will land, so the claim and the collision occupy the same address
+by construction.* Three deaths in an hour reads like bad luck; it is the design.
+
+| Lane | Committed blocks |
+|---|---|
+| **Adult Medicine** | `pct` V100–V129 · `ckp` V051–V080 · `inpatient` V111–V130 · `zibo` V035–V049 · `oros` V050–V069 · `butano` V010–V029 · `telemonitoring` V010–V029 |
+| **Surgery / Procedures** | V300–V329 in every co-edited service; `procedures-service` and `surgery-service` V001+ |
+| **Emergency (this pack)** | V2xx per §3 |
+
+**STANDING RULE: read the lease files, not the announcement messages.** My own messages to peers
+carried block numbers that were stale against this file, and two of them (`inpatient` V067–V094,
+`ckp` V010–V029) would have landed straight on top of surgery had anyone acted on them. The
+committed lease is the only source of truth; a message is a draft. Adopted as a rule by the Adult
+Medicine lane too.
+
+## 5e. The emergency↔medicine handover contract (frozen with Adult Medicine)
+
+Their medical episode links to `pct.emergency_episode` via `emergency_episode_id` and is a
+different object: an emergency episode is **one presentation**, a medical episode is the arc of a
+problem across contacts, facilities and years (FHIR `EpisodeOfCare`, not `Encounter`). No rival
+episode, no rival acuity.
+
+**Acuity and severity are different axes and neither derives from the other.**
+`pct_problems.severity` (their V060) is a property of the *disease* — moderate persistent asthma,
+Child-Pugh B cirrhosis. IITT priority is a property of the *arrival*. **IITT stops at the door.**
+Carrying an acuity forward as a severity is precisely how a triage score becomes a permanent
+clinical label, so this pack never writes one from the other.
+
+Their four commitments, which this pack builds against:
+1. **Accept is idempotent on `pct_admission_id`** — a retried acceptance creates neither a second
+   admission nor a second acceptance.
+2. **The clinical record does not restart at the door** — problems raised in emergency stay the
+   *same* `pct_problems` rows; they take ownership via `responsible_service`, never by re-recording
+   the diagnosis. An internal handover is exactly where re-clerking would fork one disease in two.
+3. **Certainty travels, and is usually not CONFIRMED** — a problem raised in emergency is typically
+   `SUSPECTED` or `WORKING`. A `WORKING` diagnosis silently promoted to `CONFIRMED` by an admission
+   handshake is a diagnosis nobody made.
+4. **No timeout discharges responsibility** — a patient nobody has accepted is emergency's patient.
+
+**What the handover row must carry, and nothing more:** `emergency_episode_id`, `subject_cpid`,
+`journey_id`, the problems raised **as `pct_problems` ids rather than free text**, the disposition,
+and the requesting clinician.
+
+**⚠ Will break ED writes if unheeded — their V100 closed the `pct_problems` vocabularies and
+RENAMED two values:** `RISK` → `RISK_FACTOR`, `SOCIAL` → `SOCIAL_CIRCUMSTANCE`. Closed sets:
+`category` (DIAGNOSIS · SYMPTOM · SYNDROME · GUIDELINE_CLASSIFICATION · RISK_FACTOR ·
+FUNCTIONAL_CONSEQUENCE · SOCIAL_CIRCUMSTANCE), `diagnostic_certainty` (SUSPECTED · DIFFERENTIAL ·
+WORKING · CONFIRMED · REFUTED, or null), `clinical_status` (ACTIVE · RECURRENCE · RELAPSE ·
+REMISSION · INACTIVE · RESOLVED). An out-of-set value returns 400 naming the allowed set. **And
+adding a problem already open on the patient now returns 409** carrying the existing problem and two
+resolutions — a caller treating 409 as failure will drop the write.
+
+## 5f. STANDING RULE: a hardened server does not survive a careless client
+
+Adult Medicine's most valuable finding, and it hit this pack twice. Their `PatientBanner` read "no
+conditions" for every patient in the estate **even though the BFF had already been hardened to
+502** — the client destructured only `data` and fell through to `?? []`, so the server-side honesty
+fix bought nothing.
+
+The same pattern was live on two emergency surfaces, fixed in `d4b37c810`:
+- **the ED trackboard** rendered "No active ED visits." on a failed read — telling a coordinator the
+  department is empty, which is the one claim on that screen that stops someone looking;
+- **the emergency patient view's medication list** rendered "None active." on a failed read, one
+  line below an allergy query that already captured `isError` correctly.
+
+So: **every `useQuery` on an emergency surface must destructure `isError`, and every empty state
+must distinguish "none recorded" from "could not be read".** Guard candidates for W15. And the
+regression test must be **mutation-proved** — revert the guard, watch it fail — because this is the
+layer where the previous fix was silently undone. Still unaudited and owned by this pack: vitals and
+the ED-specific queries on `ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx`.
+
+The `intVal()`-returns-0 defect in `EdTriageDiscriminatorEngine` (§7) is the same family one layer
+down: **absence rendering as a reassuring value.** The reassuring default is the one that stops
+someone looking.
+
+## 5g. Mobile findings inherited from the burns withdrawal
+
+From the session that landed `19429a2a7` (adopted onto canonical in `3cb08e4b9`):
+- **The two specialty menus were never connected.** `fetchSpecialtyWorkspaces()` returns
+  `unknown[]` and is not wired to the panel, which renders only the local list. So the BFF's
+  10 × 3 and mobile's 18 × 6 = 108 labels have always been independent, and both are wrong.
+- **`formKindForTool` routes index 3 of *every* workspace to a generic two-number adder** — so
+  "Heart Failure Assessment" and "Sickle Cell Crisis Protocol" labelled an arbitrary sum as a
+  clinical result. The burns fix stopped it for burns only.
+- **`NotesForm` fakes its save** the same way `RuleOf9Form` did.
+- Generalised lesson: **a grep for clinical formula names under-reports**, because implementations
+  are named after the component (`ParklandForm`), not the formula. Grep the arithmetic too
+  (`4 \* kg`, `* weight *`). This is why §5b's original "burns is absent" claim was wrong.
+
 ## 6. Defects fixed in W0 that other lanes depend on
 
 All three were verified in code, not inferred, and are pushed.
