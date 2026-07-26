@@ -25,43 +25,7 @@ import {
   type PublicServiceAction,
 } from "./AdaptiveServiceLauncher";
 import { IntentLink } from "./IntentLink";
-
-const IMMEDIATE_ACTIONS: PublicServiceAction[] = [
-  {
-    title: "Get Health Services",
-    description:
-      "Tell Impilo what care you need, optionally share your location, and compare nearby facilities.",
-    href: "/welcome/find-care",
-    icon: HeartHandshake,
-    access: "public",
-    emphasis: "primary",
-  },
-  {
-    title: "Emergency Help",
-    description:
-      "See immediate call actions, danger-sign guidance and guest emergency assistance.",
-    href: "/welcome/emergency",
-    icon: Siren,
-    access: "public",
-    emphasis: "emergency",
-  },
-  {
-    title: "Find or verify",
-    description:
-      "Search facilities or confirm a public practitioner registration without exposing private records.",
-    href: "/verify/practitioner",
-    icon: BadgeCheck,
-    access: "public",
-  },
-  {
-    title: "Feedback and safety",
-    description:
-      "Give feedback, report unsafe care anonymously, and receive a claim code for status updates.",
-    href: "/welcome/report",
-    icon: MessageSquareHeart,
-    access: "public",
-  },
-];
+import { PublicNoticesBoard } from "./PublicNoticesBoard";
 
 // Whole-health category launcher (landing concept). Every card routes to a REAL
 // existing public explorer — no dead-ends. Nutrition/exercise live under Wellness;
@@ -72,54 +36,10 @@ const CATEGORY_LAUNCHER: PublicServiceAction[] = [
   { title: "Medicines & products", description: "Pharmacies, approved suppliers and health goods.", href: "/welcome/marketplace", icon: PackageSearch, access: "public" },
   { title: "Diagnostics", description: "Where to get lab tests, imaging and screening.", href: "/welcome/find-care", icon: HeartPulse, access: "public" },
   { title: "Wellness", description: "Screening, healthy living and wellbeing support.", href: "/welcome/wellness", icon: Sparkles, access: "public" },
+  { title: "Health information", description: "Plain-language guidance and danger signs.", href: "/welcome/health-info", icon: BookOpenCheck, access: "public" },
   { title: "Health cover", description: "Compare medical-aid and insurance plans.", href: "/welcome/coverage", icon: WalletCards, access: "public" },
   { title: "Learn", description: "Trusted health courses and public information.", href: "/welcome/learning", icon: GraduationCap, access: "public" },
   { title: "Get involved", description: "Shape Impilo — ideas, consultations and communities.", href: "/get-involved", icon: Megaphone, access: "public" },
-];
-
-const OPEN_DISCOVERY: PublicServiceAction[] = [
-  {
-    title: "Health information",
-    description: "Trusted, plain-language health guidance and danger-sign callouts.",
-    href: "/welcome/health-info",
-    icon: BookOpenCheck,
-    access: "public",
-  },
-  {
-    title: "Notices and bulletins",
-    description: "Published public-health, safety, disaster and regulatory notices.",
-    href: "/welcome/notices",
-    icon: Megaphone,
-    access: "public",
-  },
-  {
-    title: "Health cover",
-    description: "Compare published medical-aid and insurance plans and benefits.",
-    href: "/welcome/coverage",
-    icon: WalletCards,
-    access: "public",
-  },
-  {
-    title: "Wellness",
-    description: "Screening schedules and private, one-off BMI or blood-pressure checks.",
-    href: "/welcome/wellness",
-    icon: HeartPulse,
-    access: "public",
-  },
-  {
-    title: "Learning",
-    description: "Browse citizen, caregiver and first-aid courses before enrolment.",
-    href: "/welcome/learning",
-    icon: GraduationCap,
-    access: "public",
-  },
-  {
-    title: "Products and suppliers",
-    description: "Browse published health products, services and approved suppliers.",
-    href: "/welcome/marketplace",
-    icon: PackageSearch,
-    access: "public",
-  },
 ];
 
 const TRUST_STEPS = [
@@ -145,7 +65,7 @@ export function PublicLanding() {
     <PublicShell>
       <WelcomeHero />
 
-      <section className="mt-12" aria-labelledby="categories-title">
+      <section id="services" className="mt-12 scroll-mt-28" aria-labelledby="categories-title">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">
             Explore all of Impilo
@@ -154,8 +74,8 @@ export function PublicLanding() {
             Find whatever helps you get well and stay well
           </h2>
           <p className="mt-3 text-base leading-7 text-slate-600">
-            Care, providers, medicines, diagnostics, wellness and cover — one place, and you can look
-            without signing in.
+            Care, providers, medicines, diagnostics, wellness and cover — one place. Browse without
+            signing in; Impilo asks who you are only when a service genuinely needs it.
           </p>
         </div>
         {/* The launcher's own container queries can't resolve their own width here,
@@ -165,55 +85,23 @@ export function PublicLanding() {
         </div>
       </section>
 
-      <section id="services" className="mt-14 scroll-mt-28" aria-labelledby="services-title">
+      {/* Live public-health notices — real feed, not another card wall (§16: each
+          section must add detail, live information or a next action). */}
+      <section className="mt-14" aria-labelledby="notices-title">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">
-            Help available now
+            Happening now
           </p>
-          <h2 id="services-title" className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-            Start with the need, not the login screen
+          <h2 id="notices-title" className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+            Public health notices and bulletins
           </h2>
           <p className="mt-3 text-base leading-7 text-slate-600">
-            These journeys use live public services. They do not require an Impilo ID, and they do
-            not expose personal health information.
+            Published alerts, safety notices and regulatory bulletins as they are issued.
           </p>
         </div>
         <div className="mt-6">
-          <AdaptiveServiceLauncher actions={IMMEDIATE_ACTIONS} />
+          <PublicNoticesBoard />
         </div>
-      </section>
-
-      <section
-        className="mt-14 grid gap-8 rounded-[2rem] border border-slate-200 bg-slate-50/70 p-6 sm:p-8 lg:grid-cols-[minmax(0,.75fr)_minmax(0,1.25fr)] lg:p-10"
-        aria-labelledby="explore-title"
-      >
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">
-            Explore freely
-          </p>
-          <h2 id="explore-title" className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-            Public knowledge and services in one place
-          </h2>
-          <p className="mt-3 text-base leading-7 text-slate-600">
-            Browse first. Impilo introduces sign-in only for saved history, personalised records,
-            transactions, certificates or authority-bound work.
-          </p>
-          <div className="mt-6 rounded-2xl border border-emerald-100 bg-white p-5">
-            <Stethoscope className="h-6 w-6 text-emerald-700" aria-hidden />
-            <h3 className="mt-3 font-semibold text-slate-950">Need help choosing?</h3>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              Ask Nompilo in the living canvas above. Nompilo gives general guidance and routes you
-              to a real public journey; it does not impersonate a clinician.
-            </p>
-            <a
-              href="#living-canvas-title"
-              className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-emerald-700 hover:text-emerald-900"
-            >
-              Ask Nompilo
-            </a>
-          </div>
-        </div>
-        <AdaptiveServiceLauncher actions={OPEN_DISCOVERY} compact />
       </section>
 
       <section
