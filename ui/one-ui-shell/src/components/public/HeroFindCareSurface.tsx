@@ -42,9 +42,7 @@ export function HeroFindCareSurface() {
   const {
     need,
     serviceToken,
-    serviceLabel,
     location,
-    view,
     results,
     selectedFacilityId,
     hydrated,
@@ -52,12 +50,14 @@ export function HeroFindCareSurface() {
     setService,
     setLocation,
     clearLocation,
-    setView,
     setResults,
     setSelectedFacility,
     hydrate,
   } = useFindCareJourneyStore();
 
+  // The hero leads with the map (per the landing concept). This is a local UI
+  // preference — it does not overwrite the full find-care page's own view.
+  const [view, setView] = useState<"map" | "list">("map");
   const [needDraft, setNeedDraft] = useState(need);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
