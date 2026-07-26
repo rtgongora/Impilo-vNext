@@ -63,6 +63,20 @@ const IMMEDIATE_ACTIONS: PublicServiceAction[] = [
   },
 ];
 
+// Whole-health category launcher (landing concept). Every card routes to a REAL
+// existing public explorer — no dead-ends. Nutrition/exercise live under Wellness;
+// equipment under Medicines & products; provider discovery is honest verification.
+const CATEGORY_LAUNCHER: PublicServiceAction[] = [
+  { title: "Find care", description: "Facilities, clinics and services near you or online.", href: "/welcome/find-care", icon: HeartHandshake, access: "public" },
+  { title: "Providers", description: "Verify a practitioner is registered and licensed.", href: "/verify/practitioner", icon: Stethoscope, access: "public" },
+  { title: "Medicines & products", description: "Pharmacies, approved suppliers and health goods.", href: "/welcome/marketplace", icon: PackageSearch, access: "public" },
+  { title: "Diagnostics", description: "Where to get lab tests, imaging and screening.", href: "/welcome/find-care", icon: HeartPulse, access: "public" },
+  { title: "Wellness", description: "Screening, healthy living and wellbeing support.", href: "/welcome/wellness", icon: Sparkles, access: "public" },
+  { title: "Health cover", description: "Compare medical-aid and insurance plans.", href: "/welcome/coverage", icon: WalletCards, access: "public" },
+  { title: "Learn", description: "Trusted health courses and public information.", href: "/welcome/learning", icon: GraduationCap, access: "public" },
+  { title: "Get involved", description: "Shape Impilo — ideas, consultations and communities.", href: "/get-involved", icon: Megaphone, access: "public" },
+];
+
 const OPEN_DISCOVERY: PublicServiceAction[] = [
   {
     title: "Health information",
@@ -130,6 +144,24 @@ export function PublicLanding() {
   return (
     <PublicShell>
       <WelcomeHero />
+
+      <section className="mt-12" aria-labelledby="categories-title">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">
+            Explore all of Impilo
+          </p>
+          <h2 id="categories-title" className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+            Find whatever helps you get well and stay well
+          </h2>
+          <p className="mt-3 text-base leading-7 text-slate-600">
+            Care, providers, medicines, diagnostics, wellness and cover — one place, and you can look
+            without signing in.
+          </p>
+        </div>
+        <div className="mt-6">
+          <AdaptiveServiceLauncher actions={CATEGORY_LAUNCHER} compact />
+        </div>
+      </section>
 
       <section id="services" className="mt-14 scroll-mt-28" aria-labelledby="services-title">
         <div className="max-w-3xl">
