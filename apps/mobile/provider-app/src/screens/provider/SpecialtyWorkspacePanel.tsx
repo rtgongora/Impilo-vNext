@@ -18,7 +18,7 @@ type Props = {
   onBack: () => void;
 };
 
-type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withheld";
+type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "soon" | "withheld";
 
 /**
  * Burns arithmetic is withheld from this app.
@@ -56,12 +56,21 @@ const WITHHELD_BURNS_ARITHMETIC = [
 ];
 
 /**
- * Workspaces where the generic `sum` fallback must not stand in for a clinical tool.
- * In Burns it labelled a two-number adder "Graft Planning", which reads as a clinical
- * result. These fall through to the honest "not implemented" state instead.
+ * There is no generic calculator any more.
+ *
+ * The fourth tool of *every* workspace used to route to a two-number adder rendered under that
+ * tool's clinical name, with the sum shown in green as "Result: N". So "Child-Pugh Score",
+ * "Sedation (RASS)", "Sickle Cell Crisis Protocol", "PPH Protocol", "Toxicity Grading (CTCAE)"
+ * and psychiatry's "Risk Assessment" each presented an arbitrary sum of two numbers the clinician
+ * typed as though it were that instrument's score. A wrong Child-Pugh grade changes who gets
+ * listed for transplant; a fabricated psychiatric risk score is worse still.
+ *
+ * The burns withdrawal fixed this for burns alone by exempting one workspace. The defect was
+ * never specific to burns — it was in the fallback — so the fallback is gone rather than
+ * exempted, and index 3 now reaches the same honest "not implemented" state as every other
+ * unbuilt tool. Do not reintroduce a generic calculator: a calculator that does not know which
+ * instrument it is computing cannot be labelled with an instrument's name.
  */
-const NO_GENERIC_CALCULATOR_WORKSPACES = new Set(["burns"]);
-
 export function formKindForTool(toolName: string, index: number, workspaceId: string): ToolFormKind {
   const t = toolName.toLowerCase();
   if (WITHHELD_BURNS_ARITHMETIC.some((token) => t.includes(token))) return "withheld";
@@ -69,7 +78,7 @@ export function formKindForTool(toolName: string, index: number, workspaceId: st
   if (t.includes("bsa")) return "bsa";
   if (t.includes("kt/v") || t.includes("ktv")) return "ktv";
   if (t.includes("checklist") || t.includes("pre-chemo")) return "checklist";
-  if (index === 3) return NO_GENERIC_CALCULATOR_WORKSPACES.has(workspaceId) ? "soon" : "sum";
+  if (index === 3) return "soon";
   return "notes";
 }
 
@@ -122,8 +131,10 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
                 {kind === "withheld"
                   ? "Unavailable — calculator withdrawn"
                   : kind === "soon"
-                    ? "Coming soon overview"
-                    : "Tap for workspace form"}
+                    ? "Not implemented"
+                    : kind === "notes"
+                      ? "Not implemented — scratch notes only"
+                      : "Tap for workspace form"}
               </Text>
             </TouchableOpacity>
           );
@@ -217,8 +228,7 @@ function ToolModalBody({
         {kind === "bsa" && <BsaForm />}
         {kind === "ktv" && <KtVForm />}
         {kind === "checklist" && <ChecklistForm />}
-        {kind === "sum" && <SumForm />}
-        {kind === "notes" && <NotesForm />}
+        {kind === "notes" && <NotesForm toolName={toolName} />}
       </ScrollView>
       <TouchableOpacity style={styles.secondaryBtn} onPress={onClose}>
         <Text style={styles.secondaryBtnText}>Close</Text>
@@ -244,9 +254,11 @@ function BsaForm() {
       <Text style={styles.inputLabel}>Weight (kg)</Text>
       <TextInput style={styles.input} keyboardType="decimal-pad" value={w} onChangeText={setW} placeholder="70" />
       <Text style={styles.result}>{bsa != null ? `BSA ≈ ${bsa.toFixed(2)} m²` : "Enter height and weight"}</Text>
-      <TouchableOpacity style={styles.primaryBtn} onPress={() => Alert.alert("BSA", bsa != null ? `${bsa.toFixed(2)} m²` : "Incomplete")}>
-        <Text style={styles.primaryBtnText}>Save</Text>
-      </TouchableOpacity>
+      {/* This had a "Save" button that only raised an alert. Nothing here reaches the record, so
+          the panel says so rather than offering a control that implies it does. */}
+      <Text style={styles.notRecordedNote}>
+        Not recorded. Copy this value into the chemotherapy order or the encounter note.
+      </Text>
     </View>
   );
 }
@@ -268,10 +280,26 @@ function KtVForm() {
       <Text style={styles.inputLabel}>Post BUN (mg/dL)</Text>
       <TextInput style={styles.input} keyboardType="decimal-pad" value={post} onChangeText={setPost} />
       <Text style={styles.result}>{ktv != null ? `Kt/V ≈ ${ktv.toFixed(2)}` : "Enter valid pre/post BUN"}</Text>
+      {/* ln(pre/post) is -ln(1-URR): the crude single-pool estimate, not Daugirdas spKt/V, which
+          also takes session length and ultrafiltration volume. Naming the model matters because
+          the crude form reads high, and a dose judged adequate on it may not be. */}
+      <Text style={styles.notRecordedNote}>
+        Crude urea-ratio estimate only — it ignores session length and ultrafiltration, so it reads
+        higher than Daugirdas spKt/V. Not recorded. Confirm adequacy against the dialysis unit's
+        governed calculation before changing the prescription.
+      </Text>
     </View>
   );
 }
 
+/**
+ * Three generic switches — not the named checklist.
+ *
+ * These items are the same whichever checklist opened this sheet, so completing them attests to
+ * nothing specific. It previously concluded "Ready to proceed", which reads as a clinical
+ * clearance derived from a real pre-procedure checklist. It is a reminder list; it says so, and
+ * it does not clear anyone to proceed.
+ */
 function ChecklistForm() {
   const [a, setA] = useState(false);
   const [b, setB] = useState(false);
@@ -279,7 +307,10 @@ function ChecklistForm() {
   const done = a && b && c;
   return (
     <View style={styles.formBlock}>
-      <Text style={styles.formLabel}>Pre-session checklist</Text>
+      <Text style={styles.notImplementedBadge}>
+        Generic reminders — not the governed checklist for this procedure
+      </Text>
+      <Text style={styles.formLabel}>Pre-session reminders</Text>
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Consents / ID verified</Text>
         <Switch value={a} onValueChange={setA} />
@@ -292,42 +323,40 @@ function ChecklistForm() {
         <Text style={styles.switchLabel}>Emergency meds available</Text>
         <Switch value={c} onValueChange={setC} />
       </View>
-      <Text style={styles.result}>{done ? "Ready to proceed" : "Complete all items"}</Text>
+      <Text style={styles.result}>{done ? "All reminders ticked" : "Reminders outstanding"}</Text>
+      <Text style={styles.notRecordedNote}>
+        Not recorded, and not a clearance to proceed. Complete the facility's checklist for this
+        procedure.
+      </Text>
     </View>
   );
 }
 
-function SumForm() {
-  const [x, setX] = useState("");
-  const [y, setY] = useState("");
-  const total = useMemo(() => {
-    const a = parseFloat(x);
-    const b = parseFloat(y);
-    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
-    return a + b;
-  }, [x, y]);
-  return (
-    <View style={styles.formBlock}>
-      <Text style={styles.formLabel}>Quick calculator</Text>
-      <TextInput style={styles.input} keyboardType="decimal-pad" value={x} onChangeText={setX} placeholder="Value A" />
-      <TextInput style={styles.input} keyboardType="decimal-pad" value={y} onChangeText={setY} placeholder="Value B" />
-      <Text style={styles.result}>{total != null ? `Result: ${total}` : "Enter two numbers"}</Text>
-    </View>
-  );
-}
-
-function NotesForm() {
+/**
+ * Scratch text, and it says so.
+ *
+ * This used to end in a "Save" button that raised `Alert.alert("Saved", "Note captured locally.")`
+ * and wrote nothing anywhere — the same fabricated save the withdrawn Rule-of-9s form used. A
+ * clinician told their note was captured has no reason to write it down again, so the note is
+ * lost precisely when someone trusted it. Until this panel has a route into the encounter record
+ * it must not offer a save control at all.
+ */
+function NotesForm({ toolName }: { toolName: string }) {
   const [notes, setNotes] = useState("");
   return (
     <View style={styles.formBlock}>
+      <Text style={styles.notImplementedBadge}>
+        {toolName} is not implemented — this is scratch text, not the instrument
+      </Text>
       <View style={styles.notesLabelRow}>
-        <Text style={styles.formLabel}>Structured notes</Text>
-        <DictationAssistButton fieldLabel="structured notes" testID="specialty-notes-dictation-assist" />
+        <Text style={styles.formLabel}>Scratch notes</Text>
+        <DictationAssistButton fieldLabel="scratch notes" testID="specialty-notes-dictation-assist" />
       </View>
       <TextInput style={[styles.input, { minHeight: 100 }]} multiline value={notes} onChangeText={setNotes} placeholder="Clinical findings, plan..." />
-      <TouchableOpacity style={styles.primaryBtn} onPress={() => Alert.alert("Saved", notes ? "Note captured locally." : "Nothing to save")}>
-        <Text style={styles.primaryBtnText}>Save</Text>
-      </TouchableOpacity>
+      <Text style={styles.notRecordedNote}>
+        Nothing typed here is saved, and it is gone when you close this sheet. Record findings in
+        the encounter note in the EHR.
+      </Text>
     </View>
   );
 }
@@ -370,6 +399,16 @@ const styles = StyleSheet.create({
   toolTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
   toolHint: { fontSize: 12, color: colors.gray[500], marginTop: 4 },
   toolHintWithheld: { color: "#B45309", fontWeight: "600" },
+  notImplementedBadge: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#92400E",
+    backgroundColor: "#FEF3C7",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  notRecordedNote: { fontSize: 12, color: colors.gray[600], lineHeight: 17, marginTop: 2 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
   modalSheet: {
     backgroundColor: "#fff",

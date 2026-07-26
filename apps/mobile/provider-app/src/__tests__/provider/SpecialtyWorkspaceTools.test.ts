@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { formKindForTool } from "../../screens/provider/SpecialtyWorkspacePanel";
-import { getSpecialtyById } from "../../data/specialtyWorkspaces";
+import { SPECIALTY_WORKSPACES, getSpecialtyById } from "../../data/specialtyWorkspaces";
 
 const BURNS = getSpecialtyById("burns");
 
@@ -25,7 +25,7 @@ describe("burns workspace tools", () => {
   });
 
   it("offers no tool that computes a number", () => {
-    const numericKinds = ["bsa", "ktv", "sum"];
+    const numericKinds = ["bsa", "ktv"];
     const computing = (BURNS?.tools ?? [])
       .map((tool, index) => ({ tool, kind: formKindForTool(tool, index, "burns") }))
       .filter((t) => numericKinds.includes(t.kind));
@@ -54,6 +54,42 @@ describe("burns workspace tools", () => {
   });
 });
 
+/**
+ * The generic adder was never a burns problem — it was in the fallback.
+ *
+ * Index 3 of *every* workspace routed to a two-number adder rendered under that tool's clinical
+ * name, with the sum shown in green as "Result: N". The burns withdrawal exempted one workspace
+ * and left the other seventeen, so this suite previously asserted that "Heart Failure Assessment"
+ * *should* be an adder. These are the names a clinician would have seen over an arbitrary sum.
+ */
+describe("no workspace fabricates a score from a generic calculator", () => {
+  const FOURTH_TOOLS: ReadonlyArray<readonly [string, string]> = [
+    ["cardiology", "Heart Failure Assessment"],
+    ["gastro", "Child-Pugh Score"],
+    ["haematology", "Sickle Cell Crisis Protocol"],
+    ["icu", "Sedation (RASS)"],
+    ["obstetrics", "PPH Protocol"],
+    ["psychiatry", "Risk Assessment"],
+    ["chemo", "Toxicity Grading (CTCAE)"],
+    ["oncology", "Symptom Assessment (ESAS)"],
+    ["neonatal", "Surfactant Protocol"],
+    ["nephrology", "Transplant Assessment"],
+  ];
+
+  it.each(FOURTH_TOOLS)("%s / %s does not render a calculator", (workspaceId, tool) => {
+    expect(formKindForTool(tool, 3, workspaceId)).toBe("soon");
+  });
+
+  it("every specialty's fourth tool is honest about not being implemented", () => {
+    for (const workspace of SPECIALTY_WORKSPACES) {
+      const fourth = workspace.tools[3];
+      if (!fourth) continue;
+      const kind = formKindForTool(fourth, 3, workspace.id);
+      expect(["soon", "withheld"]).toContain(kind);
+    }
+  });
+});
+
 describe("unrelated specialty tools are unaffected", () => {
   it("keeps the chemotherapy BSA dose calculator", () => {
     expect(formKindForTool("Dose Calculator (BSA)", 1, "chemo")).toBe("bsa");
@@ -61,10 +97,6 @@ describe("unrelated specialty tools are unaffected", () => {
 
   it("keeps the dialysis Kt/V calculator", () => {
     expect(formKindForTool("Kt/V Calculator", 2, "dialysis")).toBe("ktv");
-  });
-
-  it("keeps the generic calculator fallback outside withheld workspaces", () => {
-    expect(formKindForTool("Heart Failure Assessment", 3, "cardiology")).toBe("sum");
   });
 
   it("keeps the pre-chemo checklist", () => {
