@@ -44,6 +44,7 @@ public class FormExtractionService implements FormExtractionHook {
     private final FormResponseRepository responseRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.pct.core.clinical.ObservationService observationService;
 
     public FormExtractionService(FormsCatalogIntegration formsCatalogIntegration,
                                  ProblemService problemService,
@@ -52,7 +53,8 @@ public class FormExtractionService implements FormExtractionHook {
                                  FormExtractedResourceRepository extractedRepository,
                                  FormResponseRepository responseRepository,
                                  EventOutboxRepository outboxRepository,
-                                 ObjectMapper objectMapper) {
+                                 ObjectMapper objectMapper,
+                                 zw.gov.mohcc.impilo.pct.core.clinical.ObservationService observationService) {
         this.formsCatalogIntegration = formsCatalogIntegration;
         this.problemService = problemService;
         this.carePlanService = carePlanService;
@@ -60,6 +62,7 @@ public class FormExtractionService implements FormExtractionHook {
         this.extractedRepository = extractedRepository;
         this.responseRepository = responseRepository;
         this.outboxRepository = outboxRepository;
+        this.observationService = observationService;
         this.objectMapper = objectMapper;
     }
 
@@ -243,18 +246,92 @@ public class FormExtractionService implements FormExtractionHook {
         }
     }
 
+    /**
+     * Persists an extracted observation into the observation registry, from which it reaches the
+     * shared health record.
+     *
+     * <p>This used to record PENDING and emit an event that nothing consumed, because no
+     * PCT observation registry existed: a respiratory rate entered on an IMNCI form produced a
+     * provenance row saying "pending" forever and no observation anywhere. It now writes a real
+     * row and the status reflects what actually happened.</p>
+     *
+     * <p>The write is keyed on the form response and the observation code, so re-submitting a
+     * corrected form amends the observation it previously asserted instead of adding a second one
+     * that disagrees with the first.</p>
+     */
     private void extractObservation(FormResponseEntity r, Map<String, Object> m, String linkId,
                                     JsonNode value, String resourceType) {
-        // No direct PCT→BUTANO Observation write method exists; emit for the SHR bridge and record PENDING.
         Map<String, Object> code = asMap(m.get("code"));
+        String observationCode = code != null ? str(code.get("code")) : null;
+        if (observationCode == null || observationCode.isBlank()) {
+            observationCode = linkId;
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("subject_cpid", r.getSubjectCpid());
+        body.put("journey_id", r.getJourneyId());
+        body.put("encounter_id", r.getEncounterId());
+        body.put("code", observationCode);
+        if (code != null) {
+            body.put("code_system", str(code.get("system")));
+            body.put("display", str(code.get("display")));
+        }
+        body.put("category", str(m.get("category")));
+        body.put("effective_at", r.getSubmittedAt() == null ? null : r.getSubmittedAt().toString());
+        body.put("recorded_by", r.getSubmittedBy());
+        body.put("source", "FORM");
+        body.put("derived_from_type", "FORM_RESPONSE");
+        body.put("derived_from_id", r.getResponseId().toString());
+
+        if (value.isNumber()) {
+            body.put("value_quantity", value.numberValue());
+            body.put("value_unit", str(m.get("unit")));
+        } else if (value.isBoolean()) {
+            body.put("value_boolean", value.booleanValue());
+        } else {
+            String text = value.asText();
+            // An answer of "not assessed" is not a value. Storing it as one would make the string
+            // "NOT_ASSESSED" look like a finding to every downstream reader.
+            if (isAbsenceAnswer(text)) {
+                body.put("data_absent_reason", text.toUpperCase(java.util.Locale.ROOT));
+            } else if (str(m.get("valueSystem")) != null) {
+                body.put("value_code", text);
+                body.put("value_code_system", str(m.get("valueSystem")));
+            } else {
+                body.put("value_text", text);
+            }
+        }
+
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("subject_cpid", r.getSubjectCpid());
         payload.put("butano_encounter_ref", r.getButanoEncounterRef());
         payload.put("code", code);
         payload.put("value", value.isNumber() ? value.numberValue() : value.asText());
         payload.put("unit", str(m.get("unit")));
-        record(r, m, linkId, resourceType, "BUTANO", "PENDING", null, null, payload);
+
+        try {
+            var saved = observationService.record(body);
+            payload.put("observation_id", saved.getObservationId().toString());
+            record(r, m, linkId, resourceType, "BUTANO", "ROUTED",
+                    saved.getObservationId().toString(), null, payload);
+        } catch (RuntimeException e) {
+            // The form response itself must survive a rejected extraction — losing the clinician's
+            // answers because one derived observation was malformed would be a far worse outcome.
+            log.warn("Form {} field {} could not be extracted as an observation: {}",
+                    r.getFormKey(), linkId, e.getMessage());
+            record(r, m, linkId, resourceType, "BUTANO", "FAILED", null, e.getMessage(), payload);
+        }
         writeOutbox(r, "pct.form.observation.extracted", payload);
+    }
+
+    /** Answers that mean "no value", not a value. */
+    private static boolean isAbsenceAnswer(String text) {
+        if (text == null) {
+            return false;
+        }
+        String t = text.trim().toUpperCase(java.util.Locale.ROOT);
+        return t.equals("NOT_ASSESSED") || t.equals("ASKED_BUT_UNKNOWN") || t.equals("UNKNOWN")
+               || t.equals("REFUSED") || t.equals("UNABLE_TO_OBTAIN") || t.equals("NOT_PERFORMED");
     }
 
     /**
