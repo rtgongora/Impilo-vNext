@@ -251,6 +251,14 @@ export default function AskPage() {
                   <code className="bg-neutral-100 px-1 rounded">POST /clinical/pathways/sessions/…/advance</code>
                 </p>
               )}
+              {startPathway.isError && (
+                /* The BFF used to answer a failed start with 200 and {"error":"unavailable"}, so
+                   the button did nothing and looked like it had worked. */
+                <p className="mt-2 text-[10px] font-medium text-red-700">
+                  The pathway session could not be started — you are not being guided through a
+                  protocol.
+                </p>
+              )}
             </div>
           )}
           {/* Messages */}
