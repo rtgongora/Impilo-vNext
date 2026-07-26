@@ -199,16 +199,9 @@ export function WelcomeHero() {
 
   return (
     <section
-      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,#04211c_0%,#062f2b_38%,#053c40_70%,#04252e_100%)] shadow-[0_40px_110px_-40px_rgba(2,30,26,.85)]"
+      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(70%_55%_at_78%_-8%,rgba(45,212,191,.55),transparent_62%),radial-gradient(55%_45%_at_100%_35%,rgba(103,232,249,.34),transparent_60%),radial-gradient(60%_55%_at_2%_108%,rgba(52,211,153,.5),transparent_62%),radial-gradient(45%_38%_at_38%_100%,rgba(45,212,191,.3),transparent_62%),linear-gradient(135deg,#04211c_0%,#062f2b_38%,#053c40_70%,#04252e_100%)] shadow-[0_40px_110px_-40px_rgba(2,30,26,.85)]"
       aria-labelledby="living-canvas-title"
     >
-      {/* Backlighting — aurora orbs behind the glass, the light the frost refracts. */}
-      <div aria-hidden className="pointer-events-none absolute -right-20 -top-28 h-[32rem] w-[32rem] rounded-full bg-teal-400/70 blur-[100px]" />
-      <div aria-hidden className="pointer-events-none absolute right-1/4 -top-20 h-80 w-80 rounded-full bg-cyan-300/55 blur-[90px]" />
-      <div aria-hidden className="pointer-events-none absolute -left-20 bottom-[-5rem] h-[28rem] w-[28rem] rounded-full bg-emerald-400/65 blur-[100px]" />
-      <div aria-hidden className="pointer-events-none absolute left-1/3 bottom-[-2rem] h-72 w-72 rounded-full bg-teal-300/45 blur-[85px]" />
-      {/* Rim light behind the frosted panel so the frost has something to catch. */}
-      <div aria-hidden className="pointer-events-none absolute right-[6%] top-1/4 h-[22rem] w-[22rem] rounded-full bg-cyan-200/35 blur-[120px]" />
       {/* Hairline top highlight — the sleek edge where the light catches. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
       <div className="relative z-10 grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
