@@ -13,6 +13,11 @@ import zw.gov.mohcc.impilo.orgregistry.persistence.repository.AppointmentRoleRep
 import zw.gov.mohcc.impilo.orgregistry.persistence.repository.OrganizationRepository;
 import zw.gov.mohcc.impilo.orgregistry.persistence.repository.RegulatoryAppointmentRepository;
 
+import org.mockito.ArgumentCaptor;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,6 +27,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -100,5 +107,90 @@ class RegulatoryAppointmentServiceTest {
 
         assertThatThrownBy(() -> service.verify(tenant, appt.getId(), "national-admin"))
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    // ── RB-1: expiry is a state transition, not a decoration ────────────────
+    //
+    // valid_to was written by create() and read by nothing: no repository method mentioned it, no
+    // scheduled bean existed, and the session path filters on status alone. An appointment that
+    // lapsed a year ago stayed ACTIVE and kept minting 15-minute work-context tokens.
+
+    private RegulatoryAppointmentEntity lapsed(LocalDate validTo) {
+        RegulatoryAppointmentEntity a = new RegulatoryAppointmentEntity();
+        a.setId(UUID.randomUUID());
+        a.setTenantId(tenant);
+        a.setOrganizationId(orgId);
+        a.setPersonHealthId("person-1");
+        a.setRoleCode("REGISTRATION_OFFICER");
+        a.setJurisdictionCode("NATIONAL");
+        a.setStatus("ACTIVE");
+        a.setValidTo(validTo);
+        return a;
+    }
+
+    @Test
+    void expireLapsed_endsAnAppointmentWhoseValidityHasPassed() throws Exception {
+        RegulatoryAppointmentEntity appt = lapsed(LocalDate.now().minusDays(1));
+        when(appointmentRepository.findByStatusAndValidToBeforeAndExpirySweptAtIsNull(
+                eq("ACTIVE"), any(LocalDate.class))).thenReturn(List.of(appt));
+
+        int ended = service.expireLapsed(LocalDate.now());
+
+        assertThat(ended).isEqualTo(1);
+        assertThat(appt.getStatus()).isEqualTo("ENDED");
+        assertThat(appt.getExpirySweptAt()).isNotNull();
+    }
+
+    /**
+     * The teardown consumer keys on this event; without it the tokens already issued survive the
+     * lapse. Publishing is therefore part of the transition, not a side effect of it.
+     */
+    @Test
+    void expireLapsed_emitsTheEndedEventTheTrustPlaneConsumes() throws Exception {
+        RegulatoryAppointmentEntity appt = lapsed(LocalDate.now().minusDays(1));
+        when(appointmentRepository.findByStatusAndValidToBeforeAndExpirySweptAtIsNull(
+                eq("ACTIVE"), any(LocalDate.class))).thenReturn(List.of(appt));
+
+        service.expireLapsed(LocalDate.now());
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> payload = ArgumentCaptor.forClass(Map.class);
+        verify(outboxWriter).publish(eq(tenant), eq("REGULATORY_APPOINTMENT"), anyString(),
+                eq("regulatory_appointment"), eq("ended"), anyString(), payload.capture());
+
+        // Both anchors the consumer needs, plus the reason that distinguishes a lapse from a
+        // revocation — ENDED alone cannot tell the holder why their access stopped.
+        assertThat(payload.getValue())
+                .containsEntry("personHealthId", "person-1")
+                .containsEntry("organizationId", orgId.toString())
+                .containsEntry("endReason", "EXPIRED");
+    }
+
+    /** Re-running the sweep must not re-end or re-emit; expirySweptAt is the idempotency marker. */
+    @Test
+    void expireLapsed_isIdempotentViaTheSweptStamp() throws Exception {
+        when(appointmentRepository.findByStatusAndValidToBeforeAndExpirySweptAtIsNull(
+                eq("ACTIVE"), any(LocalDate.class))).thenReturn(List.of());
+
+        assertThat(service.expireLapsed(LocalDate.now())).isZero();
+        verifyNoInteractions(outboxWriter);
+    }
+
+    /**
+     * The sweep never renews. Putting a lapsed appointment back is a registrar's decision made
+     * with evidence through verify(); a sweep that extended validity would be the system granting
+     * regulatory authority to itself.
+     */
+    @Test
+    void expireLapsed_neverExtendsValidity() throws Exception {
+        LocalDate validTo = LocalDate.now().minusDays(30);
+        RegulatoryAppointmentEntity appt = lapsed(validTo);
+        when(appointmentRepository.findByStatusAndValidToBeforeAndExpirySweptAtIsNull(
+                eq("ACTIVE"), any(LocalDate.class))).thenReturn(List.of(appt));
+
+        service.expireLapsed(LocalDate.now());
+
+        assertThat(appt.getValidTo()).isEqualTo(validTo);
+        assertThat(appt.getStatus()).isNotEqualTo("ACTIVE");
     }
 }

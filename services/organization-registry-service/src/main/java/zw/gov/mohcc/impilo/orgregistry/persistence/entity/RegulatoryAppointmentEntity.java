@@ -61,6 +61,13 @@ public class RegulatoryAppointmentEntity {
     private String verifiedBy;
     private OffsetDateTime verifiedAt;
 
+    /**
+     * Stamped by {@code RegulatoryAppointmentExpirySweep} when this appointment was ended because
+     * {@code validTo} had passed, rather than because a registrar ended it. Both outcomes are
+     * ENDED; only this column tells the holder why their access stopped.
+     */
+    private OffsetDateTime expirySweptAt;
+
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 

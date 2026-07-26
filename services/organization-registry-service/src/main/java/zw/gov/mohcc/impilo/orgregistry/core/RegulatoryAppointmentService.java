@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.orgregistry.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.orgregistry.api.OrgRegistryDtos.CreateAppointmentRequest;
@@ -10,7 +12,9 @@ import zw.gov.mohcc.impilo.orgregistry.persistence.repository.AppointmentRoleRep
 import zw.gov.mohcc.impilo.orgregistry.persistence.repository.OrganizationRepository;
 import zw.gov.mohcc.impilo.orgregistry.persistence.repository.RegulatoryAppointmentRepository;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -23,6 +27,8 @@ import java.util.UUID;
  */
 @Service
 public class RegulatoryAppointmentService {
+
+    private static final Logger log = LoggerFactory.getLogger(RegulatoryAppointmentService.class);
 
     private static final String GRANT_STATUS_ACTIVE = "ACTIVE";
 
@@ -126,6 +132,51 @@ public class RegulatoryAppointmentService {
                 "org-registry:appointment:ended:" + saved.getId() + ":" + saved.getStatus(),
                 payload(saved, null));
         return saved;
+    }
+
+    /**
+     * Expiry as a state transition (RB-1, V008). ACTIVE appointments whose {@code validTo} has
+     * passed are ENDED and stamped, emitting the same {@code ended} event a registrar's action
+     * would — which is what lets the trust plane revoke the tokens already issued.
+     *
+     * <p>This exists because {@code validTo} was written by {@link #create} and read by nothing:
+     * an appointment that lapsed a year ago stayed ACTIVE and kept minting work-context tokens,
+     * since the session path filters on status alone.</p>
+     *
+     * <p>The sweep never renews and never extends. An appointment reaching its end date lapses;
+     * putting it back is a registrar's decision, made with evidence through {@link #verify}. It
+     * also does not spare the last administrator at an organisation — expiry is a fact about the
+     * world, and a system that declined to record it in order to keep someone signed in would be
+     * granting regulatory authority to itself. Leaving an organisation administrator-less is
+     * surfaced loudly instead (see the warning below and the RB-2 succession guard on the manual
+     * path).</p>
+     *
+     * @return the number of appointments ended
+     */
+    @Transactional
+    public int expireLapsed(LocalDate asOf) throws Exception {
+        List<RegulatoryAppointmentEntity> lapsed = appointmentRepository
+                .findByStatusAndValidToBeforeAndExpirySweptAtIsNull(GRANT_STATUS_ACTIVE, asOf);
+        for (RegulatoryAppointmentEntity appt : lapsed) {
+            appt.setStatus("ENDED");
+            appt.setExpirySweptAt(OffsetDateTime.now());
+            RegulatoryAppointmentEntity saved = appointmentRepository.save(appt);
+
+            Map<String, Object> payload = new LinkedHashMap<>(payload(saved, null));
+            // The holder's access just stopped; "why" must survive to the audit trail and to
+            // whatever tells them. ENDED alone cannot distinguish a lapse from a revocation.
+            payload.put("endReason", "EXPIRED");
+            payload.put("validTo", String.valueOf(saved.getValidTo()));
+
+            outboxWriter.publish(saved.getTenantId(), "REGULATORY_APPOINTMENT", saved.getId().toString(),
+                    "regulatory_appointment", "ended",
+                    "org-registry:appointment:ended:" + saved.getId() + ":EXPIRED",
+                    payload);
+
+            log.warn("Regulatory appointment expired: id={} org={} role={} validTo={}",
+                    saved.getId(), saved.getOrganizationId(), saved.getRoleCode(), saved.getValidTo());
+        }
+        return lapsed.size();
     }
 
     public List<RegulatoryAppointmentEntity> listForOrganization(UUID tenantId, UUID organizationId) {
