@@ -222,6 +222,26 @@ public class CatalogValidationService {
             errors.add("Unable to verify facility legitimacy at this time");
             return;
         }
+        // HAR S2 — a regulator's institution listing is NOT an operating licence. Gate on tuso's
+        // composed `operational` verdict (ACTIVE + operating status confirmed + not a bare regulator
+        // listing + source-legitimacy allows), never on the raw `status` column: ~5,509 HPA-listed
+        // facilities carry no inspection, no licence and no practitioner-in-charge, and must never
+        // be able to place a regulated medication or diagnostics order.
+        String regulatoryStatus = summary.path("regulatoryStatus").asText(null);
+        if ("IMPORTED_PENDING_CONFIGURATION".equalsIgnoreCase(regulatoryStatus)) {
+            errors.add("This facility is on the regulator's register but is not yet operationally "
+                    + "verified on Impilo — regulated orders cannot be placed");
+            return;
+        }
+        if (summary.has("operational")) {
+            if (!summary.path("operational").asBoolean(false)) {
+                String verdict = summary.path("operationalVerdict").asText(null);
+                errors.add("Facility is not operationally verified — cannot place regulated order"
+                        + (verdict == null || verdict.isBlank() ? "" : " (" + verdict + ")"));
+            }
+            return;
+        }
+        // Fallback for an older tuso that predates the composed verdict — fail closed.
         String status = summary.path("status").asText(null);
         if (status == null || !"ACTIVE".equalsIgnoreCase(status)) {
             errors.add("Facility is not ACTIVE — cannot place regulated order");

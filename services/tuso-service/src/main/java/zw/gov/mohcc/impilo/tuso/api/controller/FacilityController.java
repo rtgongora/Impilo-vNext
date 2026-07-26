@@ -56,13 +56,16 @@ public class FacilityController {
     private final FacilityService facilityService;
     private final FacilityCompletenessService completenessService;
     private final FacilityProfileCompletionService profileCompletionService;
+    private final zw.gov.mohcc.impilo.tuso.core.FacilitySourceLegitimacyService sourceLegitimacyService;
 
     public FacilityController(FacilityService facilityService,
                               FacilityCompletenessService completenessService,
-                              FacilityProfileCompletionService profileCompletionService) {
+                              FacilityProfileCompletionService profileCompletionService,
+                              zw.gov.mohcc.impilo.tuso.core.FacilitySourceLegitimacyService sourceLegitimacyService) {
         this.facilityService = facilityService;
         this.completenessService = completenessService;
         this.profileCompletionService = profileCompletionService;
+        this.sourceLegitimacyService = sourceLegitimacyService;
     }
 
     /**
@@ -172,13 +175,44 @@ public class FacilityController {
         TrustContext ctx = TrustContextHolder.require();
         FacilityService.FacilityDetail detail = facilityService.getFacility(id);
         FacilityEntity facility = detail.facility();
+
+        // HAR S1 — the honest operational verdict cross-service gates must read. A regulator's
+        // institution listing is NOT an operating licence: IMPORTED_PENDING_CONFIGURATION and an
+        // unconfirmed operating status both deny, and the source-legitimacy composite must allow.
+        java.util.List<String> reasons = new java.util.ArrayList<>();
+        boolean legitimacyAllows =
+                sourceLegitimacyService.platformAccessAllowed(facility.getFacilityUuid(), reasons);
+        boolean statusActive = "ACTIVE".equalsIgnoreCase(facility.getStatus());
+        boolean operatingConfirmed =
+                !"MISSING_REQUIRES_CONFIRMATION".equalsIgnoreCase(facility.getOperationalStatus());
+        boolean regulatorListingOnly =
+                zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus
+                        .IMPORTED_PENDING_CONFIGURATION == facility.getRegulatoryStatus();
+        boolean operational = statusActive && operatingConfirmed && !regulatorListingOnly && legitimacyAllows;
+
+        String verdict;
+        if (operational) {
+            verdict = "Operational: active, operating status confirmed, platform access allowed.";
+        } else if (regulatorListingOnly) {
+            verdict = "Listed on the regulator's register but not yet configured or verified on the "
+                    + "platform — the listing does not assert that this facility is operating.";
+        } else if (!statusActive) {
+            verdict = "Facility status is " + facility.getStatus() + ".";
+        } else if (!operatingConfirmed) {
+            verdict = "Operating status has not been confirmed.";
+        } else {
+            verdict = reasons.isEmpty() ? "Platform access is not allowed." : String.join("; ", reasons);
+        }
+
         FacilityStatusSummary summary = new FacilityStatusSummary(
                 facility.getId(),
                 facility.getFacilityCode(),
                 facility.getName(),
                 facility.getStatus(),
                 facility.getOperationalStatus(),
-                facility.getRegulatoryStatus()
+                facility.getRegulatoryStatus(),
+                operational,
+                verdict
         );
         return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
     }

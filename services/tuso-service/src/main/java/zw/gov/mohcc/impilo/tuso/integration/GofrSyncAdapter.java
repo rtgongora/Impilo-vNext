@@ -426,7 +426,16 @@ public class GofrSyncAdapter {
         Map<String, Object> location = new HashMap<>();
         location.put("resourceType", "Location");
         location.put("name", facility.getName());
-        location.put("status", "ACTIVE".equals(facility.getStatus()) ? "active" : "inactive");
+        // HAR S4 — never publish a bare regulator listing to the national registry as `active`.
+        // A facility that exists only because it appears on the HPA institution register has no
+        // inspection, no licence and no verified national code; asserting `active` outbound is an
+        // externally-visible claim we cannot retract easily. Such rows are excluded from GOFR
+        // selection upstream; this is the belt-and-braces so no future caller can leak one.
+        boolean regulatorListingOnly =
+                zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus
+                        .IMPORTED_PENDING_CONFIGURATION == facility.getRegulatoryStatus();
+        location.put("status",
+                (!regulatorListingOnly && "ACTIVE".equals(facility.getStatus())) ? "active" : "inactive");
 
         if (facility.getLatitude() != null && facility.getLongitude() != null) {
             Map<String, Object> position = new HashMap<>();

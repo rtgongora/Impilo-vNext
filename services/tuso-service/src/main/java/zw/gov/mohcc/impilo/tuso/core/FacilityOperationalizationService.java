@@ -131,6 +131,16 @@ public class FacilityOperationalizationService {
         FacilityEntity facility = facilityRepository.findById(facilityId)
                 .orElseThrow(() -> new IllegalArgumentException("Facility not found: " + facilityId));
 
+        // HAR S3 (defence in depth) — the repository query already excludes bare regulator listings;
+        // refuse here too, so no future caller or hand-picked id can operationalise an institution
+        // that has only ever been listed on a register.
+        if (zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus
+                .IMPORTED_PENDING_CONFIGURATION == facility.getRegulatoryStatus()) {
+            throw new IllegalStateException(
+                    "Facility " + facilityId + " is a regulator listing awaiting configuration and "
+                            + "cannot be operationalised by bulk provisioning");
+        }
+
         String workspaceType = defaultWorkspaceType(facility.getFacilityType());
         int workspaces = 0;
         int servicePoints = 0;
@@ -207,15 +217,22 @@ public class FacilityOperationalizationService {
         };
     }
 
-    /** Honest minimal capability derivation: outpatient always; inpatient/maternity for hospitals. */
+    /**
+     * Honest minimal capability derivation: outpatient always; inpatient/maternity for hospitals.
+     *
+     * <p>HAR S3 — the {@code CLINIC} → MATERNITY inference was removed. "Clinic" is not evidence of
+     * a maternity service: the regulator's institution types include dental, optometry and radiology
+     * clinics, and advertising maternity care on the strength of a free-text type string is a claim
+     * we cannot stand behind in a care-seeking journey. Only an explicit HOSPITAL keeps the
+     * inpatient/maternity inference; everything else gets outpatient only, and real services arrive
+     * from configuration or a governed regulator-typed derivation.</p>
+     */
     static List<String[]> defaultCapabilities(String facilityType) {
         String t = facilityType == null ? "" : facilityType.toUpperCase(Locale.ROOT);
         List<String[]> caps = new ArrayList<>();
         caps.add(new String[]{"OPD", "Outpatient Department"});
         if (t.contains("HOSPITAL")) {
             caps.add(new String[]{"IPD", "Inpatient Department"});
-            caps.add(new String[]{"MATERNITY", "Maternity"});
-        } else if (t.contains("RURAL_HEALTH_CENTRE") || t.contains("CLINIC")) {
             caps.add(new String[]{"MATERNITY", "Maternity"});
         }
         return caps;

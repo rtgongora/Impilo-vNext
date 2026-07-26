@@ -163,6 +163,38 @@ public class FacilitySourceLegitimacyService {
      * <p>{@code platformAccessAllowed} = no source row has {@code allowedOnPlatform=false} AND at
      * least one row allows. Any explicit denial blocks; silence never grants.</p>
      */
+    /**
+     * The single implementation of the platform-access rule (HAR S1). A veto lattice, never a
+     * hierarchy: one authority's deny outranks another's allow, and no recorded verdict at all is
+     * itself a deny. Callers that need the verdict without the full composite (status summaries,
+     * claim review, cross-service gates) MUST use this rather than re-deriving it — the rule was
+     * previously duplicated in {@code FacilityClaimService} with a comment hoping the two would not
+     * diverge.
+     *
+     * @param reasons optional sink for human-readable justification; may be {@code null}
+     */
+    @Transactional(readOnly = true)
+    public boolean platformAccessAllowed(UUID facilityUuid, List<String> reasons) {
+        List<FacilitySourceLegitimacyEntity> rows =
+                legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid);
+        if (rows.isEmpty()) {
+            if (reasons != null) {
+                reasons.add("No source legitimacy recorded for this facility; "
+                        + "platform access is not granted by default");
+            }
+            return false;
+        }
+        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
+        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
+        if (reasons != null) {
+            for (FacilitySourceLegitimacyEntity r : rows) {
+                reasons.add(r.getSource() + ": " + r.getStatus()
+                        + (r.isAllowedOnPlatform() ? " (allows platform operation)" : " (denies platform operation)"));
+            }
+        }
+        return !anyDenies && anyAllows;
+    }
+
     @Transactional(readOnly = true)
     public FacilitySourceLegitimacyDtos.FacilityStatusCompositeResponse getComposite(UUID facilityUuid) {
         TrustContext ctx = TrustContextHolder.require();
@@ -257,7 +289,12 @@ public class FacilitySourceLegitimacyService {
         // v1.1 envelope requirements — a null pod/idempotency key poisons the
         // outbox publisher (it halts the whole queue to preserve ordering).
         outbox.setPodId("national-spine");
-        outbox.setIdempotencyKey("tuso:legitimacy:" + facility.getId() + ":" + correlationId);
+        // HAR S7 — the key MUST include the source. A legitimacy backfill stamps more than one row
+        // per facility under a single correlation id (e.g. HPA_LEGAL + PLATFORM_OPERATIONAL); with
+        // the source omitted those events collide on the idempotency key and a deduping consumer
+        // silently drops all but the first, losing the regulator's verdict downstream.
+        outbox.setIdempotencyKey(
+                "tuso:legitimacy:" + facility.getId() + ":" + row.getSource().name() + ":" + correlationId);
         outbox.setSubjectType("Facility");
         outbox.setSubjectId(String.valueOf(facility.getId()));
         outbox.setPartitionKey(String.valueOf(facility.getId()));

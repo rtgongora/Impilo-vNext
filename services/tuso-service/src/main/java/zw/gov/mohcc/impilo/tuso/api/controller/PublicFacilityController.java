@@ -32,6 +32,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/public/facilities")
 public class PublicFacilityController {
+    /** HAR S5 — hard cap on the anonymous public lane (register is ~7,285 rows). */
+    private static final int MAX_PUBLIC_PAGE_SIZE = 100;
+
 
     private static final Logger log = LoggerFactory.getLogger(PublicFacilityController.class);
 
@@ -77,6 +80,9 @@ public class PublicFacilityController {
             @RequestParam(defaultValue = "50") int size) {
 
         TrustContext ctx = TrustContextHolder.require();
+        // HAR S5 — the public lane is anonymous and the register is now ~7,285 rows; an uncapped
+        // size is a cheap memory-pressure vector. Mirrors the BFF's own MAX_PAGE_SIZE discipline.
+        size = Math.min(Math.max(size, 1), MAX_PUBLIC_PAGE_SIZE);
         log.info("Public facility search [query={}, type={}, province={}, district={}, service={}] correlationId={}",
                 query, facilityType, province, district, service, ctx.correlationId());
 

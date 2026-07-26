@@ -30,8 +30,14 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
      * Facilities with no active workspace — the operational dead-ends targeted by
      * bulk default provisioning. Ordered by id so paced batches are resumable.
      */
+    // HAR S3 — a bare regulator listing must NEVER be swept into bulk operational provisioning.
+    // Without these exclusions this query returns the ~5,509 HPA-listed facilities, and
+    // operationalizeDefaults would mint workspaces, service points and ACTIVE capabilities for
+    // institutions that have no inspection, no licence and no practitioner-in-charge.
     @Query("SELECT f FROM FacilityEntity f WHERE f.tenantId = :tenantId " +
            "AND (:province IS NULL OR f.province = :province) " +
+           "AND f.regulatoryStatus <> zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus.IMPORTED_PENDING_CONFIGURATION " +
+           "AND f.status <> 'PROVISIONAL' " +
            "AND NOT EXISTS (SELECT 1 FROM WorkspaceEntity w WHERE w.facility = f AND w.active = true) " +
            "ORDER BY f.id")
     Page<FacilityEntity> findWithoutActiveWorkspace(
