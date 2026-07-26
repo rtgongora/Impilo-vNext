@@ -36,10 +36,29 @@ public class PathwaySessionService {
         this.clinicalOutboxWriter = clinicalOutboxWriter;
     }
 
+    /**
+     * Open a pathway session.
+     *
+     * <p><b>A definition with no steps is not startable.</b> Before this guard existed, selecting
+     * "ED — Ectopic pregnancy" on a shocked woman created an ACTIVE session at step 1 and saved it,
+     * while {@code currentStepSnapshot} returned an empty map — so the screen showed nothing and the
+     * record said an ectopic pathway had been opened. That is not a missing feature; it is a record
+     * of care that did not happen, and it is indistinguishable from a pathway with nothing left to
+     * do. Eight of the eleven seeded {@code ED_*} definitions were in that state.
+     *
+     * <p>Refusing is the containment: an unstartable pathway becomes a visible error at the point of
+     * selection instead of a silent false record, and the clinician goes and finds the protocol.
+     */
     @Transactional
     public PathwaySessionEntity start(String tenantId, String actorId, UUID pathwayId, String patientId, String encounterId) {
-        pathwayDefinitionRepository.findByIdWithSteps(pathwayId)
+        PathwayDefinitionEntity def = pathwayDefinitionRepository.findByIdWithSteps(pathwayId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "pathway not found"));
+        if (def.getSteps() == null || def.getSteps().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "pathway '" + def.getConditionCode() + "' has no steps and cannot be started. "
+                            + "It is defined but not yet implemented — use the unit's written protocol "
+                            + "and do not record this pathway as followed.");
+        }
         PathwaySessionEntity s = new PathwaySessionEntity();
         s.setPathwayId(pathwayId);
         s.setTenantId(tenantId);
@@ -68,7 +87,19 @@ public class PathwaySessionService {
                     m.put("data_capture_schema", st.getDataCaptureSchema());
                     return m;
                 })
-                .orElseGet(LinkedHashMap::new);
+                .orElseGet(() -> {
+                    // "There is no step at this order" and "there is a step and it is empty" are
+                    // different facts, and an empty map said both. A caller that cannot tell them
+                    // apart renders a blank panel either way — which is how a pathway with no
+                    // content passed for a pathway with nothing left to do.
+                    Map<String, Object> absent = new LinkedHashMap<>();
+                    absent.put("current_step_absent", true);
+                    absent.put("current_step_order", s.getCurrentStepOrder());
+                    absent.put("reason", def.getSteps() == null || def.getSteps().isEmpty()
+                            ? "PATHWAY_HAS_NO_STEPS"
+                            : "NO_STEP_AT_THIS_ORDER");
+                    return absent;
+                });
     }
 
     @Transactional
@@ -88,6 +119,16 @@ public class PathwaySessionService {
                 .findFirst();
         if (next.isPresent()) {
             s.setCurrentStepOrder(next.get().getStepOrder());
+        } else if (steps.isEmpty()) {
+            // Defence in depth for sessions that predate the start() guard. Reaching the end of a
+            // pathway that HAD steps is a completion; reaching the end of one that never had any is
+            // not — and the old code could not tell the difference, so a single advance marked the
+            // session COMPLETED, stamped completedAt, and published PATHWAY_SESSION_COMPLETED to the
+            // estate. A false completion broadcast to other services is worse than a local one,
+            // because every consumer and every indicator then counts it.
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "pathway has no steps: this session cannot be advanced or completed. "
+                            + "Reaching the end of an empty pathway is not completing it.");
         } else {
             s.setStatus("COMPLETED");
             s.setCompletedAt(Instant.now());
