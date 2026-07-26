@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useLogin } from "@/hooks/queries/useAuth";
 import { INTENT_QUERY_PARAM } from "@/lib/gateway-intent";
+import { safePublicHref } from "@/components/public/ContinueWithoutSignIn";
 
 type EntryIntent = "personal" | "work" | "regulatory";
 
@@ -222,7 +223,7 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
             >
               Create an account
             </Link>
-            <Link href="/home" className="text-slate-500 hover:text-slate-800">
+            <Link href={safePublicHref(returnTo || "/")} className="text-slate-500 hover:text-slate-800">
               Continue as guest
             </Link>
           </div>

@@ -79,9 +79,11 @@ describe("LoginPage — Progressive Auth Scene", () => {
       "href",
       "/auth/register/contact",
     );
+    // Guest continuation must land on a public path (never the authed /home) and,
+    // with no returnTo, defaults to the public landing so the guest keeps a public journey.
     expect(screen.getByRole("link", { name: /Continue as guest/i })).toHaveAttribute(
       "href",
-      "/home",
+      "/",
     );
   });
 });
