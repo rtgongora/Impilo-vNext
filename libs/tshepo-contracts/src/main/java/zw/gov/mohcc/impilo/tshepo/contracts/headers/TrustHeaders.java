@@ -109,6 +109,11 @@ public final class TrustHeaders {
     public static final String EXPORT_POLICY        = "x-export-policy";
     public static final String SUPPRESS_FIELDS      = "x-suppress-fields";
     public static final String DRILL_DOWN_ALLOWED   = "x-drill-down-allowed";
+    /**
+     * Confidential categories of {@code SPECIALLY_PROTECTED} content this requester may receive
+     * (comma-separated; {@code *} means all). Absent means none — protected content is withheld.
+     */
+    public static final String CONFIDENTIAL_CATEGORIES = "x-confidential-categories";
 
     // ── Internal service-to-service headers ──────────────────────────────
     public static final String SERVICE_ID    = "x-service-id";

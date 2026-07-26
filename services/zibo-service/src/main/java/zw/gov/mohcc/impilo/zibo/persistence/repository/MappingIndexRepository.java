@@ -25,6 +25,13 @@ public interface MappingIndexRepository extends JpaRepository<MappingIndexEntity
     List<MappingIndexEntity> findByTenantIdAndTargetSystemAndTargetCode(UUID tenantId, String targetSystem, String targetCode);
 
     /**
+     * Finds every mapping row that targets a given code system within a tenant. Used to load a
+     * whole governed classification map at once — e.g. the confidential clinical categories, whose
+     * source codes are prefixes and so cannot be found by exact source-code lookup.
+     */
+    List<MappingIndexEntity> findByTenantIdAndTargetSystem(UUID tenantId, String targetSystem);
+
+    /**
      * Finds all mapping entries derived from a specific ConceptMap artifact.
      */
     List<MappingIndexEntity> findByConceptmapRef(UUID conceptmapRef);

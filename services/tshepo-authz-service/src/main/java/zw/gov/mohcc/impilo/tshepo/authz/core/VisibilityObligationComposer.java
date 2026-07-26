@@ -28,6 +28,10 @@ public final class VisibilityObligationComposer {
     private VisibilityObligationComposer() {
     }
 
+    /**
+     * Compose obligations without any entitlement to specially-protected content. Callers that
+     * have made a confidentiality decision should use the six-argument overload instead.
+     */
     public static Obligations compose(
             AuthzInternalRequest request,
             PurposeOfUse purpose,
@@ -35,6 +39,25 @@ public final class VisibilityObligationComposer {
             PolicyRuleEntity matchedAllowRule,
             Optional<EscalationGrantView> activeGrant,
             ObjectMapper objectMapper) {
+        return compose(request, purpose, riskScore, matchedAllowRule, activeGrant, objectMapper, null);
+    }
+
+    /**
+     * @param grantedConfidentialCategories the PolicyEngine's confidentiality verdict — which
+     *        categories of {@code SPECIALLY_PROTECTED} content this requester may receive
+     *        ({@code ["*"]} for a whole-set grant). Empty or null revokes every category the rule
+     *        overlay may have asked for, so protected content stays withheld by default rather than
+     *        by hope. Confidentiality rides this obligation, not the tier: a tier is a total order,
+     *        and holding safeguarding must not imply holding mental health.
+     */
+    public static Obligations compose(
+            AuthzInternalRequest request,
+            PurposeOfUse purpose,
+            int riskScore,
+            PolicyRuleEntity matchedAllowRule,
+            Optional<EscalationGrantView> activeGrant,
+            ObjectMapper objectMapper,
+            List<String> grantedConfidentialCategories) {
 
         String loggingLevel = riskScore > 50 ? "ELEVATED" : "STANDARD";
 
@@ -60,6 +83,15 @@ public final class VisibilityObligationComposer {
 
         if (request.workflowContext() != null && !request.workflowContext().isBlank()) {
             vis.workflowContext(request.workflowContext());
+        }
+
+        // Applied LAST, after the rule overlay and any escalation lift, because either can add
+        // categories and this is the one revocation that has to win. An empty grant revokes
+        // everything: the default for every actor is that no protected content is reachable.
+        if (grantedConfidentialCategories == null || grantedConfidentialCategories.isEmpty()) {
+            vis.revokeConfidentialCategories();
+        } else {
+            vis.grantConfidentialCategories(grantedConfidentialCategories);
         }
 
         VisibilityProfile profile = vis.build();
@@ -92,7 +124,8 @@ public final class VisibilityObligationComposer {
                                 vp.suppressFields(),
                                 vp.pseudonymiseFields(),
                                 ExportPolicy.AGGREGATE_ONLY.name(),
-                                false));
+                                false,
+                                vp.confidentialCategories()));
             }
         }
         return o;
@@ -130,6 +163,13 @@ public final class VisibilityObligationComposer {
             }
             if (vm.get("drillDownAllowed") instanceof Boolean d) {
                 vis.drillDownAllowed(d);
+            }
+            if (vm.get("confidentialCategories") instanceof List<?> cc) {
+                List<String> categories = new ArrayList<>();
+                for (Object o : cc) {
+                    categories.add(o.toString());
+                }
+                vis.grantConfidentialCategories(categories);
             }
         } catch (Exception ignored) {
             // ignore malformed overlay

@@ -20,7 +20,9 @@ import zw.gov.mohcc.impilo.tshepo.contracts.dto.ConsentDecision;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -51,6 +53,7 @@ class PolicyEngineTest {
     @Mock private DelegationClient delegationClient;
     @Mock private OpaDecisionClient opaDecisionClient;
     @Mock private RoleTemplateCatalog roleTemplateCatalog;
+    @Mock private ConfidentialityPolicyPack confidentialityPack;
 
     private AuthzProperties properties;
     private ObjectMapper objectMapper;
@@ -70,11 +73,16 @@ class PolicyEngineTest {
         objectMapper = new ObjectMapper();
         lenient().when(privilegeRevocationStore.isRevoked(anyString())).thenReturn(false);
         lenient().when(visibilityEscalationService.resolveActiveGrant(any())).thenReturn(Optional.empty());
+        lenient().when(confidentialityPack.isEffective()).thenReturn(false);
+        lenient().when(confidentialityPack.retainGrantable(anyList())).thenReturn(java.util.Set.of());
+        lenient().when(confidentialityPack.stateLabel()).thenReturn("INERT(ENGINEERING_SEED,effective=false)");
+        lenient().when(confidentialityPack.packId()).thenReturn("impilo.confidentiality.adolescent");
+        lenient().when(confidentialityPack.version()).thenReturn("engineering-seed-1.0.0");
         policyEngine = new PolicyEngine(
                 riskScoring, policyCacheService, privilegeRevocationStore, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, properties, objectMapper, visibilityEscalationService,
-                delegationClient, opaDecisionClient, roleTemplateCatalog
+                delegationClient, opaDecisionClient, roleTemplateCatalog, confidentialityPack
         );
     }
 
@@ -887,6 +895,347 @@ class PolicyEngineTest {
         assertEquals(Verdict.DENY, response.verdict());
         assertEquals("DELEGATION_ASSURANCE_TOO_LOW", response.errorCode());
     }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Step 4.7: Specially-protected confidentiality control
+    //
+    // The mechanism is complete; the CONTENT that decides behaviour (confidentiality ages,
+    // confidential code lists) is an engineering seed pending MoHCC ratification. So the default
+    // mode is SHADOW: evaluate, audit, deny nothing. These tests pin both halves — that the
+    // mechanism decides correctly, and that it stays inert until the content is ratified.
+    // ════════════════════════════════════════════════════════════════════
+
+    private static final String PROTECTED_PATH = "/v1/pct/confidential/encounters/enc-1";
+
+    /**
+     * A request against the confidential clinical lane — a resource the classifier reports as
+     * {@code SPECIALLY_PROTECTED}. {@code subjectId} declares whose record is being opened.
+     */
+    private static AuthzInternalRequest protectedRequest(String actorType, List<String> roles,
+                                                         String subjectId, String purpose) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, actorType, roles, purpose,
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "GET", PROTECTED_PATH, "GET:" + PROTECTED_PATH,
+                "confidential-encounters", "enc-1",
+                3, "session-abc", null,
+                null, null, null, null, subjectId, "LOA3",
+                null, null, DutyContext.absent()
+        );
+    }
+
+    /** Risk + an unconditional ALLOW rule for the confidential lane, and permissive consent. */
+    private void stubProtectedLaneHappyPath() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity allowRule = buildAllowRule("confidential-encounters", null, null, null, null);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(allowRule));
+        lenient().when(consentClient.evaluateConsent(any(), anyString(), any(), anyString(), anyString()))
+                .thenReturn(ConsentDecision.permit("c1", List.of("read")));
+    }
+
+    /** A rule whose visibility overlay asks for specific confidential categories. */
+    private void stubProtectedLaneWithRuleCategories(String categoriesJson) {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        lenient().when(consentClient.evaluateConsent(any(), anyString(), any(), anyString(), anyString()))
+                .thenReturn(ConsentDecision.permit("c1", List.of("read")));
+        PolicyRuleEntity allowRule = buildAllowRule("confidential-encounters", null, null, null, null);
+        allowRule.setConditions("{\"visibility\":{\"confidentialCategories\":" + categoriesJson + "}}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(allowRule));
+    }
+
+    /** Make the governed pack ratified and effective, granting the given categories. */
+    private void ratifyPack(String... categories) {
+        when(confidentialityPack.isEffective()).thenReturn(true);
+        lenient().when(confidentialityPack.retainGrantable(anyList()))
+                .thenAnswer(inv -> {
+                    List<String> requested = inv.getArgument(0);
+                    Set<String> permitted = new LinkedHashSet<>();
+                    for (String r : requested) {
+                        for (String c : categories) {
+                            if (c.equalsIgnoreCase(r)) {
+                                permitted.add(c);
+                            }
+                        }
+                    }
+                    return permitted;
+                });
+    }
+
+    private static List<String> grantedCategories(AuthzResponse response) {
+        return response.obligations().visibilityProfile().confidentialCategories();
+    }
+
+    private static String capturedGovernanceEvent(AuditPublisher publisher) {
+        ArgumentCaptor<String> eventType = ArgumentCaptor.forClass(String.class);
+        verify(publisher).queueGovernanceEvent(eventType.capture(), anyString(), anyMap());
+        return eventType.getValue();
+    }
+
+    // ── Inertness: the shipped default must change nothing ───────────────────
+
+    @Test
+    @DisplayName("Step 4.7 SHADOW (default): a guardian is NOT denied, but the refusal IS audited")
+    void evaluate_protected_shadowMode_auditsWithoutDenying() {
+        stubProtectedLaneHappyPath();
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("child-cpid-1")))
+                .thenReturn(new DelegationResolution(true, List.of("*"), 2, "GUARDIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("CITIZEN", List.of("CITIZEN"), "child-cpid-1", "TREATMENT"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "the mechanism ships inert — it must not change behaviour before the content is ratified");
+        assertEquals("CONFIDENTIAL_ACCESS_REFUSED", capturedGovernanceEvent(auditPublisher),
+                "inert must still mean observable: the audit records what it WOULD have refused");
+        assertTrue(grantedCategories(response) == null || grantedCategories(response).isEmpty(),
+                "shadow grants nothing either — no record may carry a label that does not protect it");
+    }
+
+    @Test
+    @DisplayName("Step 4.7 OFF: no evaluation, no audit, no grant")
+    void evaluate_protected_offMode_doesNothing() {
+        properties.setConfidentialityMode("OFF");
+        stubProtectedLaneHappyPath();
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("CITIZEN", List.of("CITIZEN"), ACTOR_ID, "TREATMENT"));
+
+        assertEquals(Verdict.ALLOW, response.verdict());
+        verify(auditPublisher, never()).queueGovernanceEvent(anyString(), anyString(), anyMap());
+    }
+
+    @Test
+    @DisplayName("Step 4.7 ENFORCE with an unratified pack stays inert and says so LOUDLY")
+    void evaluate_protected_enforceWithInertPack_staysInertButAudits() {
+        properties.setConfidentialityMode("ENFORCE");
+        when(confidentialityPack.isEffective()).thenReturn(false);
+        stubProtectedLaneHappyPath();
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("child-cpid-1")))
+                .thenReturn(new DelegationResolution(true, List.of("*"), 2, "GUARDIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("CITIZEN", List.of("CITIZEN"), "child-cpid-1", "TREATMENT"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "enforcing on an engineering seed could hide records from the clinicians treating "
+                        + "the person, so it refuses to enforce");
+        ArgumentCaptor<String> events = ArgumentCaptor.forClass(String.class);
+        verify(auditPublisher, atLeastOnce()).queueGovernanceEvent(events.capture(), anyString(), anyMap());
+        assertTrue(events.getAllValues().contains("CONFIDENTIALITY_ENFORCE_UNAVAILABLE"),
+                "an operator must never believe a control is live when it is not — that belief is "
+                        + "the false assurance this seam exists to eliminate");
+    }
+
+    // ── The mechanism, proven under ENFORCE with a ratified pack ─────────────
+
+    @Test
+    @DisplayName("Step 4.7 ENFORCE: a guardian with a fully valid delegation cannot read a protected record")
+    void evaluate_protected_guardianContext_denies() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("SAFEGUARDING");
+        stubProtectedLaneHappyPath();
+        // A delegation that is active, unexpired, wildcard-scoped and above the assurance floor —
+        // every Step 4.5 gate passes. Only the confidentiality control can stop this.
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("child-cpid-1")))
+                .thenReturn(new DelegationResolution(true, List.of("*"), 2, "GUARDIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("CITIZEN", List.of("CITIZEN"), "child-cpid-1", "TREATMENT"));
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "guardian/caregiver context must never reach a specially-protected record");
+        assertEquals("PROTECTED_RECORD_DELEGATE_DENIED", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.7 ENFORCE: a CAREGIVER delegation is refused just like a guardian")
+    void evaluate_protected_caregiverContext_denies() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("SAFEGUARDING");
+        stubProtectedLaneHappyPath();
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("child-cpid-1")))
+                .thenReturn(new DelegationResolution(true, List.of("*"), 2, "CAREGIVER"));
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("CITIZEN", List.of("CITIZEN"), "child-cpid-1", "TREATMENT"));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("PROTECTED_RECORD_DELEGATE_DENIED", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.7 ENFORCE: a rule grant does NOT rescue a delegated request")
+    void evaluate_protected_guardianWithEntitledRule_stillDenies() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("SAFEGUARDING");
+        stubProtectedLaneWithRuleCategories("[\"SAFEGUARDING\"]");
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("child-cpid-1")))
+                .thenReturn(new DelegationResolution(true, List.of("*"), 2, "GUARDIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("CITIZEN", List.of("CITIZEN"), "child-cpid-1", "TREATMENT"));
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "delegate exclusion is absolute — the governance channel must not reopen the hole");
+        assertEquals("PROTECTED_RECORD_DELEGATE_DENIED", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.7: the person themselves is granted every category of their own record")
+    void evaluate_protected_selfAccess_grantsAllCategories() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("HIV");
+        stubProtectedLaneHappyPath();
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("CITIZEN", List.of("CITIZEN"), ACTOR_ID, "TREATMENT"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "the adolescent whose record it is must be able to read it");
+        assertEquals(List.of("*"), grantedCategories(response));
+    }
+
+    @Test
+    @DisplayName("Step 4.7 ENFORCE: a clinician with no governed category grant is refused")
+    void evaluate_protected_clinicianWithoutEntitlement_denies() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("SAFEGUARDING");
+        stubProtectedLaneHappyPath();
+
+        // subjectId null: a clinician acts in their OWN professional capacity. Setting X-Subject-ID
+        // to someone else is the act-on-behalf marker, handled by Step 4.5.
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("PROVIDER", List.of("DOCTOR"), null, "TREATMENT"));
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "reaching protected content needs an explicit governed grant, not a clinical role");
+        assertEquals("PROTECTED_RECORD_NOT_ENTITLED", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.7 ENFORCE: a governed rule grant entitles the clinician to THAT category only")
+    void evaluate_protected_ruleGrant_isCategoryScoped() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("SAFEGUARDING", "MENTAL_HEALTH");
+        stubProtectedLaneWithRuleCategories("[\"SAFEGUARDING\"]");
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("PROVIDER", List.of("DOCTOR"), null, "TREATMENT"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "the governed policy rule is the seam that grants protected access");
+        assertEquals(List.of("SAFEGUARDING"), grantedCategories(response),
+                "a safeguarding grant must not sweep in the adolescent's mental-health notes — the "
+                        + "case an ordered visibility tier could not express");
+    }
+
+    @Test
+    @DisplayName("Step 4.7 ENFORCE: a category the ratified pack does not permit is dropped, not granted")
+    void evaluate_protected_categoryOutsidePack_isDropped() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("SAFEGUARDING");
+        stubProtectedLaneWithRuleCategories("[\"HIV\"]");
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("PROVIDER", List.of("DOCTOR"), null, "TREATMENT"));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("PROTECTED_RECORD_PACK_INERT", response.errorCode(),
+                "a rule asking for a category the ratified pack does not carry must fail visibly, "
+                        + "not quietly grant something else");
+    }
+
+    @Test
+    @DisplayName("Step 4.7: a legacy visibilityTier-only overlay grants no confidential category")
+    void evaluate_protected_legacyTierOverlay_grantsNothing() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("SAFEGUARDING");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        lenient().when(consentClient.evaluateConsent(any(), anyString(), any(), anyString(), anyString()))
+                .thenReturn(ConsentDecision.permit("c1", List.of("read")));
+        PolicyRuleEntity allowRule = buildAllowRule("confidential-encounters", null, null, null, null);
+        allowRule.setConditions("{\"visibility\":{\"visibilityTier\":\"FULL_IDENTIFIED_CLINICAL\"}}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(allowRule));
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("PROVIDER", List.of("DOCTOR"), null, "TREATMENT"));
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "confidentiality is a category obligation, not a disclosure tier");
+        assertEquals("PROTECTED_RECORD_NOT_ENTITLED", response.errorCode());
+    }
+
+    // ── Emergency access is a hard requirement ───────────────────────────────
+
+    @Test
+    @DisplayName("Step 4.7: EMERGENCY purpose waives confidentiality (over-restricting kills people too)")
+    void evaluate_protected_emergencyPurpose_waives() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("HIV");
+        stubProtectedLaneHappyPath();
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("PROVIDER", List.of("DOCTOR"), null, "EMERGENCY"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "a teenager arriving unconscious must not have the HIV status that explains the "
+                        + "presentation hidden from the clinician treating them");
+        assertEquals(List.of("*"), grantedCategories(response));
+    }
+
+    @Test
+    @DisplayName("Step 4.7: the emergency waiver reaches protected content even for a delegate")
+    void evaluate_protected_emergencyWaiver_precedesDelegateExclusion() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("HIV");
+        stubProtectedLaneHappyPath();
+        lenient().when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("child-cpid-1")))
+                .thenReturn(new DelegationResolution(true, List.of("*"), 2, "GUARDIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(
+                protectedRequest("PROVIDER", List.of("DOCTOR"), "child-cpid-1", "EMERGENCY"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "an accompanying adult handing over a collapsed teenager must not be the reason "
+                        + "the clinical picture stays hidden — audited, not blocked");
+    }
+
+    @Test
+    @DisplayName("Step 4.7: every emergency waiver is audited as a grant")
+    void evaluate_protected_emergencyWaiver_isAudited() {
+        properties.setConfidentialityMode("ENFORCE");
+        ratifyPack("HIV");
+        stubProtectedLaneHappyPath();
+
+        policyEngine.evaluate(protectedRequest("PROVIDER", List.of("DOCTOR"), null, "EMERGENCY"));
+
+        assertEquals("CONFIDENTIAL_ACCESS_GRANTED", capturedGovernanceEvent(auditPublisher),
+                "the waiver is detection, not prevention — it is only safe if it is reviewable");
+    }
+
+    // ── Ordinary care is untouched ──────────────────────────────────────────
+
+    @Test
+    @DisplayName("Step 4.7: a guardian delegation still reads ORDINARY clinical data (no over-denial)")
+    void evaluate_ordinaryClinical_guardianContext_stillAllows() {
+        properties.setConfidentialityMode("ENFORCE");
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(new DelegationResolution(true, List.of("patients"), 2, "GUARDIAN"));
+        when(consentClient.evaluateConsent(eq(TENANT_ID), eq("patients"), eq("cpid-12345"),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("c1", List.of("read")));
+
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 3, "LOA3"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "the confidentiality control must narrow protected data only, not ordinary care");
+        verify(auditPublisher, never()).queueGovernanceEvent(anyString(), anyString(), anyMap());
+    }
+
 
     // ════════════════════════════════════════════════════════════════════
     // Phase 3: OPA shadow (strangler — must never change the verdict)
