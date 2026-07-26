@@ -49,8 +49,16 @@ class IdentifierLeakInventoryTest {
      * TSHEPO identity-mapping S2S response during flag-gated biometric login (L3, commit
      * 956f4c367); neither literal reaches a browser payload. Consistent with the CJ8/CJ14 re-pin,
      * which already counts internal contract field names.</p>
+     *
+     * <p>Re-pinned 56 → 58 (2026-07-26, staffing name-resolution slice): the +2 sites are
+     * <b>internal S2S response reads, not browser emissions</b> — {@code StaffIdentityResolver}
+     * reads {@code "health_id"} off vashandi's profile→anchor mapping and {@code "healthId"} off
+     * varapi's display-facts response, using each only to compose the request to the next service
+     * and to join in memory. The health id is never written onto the staffing response the browser
+     * receives, which carries {@code display_name}/{@code phone}/{@code profession} and the
+     * workforce profile id only. Same category as the CJ8/CJ14 and PII-Wave re-pins above.</p>
      */
-    private static final int BASELINE = 56;
+    private static final int BASELINE = 58;
 
     private static final Pattern LEAK = Pattern.compile("\"(healthId|impiloHealthId|health_id)\"");
 

@@ -43,7 +43,16 @@ public final class ExperienceBffSovereignWireMockSupport {
         // /v1/internal/vashandi/staffing/*, so vashandi must resolve to this WireMock server or the
         // calls escape to a real host and 500/empty.
         registry.add("impilo.services.vashandi-base-url", () -> base);
+        // The rota composes display names against varapi; point it here too so the composition legs
+        // (vashandi profile -> health id, varapi health id -> display facts) run through the stub.
+        registry.add("impilo.services.varapi-base-url", () -> base);
     }
+
+    /** The workforce profile the seeded on-call assignment is keyed on, and its resolved facts. */
+    static final String SEED_PROFILE_ID = "aa000000-0000-4000-8000-0000000000a1";
+    static final String SEED_HEALTH_ID = "cc000000-0000-4000-8000-0000000000c1";
+    static final String SEED_DISPLAY_NAME = "Dr Rumbi Chikova";
+    static final String SEED_PHONE = "+263773000111";
 
     private static void stubPharmacy() {
         SERVER.stubFor(get(urlPathMatching("/v1/prescriptions/patient/.*"))
@@ -102,11 +111,35 @@ public final class ExperienceBffSovereignWireMockSupport {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("""
+                        .withBody(("""
                                 {"data":[{"type":"on-call-assignment","id":"2026-04-06|General",\
                                 "attributes":{"assignment_date":"2026-04-06","specialty":"General",\
-                                "primary_staff_reference":"PW-004821","backup_staff_reference":null}}]}\
-                                """)));
+                                "primary_workforce_profile_id":"%s",\
+                                "primary_staff_reference":"PW-004821","primary_phone":null,\
+                                "backup_workforce_profile_id":null,"backup_staff_reference":null,\
+                                "backup_phone":null}}]}\
+                                """).formatted(SEED_PROFILE_ID))));
+
+        // Composition leg 1: vashandi maps the rostered profile to a person anchor (nothing more).
+        SERVER.stubFor(get(urlPathMatching("/v1/internal/vashandi/workforce-profiles/identity-refs.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(("""
+                                {"data":[{"workforce_profile_id":"%s","health_id":"%s",\
+                                "provider_worker_id":"PW-004821"}]}\
+                                """).formatted(SEED_PROFILE_ID, SEED_HEALTH_ID))));
+
+        // Composition leg 2: varapi answers the display facts for that anchor.
+        SERVER.stubFor(post(urlPathMatching("/v1/internal/providers/by-health-id/resolve-display"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(("""
+                                {"data":[{"healthId":"%s","resolved":true,"providerPublicId":"PUB-1",\
+                                "displayName":"%s","phone":"%s","profession":"MEDICAL_PRACTITIONER",\
+                                "cadre":"REGISTRAR"}]}\
+                                """).formatted(SEED_HEALTH_ID, SEED_DISPLAY_NAME, SEED_PHONE))));
     }
 
     private static void stubMarketplace() {

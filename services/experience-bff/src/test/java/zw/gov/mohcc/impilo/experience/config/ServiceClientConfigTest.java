@@ -244,6 +244,45 @@ class ServiceClientConfigTest {
         };
     }
 
+    /**
+     * The BFF must be able to PATCH a downstream. The on-call swap decision is a PATCH to vashandi,
+     * and the previous {@code SimpleClientHttpRequestFactory} (HttpURLConnection) cannot issue PATCH
+     * at all — every swap approval died as an I/O error the client turned into a 502. A mock request
+     * factory would hide exactly that limitation, so this drives a real PATCH over a real loopback
+     * HTTP server through the real {@code serviceRestTemplate}.
+     */
+    @Test
+    void serviceRestTemplateCanIssuePatchOverRealHttp() throws IOException {
+        com.sun.net.httpserver.HttpServer server =
+                com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+        java.util.concurrent.atomic.AtomicReference<String> observedMethod = new java.util.concurrent.atomic.AtomicReference<>();
+        server.createContext("/decide", exchange -> {
+            observedMethod.set(exchange.getRequestMethod());
+            byte[] body = "{\"status\":\"APPROVED\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            try (var os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        });
+        server.start();
+        try {
+            ServiceClientConfig config = new ServiceClientConfig();
+            org.springframework.web.client.RestTemplate template =
+                    config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(providerYieldingNothing()));
+            String url = "http://127.0.0.1:" + server.getAddress().getPort() + "/decide";
+
+            var response = template.exchange(url, HttpMethod.PATCH,
+                    new org.springframework.http.HttpEntity<>("{\"status\":\"APPROVED\"}"), String.class);
+
+            assertEquals("PATCH", observedMethod.get(),
+                    "the outbound template must reach the server with a real PATCH, not fail before sending it");
+            assertEquals(org.springframework.http.HttpStatus.OK, response.getStatusCode());
+        } finally {
+            server.stop(0);
+        }
+    }
+
     private abstract static class StubServiceTokenProvider extends ServiceTokenProvider {
         StubServiceTokenProvider() {
             super(new ServiceTokenProperties(false, null, null, null, null), new ObjectMapper());
