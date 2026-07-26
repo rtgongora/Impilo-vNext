@@ -19,9 +19,14 @@ import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const BLUE = "#1E40AF";
-const BLUE_DARK = "#1E3A8A";
-const BLUE_LIGHT = "#DBEAFE";
+// Provider identity: deep teal, matching the accent in App.tsx's ThemeProvider
+// mount. This screen used the generic Tailwind blue (#1E40AF/#1E3A8A/#DBEAFE)
+// the brief specifically called out — kept as static hex here (not theme-
+// reactive) since this is the pre-auth screen and the app is light-mode only
+// today; see docs/design/mobile-visual-redesign-brief.md.
+const BLUE = "#0F766E";
+const BLUE_DARK = "#115E56";
+const BLUE_LIGHT = "#CCFBF1";
 
 const FEATURE_PILLS = ["Worklist", "Encounters", "Lab Results", "Outreach"];
 

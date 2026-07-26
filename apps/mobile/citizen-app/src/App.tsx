@@ -65,7 +65,14 @@ export function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <ThemeProvider mode="light">
+      {/*
+        accentColor is explicit rather than left to ThemeProvider's default
+        (colors.primary[600] = #008A34), so Citizen's identity is a decision
+        recorded here, not an accident of whatever the token file happens to
+        contain. #009739 is the real Impilo brand green (tokens/colors.ts
+        primary[500]) — see docs/design/mobile-visual-redesign-brief.md.
+      */}
+      <ThemeProvider mode="light" accentColor="#009739">
         <AppNavigator />
       </ThemeProvider>
     </SafeAreaProvider>

@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TabBar } from "@impilo/mobile-design-system";
+import { TabBar, useOptionalTheme } from "@impilo/mobile-design-system";
 import { ProviderDashboardScreen } from "../screens/provider/ProviderDashboardScreen";
 import { PatientLookupScreen } from "../screens/provider/PatientLookupScreen";
 import { ResultsViewScreen } from "../screens/provider/ResultsViewScreen";
@@ -24,14 +24,17 @@ import { useAppStore } from "../stores/appStore";
 import { useEncounterStore } from "../stores/encounterStore";
 import type { ProviderTabKey } from "../types";
 
-const ACCENT = "#1E40AF";
-
-function tabIcon(name: string, isActive: boolean): React.ReactNode {
-  const color = isActive ? ACCENT : "#9CA3AF";
-  return <Ionicons name={name as never} size={22} color={color} />;
-}
-
 export function ProviderTabs() {
+  // Provider's own accent (deliberately teal, not the generic Tailwind blue
+  // #1E40AF this file used to hardcode) — see App.tsx's ThemeProvider mount
+  // and docs/design/mobile-visual-redesign-brief.md.
+  const { theme } = useOptionalTheme();
+  const tabIcon = useCallback(
+    (name: string, isActive: boolean): React.ReactNode => (
+      <Ionicons name={name as never} size={22} color={isActive ? theme.colors.primary : "#9CA3AF"} />
+    ),
+    [theme.colors.primary]
+  );
   const { unreadNotifications, providerTab, setProviderTab } = useAppStore();
   const { activeEncounter } = useEncounterStore();
 
@@ -146,7 +149,7 @@ export function ProviderTabs() {
         items={tabs}
         activeKey={providerTab}
         onSelect={handleTabChange}
-        accentColor={ACCENT}
+        accentColor={theme.colors.primary}
       />
     </View>
   );

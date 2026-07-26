@@ -67,7 +67,14 @@ export function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <ThemeProvider mode="light">
+      {/*
+        Provider identity: deep teal, deliberately related to Citizen's green
+        (same hue family) but clearly distinct, per the PO redesign brief —
+        never the generic Tailwind blue (#1E40AF) the app shipped with.
+        #0F766E ~ Tailwind teal-700: dark enough for white button text,
+        distinguishable from both citizen green and plain blue at a glance.
+      */}
+      <ThemeProvider mode="light" accentColor="#0F766E">
         <AppNavigator />
       </ThemeProvider>
     </SafeAreaProvider>
