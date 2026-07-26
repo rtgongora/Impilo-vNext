@@ -79,6 +79,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Paediatric age routing + WHO growth standards -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>paediatric-domain</artifactId>
+        </dependency>
+
         <!-- Observability -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
