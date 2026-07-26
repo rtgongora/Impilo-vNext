@@ -160,30 +160,75 @@ already holds.
 - The mobile tile stays unreachable as the sweep left it; its registry entry now names what
   exists and what is outstanding instead of "wave TBC".
 
+## Corrected age now targets full term
+
+Closes open question 1. `CorrectedAge` held one constant, `TERM_GESTATION_WEEKS = 37`, and used
+it to answer two different questions: *is this baby preterm* and *how far back do we correct*.
+The first is right at 37 weeks. The second is wrong there — the convention corrects to 40 weeks,
+full term. So the correction was three weeks short for every preterm child, whatever their
+gestation, and their growth was read about three weeks "old": compared against an older child's
+median, which reads as slightly worse than they are.
+
+There are now two constants, `PRETERM_THRESHOLD_WEEKS = 37` and
+`TERM_CORRECTION_TARGET_WEEKS = 40`, and a test asserts they are not equal — collapsing them
+again is the defect returning, not a simplification.
+
+**Size and direction of the error, measured rather than reasoned about.** A girl born at 30
+weeks, weighed at 50 weeks postmenstrual age — the first week on the WHO tables, so exactly where
+the handover puts her:
+
+| weight | z at 70 days corrected (correct) | z at 91 days (as it read before) |
+|--------|----------------------------------|----------------------------------|
+| 3.9 kg | −2.44 moderate                   | −3.17 **severe**                 |
+| 4.2 kg | −1.88 normal                     | −2.59 moderate                   |
+
+The error is about 0.7 SD, always in the direction of reading a preterm child as *worse* than
+they are, and it **crosses the classification thresholds** that drive nutrition referral. It is
+the conservative direction — over-referral, not a missed case — but a well-growing preterm baby
+being told they are severely underweight is the same category error the Fenton work itself
+closed, one layer further along.
+
+It also restores the invariant the handover was designed around and which
+`FENTON_MAX_POSTMENSTRUAL_WEEKS` already claimed in prose: 50 weeks postmenstrual is 10 weeks
+corrected. It was 13. The chart now hands over without stepping the child forward in age.
+
+**Already-stamped scores are left as they are. No backfill.** Reasons, in order of weight:
+
+1. A stored z-score is a record of what a clinician was shown when they made a decision.
+   Rewriting it in place destroys the evidence of why a referral was or was not made, and
+   leaves an audit trail describing a screen nobody ever saw.
+2. Every row carries `growth_engine_version`, so it stays interpretable as the thing it
+   actually was. `1.0.0` = preterm scored on the term chart; `2.0.0` = preterm on Fenton,
+   corrected to 37 weeks; `3.0.0` = corrected to full term. Each bump is major because a score
+   is not comparable across it for the same child and the same measurement.
+3. There is nothing material to restate. At the time of writing the estate holds **one** growth
+   measurement in `pct.pct_growth_measurements`, stamped `1.0.0`, for a term child with no
+   correction applied. This was checked, not assumed.
+
+Point 3 is the reason this is cheap today and will not be later. Anyone reopening the question
+once real preterm volume exists should reopen it as "how do we present a superseded score",
+not as "can we rewrite it" — the answer to the second is no, for reason 1.
+
 ## Open questions this work raised and did not close
 
-1. **Corrected age targets 37 weeks, not the conventional 40.** `CorrectedAge` reuses the
-   preterm *threshold* as the correction *target*, so a baby born at 30 weeks is corrected by
-   7 weeks where convention says 10. The effect is to read a preterm child's growth about
-   three weeks "old" — slightly worse than it is — from the moment they leave the preterm
-   chart. Changing it would restate every corrected-age score already stamped in the record,
-   so it is raised as its own decision. `FentonPretermStandardTest` asserts the current value
-   deliberately, so a fix trips the test rather than sliding through.
-2. **WHO weight-for-age does not apply the SD23 tail correction**, though the WHO technical
+The original question 1 — corrected age targeting 37 weeks — is closed above.
+
+1. **WHO weight-for-age does not apply the SD23 tail correction**, though the WHO technical
    report specifies it. Fenton does, because its own calculator does. Aligning WHO would move
    stored scores beyond ±3 SD, which is exactly where the severe-malnutrition threshold sits.
-3. **Nothing consumes `growth_standard`.** CKP's growth interpreter reads the stamped z-score
+2. **Nothing consumes `growth_standard`.** CKP's growth interpreter reads the stamped z-score
    without reading which standard produced it, so a history spanning the Fenton→WHO handover
-   is interpreted as though it were one continuous series.
-4. **Neonatal "Surfactant Protocol"** is registered as in-development and unreachable, but it
+   is interpreted as though it were one continuous series. Note this now also spans an engine
+   version change: a series can cross both a standard boundary and a corrected-age convention.
+3. **Neonatal "Surfactant Protocol"** is registered as in-development and unreachable, but it
    sat one tile away from the Fenton fake and is worth the sweep confirming.
 
 ## Test coverage
 
 | Suite | Tests | Of which new |
 |---|---|---|
-| `libs/paediatric-domain` | 89 | 11 Fenton fixtures and invariants |
-| `pct-service` | 382 | 3 (preterm selection, birth-record resolution, unrecorded gestation) |
+| `libs/paediatric-domain` | 92 | 11 Fenton fixtures and invariants; 3 corrected-age (threshold ≠ target, late preterm, handover arithmetic) |
+| `pct-service` | 451 | 3 (preterm selection, birth-record resolution, unrecorded gestation) |
 | `experience-bff` | 1235 | 7 (resource shape, attribution, reference curves, honest absence) |
 | `ui/one-ui-shell` | 2501 | 4 (chart mounted, preterm axis, attribution, stated absence) |
 | `apps/mobile/provider-app` | 266 | — (registry entry only) |

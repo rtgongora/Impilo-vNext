@@ -96,7 +96,8 @@ class GrowthServiceTest {
         });
 
         assertThat(row.getAgeDays()).isEqualTo(120);
-        assertThat(row.getCorrectedAgeDays()).isEqualTo(85);
+        // Born eight weeks short of full term, so 120 days lived is 64 days corrected.
+        assertThat(row.getCorrectedAgeDays()).isEqualTo(120 - 56);
         assertThat(row.isCorrectedAgeApplied()).isTrue();
         assertThat(row.getGestationalAgeWeeks()).isEqualTo(32);
         assertThat(row.getGestationalAgeSource()).isEqualTo("SUPPLIED");
