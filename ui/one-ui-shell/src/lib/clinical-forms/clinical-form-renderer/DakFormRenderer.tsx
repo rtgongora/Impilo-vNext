@@ -8,6 +8,8 @@ import { validateClinicalForm } from "../validate-form";
 import { useClinicalFormDraft } from "./useClinicalFormDraft";
 import { SegmentedControl } from "shared-ui";
 import { optionsForKind, tonesForKind } from "../canonical-option-sets";
+import { BodyMapField } from "@/features/body-map/BodyMapField";
+import type { FormBodyMapFinding } from "../types";
 import { runAncContact1DecisionSupport, type DecisionSupportAlert } from "../decision-support-hooks/anc-decision-support";
 import { ANTENATAL_CONTACT_1_FORM } from "../clinical-form-definitions/antenatal-contact-1-exemplar";
 
@@ -152,6 +154,23 @@ function renderField(
           {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
         </label>
       );
+    case "body_map": {
+      const findings = Array.isArray(values[field.id]) ? (values[field.id] as FormBodyMapFinding[]) : [];
+      return (
+        <div key={field.id}>
+          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
+          <div className="mt-2">
+            <BodyMapField
+              instrumentId={field.bodyMapInstrument ?? "general-body"}
+              value={findings}
+              onChange={(next) => setField(field.id, next)}
+              data-testid={`field-${field.id}`}
+            />
+          </div>
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </div>
+      );
+    }
     case "boolean":
       // Rendered as an explicit two-option choice rather than a checkbox: an unticked
       // checkbox is indistinguishable from an unanswered question, which is exactly the

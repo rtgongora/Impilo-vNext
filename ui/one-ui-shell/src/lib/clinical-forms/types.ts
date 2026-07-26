@@ -26,7 +26,14 @@ export type ClinicalFieldKind =
    * A blank examination field must never read as normal, and the reasons an examination
    * produced no finding lead to different next steps.
    */
-  | "exam_finding";
+  | "exam_finding"
+  /**
+   * An interactive anatomical map. The value is the marked-finding list itself, so
+   * examination findings ride the ordinary form-response spine rather than a parallel
+   * store that could drift out of sync with the encounter. The instrument is named by
+   * {@link ClinicalFormFieldDefinition.bodyMapInstrument}.
+   */
+  | "body_map";
 
 export type AgeBand = "NEONATAL" | "INFANT" | "CHILD" | "ADOLESCENT" | "ADULT" | "OLDER_ADULT";
 
@@ -130,6 +137,8 @@ export interface ClinicalFormFieldDefinition {
   decisionHooks?: DecisionSupportHookRef[];
   /** Group within section */
   groupId?: string;
+  /** For kind "body_map": which examination instrument to render (see features/body-map). */
+  bodyMapInstrument?: string;
 }
 
 export interface ClinicalFormSectionDefinition {
@@ -165,7 +174,26 @@ export interface ClinicalFormDefinition {
   };
 }
 
-export type FormValues = Record<string, string | number | boolean | string[] | null | undefined>;
+/**
+ * A body-map finding as carried in form values. Structurally mirrors
+ * {@code features/body-map/core/types.ts MarkedRegionFinding}; declared here so the form
+ * value union stays self-contained and JSON-serialisable for drafts and submission.
+ */
+export interface FormBodyMapFinding {
+  regionId: string;
+  locationCode: { system: string; code: string; display?: string };
+  laterality?: "left" | "right" | "midline";
+  morphology?: string;
+  severity?: "mild" | "moderate" | "severe";
+  note?: string;
+  onset?: string;
+  photoConsent?: "granted" | "declined" | "not_asked";
+}
+
+export type FormValues = Record<
+  string,
+  string | number | boolean | string[] | FormBodyMapFinding[] | null | undefined
+>;
 
 export interface FormValidationIssue {
   fieldId: string;
