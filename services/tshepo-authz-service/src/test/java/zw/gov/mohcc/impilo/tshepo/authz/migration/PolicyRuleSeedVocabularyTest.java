@@ -41,17 +41,32 @@ import static org.assertj.core.api.Assertions.fail;
  *       either no caller can legally send that purpose (so the rule is unreachable and the
  *       access it was written to grant silently does not exist), or a caller does send it and
  *       is denied outright.</li>
- *   <li>{@code actor_type} — matched against the request's {@code X-Actor-Type}, which is
- *       parsed into {@link ActorType}.</li>
+ *   <li>{@code actor_type} — matched against the request's {@code X-Actor-Type} by raw string
+ *       equality. Nothing parses it, so nothing rejects an unknown value; the rule simply never
+ *       matches. That makes enum membership the <em>wrong</em> test here — see below.</li>
  *   <li>{@code effect} — {@code PolicyEngine.evaluatePolicies} tests only
  *       {@code "DENY".equalsIgnoreCase(...)} and {@code "ALLOW".equalsIgnoreCase(...)}. Any
  *       other value makes the rule contribute neither an allow nor a deny: inert.</li>
  * </ul>
  *
  * <p>None of these fail loudly. They produce a rule that exists in the table, reads correctly
- * to a human, and never fires. This test is the forcing function: the vocabularies are read
- * from the enums themselves, so <em>extending</em> {@link PurposeOfUse} widens the guard
- * automatically, while a typo or an invented code fails the build with file, line and rule name.
+ * to a human, and never fires.
+ *
+ * <p><b>Enum membership is not the same question as reachability.</b> An earlier version of this
+ * guard checked {@code actor_type} against {@link ActorType} and would have passed a seed reading
+ * {@code actor_type = 'ADMIN'} — a value sitting in the enum that no client in the estate has ever
+ * emitted, so the rule would be exactly as dead as the ones this guard was written to catch, one
+ * level up. For {@link PurposeOfUse} the enum genuinely is the runtime vocabulary, because
+ * {@code parsePurpose} enforces it. For {@link ActorType} the enum is only a declaration, so the
+ * real test is whether anyone can send the value:
+ *
+ * <ul>
+ *   <li>a value some client union declares (see {@link ContractMirrors}), or</li>
+ *   <li>a service-side value that only Java callers emit ({@code SYSTEM}, {@code SERVICE}).</li>
+ * </ul>
+ *
+ * <p>{@code ContractMirrorsTest} holds the other half of that contract — it keeps the mirrors and
+ * the enum in agreement, so this reachability set cannot quietly drift out from under the seeds.
  *
  * <p><b>Effective state, not file text.</b> An applied migration can never be edited (Flyway
  * validates its checksum), so a bad seed is corrected by a later migration issuing an
@@ -77,13 +92,26 @@ class PolicyRuleSeedVocabularyTest {
     private static final Set<String> PURPOSES = Arrays.stream(PurposeOfUse.values())
             .map(Enum::name).collect(Collectors.toUnmodifiableSet());
 
-    private static final Set<String> ACTOR_TYPES = Arrays.stream(ActorType.values())
-            .map(Enum::name).collect(Collectors.toUnmodifiableSet());
+    /** The columns this guard checks. Order is irrelevant; membership is what matters. */
+    private static final List<String> GUARDED_COLUMNS = List.of("purpose", "actor_type", "effect");
 
-    private static final Map<String, Set<String>> CLOSED_VOCABULARIES = Map.of(
-            "purpose", PURPOSES,
-            "actor_type", ACTOR_TYPES,
-            "effect", EFFECTS);
+    /**
+     * Actor types someone can actually put on the wire: whatever a client union declares, plus the
+     * service-side values only Java callers emit. Deliberately NOT {@code ActorType.values()} —
+     * see the class javadoc.
+     */
+    private static Set<String> emittableActorTypes() {
+        Set<String> reachable = new LinkedHashSet<>(ContractMirrors.declaredByAnyClient("ActorType"));
+        reachable.addAll(ContractMirrors.SERVICE_SIDE_ACTOR_TYPES);
+        return reachable;
+    }
+
+    private static Map<String, Set<String>> closedVocabularies() {
+        return Map.of(
+                "purpose", PURPOSES,
+                "actor_type", emittableActorTypes(),
+                "effect", EFFECTS);
+    }
 
     private static final Pattern INSERT_HEAD = Pattern.compile(
             "INSERT\\s+INTO\\s+(?:tshepo_authz\\.)?policy_rule\\s*\\(([^)]*)\\)\\s*VALUES",
@@ -111,6 +139,13 @@ class PolicyRuleSeedVocabularyTest {
         assertThat(migrations)
                 .as("migration scripts discovered under db/migration")
                 .isNotEmpty();
+
+        Map<String, Set<String>> vocabularies = closedVocabularies();
+        assertThat(vocabularies.get("actor_type"))
+                .as("actor types anyone can actually emit — if this collapses to the service-side"
+                        + " values alone, the client mirrors stopped being readable and the"
+                        + " actor_type check would pass everything")
+                .hasSizeGreaterThan(ContractMirrors.SERVICE_SIDE_ACTOR_TYPES.size());
 
         // Pass 1: read every script once, in Flyway order.
         List<String> scripts = migrations.stream().map(m -> stripComments(read(m))).toList();
@@ -151,7 +186,7 @@ class PolicyRuleSeedVocabularyTest {
                     String ruleName = literalOf(byColumn.get("name"));
 
                     int seededIn = fileIndex;
-                    CLOSED_VOCABULARIES.forEach((column, allowed) -> {
+                    vocabularies.forEach((column, allowed) -> {
                         Value value = byColumn.get(column);
                         if (value == null || isSqlNull(value)) {
                             return; // column absent from this INSERT, or an intentional wildcard
@@ -249,7 +284,7 @@ class PolicyRuleSeedVocabularyTest {
                 continue;
             }
 
-            for (String column : CLOSED_VOCABULARIES.keySet()) {
+            for (String column : GUARDED_COLUMNS) {
                 Matcher assignment = Pattern
                         .compile("\\b" + column + "\\s*=\\s*'((?:[^']|'')*)'", Pattern.CASE_INSENSITIVE)
                         .matcher(setClause);
