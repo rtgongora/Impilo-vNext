@@ -112,6 +112,7 @@ way clinical software kills people quietly:
 | `inpatient-service` | 134 | green |
 | `clinical-knowledge-platform-service` | 368 | green |
 | `one-ui-shell` clinical-forms + shared-ui | 56 | green |
+| `one-ui-shell` paediatric features | 99 | green |
 
 Three governance gates run clinical content against the live engines: `PaediatricRuleContentTest`
 executes every danger-sign rule's own fixtures, `DoseCalculationServiceTest` executes every
@@ -229,7 +230,7 @@ visit brings them back has usually closed, so a single threshold would always be
 - `IMAM_EPISODE_ENROLLED`, `IMAM_VISIT_RECORDED`, `IMAM_EPISODE_CLOSED` and
   `IMAM_TRACING_REQUIRED` all published on their own Kafka topics.
 
-**Deploying caught three defects the tests could not**, which is now the fourth time in this
+**Deploying caught four defects the tests could not**, which is now the fourth time in this
 programme:
 
 - **The knowledge platform authenticates services, not just users.** Every eligibility and progress
@@ -258,8 +259,51 @@ maximum length of stay and the RUTF/RUSF ration table are `ENGINEERING_SEED` /
 `PENDING_MOHCC_RATIFICATION` and must be confirmed against the national IMAM protocol before they
 drive treatment. Nineteen content fixtures execute against the live engine as a build gate.
 
-**Not built:** a UI. The BFF contract and the tracing worklist exist and are reachable; no
-paediatric screen consumes them yet.
+### The experience surface
+
+Two screens, because they are two jobs done by different people: `/ehr/[patientId]/imam` is the
+child's treatment — enrol, review, discharge — and `/clinical/nutrition-tracing` is the facility's
+defaulter worklist, which a community health worker planning home visits reads, not the nurse who
+saw the child last.
+
+The UI holds three distinctions rather than flattening them, each tested without rendering:
+
+1. **Not evaluated is not not-ready.** A null discharge verdict means the knowledge platform could
+   not be reached. It renders as its own state, in the criteria panel and on each review's verdict
+   chip, because painting it as "not yet dischargeable" would put a clinical finding about the
+   child on screen when the only fact was a failed network call.
+2. **Never reviewed is not merely overdue.** Those children get their own group above the
+   defaulters on the worklist, and an episode with no reviews renders as an alarm rather than an
+   empty list. An identical missed-visit count cannot say that nobody has laid eyes on the child
+   since the day they were found to be malnourished.
+3. **A cure needs its evidence.** The outcome form demands a written reason when the criteria are
+   unmet *or* unevaluable, names which criteria are unmet, and the reason is stored on the record.
+
+The discharge panel shows met and unmet criteria alike with the sentence explaining each, because
+"1 review recorded; 2 consecutive are required" is the difference between a clinician understanding
+why the discharge is unavailable and believing the system is being obstructive. Oedema and danger
+signs are tri-state with "not assessed" selectable and default — a form offering only yes and no
+makes a busy clinician pick "no" to submit, and a recorded "no oedema" nobody checked can discharge
+a child. Attendance banding stays server-side: two surfaces deriving "defaulted" from a date would
+eventually disagree about the same child.
+
+`scripts/e2e/imam-episode-proof.sh` drives the vertical through the real ingress on the endpoints
+the screens call — worklist, episode detail with its live assessment, a review write, the child
+leaving the worklist once seen, the 422 on a premature cure, and the same cure accepted with a
+stated reason. **10 of 10 green.**
+
+**A fourth defect, found by running that script.** With no actor on the trust context — the preview
+estate's normal state, since it does not enforce bearer authentication — the review insert reached
+the `recorded_by` NOT NULL constraint and returned a 500. The clinician would have seen a generic
+failure with nothing to act on, and the review would have been lost. All three write paths now
+resolve the author from the body then the trust context and reject with a 400 naming what is
+missing. **A clinical record with no author is not a record**: you cannot ask whoever wrote it what
+they saw. The forms send the signed-in user, and deliberately do not fall back to the literal
+string "unknown" the way the growth page does — "unknown" is not an author, it is the absence of one
+written into the record where it can never be questioned.
+
+**Not built:** nothing in this vertical. The screens are deployed to the preview estate and the
+data path under them is proven; what has not been done is a human walking the rendered pages.
 
 ---
 
@@ -463,8 +507,8 @@ acquisition, and PWA offline — are independent of this and can proceed in any 
 **IMAM episodes end to end are done and live-proven** (§4b).
 
 **Wave 5+.** Paediatric surgery, the adolescent confidential pathway (blocked on the
-`SPECIALLY_PROTECTED` enforcement seam above), the remaining body-map instruments, an IMAM
-experience surface, quality and surveillance analytics.
+`SPECIALLY_PROTECTED` enforcement seam above), the remaining body-map instruments, quality and
+surveillance analytics.
 
 ---
 
