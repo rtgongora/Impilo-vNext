@@ -1,0 +1,472 @@
+{
+  "formKey": "impilo.labour.partograph.observation.v1",
+  "name": "Partograph observation",
+  "description": "One timed observation on a labour partograph. Backed by pct-service pct_labour_observations; the progress assessment against the alert and action lines is returned with the write.",
+  "formType": "SERIAL_OBSERVATION",
+  "careSettings": [
+    "INPATIENT",
+    "MATERNITY"
+  ],
+  "careStages": [
+    "MONITORING"
+  ],
+  "specialties": [
+    "MIDWIFERY",
+    "OBSTETRICS",
+    "NURSING"
+  ],
+  "encounterTypes": [
+    "LABOUR",
+    "MATERNITY",
+    "OBSTETRICS",
+    "INPATIENT"
+  ],
+  "requiredWorkflow": "MONITOR",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": [
+    "MIDWIFE",
+    "NURSE",
+    "PHYSICIAN",
+    "CLINICAL_OFFICER"
+  ],
+  "sexApplicability": "FEMALE",
+  "requirePregnant": true,
+  "programmeApplicability": [
+    "MATERNAL"
+  ],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO partograph (classic); labour-care monitoring intervals",
+  "publish": true,
+  "definition": {
+    "id": "impilo.labour.partograph.observation.v1",
+    "version": "1.0.0",
+    "title": "Partograph observation",
+    "description": "Recorded repeatedly through labour. Every field is optional except the time and the stage: a partograph is filled in as observations are taken, and a form demanding all of them at once would be abandoned or filled with guesses.",
+    "healthDomain": "MATERNAL",
+    "programme": "MATERNAL",
+    "encounterTypes": [
+      "LABOUR",
+      "MATERNITY",
+      "OBSTETRICS",
+      "INPATIENT"
+    ],
+    "sexApplicability": "FEMALE",
+    "providerRoles": [
+      "MIDWIFE",
+      "NURSE",
+      "PHYSICIAN",
+      "CLINICAL_OFFICER"
+    ],
+    "offlineCapable": true,
+    "audit": {
+      "dataCustodian": "MOHCC",
+      "sensitivity": "SENSITIVE"
+    },
+    "sections": [
+      {
+        "id": "timing",
+        "title": "When",
+        "fields": [
+          {
+            "id": "observedAt",
+            "linkId": "observedAt",
+            "label": "Observation time",
+            "kind": "datetime",
+            "description": "The time the observation was taken, not the time it was typed. A partograph read at the wrong times is not a partograph.",
+            "validation": {
+              "required": true
+            }
+          },
+          {
+            "id": "phase",
+            "linkId": "phase",
+            "label": "Stage of labour",
+            "kind": "coded_single",
+            "description": "The alert line is drawn from the recognition of active labour. Latent phase is excluded from progress assessment rather than judged by it — measuring from admission would condemn a normal latent phase as obstruction.",
+            "options": [
+              {
+                "code": "LATENT",
+                "display": "Latent phase"
+              },
+              {
+                "code": "ACTIVE_LABOUR",
+                "display": "Active first stage"
+              },
+              {
+                "code": "SECOND_STAGE",
+                "display": "Second stage"
+              },
+              {
+                "code": "THIRD_STAGE",
+                "display": "Third stage"
+              }
+            ],
+            "validation": {
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "fetal",
+        "title": "Fetal wellbeing",
+        "fields": [
+          {
+            "id": "fetalHeartRateBpm",
+            "linkId": "fetalHeartRateBpm",
+            "label": "Fetal heart rate",
+            "kind": "numeric_with_unit",
+            "unit": "bpm",
+            "validation": {
+              "min": 30,
+              "max": 250
+            }
+          },
+          {
+            "id": "liquor",
+            "linkId": "liquor",
+            "label": "Liquor",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "INTACT",
+                "display": "Membranes intact"
+              },
+              {
+                "code": "CLEAR",
+                "display": "Clear"
+              },
+              {
+                "code": "MECONIUM_LIGHT",
+                "display": "Meconium — light"
+              },
+              {
+                "code": "MECONIUM_THICK",
+                "display": "Meconium — thick"
+              },
+              {
+                "code": "BLOOD_STAINED",
+                "display": "Blood stained"
+              },
+              {
+                "code": "ABSENT",
+                "display": "Absent"
+              }
+            ]
+          },
+          {
+            "id": "moulding",
+            "linkId": "moulding",
+            "label": "Moulding",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "0",
+                "display": "0 — bones separated"
+              },
+              {
+                "code": "1",
+                "display": "+1 — bones touching"
+              },
+              {
+                "code": "2",
+                "display": "+2 — overlapping, reducible"
+              },
+              {
+                "code": "3",
+                "display": "+3 — overlapping, not reducible"
+              }
+            ]
+          },
+          {
+            "id": "caput",
+            "linkId": "caput",
+            "label": "Caput",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "0",
+                "display": "0"
+              },
+              {
+                "code": "1",
+                "display": "+1"
+              },
+              {
+                "code": "2",
+                "display": "+2"
+              },
+              {
+                "code": "3",
+                "display": "+3"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "progress",
+        "title": "Labour progress",
+        "fields": [
+          {
+            "id": "cervicalDilationCm",
+            "linkId": "cervicalDilationCm",
+            "label": "Cervical dilatation",
+            "kind": "numeric_with_unit",
+            "unit": "cm",
+            "description": "Recorded only when an examination was actually performed. Carrying the previous value forward draws a progress line nobody measured.",
+            "validation": {
+              "min": 0,
+              "max": 10
+            }
+          },
+          {
+            "id": "fetalDescentFifths",
+            "linkId": "fetalDescentFifths",
+            "label": "Descent (fifths palpable)",
+            "kind": "numeric_with_unit",
+            "unit": "fifths",
+            "validation": {
+              "min": 0,
+              "max": 5
+            }
+          },
+          {
+            "id": "contractionFrequency10Min",
+            "linkId": "contractionFrequency10Min",
+            "label": "Contractions per 10 minutes",
+            "kind": "numeric_with_unit",
+            "unit": "count",
+            "validation": {
+              "min": 0,
+              "max": 10
+            }
+          },
+          {
+            "id": "contractionDurationSec",
+            "linkId": "contractionDurationSec",
+            "label": "Contraction duration",
+            "kind": "numeric_with_unit",
+            "unit": "s",
+            "validation": {
+              "min": 0,
+              "max": 300
+            }
+          }
+        ]
+      },
+      {
+        "id": "maternal",
+        "title": "Maternal wellbeing",
+        "fields": [
+          {
+            "id": "maternalPulseBpm",
+            "linkId": "maternalPulseBpm",
+            "label": "Pulse",
+            "kind": "numeric_with_unit",
+            "unit": "bpm",
+            "validation": {
+              "min": 20,
+              "max": 250
+            }
+          },
+          {
+            "id": "systolicBp",
+            "linkId": "systolicBp",
+            "label": "Systolic blood pressure",
+            "kind": "numeric_with_unit",
+            "unit": "mmHg",
+            "validation": {
+              "min": 40,
+              "max": 300
+            }
+          },
+          {
+            "id": "diastolicBp",
+            "linkId": "diastolicBp",
+            "label": "Diastolic blood pressure",
+            "kind": "numeric_with_unit",
+            "unit": "mmHg",
+            "validation": {
+              "min": 20,
+              "max": 200
+            }
+          },
+          {
+            "id": "temperatureC",
+            "linkId": "temperatureC",
+            "label": "Temperature",
+            "kind": "numeric_with_unit",
+            "unit": "Cel",
+            "validation": {
+              "min": 30,
+              "max": 45
+            }
+          },
+          {
+            "id": "urineVolumeMl",
+            "linkId": "urineVolumeMl",
+            "label": "Urine passed",
+            "kind": "numeric_with_unit",
+            "unit": "mL",
+            "validation": {
+              "min": 0,
+              "max": 3000
+            }
+          },
+          {
+            "id": "urineProtein",
+            "linkId": "urineProtein",
+            "label": "Urine protein",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "NIL",
+                "display": "Nil"
+              },
+              {
+                "code": "TRACE",
+                "display": "Trace"
+              },
+              {
+                "code": "1",
+                "display": "+"
+              },
+              {
+                "code": "2",
+                "display": "++"
+              },
+              {
+                "code": "3",
+                "display": "+++"
+              },
+              {
+                "code": "4",
+                "display": "++++"
+              }
+            ]
+          },
+          {
+            "id": "urineAcetone",
+            "linkId": "urineAcetone",
+            "label": "Urine acetone",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "NIL",
+                "display": "Nil"
+              },
+              {
+                "code": "TRACE",
+                "display": "Trace"
+              },
+              {
+                "code": "1",
+                "display": "+"
+              },
+              {
+                "code": "2",
+                "display": "++"
+              },
+              {
+                "code": "3",
+                "display": "+++"
+              }
+            ]
+          },
+          {
+            "id": "maternalCondition",
+            "linkId": "maternalCondition",
+            "label": "Overall condition",
+            "kind": "exam_finding"
+          }
+        ]
+      },
+      {
+        "id": "intervention",
+        "title": "Interventions",
+        "fields": [
+          {
+            "id": "oxytocinRateMiuMin",
+            "linkId": "oxytocinRateMiuMin",
+            "label": "Oxytocin rate",
+            "kind": "numeric_with_unit",
+            "unit": "mU/min",
+            "validation": {
+              "min": 0,
+              "max": 100
+            }
+          },
+          {
+            "id": "notes",
+            "linkId": "notes",
+            "label": "Notes",
+            "kind": "text"
+          }
+        ]
+      }
+    ]
+  },
+  "resourceMappings": {
+    "mappings": [
+      {
+        "linkId": "fetalHeartRateBpm",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "/min",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "55283-6",
+          "display": "Fetal heart rate"
+        }
+      },
+      {
+        "linkId": "systolicBp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "mm[Hg]",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8480-6",
+          "display": "Systolic blood pressure"
+        }
+      },
+      {
+        "linkId": "diastolicBp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "mm[Hg]",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8462-4",
+          "display": "Diastolic blood pressure"
+        }
+      },
+      {
+        "linkId": "temperatureC",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "Cel",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8310-5",
+          "display": "Body temperature"
+        }
+      },
+      {
+        "linkId": "cervicalDilationCm",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "cm",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "11976-8",
+          "display": "Cervical dilatation"
+        }
+      }
+    ]
+  }
+}
