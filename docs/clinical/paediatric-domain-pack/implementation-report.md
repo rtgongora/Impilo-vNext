@@ -332,6 +332,37 @@ every child is worse than no flag: it teaches people to dismiss the one that mat
 never hides the gap — waived criteria are reported on the result. **It must only ever be applied to
 a criterion that is an additional route to a finding, never the sole way to exclude one.**
 
+**Wave 5 — a blocking finding before any of it is built.**
+
+Journey 5 (the confidential adolescent visit) rests on the platform's highest confidentiality
+class, `SPECIALLY_PROTECTED`. That class is currently **decorative**. It appears in exactly two
+places in the repository: its declaration in `DataSensitivityClass`, and a single switch arm in
+`ResourceSensitivityClassifier` that maps it to the *same* visibility tier as `FULL_CLINICAL`.
+Nothing assigns it to any record, no policy branches on it, and no seed or rego references it.
+
+So marking an adolescent's sexual-health or safeguarding record `SPECIALLY_PROTECTED` today would
+change nothing about who can read it, while making the record *look* protected in the schema and in
+any UI that displays the label. That is worse than leaving it unmarked: it manufactures a false
+assurance for the clinician deciding whether it is safe to write something down, and for the
+adolescent being told their record is confidential.
+
+The requirement this blocks is explicit in the brief — restricted adolescent and safeguarding data,
+and guardian access separated from the confidential adolescent record. Building the pathway on top
+of a class with no enforcement would satisfy the letter of it and none of the substance, so the
+enforcement seam has to land first:
+
+1. The class must produce a distinct visibility tier, not share `FULL_IDENTIFIED_CLINICAL`.
+2. Guardian context must be a first-class input to the decision. A caregiver acting for a child is
+   a different requester from the person themselves, and the difference is the whole feature.
+3. Assignment must be content-driven and governed, so what counts as confidential is a reviewable
+   list rather than a per-service judgement.
+4. Every access and every refusal must be audited, because a confidentiality control nobody can
+   review is not a control.
+
+Remaining Wave 5 items — paediatric surgery, IMAM episodes end to end, the remaining body-map
+instruments, 5–19 year LMS data acquisition, and PWA offline — are independent of this and can
+proceed in any order.
+
 **Wave 5+.** Paediatric surgery, nutrition/IMAM episodes end to end, the adolescent confidential
 pathway, the remaining body-map instruments, quality and surveillance analytics.
 
