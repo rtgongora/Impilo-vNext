@@ -181,7 +181,10 @@ public class DiscoveryOrchestrationService {
             }
             params.add("page", "0");
             params.add("size", String.valueOf(all ? ALL_PER_SOURCE : 20));
-            JsonNode listings = msika.publicListings(params);
+            // The marketplace lane returns the unwrapped `data` node: an object
+            // shaped {results:[...],total,page,size}. Older/other shapes may be a
+            // bare array, so accept both rather than silently rendering nothing.
+            JsonNode listings = arrayOf(msika.publicListings(params), "results");
             if (listings != null && listings.isArray()) {
                 int added = 0;
                 for (JsonNode l : listings) {
@@ -211,7 +214,7 @@ public class DiscoveryOrchestrationService {
 
     private void addCoverage(boolean all, List<DiscoveryResult> out, List<String> notes) {
         try {
-            JsonNode plans = coverage.publicCoveragePlans();
+            JsonNode plans = arrayOf(coverage.publicCoveragePlans(), "results");
             if (plans != null && plans.isArray()) {
                 int added = 0;
                 for (JsonNode p : plans) {
@@ -241,7 +244,7 @@ public class DiscoveryOrchestrationService {
 
     private void addWellness(boolean all, List<DiscoveryResult> out, List<String> notes) {
         try {
-            JsonNode programmes = simba.publicScreeningProgrammes();
+            JsonNode programmes = arrayOf(simba.publicScreeningProgrammes(), "results");
             if (programmes != null && programmes.isArray()) {
                 int added = 0;
                 for (JsonNode w : programmes) {
@@ -273,6 +276,19 @@ public class DiscoveryOrchestrationService {
     }
 
     // ---- helpers ----
+
+    /**
+     * Public lanes differ in envelope: some return a bare JSON array, others the
+     * unwrapped {@code data} object holding a collection field. Normalise both to
+     * an array node so one lane's shape never silently renders as "no results".
+     */
+    private static JsonNode arrayOf(JsonNode node, String collectionField) {
+        if (node == null || node.isArray()) {
+            return node;
+        }
+        JsonNode inner = node.get(collectionField);
+        return inner != null && inner.isArray() ? inner : null;
+    }
 
     private static String text(JsonNode n, String field) {
         return n != null && n.hasNonNull(field) ? n.get(field).asText() : null;

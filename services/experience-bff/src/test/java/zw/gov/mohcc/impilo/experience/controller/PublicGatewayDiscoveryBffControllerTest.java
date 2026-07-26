@@ -62,6 +62,26 @@ class PublicGatewayDiscoveryBffControllerTest {
     }
 
     @Test
+    void marketplaceLane_acceptsWrappedResultsEnvelope() {
+        // The live msika lane returns the unwrapped `data` object {results:[...]},
+        // not a bare array — this must still render (regression: it rendered empty).
+        ArrayNode arr = mapper.createArrayNode();
+        ObjectNode l = mapper.createObjectNode();
+        l.put("id", "L9");
+        l.put("title", "Fingertip pulse oximeter");
+        arr.add(l);
+        ObjectNode envelope = mapper.createObjectNode();
+        envelope.set("results", arr);
+        envelope.put("total", 1);
+
+        var svc = new DiscoveryOrchestrationService(null, new StubMsika(envelope), null, null);
+        var out = svc.search(null, "marketplace", null, null, 0, 20, "127.0.0.1");
+
+        assertEquals(1, out.results().size());
+        assertEquals("Fingertip pulse oximeter", out.results().get(0).title());
+    }
+
+    @Test
     void coverageLane_normalisesRealPlans() {
         ArrayNode arr = mapper.createArrayNode();
         ObjectNode p = mapper.createObjectNode();
