@@ -63,7 +63,7 @@ leases as committed rather than as first drafted.
 
 | Service | Head today | Existing claims (as committed) | **Adult Medicine block** | Sub-ranges |
 |---|---|---|---|---|
-| `pct-service` | V100 | trauma V035–V069 · RMNP V058/V059/V061–V069 · **this pack V060 + V100** · emergency V200–V239 | **V100–V129** | problem model V100–V103 · medical episode V104–V105 · clerking + structured history V106–V109 · medication reconciliation V110–V112 · programme enrolment (HIV/TB/NCD) V113–V116 · chronic registers V117–V120 · reserve V121–V129 |
+| `pct-service` | V100 | trauma V035–V069 · RMNP V058/V059/V061–V069 · **this pack V060 + V100** · emergency V200–V239 · **paediatric/IMAM V104–V105 (carve-out, see note)** | **V100–V129 excl. V104–V105** | problem model V100–V103 (landed: V100 problems · V101 medical episode · V102 clinical documents · V103 problem links) · clerking + structured history V106–V109 · medication reconciliation V110–V112 · programme enrolment (HIV/TB/NCD) V113–V116 · chronic registers V117–V120 · reserve V121–V129 |
 | `clinical-knowledge-platform-service` | V006 | surgery V007–V020 · RMNP V007–V009 · emergency V200–V229 | **V051–V080** | rule-governance + source provenance V051 · adult content tranches V052–V070 · reserve V071–V080 |
 | `inpatient-service` | V066 | trauma V035–V064 (**dead space**) · surgery V067–V080 · emergency V200–V229 | **V111–V130** | medical ward workspace V111–V114 · reserve V115–V130 |
 | `zibo-service` | V007 | surgery V008–V014 · emergency V200–V219 | **V035–V049** | adult medical value sets V035–V040 · DAK artifact registry V041–V044 |
@@ -73,6 +73,17 @@ leases as committed rather than as first drafted.
 
 `pct` V061–V069 remains RMNP's; this pack does **not** treat the gap between V060 and V100 as
 available.
+
+> **Coordinator amendment, 2026-07-26 (V104–V105 carve-out).** During the IMAM merge window, the IMAM
+> lane's `V058/V059` collided with RMNP's identically numbered migrations on canonical and were
+> renumbered to **V104/V105** (`V104__imam_episodes.sql`, `V105__imam_tracing_notification.sql`), which
+> landed on canonical and are applied on the preview estate. Those two numbers sat inside this pack's
+> block and its planned "medical episode" sub-range — which had in fact already landed at V101, so no
+> Adult Medicine file was displaced. Rather than force a second live flyway-history repair, the
+> coordinator cedes **V104–V105 to the paediatric/IMAM lane permanently**. This pack's next free pct
+> number is **V106**. Process note for every lane: a renumber must target numbers above ALL committed
+> lease claims (per the fleet law), or obtain an explicit carve-out like this one — and the carve-out
+> must be written into the affected lease, not just announced in a message.
 
 > ⚠️ **Read the lease files, not the announcement messages.** The emergency lane's cross-session
 > message announced pct V070–V099, inpatient V067–V094, ckp V010–V029. Its *committed* lease says
