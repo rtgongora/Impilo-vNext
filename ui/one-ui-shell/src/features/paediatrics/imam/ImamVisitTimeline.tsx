@@ -15,9 +15,15 @@ import { formatMuac, formatWeight, oedemaLabel, TONE_BADGE, triStateLabel, visit
 export interface ImamVisitTimelineProps {
   visits: ImamVisit[];
   reviewIntervalDays: number | null;
+  /** A closed episode with no review is its own finding, and a worse one. */
+  episodeClosed?: boolean;
 }
 
-export function ImamVisitTimeline({ visits, reviewIntervalDays }: ImamVisitTimelineProps) {
+export function ImamVisitTimeline({
+  visits,
+  reviewIntervalDays,
+  episodeClosed = false,
+}: ImamVisitTimelineProps) {
   if (visits.length === 0) {
     return (
       <section
@@ -26,8 +32,9 @@ export function ImamVisitTimeline({ visits, reviewIntervalDays }: ImamVisitTimel
       >
         <h3 className="text-sm font-semibold text-red-900">No review has been recorded</h3>
         <p className="mt-1 text-xs text-red-900">
-          Nothing has been recorded for this child since they were enrolled. This is not an empty
-          list — it is a child in treatment that nobody has reviewed.
+          {episodeClosed
+            ? "This episode was closed without a single review being recorded. Whatever outcome it carries was not observed."
+            : "Nothing has been recorded for this child since they were enrolled. This is not an empty list — it is a child in treatment that nobody has reviewed."}
         </p>
       </section>
     );

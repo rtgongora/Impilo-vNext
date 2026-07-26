@@ -184,6 +184,7 @@ export function ImamEpisodePanel({ episode }: { episode: ImamEpisode }) {
       <ImamVisitTimeline
         visits={episode.visits}
         reviewIntervalDays={episode.reviewIntervalDays}
+        episodeClosed={closed}
       />
 
       {!closed && (

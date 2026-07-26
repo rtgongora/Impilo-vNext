@@ -217,6 +217,14 @@ describe("the review timeline", () => {
     expect(empty).toHaveTextContent(/not an empty list/i);
   });
 
+  it("a closed episode with no review says the outcome was never observed", () => {
+    render(<ImamVisitTimeline visits={[]} reviewIntervalDays={7} episodeClosed />);
+
+    expect(screen.getByTestId("imam-visits-empty")).toHaveTextContent(
+      /closed without a single review/i,
+    );
+  });
+
   it("marks an unevaluated review as unevaluated rather than as treatment continuing", () => {
     render(<ImamVisitTimeline visits={[visit({ dischargeEligible: null })]} reviewIntervalDays={7} />);
 
