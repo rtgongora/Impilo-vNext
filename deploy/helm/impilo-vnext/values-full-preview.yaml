@@ -548,6 +548,15 @@ fullBootServices:
   rito-quality-safety-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  # BUTANO is the shared health record, and every one of its consumers is an ingestion path:
+  # impilo.identity.subject creates the FHIR Patients everything else references,
+  # platform.consent.events applies revocations, the pacs.* topics archive imaging, and
+  # pct.observation.recorded archives clinical observations. With auto-startup off none of them
+  # ran, so the SHR held one Patient and nothing else — a shared record that had never been
+  # written to. Rollback = remove the env line.
+  butano-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
   analytics-pipeline-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
