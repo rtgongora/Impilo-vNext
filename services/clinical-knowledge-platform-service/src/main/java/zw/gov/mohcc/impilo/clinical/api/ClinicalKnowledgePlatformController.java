@@ -191,6 +191,9 @@ public class ClinicalKnowledgePlatformController {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("age_days", assessment.ageDays());
+        // Which IMNCI chart was used. A caller must be able to see that a 10-day-old was assessed
+        // on the young-infant chart and not the child one.
+        data.put("pathway", assessment.pathway());
         data.put("applicable", assessment.applicable());
         data.put("classifications", classifications);
         data.put("urgent_referral_required", assessment.urgentReferralRequired());
