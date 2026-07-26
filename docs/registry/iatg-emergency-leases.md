@@ -208,6 +208,37 @@ RMNP sessions on 2026-07-26.
    deferral needs a revisit condition. Each domain's standards stay in its own file; only the
    machinery is common.
 
+## 5b. Burns — split at the stabilisation boundary
+
+Burns is **in scope for this pack's owned responsibilities and out of scope for definitive
+management**, the same boundary the pack applies to trauma and surgery generally. The brief lists
+Burns under "invoke the Trauma and Surgery Packs", and that invocation is correct — but three burns
+capabilities are squarely inside the list of things Emergency Care owns (immediate stabilisation,
+resuscitation, time-critical treatment, transfer), so they cannot be deferred to a downstream pack
+that only sees the patient later.
+
+| Capability | Owner | Why |
+|---|---|---|
+| %TBSA estimation (Lund–Browder, age-adjusted; rule of nines) | **Emergency** — `libs/emergency-domain` arithmetic | An emergency assessment measurement, and the input to fluid resuscitation. Age-adjusted body proportions mean this must route through `paediatric-domain` age banding, not a fixed adult chart. |
+| Fluid resuscitation calculation (Parkland: %TBSA × weight × rate, with the first-half/second-half clock) | **Emergency** — `libs/emergency-domain` arithmetic | Time-critical and clock-anchored **from the time of injury, not from arrival** — which is exactly why `time_target_basis` exists as its own column (R9/C.3). Wrong clock, wrong volume. |
+| Inhalational-injury / airway assessment | **Emergency** — CKP content, `DANGER_SIGN` + `ESCALATION` layers | An emergency airway decision. Pairs with the environmental tranche's smoke-inhalation rules. |
+| Burn-centre referral and transfer criteria | **Emergency** — `emergency_handover(TO_FACILITY)` + disposition CHECKs | A disposition decision, and the acceptance handshake applies unchanged. |
+| Definitive burn management — excision, grafting, dressings, nutrition, rehabilitation, scar care | **Surgery / plastics** | Not emergency care. Invoked, not rebuilt. Surgery has not claimed burns in its ADR, lease or standards baseline, so this needs confirming with that lane. |
+
+`episode_class` already carries `BURNS`. Content placement: the burns **arithmetic** lands in W1 with
+the rest of `libs/emergency-domain`; burns **rules** land in tranche 10 (environmental — shared with
+smoke inhalation, electrical and lightning injury) and tranche 12 (the trauma/surgical invocation
+set). Weight-banded and TBSA-banded thresholds must use RMNP's `bandKey` rather than overloading
+`ageDays` (§5a).
+
+**Verified state today: burns is absent from the estate except one decorative line.**
+`MobileProviderExtendedController` advertises a burns workspace offering "Lund-Browder Chart",
+"Fluid Calculator" and "Parkland Formula" — and a repo-wide grep for `tbsa|parkland|lund.browder`
+returns *only that line*. The mobile provider app consumes it
+(`apps/mobile/provider-app/src/services/queueService.ts:192`), so a clinician can select burns and tap
+toward three tools that do not exist. Tracked as `task_40846f47`; the burns tools themselves are this
+pack's to deliver.
+
 ## 5a. Inherited engineering constraints (from the RMNP lane, 2026-07-26)
 
 Two constraints on CKP internals this pack must respect rather than rediscover.
