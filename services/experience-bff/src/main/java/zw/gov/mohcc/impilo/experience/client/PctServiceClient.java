@@ -358,9 +358,22 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    public JsonNode listConditions(String patientId, int page, int size) {
-        String url = baseUrl + "/v1/conditions?patient_id=" + patientId + "&page=" + page + "&size=" + size;
-        log.debug("PCT: listing conditions for patient={}", patientId);
+    /**
+     * The patient's problem list.
+     *
+     * <p>PCT serves this at {@code /v1/problems} keyed by {@code subject_cpid}. This client
+     * previously called {@code /v1/conditions?patient_id=}, an endpoint pct-service has never
+     * served, so every read 404'd and every clinical surface above showed an empty problem list.
+     * "Condition" survives as the BFF's outward-facing noun because the UI is built on it;
+     * "problem" is the doctrine word and the name of the record. One clinical truth, and the
+     * translation happens here rather than by adding a second endpoint to the system of record.</p>
+     *
+     * <p>Deliberately unpaged: a problem list is read whole or it misleads. Truncating it at a
+     * page boundary hides the diagnosis that did not fit.</p>
+     */
+    public JsonNode listProblems(String subjectCpid) {
+        String url = baseUrl + "/v1/problems?subject_cpid=" + subjectCpid;
+        log.debug("PCT: listing problems for subject={}", subjectCpid);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
@@ -798,18 +811,22 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    // ── Conditions (strangler migration) ────────────────────────
+    // ── Problem list (the UI calls these "conditions") ──────────
 
-    public JsonNode createCondition(Map<String, Object> body) {
-        String url = baseUrl + "/v1/conditions";
-        log.info("PCT: Creating condition for patient={}", body.get("patient_id"));
+    /**
+     * Adds a problem. The body must already be in PCT's vocabulary — see
+     * {@code ConditionsController#toPctProblem}, which owns the translation.
+     */
+    public JsonNode createProblem(Map<String, Object> body) {
+        String url = baseUrl + "/v1/problems";
+        log.info("PCT: Creating problem for subject={}", body.get("subject_cpid"));
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 
-    public JsonNode resolveCondition(String conditionId) {
-        String url = baseUrl + "/v1/conditions/" + conditionId + "/resolve";
-        log.info("PCT: Resolving condition={}", conditionId);
+    public JsonNode resolveProblem(String problemId) {
+        String url = baseUrl + "/v1/problems/" + problemId + "/resolve";
+        log.info("PCT: Resolving problem={}", problemId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
         return extractData(response);
     }

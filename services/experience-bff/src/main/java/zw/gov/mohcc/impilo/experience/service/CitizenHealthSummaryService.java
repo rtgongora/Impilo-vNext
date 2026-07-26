@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.ButanoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -12,6 +14,8 @@ import java.util.Map;
 
 @Service
 public class CitizenHealthSummaryService {
+
+    private static final Logger log = LoggerFactory.getLogger(CitizenHealthSummaryService.class);
 
     private final ButanoServiceClient butanoClient;
     private final PctServiceClient pctClient;
@@ -33,10 +37,16 @@ public class CitizenHealthSummaryService {
         }
 
         try {
-            JsonNode conditions = pctClient.listConditions(actorId, 0, 50);
+            JsonNode conditions = pctClient.listProblems(actorId);
             data.put("conditions", jsonToList(conditions));
-        } catch (Exception ignored) {
-            data.putIfAbsent("conditions", List.of());
+            data.put("conditionsUnavailable", false);
+        } catch (Exception e) {
+            // A citizen reading their own record must not be shown an empty condition list when
+            // the truth is that it could not be fetched. The section is marked unavailable rather
+            // than failing the whole summary, which is composed from several optional sources.
+            log.warn("PCT listProblems failed for actor={}: {}", actorId, e.getMessage());
+            data.put("conditions", List.of());
+            data.put("conditionsUnavailable", true);
         }
 
         try {

@@ -79,7 +79,7 @@ class DownstreamFailureHonestyTest {
     void conditions() {
         ResponseEntity<Map<String, Object>> response =
                 new ConditionsController(failingPct())
-                        .listConditions("t", "req-2", "corr-2", 0, 20, "p-1");
+                        .listConditions("t", "req-2", "corr-2", "p-1");
         assertHonestFailure(response, "condition_list_unavailable");
         assertHasMeta(response, "req-2");
     }
@@ -196,7 +196,7 @@ class DownstreamFailureHonestyTest {
     private static PctServiceClient failingPct() {
         return new PctServiceClient(new RestTemplate(), endpoints(), mapper) {
             @Override public JsonNode listAllergies(String cpid) { throw DOWN; }
-            @Override public JsonNode listConditions(String cpid, int page, int size) { throw DOWN; }
+            @Override public JsonNode listProblems(String cpid) { throw DOWN; }
             @Override public JsonNode listImmunizations(String cpid, int page, int size) { throw DOWN; }
             @Override public JsonNode listVitals(String cpid, int page, int size) { throw DOWN; }
             @Override public JsonNode getPatientTimeline(String cpid) { throw DOWN; }
