@@ -159,8 +159,25 @@ if grep -Eq "encounter_ref\s+VARCHAR" services/oros-service/src/main/resources/d
    && ! grep -rEq "encounter_ref\s+VARCHAR[^,]*NOT NULL|ALTER COLUMN encounter_ref SET NOT NULL" services/oros-service/src/main/resources/db/migration/ 2>/dev/null; then
   echo "WARN: V-2 open — oros orders still accept a null encounter_ref (CC-5)"
 fi
-if ! grep -rq "pct_journey_id\|encounter_ref" services/daidzai-service/src/main/java/*/trauma* 2>/dev/null; then
+# V-3 detector, repaired 2026-07-26. The previous form globbed
+#   services/daidzai-service/src/main/java/*/trauma*
+# which cannot match: the only child of .../java is zw/, so the pattern expanded to zw/trauma* and
+# matched nothing. grep therefore always found nothing and this WARN fired unconditionally — it
+# would have kept firing after V-3 was closed, and would never have fired for the right reason.
+# A detector that cannot detect is worse than no detector: it produces a warning everyone learns to
+# ignore, and it silently withholds the signal it exists to give.
+#
+# Detect on the SCHEMA rather than on Java source, because the column is what closes V-3 and a
+# migration cannot be refactored out of existence the way a class can.
+if ! grep -rq "pct_journey_id" services/daidzai-service/src/main/resources/db/migration/ 2>/dev/null; then
   echo "WARN: V-3 open — trauma episodes still carry no PCT back-link (CC-5)"
+else
+  # Closed. Now assert it STAYS closed: the back-link must exist and be constrained to be present
+  # once the episode has reached a facility phase, or the anchor is optional in practice.
+  if ! grep -rq "chk_dai_anchored_once_in_facility" services/daidzai-service/src/main/resources/db/migration/ 2>/dev/null; then
+    echo "FAIL: V-3 regressed — pct_journey_id exists but nothing requires it once in a facility (CC-5)"
+    FAIL=1
+  fi
 fi
 
 if [[ "$FAIL" -eq 1 ]]; then

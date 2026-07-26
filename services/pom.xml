@@ -117,6 +117,7 @@
         <!-- Participation — Citizen Get-Involved & Co-Design -->
         <module>participation-service</module>
         <module>telemonitoring-service</module>
+        <module>procedures-service</module>
         <!-- Forms Service — Clinical Content Platform -->
         <module>forms-service</module>
         <!-- Data Pipeline — v1.1-Native Ingestion & Watermarking -->

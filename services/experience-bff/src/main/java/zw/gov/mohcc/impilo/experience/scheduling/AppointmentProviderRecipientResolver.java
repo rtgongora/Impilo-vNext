@@ -18,10 +18,9 @@ import java.util.Set;
 @Component
 public class AppointmentProviderRecipientResolver {
 
-    // Rostering and on-call are vashandi's, not tuso's. TusoServiceClient's staffing
-    // methods called tuso /v1/staffing/*, which no service serves, and were removed with a
-    // docblock saying not to reintroduce them; this caller was left pointing at one of
-    // them by a different lane, which is why the module stopped compiling.
+    // Repointed from tuso: this resolver read the on-call rota from tuso /v1/staffing/on-call, a
+    // path no service serves, so resolveFacilityStaff has always come back empty and appointment
+    // notifications never reached facility staff. Rostering is vashandi's.
     private final VashandiServiceClient vashandiClient;
 
     public AppointmentProviderRecipientResolver(VashandiServiceClient vashandiClient) {
@@ -50,9 +49,15 @@ public class AppointmentProviderRecipientResolver {
             JsonNode onCall = vashandiClient.listOnCall(facilityId, weekStart);
             if (onCall != null && onCall.isArray()) {
                 for (JsonNode row : onCall) {
-                    addIfPresent(recipients, row, "provider_id", "providerId", "actor:");
-                    addIfPresent(recipients, row, "staff_id", "staffId", "staff:");
-                    addIfPresent(recipients, row, "primary_staff_id", "primaryStaffId", "staff:");
+                    // The rota is a resource envelope: identifiers live under "attributes", and the
+                    // person reference vashandi holds is the workforce profile id. Reading the old
+                    // flat provider_id/staff_id keys would compile, run, and quietly resolve nobody
+                    // — which is how this path came to be silently empty in the first place.
+                    JsonNode attributes = row.has("attributes") ? row.get("attributes") : row;
+                    addIfPresent(recipients, attributes,
+                            "primary_workforce_profile_id", "primaryWorkforceProfileId", "staff:");
+                    addIfPresent(recipients, attributes,
+                            "backup_workforce_profile_id", "backupWorkforceProfileId", "staff:");
                 }
             }
         } catch (Exception ignored) {

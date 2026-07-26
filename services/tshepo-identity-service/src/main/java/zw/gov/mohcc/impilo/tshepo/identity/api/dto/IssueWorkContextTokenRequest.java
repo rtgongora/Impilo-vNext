@@ -28,6 +28,11 @@ public record IssueWorkContextTokenRequest(
         String wardId,
         String programmeId,
         String organisationId,
+        // Jurisdiction the regulatory appointment covers (NATIONAL, or a province/district code
+        // from the zibo value set). Carried on the token because a regulator's authority is
+        // bounded by WHERE as well as by which organisation: an inspector appointed for one
+        // province must not act across the country merely because their council is national.
+        String jurisdictionCode,
         String assignmentId,
         UUID workspaceId,
         String roleTemplateId,

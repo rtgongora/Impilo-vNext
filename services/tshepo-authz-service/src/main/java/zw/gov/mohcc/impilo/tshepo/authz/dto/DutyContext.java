@@ -35,16 +35,22 @@ public record DutyContext(
         String orgId,
         String providerId,
         String role,
-        String assignmentId
+        String assignmentId,
+        /**
+         * Jurisdiction the duty covers (NATIONAL, or a province/district code). A regulator's
+         * authority is bounded by WHERE as well as by which organisation, so this is a dimension
+         * in its own right rather than something inferred from the organisation.
+         */
+        String jurisdictionCode
 ) {
     /** No token was carried — the common, non-duty request. */
     public static DutyContext absent() {
-        return new DutyContext(false, false, null, null, null, null, null, null, null, null, null, null, null);
+        return new DutyContext(false, false, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     /** A token was carried but introspection said inactive (revoked / expired / unknown jti). */
     public static DutyContext revoked() {
-        return new DutyContext(true, false, null, null, null, null, null, null, null, null, null, null, null);
+        return new DutyContext(true, false, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     /** Present, active, and a genuine WORK_CONTEXT token: safe to treat as duty-authoritative. */

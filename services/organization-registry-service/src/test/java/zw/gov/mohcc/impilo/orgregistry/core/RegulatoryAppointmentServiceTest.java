@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -174,6 +175,142 @@ class RegulatoryAppointmentServiceTest {
 
         assertThat(service.expireLapsed(LocalDate.now())).isZero();
         verifyNoInteractions(outboxWriter);
+    }
+
+    // ── RB-2: administration is a role class, and a regulator is never left without one ────
+
+    private void roleIsAdministrative(String roleCode, boolean administrative, boolean bootstrapOnly) {
+        AppointmentRoleEntity role = new AppointmentRoleEntity();
+        try {
+            java.lang.reflect.Field a = AppointmentRoleEntity.class.getDeclaredField("administrative");
+            a.setAccessible(true);
+            a.setBoolean(role, administrative);
+            java.lang.reflect.Field b = AppointmentRoleEntity.class.getDeclaredField("bootstrapOnly");
+            b.setAccessible(true);
+            b.setBoolean(role, bootstrapOnly);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+        lenient().when(roleRepository.findById(roleCode)).thenReturn(Optional.of(role));
+    }
+
+    private RegulatoryAppointmentEntity activeAppointment(String roleCode) {
+        RegulatoryAppointmentEntity a = new RegulatoryAppointmentEntity();
+        a.setId(UUID.randomUUID());
+        a.setTenantId(tenant);
+        a.setOrganizationId(orgId);
+        a.setPersonHealthId("person-1");
+        a.setRoleCode(roleCode);
+        a.setStatus("ACTIVE");
+        return a;
+    }
+
+    /**
+     * A regulator left with no administrator cannot add a user, restore its own access, or appoint
+     * a replacement — recovery would mean a platform-root intervention on a live regulator. This is
+     * the mandatory-second-administrator rule seen from the other end.
+     */
+    @Test
+    void end_refusesToRemoveTheLastAdministrator() {
+        RegulatoryAppointmentEntity appt = activeAppointment("REGULATOR_SECURITY_ADMINISTRATOR");
+        roleIsAdministrative("REGULATOR_SECURITY_ADMINISTRATOR", true, false);
+        when(appointmentRepository.findByTenantIdAndId(tenant, appt.getId())).thenReturn(Optional.of(appt));
+        when(appointmentRepository.countActiveAdministrators(tenant, orgId, appt.getId())).thenReturn(0L);
+
+        assertThatThrownBy(() -> service.end(tenant, appt.getId(), "resigned", "actor"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("LAST_ADMINISTRATOR");
+        assertThat(appt.getStatus()).isEqualTo("ACTIVE");
+    }
+
+    @Test
+    void end_allowsRemovingAnAdministratorWhenAnotherRemains() throws Exception {
+        RegulatoryAppointmentEntity appt = activeAppointment("REGULATOR_SECURITY_ADMINISTRATOR");
+        roleIsAdministrative("REGULATOR_SECURITY_ADMINISTRATOR", true, false);
+        when(appointmentRepository.findByTenantIdAndId(tenant, appt.getId())).thenReturn(Optional.of(appt));
+        when(appointmentRepository.countActiveAdministrators(tenant, orgId, appt.getId())).thenReturn(1L);
+
+        assertThat(service.end(tenant, appt.getId(), "resigned", "actor").getStatus()).isEqualTo("ENDED");
+    }
+
+    /** The guard is about administrators only — an inspector leaving is an ordinary departure. */
+    @Test
+    void end_doesNotGuardOperationalRoles() throws Exception {
+        RegulatoryAppointmentEntity appt = activeAppointment("INSPECTOR");
+        roleIsAdministrative("INSPECTOR", false, false);
+        when(appointmentRepository.findByTenantIdAndId(tenant, appt.getId())).thenReturn(Optional.of(appt));
+
+        assertThat(service.end(tenant, appt.getId(), "resigned", "actor").getStatus()).isEqualTo("ENDED");
+        verify(appointmentRepository, never()).countActiveAdministrators(any(), any(), any());
+    }
+
+    /**
+     * A founding role exists because nobody is there to approve it yet. Once a regulator has an
+     * administrator, granting it again would route a privileged appointment around the four-eyes
+     * rail it was created to require.
+     */
+    @Test
+    void verify_refusesABootstrapRoleOnceAnAdministratorExists() throws Exception {
+        RegulatoryAppointmentEntity appt = service.create(tenant, orgId, req(), "registrar-1");
+        appt.setRoleCode("FOUNDING_REGULATOR_ADMINISTRATOR");
+        roleIsAdministrative("FOUNDING_REGULATOR_ADMINISTRATOR", true, true);
+        when(appointmentRepository.findByTenantIdAndId(tenant, appt.getId())).thenReturn(Optional.of(appt));
+        when(appointmentRepository.existsByTenantIdAndOrganizationIdAndPersonHealthIdAndRoleCodeAndStatus(
+                eq(tenant), eq(orgId), anyString(), anyString(), eq("ACTIVE"))).thenReturn(false);
+        when(appointmentRepository.countActiveAdministrators(tenant, orgId, null)).thenReturn(1L);
+
+        assertThatThrownBy(() -> service.verify(tenant, appt.getId(), "national-admin"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("BOOTSTRAP_ROLE_NOT_AVAILABLE");
+    }
+
+    @Test
+    void verify_allowsTheFoundingRoleWhileTheSeatIsEmpty() throws Exception {
+        RegulatoryAppointmentEntity appt = service.create(tenant, orgId, req(), "registrar-1");
+        appt.setRoleCode("FOUNDING_REGULATOR_ADMINISTRATOR");
+        roleIsAdministrative("FOUNDING_REGULATOR_ADMINISTRATOR", true, true);
+        when(appointmentRepository.findByTenantIdAndId(tenant, appt.getId())).thenReturn(Optional.of(appt));
+        when(appointmentRepository.existsByTenantIdAndOrganizationIdAndPersonHealthIdAndRoleCodeAndStatus(
+                eq(tenant), eq(orgId), anyString(), anyString(), eq("ACTIVE"))).thenReturn(false);
+        when(appointmentRepository.countActiveAdministrators(tenant, orgId, null)).thenReturn(0L);
+
+        assertThat(service.verify(tenant, appt.getId(), "national-admin").getStatus()).isEqualTo("ACTIVE");
+    }
+
+    /**
+     * Expiry deliberately ignores the succession guard: a lapse is a fact about the world, and
+     * refusing to record it to keep somebody signed in would be the system granting regulatory
+     * authority to itself.
+     */
+    @Test
+    void expiry_isNotBlockedByTheSuccessionGuard() throws Exception {
+        RegulatoryAppointmentEntity appt = lapsed(LocalDate.now().minusDays(1));
+        appt.setRoleCode("REGULATOR_SECURITY_ADMINISTRATOR");
+        when(appointmentRepository.findByStatusAndValidToBeforeAndExpirySweptAtIsNull(
+                eq("ACTIVE"), any(LocalDate.class))).thenReturn(List.of(appt));
+
+        assertThat(service.expireLapsed(LocalDate.now())).isEqualTo(1);
+        assertThat(appt.getStatus()).isEqualTo("ENDED");
+        verify(appointmentRepository, never()).countActiveAdministrators(any(), any(), any());
+    }
+
+    /**
+     * The separation-of-duties rule spans rows and lands as a trigger, so it is asserted at the
+     * schema rather than mocked here: granting access and being accountable for its use must never
+     * be the same person.
+     */
+    @Test
+    void theSchemaSeparatesTheSecurityAdministratorFromTheBusinessOwner() throws Exception {
+        String migration = java.nio.file.Files.readString(java.nio.file.Path.of(
+                "src/main/resources/db/migration/V009__regulator_administration_roles.sql"));
+        assertThat(migration).contains("trg_regulator_duty_separation");
+        assertThat(migration).contains("separation of duties");
+        assertThat(migration)
+                .as("the founding role must be capped so it cannot become a standing privileged class")
+                .contains("'FOUNDING_REGULATOR_ADMINISTRATOR'");
+        assertThat(migration)
+                .as("the country root is established as an identity, never granted a broad ALLOW here")
+                .doesNotContain("policy_rule");
     }
 
     /**

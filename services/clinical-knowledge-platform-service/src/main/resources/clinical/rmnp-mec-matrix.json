@@ -1,0 +1,440 @@
+{
+  "packId": "rmnp-mec-matrix",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Medical eligibility criteria for contraceptive use — partial matrix",
+    "primarySource": "WHO Medical Eligibility Criteria for Contraceptive Use",
+    "why": "The criteria are a table of methods against conditions, resolved as the worst category any present condition imposes. Nothing else in the platform can express that: a rule list would duplicate every condition once per method, and a classification table returns one row and discards the others.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The MEC text is NOT in docs/reference/who-dak/MANIFEST.json. The Family Planning DAK publishes a data dictionary and vocabulary but no decision logic and no machine-readable criteria, so there is no artefact to extract these categories from. They were transcribed from the published criteria and are double-entered against an independent transcription held in MecMatrixContentTest, which fails the build on any disagreement. Be clear about what that control does and does not do: it catches transcription slips — a misread row, a column shifted, a digit typed twice. It does NOT catch a category both transcriptions get wrong the same way. Only checking against the vendored primary text does that, and until it is vendored this pack must not be ratified."
+    }
+  },
+  "coverageNote": "A partial matrix. Twelve conditions are classified; the substantial list in conditionsOutOfScope is not, and a woman whose condition is on that list will receive an assessment that does not account for it. The engine reports the list on every assessment and treats an unclassified pair as unclassified rather than as no restriction, so the gap is visible rather than answered.",
+  "methods": [
+    {"code": "COMBINED_ORAL_PILL", "name": "Combined oral contraceptive pill", "methodClass": "COMBINED_HORMONAL", "group": "COMBINED_HORMONAL"},
+    {"code": "PROGESTOGEN_ONLY_PILL", "name": "Progestogen-only pill", "methodClass": "PROGESTOGEN_ONLY", "group": "PROGESTOGEN_ONLY_PILL"},
+    {"code": "INJECTABLE_DMPA_IM", "name": "DMPA intramuscular injectable", "methodClass": "PROGESTOGEN_ONLY", "group": "PROGESTOGEN_ONLY_INJECTABLE"},
+    {"code": "INJECTABLE_DMPA_SC", "name": "DMPA subcutaneous injectable", "methodClass": "PROGESTOGEN_ONLY", "group": "PROGESTOGEN_ONLY_INJECTABLE"},
+    {"code": "INJECTABLE_NET_EN", "name": "NET-EN injectable", "methodClass": "PROGESTOGEN_ONLY", "group": "PROGESTOGEN_ONLY_INJECTABLE"},
+    {"code": "IMPLANT_LEVONORGESTREL_2ROD", "name": "Levonorgestrel implant, 2 rods", "methodClass": "PROGESTOGEN_ONLY", "group": "IMPLANT"},
+    {"code": "IMPLANT_ETONOGESTREL_1ROD", "name": "Etonogestrel implant, 1 rod", "methodClass": "PROGESTOGEN_ONLY", "group": "IMPLANT"},
+    {"code": "IUD_COPPER_T380A", "name": "Copper intrauterine device", "methodClass": "INTRAUTERINE", "group": "IUD_COPPER"},
+    {"code": "IUS_LEVONORGESTREL", "name": "Levonorgestrel intrauterine system", "methodClass": "INTRAUTERINE", "group": "IUD_LEVONORGESTREL"}
+  ],
+  "conditions": [
+    {
+      "code": "AGE_MENARCHE_TO_18",
+      "name": "Younger than 18",
+      "requiredInputs": ["ageYears"],
+      "logic": {"input": "ageYears", "op": "lt", "value": 18},
+      "sourceRefs": ["WHO MEC — age"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "From menarche to under 18 years: injectables are category 2 on bone mineral density grounds; intrauterine devices are category 2 from menarche to under 20 years.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO MEC — age"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "AGE_40_PLUS",
+      "name": "40 or older",
+      "requiredInputs": ["ageYears"],
+      "logic": {"input": "ageYears", "op": "gte", "value": 40},
+      "sourceRefs": ["WHO MEC — age"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "At 40 years and above, combined hormonal contraception and progestogen-only injectables are category 2.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO MEC — age"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "SMOKING_35PLUS_LT15",
+      "name": "35 or older, smoking fewer than 15 cigarettes a day",
+      "requiredInputs": ["ageYears", "smokingStatus"],
+      "logic": {
+        "all": [
+          {"input": "ageYears", "op": "gte", "value": 35},
+          {"input": "smokingStatus", "op": "eq", "value": "CURRENT_LT_15"}
+        ]
+      },
+      "sourceRefs": ["WHO MEC — smoking"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Age 35 or older and smoking fewer than 15 cigarettes per day: combined hormonal contraception is category 3.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO MEC — smoking"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "SMOKING_35PLUS_GTE15",
+      "name": "35 or older, smoking 15 or more cigarettes a day",
+      "requiredInputs": ["ageYears", "smokingStatus"],
+      "logic": {
+        "all": [
+          {"input": "ageYears", "op": "gte", "value": 35},
+          {"input": "smokingStatus", "op": "eq", "value": "CURRENT_GTE_15"}
+        ]
+      },
+      "sourceRefs": ["WHO MEC — smoking"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Age 35 or older and smoking 15 or more cigarettes per day: combined hormonal contraception is category 4.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO MEC — smoking"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "HYPERTENSION_MODERATE",
+      "name": "Blood pressure 140–159 / 90–99 mmHg",
+      "requiredInputs": ["systolicBp", "diastolicBp"],
+      "logic": {
+        "any": [
+          {"input": "systolicBp", "op": "between", "min": 140, "max": 159},
+          {"input": "diastolicBp", "op": "between", "min": 90, "max": 99}
+        ]
+      },
+      "sourceRefs": ["WHO MEC — hypertension"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Adequately controlled or elevated blood pressure of 140–159/90–99 mmHg: combined hormonal contraception is category 3, progestogen-only injectables category 2, other progestogen-only methods and intrauterine devices category 1.",
+        "nationalStatement": "Adopted as published. Evaluated as either reading, not both — an isolated diastolic of 95 with a systolic of 130 is still this band.",
+        "evidenceRefs": ["WHO MEC — hypertension"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "HYPERTENSION_SEVERE",
+      "name": "Blood pressure 160/100 mmHg or higher",
+      "requiredInputs": ["systolicBp", "diastolicBp"],
+      "logic": {
+        "any": [
+          {"input": "systolicBp", "op": "gte", "value": 160},
+          {"input": "diastolicBp", "op": "gte", "value": 100}
+        ]
+      },
+      "sourceRefs": ["WHO MEC — hypertension"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Blood pressure of 160/100 mmHg or above: combined hormonal contraception is category 4, progestogen-only injectables category 3, progestogen-only pills, implants and the levonorgestrel intrauterine system category 2, the copper intrauterine device category 1.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO MEC — hypertension"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "MIGRAINE_WITH_AURA",
+      "name": "Migraine with aura",
+      "requiredInputs": ["migraineWithAura"],
+      "logic": {"input": "migraineWithAura", "op": "eq", "value": "PRESENT"},
+      "sourceRefs": ["WHO MEC — headaches"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Migraine with aura, at any age: combined hormonal contraception is category 4. Progestogen-only methods and the levonorgestrel intrauterine system are category 2 for initiation and category 3 for continuation. The copper intrauterine device is category 1.",
+        "nationalStatement": "Adopted as published, including the initiation/continuation split — aura appearing in a woman already using a progestogen-only method is a different decision from starting one in a woman who has it.",
+        "evidenceRefs": ["WHO MEC — headaches"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "VTE_HISTORY_OR_CURRENT_UNDIFFERENTIATED",
+      "name": "Deep vein thrombosis or pulmonary embolism — past or current",
+      "requiredInputs": ["knownThrombosis"],
+      "logic": {"input": "knownThrombosis", "op": "eq", "value": "PRESENT"},
+      "sourceRefs": ["WHO MEC — deep venous thrombosis and pulmonary embolism"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "The criteria distinguish a history of deep vein thrombosis or pulmonary embolism (progestogen-only methods category 2, levonorgestrel intrauterine system category 2) from acute disease (progestogen-only methods category 3, levonorgestrel intrauterine system category 3). Combined hormonal contraception is category 4 in both. The copper intrauterine device is category 1 in both.",
+        "nationalStatement": "The form captures one field covering past or current, so the acute categories are applied to both.",
+        "rationale": "Applying the milder categories to an undifferentiated answer would clear a woman with an acute clot on the strength of a question that never asked. The cost of the conservative reading is a woman with a ten-year-old provoked clot assessed one category worse than she needs to be, which a clinician can override with the reason in front of them; the cost of the other reading is not visible at all. Refined by splitting the form field into past versus acute, at which point this condition should be split in two and this adaptation removed.",
+        "evidenceRefs": ["WHO MEC — deep venous thrombosis and pulmonary embolism"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "BREAST_CANCER_CURRENT",
+      "name": "Current breast cancer",
+      "requiredInputs": ["breastCancerStatus"],
+      "logic": {"input": "breastCancerStatus", "op": "eq", "value": "CURRENT"},
+      "sourceRefs": ["WHO MEC — breast cancer"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Current breast cancer: all hormonal methods are category 4. The copper intrauterine device is category 1.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO MEC — breast cancer"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "BREAST_CANCER_PAST_5Y",
+      "name": "Past breast cancer, no evidence of disease for 5 years",
+      "requiredInputs": ["breastCancerStatus"],
+      "logic": {"input": "breastCancerStatus", "op": "eq", "value": "PAST_NO_EVIDENCE_5Y"},
+      "sourceRefs": ["WHO MEC — breast cancer"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Past breast cancer with no evidence of disease for 5 years: all hormonal methods are category 3. The copper intrauterine device is category 1.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO MEC — breast cancer"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "ENZYME_INDUCING_THERAPY",
+      "name": "Taking rifampicin, rifabutin, or an enzyme-inducing anticonvulsant or antiretroviral",
+      "requiredInputs": ["onEnzymeInducingArvOrTb"],
+      "logic": {"input": "onEnzymeInducingArvOrTb", "op": "eq", "value": "YES"},
+      "sourceRefs": ["WHO MEC — drug interactions"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Rifampicin or rifabutin therapy, and certain enzyme-inducing anticonvulsants: combined hormonal contraception and progestogen-only pills are category 3, implants category 2, progestogen-only injectables category 1, intrauterine devices category 1.",
+        "nationalStatement": "Adopted as published. This is the reason the injectable and the intrauterine devices matter in a tuberculosis programme — they are the methods rifampicin does not undermine.",
+        "evidenceRefs": ["WHO MEC — drug interactions"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    },
+    {
+      "code": "HIV_ON_ART_CLINICALLY_WELL",
+      "name": "Living with HIV, on antiretroviral therapy, clinically well",
+      "requiredInputs": ["hivStatus"],
+      "logic": {"input": "hivStatus", "op": "eq", "value": "POSITIVE_ON_ART"},
+      "sourceRefs": ["WHO MEC — HIV"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Women living with HIV who are clinically well on antiretroviral therapy can use all hormonal methods and intrauterine devices without restriction.",
+        "nationalStatement": "Adopted as published, and carried in the matrix deliberately even though every cell is category 1. A condition that restricts nothing still needs to be in the table: leaving it out makes 'no restriction' indistinguishable from 'never considered', and HIV status is the field most likely to be used to refuse a method it does not in fact restrict. Interactions with enzyme-inducing antiretrovirals are a separate condition.",
+        "evidenceRefs": ["WHO MEC — HIV"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      }
+    }
+  ],
+  "conditionsOutOfScope": [
+    "Pregnancy — handled by the contraceptive initiation layer rather than as a matrix cell, because the criteria classify pregnancy as 'not applicable' for hormonal methods and category 4 for intrauterine insertion, and a 1-4 cell cannot express 'not applicable' without misstating it",
+    "Postpartum and breastfeeding timing bands",
+    "Post-abortion, including post-septic-abortion",
+    "Diabetes, including duration and vascular complications",
+    "Ischaemic heart disease, stroke, and known hyperlipidaemias",
+    "Valvular heart disease and peripartum cardiomyopathy",
+    "Multiple risk factors for arterial cardiovascular disease",
+    "Known thrombogenic mutations and superficial venous disorders",
+    "Systemic lupus erythematosus and antiphospholipid antibodies",
+    "Viral hepatitis, cirrhosis, and liver tumours",
+    "Gallbladder disease and past cholestasis",
+    "Obesity and body mass index bands",
+    "Unexplained vaginal bleeding before evaluation",
+    "Cervical, endometrial and ovarian cancer; cervical intraepithelial neoplasia",
+    "Gestational trophoblastic disease",
+    "Uterine fibroids and anatomical abnormalities distorting the cavity",
+    "Pelvic inflammatory disease, current purulent cervicitis, chlamydia and gonorrhoea",
+    "Pelvic tuberculosis",
+    "Anaemias including sickle cell disease and thalassaemia",
+    "Epilepsy as a condition, separate from the anticonvulsant interaction",
+    "Depressive disorders",
+    "Solid organ transplantation",
+    "Inflammatory bowel disease and other malabsorption",
+    "Thyroid disorders",
+    "Endometriosis and benign ovarian tumours"
+  ],
+  "cells": [
+    {
+      "condition": "AGE_MENARCHE_TO_18",
+      "clarification": "Injectables are category 2 on bone mineral density grounds; the concern is theoretical and reversible, and it is not a reason to withhold the method from an adolescent who wants it.",
+      "sourceRefs": ["WHO MEC — age"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 1, "c": 1},
+        "PROGESTOGEN_ONLY_PILL": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_IM": {"i": 2, "c": 2},
+        "INJECTABLE_DMPA_SC": {"i": 2, "c": 2},
+        "INJECTABLE_NET_EN": {"i": 2, "c": 2},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 1, "c": 1},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 1, "c": 1},
+        "IUD_COPPER_T380A": {"i": 2, "c": 2},
+        "IUS_LEVONORGESTREL": {"i": 2, "c": 2}
+      }
+    },
+    {
+      "condition": "AGE_40_PLUS",
+      "clarification": "Age alone. Where it appears with smoking, hypertension or migraine, the worst of those categories governs.",
+      "sourceRefs": ["WHO MEC — age"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 2, "c": 2},
+        "PROGESTOGEN_ONLY_PILL": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_IM": {"i": 2, "c": 2},
+        "INJECTABLE_DMPA_SC": {"i": 2, "c": 2},
+        "INJECTABLE_NET_EN": {"i": 2, "c": 2},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 1, "c": 1},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 1, "c": 1},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 1, "c": 1}
+      }
+    },
+    {
+      "condition": "SMOKING_35PLUS_LT15",
+      "clarification": "Smoking restricts the combined pill and nothing else. Every progestogen-only method and both intrauterine devices remain category 1.",
+      "sourceRefs": ["WHO MEC — smoking"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 3, "c": 3},
+        "PROGESTOGEN_ONLY_PILL": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_IM": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_SC": {"i": 1, "c": 1},
+        "INJECTABLE_NET_EN": {"i": 1, "c": 1},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 1, "c": 1},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 1, "c": 1},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 1, "c": 1}
+      }
+    },
+    {
+      "condition": "SMOKING_35PLUS_GTE15",
+      "clarification": "An unacceptable risk with the combined pill, and no restriction at all on the alternatives — which is the counselling point, not the refusal.",
+      "sourceRefs": ["WHO MEC — smoking"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 4, "c": 4},
+        "PROGESTOGEN_ONLY_PILL": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_IM": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_SC": {"i": 1, "c": 1},
+        "INJECTABLE_NET_EN": {"i": 1, "c": 1},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 1, "c": 1},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 1, "c": 1},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 1, "c": 1}
+      }
+    },
+    {
+      "condition": "HYPERTENSION_MODERATE",
+      "clarification": "One reading is not a diagnosis of hypertension. Where the blood pressure was taken once and is borderline, repeat it before it drives the answer.",
+      "sourceRefs": ["WHO MEC — hypertension"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 3, "c": 3},
+        "PROGESTOGEN_ONLY_PILL": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_IM": {"i": 2, "c": 2},
+        "INJECTABLE_DMPA_SC": {"i": 2, "c": 2},
+        "INJECTABLE_NET_EN": {"i": 2, "c": 2},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 1, "c": 1},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 1, "c": 1},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 1, "c": 1}
+      }
+    },
+    {
+      "condition": "HYPERTENSION_SEVERE",
+      "clarification": "A blood pressure this high is a reason to treat her hypertension, not only to choose a different method.",
+      "sourceRefs": ["WHO MEC — hypertension"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 4, "c": 4},
+        "PROGESTOGEN_ONLY_PILL": {"i": 2, "c": 2},
+        "INJECTABLE_DMPA_IM": {"i": 3, "c": 3},
+        "INJECTABLE_DMPA_SC": {"i": 3, "c": 3},
+        "INJECTABLE_NET_EN": {"i": 3, "c": 3},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 2, "c": 2},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 2, "c": 2},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 2, "c": 2}
+      }
+    },
+    {
+      "condition": "MIGRAINE_WITH_AURA",
+      "clarification": "Aura, not severity. A woman with severe migraine and no aura is a different row; a woman with visual disturbance before the headache is this one, however mild.",
+      "sourceRefs": ["WHO MEC — headaches"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 4, "c": 4},
+        "PROGESTOGEN_ONLY_PILL": {"i": 2, "c": 3},
+        "INJECTABLE_DMPA_IM": {"i": 2, "c": 3},
+        "INJECTABLE_DMPA_SC": {"i": 2, "c": 3},
+        "INJECTABLE_NET_EN": {"i": 2, "c": 3},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 2, "c": 3},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 2, "c": 3},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 2, "c": 3}
+      }
+    },
+    {
+      "condition": "VTE_HISTORY_OR_CURRENT_UNDIFFERENTIATED",
+      "clarification": "The acute categories are applied because the form does not distinguish a past clot from a current one. If she is well and the event was years ago, the criteria are one category milder for the progestogen-only methods — record the distinction in the notes.",
+      "sourceRefs": ["WHO MEC — deep venous thrombosis and pulmonary embolism"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 4, "c": 4},
+        "PROGESTOGEN_ONLY_PILL": {"i": 3, "c": 3},
+        "INJECTABLE_DMPA_IM": {"i": 3, "c": 3},
+        "INJECTABLE_DMPA_SC": {"i": 3, "c": 3},
+        "INJECTABLE_NET_EN": {"i": 3, "c": 3},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 3, "c": 3},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 3, "c": 3},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 3, "c": 3}
+      }
+    },
+    {
+      "condition": "BREAST_CANCER_CURRENT",
+      "clarification": "The copper device is the one method with no restriction here, and it is the answer to give rather than leaving her with none.",
+      "sourceRefs": ["WHO MEC — breast cancer"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 4, "c": 4},
+        "PROGESTOGEN_ONLY_PILL": {"i": 4, "c": 4},
+        "INJECTABLE_DMPA_IM": {"i": 4, "c": 4},
+        "INJECTABLE_DMPA_SC": {"i": 4, "c": 4},
+        "INJECTABLE_NET_EN": {"i": 4, "c": 4},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 4, "c": 4},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 4, "c": 4},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 4, "c": 4}
+      }
+    },
+    {
+      "condition": "BREAST_CANCER_PAST_5Y",
+      "clarification": "Five years without evidence of disease moves every hormonal method from unacceptable to a judgement about the alternatives.",
+      "sourceRefs": ["WHO MEC — breast cancer"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 3, "c": 3},
+        "PROGESTOGEN_ONLY_PILL": {"i": 3, "c": 3},
+        "INJECTABLE_DMPA_IM": {"i": 3, "c": 3},
+        "INJECTABLE_DMPA_SC": {"i": 3, "c": 3},
+        "INJECTABLE_NET_EN": {"i": 3, "c": 3},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 3, "c": 3},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 3, "c": 3},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 3, "c": 3}
+      }
+    },
+    {
+      "condition": "ENZYME_INDUCING_THERAPY",
+      "clarification": "The interaction reduces contraceptive effectiveness rather than causing harm. The injectable and both intrauterine devices are unaffected, which is what makes them the methods of choice on tuberculosis treatment.",
+      "sourceRefs": ["WHO MEC — drug interactions"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 3, "c": 3},
+        "PROGESTOGEN_ONLY_PILL": {"i": 3, "c": 3},
+        "INJECTABLE_DMPA_IM": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_SC": {"i": 1, "c": 1},
+        "INJECTABLE_NET_EN": {"i": 1, "c": 1},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 2, "c": 2},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 2, "c": 2},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 1, "c": 1}
+      }
+    },
+    {
+      "condition": "HIV_ON_ART_CLINICALLY_WELL",
+      "clarification": "No restriction on any method. Present in the matrix so that the answer is a recorded 'no restriction' rather than a silence — this is the status most often used to refuse a method that it does not restrict.",
+      "sourceRefs": ["WHO MEC — HIV"],
+      "categories": {
+        "COMBINED_ORAL_PILL": {"i": 1, "c": 1},
+        "PROGESTOGEN_ONLY_PILL": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_IM": {"i": 1, "c": 1},
+        "INJECTABLE_DMPA_SC": {"i": 1, "c": 1},
+        "INJECTABLE_NET_EN": {"i": 1, "c": 1},
+        "IMPLANT_LEVONORGESTREL_2ROD": {"i": 1, "c": 1},
+        "IMPLANT_ETONOGESTREL_1ROD": {"i": 1, "c": 1},
+        "IUD_COPPER_T380A": {"i": 1, "c": 1},
+        "IUS_LEVONORGESTREL": {"i": 1, "c": 1}
+      }
+    }
+  ]
+}

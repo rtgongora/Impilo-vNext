@@ -302,6 +302,55 @@ they saw. The forms send the signed-in user, and deliberately do not fall back t
 string "unknown" the way the growth page does — "unknown" is not an author, it is the absence of one
 written into the record where it can never be questioned.
 
+### Flyway out-of-order, and the verified list of what flipping it applies
+
+`pct-service` is written by six programmes and each holds a reserved *band* of migration numbers
+(RMNP V058–V069, Emergency V070–V099 + V200s, Adult Medicine V100–V129, Surgery V300–V329,
+Paediatrics V400–V429). Bands mean a lane routinely adds a migration numerically below one another
+lane has already applied. Flyway's default refuses those, and with `validate-on-migrate` already
+off it does not complain — it just never runs them.
+
+Proven on `impilo-full-preview` (pod `postgres-5587b4689c-qzq6z`, database `pct`, schema `pct`),
+both directions on the same database:
+
+| | history | tables |
+|---|---|---|
+| `out-of-order` off (default) | `100, 101, 102, 103, 200, 400, 401` — no `106` | none of V106's six exist |
+| `out-of-order: true` | `…, 400, 401, 106` — applied out of order, as intended | all six present |
+
+The service booted green with zero errors in *both* states. Green service, merged code, missing
+tables, nothing in any log.
+
+**Verified list of what the flip applies next**, computed as the jar's migration set minus the
+applied set rather than assumed: **V107** (`medication_reconciliation` —
+`pct_medication_reconciliations`, `pct_medication_reconciliation_items`) and **V108**
+(`medical_episode_emergency_fk`). Nothing else is outstanding.
+
+**V108 was a cross-band dependency that would have failed on any fresh database — now resolved.**
+It added a foreign key from `pct_medical_episodes` (Adult Medicine, V100s) to `emergency_episode`,
+created by V200 (Emergency). A fresh database applies strictly ascending, so V108 ran before V200
+and the target did not exist. Reproduced on a scratch database:
+
+```
+ERROR:  relation "emergency_episode" does not exist
+```
+
+Resolved the same day: Adult withdrew V108 (`ac620b355` — "a cross-lane FK cannot live in the
+referencing band", verified never applied anywhere) and Emergency re-landed the identical constraint
+as **V201**, inside their own band and numerically above the V200 that creates the table. Ascending
+order now works on a fresh database by construction.
+
+**The rule this produced is fleet law and worth carrying:** a foreign key belongs in the band of the
+table it *references*, never the band of the table that references it. The referencing lane can then
+never order itself ahead of its own dependency.
+
+Two properties of the near-miss are worth keeping, because neither is visible from the estate:
+out-of-order neither caused nor fixed it, but it *hid* it — on a long-lived database V200 has
+already applied, so V108 succeeded there while every new environment would have failed to boot. And
+it was a boot failure rather than a degraded feature, so it would have taken out every lane's pct
+surfaces, not just Adult's. **A cross-band dependency is invisible until a disaster-recovery
+rebuild**, which is the worst possible moment to meet it.
+
 **Not built:** nothing in this vertical. The screens are deployed to the preview estate and the
 data path under them is proven; what has not been done is a human walking the rendered pages.
 

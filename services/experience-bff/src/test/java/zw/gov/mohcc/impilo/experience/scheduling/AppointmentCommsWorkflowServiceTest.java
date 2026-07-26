@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
-import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 import zw.gov.mohcc.impilo.experience.facility.FacilityNameResolver;
 
 import java.time.Instant;
@@ -40,7 +39,7 @@ class AppointmentCommsWorkflowServiceTest {
         notify = mock(NotificationServiceClient.class);
         FacilityNameResolver facilityNames = new FacilityNameResolver(stubTusoClient());
         AppointmentProviderRecipientResolver recipients =
-                new AppointmentProviderRecipientResolver(stubVashandiClient());
+                new AppointmentProviderRecipientResolver(stubTusoClient());
         TshepoAuditServiceClient audit = stubAuditClient();
         AppointmentReminderReceiptStore reminders = new AppointmentReminderReceiptStore(mock(org.springframework.data.redis.core.StringRedisTemplate.class));
         service = new AppointmentCommsWorkflowService(
@@ -149,12 +148,6 @@ class AppointmentCommsWorkflowServiceTest {
     private TusoServiceClient stubTusoClient() {
         TusoServiceClient client = mock(TusoServiceClient.class);
         when(client.getFacility(42L)).thenReturn(mapper.createObjectNode().put("name", "Harare Central Hospital"));
-        return client;
-    }
-
-    /** On-call is rostered in vashandi, not tuso; tuso serves the facility name only. */
-    private VashandiServiceClient stubVashandiClient() {
-        VashandiServiceClient client = mock(VashandiServiceClient.class);
         when(client.listOnCall(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(mapper.createArrayNode());
         return client;

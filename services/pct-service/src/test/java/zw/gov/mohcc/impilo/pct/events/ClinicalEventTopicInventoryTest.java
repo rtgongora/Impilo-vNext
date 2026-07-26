@@ -59,6 +59,13 @@ class ClinicalEventTopicInventoryTest {
         // NEITHER map, so the guard silently passed while the estate's only ED safety event rode the
         // catch-all. See the maintenance note above: it is emitted via setEventType(), not emit().
         put("pct.ed.critical_result", "pct.emergency.critical_result");
+
+        // The emergency episode lifecycle. daidzai back-fills its continuum link from the state
+        // change, butano archives it, reporting derives time-to-clinician and length-of-stay.
+        put("EMERGENCY_EPISODE_OPENED", "pct.emergency.episode.state_changed");
+        put("EMERGENCY_EPISODE_STATE_CHANGED", "pct.emergency.episode.state_changed");
+        put("EMERGENCY_EPISODE_ANCHOR_RESOLVED", "pct.emergency.episode.state_changed");
+        put("EMERGENCY_EPISODE_MERGED", "pct.emergency.episode.state_changed");
     }};
 
     /**
