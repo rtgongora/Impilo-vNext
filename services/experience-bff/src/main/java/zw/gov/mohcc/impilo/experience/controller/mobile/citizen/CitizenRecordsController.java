@@ -98,6 +98,22 @@ public class CitizenRecordsController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "record not found");
         }
 
+        // The subject binding is checked HERE as well as passed to pct, and that redundancy is
+        // the point. A pct that does not know the subject_cpid parameter ignores it silently and
+        // answers 200 — a binding the downstream drops is indistinguishable from one it enforced,
+        // which is how a citizen ends up holding someone else's record while every layer reports
+        // success. Proven live against a pct build predating the parameter. 404, never 403: the
+        // existence of another person's record id is not ours to disclose.
+        String subject = document == null ? null : text(document, "subject_cpid");
+        if (subject == null) {
+            subject = document == null ? null : text(document, "patient_id");
+        }
+        if (subject == null || !subject.equals(actorId)) {
+            log.warn("Citizen record read refused: actor={} requested record={} belonging to another subject",
+                    actorId, id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "record not found");
+        }
+
         // Detail read gets a short-lived download link when the binary is registered. Advisory
         // enrichment: its failure hides the link, never the record.
         String documentUrl = null;

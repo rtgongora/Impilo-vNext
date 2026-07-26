@@ -4,18 +4,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * The citizen records surface: the caller's own actor id is the subject binding (a person can
@@ -86,6 +90,52 @@ class CitizenRecordsControllerTest {
         Map<?, ?> page = (Map<?, ?>) ((Map<?, ?>) response.getBody().get("meta")).get("page");
         assertEquals(3, page.get("total_elements"));
         assertEquals(2, page.get("total_pages"));
+    }
+
+    /**
+     * The defect this guards was proven live: a pct build that does not know the
+     * {@code subject_cpid} parameter ignores it and answers 200, so the binding the BFF thought
+     * it applied was never applied at all. The check must hold on the returned row, not on the
+     * downstream's willingness to honour a query parameter.
+     */
+    @Test
+    void aRecordBelongingToAnotherSubjectIsNotFound_evenWhenPctIgnoresTheBinding() {
+        PctServiceClient ignoresBinding = new PctServiceClient(new RestTemplate(), endpoints(), mapper) {
+            @Override public JsonNode getPatientRecord(String recordId, String subjectCpid) {
+                return mapper.createObjectNode()
+                        .put("document_id", recordId)
+                        .put("subject_cpid", "CPID-SOMEBODY-ELSE")
+                        .put("title", "another person's discharge summary")
+                        .put("document_type", "DISCHARGE_SUMMARY");
+            }
+        };
+        CitizenRecordsController controller =
+                new CitizenRecordsController(ignoresBinding, new StubDocumentClient());
+
+        ResponseStatusException refused = assertThrows(ResponseStatusException.class, () ->
+                controller.get(UUID.fromString("efd91fc6-9743-463b-9fa7-070240d7c2a4"),
+                        "t1", "req-3", "corr-3", "CPID-ME"));
+        // 404, not 403: the existence of another person's record id is not ours to disclose.
+        assertEquals(HttpStatus.NOT_FOUND, refused.getStatusCode());
+    }
+
+    @Test
+    void theCallersOwnRecordIsServed() {
+        PctServiceClient own = new PctServiceClient(new RestTemplate(), endpoints(), mapper) {
+            @Override public JsonNode getPatientRecord(String recordId, String subjectCpid) {
+                return mapper.createObjectNode()
+                        .put("document_id", recordId)
+                        .put("subject_cpid", "CPID-ME")
+                        .put("title", "my discharge summary")
+                        .put("document_type", "DISCHARGE_SUMMARY");
+            }
+        };
+        ResponseEntity<Map<String, Object>> response =
+                new CitizenRecordsController(own, new StubDocumentClient())
+                        .get(UUID.fromString("efd91fc6-9743-463b-9fa7-070240d7c2a4"),
+                                "t1", "req-4", "corr-4", "CPID-ME");
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("my discharge summary", ((Map<?, ?>) response.getBody().get("data")).get("title"));
     }
 
     @Test
