@@ -43,7 +43,15 @@ public record PublicPractitionerVerificationResponse(
         LocalDate licenceValidTo,
         String registeringAuthority,
         ExperienceSummary experienceSummary,
-        String goodStanding
+        String goodStanding,
+        /**
+         * HAR W2 — false for a registration Impilo knows only from HPA's institution return. The
+         * practitioner's own professional council has not confirmed it, and it asserts nothing
+         * about a current practising certificate.
+         */
+        boolean councilVerified,
+        /** Provenance of the register entry, e.g. "HPA institution return, 17 July 2026". */
+        String registerSource
 ) {
 
     public static final String STATUS_NOT_FOUND = "NOT_FOUND";
@@ -61,6 +69,6 @@ public record PublicPractitionerVerificationResponse(
     /** Uniform miss shape — same fields, all null except the status. */
     public static PublicPractitionerVerificationResponse notFound() {
         return new PublicPractitionerVerificationResponse(
-                STATUS_NOT_FOUND, null, null, null, null, null, null, null, null, null, null, null, null);
+                STATUS_NOT_FOUND, null, null, null, null, null, null, null, null, null, null, null, null, false, null);
     }
 }

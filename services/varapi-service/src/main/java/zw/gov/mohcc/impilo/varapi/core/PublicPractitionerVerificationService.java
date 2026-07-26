@@ -51,6 +51,26 @@ public class PublicPractitionerVerificationService {
     }
 
     /**
+     * HAR W2 — an entry Impilo knows only from HPA's institution return is NOT council-verified.
+     * Saying otherwise would let a citizen read a facility return as a professional-council
+     * confirmation, which it is not.
+     */
+    private static boolean councilVerified(ProviderCouncilRegistrationRecordEntity record) {
+        return !zw.gov.mohcc.impilo.varapi.core.HpaPractitionerRegisterBackfillService
+                .STATUS_LISTED_PENDING_COUNCIL_VERIFICATION.equalsIgnoreCase(record.getStatus());
+    }
+
+    /** Human-readable provenance for the register entry, shown beside the verdict. */
+    private static String registerSource(ProviderCouncilRegistrationRecordEntity record) {
+        if (zw.gov.mohcc.impilo.varapi.core.HpaPractitionerRegisterBackfillService
+                .STATUS_LISTED_PENDING_COUNCIL_VERIFICATION.equalsIgnoreCase(record.getStatus())) {
+            return "HPA institution return, 17 July 2026 — not yet verified against the "
+                    + "practitioner's professional council register";
+        }
+        return record.getIssuedUnderAuthority();
+    }
+
+    /**
      * Public-safe good-standing projection: only GOOD vs NOT_IN_GOOD_STANDING is disclosed —
      * an active investigation or the precise adverse reason is never revealed on the public lane.
      */
@@ -112,6 +132,8 @@ public class PublicPractitionerVerificationService {
                 licence.validTo(),
                 authority,
                 experience,
-                resolvePublicGoodStanding(tenantId, provider, record));
+                resolvePublicGoodStanding(tenantId, provider, record),
+                councilVerified(record),
+                registerSource(record));
     }
 }

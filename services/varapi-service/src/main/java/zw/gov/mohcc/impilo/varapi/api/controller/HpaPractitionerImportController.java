@@ -32,14 +32,46 @@ public class HpaPractitionerImportController {
 
     private final HpaPractitionerImportService importService;
     private final HpaPractitionerMaterializationService materializationService;
+    private final zw.gov.mohcc.impilo.varapi.core.HpaPractitionerRegisterBackfillService registerBackfillService;
     private final JdbcTemplate jdbc;
 
     public HpaPractitionerImportController(HpaPractitionerImportService importService,
                                            HpaPractitionerMaterializationService materializationService,
+                                           zw.gov.mohcc.impilo.varapi.core.HpaPractitionerRegisterBackfillService registerBackfillService,
                                            JdbcTemplate jdbc) {
         this.importService = importService;
         this.materializationService = materializationService;
+        this.registerBackfillService = registerBackfillService;
         this.jdbc = jdbc;
+    }
+
+    /** HAR W2 — request shape for the council register-record backfill. */
+    public record RegisterBackfillApiRequest(String tenantId, Boolean dryRun, Integer limit) {}
+
+    /**
+     * HAR W2 — create the HPA council register record for each imported practitioner.
+     *
+     * <p>Without this the registration number lives only on {@code provider.practice_number}, which
+     * the public verification lane never reads, so every lookup returns NOT_FOUND. The record is
+     * written against the HPA council with status LISTED_PENDING_COUNCIL_VERIFICATION: findable,
+     * explicitly not council-verified, and inert to every access gate.</p>
+     */
+    @PostMapping("/backfill-register-records")
+    public ResponseEntity<ApiResponse<zw.gov.mohcc.impilo.varapi.core.HpaPractitionerRegisterBackfillService.BackfillSummary>>
+            backfillRegisterRecords(@RequestBody(required = false) RegisterBackfillApiRequest request) {
+        boolean dryRun = request != null && Boolean.TRUE.equals(request.dryRun());
+        Integer limit = request == null ? null : request.limit();
+        log.info("HAR W2 register backfill requested dryRun={} limit={}", dryRun, limit);
+        var summary = registerBackfillService.backfill(
+                tenant(request == null ? null : request.tenantId()), dryRun, limit);
+        return ResponseEntity.ok(ApiResponse.ok(summary, correlationId()));
+    }
+
+    @GetMapping("/register-summary")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> registerSummary(
+            @RequestParam(required = false) String tenantId) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                registerBackfillService.summary(tenant(tenantId)), correlationId()));
     }
 
     public record ImportApiRequest(String feedPath, String tenantId) {}

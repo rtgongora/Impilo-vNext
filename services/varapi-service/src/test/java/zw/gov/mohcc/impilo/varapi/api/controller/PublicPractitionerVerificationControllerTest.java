@@ -219,7 +219,7 @@ class PublicPractitionerVerificationControllerTest {
         var missNode = json.readTree(json.writeValueAsString(body));
         var hitNode = json.readTree(json.writeValueAsString(
                 new PublicPractitionerVerificationResponse("REGISTERED", "Dr X", "P", "C",
-                        "N-1", LocalDate.now(), null, "ACTIVE", LocalDate.now(), null, "Council", null, "GOOD")));
+                        "N-1", LocalDate.now(), null, "ACTIVE", LocalDate.now(), null, "Council", null, "GOOD", true, "Council")));
         assertThat(iterToList(missNode.fieldNames())).isEqualTo(iterToList(hitNode.fieldNames()));
     }
 
