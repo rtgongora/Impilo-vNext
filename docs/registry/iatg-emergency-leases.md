@@ -90,27 +90,43 @@ Consequences that are not optional:
 
 ## 3. Reserved migration blocks
 
-Heads verified at `6fd3ca2d0`. **Every block below sits above the corresponding claim in the trauma
-and surgery/procedures leases**, so a collision is impossible in either direction.
+### THE RULE: reserve by numeric DISTANCE, not adjacency. This pack owns the **V2xx band**.
 
-| Service | Head today | Trauma lease | Surgery lease | **Emergency block** | Sub-ranges |
-|---|---|---|---|---|---|
-| `pct-service` | **V060 (untracked — §3c)** | V035–V069 | — | **V070–V099** | episode V070–72 · triage V073–74 · alerts V075 · diagnostics/order-sets V076–77 · medicines V078 · obs-stay/disposition/handover V079–81 · identity ledger V082 · board V083–85 · reserve V086–99 |
-| `inpatient-service` | V066 | V035–V064 (**dead, see §3a**) | V067–V080 | **V081–V110** | resus tenant/anchor V081 · concurrency V082 · `resuscitation_medication` V083 · activation origin/CHECK V084 · reserve V085–110 |
-| `daidzai-service` | V016 | V010–V049 | — | **V050–V079** | generalise + PCT back-link V050–52 · merge/adopt V053 · MCI casualty V054–56 |
-| `madi-service` | V015 | V015–V044 (MTP sub-range **never built**, superseded — §3b) | — | **V045–V074** | MHP V045–48 · emergency release V049–50 · ratio content V051 |
-| `clinical-knowledge-platform-service` | V006 | — | V007–V020 | **V021–V040** | rules framework V021 · IITT V022 · pathway repair V023 · order sets V024 · tranches V025–36 |
-| `zibo-service` | V007 | — | V008–V014 | **V015–V034** | emergency value sets V015–18 |
-| `tuso-service` | V043 | — | V042–V048 | **V050–V069** | `space_type` widen V050 · ED capacity V051 · trauma-centre capability V052–53 |
-| `oros-service` | V017 | V015–V024 | V018–V024 | **V030–V049** | `results.acted_at` V030 |
-| `inventory-service` (Dura) | V014 | — | V015–V020 | **V021–V040** | emergency kit V021–23 |
-| `rito-quality-safety-service` | V007 | V010–V019 | — | **V030–V039** | after-action linkage V030 |
-| `notification-service` | V017 | — | V018–V020 | **V030–V039** | emergency templates V030 |
-| `vashandi-workforce-service` | V008 | V015–V024 | V009–V012 | **V030–V039** | emergency roster view V030 |
-| `vito-service` | V048 | V035–V044 | — | **V060–V069** | provisional-identity hardening V060 |
-| `mental-health-service` | — | — | — | **V001–V030** | new service |
-| `costing-engine-service` (COSTA) | V024 | — | V025–V028 | **none needed** | emergency override + deferred-charge reconciliation already built (V012/V014) |
-| `mvumo-service` | V008 | — | V009–V014 | **none needed** | `L4_EMERGENCY_OVERRIDE` consent break-glass already built |
+Adjacent reservation is fragile on a contested service, and this pack proved it twice in one hour:
+
+- the trauma lease reserved `inpatient` V035–V064 adjacent to its head; only V035/V036 landed and
+  theatre then took V065/V066, so **V037–V064 is permanently unusable** (§3a);
+- this file originally reserved `pct` V070–V099 just above a head of V060. Within the hour the Adult
+  Medicine lane committed **`V100__problem_model_certainty_and_status.sql`** (`b9579561d`), and
+  V070–V099 became dead space by the same mechanism — below the head, so Flyway will never apply it
+  in any environment that has reached V100. **I wrote the rule in §3a and then broke it.**
+
+Heads move faster than a reservation can track, so the defence is distance. **Every emergency
+migration takes a V2xx number**, in every service. Nothing incremental will reach V200 for years, the
+band is collision-proof against any lane reserving above a head, and ownership is legible at a glance
+from the version alone. Flyway sorts by version and gaps are free, so the cost is cosmetic and the
+safety benefit is not.
+
+Heads re-verified at `b9579561d`, **including untracked files** (§1).
+
+| Service | Head today (incl. untracked) | Peer claims | **Emergency block** | Sub-ranges |
+|---|---|---|---|---|
+| `pct-service` | **V100** · V059 untracked · V058 absent | trauma V035–V069 · RMNP V058/V059/V061–V069 · problem-list V060 **and V100** · surgery: none | **V200–V239** | episode V200–02 · triage V203–04 · alerts V205 · diagnostics/order-sets V206–07 · medicines V208 · obs-stay/disposition/handover V209–11 · identity ledger V212 · board V213–15 · reserve V216–39 |
+| `inpatient-service` | V066 (**V037–V064 dead — §3a**) | surgery V067–V080 (their P4) | **V200–V229** | resus tenant/anchor V200 · concurrency V201 · `resuscitation_medication` V202 · activation origin/CHECK V203 · reserve V204–29 |
+| `clinical-knowledge-platform-service` | V006 | surgery V007–V020 · RMNP V007–V009 | **V200–V229** | rules framework V200 · IITT V201 · pathway repair V202 · order sets V203 · tranches V204–15 |
+| `daidzai-service` | V016 | trauma V010–V049 | **V200–V229** | generalise + PCT back-link V200–02 · merge/adopt V203 · MCI casualty V204–06 |
+| `madi-service` | V015 | trauma V015–V044 (MTP sub-range **never built**, superseded — §3b) | **V200–V229** | MHP V200–03 · emergency release V204–05 · ratio content V206 |
+| `zibo-service` | V007 | surgery V008–V014 | **V200–V219** | emergency value sets V200–03 |
+| `tuso-service` | V043 | surgery **V044–V049** (moved off V042–V048 — V042/V043 had already landed from the facility-readiness lane) | **V200–V219** | `space_type` widen V200 · ED capacity V201 · trauma-centre capability V202–03 |
+| `oros-service` | V017 | trauma V015–V024 · surgery V018–V024 | **V200–V219** | `results.acted_at` V200 |
+| `inventory-service` (Dura) | V014 | surgery V015–V020 | **V200–V219** | emergency kit V200–02 |
+| `rito-quality-safety-service` | V007 | trauma V010–V019 | **V200–V219** | after-action linkage V200 |
+| `notification-service` | V017 | surgery V018–V020 | **V200–V219** | emergency templates V200 |
+| `vashandi-workforce-service` | V008 | trauma V015–V024 · surgery V009–V012 | **V200–V219** | emergency roster view V200 |
+| `vito-service` | V048 | trauma V035–V044 | **V200–V219** | provisional-identity hardening V200 |
+| `mental-health-service` | — | — | **V001–V030** | new service — no contention, so ordinary numbering |
+| `costing-engine-service` (COSTA) | V024 | surgery V025–V028 | **none needed** | emergency override + deferred-charge reconciliation already built (V012/V014) |
+| `mvumo-service` | V008 | surgery V009–V014 | **none needed** | `L4_EMERGENCY_OVERRIDE` consent break-glass already built |
 
 ### 3c. Peer claims recorded here — and `pct` V060 is an EXCEPTION, not part of a range
 
@@ -207,6 +223,32 @@ RMNP sessions on 2026-07-26.
    `ZW_POLICY` (`WHO_DAK` is RMNP's). Non-coverage goes in a per-domain exclusions register and every
    deferral needs a revisit condition. Each domain's standards stay in its own file; only the
    machinery is common.
+
+## 5c. INHERITED SAFETY GAP: nothing verifies site and side
+
+Reported by the surgery/procedures lane, 2026-07-26. **No structured site/side field exists on
+`inpatient.procedure_episode`, and no gate refuses to start a procedure whose site and side were not
+confirmed.** They are recorded on `referral.surgical_referral` and rendered on the theatre case banner,
+but as display text — the WHO Surgical Safety Checklist Time Out asks the question and there is
+nowhere to put the answer.
+
+**This lands hardest on emergency care, not on theatre.** Elective surgery has a consent form, a
+marked limb and a scheduled Time Out. The lateralised procedures this pack owns are done at the
+bedside, at speed, often on an unidentified patient: **chest drain, needle and tube thoracostomy,
+central line, arterial line, thoracotomy, joint reduction, escharotomy, burr hole**. Wrong-side chest
+decompression is a fatal, fast and entirely preventable error, and it is precisely the procedure most
+likely to be performed by a lone clinician under time pressure without a second checker.
+
+The surgery lane fixes it in their **P4** with a structured field plus a start gate on the shared
+`procedure_episode` aggregate, declared as standard `PS.WRONG_SITE.PREVENTION` in
+`docs/clinical-governance/procedures/standards-baseline.json` so their guard holds them to it. This
+pack inherits the fix.
+
+**Binding consequence for this pack:** if an emergency lateralised bedside procedure would ship before
+P4 lands, it must either wait for P4 or carry its own laterality confirmation — and it may **not**
+ship with laterality as free text. W7 (procedures invocation) is sequenced after their P4 for this
+reason; if that ordering changes, this constraint is what has to be re-decided. Recorded in the
+honest-gap register either way.
 
 ## 5b. Burns — split at the stabilisation boundary
 
