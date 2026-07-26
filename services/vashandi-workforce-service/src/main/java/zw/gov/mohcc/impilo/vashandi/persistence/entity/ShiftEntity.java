@@ -47,6 +47,21 @@ public class ShiftEntity {
     @Column(nullable = false, length = 32)
     private String status = "scheduled";
 
+    /**
+     * PRIMARY (first call) or BACKUP (second call) when this shift forms part of an on-call rota;
+     * NULL for an ordinary rostered shift (V009). The on-call read is a projection over the rows
+     * where this is set — a rota is not a second store.
+     */
+    @Column(length = 16)
+    private String onCallRole;
+
+    /**
+     * Service line an on-call shift covers. Held here rather than parsed out of virtualPoolId,
+     * which is a frozen TUSO routing-seam contract and must not become a display dependency.
+     */
+    @Column(length = 64)
+    private String specialty;
+
     @Column(nullable = false)
     private boolean checkInRequired = true;
 

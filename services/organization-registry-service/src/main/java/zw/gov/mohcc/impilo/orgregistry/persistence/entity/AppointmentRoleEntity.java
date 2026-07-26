@@ -29,4 +29,23 @@ public class AppointmentRoleEntity {
 
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
+
+    /**
+     * This role administers the regulator on the platform rather than performing its statutory
+     * work (V009). The bootstrap, succession and four-eyes invariants attach to this flag, so a
+     * role added later inherits them by being marked rather than by being remembered.
+     */
+    @Column(name = "is_administrative", nullable = false)
+    private boolean administrative;
+
+    /**
+     * Grantable only through the bootstrap rail, and only while the organisation has no active
+     * administrator — so a founding role cannot be reused later as an ordinary appointment.
+     */
+    @Column(name = "is_bootstrap_only", nullable = false)
+    private boolean bootstrapOnly;
+
+    /** Upper bound on simultaneous ACTIVE holders at one organisation; null means unbounded. */
+    @Column(name = "max_concurrent_per_org")
+    private Integer maxConcurrentPerOrg;
 }

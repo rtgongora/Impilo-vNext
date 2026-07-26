@@ -58,6 +58,10 @@ DERIVED = {
     "minutesSinceOpen", "minutesSinceLastReassessment",
     "stepsCompleted", "stepsOverdue",
     "pregnant", "pluralityDerived",
+    # The engine resolves the SPR checklist and injects the verdict; a clinician never types
+    # "reasonably certain" as a field. The six criteria that produce it are NOT derived and are
+    # checked against the form like everything else.
+    "pregnancyCertainty",
 }
 DERIVED_PREFIXES = ("minutesSinceLastObservationOf.", "smbp.")
 
@@ -110,7 +114,12 @@ def rule_inputs(pack):
     logic reads without declaring it is invisible to the "what could not be assessed" report.
     """
     found = set()
-    for collection in ("rules", "tables", "conditions", "signals", "services", "bundles"):
+    # "criteria" is here because the SPR reasonable-certainty checklist is not a rule list: its six
+    # criteria are combined by the engine rather than fired independently, so they live in their own
+    # collection. Left out, the single most consequential question in family planning — is she
+    # pregnant — would have been checked against nothing and passed.
+    for collection in ("rules", "tables", "conditions", "criteria",
+                       "signals", "services", "bundles"):
         for item in pack.get(collection, []) or []:
             for declared in item.get("requiredInputs", []) or []:
                 found.add(declared)

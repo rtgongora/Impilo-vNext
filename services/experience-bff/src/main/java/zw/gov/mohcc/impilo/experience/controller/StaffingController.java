@@ -10,13 +10,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
-import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 
 import java.util.*;
 
 /**
- * Staffing surfaces: roster from recorded shifts, on-call assignments and swap workflow.
- * Delegates to TUSO and fails closed on upstream dependency errors.
+ * Staffing surfaces: the week's roster, the on-call rota and the shift-swap workflow.
+ *
+ * <p><b>Repointed from tuso (route-contract completion).</b> These handlers called
+ * {@code tuso /v1/staffing/*} — paths no service in the estate serves — so the roster screen, the
+ * on-call screen and the control tower rendered empty while every layer reported success. Vashandi
+ * owns rostering ({@code vsh_roster}/{@code vsh_shift}); scheduled on-call is a projection over the
+ * shifts that carry an {@code on_call_role}, so there is one on-call truth with several read
+ * shapes rather than a rival store.</p>
+ *
+ * <p><b>An empty roster is now distinguishable from a broken one.</b> The previous handlers
+ * returned {@code data: []} both when the upstream answered with nothing and when it answered with
+ * an empty list, so "no shifts rostered this week" and "the call produced nothing" looked
+ * identical to the screen. The upstream response is passed through as given; only a genuine
+ * failure takes the error path.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/staffing")
@@ -24,21 +36,26 @@ public class StaffingController {
 
     private static final Logger log = LoggerFactory.getLogger(StaffingController.class);
 
-    private final TusoServiceClient tusoClient;
+    private final VashandiServiceClient vashandiClient;
 
-    public StaffingController(TusoServiceClient tusoClient) {
-        this.tusoClient = tusoClient;
+    public StaffingController(VashandiServiceClient vashandiClient) {
+        this.vashandiClient = vashandiClient;
     }
 
-    public record PatchSwapRequest(@NotBlank String status) {}
+    public record PatchSwapRequest(@NotBlank String status, String note) {}
 
+    /**
+     * A swap is raised against a rostered shift and a person, not against typed names.
+     *
+     * <p>The previous contract took {@code requestor_name}/{@code requestee_name} as free text.
+     * Two staff share a name, and a shift swap changes who is clinically accountable for a window —
+     * that is not an ambiguity to resolve by string match, so the identifiers are required.</p>
+     */
     public record CreateSwapRequest(
-            @NotBlank String facility_id,
-            @NotBlank String requestor_name,
-            @NotBlank String requestee_name,
-            @NotBlank String original_date,
-            @NotBlank String swap_date,
-            String specialty
+            @NotBlank String requesting_shift_id,
+            @NotBlank String requested_profile_id,
+            String offered_shift_id,
+            String reason
     ) {}
 
     @GetMapping("/roster-week")
@@ -49,17 +66,12 @@ public class StaffingController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(name = "week_start") String weekStartParam,
             @RequestParam(name = "workspace_id", required = false) String workspaceId) {
-
         try {
-            JsonNode roster = tusoClient.getRosterWeek(facilityId, weekStartParam, workspaceId);
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", roster != null ? roster : List.of());
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                    "week_start", weekStartParam));
-            return ResponseEntity.ok(response);
+            JsonNode roster = vashandiClient.getRosterWeek(facilityId, weekStartParam);
+            return ok(roster, requestId, correlationId, Map.of("week_start", weekStartParam));
         } catch (Exception e) {
-            log.warn("TUSO roster-week unavailable: {}", e.getMessage());
-            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
+            log.warn("VASHANDI roster-week unavailable: {}", e.getMessage());
+            return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
         }
     }
 
@@ -70,24 +82,13 @@ public class StaffingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(name = "week_start") String weekStartParam) {
-
         try {
-            JsonNode onCall = tusoClient.listOnCall(facilityId, weekStartParam);
-            if (onCall != null && onCall.isArray() && onCall.size() > 0) {
-                Map<String, Object> response = new LinkedHashMap<>();
-                response.put("data", onCall);
-                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                        "week_start", weekStartParam));
-                return ResponseEntity.ok(response);
-            }
+            JsonNode onCall = vashandiClient.listOnCall(facilityId, weekStartParam);
+            return ok(onCall, requestId, correlationId, Map.of("week_start", weekStartParam));
         } catch (Exception e) {
-            log.warn("TUSO on-call unavailable: {}", e.getMessage());
-            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
+            log.warn("VASHANDI on-call unavailable: {}", e.getMessage());
+            return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
         }
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                        "week_start", weekStartParam)));
     }
 
     @GetMapping("/on-call/swaps")
@@ -96,21 +97,13 @@ public class StaffingController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId) {
-
         try {
-            JsonNode swaps = tusoClient.listSwapRequests(facilityId);
-            if (swaps != null && swaps.isArray() && swaps.size() > 0) {
-                return ResponseEntity.ok(Map.of(
-                        "data", swaps,
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-            }
+            JsonNode swaps = vashandiClient.listSwapRequests(facilityId);
+            return ok(swaps, requestId, correlationId, Map.of());
         } catch (Exception e) {
-            log.warn("TUSO swap list unavailable: {}", e.getMessage());
-            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
+            log.warn("VASHANDI swap list unavailable: {}", e.getMessage());
+            return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
         }
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/on-call/swaps")
@@ -121,27 +114,27 @@ public class StaffingController {
             @Valid @RequestBody CreateSwapRequest body) {
 
         Map<String, Object> swapData = new LinkedHashMap<>();
-        swapData.put("facility_id", body.facility_id());
-        swapData.put("requestor_name", body.requestor_name());
-        swapData.put("requestee_name", body.requestee_name());
-        swapData.put("original_date", body.original_date());
-        swapData.put("swap_date", body.swap_date());
-        swapData.put("specialty", body.specialty());
-        swapData.put("tenant_id", tenantId);
+        swapData.put("requestingShiftId", body.requesting_shift_id());
+        swapData.put("requestedProfileId", body.requested_profile_id());
+        if (body.offered_shift_id() != null && !body.offered_shift_id().isBlank()) {
+            swapData.put("offeredShiftId", body.offered_shift_id());
+        }
+        swapData.put("reason", body.reason());
 
         try {
-            JsonNode result = tusoClient.createSwapRequest(swapData);
-            if (result != null) {
-                Map<String, Object> response = new LinkedHashMap<>();
-                response.put("data", result);
-                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-                return ResponseEntity.status(201).body(response);
+            JsonNode result = vashandiClient.createSwapRequest(swapData);
+            if (result == null) {
+                return upstreamFailure(requestId, correlationId,
+                        "VASHANDI_UNAVAILABLE", "Swap request was not persisted");
             }
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", result);
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            log.warn("TUSO create swap unavailable: {}", e.getMessage());
-            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
+            log.warn("VASHANDI create swap unavailable: {}", e.getMessage());
+            return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
         }
-        return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", "Swap request was not persisted");
     }
 
     @PatchMapping("/on-call/swaps/{id}")
@@ -153,24 +146,46 @@ public class StaffingController {
             @Valid @RequestBody PatchSwapRequest body) {
 
         String normalized = body.status().trim().toUpperCase(Locale.ROOT);
-        if (!normalized.equals("APPROVED") && !normalized.equals("DECLINED")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status must be APPROVED or DECLINED");
+        if (!normalized.equals("APPROVED") && !normalized.equals("DECLINED")
+                && !normalized.equals("WITHDRAWN")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "status must be APPROVED, DECLINED or WITHDRAWN");
         }
 
-        Map<String, Object> updateData = Map.of("status", normalized);
+        Map<String, Object> updateData = new LinkedHashMap<>();
+        updateData.put("status", normalized);
+        updateData.put("note", body.note());
         try {
-            JsonNode result = tusoClient.updateSwapRequest(id.toString(), updateData);
-            if (result != null) {
-                Map<String, Object> response = new LinkedHashMap<>();
-                response.put("data", result);
-                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-                return ResponseEntity.ok(response);
+            JsonNode result = vashandiClient.updateSwapRequest(id.toString(), updateData);
+            if (result == null) {
+                return upstreamFailure(requestId, correlationId,
+                        "VASHANDI_UNAVAILABLE", "Swap update was not persisted");
             }
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", result);
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.warn("TUSO patch swap unavailable: {}", e.getMessage());
-            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
+            log.warn("VASHANDI patch swap unavailable: {}", e.getMessage());
+            return upstreamFailure(requestId, correlationId, "VASHANDI_UNAVAILABLE", e.getMessage());
         }
-        return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", "Swap update was not persisted");
+    }
+
+    /**
+     * Pass the upstream answer through as given. An empty list means the week is genuinely empty —
+     * it is not a stand-in for a call that produced nothing, which takes the error path instead.
+     */
+    private ResponseEntity<Map<String, Object>> ok(JsonNode data, String requestId,
+                                                   String correlationId, Map<String, String> extraMeta) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        meta.putAll(extraMeta);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data == null ? List.of() : data);
+        response.put("meta", meta);
+        return ResponseEntity.ok(response);
     }
 
     private ResponseEntity<Map<String, Object>> upstreamFailure(

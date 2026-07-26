@@ -130,6 +130,22 @@ for content_file in sorted(list(CKP.glob("*.json")) + list(FORMS.glob("*.json"))
         continue
     found = []
     walk(payload, found)
+
+    # A pack whose rules rest on citations rather than on rows of an extracted DAK was authored
+    # against published text rather than ingested from a pinned artefact. That is sometimes the only
+    # option — WHO publishes normative guidance with no DAK behind it — but it is a departure from
+    # the rule this repository set itself, and a departure nobody records is a departure nobody
+    # revisits. It has to be declared where a reader will see it, not left to be inferred from the
+    # absence of a dakRef.
+    cites_without_dak = any(not (ref or {}).get("id") for ref, _, _ in found)
+    if cites_without_dak:
+        verification = (payload.get("provenance") or {}).get("sourceVerification")
+        if not isinstance(verification, dict) or "primaryTextVendored" not in verification:
+            print(f"FAIL: {content_file.name} ships rules cited to text rather than to an extracted "
+                  f"DAK row, but declares no provenance.sourceVerification saying whether that "
+                  f"primary text is vendored. State it — including when the answer is 'not yet'.")
+            fail = 1
+
     for dak_ref, adaptation, code in found:
         where = f"{content_file.name}:{code}"
         adaptation_type = adaptation.get("type")
@@ -137,20 +153,37 @@ for content_file in sorted(list(CKP.glob("*.json")) + list(FORMS.glob("*.json"))
             print(f"FAIL: {where} adaptation type {adaptation_type!r} is not one of "
                   f"{sorted(VALID_ADAPTATIONS)}")
             fail = 1
-        if adaptation_type == "ADDED_NATIONAL":
-            if not adaptation.get("evidenceRefs"):
-                print(f"FAIL: {where} is ADDED_NATIONAL but cites no evidence. A rule with no WHO "
-                      f"source and no national source is not traceable to anything.")
-                fail = 1
-        else:
-            dak_id = dak_ref.get("id")
-            if not dak_id:
-                print(f"FAIL: {where} has no dakRef.id and is not ADDED_NATIONAL.")
-                fail = 1
-            elif dak_id not in published:
+        # Two independent questions, and an earlier version of this guard collapsed them into one.
+        #
+        #   1. WHAT DID WE DO to the source text? That is adaptation.type, and the vocabulary above
+        #      is right.
+        #   2. WHERE DID IT COME FROM? A DAK row, or a citation.
+        #
+        # Requiring a dakRef.id for everything that was not ADDED_NATIONAL made those the same
+        # question, and the consequence showed up the first time a pack encoded WHO guidance that
+        # has no DAK behind it. The Medical Eligibility Criteria, the Selected Practice
+        # Recommendations and the Labour Care Guide are all normative WHO text with no machine-
+        # readable artefact. Under the old rule the only way to ship them was to label them
+        # ADDED_NATIONAL — recording "Zimbabwe invented this" about a WHO recommendation, which is
+        # the exact confusion the adaptation block exists to prevent. The pressure was toward a
+        # false provenance, and a guard that makes the honest answer unavailable will get the
+        # dishonest one.
+        #
+        # So: a source is a resolvable DAK row OR a citation. Absence of both is still a failure.
+        dak_id = dak_ref.get("id")
+        if dak_id:
+            if dak_id not in published:
                 print(f"FAIL: {where} cites {dak_id}, which no extracted DAK publishes. "
-                      f"Check the identifier, or mark the rule ADDED_NATIONAL.")
+                      f"Check the identifier, or cite the source in adaptation.evidenceRefs.")
                 fail = 1
+        elif not adaptation.get("evidenceRefs"):
+            print(f"FAIL: {where} names no source: no dakRef.id and no adaptation.evidenceRefs. "
+                  f"A rule traceable to nothing cannot be reviewed or revised.")
+            fail = 1
+        if adaptation_type == "ADDED_NATIONAL" and not adaptation.get("evidenceRefs"):
+            print(f"FAIL: {where} is ADDED_NATIONAL but cites no evidence. A rule with no WHO "
+                  f"source and no national source is not traceable to anything.")
+            fail = 1
         if adaptation_type not in (None, "ADOPTED_VERBATIM") and not (
                 adaptation.get("rationale") or "").strip():
             print(f"FAIL: {where} changes the WHO text ({adaptation_type}) but states no rationale.")

@@ -110,12 +110,15 @@ export default function RosterPage() {
     const byUser = new Map<string, { displayName: string; days: Record<string, CellState> }>();
     for (const s of shifts) {
       const attrs = s.attributes;
-      const uid = attrs.user_id;
+      // Vashandi is the rostering source of record and holds no names — person identity is
+      // vito's and provider identity varapi's. The worker reference is what staff recognise on a
+      // rota; falling back to the profile id is ugly but true, and beats inventing a name.
+      const uid = attrs.workforce_profile_id;
       if (!byUser.has(uid)) {
-        byUser.set(uid, { displayName: attrs.staff_display_name || uid, days: {} });
+        byUser.set(uid, { displayName: attrs.staff_reference || uid, days: {} });
       }
       const entry = byUser.get(uid)!;
-      if (attrs.staff_display_name) entry.displayName = attrs.staff_display_name;
+      if (attrs.staff_reference) entry.displayName = attrs.staff_reference;
       for (const day of dateColumns) {
         const next = cellStateForShift(attrs, day);
         if (!next) continue;
