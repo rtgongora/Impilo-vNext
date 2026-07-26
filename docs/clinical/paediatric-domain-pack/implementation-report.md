@@ -133,8 +133,86 @@ every age from birth and asserts a band exists.
 | **4. Paediatric surgical emergency** | **Not started.** Existing theatre and inpatient spines are reusable; the surgical-abdomen pathway and paediatric surgical clerking are not built. |
 | **5. Confidential adolescent visit** | **Not started.** The TSHEPO `SPECIALLY_PROTECTED` sensitivity class exists but has never been assigned; caregiver-context gating is designed, not built. |
 
-Nothing here has been run against a deployed estate. These are unit- and integration-tested
-behaviours, not live-proven journeys.
+**Live-proof status (updated 2026-07-26).** The earlier statement that none of this had run against
+a deployed estate no longer holds. pct-service, inpatient-service and the clinical knowledge
+platform are deployed to the full preview estate with migrations applied, and the following are
+proven against a real database rather than a fixture:
+
+- Growth: a z-score of −2.9 with severe acute malnutrition classified, carrying its standard and
+  engine version; the care-relationship guard returning 403 for an unrelated actor.
+- Immunisation: a dose recorded elsewhere moving from pending to verified.
+- Newborn: preterm and low-birth-weight flags derived, and a replayed delivery event proven
+  idempotent.
+- PEWS age-banding: identical vitals (heart rate 150, respiratory rate 45) scoring 0/NONE for a
+  three-month-old and 6/MEDIUM with escalation for a ten-year-old. This is the defect the wave
+  existed to fix, shown fixed on live data.
+- Danger signs: a ten-day-old with poor feeding raising possible serious bacterial infection —
+  critical, non-overridable, referral required, citing source, version and approval status.
+- The honesty property, which matters more than any single rule: a child with nothing assessed
+  returns `incomplete: true` with 23 unassessed signs and never an all-clear, while a fully
+  assessed negative child returns `incomplete: false`.
+
+The dosing engine is tested but has no HTTP surface of its own, so it has not been exercised live.
+
+**Known limitation, found while proving the above.** The predicate evaluator's `any` combinator
+short-circuits, so `triggering_findings` reports only the inputs evaluated up to the first match.
+The ten-day-old fired on feeding and did not list the qualifying temperature of 35.0 °C. The alert
+and the required action are identical either way, so this is not a safety defect, but the evidence
+list under-reports what actually qualified, which matters when a clinician reviews why a rule
+fired. The fix is to keep evaluating for evidence collection while still short-circuiting the
+verdict.
+
+---
+
+## 4a. Maternity — a broken vertical closed alongside this pack
+
+Not part of the original paediatric brief, but adjacent to it: the newborn record begins at a
+delivery, and the delivery record did not exist.
+
+experience-bff had shipped `/v1/labour-monitoring` and `/v1/maternity/**` calling fourteen
+pct-service endpoints that were never built. The BFF caught the resulting 404 and returned HTTP 200
+with an empty list, so a ward reading a labouring woman's record saw "no observations" when the
+truth was that the system could not ask. Cardiotocography was served from an in-process map that
+emptied on every pod restart. Nothing a midwife recorded was ever stored.
+
+The BFF carries its own Flyway scripts V33–V36 for these tables, but the BFF has no datasource
+outside the CI test profile, so they have never run. Verified across every preview database before
+any work began: the tables exist nowhere and hold no rows. There was nothing to migrate, only a
+contract to make real.
+
+**One observation table, not two.** The orphan schemas defined `labour_monitoring_entries` and
+`maternity_partograph_points` with identical clinical columns. Reproducing both would have created
+two systems of record for the same fact, and a partograph drawn from one while the labour record
+listed the other would disagree about the same woman. A partograph point is a labour observation;
+only an open session distinguishes them, so there is one table with a nullable session reference,
+and an observation recorded while a session is open joins it automatically.
+
+`PartographProgressEngine` evaluates the WHO classic partograph rather than merely storing points
+for drawing: the alert line rises 1 cm/hour from the recognition of active labour, with the action
+line four hours to its right. The alert line's origin is pinned at the first active-phase reading
+and never moved, so correcting a later reading cannot silently rewrite whether the labour had
+crossed it. The latent phase is excluded rather than judged, because measuring from admission would
+condemn a normal latent phase as obstruction. An empty partograph reports `INSUFFICIENT_DATA` and
+lists every observation as never recorded — never the reassuring case.
+
+Proven live on the preview estate: 4 cm at 06:00 reads left of the alert line; 5 cm at 08:00
+crosses the alert line; 5 cm at 12:00 crosses the action line and returns "requires a decision now"
+with its guideline source and content version. A cardiotocography chunk declaring more samples than
+it carries records the shortfall rather than interpolating it, because a flat line the transducer
+never measured is indistinguishable on screen from one it did.
+
+**Deploying caught a defect the tests did not.** The empty partograph initially reported
+`INSUFFICIENT_DATA` beside "0 outstanding observations" — a reassuring line attached to the most
+alarming case, because the outstanding check short-circuited on an empty list. Fixed, redeployed
+and reproven. This is the same shape as the newborn-episode transaction bug found earlier in this
+programme: **check what an empty collection reports, not only what a populated one does.**
+
+**A systemic finding left deliberately open.** The pattern
+`catch (Exception) → ResponseEntity.ok(empty)` appears at 126 sites across the BFF controllers.
+The two verticals this lane owns (growth and labour monitoring) now return 502 with a message
+stating explicitly that the failure must not be read as an absence. The remainder is registered as
+separate work rather than swept in silently. The regression risk there is on the client side: any
+surface that currently renders an empty list will begin receiving a 502 and needs an error state.
 
 ---
 
