@@ -537,20 +537,170 @@ public class MobileProviderExtendedController {
 
     // ── Specialty Workspace Config ──────────────────────────────────
 
+    /**
+     * Specialty workspaces, each tool declaring whether it is actually reachable.
+     *
+     * <p>This route used to return a bare literal of 10 specialties × 3 tool <em>names</em> —
+     * "Lund-Browder Chart", "Parkland Formula", "ACLS Protocol", "PHQ-9", "Kt/V Calculator",
+     * "TNM Staging" and 24 more — with no indication that essentially none of them existed
+     * anywhere in the estate. A name in a tool menu is a promise that tapping it does the thing.
+     * For clinical calculators the failure mode is worse than a dead link: a clinician who
+     * believes the estate carries a Parkland calculator may go looking for it in an emergency
+     * rather than reaching for a chart.
+     *
+     * <p>So availability is no longer asserted by the presence of a label. Every tool carries
+     * {@code available}, a canonical {@code maturity}
+     * (docs/frontend/MATURITY_TAXONOMY.md), the {@code route} that serves it, and — when it is
+     * not available — an {@code unavailable_reason} the client can render as an honest disabled
+     * state. A tool is only {@code available: true} if a real BFF route serves it today; that
+     * invariant is guarded by {@code MobileSpecialtyWorkspaceCatalogTest}.
+     *
+     * <p><b>Burns and resuscitation are deliberately withheld, not merely unbuilt.</b> An earlier
+     * mobile build shipped a Rule-of-9s form using fixed adult proportions and a Parkland form
+     * with no injury-time clock and no first-8h/second-16h split, and neither persisted anything.
+     * Those are leased to the Emergency, Resuscitation and Acute Care pack
+     * (docs/registry/iatg-emergency-leases.md §5b) and land in {@code libs/burn-domain}. They are
+     * marked {@code BLOCKED} so nobody re-adds a private fourth implementation to close the gap.
+     */
     @GetMapping("/workspaces/specialties")
     public ResponseEntity<Map<String, Object>> getSpecialtyWorkspaces() {
-        List<Map<String, Object>> workspaces = List.of(
-                Map.of("id", "trauma", "name", "Trauma", "icon", "alert-triangle", "tools", List.of("GCS Scale", "Injury Severity Score", "FAST Exam")),
-                Map.of("id", "labour-delivery", "name", "Labour & Delivery", "icon", "baby", "tools", List.of("Partograph", "APGAR Score", "Bishop Score")),
-                Map.of("id", "theatre", "name", "Theatre", "icon", "scissors", "tools", List.of("WHO Checklist", "Anaesthesia Record", "Op Note")),
-                Map.of("id", "burns", "name", "Burns", "icon", "flame", "tools", List.of("Lund-Browder Chart", "Fluid Calculator", "Parkland Formula")),
-                Map.of("id", "paediatrics", "name", "Paediatrics", "icon", "baby", "tools", List.of("Growth Charts", "IMCI Protocol", "Immunization Schedule")),
-                Map.of("id", "mental-health", "name", "Mental Health", "icon", "brain", "tools", List.of("PHQ-9", "GAD-7", "Safety Plan")),
-                Map.of("id", "dialysis", "name", "Dialysis", "icon", "droplet", "tools", List.of("HD Prescription", "Fluid Balance", "Kt/V Calculator")),
-                Map.of("id", "physiotherapy", "name", "Physiotherapy", "icon", "activity", "tools", List.of("ROM Assessment", "Muscle Grading", "Gait Analysis")),
-                Map.of("id", "resuscitation", "name", "Resuscitation", "icon", "heart", "tools", List.of("ACLS Protocol", "Drug Calculator", "Defib Timer")),
-                Map.of("id", "oncology", "name", "Oncology", "icon", "target", "tools", List.of("Chemo Protocol", "ECOG Score", "TNM Staging"))
-        );
-        return ResponseEntity.ok(Map.of("data", workspaces));
+        List<Map<String, Object>> workspaces = SPECIALTY_WORKSPACE_CATALOG;
+        long availableTools = workspaces.stream()
+                .flatMap(w -> toolsOf(w).stream())
+                .filter(t -> Boolean.TRUE.equals(t.get("available")))
+                .count();
+        long totalTools = workspaces.stream().mapToLong(w -> toolsOf(w).size()).sum();
+
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("tool_count", totalTools);
+        meta.put("available_tool_count", availableTools);
+        meta.put("message", "A tool is usable only where \"available\" is true. Every other entry is "
+                            + "a declared gap with a reason — render it disabled, never as a "
+                            + "working tool.");
+        return ResponseEntity.ok(Map.of("data", workspaces, "meta", meta));
     }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> toolsOf(Map<String, Object> workspace) {
+        return (List<Map<String, Object>>) workspace.get("tools");
+    }
+
+    /** Canonical maturity labels from docs/frontend/MATURITY_TAXONOMY.md. */
+    private static final String MATURITY_LIVE = "Live";
+    private static final String MATURITY_NOT_WIRED = "Not wired";
+    private static final String MATURITY_BLOCKED = "Blocked";
+
+    private static final String REASON_NOT_BUILT =
+            "No service in the estate implements this tool yet. Document in the encounter note.";
+    private static final String REASON_BURNS_WITHHELD =
+            "Withheld. The previous burns calculators used adult-only body proportions and an "
+            + "unclocked 24-hour Parkland total, and saved nothing. Estimate %TBSA from an "
+            + "age-appropriate Lund-Browder chart and clock fluid from the time of injury — half "
+            + "over the first 8 hours from injury, half over the next 16.";
+    private static final String REASON_RESUS_LEASED =
+            "Withheld pending the governed resuscitation record. Use the facility's ACLS wall "
+            + "chart and the printed drug-dose table.";
+
+    /** A tool that a real BFF route serves today. */
+    private static Map<String, Object> wired(String id, String name, String route) {
+        Map<String, Object> t = new LinkedHashMap<>();
+        t.put("id", id);
+        t.put("name", name);
+        t.put("available", true);
+        t.put("maturity", MATURITY_LIVE);
+        t.put("route", route);
+        t.put("unavailable_reason", null);
+        return t;
+    }
+
+    /** A tool that is advertised but not reachable — declared, with the reason why. */
+    private static Map<String, Object> gap(String id, String name, String maturity, String reason) {
+        Map<String, Object> t = new LinkedHashMap<>();
+        t.put("id", id);
+        t.put("name", name);
+        t.put("available", false);
+        t.put("maturity", maturity);
+        t.put("route", null);
+        t.put("unavailable_reason", reason);
+        return t;
+    }
+
+    @SafeVarargs
+    private static Map<String, Object> workspace(String id, String name, String icon,
+                                                 Map<String, Object>... tools) {
+        Map<String, Object> w = new LinkedHashMap<>();
+        w.put("id", id);
+        w.put("name", name);
+        w.put("icon", icon);
+        w.put("tools", List.of(tools));
+        return w;
+    }
+
+    @SafeVarargs
+    private static List<Map<String, Object>> catalog(Map<String, Object>... entries) {
+        return List.of(entries);
+    }
+
+    private static final List<Map<String, Object>> SPECIALTY_WORKSPACE_CATALOG = catalog(
+            workspace("trauma", "Trauma", "alert-triangle",
+                    gap("gcs", "GCS Scale", MATURITY_NOT_WIRED,
+                            "Glasgow Coma Scale is captured on the prehospital ePCR in daidzai-service "
+                            + "but no mobile provider route exposes it. Record it in the trauma note."),
+                    gap("iss", "Injury Severity Score", MATURITY_NOT_WIRED, REASON_NOT_BUILT),
+                    gap("fast-exam", "FAST Exam", MATURITY_NOT_WIRED, REASON_NOT_BUILT)),
+            workspace("labour-delivery", "Labour & Delivery", "baby",
+                    wired("partograph", "Partograph", "/internal/v1/maternity/partograph/sessions"),
+                    gap("apgar", "APGAR Score", MATURITY_NOT_WIRED,
+                            "APGAR is recorded by inpatient-service but is not exposed on the mobile "
+                            + "provider surface. Record it on the delivery record."),
+                    gap("bishop", "Bishop Score", MATURITY_NOT_WIRED, REASON_NOT_BUILT)),
+            workspace("theatre", "Theatre", "scissors",
+                    gap("who-checklist", "WHO Checklist", MATURITY_NOT_WIRED,
+                            "The WHO surgical safety checklist is modelled in inpatient-service's "
+                            + "procedure episode but has no mobile route. Use the paper checklist."),
+                    gap("anaesthesia-record", "Anaesthesia Record", MATURITY_NOT_WIRED, REASON_NOT_BUILT),
+                    gap("op-note", "Op Note", MATURITY_NOT_WIRED, REASON_NOT_BUILT)),
+            workspace("burns", "Burns", "flame",
+                    gap("lund-browder", "Lund-Browder Chart", MATURITY_BLOCKED, REASON_BURNS_WITHHELD),
+                    gap("fluid-calculator", "Fluid Calculator", MATURITY_BLOCKED, REASON_BURNS_WITHHELD),
+                    gap("parkland", "Parkland Formula", MATURITY_BLOCKED, REASON_BURNS_WITHHELD)),
+            workspace("paediatrics", "Paediatrics", "baby",
+                    wired("growth-charts", "Growth Charts", "/internal/v1/growth"),
+                    gap("imci", "IMCI Protocol", MATURITY_NOT_WIRED,
+                            "IMNCI classification runs in the clinical knowledge platform but is not "
+                            + "reachable from this menu."),
+                    wired("immunisation-schedule", "Immunization Schedule", "/internal/v1/immunizations")),
+            workspace("mental-health", "Mental Health", "brain",
+                    gap("phq9", "PHQ-9", MATURITY_NOT_WIRED,
+                            "There is no mental-health service in the estate. A scored depression "
+                            + "instrument must persist against the record before it is offered here."),
+                    gap("gad7", "GAD-7", MATURITY_NOT_WIRED,
+                            "There is no mental-health service in the estate. A scored anxiety "
+                            + "instrument must persist against the record before it is offered here."),
+                    gap("safety-plan", "Safety Plan", MATURITY_NOT_WIRED,
+                            "There is no mental-health service in the estate. A safety plan that is "
+                            + "not stored and cannot be retrieved by the next clinician is not a "
+                            + "safety plan.")),
+            workspace("dialysis", "Dialysis", "droplet",
+                    gap("hd-prescription", "HD Prescription", MATURITY_NOT_WIRED, REASON_NOT_BUILT),
+                    gap("fluid-balance", "Fluid Balance", MATURITY_NOT_WIRED, REASON_NOT_BUILT),
+                    gap("ktv", "Kt/V Calculator", MATURITY_NOT_WIRED,
+                            "No governed dialysis adequacy calculation exists. Kt/V must state its "
+                            + "model and inputs — a bare urea ratio is not spKt/V.")),
+            workspace("physiotherapy", "Physiotherapy", "activity",
+                    gap("rom", "ROM Assessment", MATURITY_NOT_WIRED, REASON_NOT_BUILT),
+                    gap("muscle-grading", "Muscle Grading", MATURITY_NOT_WIRED, REASON_NOT_BUILT),
+                    gap("gait-analysis", "Gait Analysis", MATURITY_NOT_WIRED, REASON_NOT_BUILT)),
+            workspace("resuscitation", "Resuscitation", "heart",
+                    gap("acls", "ACLS Protocol", MATURITY_BLOCKED, REASON_RESUS_LEASED),
+                    gap("drug-calculator", "Drug Calculator", MATURITY_BLOCKED,
+                            "Withheld. A resuscitation drug-dose calculator that is not weight-banded "
+                            + "and not verified against the governed dosing engine is a dosing error "
+                            + "waiting to happen. Use the printed dose table."),
+                    gap("defib-timer", "Defib Timer", MATURITY_BLOCKED, REASON_RESUS_LEASED)),
+            workspace("oncology", "Oncology", "target",
+                    gap("chemo-protocol", "Chemo Protocol", MATURITY_NOT_WIRED, REASON_NOT_BUILT),
+                    gap("ecog", "ECOG Score", MATURITY_NOT_WIRED, REASON_NOT_BUILT),
+                    gap("tnm", "TNM Staging", MATURITY_NOT_WIRED, REASON_NOT_BUILT))
+    );
 }
