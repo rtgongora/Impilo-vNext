@@ -510,6 +510,7 @@ export function HeroDiscoverySurface() {
                 origin={location ? { lat: location.lat, lng: location.lng } : null}
                 height="100%"
                 hideCaption
+                compactChrome
               />
               {/* Selected-result card, over the map so the map stays the dominant visual. */}
               {selectedResult && (

@@ -52,6 +52,8 @@ export interface NdilaMapLibreProps {
   showNavigation?: boolean;
   showZimbabweAdmin?: boolean;
   showMapChrome?: boolean;
+  /** Collapse the map's layer picker to a single button (small embedded maps). */
+  compactChrome?: boolean;
   clusterMarkers?: boolean;
   flyToCenter?: boolean;
   className?: string;
@@ -316,6 +318,7 @@ export function NdilaMapLibre({
   showNavigation = false,
   showZimbabweAdmin = true,
   showMapChrome = true,
+  compactChrome = false,
   clusterMarkers = false,
   flyToCenter = true,
   className,
@@ -562,6 +565,7 @@ export function NdilaMapLibre({
       />
       {showMapChrome ? (
         <NdilaMapChrome
+          compact={compactChrome}
           layerMode={layerMode}
           streetsAvailable={streetsAvailable}
           isFullscreen={isFullscreen}

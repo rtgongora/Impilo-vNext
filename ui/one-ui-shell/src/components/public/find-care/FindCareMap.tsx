@@ -62,6 +62,8 @@ interface FindCareMapProps {
   hideCaption?: boolean;
   /** Pre-built markers (e.g. from unified discovery). When set, `results` are ignored for markers. */
   geoMarkers?: NdilaGeoMarker[];
+  /** Collapse the map's layer picker to one button — for narrow embedded maps. */
+  compactChrome?: boolean;
 }
 
 export function FindCareMap({
@@ -71,6 +73,7 @@ export function FindCareMap({
   height = 360,
   hideCaption = false,
   geoMarkers,
+  compactChrome = false,
 }: FindCareMapProps) {
   const markers = useMemo<NdilaGeoMarker[]>(() => {
     const facilityMarkers: NdilaGeoMarker[] = geoMarkers
@@ -130,6 +133,7 @@ export function FindCareMap({
           fitToMarkers={mappable > 0}
           clusterMarkers
           showNavigation
+          compactChrome={compactChrome}
           height="100%"
           flyToCenter={false}
         />
