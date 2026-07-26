@@ -139,11 +139,26 @@ public class SecurityConfig {
                             .requestMatchers("/api/v1/ndila/intelligence/**").hasAnyRole(NDILA_INTELLIGENCE_ROLES)
                             .requestMatchers("/api/v1/ndila/audience/**").hasAnyRole(NDILA_INTELLIGENCE_ROLES)
 
-                            // Internal HPA location import (service-to-service, in-cluster only;
-                            // not gateway-routed externally). Mirrors the tuso/varapi internal HPA
-                            // import endpoints: grants no authority and writes only UNVERIFIED
-                            // candidate locations keyed to a tuso facility.
-                            .requestMatchers("/internal/v1/locations/hpa-import/**").permitAll()
+                            // Internal HPA location import + geocode stewardship.
+                            //
+                            // This was permitAll (31dd42e43, 2026-07-21) on the stated grounds that
+                            // it is "in-cluster only, not gateway-routed externally". That premise
+                            // is FALSE: `kubectl get networkpolicy -n impilo-full-preview` returns
+                            // no resources, so there is no segmentation and "internal" means any
+                            // pod in the namespace, not the BFF alone.
+                            //
+                            // It also grew. What was one import endpoint is now five mutating ones,
+                            // including /apply — which takes a caller-supplied `feedPath` and reads
+                            // it from the pod filesystem — and /propose-geocoded-addresses, which
+                            // injects coordinates into the geocode review queue. Widening an
+                            // unauthenticated surface by adding endpoints beneath it is the quiet
+                            // version of granting access, and that is what happened here.
+                            //
+                            // These are operator/steward operations, not service-to-service calls:
+                            // nothing in the estate invokes them programmatically. So they take an
+                            // admin role like every other mutating ndila path.
+                            .requestMatchers("/internal/v1/locations/hpa-import/**")
+                                    .hasAnyRole(NDILA_ADMIN_ROLES)
 
                             // Provider configs / ops
                             .requestMatchers("/internal/v1/ndila/providers/**").hasAnyRole(NDILA_ADMIN_ROLES)
