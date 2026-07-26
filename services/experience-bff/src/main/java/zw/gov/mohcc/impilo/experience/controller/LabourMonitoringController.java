@@ -41,9 +41,15 @@ public class LabourMonitoringController {
                     "data", pctData != null ? pctData : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT listLabourMonitoring failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // A failed call is not an empty labour record. Returning 200 with an empty list here
+            // told the ward that a woman in labour had no observations, which is the most
+            // reassuring thing this endpoint can say and was said precisely when the system knew
+            // least. "PCT has no rows" and "PCT could not be reached" must not share a response.
+            log.error("PCT listLabourMonitoring failed for patient={}: {}", patientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "labour_monitoring_unavailable",
+                    "message", "Labour observations could not be retrieved. Do not treat this as an "
+                               + "absence of observations.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

@@ -74,9 +74,13 @@ public class GrowthController {
                     "data", pctData != null ? pctData : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT listGrowthMeasurements failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty 200 here reads as "this child has never been weighed", which is a finding
+            // in its own right and would be a fabricated one. Fail loudly instead.
+            log.error("PCT listGrowthMeasurements failed for patient={}: {}", patientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "growth_history_unavailable",
+                    "message", "Growth measurements could not be retrieved. Do not treat this as an "
+                               + "absence of measurements.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
