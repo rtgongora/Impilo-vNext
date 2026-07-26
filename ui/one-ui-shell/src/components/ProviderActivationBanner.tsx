@@ -21,6 +21,13 @@ function ProviderActivationBannerInner() {
   const hasProviderId = !!linkedIds?.providerId;
   const isActivated = user?.providerActivated;
 
+  // Deliberately no `isError` branch (experience-bff empty-200 honesty sweep).
+  // /internal/v1/identity/linked-ids now returns 502 rather than an empty 200, and on that path
+  // this banner stays hidden. That is an absent invitation, not a fabricated finding: nothing is
+  // rendered, so no reader can mistake it for "you have no Provider ID". The regulatory claim
+  // this banner would otherwise imply is made on /professional, which does show an explicit
+  // unavailable state. Activation remains reachable there, so a silent fallback loses a prompt,
+  // not a fact.
   if (!hasProviderId || isActivated) return null;
 
   return (
