@@ -1,0 +1,188 @@
+{
+  "domain": "surgery",
+  "note": "Conscious non-coverage for the surgical standards baseline at programme open (Wave 0.4). Every entry names the wave that will implement it and the condition that brings it back. As waves land, entries are deleted and the standard flips to SHIPPED because governed content in the clinical knowledge platform cites it. An entry that survives its planned wave is a signal, not paperwork.",
+  "exclusions": [
+    {
+      "standardId": "ECO.WHA76-2.CONTINUUM",
+      "decision": "DEFERRED",
+      "plannedWave": "S1",
+      "reason": "The repository has the operative phase of the continuum in real depth and almost nothing on either side of it: six of the twenty surgical journey stages exist. A surgical episode that spans presentation through surveillance is the artefact that makes this standard representable, and it does not exist yet — procedure_episode is a case, not a course.",
+      "revisitCondition": "surgery-service ships surgical_episode with entry pathways and a resolvable PCT anchor (S1)."
+    },
+    {
+      "standardId": "ECO.WHA76-2.SURGICAL_ANAESTHESIA_PERIOP",
+      "decision": "DEFERRED",
+      "plannedWave": "S6",
+      "reason": "Surgical, anaesthesia and perioperative care exist as three separately-wired capabilities rather than one integrated service. Anaesthesia has a real preoperative assessment, chart and scoring engine; what is missing is the integration seam between the surgical clinic decision and the anaesthetic plan, because the surgical clinic does not exist.",
+      "revisitCondition": "S6 links surgical clinic, waiting list, consent, optimisation, theatre, ward, follow-up and outcomes into one course."
+    },
+    {
+      "standardId": "ECO.WHA76-2.SAFETY_CHECKLISTS",
+      "decision": "DEFERRED",
+      "plannedWave": "P7",
+      "reason": "One safety checklist exists — the WHO surgical one — and it is real and gated. The standard asks for checklists across emergency and operative procedures generally, and nine of the ten procedure classes that need one have none.",
+      "revisitCondition": "P7 ships class-specific safety pauses as governed content for bedside, sedation, endoscopy, interventional imaging, dialysis, transfusion, implant insertion, specimen collection and generic invasive procedures."
+    },
+    {
+      "standardId": "ECO.WHA76-2.REFERRAL_NETWORKS",
+      "decision": "DEFERRED",
+      "plannedWave": "S14",
+      "reason": "Surgical referral exists as a record (referral.surgical_referral, with indication, laterality, site, urgency and target specialty) and Ndila and Nhume can route. What cannot be asked is whether the destination is capable of the procedure, because TUSO holds spaces, beds and equipment but not procedure-level capability.",
+      "revisitCondition": "S14 adds the fourteen TUSO surgical capability dimensions and routes referral on capability rather than on geography alone."
+    },
+    {
+      "standardId": "ECO.WHA76-2.DATA_INDICATORS",
+      "decision": "DEFERRED",
+      "plannedWave": "S17",
+      "reason": "Two report definitions exist — theatre utilisation and a case register — against twenty required surgical indicators. Reporting a subset while claiming indicator coverage would be the specific failure this register exists to prevent.",
+      "revisitCondition": "S17 ships the twenty surgical indicators, including surgical-site infection, length of stay, unplanned return to theatre, mortality and patient-reported outcomes."
+    },
+    {
+      "standardId": "ECO.WHA76-2.FINANCING",
+      "decision": "DEFERRED",
+      "plannedWave": "P12",
+      "reason": "COSTA posts a surgical case bundle over seeded AHFOZ tariffs, so cost is computed. Financial protection is not modelled: there is no estimate, authorisation, denial or appeal path, and the invariant that financial state must never delay emergency surgery is asserted in prose and proven nowhere.",
+      "revisitCondition": "P12 ships the financial path with an explicit rig assertion that an emergency procedure proceeds with authorisation absent, and that payment state cannot present as clinical cancellation."
+    },
+    {
+      "standardId": "SSC.2009.SIGN_IN",
+      "decision": "COVERED_ELSEWHERE",
+      "plannedWave": "P7",
+      "reason": "Implemented and live-proven, but not as governed content this generator can see. inpatient.procedure_checklist_item carries a real SIGN_IN phase, seeded per episode, and theatre start is hard-gated on consent status GRANTED. The implementation is Java and SQL, so no CKP artefact cites the standard and the matrix cannot show the link.",
+      "revisitCondition": "P7 moves the checklist definition into governed CKP content citing this phase, at which point coverage becomes machine-visible and this entry is deleted."
+    },
+    {
+      "standardId": "SSC.2009.TIME_OUT",
+      "decision": "COVERED_ELSEWHERE",
+      "plannedWave": "P7",
+      "reason": "Implemented and live-proven as a TIME_OUT phase on inpatient.procedure_checklist_item, but as code rather than as governed content, so the citation link is invisible here. Note one honest gap inside the phase: anticipated critical events are captured as free text, not as structured expectations that could later be reconciled against what happened.",
+      "revisitCondition": "P7 ships the phase as governed content and structures anticipated critical events."
+    },
+    {
+      "standardId": "SSC.2009.SIGN_OUT",
+      "decision": "COVERED_ELSEWHERE",
+      "plannedWave": "P7",
+      "reason": "Implemented with the strongest safety property in the theatre stream: a count discrepancy blocks Sign Out and raises a RETAINED_ITEM safety event to Rito. Specimen labelling is also real. Not visible to this generator because it is code, not content.",
+      "revisitCondition": "P7 ships the phase as governed content citing this standard."
+    },
+    {
+      "standardId": "SSC.2009.NINETEEN_ITEMS",
+      "decision": "DEFERRED",
+      "plannedWave": "P7",
+      "reason": "The three phases are implemented but the checklist is not item-complete against WHO's nineteen, and this repository cannot currently prove which items it covers: the individual WHO item texts are not vendored here, so no comparison is possible. Claiming item-level conformance without the source would be an assertion dressed as traceability.",
+      "revisitCondition": "the WHO Surgical Safety Checklist is vendored under docs/reference/who-dak with a manifest hash, and P7 maps each item to a checklist item code."
+    },
+    {
+      "standardId": "SSI.2018.PREOPERATIVE",
+      "decision": "DEFERRED",
+      "plannedWave": "S13",
+      "reason": "No surgical-site-infection prevention logic exists anywhere in the repository. The clinical knowledge platform has the right machinery — versioned, applicability-scoped, structurally inspectable rules — and no surgical content in it. Preoperative measures are also where prehabilitation and optimisation attach, and that model is absent too.",
+      "revisitCondition": "S13 ships surgical decision-support content in CKP including antibiotic prophylaxis timing and preoperative preparation, and S4 ships optimisation."
+    },
+    {
+      "standardId": "SSI.2018.INTRAOPERATIVE",
+      "decision": "DEFERRED",
+      "plannedWave": "S13",
+      "reason": "Intraoperative infection-prevention measures are not modelled. Wound classification, which is the entry point for surgical-site-infection surveillance, is not even captured on the operative record.",
+      "revisitCondition": "S7 captures wound classification on the operative record and S13 ships the intraoperative rules."
+    },
+    {
+      "standardId": "SSI.2018.POSTOPERATIVE",
+      "decision": "DEFERRED",
+      "plannedWave": "S9",
+      "reason": "Surgical-site infection is one of the twenty complications the surgical pack must manage as a pathway, and complications are currently events routed to Rito rather than pathways with recognition, severity, responsible team, investigation, treatment, disclosure and outcome. Postoperative antibiotic discontinuation is not modelled.",
+      "revisitCondition": "S9 ships the surgical-site infection pathway and S17 ships the infection indicator."
+    },
+    {
+      "standardId": "SSI.2018.FIO2",
+      "decision": "DEFERRED",
+      "plannedWave": "S13",
+      "reason": "Conditional recommendation on high inspired-oxygen fraction under general anaesthesia. Deferred deliberately behind the rest of the SSI content: it is the recommendation WHO itself downgraded from strong to conditional in the 2018 update, so it needs a national ratification decision rather than direct adoption, and the anaesthesia chart already records inspired oxygen so the data will be there when the decision is made.",
+      "revisitCondition": "S13 ships SSI content and the Ministry rules on adoption, strengthening or rejection of the conditional recommendation."
+    },
+    {
+      "standardId": "LCOGS.IND.1.TIMELY_ACCESS",
+      "decision": "DEFERRED",
+      "plannedWave": "S17",
+      "reason": "Two-hour access to bellwether-capable facilities is computable in principle — Ndila holds geography and the facility master holds 1,778 facilities with coordinates for many — but the bellwether capability flag does not exist on any facility, so the numerator cannot be formed.",
+      "revisitCondition": "S14 ships bellwether capability on TUSO facilities, then S17 computes the indicator against Ndila travel time."
+    },
+    {
+      "standardId": "LCOGS.IND.2.WORKFORCE_DENSITY",
+      "decision": "DEFERRED",
+      "plannedWave": "S17",
+      "reason": "Varapi holds provider registration and specialty, and Vashandi holds facility assignment, so the denominator and numerator both have owners. Nothing joins them into a surgical workforce density figure.",
+      "revisitCondition": "S17 projects specialist surgical workforce density from Varapi specialty and Vashandi assignment."
+    },
+    {
+      "standardId": "LCOGS.IND.3.SURGICAL_VOLUME",
+      "decision": "DEFERRED",
+      "plannedWave": "S17",
+      "reason": "Case volume is projected today by the theatre reporting consumer, so this is the closest of the six to being met. It is deferred rather than claimed because the projection counts theatre cases, and surgical volume as defined counts procedures per 100 000 population — which needs a population denominator and needs to include procedures performed outside a theatre, and non-theatre settings do not exist yet.",
+      "revisitCondition": "P4 gives non-theatre procedures a setting and S17 adds the population denominator."
+    },
+    {
+      "standardId": "LCOGS.IND.4.POMR",
+      "decision": "DEFERRED",
+      "plannedWave": "S17",
+      "reason": "The death pathway from theatre is real and routes to PCT and onward to surveillance, so the events exist. A perioperative mortality rate does not: there is no denominator, no defined postoperative window, and no national tracking system, which is the part the indicator actually asks for.",
+      "revisitCondition": "S17 ships perioperative mortality with a declared window and denominator over the surgical episode."
+    },
+    {
+      "standardId": "LCOGS.IND.5.IMPOVERISHING_EXPENDITURE",
+      "decision": "DEFERRED",
+      "plannedWave": "S17",
+      "reason": "Financial protection is not measured. Coverage and COSTA hold entitlement and cost, so the inputs have owners, but no household-expenditure view exists and equity is not stratified anywhere in surgical reporting.",
+      "revisitCondition": "P12 ships the financial path and S17 stratifies surgical outcomes and cost by equity dimension."
+    },
+    {
+      "standardId": "LCOGS.IND.6.CATASTROPHIC_EXPENDITURE",
+      "decision": "DEFERRED",
+      "plannedWave": "S17",
+      "reason": "As with indicator 5, the inputs have owners and the measure does not exist. Deferred together because they share a denominator and would otherwise be built twice.",
+      "revisitCondition": "S17 ships both financial-protection indicators over the same household-expenditure basis."
+    },
+    {
+      "standardId": "LCOGS.BELLWETHER.LAPAROTOMY",
+      "decision": "DEFERRED",
+      "plannedWave": "S14",
+      "reason": "Exploratory laparotomy is one of the ten procedure codes ZIBO seeds, and the theatre stream has proven an emergency laparotomy journey end to end. What is missing is the capability assertion: no facility record states that it can perform a laparotomy, so the bellwether cannot be used for its actual purpose, which is judging whether essential surgical care is reachable.",
+      "revisitCondition": "S14 ships bellwether capability as a first-class TUSO facility capability."
+    },
+    {
+      "standardId": "LCOGS.BELLWETHER.CAESAREAN",
+      "decision": "DEFERRED",
+      "plannedWave": "S14",
+      "reason": "Caesarean section is seeded in ZIBO and the obstetric caesarean journey is live-proven including maternal, fetal and neonatal handling. Facility capability is again the gap.",
+      "revisitCondition": "S14 ships bellwether capability; S15e reconciles it with the Reproductive Pack rather than duplicating it."
+    },
+    {
+      "standardId": "LCOGS.BELLWETHER.OPEN_FRACTURE",
+      "decision": "DEFERRED",
+      "plannedWave": "S14",
+      "reason": "The weakest of the three today. Open reduction with internal fixation is a seeded ZIBO code, but open fracture care specifically sits across the surgical and trauma boundary, has no orthopaedic content behind it, and no facility capability flag.",
+      "revisitCondition": "S14 ships bellwether capability and S15c ships orthopaedic content, coordinating with the trauma lane on the injury side."
+    },
+    {
+      "standardId": "ZW.NSOAS.2022.DISTRICT_ACCESS",
+      "decision": "DEFERRED",
+      "plannedWave": "S14",
+      "reason": "The national strategy's central finding is that 83% of key tracer surgical operations were being performed at central and provincial hospitals, and its aim is to push surgical services down to district level. This platform cannot currently measure that at all: procedures are not tagged by facility level in any surgical projection, and tracer operations are not defined as a set.",
+      "revisitCondition": "S14 ships facility-level capability and S17 reports tracer surgical operations by facility level so the strategy's own indicator becomes measurable."
+    },
+    {
+      "standardId": "ZW.NSOAS.2022.INFRASTRUCTURE_EQUIPMENT",
+      "decision": "DEFERRED",
+      "plannedWave": "S14",
+      "reason": "TUSO holds equipment assets and instrument sets, which is the beginning of this, but there is no view of essential-surgical-care equipment gaps against a defined standard set.",
+      "revisitCondition": "S14 defines the essential surgical equipment set per facility level and reports gaps against it."
+    },
+    {
+      "standardId": "ZW.NSOAS.2022.TIMELY_AFFORDABLE_SAFE",
+      "decision": "DEFERRED",
+      "plannedWave": "S17",
+      "reason": "The strategy's four qualities map onto four different pieces of missing work: timely needs waiting-time measurement, affordable needs financial protection, safe needs the complication and infection indicators, quality needs patient-reported outcomes. None of the four is measured today.",
+      "revisitCondition": "S17 reports all four, and S3 makes waiting time measurable by giving the waiting list the fields it lacks."
+    }
+  ]
+}

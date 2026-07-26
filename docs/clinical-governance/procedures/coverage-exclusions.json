@@ -1,0 +1,104 @@
+{
+  "domain": "procedures",
+  "note": "Conscious non-coverage for the Clinical Procedures Pipeline standards baseline at programme open (Wave 0.4). Four entries are COVERED_ELSEWHERE rather than deferred: device traceability, transfusion practice and critical-result acknowledgement are genuinely implemented, just not as governed content this generator can see. Those entries name what is real and what is still missing inside them, because a COVERED_ELSEWHERE that hides a gap is worse than a deferral.",
+  "exclusions": [
+    {
+      "standardId": "IPC.CORE.HAND_HYGIENE",
+      "decision": "DEFERRED",
+      "plannedWave": "P11",
+      "reason": "Not modelled. The specification is explicit that a generic sterile checkbox is not acceptable where the risk warrants traceable readiness, and hand hygiene is the clearest case: a boolean recording that someone attested to it carries no information.",
+      "revisitCondition": "P11 ships infection-prevention readiness as catalogue requirements with named owners per unresolved item, so hand hygiene appears as a requirement of the procedure rather than a tick."
+    },
+    {
+      "standardId": "IPC.CORE.ASEPTIC_TECHNIQUE",
+      "decision": "DEFERRED",
+      "plannedWave": "P11",
+      "reason": "Skin preparation, sterile field and aseptic technique are not captured anywhere. Skin preparation is also a WHO surgical-site-infection preoperative measure, so this and the surgical baseline's SSI.2018.PREOPERATIVE close together or not at all.",
+      "revisitCondition": "P11 ships the IPC requirement model; S13 ships the SSI rules that reference it."
+    },
+    {
+      "standardId": "IPC.CORE.STERILE_PROCESSING",
+      "decision": "DEFERRED",
+      "plannedWave": "P11",
+      "reason": "Partially real, and deferred rather than claimed for that reason. tuso.instrument_set_cssd_cycle and inpatient.procedure_instrument_set_use give an instrument set a traceable sterilisation cycle, and readiness can block on an unsterile set — which is the hard half. Absent: declared reprocessing limits per set, single-use item discipline, and environmental cleaning. Recording partial coverage as covered is how a gap becomes invisible.",
+      "revisitCondition": "P11 adds reprocessing limits, single-use enforcement and cycle-level traceability from the catalogue's IPC requirements."
+    },
+    {
+      "standardId": "IPC.CORE.INJECTION_SAFETY",
+      "decision": "DEFERRED",
+      "plannedWave": "P11",
+      "reason": "Sharps safety, exposure incidents and clinical waste are not modelled. Exposure incident is the notable one: it is a staff safety event with a reporting obligation, and it currently has nowhere to go.",
+      "revisitCondition": "P11 ships exposure-incident capture routed to Rito, and waste handling as an IPC requirement."
+    },
+    {
+      "standardId": "PS.WRONG_SITE.PREVENTION",
+      "decision": "DEFERRED",
+      "plannedWave": "P4",
+      "reason": "This is the most serious gap in the pipeline audit and it deserves to be stated plainly. Site and side are recorded on a surgical referral and are shown on the theatre case banner, but nothing verifies them: there is no site marking, no structured laterality on the procedure episode, and no gate that refuses to start a procedure whose site and side were not confirmed. The WHO Time Out asks the question; the platform has no field that can hold the answer.",
+      "revisitCondition": "P4 puts structured site and side on the procedure episode with a start gate, and P7 makes confirmation an explicit safety-pause step for every class where laterality or multiple structures apply."
+    },
+    {
+      "standardId": "PS.GLOBAL_ACTION_PLAN.2021_2030",
+      "decision": "DEFERRED",
+      "plannedWave": "P10",
+      "reason": "Harm is recorded but not managed. procedure_safety_event routes to Rito, which is real and more than most systems have, but the action plan's expectation is that harm is engineered out by design and that patients and families are engaged — and there is no disclosure or open-communication path to a patient at all.",
+      "revisitCondition": "P10 ships the complication model including disclosure and communication to the patient, with the Rito review link preserved."
+    },
+    {
+      "standardId": "PS.INFORMED_CONSENT",
+      "decision": "DEFERRED",
+      "plannedWave": "P5",
+      "reason": "A consent bundle exists and is genuinely good: procedure, anaesthesia and transfusion consent are separate, theatre start is hard-gated on GRANTED, and an audited emergency exception path exists with two-doctor, deferred and proxy variants. What is absent is the content of the conversation — purpose, benefits, material risks, alternatives, consequences of no procedure, questions asked, language and interpreter. Consent today records that consent happened, which is exactly the reduction to a signature the specification forbids.",
+      "revisitCondition": "P5 ships the consent content fields in mvumo and the pipeline refuses to treat a consent record with no recorded discussion as informed."
+    },
+    {
+      "standardId": "PS.CAPACITY_ASSENT_GUARDIAN",
+      "decision": "DEFERRED",
+      "plannedWave": "P5",
+      "reason": "Guardian consent exists in the paediatric context but capacity assessment, child assent as distinct from guardian consent, lawful substitute decision-making, refusal and withdrawal are absent. Adolescent confidentiality is blocked by a platform defect rather than by effort: TSHEPO's SPECIALLY_PROTECTED sensitivity class is decorative — a single production reference in ResourceSensitivityClassifier collapses it into FULL_IDENTIFIED_CLINICAL, so it shares a visibility tier with ordinary clinical data. Collecting adolescent-confidential procedure consent into a record that only looks protected is worse than not collecting it.",
+      "revisitCondition": "P5 ships capacity, assent, refusal and withdrawal; the adolescent-confidentiality portion additionally requires SPECIALLY_PROTECTED to produce a distinct visibility tier, and P5 ships an explicit PARTIAL saying so if it does not."
+    },
+    {
+      "standardId": "MED.DEVICE.UDI_TRACEABILITY",
+      "decision": "COVERED_ELSEWHERE",
+      "plannedWave": "P8",
+      "reason": "Genuinely implemented, and more completely than the first pass of the audit credited. inventory-service holds a national implant registry — ImplantTraceabilityService over ImplantUnitEntity and PatientImplantEntity — exposing recall trace by UDI or lot across all patients, per-patient implant history and per-unit history, with product, manufacturer, lot, serial, expiry and site captured at insertion. Not visible to this generator because it is Java and SQL rather than governed content. Two real gaps remain inside the standard: information given to the patient about their own implant, and removal, revision or replacement as tracked events.",
+      "revisitCondition": "P8 ships patient-facing implant information and the removal/revision lifecycle; S11 extends the same registry to drains and stomas as longitudinal objects."
+    },
+    {
+      "standardId": "BLOOD.TRANSFUSION.APPROPRIATE_USE",
+      "decision": "COVERED_ELSEWHERE",
+      "plannedWave": "P7",
+      "reason": "Implemented across MADI and the theatre blood gate: a procedure's blood requirement is checked against a real MADI reservation with compatibility, readiness blocks when blood is required and not reserved, and transfusion is recorded against the episode. Consent for transfusion is separately captured. The gap is the bedside step the standard cares most about: positive patient identification at the point of administration, and structured observation during transfusion.",
+      "revisitCondition": "P7 ships transfusion as a procedure class with its own safety pause including bedside positive identification, and observation during administration."
+    },
+    {
+      "standardId": "SEDATION.CONTINUUM.DEPTH",
+      "decision": "DEFERRED",
+      "plannedWave": "P7",
+      "reason": "Anaesthesia is modelled as a specialty activity with ASA classification, airway assessment, a time-series chart and a scoring engine. Sedation as a continuum of depth is not modelled at all, which matters because the standard's whole point is that requirements follow the depth that may be reached rather than the depth intended — so a moderate-sedation endoscopy needs deep-sedation rescue capability available.",
+      "revisitCondition": "P7 ships the seven sedation levels with monitoring, provider competence, rescue capability and recovery criteria derived from the level."
+    },
+    {
+      "standardId": "ANAESTHESIA.WFSA_WHO.MONITORING",
+      "decision": "DEFERRED",
+      "plannedWave": "P7",
+      "reason": "The anaesthesia chart can record pulse oximetry and the WHO checklist Sign In includes it, so the data path exists. What does not exist is the assertion: nothing refuses to proceed when mandatory monitoring is unavailable, and nothing checks that a trained anaesthesia provider is present for the depth of sedation planned.",
+      "revisitCondition": "P7 makes mandatory monitoring and provider presence readiness requirements that block, with an audited emergency override rather than a silent bypass."
+    },
+    {
+      "standardId": "SPECIMEN.CHAIN_OF_CUSTODY",
+      "decision": "DEFERRED",
+      "plannedWave": "P8",
+      "reason": "The specimen path from a procedure to a histopathology report is real and end to end: inpatient.procedure_specimen to OROS lab specimens to a histopathology report, with the surgical discharge summary surfacing results still pending. Chain of custody specifically is thin — collector, container, fixative, destination and receipt exist in places, but there is no custody transfer record and nothing prevents an unlabelled or mismatched specimen, which is the failure the standard exists to stop.",
+      "revisitCondition": "P8 ships custody transfer and label verification such that an unlabelled specimen cannot be accepted."
+    },
+    {
+      "standardId": "RESULTS.CRITICAL_ACKNOWLEDGEMENT",
+      "decision": "COVERED_ELSEWHERE",
+      "plannedWave": "S10",
+      "reason": "Implemented in OROS and stronger than the audit's first pass suggested. The order lifecycle distinguishes preliminary, final, released, acknowledged, amended and superseded states, result escalation exists, and a notification consumer for critical results was enabled by the trauma stream. Not visible here because the states are Java enums, not governed content. The gap is not acknowledgement itself but its consequence: nothing prevents a clinical episode closing while a required result sits unacknowledged.",
+      "revisitCondition": "S10 makes the surgical episode refuse to close on an unreviewed histology result, using the existing ACKNOWLEDGED state as the gate."
+    }
+  ]
+}

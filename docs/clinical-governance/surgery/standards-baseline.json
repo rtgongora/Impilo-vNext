@@ -1,0 +1,188 @@
+{
+  "domain": "surgery",
+  "note": "WHO has published no SMART DAK for surgery, so this baseline applies the DAK structure to standards assembled by hand. Every entry cites a source that can be checked. Where a source is known to decompose further than an entry here does, the entry says so rather than inventing the decomposition: the WHO SSI guideline states that it contains 29 recommendations on 23 topics, but the per-recommendation titles are not in any source vendored in this repository, so SSI is declared at phase level plus the one topic the WHO publication page names. Decomposing it properly requires vendoring the guideline under docs/reference/who-dak/ with a manifest hash, which is recorded as a follow-up, not silently skipped.",
+  "standards": [
+    {
+      "standardId": "ECO.WHA76-2.CONTINUUM",
+      "family": "WHO_ECO",
+      "kind": "POLICY_FRAMEWORK",
+      "title": "Emergency, critical and operative care is one continuum, from community recognition and first aid through emergency unit care to surgical and anaesthesia services in theatre and beyond",
+      "sourceCitation": "WHA76.2, Integrated emergency, critical and operative care for universal health coverage and protection from health emergencies, World Health Assembly, 6 June 2023. https://apps.who.int/gb/ebwha/pdf_files/WHA76/A76_R2-en.pdf"
+    },
+    {
+      "standardId": "ECO.WHA76-2.SURGICAL_ANAESTHESIA_PERIOP",
+      "family": "WHO_ECO",
+      "kind": "POLICY_FRAMEWORK",
+      "title": "Member States strengthen surgical, anaesthesia and perioperative care capability as an integrated service, not as isolated theatre capacity",
+      "sourceCitation": "WHA76.2 operative paragraphs on surgical, anaesthesia and perioperative care. World Health Assembly, 6 June 2023."
+    },
+    {
+      "standardId": "ECO.WHA76-2.SAFETY_CHECKLISTS",
+      "family": "WHO_ECO",
+      "kind": "POLICY_FRAMEWORK",
+      "title": "Implement safety checklists and standardised protocols for emergency and operative procedures",
+      "sourceCitation": "WHA76.2 operative paragraphs on safety and quality. World Health Assembly, 6 June 2023."
+    },
+    {
+      "standardId": "ECO.WHA76-2.REFERRAL_NETWORKS",
+      "family": "WHO_ECO",
+      "kind": "POLICY_FRAMEWORK",
+      "title": "Functional referral systems connecting primary, secondary and tertiary care",
+      "sourceCitation": "WHA76.2 operative paragraphs on referral. World Health Assembly, 6 June 2023."
+    },
+    {
+      "standardId": "ECO.WHA76-2.DATA_INDICATORS",
+      "family": "WHO_ECO",
+      "kind": "INDICATOR_FRAMEWORK",
+      "title": "Establish data and indicator systems that track emergency and operative care performance and outcomes",
+      "sourceCitation": "WHA76.2 operative paragraphs on data and indicators. World Health Assembly, 6 June 2023."
+    },
+    {
+      "standardId": "ECO.WHA76-2.FINANCING",
+      "family": "WHO_ECO",
+      "kind": "POLICY_FRAMEWORK",
+      "title": "Financing mechanisms sustain integrated emergency, critical and operative care without exposing patients to catastrophic cost",
+      "sourceCitation": "WHA76.2 operative paragraphs on financing. World Health Assembly, 6 June 2023."
+    },
+    {
+      "standardId": "SSC.2009.SIGN_IN",
+      "family": "WHO_SSC",
+      "kind": "CHECKLIST_PHASE",
+      "title": "Sign In — completed before induction of anaesthesia",
+      "sourceCitation": "WHO Surgical Safety Checklist, 19 items in three phases. WHO Safe Surgery Saves Lives, 2009; phase definition confirmed in Haynes et al., N Engl J Med 2009;360:491-499. https://www.who.int/teams/integrated-health-services/quality-of-care-and-patient-safety/patient-safety-guidance-and-tools/safe-surgery/tool-and-resources"
+    },
+    {
+      "standardId": "SSC.2009.TIME_OUT",
+      "family": "WHO_SSC",
+      "kind": "CHECKLIST_PHASE",
+      "title": "Time Out — completed before skin incision, and specifying anticipated critical events",
+      "sourceCitation": "WHO Surgical Safety Checklist, 2009. Phase anchored before skin incision."
+    },
+    {
+      "standardId": "SSC.2009.SIGN_OUT",
+      "family": "WHO_SSC",
+      "kind": "CHECKLIST_PHASE",
+      "title": "Sign Out — completed before the patient leaves the operating room, including instrument, sponge and needle counts and specimen labelling",
+      "sourceCitation": "WHO Surgical Safety Checklist, 2009. Timing evidence on final wound closure: Boaz et al., BJS Open 2021;5(3):zrab028. https://academic.oup.com/bjsopen/article/5/3/zrab028/6271349"
+    },
+    {
+      "standardId": "SSC.2009.NINETEEN_ITEMS",
+      "family": "WHO_SSC",
+      "kind": "CHECKLIST",
+      "title": "The checklist comprises 19 items across the three phases",
+      "sourceCitation": "WHO Surgical Safety Checklist, 2009, 19 items. The individual item texts are not vendored in this repository; see the note on this baseline."
+    },
+    {
+      "standardId": "SSI.2018.PREOPERATIVE",
+      "family": "WHO_SSI",
+      "kind": "GUIDELINE_SECTION",
+      "title": "Preoperative measures for the prevention of surgical site infection",
+      "sourceCitation": "WHO Global guidelines for the prevention of surgical site infection, second edition, 1 December 2018, ISBN 978-92-4-155047-5. 29 recommendations on 23 topics. https://www.who.int/publications/i/item/9789241550475"
+    },
+    {
+      "standardId": "SSI.2018.INTRAOPERATIVE",
+      "family": "WHO_SSI",
+      "kind": "GUIDELINE_SECTION",
+      "title": "Intraoperative measures for the prevention of surgical site infection",
+      "sourceCitation": "WHO Global guidelines for the prevention of surgical site infection, second edition, 2018. Intraoperative and postoperative measures summarised in Allegranzi et al., Lancet Infect Dis 2016;16(12):e288-e303."
+    },
+    {
+      "standardId": "SSI.2018.POSTOPERATIVE",
+      "family": "WHO_SSI",
+      "kind": "GUIDELINE_SECTION",
+      "title": "Postoperative measures for the prevention of surgical site infection, including surgical antibiotic prophylaxis discontinuation and wound surveillance",
+      "sourceCitation": "WHO Global guidelines for the prevention of surgical site infection, second edition, 2018."
+    },
+    {
+      "standardId": "SSI.2018.FIO2",
+      "family": "WHO_SSI",
+      "kind": "RECOMMENDATION",
+      "title": "Use of a high fraction of inspired oxygen in surgical patients under general anaesthesia with tracheal intubation — downgraded from strong to conditional in the 2018 update",
+      "sourceCitation": "WHO Global guidelines for the prevention of surgical site infection, second edition, 2018. This is the one recommendation the WHO publication page names individually, and the 2018 revision is why the second edition exists."
+    },
+    {
+      "standardId": "LCOGS.IND.1.TIMELY_ACCESS",
+      "family": "LCOGS",
+      "kind": "INDICATOR",
+      "title": "Access to timely essential surgery — proportion of the population within two hours of a facility capable of the three bellwether procedures; target 80%",
+      "sourceCitation": "Meara JG et al., Global Surgery 2030: evidence and solutions for achieving health, welfare, and economic development. Lancet Commission on Global Surgery, Lancet 2015;386:569-624. https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(15)60160-X/fulltext"
+    },
+    {
+      "standardId": "LCOGS.IND.2.WORKFORCE_DENSITY",
+      "family": "LCOGS",
+      "kind": "INDICATOR",
+      "title": "Specialist surgical workforce density — surgeons, anaesthetists and obstetricians per 100 000 population",
+      "sourceCitation": "Lancet Commission on Global Surgery, Lancet 2015;386:569-624, indicator 2."
+    },
+    {
+      "standardId": "LCOGS.IND.3.SURGICAL_VOLUME",
+      "family": "LCOGS",
+      "kind": "INDICATOR",
+      "title": "Surgical volume — procedures per 100 000 population per year; target 5 000",
+      "sourceCitation": "Lancet Commission on Global Surgery, Lancet 2015;386:569-624, indicator 3."
+    },
+    {
+      "standardId": "LCOGS.IND.4.POMR",
+      "family": "LCOGS",
+      "kind": "INDICATOR",
+      "title": "Perioperative mortality rate — with a national system for tracking it",
+      "sourceCitation": "Lancet Commission on Global Surgery, Lancet 2015;386:569-624, indicator 4."
+    },
+    {
+      "standardId": "LCOGS.IND.5.IMPOVERISHING_EXPENDITURE",
+      "family": "LCOGS",
+      "kind": "INDICATOR",
+      "title": "Protection against impoverishing expenditure from surgical care",
+      "sourceCitation": "Lancet Commission on Global Surgery, Lancet 2015;386:569-624, indicator 5."
+    },
+    {
+      "standardId": "LCOGS.IND.6.CATASTROPHIC_EXPENDITURE",
+      "family": "LCOGS",
+      "kind": "INDICATOR",
+      "title": "Protection against catastrophic expenditure from surgical care",
+      "sourceCitation": "Lancet Commission on Global Surgery, Lancet 2015;386:569-624, indicator 6."
+    },
+    {
+      "standardId": "LCOGS.BELLWETHER.LAPAROTOMY",
+      "family": "LCOGS",
+      "kind": "CAPABILITY",
+      "title": "Bellwether procedure — laparotomy",
+      "sourceCitation": "Lancet Commission on Global Surgery, Lancet 2015;386:569-624. The three bellwethers together indicate that a facility can deliver essential surgical care."
+    },
+    {
+      "standardId": "LCOGS.BELLWETHER.CAESAREAN",
+      "family": "LCOGS",
+      "kind": "CAPABILITY",
+      "title": "Bellwether procedure — caesarean delivery",
+      "sourceCitation": "Lancet Commission on Global Surgery, Lancet 2015;386:569-624."
+    },
+    {
+      "standardId": "LCOGS.BELLWETHER.OPEN_FRACTURE",
+      "family": "LCOGS",
+      "kind": "CAPABILITY",
+      "title": "Bellwether procedure — open fracture care",
+      "sourceCitation": "Lancet Commission on Global Surgery, Lancet 2015;386:569-624."
+    },
+    {
+      "standardId": "ZW.NSOAS.2022.DISTRICT_ACCESS",
+      "family": "ZW_NSOAS",
+      "kind": "NATIONAL_STRATEGY",
+      "title": "Promote access to surgical services from district level — 83% of key tracer surgical operations were being performed at central and provincial hospitals",
+      "sourceCitation": "Zimbabwe National Surgical, Obstetric and Anaesthesia Strategy (NSOAS) 2022-2025, Ministry of Health and Child Care, launched 30 September 2022. https://www.afro.who.int/countries/zimbabwe/news/zimbabwe-launches-its-first-national-surgical-obstetric-and-anesthesia-strategy-2022-2025"
+    },
+    {
+      "standardId": "ZW.NSOAS.2022.INFRASTRUCTURE_EQUIPMENT",
+      "family": "ZW_NSOAS",
+      "kind": "NATIONAL_STRATEGY",
+      "title": "Address infrastructure and equipment gaps in essential surgical care",
+      "sourceCitation": "Zimbabwe NSOAS 2022-2025, Ministry of Health and Child Care, launched 30 September 2022."
+    },
+    {
+      "standardId": "ZW.NSOAS.2022.TIMELY_AFFORDABLE_SAFE",
+      "family": "ZW_NSOAS",
+      "kind": "NATIONAL_STRATEGY",
+      "title": "Timely, affordable, safe and quality surgical services, aligned to the National Health Strategy 2021-2025",
+      "sourceCitation": "Zimbabwe NSOAS 2022-2025, Ministry of Health and Child Care, launched 30 September 2022. Zimbabwe is the 5th SADC and 9th African country to launch an NSOAP."
+    }
+  ]
+}

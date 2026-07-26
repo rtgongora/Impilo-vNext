@@ -37,7 +37,12 @@ CKP_CONTENT = (REPO_ROOT / "services" / "clinical-knowledge-platform-service"
                / "src" / "main" / "resources" / "clinical")
 FORMS_SEEDS = REPO_ROOT / "services" / "forms-service" / "src" / "main" / "resources" / "seed-forms"
 OUT_DIR = REPO_ROOT / "docs" / "clinical-governance" / "rmnp"
+GOVERNANCE = REPO_ROOT / "docs" / "clinical-governance"
+# The register of conscious non-coverage. Per-domain, matching standards-baseline.json: a domain
+# declares its own standards, so it must own its own decisions about them. The rmnp file keeps its
+# original name because it is committed, reviewed, and referenced from the matrix it produced.
 EXCLUSIONS = OUT_DIR / "dak-coverage-exclusions.json"
+EXCLUSION_GLOB = "*/coverage-exclusions.json"
 
 ADAPTATION_TYPES = {
     "ADOPTED_VERBATIM", "STRENGTHENED", "NARROWED", "SPLIT", "MERGED",
@@ -216,11 +221,44 @@ def shipped_artefacts() -> tuple[list[dict], list[str]]:
     return shipped, problems
 
 
-def exclusions() -> dict[str, dict]:
-    if not EXCLUSIONS.exists():
-        return {}
-    payload = json.loads(EXCLUSIONS.read_text(encoding="utf-8"))
-    return {e["dakId"]: e for e in payload.get("exclusions", [])}
+def _exclusion_key(entry: dict) -> str | None:
+    """Either spelling identifies the standard being excluded.
+
+    Extracted DAK artefacts are keyed on dakId. Hand-declared standards have no dakId at all, so
+    forcing their exclusions to use that field would mean writing a DAK identifier for something no
+    DAK publishes. Both are accepted; the matrix keys on standardId either way.
+    """
+    return entry.get("standardId") or entry.get("dakId")
+
+
+def exclusion_files() -> list[Path]:
+    files = [EXCLUSIONS] if EXCLUSIONS.exists() else []
+    if GOVERNANCE.is_dir():
+        files.extend(sorted(GOVERNANCE.glob(EXCLUSION_GLOB)))
+    return files
+
+
+def exclusions() -> tuple[dict[str, dict], list[str]]:
+    register: dict[str, dict] = {}
+    problems: list[str] = []
+    for path in exclusion_files():
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            problems.append(f"{path.relative_to(REPO_ROOT)}: not valid JSON ({exc})")
+            continue
+        for entry in payload.get("exclusions", []):
+            key = _exclusion_key(entry)
+            if not key:
+                problems.append(
+                    f"{path.relative_to(REPO_ROOT)}: an exclusion names no standardId or dakId")
+                continue
+            if key in register:
+                # Two decisions about one standard means the register cannot say what was decided.
+                problems.append(f"{key} is excluded in more than one register file")
+                continue
+            register[key] = entry
+    return register, problems
 
 
 # ── the matrix ─────────────────────────────────────────────────────────────────
@@ -232,7 +270,8 @@ def build() -> tuple[dict, list[str]]:
     published.update(declared)
     shipped, problems = shipped_artefacts()
     problems.extend(declared_problems)
-    excluded = exclusions()
+    excluded, exclusion_problems = exclusions()
+    problems.extend(exclusion_problems)
 
     by_dak: dict[str, list[dict]] = defaultdict(list)
     for entry in shipped:
@@ -305,7 +344,8 @@ def render_markdown(matrix: dict) -> str:
         "One row per artefact an external standard published — WHO SMART DAK artefacts extracted",
         "from vendored spreadsheets, plus standards declared by hand for domains WHO has published",
         "no DAK for. `SHIPPED` means an Impilo rule cites it; every other",
-        "status is a recorded decision in `dak-coverage-exclusions.json`. `UNCOVERED` means nobody",
+        "status is a recorded decision in a coverage register — `rmnp/dak-coverage-exclusions.json`",
+        "or a domain's own `<domain>/coverage-exclusions.json`. `UNCOVERED` means nobody",
         "has decided yet, and the guard fails on it — a table nobody looked at is the failure this",
         "matrix exists to make visible.",
         "",

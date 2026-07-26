@@ -53,7 +53,10 @@ import json, sys
 from pathlib import Path
 
 MATRIX = Path("docs/clinical-governance/rmnp/dak-traceability-matrix.json")
-EXCLUSIONS = Path("docs/clinical-governance/rmnp/dak-coverage-exclusions.json")
+GOVERNANCE = Path("docs/clinical-governance")
+# Per-domain registers, plus the original rmnp file under its committed name.
+EXCLUSION_FILES = ([GOVERNANCE / "rmnp" / "dak-coverage-exclusions.json"]
+                   + sorted(GOVERNANCE.glob("*/coverage-exclusions.json")))
 CKP = Path("services/clinical-knowledge-platform-service/src/main/resources/clinical")
 FORMS = Path("services/forms-service/src/main/resources/seed-forms")
 
@@ -84,9 +87,12 @@ if uncovered:
     fail = 1
 
 # Exclusions must be decisions, not placeholders.
-if EXCLUSIONS.exists():
-    for entry in json.loads(EXCLUSIONS.read_text(encoding="utf-8")).get("exclusions", []):
-        dak_id = entry.get("dakId", "?")
+for exclusion_file in EXCLUSION_FILES:
+    if not exclusion_file.exists():
+        continue
+    for entry in json.loads(exclusion_file.read_text(encoding="utf-8")).get("exclusions", []):
+        # Hand-declared standards carry no dakId, so either spelling identifies the standard.
+        dak_id = entry.get("standardId") or entry.get("dakId") or "?"
         if entry.get("decision") not in VALID_DECISIONS:
             print(f"FAIL: exclusion {dak_id} has decision {entry.get('decision')!r}; "
                   f"expected one of {sorted(VALID_DECISIONS)}")
