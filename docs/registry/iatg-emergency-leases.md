@@ -128,6 +128,37 @@ band is collision-proof against any lane reserving above a head, and ownership i
 from the version alone. Flyway sorts by version and gaps are free, so the cost is cosmetic and the
 safety benefit is not.
 
+### 🔴 THE BAND CONVENTION'S TRAP: a cross-lane FK must live in the OWNER's band
+
+Reserving by numeric distance solves collisions and **creates a dependency-ordering trap**. Flyway
+applies migrations in version order, so **a lane in a lower band can never reference a table created
+in a higher band** — the referencing migration runs first and the table does not exist yet.
+
+Found the hard way, 2026-07-26. The Adult Medicine lane wrote the `pct_medical_episodes` →
+`emergency_episode` foreign key at **V108** exactly as specified, dry-ran it against the preview
+schema positive *and* negative, and got green. Reproduced on a clean Postgres:
+
+```
+=== FLYWAY ORDER: V108 (FK) runs BEFORE V200 (the table) ===
+ERROR:  relation "emergency_episode" does not exist
+```
+
+Applied in the *discussed* order (V200 then V108) both succeed, which is why preview was green and a
+clean boot would not have been. **The trap is invisible in any environment where the referenced table
+is already deployed** — which is every environment except a fresh one, and a fresh one is what a
+full-boot is.
+
+**THE RULE: a cross-lane foreign key belongs in the band of the lane that owns the REFERENCED table,
+never the referencing one.** So an FK onto `pct.emergency_episode` is written in the V2xx block by
+this pack, even when the referencing table belongs to another lane. The referencing lane keeps a
+pointer in its own block saying where the constraint lives and why, so table history stays readable.
+
+This cost is mine: I proposed the band convention (§3) without thinking the dependency direction
+through, and a peer lane inherited the consequence. Recorded prominently because it binds every lane
+that has adopted a band, not just this pair — Adult Medicine V100s, Emergency V200s, Surgery V300s
+means **surgery can reference anything, this pack can reference Adult Medicine's tables, and neither
+of the lower bands can reference upward.**
+
 Heads re-verified at `b9579561d`, **including untracked files** (§1).
 
 | Service | Head today (incl. untracked) | Peer claims | **Emergency block** | Sub-ranges |
