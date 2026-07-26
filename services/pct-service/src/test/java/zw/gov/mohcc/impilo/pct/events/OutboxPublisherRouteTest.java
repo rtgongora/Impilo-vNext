@@ -54,6 +54,20 @@ class OutboxPublisherRouteTest {
     }
 
     @org.junit.jupiter.api.Test
+    void imamLifecycleEventsRouteToTheirOwnTopics() {
+        assertEquals("pct.imam.episode.updated", OutboxPublisher.routeTopic("IMAM_EPISODE_ENROLLED"));
+        assertEquals("pct.imam.episode.updated", OutboxPublisher.routeTopic("IMAM_EPISODE_CLOSED"));
+        assertEquals("pct.imam.visit.recorded", OutboxPublisher.routeTopic("IMAM_VISIT_RECORDED"));
+    }
+
+    @org.junit.jupiter.api.Test
+    void imamTracingHasATopicOfItsOwnBecauseADifferentTeamActsOnIt() {
+        // A defaulter trace is a community health worker's home visit, not the clinic's next
+        // review. Left on the episode topic it would arrive mixed in with routine updates.
+        assertEquals("pct.imam.tracing.required", OutboxPublisher.routeTopic("IMAM_TRACING_REQUIRED"));
+    }
+
+    @org.junit.jupiter.api.Test
     void aCriticalResultReachesTheTopicRitoAndNotificationSubscribeTo() {
         // The estate's only ED safety event. EdDiagnosticsService emitted it from the day the ED
         // diagnostics lane shipped, but with no case here it rode the pct.events catch-all: the

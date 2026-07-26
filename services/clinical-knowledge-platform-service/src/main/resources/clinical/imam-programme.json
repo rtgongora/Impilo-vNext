@@ -1,0 +1,402 @@
+{
+  "packId": "impilo.paediatric.imam-programme",
+  "version": "engineering-seed-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": "Admission routes, discharge criteria, review cadence, defaulter definitions and therapeutic-food rations follow WHO/UNICEF community-based management of acute malnutrition and the WHO guideline on the management of severe acute malnutrition in infants and children. Admission classifications are the IMNCI acute-malnutrition tier codes, so a child classified by imnci-classification-tables.json routes into a programme without a second clinical judgement. The Zimbabwe national IMAM protocol, the national RUTF/RUSF ration schedule and the national defaulter definition MUST be confirmed before this drives treatment. This is an engineering seed and is NOT ratified national protocol. See docs/clinical-governance/edliz-engineering-seed-policy.md.",
+
+  "programmes": [
+    {
+      "code": "INPATIENT_STABILISATION",
+      "name": "Inpatient therapeutic care (stabilisation centre)",
+      "treats": "Severe acute malnutrition with a medical complication or a failed appetite test",
+      "admitsClassifications": ["COMPLICATED_SEVERE_ACUTE_MALNUTRITION"],
+      "admissionCriteria": [
+        {
+          "code": "SAM_WITH_COMPLICATION",
+          "description": "Severe acute malnutrition (MUAC below 11.5 cm, bilateral pitting oedema, or weight-for-height below -3 z) together with a failed appetite test or a medical complication.",
+          "combinator": "ANY",
+          "muacBelowCm": 11.5,
+          "oedemaPresent": true,
+          "weightForHeightZBelow": -3.0,
+          "requiresComplication": true
+        }
+      ],
+      "reviewIntervalDays": 1,
+      "attendanceGraceDays": 0,
+      "traceAfterMissedVisits": 1,
+      "defaulterMissedVisits": 2,
+      "nonResponderAfterDays": 21,
+      "targetWeightGainGramsPerKgPerDay": 5.0,
+      "therapeuticFood": {
+        "productCode": "F75_F100",
+        "productName": "Therapeutic milk (F-75 then F-100)",
+        "rationBasis": "PRESCRIBED_PER_FEED",
+        "note": "Volumes are prescribed per feed against current weight in the stabilisation ward, not issued as a take-home ration, so no take-home ration table applies here.",
+        "rationBands": []
+      },
+      "dischargeCriteria": {
+        "narrative": "A child leaves inpatient stabilisation when the complication has resolved, oedema is reducing and appetite has returned — they then continue treatment in outpatient therapeutic care. This is a transfer of setting, not a cure: recording it as a cure would close a child's episode while they are still severely malnourished.",
+        "requiresAppetiteReturned": true,
+        "requiresNoAcuteMedicalProblem": true,
+        "requiresOedemaResolving": true,
+        "dischargeDestination": "OTP",
+        "dischargeOutcomeIsCure": false
+      }
+    },
+
+    {
+      "code": "OTP",
+      "name": "Outpatient therapeutic programme",
+      "treats": "Severe acute malnutrition with appetite and no medical complication",
+      "admitsClassifications": ["UNCOMPLICATED_SEVERE_ACUTE_MALNUTRITION"],
+      "admissionCriteria": [
+        {
+          "code": "MUAC_BELOW_11_5",
+          "description": "Mid-upper-arm circumference below 11.5 cm in a child aged 6-59 months.",
+          "muacBelowCm": 11.5,
+          "minAgeDays": 183,
+          "maxAgeDays": 1824
+        },
+        {
+          "code": "BILATERAL_PITTING_OEDEMA",
+          "description": "Bilateral pitting oedema is severe acute malnutrition irrespective of any measurement — a child with nutritional oedema can carry a deceptively normal weight.",
+          "oedemaPresent": true
+        },
+        {
+          "code": "WEIGHT_FOR_HEIGHT_BELOW_MINUS_3",
+          "description": "Weight-for-height below -3 z-scores.",
+          "weightForHeightZBelow": -3.0,
+          "optionalCriterion": true
+        }
+      ],
+      "reviewIntervalDays": 7,
+      "attendanceGraceDays": 2,
+      "traceAfterMissedVisits": 1,
+      "defaulterMissedVisits": 2,
+      "nonResponderAfterDays": 112,
+      "targetWeightGainGramsPerKgPerDay": 5.0,
+      "therapeuticFood": {
+        "productCode": "RUTF",
+        "productName": "Ready-to-use therapeutic food (92 g / 500 kcal sachet)",
+        "rationBasis": "WEIGHT_BAND",
+        "note": "Approximately 150-200 kcal/kg/day. Bands are the widely used UNICEF RUTF ration chart and must be confirmed against the national schedule.",
+        "rationBands": [
+          {"minWeightKg": 3.0, "maxWeightKg": 3.4, "sachetsPerDay": 1.25, "sachetsPerWeek": 9},
+          {"minWeightKg": 3.5, "maxWeightKg": 4.9, "sachetsPerDay": 1.5, "sachetsPerWeek": 11},
+          {"minWeightKg": 5.0, "maxWeightKg": 6.9, "sachetsPerDay": 2.0, "sachetsPerWeek": 14},
+          {"minWeightKg": 7.0, "maxWeightKg": 9.9, "sachetsPerDay": 3.0, "sachetsPerWeek": 21},
+          {"minWeightKg": 10.0, "maxWeightKg": 14.9, "sachetsPerDay": 4.0, "sachetsPerWeek": 28},
+          {"minWeightKg": 15.0, "maxWeightKg": 19.9, "sachetsPerDay": 5.0, "sachetsPerWeek": 35},
+          {"minWeightKg": 20.0, "maxWeightKg": 29.9, "sachetsPerDay": 6.0, "sachetsPerWeek": 42},
+          {"minWeightKg": 30.0, "maxWeightKg": 999.0, "sachetsPerDay": 7.0, "sachetsPerWeek": 49}
+        ]
+      },
+      "dischargeCriteria": {
+        "narrative": "Mid-upper-arm circumference at or above 12.5 cm on two consecutive reviews, no bilateral pitting oedema for fourteen days, no acute medical problem, and at least fourteen days in the programme. The 'two consecutive' clause is the point of the rule: a single arm circumference at or above the cut-off can be a mis-measurement, a differently held tape or a different measurer, and discharging on it returns a still-wasted child to the community with their treatment stopped.",
+        "muacAtLeastCm": 12.5,
+        "sustainedConsecutiveVisits": 2,
+        "oedemaFreeMinimumDays": 14,
+        "minimumStayDays": 14,
+        "requiresNoAcuteMedicalProblem": true,
+        "dischargeOutcomeIsCure": true
+      }
+    },
+
+    {
+      "code": "SFP",
+      "name": "Supplementary feeding programme",
+      "treats": "Moderate acute malnutrition",
+      "admitsClassifications": ["MODERATE_ACUTE_MALNUTRITION"],
+      "admissionCriteria": [
+        {
+          "code": "MUAC_11_5_TO_12_4",
+          "description": "Mid-upper-arm circumference at or above 11.5 cm and below 12.5 cm in a child aged 6-59 months.",
+          "muacAtLeastCm": 11.5,
+          "muacBelowCm": 12.5,
+          "minAgeDays": 183,
+          "maxAgeDays": 1824
+        },
+        {
+          "code": "WEIGHT_FOR_HEIGHT_MINUS_3_TO_MINUS_2",
+          "description": "Weight-for-height at or above -3 and below -2 z-scores.",
+          "weightForHeightZAtLeast": -3.0,
+          "weightForHeightZBelow": -2.0,
+          "optionalCriterion": true
+        }
+      ],
+      "reviewIntervalDays": 14,
+      "attendanceGraceDays": 3,
+      "traceAfterMissedVisits": 1,
+      "defaulterMissedVisits": 2,
+      "nonResponderAfterDays": 112,
+      "targetWeightGainGramsPerKgPerDay": 3.0,
+      "therapeuticFood": {
+        "productCode": "RUSF",
+        "productName": "Ready-to-use supplementary food (92 g sachet)",
+        "rationBasis": "FLAT",
+        "note": "One sachet per day, approximately 500 kcal, irrespective of weight band.",
+        "rationBands": [
+          {"minWeightKg": 0.0, "maxWeightKg": 999.0, "sachetsPerDay": 1.0, "sachetsPerWeek": 7}
+        ]
+      },
+      "dischargeCriteria": {
+        "narrative": "Mid-upper-arm circumference at or above 12.5 cm on two consecutive reviews and no bilateral pitting oedema. Oedema appearing during supplementary feeding is not a reason to discharge — it is severe acute malnutrition and the child must be transferred to therapeutic care.",
+        "muacAtLeastCm": 12.5,
+        "sustainedConsecutiveVisits": 2,
+        "oedemaFreeMinimumDays": 14,
+        "minimumStayDays": 28,
+        "requiresNoAcuteMedicalProblem": false,
+        "dischargeOutcomeIsCure": true
+      }
+    }
+  ],
+
+  "escalations": [
+    {
+      "code": "OEDEMA_IN_SFP",
+      "fromProgramme": "SFP",
+      "when": "oedemaPresent",
+      "toProgramme": "OTP",
+      "action": "Bilateral pitting oedema has appeared during supplementary feeding. This is severe acute malnutrition: transfer to therapeutic care today rather than continuing supplementary feeding."
+    },
+    {
+      "code": "SAM_IN_SFP",
+      "fromProgramme": "SFP",
+      "when": "muacBelowSevere",
+      "toProgramme": "OTP",
+      "action": "Arm circumference has fallen below the severe cut-off during supplementary feeding. Transfer to therapeutic care."
+    },
+    {
+      "code": "COMPLICATION_IN_OTP",
+      "fromProgramme": "OTP",
+      "when": "dangerSignsOrFailedAppetite",
+      "toProgramme": "INPATIENT_STABILISATION",
+      "action": "A danger sign or a failed appetite test in outpatient therapeutic care means the child can no longer be treated at home. Refer for inpatient stabilisation today."
+    }
+  ],
+
+  "outcomes": [
+    {"code": "CURED", "name": "Cured", "requiresDischargeCriteria": true, "description": "Discharge criteria met and recorded."},
+    {"code": "DEFAULTED", "name": "Defaulted", "requiresDischargeCriteria": false, "description": "Absent for the defined number of consecutive scheduled reviews, after tracing was attempted."},
+    {"code": "DIED", "name": "Died", "requiresDischargeCriteria": false, "description": "Died while enrolled in the programme."},
+    {"code": "NON_RESPONDER", "name": "Non-responder", "requiresDischargeCriteria": false, "description": "Did not reach discharge criteria within the maximum length of stay. Requires medical investigation, not simply re-enrolment."},
+    {"code": "TRANSFERRED_OUT", "name": "Transferred out", "requiresDischargeCriteria": false, "description": "Continuing the same treatment at another site or in another programme; the episode continues elsewhere and is not an outcome of care."},
+    {"code": "MEDICAL_TRANSFER", "name": "Medical transfer", "requiresDischargeCriteria": false, "description": "Referred to inpatient care for a medical complication."}
+  ],
+
+  "testCases": [
+    {
+      "kind": "ELIGIBILITY",
+      "name": "MUAC 10.8 with a failed appetite test routes to inpatient stabilisation",
+      "facts": {"ageDays": 400, "muacCm": 10.8, "bilateralPittingOedema": "ABSENT", "appetiteTest": "FAILED"},
+      "expectEligible": true,
+      "expectProgramme": "INPATIENT_STABILISATION"
+    },
+    {
+      "kind": "ELIGIBILITY",
+      "name": "MUAC 10.8 with appetite and no complication routes to outpatient therapeutic care",
+      "facts": {"ageDays": 400, "muacCm": 10.8, "bilateralPittingOedema": "ABSENT", "appetiteTest": "PASSED"},
+      "expectEligible": true,
+      "expectProgramme": "OTP",
+      "expectAdmissionCriterion": "MUAC_BELOW_11_5"
+    },
+    {
+      "kind": "ELIGIBILITY",
+      "name": "oedema admits to therapeutic care whatever the arm circumference says",
+      "facts": {"ageDays": 400, "muacCm": 14.0, "bilateralPittingOedema": "PRESENT", "appetiteTest": "PASSED"},
+      "expectEligible": true,
+      "expectProgramme": "OTP",
+      "expectAdmissionCriterion": "BILATERAL_PITTING_OEDEMA"
+    },
+    {
+      "kind": "ELIGIBILITY",
+      "name": "MUAC 12.0 routes to supplementary feeding",
+      "facts": {"ageDays": 400, "muacCm": 12.0, "bilateralPittingOedema": "ABSENT"},
+      "expectEligible": true,
+      "expectProgramme": "SFP",
+      "expectAdmissionCriterion": "MUAC_11_5_TO_12_4"
+    },
+    {
+      "kind": "ELIGIBILITY",
+      "name": "MUAC 13.5 with no oedema is not eligible for a nutrition programme",
+      "facts": {"ageDays": 400, "muacCm": 13.5, "bilateralPittingOedema": "ABSENT"},
+      "expectEligible": false,
+      "expectAssessable": true
+    },
+    {
+      "kind": "ELIGIBILITY",
+      "name": "a child never measured is not reported as ineligible",
+      "facts": {"ageDays": 400},
+      "expectEligible": false,
+      "expectAssessable": false
+    },
+    {
+      "kind": "ELIGIBILITY",
+      "name": "an IMNCI classification routes without re-deriving the anthropometry",
+      "facts": {"ageDays": 400, "classification": "UNCOMPLICATED_SEVERE_ACUTE_MALNUTRITION"},
+      "expectEligible": true,
+      "expectProgramme": "OTP",
+      "expectAdmissionCriterion": "IMNCI_CLASSIFICATION"
+    },
+    {
+      "kind": "ELIGIBILITY",
+      "name": "MUAC is not interpretable under six months and does not admit on its own",
+      "facts": {"ageDays": 90, "muacCm": 10.0, "bilateralPittingOedema": "ABSENT"},
+      "expectEligible": false,
+      "expectAssessable": false
+    },
+
+    {
+      "kind": "PROGRESS",
+      "name": "one good arm circumference does not discharge a child",
+      "programme": "OTP",
+      "admittedOn": "2026-06-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-22",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-06-08", "muacCm": 11.8, "oedema": "ABSENT", "weightKg": 7.2, "dangerSignsPresent": false},
+        {"visitNumber": 2, "attended": true, "visitDate": "2026-06-15", "muacCm": 12.6, "oedema": "ABSENT", "weightKg": 7.6, "dangerSignsPresent": false}
+      ],
+      "expectDischargeEligible": false,
+      "expectUnmetCriteria": ["MUAC_SUSTAINED"]
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "two consecutive arm circumferences above the cut-off with no oedema discharge as cured",
+      "programme": "OTP",
+      "admittedOn": "2026-06-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-23",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-06-08", "muacCm": 11.8, "oedema": "ABSENT", "weightKg": 7.2, "dangerSignsPresent": false},
+        {"visitNumber": 2, "attended": true, "visitDate": "2026-06-15", "muacCm": 12.6, "oedema": "ABSENT", "weightKg": 7.6, "dangerSignsPresent": false},
+        {"visitNumber": 3, "attended": true, "visitDate": "2026-06-22", "muacCm": 12.7, "oedema": "ABSENT", "weightKg": 7.9, "dangerSignsPresent": false}
+      ],
+      "expectDischargeEligible": true
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "oedema within the last fourteen days blocks discharge however good the arm circumference is",
+      "programme": "OTP",
+      "admittedOn": "2026-06-01",
+      "admissionOedema": "PRESENT",
+      "asOf": "2026-06-23",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-06-08", "muacCm": 12.9, "oedema": "PRESENT", "weightKg": 7.2, "dangerSignsPresent": false},
+        {"visitNumber": 2, "attended": true, "visitDate": "2026-06-15", "muacCm": 13.0, "oedema": "PRESENT", "weightKg": 7.0, "dangerSignsPresent": false},
+        {"visitNumber": 3, "attended": true, "visitDate": "2026-06-22", "muacCm": 13.1, "oedema": "ABSENT", "weightKg": 7.1, "dangerSignsPresent": false}
+      ],
+      "expectDischargeEligible": false,
+      "expectUnmetCriteria": ["OEDEMA_FREE"]
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "oedema never assessed is not oedema absent",
+      "programme": "OTP",
+      "admittedOn": "2026-05-01",
+      "admissionOedema": "NOT_ASSESSED",
+      "asOf": "2026-06-23",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-06-08", "muacCm": 12.9, "weightKg": 7.2, "dangerSignsPresent": false},
+        {"visitNumber": 2, "attended": true, "visitDate": "2026-06-15", "muacCm": 13.0, "weightKg": 7.4, "dangerSignsPresent": false},
+        {"visitNumber": 3, "attended": true, "visitDate": "2026-06-22", "muacCm": 13.1, "weightKg": 7.6, "dangerSignsPresent": false}
+      ],
+      "expectDischargeEligible": false,
+      "expectUnmetCriteria": ["OEDEMA_FREE"]
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "an episode with no review recorded is never reported as progressing",
+      "programme": "OTP",
+      "admittedOn": "2026-06-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-23",
+      "visits": [],
+      "expectDischargeEligible": false,
+      "expectAttendanceStatus": "DEFAULTER",
+      "expectNoReviewRecorded": true
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "one missed weekly review triggers tracing before the child is a defaulter",
+      "programme": "OTP",
+      "admittedOn": "2026-06-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-19",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-06-08", "muacCm": 11.8, "oedema": "ABSENT", "weightKg": 7.2, "dangerSignsPresent": false}
+      ],
+      "expectAttendanceStatus": "TRACE_REQUIRED",
+      "expectDischargeEligible": false
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "two consecutive missed weekly reviews is a defaulter",
+      "programme": "OTP",
+      "admittedOn": "2026-06-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-26",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-06-08", "muacCm": 11.8, "oedema": "ABSENT", "weightKg": 7.2, "dangerSignsPresent": false}
+      ],
+      "expectAttendanceStatus": "DEFAULTER",
+      "expectDischargeEligible": false
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "a child seen on schedule is attending",
+      "programme": "OTP",
+      "admittedOn": "2026-06-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-17",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-06-08", "muacCm": 11.8, "oedema": "ABSENT", "weightKg": 7.2, "dangerSignsPresent": false},
+        {"visitNumber": 2, "attended": true, "visitDate": "2026-06-15", "muacCm": 12.0, "oedema": "ABSENT", "weightKg": 7.5, "dangerSignsPresent": false}
+      ],
+      "expectAttendanceStatus": "ATTENDING"
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "oedema appearing in supplementary feeding escalates to therapeutic care",
+      "programme": "SFP",
+      "admittedOn": "2026-05-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-01",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-05-15", "muacCm": 12.0, "oedema": "ABSENT", "weightKg": 8.0, "dangerSignsPresent": false},
+        {"visitNumber": 2, "attended": true, "visitDate": "2026-05-29", "muacCm": 12.2, "oedema": "PRESENT", "weightKg": 8.4, "dangerSignsPresent": false}
+      ],
+      "expectEscalation": "OEDEMA_IN_SFP",
+      "expectDischargeEligible": false
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "a danger sign in outpatient therapeutic care means inpatient stabilisation",
+      "programme": "OTP",
+      "admittedOn": "2026-06-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-16",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-06-08", "muacCm": 11.8, "oedema": "ABSENT", "weightKg": 7.2, "dangerSignsPresent": false},
+        {"visitNumber": 2, "attended": true, "visitDate": "2026-06-15", "muacCm": 11.9, "oedema": "ABSENT", "weightKg": 7.3, "dangerSignsPresent": true}
+      ],
+      "expectEscalation": "COMPLICATION_IN_OTP",
+      "expectDischargeEligible": false
+    },
+    {
+      "kind": "PROGRESS",
+      "name": "a child still not recovered after the maximum length of stay is a non-responder",
+      "programme": "OTP",
+      "admittedOn": "2026-01-01",
+      "admissionOedema": "ABSENT",
+      "asOf": "2026-06-01",
+      "visits": [
+        {"visitNumber": 1, "attended": true, "visitDate": "2026-05-18", "muacCm": 11.4, "oedema": "ABSENT", "weightKg": 7.0, "dangerSignsPresent": false},
+        {"visitNumber": 2, "attended": true, "visitDate": "2026-05-25", "muacCm": 11.4, "oedema": "ABSENT", "weightKg": 7.0, "dangerSignsPresent": false}
+      ],
+      "expectResponseStatus": "NON_RESPONDER",
+      "expectDischargeEligible": false
+    }
+  ]
+}

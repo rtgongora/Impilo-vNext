@@ -106,6 +106,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/clinical/control-tower", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Control Tower", navLabel: "Control Tower", navZone: "work" },
   { path: "/clinical/dictation", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Voice Dictation", navLabel: "Dictation", navZone: "work" },
   { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
+  { path: "/clinical/nutrition-tracing", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Nutrition Defaulter Tracing", navLabel: "Nutrition Tracing", navZone: "work" },
   // The three ED child routes below shipped unregistered. matchRouteDefinition anchors every
   // pattern with ^...$, so "/clinical/emergency" never matched "/clinical/emergency/resus/<id>":
   // the matcher returned null, AuthGuardProvider returned early, and the resuscitation workspace,
@@ -330,6 +331,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/procedures", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Procedures", navLabel: "Procedures", navZone: "work" },
   { path: "/ehr/[patientId]/paediatrics", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Paediatric Workspace", navLabel: "Paediatrics", navZone: "work" },
   { path: "/ehr/[patientId]/growth-chart", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Growth Chart", navLabel: "Growth Chart", navZone: "work" },
+  { path: "/ehr/[patientId]/imam", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Nutrition Treatment", navLabel: "Nutrition Treatment", navZone: "work" },
   { path: "/ehr/[patientId]/family-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Family History", navLabel: "Family History", navZone: "work" },
   { path: "/ehr/[patientId]/social-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Social History", navLabel: "Social History", navZone: "work" },
   { path: "/ehr/[patientId]/functional-status", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Functional Status", navLabel: "Functional Status", navZone: "work" },
@@ -1035,7 +1037,9 @@ export const ROUTES: RouteDefinition[] = [
 // Paediatric workspace (26 Jul 2026): +1 — /ehr/[patientId]/paediatrics. Total 799.
 // Emergency pack W0 (Jul 2026): +3 ED child routes that shipped unregistered and therefore
 // unguarded — resus/[activationId], episode/[episodeId], [visitId]. Total 803.
-export const EXPECTED_ROUTE_COUNT = 803;
+// IMAM nutrition treatment (Jul 2026): +2 — the child's treatment episode and the facility's
+// defaulter tracing worklist, which are different jobs done by different people. Total 805.
+export const EXPECTED_ROUTE_COUNT = 805;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

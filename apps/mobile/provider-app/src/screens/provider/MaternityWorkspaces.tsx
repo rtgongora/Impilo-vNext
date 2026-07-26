@@ -1,11 +1,14 @@
 /**
  * Partograph and CTG — governed maternal-instrument workspaces.
  *
- * Replaces the generic notes-box the obstetrics specialty workspace fell back to (see
- * `SpecialtyWorkspacePanel.tsx`'s `formKindForTool` — "Partograph" was a notes box only because
- * it is first in `specialtyWorkspaces.ts`'s tool array, never because anyone decided a partograph
- * is notes). Both instruments already have a real backend (pct-service V056) and governed form
- * definitions served from forms-service; this file adds no persistence of its own.
+ * Replaces the generic notes-box the obstetrics specialty workspace fell back to. That fallback
+ * came from a resolver that picked a tool's form by its POSITION in `specialtyWorkspaces.ts`'s
+ * tool array — "Partograph" was a notes box only because it is first in that array, never because
+ * anyone decided a partograph is notes. That positional resolver is gone: tools now resolve
+ * through `data/specialtyToolRegistry.ts`, where these two are registered as WIRED against the
+ * `PartographWorkspace` and `CtgWorkspace` surfaces below. Both instruments already have a real
+ * backend (pct-service V056) and governed form definitions served from forms-service; this file
+ * adds no persistence of its own.
  *
  * See docs/clinical/rmnp/partograph-ctg-mobile-contract.md for the six behaviours this UI must
  * preserve. The short version: a 200 saying "no session is open" and a 502 saying "could not ask"
