@@ -253,6 +253,34 @@ ndilaStreetStack:
       cpu: 500m
       memory: 512Mi
 
+# Estate health watch — continuous detection of silent service death.
+# Exists because Keycloak sat with ZERO endpoints for 9 days (2026-07-20 outage)
+# with every other signal green. Emits pod logs + a Kubernetes Event + a failed
+# Job; set webhookUrlSecret to turn detection into an actual page.
+estateHealthWatch:
+  enabled: true
+  schedule: "*/10 * * * *"
+  # Services whose Service object must always have >=1 ready endpoint.
+  # Keycloak first: it has no partial-failure mode — when it is down, ALL web
+  # and mobile authentication is down, and nothing else reports it.
+  requiredEndpoints:
+    - keycloak
+    - experience-bff
+    - postgres
+  image:
+    # docker.io is unreachable from the preview VM; use the gcr mirror.
+    repository: mirror.gcr.io/curlimages/curl
+    tag: "8.11.1"
+    pullPolicy: IfNotPresent
+  # OPTIONAL — the only setting that produces a real page rather than a trace.
+  # Create the secret out-of-band, then uncomment:
+  #   kubectl -n impilo-full-preview create secret generic impilo-alert-webhook \
+  #     --from-literal=url='https://hooks.slack.com/services/...'
+  # webhookUrlSecret:
+  #   name: impilo-alert-webhook
+  #   key: url
+  webhookUrlSecret: null
+
 # redroid — Android-in-container mobile runtime fixture (adb :5555 internal).
 # Image mirrored to the local registry (docker.io direct pull is unreliable
 # from this VM): docker pull redroid/redroid:13.0.0-latest && docker tag …

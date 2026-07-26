@@ -47,3 +47,13 @@ redroid:
   resources:
     requests: { cpu: "2", memory: 3Gi }
     limits: { cpu: "4", memory: 6Gi }
+
+# Continuous health watch (see templates/estate-health-watch.yaml); off in the minimal slice.
+estateHealthWatch:
+  enabled: false
+  schedule: "*/10 * * * *"
+  requiredEndpoints: [keycloak]
+  image:
+    repository: mirror.gcr.io/curlimages/curl
+    tag: "8.11.1"
+  webhookUrlSecret: null

@@ -498,6 +498,18 @@ echo "--- Keycloak persona users reconcile ---"
 NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/operator/reconcile-keycloak-realm-users.sh" || \
   echo "WARN: keycloak realm-user reconcile failed — persona logins may need manual reseed."
 
+# --- MANDATORY: Keycloak is actually serving. ---
+# Keycloak crash-looped on a malformed realm import for 6 days (2026-07-20 → 07-26)
+# with an empty Service endpoint list, taking ALL web and mobile login down, and
+# nothing detected it — pods existed, the route was correct, the site returned 200.
+# A deploy that leaves Keycloak unserving is a failed deploy, not a warning.
+echo "--- Keycloak serving check (mandatory) ---"
+NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/full-boot/verify-keycloak-endpoints.sh" || {
+  echo "DEPLOY INCOMPLETE: Keycloak is not serving — all authentication is down." >&2
+  echo "  see scripts/full-boot/verify-keycloak-endpoints.sh output above" >&2
+  exit 1
+}
+
 echo "--- Sovereign preview seeds (VARAPI, WGV, domain truth) ---"
 bash "$REPO_PATH/scripts/deploy/seed-full-preview-sovereign-data.sh" || {
   echo "WARN: sovereign seed script failed — continuing with smoke tests"

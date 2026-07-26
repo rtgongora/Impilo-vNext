@@ -1,0 +1,185 @@
+{{- if .Values.estateHealthWatch.enabled }}
+# =============================================================================
+# Estate health watch — continuous detection for failures that are SILENT.
+#
+# WHY THIS EXISTS (2026-07-20 → 2026-07-26): Keycloak crash-looped for six days
+# with an empty Service endpoint list. ALL web and mobile authentication was
+# down the entire time and nothing noticed, because everything else looked
+# healthy — pods existed, the Traefik route was correct, the site returned 200.
+# No other service depends on Keycloak until a human tries to sign in.
+#
+# CI and deploy gates (scripts/guard/check-keycloak-realm-import.sh,
+# scripts/full-boot/verify-keycloak-endpoints.sh) catch this at merge and at
+# deploy. Neither would have caught it on 20 July, because nothing was merged
+# or deployed — Keycloak simply restarted and never came back. Only a
+# CONTINUOUS check catches that class.
+#
+# This deliberately uses no Prometheus/Alertmanager: neither is deployed on this
+# estate (tools/ops/ is a dev-only docker-compose profile and
+# tools/ops/prometheus/rules/ring0-alerts.yml is orphaned — nothing loads it).
+# A PrometheusRule here would be theatre. Instead the check talks to the
+# Kubernetes API directly with its ServiceAccount token and emits signals that
+# are visible with tools the estate actually has:
+#   1. loud pod logs            → kubectl logs job/...
+#   2. a Kubernetes Event       → kubectl get events --field-selector reason=EstateHealthCheckFailed
+#   3. a failed Job             → kubectl get jobs -l app=estate-health-watch
+#   4. an optional webhook POST → set estateHealthWatch.webhookUrlSecret to page a human
+#
+# Items 1–3 need nothing. Item 4 is the only real "page" and requires a channel;
+# until one exists, this is detection without notification — which is still
+# strictly better than six days of silence.
+# =============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: estate-health-watch
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: estate-health-watch
+  namespace: {{ .Release.Namespace }}
+rules:
+  # Read-only on the things we assert about, plus Event creation so a failure
+  # leaves a durable, queryable trace in the cluster itself.
+  - apiGroups: [""]
+    resources: ["endpoints", "services", "pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: estate-health-watch
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: estate-health-watch
+subjects:
+  - kind: ServiceAccount
+    name: estate-health-watch
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: estate-health-watch-script
+  namespace: {{ .Release.Namespace }}
+data:
+  check.sh: |
+    #!/bin/sh
+    # Runs inside the cluster. No kubectl binary required — talks to the API
+    # server with the pod's ServiceAccount token.
+    set -u
+    API="https://kubernetes.default.svc"
+    SA=/var/run/secrets/kubernetes.io/serviceaccount
+    TOKEN="$(cat $SA/token)"
+    NS="$(cat $SA/namespace)"
+    CA="$SA/ca.crt"
+    FAILED=""
+
+    kget() { curl -sS --max-time 10 --cacert "$CA" -H "Authorization: Bearer $TOKEN" "$API$1"; }
+
+    emit_event() { # emit_event <reason> <message>
+      # A Kubernetes Event is the most durable signal available without external
+      # infrastructure: queryable, timestamped, and picked up by any monitoring
+      # added later without changing this script.
+      ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      curl -sS --max-time 10 --cacert "$CA" -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" -X POST "$API/api/v1/namespaces/$NS/events" \
+        -d "{\"metadata\":{\"generateName\":\"estate-health-\"},
+             \"involvedObject\":{\"kind\":\"Namespace\",\"name\":\"$NS\",\"namespace\":\"$NS\"},
+             \"reason\":\"$1\",\"message\":\"$2\",\"type\":\"Warning\",
+             \"firstTimestamp\":\"$ts\",\"lastTimestamp\":\"$ts\",
+             \"source\":{\"component\":\"estate-health-watch\"}}" >/dev/null 2>&1
+    }
+
+    # --- CHECK: services that must have ready endpoints ----------------------
+    # A Service with zero endpoints is the signature of "the pod exists but the
+    # thing is dead" — exactly the Keycloak failure mode, and it is invisible
+    # from the edge, which keeps returning a routed 503.
+    for svc in {{ .Values.estateHealthWatch.requiredEndpoints | join " " }}; do
+      body="$(kget "/api/v1/namespaces/$NS/endpoints/$svc")"
+      case "$body" in
+        *'"addresses"'*) echo "OK    endpoints/$svc has ready backends" ;;
+        *) echo "FAIL  endpoints/$svc is EMPTY — $svc is down"
+           FAILED="$FAILED $svc" ;;
+      esac
+    done
+
+    if [ -n "$FAILED" ]; then
+      MSG="Services with NO ready endpoints:$FAILED. All dependent journeys are down."
+      echo ""
+      echo "ESTATE HEALTH CHECK FAILED — $MSG"
+      echo "Runbook: docs/runbooks/keycloak-auth-outage-runbook.md (if keycloak is listed)"
+      emit_event "EstateHealthCheckFailed" "$MSG"
+      {{- if .Values.estateHealthWatch.webhookUrlSecret }}
+      # Optional real page. Generic JSON body: works with Slack/Teams/webhook relays.
+      if [ -n "${ALERT_WEBHOOK_URL:-}" ]; then
+        curl -sS --max-time 10 -X POST -H "Content-Type: application/json" \
+          -d "{\"text\":\"[Impilo $NS] $MSG\"}" "$ALERT_WEBHOOK_URL" >/dev/null 2>&1 \
+          && echo "webhook notified" || echo "WARN webhook POST failed"
+      fi
+      {{- end }}
+      exit 1
+    fi
+    echo ""
+    echo "PASS: all required services have ready endpoints."
+    exit 0
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: estate-health-watch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: estate-health-watch
+spec:
+  schedule: {{ .Values.estateHealthWatch.schedule | quote }}
+  concurrencyPolicy: Forbid
+  # Keep failures visible in `kubectl get jobs` rather than garbage-collected away.
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: estate-health-watch
+        spec:
+          serviceAccountName: estate-health-watch
+          restartPolicy: Never
+          containers:
+            - name: check
+              image: "{{ .Values.estateHealthWatch.image.repository }}:{{ .Values.estateHealthWatch.image.tag }}"
+              imagePullPolicy: {{ .Values.estateHealthWatch.image.pullPolicy | default "IfNotPresent" }}
+              command: ["sh", "/scripts/check.sh"]
+              {{- if .Values.estateHealthWatch.webhookUrlSecret }}
+              env:
+                - name: ALERT_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.estateHealthWatch.webhookUrlSecret.name }}
+                      key: {{ .Values.estateHealthWatch.webhookUrlSecret.key }}
+                      optional: true
+              {{- end }}
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+          volumes:
+            - name: script
+              configMap:
+                name: estate-health-watch-script
+{{- end }}

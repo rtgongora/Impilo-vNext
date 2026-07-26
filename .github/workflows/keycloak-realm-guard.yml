@@ -1,0 +1,44 @@
+name: Keycloak Realm Guard
+
+# Realm JSON that Keycloak cannot parse does not degrade the platform — it stops
+# Keycloak booting, which takes ALL web and mobile authentication down. That is
+# exactly what happened 2026-07-20 → 2026-07-26: 11 fields named
+# `webAuthnPasswordlessPolicy*` instead of `webAuthnPolicyPasswordless*` crash-looped
+# realm import for six days before anyone noticed. The names look plausible to a
+# human reviewer; only Keycloak can tell you they are wrong.
+#
+# This runs a real `kc.sh import` into a throwaway in-container database, so it
+# catches every malformed-realm class, not just the one we already know about.
+# Path-filtered: it only runs when a realm file actually changes.
+
+on:
+  pull_request:
+    paths:
+      - "deploy/helm/impilo-vnext/files/realm-*.json"
+      - "infra/keycloak/realm-*.json"
+      - "tools/auth/*realm*.json"
+      - "scripts/guard/check-keycloak-realm-import.sh"
+      - ".github/workflows/keycloak-realm-guard.yml"
+  push:
+    branches: [main, develop, "claude/**"]
+    paths:
+      - "deploy/helm/impilo-vnext/files/realm-*.json"
+      - "infra/keycloak/realm-*.json"
+      - "tools/auth/*realm*.json"
+      - "scripts/guard/check-keycloak-realm-import.sh"
+      - ".github/workflows/keycloak-realm-guard.yml"
+
+jobs:
+  realm-import-validation:
+    name: Keycloak accepts every realm file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate realm JSON by importing it into Keycloak
+        env:
+          # Keep in step with deploy/helm/impilo-vnext/values-full-preview.yaml
+          # (keycloak.image.tag). A realm valid for one major may be invalid for
+          # the next — validating against the wrong version defeats the point.
+          KEYCLOAK_IMAGE: quay.io/keycloak/keycloak:25.0
+        run: bash scripts/guard/check-keycloak-realm-import.sh
