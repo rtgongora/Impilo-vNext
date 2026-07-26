@@ -247,7 +247,7 @@
         "any": [
           {"finding": "feverByHistory", "present": true},
           {"finding": "feelsHot", "present": true},
-          {"input": "vitals.temperature", "op": "gte", "value": 37.5}
+          {"input": "vitals.temperature", "op": "gte", "value": 37.5, "optionalCriterion": true}
         ]
       },
       "requiredInputs": ["stiffNeck", "malariaTestResult"],
@@ -300,7 +300,9 @@
         {"name": "stiff neck with fever is very severe febrile disease", "facts": {"ageDays": 400, "feelsHot": "PRESENT", "stiffNeck": "PRESENT"}, "expectStatus": "CLASSIFIED", "expectClassification": "VERY_SEVERE_FEBRILE_DISEASE"},
         {"name": "a positive test is malaria", "facts": {"ageDays": 400, "feelsHot": "PRESENT", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT", "stiffNeck": "ABSENT", "bulgingFontanelle": "ABSENT", "malariaTestResult": "POSITIVE"}, "expectStatus": "CLASSIFIED", "expectClassification": "MALARIA"},
         {"name": "a negative test is fever without malaria", "facts": {"ageDays": 400, "feelsHot": "PRESENT", "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT", "stiffNeck": "ABSENT", "bulgingFontanelle": "ABSENT", "malariaTestResult": "NEGATIVE"}, "expectStatus": "CLASSIFIED", "expectClassification": "FEVER_NO_MALARIA"},
-        {"name": "fever with no test and no neck examination is indeterminate, never no-malaria", "facts": {"ageDays": 400, "feelsHot": "PRESENT"}, "expectStatus": "INDETERMINATE"}
+        {"name": "fever with no test and no neck examination is indeterminate, never no-malaria", "facts": {"ageDays": 400, "feelsHot": "PRESENT"}, "expectStatus": "INDETERMINATE"},
+        {"name": "no fever by history and not hot to touch, with no thermometer, is not a fever", "facts": {"ageDays": 400, "feverByHistory": "ABSENT", "feelsHot": "ABSENT"}, "expectStatus": "NOT_APPLICABLE"},
+        {"name": "a measured temperature still triggers the table when the carer reported no fever", "facts": {"ageDays": 400, "feverByHistory": "ABSENT", "feelsHot": "ABSENT", "vitals": {"temperature": 38.9}, "unableToDrinkOrBreastfeed": "ABSENT", "vomitsEverything": "ABSENT", "convulsions": "ABSENT", "lethargicOrUnconscious": "ABSENT", "stiffNeck": "ABSENT", "bulgingFontanelle": "ABSENT", "malariaTestResult": "NEGATIVE"}, "expectStatus": "CLASSIFIED", "expectClassification": "FEVER_NO_MALARIA"}
       ]
     },
 
@@ -315,7 +317,7 @@
           {"any": [
             {"finding": "feverByHistory", "present": true},
             {"finding": "feelsHot", "present": true},
-            {"input": "vitals.temperature", "op": "gte", "value": 37.5}
+            {"input": "vitals.temperature", "op": "gte", "value": 37.5, "optionalCriterion": true}
           ]},
           {"any": [
             {"finding": "generalisedRash", "present": true},
