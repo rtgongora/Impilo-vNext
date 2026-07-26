@@ -145,16 +145,33 @@ function TriagePanel({
   triage,
   vitals,
   isLoading,
+  isError,
 }: {
   triage: TriageRecord | null;
   vitals: EncounterVitalsLike | null;
   isLoading: boolean;
+  isError: boolean;
 }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         <span className="text-sm">Loading triage data...</span>
+      </div>
+    );
+  }
+
+  // "No triage data available" is an affirmative claim that this patient was never triaged —
+  // no acuity category, no danger-sign screening. That is exactly the record a clinician uses
+  // to decide this patient can wait. When the read failed we have no basis for it.
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 py-12 text-center">
+        <AlertTriangle className="mb-2 h-6 w-6 text-red-500" />
+        <p className="text-sm font-medium text-red-700">
+          Triage could not be loaded. This is not a record that the patient is untriaged —
+          an acuity category and danger-sign screening may exist.
+        </p>
       </div>
     );
   }
@@ -276,15 +293,30 @@ function TriagePanel({
 function HistoryPanel({
   history,
   isLoading,
+  isError,
 }: {
   history: EncounterHistoryLike | null;
   isLoading: boolean;
+  isError: boolean;
 }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         <span className="text-sm">Loading history...</span>
+      </div>
+    );
+  }
+
+  // An empty history panel reads as "nothing was asked or recorded at this encounter".
+  // Say the read failed instead.
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 py-12 text-center">
+        <FileText className="mb-2 h-6 w-6 text-red-500" />
+        <p className="text-sm font-medium text-red-700">
+          History could not be loaded. This is not a record that no history was taken.
+        </p>
       </div>
     );
   }
@@ -789,9 +821,9 @@ export function AssessmentSection() {
   const [selectedTemplate, setSelectedTemplate] = useState<ClerkingTemplate | null>(null);
 
   // Fetch triage, vitals, and history from BFF
-  const { data: triageData, isLoading: triageLoading } = useTriage(encounterId);
-  const { data: vitalsData, isLoading: vitalsLoading } = useEncounterVitals(encounterId);
-  const { data: historyData, isLoading: historyLoading } = useEncounterHistory(encounterId);
+  const { data: triageData, isLoading: triageLoading, isError: triageUnavailable } = useTriage(encounterId);
+  const { data: vitalsData, isLoading: vitalsLoading, isError: vitalsUnavailable } = useEncounterVitals(encounterId);
+  const { data: historyData, isLoading: historyLoading, isError: historyUnavailable } = useEncounterHistory(encounterId);
 
   const triage = triageData?.data ?? null;
   const latestVitals = (vitalsData?.data?.[0]?.attributes ?? vitalsData?.data?.[0] ?? null) as EncounterVitalsLike | null;
@@ -846,7 +878,14 @@ export function AssessmentSection() {
       </div>
 
       {/* Tab content */}
-      {activeTab === "triage" && <TriagePanel triage={triage} vitals={latestVitals} isLoading={triageLoading || vitalsLoading} />}
+      {activeTab === "triage" && (
+        <TriagePanel
+          triage={triage}
+          vitals={latestVitals}
+          isLoading={triageLoading || vitalsLoading}
+          isError={triageUnavailable || vitalsUnavailable}
+        />
+      )}
       {activeTab === "vitals" && encounterId && <VitalsRecorder encounterId={encounterId} />}
       {activeTab === "clerking" && (
         selectedTemplate
@@ -855,7 +894,9 @@ export function AssessmentSection() {
       )}
       {activeTab === "cadre-history" && <CadreHistoryForm config={cadreConfig} />}
       {activeTab === "cadre-exam" && <CadreExamForm config={cadreConfig} />}
-      {activeTab === "history" && <HistoryPanel history={history} isLoading={historyLoading} />}
+      {activeTab === "history" && (
+        <HistoryPanel history={history} isLoading={historyLoading} isError={historyUnavailable} />
+      )}
       {activeTab === "examination" && (
         <div className="rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
           Full structured examination capture is not yet wired to a production backend API.
