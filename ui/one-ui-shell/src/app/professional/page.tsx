@@ -67,16 +67,19 @@ function useProviderNotices() {
 
 export default function ProfessionalProfilePage() {
   const { user } = useAuthStore();
-  const { data, isLoading } = useLinkedIds();
+  const { data, isLoading, isError: linkedUnavailable } = useLinkedIds();
 
-  const { data: affData, isLoading: affLoading } = useAffiliations();
-  const { data: noticeData, isLoading: noticeLoading } = useProviderNotices();
+  const { data: affData, isLoading: affLoading, isError: affUnavailable } = useAffiliations();
+  const { data: noticeData, isLoading: noticeLoading, isError: noticesUnavailable } = useProviderNotices();
   const affiliations = (affData?.data ?? []).map((a) => ({ id: a.id, name: a.attributes.facilityName, role: a.attributes.role }));
   const notices = (noticeData?.data ?? []).map((n) => ({ id: n.id, text: n.attributes.text, severity: n.attributes.severity, category: n.attributes.category }));
   const linkedAttrs = data?.data?.attributes;
   const providerId = linkedAttrs?.providerId ?? user?.providerId;
-  const providerStatus = linkedAttrs?.providerStatus ?? "Active";
-  const licenceValid = linkedAttrs?.licenceValid ?? true;
+  // These defaults used to be "Active" and true, so a failed VARAPI read told a provider their
+  // registration was in good standing and their licence valid — the two facts this page exists to
+  // report, asserted without having checked either. Fall back to unknown, never to reassurance.
+  const providerStatus = linkedAttrs?.providerStatus ?? (linkedUnavailable ? "Unknown" : "Active");
+  const licenceValid = linkedAttrs?.licenceValid ?? (linkedUnavailable ? null : true);
 
   const licenceExpiry = useMemo(() => {
     const date = new Date();
@@ -159,13 +162,21 @@ export default function ProfessionalProfilePage() {
                 </div>
                 <div className="flex items-center justify-between py-1">
                   <span className="text-sm text-muted-foreground">Licence</span>
+                  {/* Three states, not two: "Expired" is as much a fabricated finding as "Valid"
+                      when the registry could not be read. */}
                   <span
                     className={[
                       "text-sm font-medium",
-                      licenceValid ? "text-primary-hover" : "text-brand-red",
+                      licenceValid === null
+                        ? "text-warning-foreground"
+                        : licenceValid
+                          ? "text-primary-hover"
+                          : "text-brand-red",
                     ].join(" ")}
                   >
-                    {licenceValid ? "Valid" : "Expired"} until {licenceExpiry}
+                    {licenceValid === null
+                      ? "Could not be checked"
+                      : `${licenceValid ? "Valid" : "Expired"} until ${licenceExpiry}`}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 pt-2">
@@ -205,6 +216,12 @@ export default function ProfessionalProfilePage() {
               <div className="px-6 py-6 animate-pulse space-y-3">
                 <div className="h-4 bg-neutral-100 rounded w-3/4" />
                 <div className="h-4 bg-neutral-100 rounded w-1/2" />
+              </div>
+            ) : affUnavailable ? (
+              <div className="px-6 py-6 text-center text-sm text-warning-foreground">
+                Affiliations could not be loaded. This is not a record that you have none —
+                organisational affiliation is a precondition for clinical work, so retry before
+                assuming it is missing.
               </div>
             ) : affiliations.length === 0 ? (
               <div className="px-6 py-6 text-sm text-muted-foreground text-center">
@@ -254,6 +271,12 @@ export default function ProfessionalProfilePage() {
               <div className="px-6 py-6 animate-pulse space-y-3">
                 <div className="h-4 bg-neutral-100 rounded w-3/4" />
                 <div className="h-4 bg-neutral-100 rounded w-1/2" />
+              </div>
+            ) : noticesUnavailable ? (
+              /* "No professional notices" is the all-clear. A licence renewal deadline or a
+                 compliance action would be hidden behind exactly this message. */
+              <div className="px-6 py-6 text-center text-sm text-warning-foreground">
+                Notices could not be loaded — do not read this as nothing outstanding.
               </div>
             ) : notices.length === 0 ? (
               <div className="px-6 py-6 text-sm text-muted-foreground text-center">
