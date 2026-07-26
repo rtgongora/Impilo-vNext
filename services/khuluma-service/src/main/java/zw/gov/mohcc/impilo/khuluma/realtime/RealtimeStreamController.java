@@ -20,8 +20,14 @@ import java.util.UUID;
 /**
  * Server-Sent-Events transport of the realtime gateway. A client opens one long-lived stream and
  * receives every message/receipt/presence/ringing/typing event for the channels it is entitled to
- * (its conversations + personal + tenant). Mirrors the {@code FetalMonitoringStreamService} SSE
- * precedent; subscription/dispatch is shared with the WebSocket transport via {@link RealtimeHub}.
+ * (its conversations + personal + tenant). Subscription and dispatch are shared with the WebSocket
+ * transport via {@link RealtimeHub}.
+ *
+ * <p>This previously cited {@code FetalMonitoringStreamService} as its SSE precedent. That class
+ * is gone: it held CTG traces in an in-process map that emptied on every pod restart, and fetal
+ * monitoring now persists in pct-service. The SSE transport pattern here is sound — what was
+ * wrong with the precedent was its storage, not its streaming — but the reference is removed so
+ * nobody follows it looking for an example that no longer exists.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/khuluma/stream")

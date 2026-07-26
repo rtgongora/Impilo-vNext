@@ -1,0 +1,53 @@
+       INTERAGENCY INTEGRATED TRIAGE TOOL: Age < 12
+     1         CHECK FOR RED CRITERIA                               2        CHECK FOR YELLOW CRITERIA
+
+
+     • Unresponsive
+                                                                    AIRWAY & BREATHING
+    AIRWAY & BREATHING
+                                                                    • Any swelling/mass of mouth, throat or neck
+     • Stridor                                                      • Wheezing (no red criteria)
+     • Respiratory distress* or central cyanosis                                                                                              Patients with high-risk vital signs
+                                                                                                                                                  or clinical concern need
+    CIRCULATION                                                     CIRCULATION
+                                                                                                                                              up-triage or immediate review by
+     • Capillary refill >3 sec                                      • Unable to feed or drink
+     • Weak and fast pulse                                          • Vomits everything                                                              supervising clinician
+     • Heavy bleeding                                               • Ongoing diarrhoea
+     • Cold extremities                                             • Dehydration
+     • Any two of:                                                  • Severe pallor (no red criteria)
+                                                                                                                                                                        YES
+       - Lethargy
+       - Sunken eyes                                                DISABILITY
+       - Very slow skin pinch
+                                                                    • Restless, continuously irritable or lethargy                                            CHECK FOR HIGH-RISK
+       - Drinks poorly                                         NO   • Severe pain                                                        NO           3       VITAL SIGNS
+    DISABILITY
+     • Active convulsions                                           OTHER
+                                                                                                                                                    Temp <36° or >39°
+     • Altered mental status (confused, restless,                   • Any infant 8 days to 6 months old
+       continuously irritable or lethargic) with stiff neck,        • Malnutrition with visible severe wasting OR oedema
+       hypothermia or fever                                           of both feet                                                                  SpO2 < 92%
+     • Hypoglycaemia (if known)                                     • Trauma/burn (no red criteria)
+                                                                    • Sexual assault                                                                AVPU other than A
+    OTHER                                                           • Known diagnosis requiring urgent surgical
+     • Any infant <8 days old                                         intervention                                                                  RR       < 1 year    1-4 years    5-12 years
+     • Age <2 months and temp <36 or >39°C                          • New rash worsening over hours or peeling (no red                              High     50          40           30
+     • High-risk trauma*                                              criteria)
+                                                                                                                                                    Low      25          20           10
+     • Threatened limb*                                             • Exposure requiring time-sensitive prophylaxis (e.g.
+                                                                      animal bite)                                                                  HR       < 1 year    1-4 years    5-12 years
+     • Acute testicular/scrotal pain or priapism
+     • Snake bite                                                   • Pregnancy (no red criteria)                                                   High     180         160          140
+     • Poisoning/ingestion or dangerous chemical                    • Headache (no red criteria)                                                    Low      < 90        < 80         < 70
+       exposure*
+     • Pregnant with adult red criteria
+                                                                                                                                                                        NO
+
+                             YES                                                             YES
+
+   MOVE TO HIGH ACUITY RESUSCITATION                                MOVE TO CLINICAL TREATMENT AREA                                                     MOVE TO LOW ACUITY
+           AREA IMMEDIATELY                                                                                                                              OR WAITING AREA
+
+*See Reference Card                                                                     Developed by World Health Organization, International Committee of the Red Cross, Médecins Sans Frontières
+

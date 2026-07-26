@@ -1,0 +1,215 @@
+{
+  "formKey": "impilo.labour.ctg.annotation.v1",
+  "name": "Cardiotocography — clinician annotation",
+  "description": "A clinician's reading of a point on a fetal monitoring trace. Backed by pct-service pct_ctg_annotations. The trace itself is device data and arrives as sample chunks, not through this form.",
+  "formType": "SERIAL_OBSERVATION",
+  "careSettings": [
+    "INPATIENT",
+    "MATERNITY"
+  ],
+  "careStages": [
+    "MONITORING"
+  ],
+  "specialties": [
+    "MIDWIFERY",
+    "OBSTETRICS"
+  ],
+  "encounterTypes": [
+    "LABOUR",
+    "MATERNITY",
+    "OBSTETRICS",
+    "INPATIENT"
+  ],
+  "requiredWorkflow": "MONITOR",
+  "obligationDefault": "OPTIONAL",
+  "permittedCadres": [
+    "MIDWIFE",
+    "PHYSICIAN",
+    "CLINICAL_OFFICER"
+  ],
+  "sexApplicability": "FEMALE",
+  "requirePregnant": true,
+  "programmeApplicability": [
+    "MATERNAL"
+  ],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO recommendations on intrapartum care; fetal monitoring interpretation",
+  "publish": true,
+  "definition": {
+    "id": "impilo.labour.ctg.annotation.v1",
+    "version": "1.0.0",
+    "title": "CTG annotation",
+    "description": "What a clinician saw on the trace and when. Separate from the trace itself, which is measured rather than interpreted: a gap where the transducer lost contact is recorded as a gap and never interpolated, because a flat line nobody measured looks identical on screen to one that was.",
+    "healthDomain": "MATERNAL",
+    "programme": "MATERNAL",
+    "encounterTypes": [
+      "LABOUR",
+      "MATERNITY",
+      "OBSTETRICS",
+      "INPATIENT"
+    ],
+    "sexApplicability": "FEMALE",
+    "providerRoles": [
+      "MIDWIFE",
+      "PHYSICIAN",
+      "CLINICAL_OFFICER"
+    ],
+    "offlineCapable": true,
+    "audit": {
+      "dataCustodian": "MOHCC",
+      "sensitivity": "SENSITIVE"
+    },
+    "sections": [
+      {
+        "id": "position",
+        "title": "Where on the trace",
+        "fields": [
+          {
+            "id": "recordedAt",
+            "linkId": "recordedAt",
+            "label": "Time of the finding",
+            "kind": "datetime",
+            "validation": {
+              "required": true
+            }
+          },
+          {
+            "id": "channel",
+            "linkId": "channel",
+            "label": "Channel",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "FHR",
+                "display": "Fetal heart rate"
+              },
+              {
+                "code": "UTERINE_ACTIVITY",
+                "display": "Uterine activity"
+              },
+              {
+                "code": "MATERNAL_HR",
+                "display": "Maternal heart rate"
+              }
+            ],
+            "description": "Which trace the finding is on. A maternal pulse mistaken for a fetal heart rate is a recognised and lethal confusion, so the channel is explicit rather than assumed.",
+            "validation": {
+              "required": true
+            }
+          },
+          {
+            "id": "sampleOffsetSec",
+            "linkId": "sampleOffsetSec",
+            "label": "Offset into the recording",
+            "kind": "numeric_with_unit",
+            "unit": "s",
+            "validation": {
+              "min": 0
+            }
+          }
+        ]
+      },
+      {
+        "id": "finding",
+        "title": "Finding",
+        "fields": [
+          {
+            "id": "category",
+            "linkId": "category",
+            "label": "What was seen",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "BASELINE",
+                "display": "Baseline rate"
+              },
+              {
+                "code": "VARIABILITY",
+                "display": "Variability"
+              },
+              {
+                "code": "ACCELERATION",
+                "display": "Acceleration"
+              },
+              {
+                "code": "EARLY_DECELERATION",
+                "display": "Early deceleration"
+              },
+              {
+                "code": "VARIABLE_DECELERATION",
+                "display": "Variable deceleration"
+              },
+              {
+                "code": "LATE_DECELERATION",
+                "display": "Late deceleration"
+              },
+              {
+                "code": "PROLONGED_DECELERATION",
+                "display": "Prolonged deceleration"
+              },
+              {
+                "code": "SIGNAL_LOSS",
+                "display": "Signal loss / transducer displaced"
+              },
+              {
+                "code": "MATERNAL_MOVEMENT",
+                "display": "Maternal movement"
+              },
+              {
+                "code": "INTERVENTION",
+                "display": "Intervention performed"
+              },
+              {
+                "code": "OTHER",
+                "display": "Other"
+              }
+            ],
+            "validation": {
+              "required": true
+            }
+          },
+          {
+            "id": "value",
+            "linkId": "value",
+            "label": "Measured value",
+            "kind": "text",
+            "description": "For example a baseline rate in beats per minute, or a deceleration depth."
+          },
+          {
+            "id": "severity",
+            "linkId": "severity",
+            "label": "Concern",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "NORMAL",
+                "display": "Normal"
+              },
+              {
+                "code": "NON_REASSURING",
+                "display": "Non-reassuring"
+              },
+              {
+                "code": "ABNORMAL",
+                "display": "Abnormal"
+              }
+            ],
+            "description": "Recorded as the clinician's judgement. Nothing derives this from the trace: an automated category on an incomplete recording is a confident answer about data that was never captured."
+          },
+          {
+            "id": "notes",
+            "linkId": "notes",
+            "label": "Notes",
+            "kind": "text"
+          }
+        ]
+      }
+    ]
+  },
+  "resourceMappings": {
+    "mappings": []
+  }
+}

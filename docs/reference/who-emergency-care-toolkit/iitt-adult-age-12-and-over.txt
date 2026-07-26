@@ -1,0 +1,56 @@
+       INTERAGENCY INTEGRATED TRIAGE TOOL: Age ≥ 12
+     1         CHECK FOR RED CRITERIA                             2        CHECK FOR YELLOW CRITERIA
+
+
+     • Unresponsive
+                                                                  AIRWAY & BREATHING
+    AIRWAY & BREATHING
+                                                                  • Any swelling/mass of mouth, throat or neck
+     • Stridor
+                                                                  • Wheezing (no red criteria)                                               Patients with high-risk vital signs
+     • Respiratory distress* or central cyanosis
+    CIRCULATION                                                                                                                                  or clinical concern need
+                                                                  CIRCULATION
+     • Capillary refill >3 sec                                                                                                               up-triage or immediate review by
+                                                                  • Vomits everything or ongoing diarrhoea
+     • Weak and fast pulse
+                                                                  • Unable to feed or drink                                                         supervising clinician
+     • Heavy bleeding
+     • HR <50 or >150                                             • Severe pallor (no red criteria)
+                                                                  • Ongoing bleeding (no red criteria)
+    DISABILITY                                                    • Recent fainting
+                                                                                                                                                                     YES
+     • Active convulsions
+     • Any two of:                                                DISABILITY
+       - Altered mental status     - Hypothermia or fever         • Altered mental status or agitation (no red criteria)                                     CHECK FOR HIGH-RISK
+       - Stiff neck
+     • Hypoglycaemia
+                                   - Headache                NO   • Acute general weakness                                             NO           3        VITAL SIGNS
+                                                                  • Acute focal neurologic complaint
+    OTHER                                                         • Acute visual disturbance
+                                                                  • Severe pain (no red criteria)
+     • High-risk trauma*                                                                                                                            HR <60 or >130
+     • Poisoning/ingestion or dangerous chemical exposure*
+     • Threatened limb*                                           OTHER                                                                             RR <10 or >30
+     • Snake bite                                                 • New rash worsening over hours or peeling (no red criteria)
+     • Acute chest or abdominal pain (>50 years old)              • Visible acute limb deformity
+     • ECG with acute ischaemia (if done)                         • Open fracture                                                                   Temp <36° or >39°
+     • Violent or aggressive                                      • Suspected dislocation
+    PREGNANT WITH ANY OF:                                         • Other trauma/burns (no red criteria)                                            SpO2 <92%
+                                                                  • Known diagnosis requiring urgent surgical intervention
+     • Heavy bleeding                                             • Sexual assault
+     • Severe abdominal pain                                      • Acute testicular/scrotal pain or priapism                                       AVPU other than A
+     • Seizures or altered mental status                          • Unable to pass urine
+     • Severe headache                                            • Exposure requiring time-sensitive prophylaxis (eg.
+     • Visual changes                                               animal bite, needlestick)
+     • SBP ≥160 or DBP ≥110                                       • Pregnancy, referred for complications
+     • Active labour                                                                                                                                                  NO
+     • Trauma
+
+                                 YES                                                       YES
+
+   MOVE TO HIGH ACUITY RESUSCITATION                              MOVE TO CLINICAL TREATMENT AREA                                                     MOVE TO LOW ACUITY
+           AREA IMMEDIATELY                                                                                                                            OR WAITING AREA
+
+*See Reference Card                                                                   Developed by World Health Organization, The International Committee of the Red Cross, Médecins Sans Frontières
+

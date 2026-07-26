@@ -1,0 +1,139 @@
+package zw.gov.mohcc.impilo.clinical.contraception;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * The medical eligibility matrix: methods, conditions, and the category where they meet.
+ *
+ * <p><b>A partial matrix must not read as a complete one.</b> This is the property that makes a
+ * subset shippable. Transcribing every condition in the criteria is a long, careful, two-person job,
+ * and shipping what exists so far is only safe if the content states what it does not cover and the
+ * engine reports it. Two mechanisms do that:
+ *
+ * <ul>
+ *   <li>{@link #conditionsOutOfScope()} — conditions the transcription has NOT reached, declared by
+ *       name in the content. They travel on every assessment, so a clinician can see that a woman's
+ *       relevant condition may simply not be in the matrix yet.</li>
+ *   <li>A (condition, method) pair with no cell is reported as unclassified rather than defaulted to
+ *       category 1. The content not speaking to a pair is not the same as the pair being safe.</li>
+ * </ul>
+ *
+ * <p>Without both, a partial matrix answers "category 1, no restriction" for a woman whose
+ * condition was never transcribed — a confident green light derived from an absence.
+ */
+public record MecMatrix(
+        String packId,
+        String version,
+        String approvalStatus,
+        String adaptationAuthority,
+        String provenance,
+        String coverageNote,
+        List<Method> methods,
+        List<Condition> conditions,
+        List<String> conditionsOutOfScope,
+        Map<String, Cell> cells) {
+
+    /** A contraceptive method. */
+    public record Method(String code, String name, String methodClass) {
+    }
+
+    /**
+     * A condition or characteristic that may restrict a method.
+     *
+     * @param logic three-valued predicate over the same fact map every other engine reads
+     */
+    public record Condition(String code, String name, JsonNode logic,
+                            List<String> requiredInputs, List<String> sourceRefs) {
+    }
+
+    /**
+     * One cell: what this condition does to this method.
+     *
+     * @param initiation   category 1-4 for starting the method
+     * @param continuation category 1-4 for continuing a method already in use. Frequently differs —
+     *                     for several conditions stopping is more harmful than continuing.
+     */
+    public record Cell(String conditionCode, String methodCode,
+                       int initiation, int continuation,
+                       String clarification, List<String> sourceRefs) {
+
+        public int categoryFor(MedicalEligibilityEngine.UsePhase phase) {
+            return phase == MedicalEligibilityEngine.UsePhase.CONTINUATION ? continuation : initiation;
+        }
+    }
+
+    /**
+     * Composite key for the cell index.
+     *
+     * <p>The separator has to be a character that cannot occur in a code, or the key collides:
+     * concatenating without one makes {@code AB + C} and {@code A + BC} the same key, and the
+     * eligibility answer for one method would silently be served for another. Condition and method
+     * codes are upper-case with underscores, so a pipe cannot appear in either.
+     */
+    private static String key(String conditionCode, String methodCode) {
+        return conditionCode + "|" + methodCode;
+    }
+
+    public Cell cell(String conditionCode, String methodCode) {
+        return cells.get(key(conditionCode, methodCode));
+    }
+
+    public String conditionName(String conditionCode) {
+        return conditions.stream()
+                .filter(c -> c.code().equals(conditionCode))
+                .map(Condition::name)
+                .findFirst()
+                .orElse(conditionCode);
+    }
+
+    /** The questions that would resolve a set of unassessed conditions. */
+    public List<String> requiredInputsFor(List<String> conditionCodes) {
+        Set<String> inputs = new LinkedHashSet<>();
+        for (Condition condition : conditions) {
+            if (conditionCodes.contains(condition.code())) {
+                inputs.addAll(condition.requiredInputs());
+            }
+        }
+        return List.copyOf(inputs);
+    }
+
+    /** Build the cell index from a flat list. */
+    public static MecMatrix of(String packId, String version, String approvalStatus,
+                               String adaptationAuthority, String provenance, String coverageNote,
+                               List<Method> methods, List<Condition> conditions,
+                               List<String> conditionsOutOfScope, List<Cell> cellList) {
+        Map<String, Cell> index = new LinkedHashMap<>();
+        for (Cell cell : cellList) {
+            index.put(key(cell.conditionCode(), cell.methodCode()), cell);
+        }
+        return new MecMatrix(packId, version, approvalStatus, adaptationAuthority, provenance,
+                coverageNote, List.copyOf(methods), List.copyOf(conditions),
+                List.copyOf(conditionsOutOfScope), Map.copyOf(index));
+    }
+
+    /**
+     * Pairs the matrix does not classify, for the content gate.
+     *
+     * <p>A hole is legitimate — not every condition restricts every method, and the criteria
+     * genuinely do not address some pairs — but it must be a hole somebody chose. The content test
+     * requires every pair to be either a cell or listed as deliberately unclassified.
+     */
+    public List<String> unclassifiedPairs() {
+        List<String> out = new ArrayList<>();
+        for (Condition condition : conditions) {
+            for (Method method : methods) {
+                if (cell(condition.code(), method.code()) == null) {
+                    out.add(condition.code() + " x " + method.code());
+                }
+            }
+        }
+        return out;
+    }
+}

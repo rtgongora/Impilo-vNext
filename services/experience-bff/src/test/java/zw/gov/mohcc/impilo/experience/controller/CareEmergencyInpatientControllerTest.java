@@ -66,9 +66,9 @@ class CareEmergencyInpatientControllerTest {
             return arr;
         }
 
-        @Override public JsonNode listEmergencyActivations() {
-            return mapper.createArrayNode();
-        }
+        // No listEmergencyActivations override: emergency activations were never served by PCT.
+        // The stub used to return an empty array here while the inpatient stub below returned the
+        // real fixture, which is what a vestigial defensive stub looks like.
 
         @Override public JsonNode createCarePlan(Map<String, Object> body) {
             return mapper.createObjectNode().put("id", "cp-new");

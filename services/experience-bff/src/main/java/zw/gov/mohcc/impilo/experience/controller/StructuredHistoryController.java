@@ -13,9 +13,6 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
-import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -34,8 +31,6 @@ public class StructuredHistoryController {
 
     private static final Logger log = LoggerFactory.getLogger(StructuredHistoryController.class);
 
-    /** Golden-path demo patient — offline structured rows when PCT has no data. */
-    private static final String GOLDEN_PATH_DEMO_PATIENT = "a1000000-0000-0000-0000-000000000001";
 
     private final ObjectMapper objectMapper;
     private final PctServiceClient pctClient;
@@ -63,22 +58,34 @@ public class StructuredHistoryController {
         );
     }
 
-    private static String dateStr(Date d) {
-        return d == null ? null : d.toLocalDate().toString();
-    }
+    /**
+     * The lane and wave that owe this capability a system of record.
+     *
+     * <p>Named on every response by product-owner rule: we do not delete things to hide incomplete
+     * functionality, we complete it — and an honest failure is only an acceptable transitional
+     * state while the backing wave is named and scheduled. An unattributed "unavailable" is
+     * indistinguishable from an outage, so nobody can tell whether to wait, escalate, or record
+     * the history somewhere else.</p>
+     */
+    private static final String OWNING_WAVE =
+            "Adult Medicine and Medical Specialties pack, wave W2 (structured history system of record)";
 
     /**
-     * Every endpoint here falls through to an empty (or demo-patient) history when the upstream
-     * has nothing to say. That fallback is only honest when the upstream actually answered — a
-     * failed call rendered as an empty history is an affirmative clinical claim ("no surgery",
-     * "no advance directive") made at the moment the system knows least. Failures land here
-     * instead.
+     * Every endpoint here falls through to an empty history when the upstream answers and holds
+     * nothing. That fallback is only honest when the upstream actually answered — a failed call
+     * rendered as an empty history is an affirmative clinical claim ("no surgery", "no advance
+     * directive") made at the moment the system knows least. Failures land here instead, and say
+     * who owes the capability.
      */
     private static ResponseEntity<Map<String, Object>> upstreamUnavailable(
             String code, String message, String requestId, String correlationId) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                 "error", code,
                 "message", message,
+                "in_development", Map.of(
+                        "owner", OWNING_WAVE,
+                        "status", "Structured history has no system of record yet. This is "
+                                  + "in development, not an outage."),
                 "meta", meta(requestId, correlationId)));
     }
 
@@ -103,19 +110,7 @@ public class StructuredHistoryController {
                     "Social history could not be retrieved. Do not treat this as an absence of "
                     + "social history.", requestId, correlationId);
         }
-        return demoSocialHistory(patientIdParam, requestId, correlationId);
-    }
-
-    private Map<String, Object> socialRow(ResultSet rs) throws SQLException {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", rs.getObject("id", UUID.class).toString());
-        m.put("category", rs.getString("category"));
-        m.put("icon", rs.getString("icon"));
-        m.put("status", rs.getString("status"));
-        m.put("detail", rs.getString("detail"));
-        m.put("lastUpdated", dateStr(rs.getDate("last_updated")));
-        m.put("riskLevel", rs.getString("risk_level"));
-        return m;
+        return emptyHistory(requestId, correlationId);
     }
 
     @GetMapping("/family-history")
@@ -140,21 +135,7 @@ public class StructuredHistoryController {
                     "Family history could not be retrieved. Do not treat this as an absence of "
                     + "family history.", requestId, correlationId);
         }
-        return demoFamilyHistory(patientIdParam, requestId, correlationId);
-    }
-
-    private Map<String, Object> familyMemberRow(ResultSet rs) throws SQLException {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", rs.getObject("id", UUID.class).toString());
-        m.put("name", rs.getString("name"));
-        m.put("relationship", rs.getString("relationship"));
-        int age = rs.getInt("age");
-        m.put("age", rs.wasNull() ? null : age);
-        m.put("deceased", Boolean.TRUE.equals(rs.getObject("deceased", Boolean.class)));
-        int da = rs.getInt("deceased_age");
-        m.put("deceasedAge", rs.wasNull() ? null : da);
-        m.put("causeOfDeath", rs.getString("cause_of_death"));
-        return m;
+        return emptyHistory(requestId, correlationId);
     }
 
     private Map<UUID, List<Map<String, Object>>> loadFamilyConditions(List<UUID> memberIds) {
@@ -185,30 +166,7 @@ public class StructuredHistoryController {
                     "Functional assessments could not be retrieved. Do not treat this as an "
                     + "absence of assessments.", requestId, correlationId);
         }
-        return demoFunctionalAssessments(patientIdParam, requestId, correlationId);
-    }
-
-    private Map<String, Object> functionalRow(ResultSet rs) throws SQLException {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", rs.getObject("id", UUID.class).toString());
-        m.put("type", rs.getString("assessment_type"));
-        m.put("date", dateStr(rs.getDate("assessment_date")));
-        m.put("assessor", rs.getString("assessor"));
-        m.put("totalScore", rs.getInt("total_score"));
-        m.put("maxScore", rs.getInt("max_score"));
-        m.put("interpretation", rs.getString("interpretation"));
-        String json = rs.getString("activities_json");
-        List<Map<String, Object>> activities = List.of();
-        if (json != null && !json.isBlank()) {
-            try {
-                activities = objectMapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {
-                });
-            } catch (Exception ignored) {
-                activities = List.of();
-            }
-        }
-        m.put("activities", activities);
-        return m;
+        return emptyHistory(requestId, correlationId);
     }
 
     @GetMapping("/procedures")
@@ -252,20 +210,7 @@ public class StructuredHistoryController {
                     "Procedure history could not be retrieved. Do not treat this as an absence "
                     + "of procedures.", requestId, correlationId);
         }
-        return demoProcedures(patientIdParam, requestId, correlationId);
-    }
-
-    private Map<String, Object> procedureRow(ResultSet rs) throws SQLException {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", rs.getObject("id", UUID.class).toString());
-        m.put("name", rs.getString("name"));
-        m.put("type", rs.getString("procedure_type"));
-        m.put("date", dateStr(rs.getDate("procedure_date")));
-        m.put("surgeon", rs.getString("surgeon"));
-        m.put("facility", rs.getString("facility"));
-        m.put("status", rs.getString("status"));
-        m.put("notes", rs.getString("notes"));
-        return m;
+        return emptyHistory(requestId, correlationId);
     }
 
     @GetMapping("/advance-directives")
@@ -292,22 +237,7 @@ public class StructuredHistoryController {
                     "Advance directives could not be retrieved. Do not treat this as an absence "
                     + "of a directive.", requestId, correlationId);
         }
-        return demoAdvanceDirectives(patientIdParam, requestId, correlationId);
-    }
-
-    private Map<String, Object> directiveRow(ResultSet rs) throws SQLException {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", rs.getObject("id", UUID.class).toString());
-        m.put("type", rs.getString("directive_type"));
-        m.put("status", rs.getString("status"));
-        m.put("effectiveDate", dateStr(rs.getDate("effective_date")));
-        m.put("reviewDate", dateStr(rs.getDate("review_date")));
-        m.put("documentRef", rs.getString("document_ref"));
-        m.put("summary", rs.getString("summary"));
-        m.put("contact", rs.getString("contact"));
-        m.put("contactRelation", rs.getString("contact_relation"));
-        m.put("contactPhone", rs.getString("contact_phone"));
-        return m;
+        return emptyHistory(requestId, correlationId);
     }
 
     private static boolean pctPayloadMissingOrEmpty(JsonNode pctData) {
@@ -321,86 +251,4 @@ public class StructuredHistoryController {
         return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
     }
 
-    private ResponseEntity<Map<String, Object>> demoSocialHistory(
-            String patientIdParam, String requestId, String correlationId) {
-        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
-            return emptyHistory(requestId, correlationId);
-        }
-        List<Map<String, Object>> rows = List.of(Map.of(
-                "id", "soc-demo-1",
-                "category", "Tobacco",
-                "icon", "smoke",
-                "status", "UNKNOWN",
-                "detail", "Not assessed",
-                "lastUpdated", "2026-01-01",
-                "riskLevel", "UNKNOWN"));
-        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
-    }
-
-    private ResponseEntity<Map<String, Object>> demoFamilyHistory(
-            String patientIdParam, String requestId, String correlationId) {
-        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
-            return emptyHistory(requestId, correlationId);
-        }
-        List<Map<String, Object>> rows = List.of(Map.of(
-                "id", "fam-demo-1",
-                "name", "Parent",
-                "relationship", "Mother",
-                "age", 72,
-                "deceased", false,
-                "conditions", List.of(Map.of("code", "E11", "label", "Type 2 diabetes"))));
-        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
-    }
-
-    private ResponseEntity<Map<String, Object>> demoFunctionalAssessments(
-            String patientIdParam, String requestId, String correlationId) {
-        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
-            return emptyHistory(requestId, correlationId);
-        }
-        List<Map<String, Object>> rows = List.of(Map.of(
-                "id", "func-demo-1",
-                "type", "ADL",
-                "date", "2026-01-15",
-                "assessor", "Sample data (demo)",
-                "totalScore", 18,
-                "maxScore", 24,
-                "interpretation", "Independent with aids",
-                "activities", List.of(Map.of("code", "MOBILITY", "score", 4))));
-        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
-    }
-
-    private ResponseEntity<Map<String, Object>> demoProcedures(
-            String patientIdParam, String requestId, String correlationId) {
-        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
-            return emptyHistory(requestId, correlationId);
-        }
-        List<Map<String, Object>> rows = List.of(Map.of(
-                "id", "proc-demo-1",
-                "name", "Appendectomy",
-                "type", "Surgical",
-                "date", "2018-06-01",
-                "surgeon", "Sample data (demo)",
-                "facility", "Harare Central",
-                "status", "COMPLETED",
-                "notes", "Uncomplicated"));
-        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
-    }
-
-    private ResponseEntity<Map<String, Object>> demoAdvanceDirectives(
-            String patientIdParam, String requestId, String correlationId) {
-        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
-            return emptyHistory(requestId, correlationId);
-        }
-        List<Map<String, Object>> rows = List.of(Map.of(
-                "id", "ad-demo-1",
-                "type", "POLST",
-                "status", "ACTIVE",
-                "effectiveDate", "2025-12-01",
-                "reviewDate", "2027-12-01",
-                "summary", "Full code unless terminal",
-                "contact", "Next of kin",
-                "contactRelation", "Spouse",
-                "contactPhone", "+263-77-000-0000"));
-        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
-    }
 }

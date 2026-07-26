@@ -519,6 +519,62 @@ From the session that landed `19429a2a7` (adopted onto canonical in `3cb08e4b9`)
   are named after the component (`ParklandForm`), not the formula. Grep the arithmetic too
   (`4 \* kg`, `* weight *`). This is why §5b's original "burns is absent" claim was wrong.
 
+## 5h. Coordinator rulings taken into scope
+
+**Definition of done, all remaining waves.** A slice is done only when **UI + BFF + contract/API +
+backend are all wired** — no orphan endpoints, no UI over demo fixtures. And **every new
+service→service call must carry its own `client_credentials` token** (the mvumo
+`ClientCredentialsTokenProvider` / pct `ServiceTokenProvider` pattern). **Trust headers are not
+authentication**, and a unit test that mocks the client mocks away the 401 — so an S2S call proven
+only by a mocked-client test is not proven. This binds every cross-service call this pack adds:
+PCT→daidzai continuum-link and adopt, PCT→CKP triage and pathway evaluation, PCT→madi MHP
+activation, PCT→inpatient activation, and the emergency→mental-health handover. A coordinated S2S
+token wave is building the BFF-side minting seam; this pack consumes it rather than minting its own.
+
+**S2S tokens — the concrete plan, verified.** The BFF-side seam landed on
+`origin/worktree-agent-ad437b26ae1ec58a7` (head `5a34930e3`): `ServiceTokenProvider` mints
+client_credentials, caches to expiry−30s, and on failure logs `SERVICE_TOKEN_MINT_FAILED` and
+returns empty rather than throwing. Interceptor precedence in the shared `serviceRestTemplate`:
+(1) an explicitly pre-set `Authorization` wins; (2) an inbound user token is forwarded unchanged and
+the provider is never consulted; (3) with no inbound token — schedulers, Kafka consumers, public-lane
+composition — the service token is attached.
+
+**But that seam covers only BFF-originated calls.** Every cross-service call this pack adds is
+**service-side**: PCT→daidzai (continuum-link, adopt), PCT→CKP (triage, pathways), PCT→madi (MHP),
+PCT→inpatient (activation), and emergency→mental-health. Each needs the per-service provider —
+copy `services/pct-service/.../integration/ServiceTokenProvider.java`
+(`origin/claude/trusting-greider-6464d6` @ `bef6af9f3`, verified reachable) plus helm `secretEnv` per
+service. `mvumo` has the sibling `ClientCredentialsTokenProvider` if a second reference is wanted.
+
+**The role caveat does NOT block this pack — checked rather than assumed.** The coordinator flagged
+that `service-account-impilo-backend` currently holds no downstream roles beyond realm-management, so
+role-guarded endpoints (ndila) will 403 until a realm-role vocabulary is decided. **All four of this
+pack's targets are `authenticated()` only, not role-guarded:**
+
+| Service | Posture | Blocked by the role gap? |
+|---|---|---|
+| clinical-knowledge-platform | `.anyRequest().authenticated()` | No |
+| daidzai | `/internal/v1/daidzai/**` `.authenticated()` | No |
+| madi | `/internal/v1/madi/**` `.authenticated()` | No |
+| inpatient | `.anyRequest().authenticated()` | No |
+
+So W2 and W3 can proceed on the token seam without waiting for the realm-role decision. (Noted in
+passing: daidzai and inpatient carry an `else` branch of `anyRequest().permitAll()` behind the
+preview/test flag — relevant to the deferred preview→prod auth hardening wave, not to this one.)
+
+**Rig proof pattern, binding on W2:** a positive assertion on authenticated content **plus a negative
+control — a tokenless call must 401**. Never absence-of-errors. This is the concrete form of the DoD
+clause that a unit test mocking the client mocks away the 401.
+
+**Mobile specialty-workspace slice.** The coordinator's sweep found 66 of 108 labels attach clinical
+instrument names to a fake adder or a non-persisting notes box; the burns session does the mechanical
+withdrawal and per-lane replacements go through **forms-service governed definitions**. This pack's
+slice: **GCS, NIHSS, RASS/ICU sedation**, plus **PHQ-9, GAD-7 and Safety Plan as forms-service
+questionnaires now, with interpretation deferred to `mental-health-service` (8397)**. The split
+matters — capturing a PHQ-9 score is a form; acting on item 9 is a clinical decision that needs the
+service, so shipping the questionnaire without the interpretation is honest only while the deferral
+is stated on the surface.
+
 ## 6. Defects fixed in W0 that other lanes depend on
 
 All three were verified in code, not inferred, and are pushed.
