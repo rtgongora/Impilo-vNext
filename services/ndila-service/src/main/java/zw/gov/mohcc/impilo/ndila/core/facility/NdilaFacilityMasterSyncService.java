@@ -24,9 +24,12 @@ import java.util.UUID;
 @Service
 public class NdilaFacilityMasterSyncService {
 
-    public static final String OWNER_SERVICE = "TUSO";
-    public static final String OWNER_ENTITY_TYPE = "FACILITY";
-    public static final String LOCATION_TYPE = "HEALTH_FACILITY";
+    public static final String OWNER_SERVICE =
+            zw.gov.mohcc.impilo.ndila.core.location.NdilaLocationVocabulary.OWNER_SERVICE_TUSO;
+    public static final String OWNER_ENTITY_TYPE =
+            zw.gov.mohcc.impilo.ndila.core.location.NdilaLocationVocabulary.OWNER_ENTITY_TYPE_FACILITY;
+    public static final String LOCATION_TYPE =
+            zw.gov.mohcc.impilo.ndila.core.location.NdilaLocationVocabulary.LOCATION_TYPE_HEALTH_FACILITY;
 
     private final NdilaLocationRepository locationRepository;
     private final NdilaLocationService locationService;

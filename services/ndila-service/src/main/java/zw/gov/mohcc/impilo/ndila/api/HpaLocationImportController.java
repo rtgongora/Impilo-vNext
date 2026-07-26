@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.ndila.core.location.HpaGeocodeProposalService;
 import zw.gov.mohcc.impilo.ndila.core.location.HpaLocationImportService;
 
 import java.util.List;
@@ -30,10 +31,14 @@ public class HpaLocationImportController {
     private static final Logger log = LoggerFactory.getLogger(HpaLocationImportController.class);
 
     private final HpaLocationImportService importService;
+    private final HpaGeocodeProposalService proposalService;
     private final JdbcTemplate jdbc;
 
-    public HpaLocationImportController(HpaLocationImportService importService, JdbcTemplate jdbc) {
+    public HpaLocationImportController(HpaLocationImportService importService,
+                                       HpaGeocodeProposalService proposalService,
+                                       JdbcTemplate jdbc) {
         this.importService = importService;
+        this.proposalService = proposalService;
         this.jdbc = jdbc;
     }
 
@@ -48,12 +53,36 @@ public class HpaLocationImportController {
 
     @GetMapping("/geocode-review-queue")
     public ResponseEntity<List<Map<String, Object>>> geocodeReviewQueue(
-            @RequestParam(value = "limit", defaultValue = "200") int limit) {
+            @RequestParam(value = "limit", defaultValue = "200") int limit,
+            @RequestParam(value = "province", required = false) String province) {
+        // HAR W4 — the proposal columns are returned so a steward sees a starting point rather than
+        // 6,327 rows with nothing but a name. They are proposals, and the payload says so.
         return ResponseEntity.ok(jdbc.queryForList(
-                "SELECT id, owner_entity_id, facility_name, province, reason, status FROM ndila_geocode_review_queue "
-                        + "WHERE owner_service='TUSO' AND reason='MISSING_COORDINATES' AND status='PENDING' "
-                        + "ORDER BY created_at LIMIT ?", limit));
+                "SELECT id, owner_entity_id, facility_name, province, district, reason, status, "
+                        + "       proposed_latitude, proposed_longitude, proposed_source, "
+                        + "       proposed_confidence, proposed_locality, proposed_address, proposal_status "
+                        + "  FROM ndila_geocode_review_queue "
+                        + " WHERE owner_service = ? AND reason='MISSING_COORDINATES' AND status='PENDING' "
+                        + "   AND (? IS NULL OR lower(province) = lower(?)) "
+                        + " ORDER BY created_at LIMIT ?",
+                zw.gov.mohcc.impilo.ndila.core.location.NdilaLocationVocabulary.OWNER_SERVICE_TUSO,
+                province, province, limit));
     }
+
+    /**
+     * HAR W4 — propose a starting point for each pending review row from the district centroid of
+     * facilities we have already surveyed. Writes only to the review queue; publishes no pin.
+     */
+    @PostMapping("/propose-geocodes")
+    public ResponseEntity<HpaGeocodeProposalService.ProposalSummary> proposeGeocodes(
+            @RequestBody(required = false) ProposeApiRequest request) {
+        boolean dryRun = request == null || request.dryRun() == null || request.dryRun();
+        int limit = request == null || request.limit() == null ? 1000 : request.limit();
+        return ResponseEntity.ok(proposalService.proposeForPendingReviews(
+                tenant(request == null ? null : request.tenantId()), dryRun, limit));
+    }
+
+    public record ProposeApiRequest(String tenantId, Boolean dryRun, Integer limit) {}
 
     private static UUID tenant(String raw) {
         return (raw == null || raw.isBlank()) ? null : UUID.fromString(raw.trim());

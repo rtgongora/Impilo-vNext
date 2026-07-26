@@ -110,7 +110,7 @@ public class HpaLocationImportService {
 
                 // No plausible, corroborated coordinate → no public pin; queue for confirmation.
                 if (!coordPersisted) {
-                    if (enqueueGeocodeReview(tenantId, ownerEntityId, name, province)) {
+                    if (enqueueGeocodeReview(tenantId, ownerEntityId, name, province, locality, address)) {
                         queued++;
                     }
                 }
@@ -126,27 +126,46 @@ public class HpaLocationImportService {
     private boolean insertLocationIfAbsent(UUID tenantId, String ownerEntityId, String name, String address,
                                            String locality, String province, BigDecimal lat, BigDecimal lng) {
         Integer existing = jdbc.queryForObject(
-                "SELECT count(*) FROM ndila_locations WHERE tenant_id=? AND owner_service='TUSO' "
+                "SELECT count(*) FROM ndila_locations WHERE tenant_id=? AND owner_service=? "
                         + "AND owner_entity_id=? AND source='IMPORT'",
-                Integer.class, tenantId, ownerEntityId);
+                Integer.class, tenantId, NdilaLocationVocabulary.OWNER_SERVICE_TUSO, ownerEntityId);
         if (existing != null && existing > 0) {
             return false;
         }
+        // HAR W4 — HPA's locality is the administrative area the institution sits in, which is what
+        // `district` means here and what every district-scoped read expects. It used to land only in
+        // `locality`, leaving `district` empty for the whole HPA estate, so a district search found
+        // none of them. Written to both: `locality` keeps the source's own word for it.
         jdbc.update("INSERT INTO ndila_locations (tenant_id, owner_service, owner_entity_type, owner_entity_id, "
-                        + "name, description, location_type, latitude, longitude, locality, province, source, "
-                        + "verification_status, sensitivity_level) "
-                        + "VALUES (?, 'TUSO', 'FACILITY', ?, ?, ?, 'HEALTH_FACILITY', ?, ?, ?, ?, 'IMPORT', 'UNVERIFIED', 'PUBLIC')",
-                tenantId, ownerEntityId, name != null ? name : ownerEntityId, address, lat, lng, locality, province);
+                        + "name, description, address_line1, location_type, latitude, longitude, "
+                        + "locality, district, province, source, verification_status, sensitivity_level) "
+                        + "VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'IMPORT', 'UNVERIFIED', 'PUBLIC')",
+                tenantId,
+                NdilaLocationVocabulary.OWNER_SERVICE_TUSO,
+                NdilaLocationVocabulary.OWNER_ENTITY_TYPE_FACILITY,
+                ownerEntityId,
+                name != null ? name : ownerEntityId,
+                address,
+                NdilaLocationVocabulary.LOCATION_TYPE_HEALTH_FACILITY,
+                lat, lng, locality, locality, province);
         return true;
     }
 
-    private boolean enqueueGeocodeReview(UUID tenantId, String ownerEntityId, String name, String province) {
+    private boolean enqueueGeocodeReview(UUID tenantId, String ownerEntityId, String name,
+                                         String province, String district, String address) {
+        // The queue row carries the locality/address the facility was described by, because that is
+        // exactly what a steward needs to place it — and what a geocode proposal is derived from.
         int rows = jdbc.update(
                 "INSERT INTO ndila_geocode_review_queue (tenant_id, owner_service, owner_entity_type, "
-                        + "owner_entity_id, facility_name, province, reason, status) "
-                        + "VALUES (?, 'TUSO', 'FACILITY', ?, ?, ?, 'MISSING_COORDINATES', 'PENDING') "
+                        + "owner_entity_id, facility_name, province, district, proposed_locality, "
+                        + "proposed_address, reason, status) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'MISSING_COORDINATES', 'PENDING') "
                         + "ON CONFLICT (tenant_id, owner_service, owner_entity_id) DO NOTHING",
-                tenantId, ownerEntityId, name != null ? name : ownerEntityId, province);
+                tenantId,
+                NdilaLocationVocabulary.OWNER_SERVICE_TUSO,
+                NdilaLocationVocabulary.OWNER_ENTITY_TYPE_FACILITY,
+                ownerEntityId, name != null ? name : ownerEntityId,
+                province, district, district, address);
         return rows > 0;
     }
 
