@@ -9,13 +9,18 @@ export interface StaffingShiftResource {
   id: string;
   type: string;
   attributes: {
-    user_id: string;
-    staff_display_name: string;
+    /** Vashandi's person reference. Names live in vito/varapi, not in the rostering service. */
+    workforce_profile_id: string;
+    /** Operational worker id — a reference staff recognise, NOT the person's name. May be null. */
+    staff_reference: string | null;
     facility_id: string | null;
-    workspace_id: string | null;
+    shift_type: string | null;
+    on_call_role: "PRIMARY" | "BACKUP" | null;
+    specialty: string | null;
     status: string;
     started_at: string;
     ended_at: string | null;
+    virtual_pool_id: string | null;
   };
 }
 
@@ -25,10 +30,15 @@ export interface OnCallAssignmentResource {
   attributes: {
     assignment_date: string;
     specialty: string;
-    shift_kind: string;
-    primary_staff_name: string;
+    shift_kind: string | null;
+    primary_workforce_profile_id: string | null;
+    primary_staff_reference: string | null;
+    primary_shift_id: string | null;
+    /** null means "not known here" — vashandi holds no phone numbers and will not invent one. */
     primary_phone: string | null;
-    backup_staff_name: string;
+    backup_workforce_profile_id: string | null;
+    backup_staff_reference: string | null;
+    backup_shift_id: string | null;
     backup_phone: string | null;
   };
 }
@@ -37,12 +47,16 @@ export interface OnCallSwapResource {
   id: string;
   type: string;
   attributes: {
-    requestor_name: string;
-    requestee_name: string;
-    original_date: string;
-    swap_date: string;
-    specialty: string | null;
+    requesting_shift_id: string;
+    requesting_workforce_profile_id: string;
+    requested_workforce_profile_id: string;
+    offered_shift_id: string | null;
+    facility_id: string | null;
+    reason: string | null;
     status: string;
+    decided_by: string | null;
+    decided_at: string | null;
+    created_at: string | null;
   };
 }
 
@@ -95,22 +109,24 @@ export function useOnCallSwaps(facilityId: string | undefined) {
   });
 }
 
+/**
+ * A swap is raised against a rostered shift and a person, never against typed names: two staff
+ * share a name, and a swap changes who is clinically accountable for a window.
+ */
 export interface CreateOnCallSwapPayload {
-  facility_id: string;
-  requestor_name: string;
-  requestee_name: string;
-  original_date: string;
-  swap_date: string;
-  specialty?: string | null;
+  requesting_shift_id: string;
+  requested_profile_id: string;
+  offered_shift_id?: string | null;
+  reason?: string | null;
 }
 
-export function useCreateOnCallSwap() {
+export function useCreateOnCallSwap(facilityId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateOnCallSwapPayload) =>
       apiClient.post<{ data: OnCallSwapResource }>("/internal/v1/staffing/on-call/swaps", body),
-    onSuccess: (_res, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["staffing", "on-call-swaps", variables.facility_id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staffing", "on-call-swaps", facilityId] });
     },
   });
 }
@@ -118,9 +134,15 @@ export function useCreateOnCallSwap() {
 export function usePatchOnCallSwap() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (args: { id: string; facilityId: string; status: "APPROVED" | "DECLINED" }) =>
+    mutationFn: (args: {
+      id: string;
+      facilityId: string;
+      status: "APPROVED" | "DECLINED" | "WITHDRAWN";
+      note?: string | null;
+    }) =>
       apiClient.patch<{ data: OnCallSwapResource }>(`/internal/v1/staffing/on-call/swaps/${args.id}`, {
         status: args.status,
+        note: args.note ?? null,
       }),
     onSuccess: (_res, variables) => {
       queryClient.invalidateQueries({ queryKey: ["staffing", "on-call-swaps", variables.facilityId] });

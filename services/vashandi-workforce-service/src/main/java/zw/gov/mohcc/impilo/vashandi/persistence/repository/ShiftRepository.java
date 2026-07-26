@@ -61,4 +61,24 @@ public interface ShiftRepository extends JpaRepository<ShiftEntity, UUID> {
 
     /** Every shift rostered against a pool, any status (management read). */
     List<ShiftEntity> findByTenantIdAndVirtualPoolIdOrderByStartTimeAsc(UUID tenantId, String virtualPoolId);
+
+    /**
+     * Roster-week read (V009): every shift at a facility whose window starts inside [from, to).
+     * Powers the roster grid and the control tower, both of which have been rendering empty
+     * because the BFF asked tuso for this and tuso serves no such path.
+     */
+    List<ShiftEntity> findByTenantIdAndFacilityIdAndStartTimeBetweenOrderByStartTimeAsc(
+            UUID tenantId, UUID facilityId, OffsetDateTime from, OffsetDateTime to);
+
+    /**
+     * On-call rota read (V009): the same window, restricted to shifts that play a rota role.
+     * An ordinary rostered shift carries no on_call_role and is not part of the rota.
+     */
+    @Query("SELECT s FROM ShiftEntity s WHERE s.tenantId = :tenantId AND s.facilityId = :facilityId "
+            + "AND s.onCallRole IS NOT NULL AND s.startTime >= :from AND s.startTime < :to "
+            + "ORDER BY s.startTime ASC, s.onCallRole ASC")
+    List<ShiftEntity> findOnCallForFacilityWindow(@Param("tenantId") UUID tenantId,
+                                                  @Param("facilityId") UUID facilityId,
+                                                  @Param("from") OffsetDateTime from,
+                                                  @Param("to") OffsetDateTime to);
 }
