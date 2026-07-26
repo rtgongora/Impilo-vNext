@@ -55,6 +55,14 @@ export function EncounterCareChainRail({ encounterId, patientId, patientCpid }: 
 
   const costEventCount = (costEventsQ.data ?? []).length;
 
+  // Every number on this rail is a count, and a count of zero is a claim: nothing ordered on this
+  // encounter, nothing billed, nothing paid. The chain is also cascaded — a failed invoice read
+  // yields no bill ids, which disables the intents query, which disables settlements — so an
+  // outage one link up renders three confident zeros downstream.
+  const ordersUnavailable = ordersQ.isError;
+  const billingUnavailable = costEventsQ.isError || invoicesQ.isError;
+  const paymentsUnavailable = invoicesQ.isError || intentsQ.isError || settlementsQ.isError;
+
   return (
     <section
       className="rounded-xl border border-border bg-card px-4 py-4 shadow-sm"
@@ -81,8 +89,14 @@ export function EncounterCareChainRail({ encounterId, patientId, patientCpid }: 
               <ScanLine className="h-3.5 w-3.5" />
               OROS orders
             </div>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{encounterOrders.length}</p>
-            <p className="text-xs text-muted-foreground">Lab & imaging orders linked to this encounter.</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {ordersUnavailable ? "—" : encounterOrders.length}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {ordersUnavailable
+                ? "OROS unreachable — order count unknown, not zero."
+                : "Lab & imaging orders linked to this encounter."}
+            </p>
           </div>
 
           <div className="rounded-lg border border-emerald-100 bg-success-soft/60 p-3">
@@ -90,9 +104,17 @@ export function EncounterCareChainRail({ encounterId, patientId, patientCpid }: 
               <Receipt className="h-3.5 w-3.5" />
               Costa billing
             </div>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{costEventCount}</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {billingUnavailable ? "—" : costEventCount}
+            </p>
             <p className="text-xs text-muted-foreground">
-              Cost events · {invoiceRows.length} invoice row{invoiceRows.length === 1 ? "" : "s"}.
+              {billingUnavailable ? (
+                "COSTA unreachable — cost events and invoice rows unknown, not zero."
+              ) : (
+                <>
+                  Cost events · {invoiceRows.length} invoice row{invoiceRows.length === 1 ? "" : "s"}.
+                </>
+              )}
             </p>
           </div>
 
@@ -101,9 +123,17 @@ export function EncounterCareChainRail({ encounterId, patientId, patientCpid }: 
               <Wallet className="h-3.5 w-3.5" />
               MusheX payments
             </div>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{intentRows.length}</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {paymentsUnavailable ? "—" : intentRows.length}
+            </p>
             <p className="text-xs text-muted-foreground">
-              Payment intents · {settlementCount} linked settlement row{settlementCount === 1 ? "" : "s"}.
+              {paymentsUnavailable ? (
+                "MusheX chain unreachable — payment intents and settlements unknown, not zero."
+              ) : (
+                <>
+                  Payment intents · {settlementCount} linked settlement row{settlementCount === 1 ? "" : "s"}.
+                </>
+              )}
             </p>
           </div>
         </div>
