@@ -135,18 +135,45 @@ evaluated the rules engine against a context describing a patient with no condit
 medications and no allergies — and the engine correctly answered "no alerts". It now fails closed,
 and `EHRLayout` puts an explicit "decision support unavailable" entry on the alert rail.
 
-### Not yet audited
+### The remaining 20
 
 A precise scan (query hooks that call a changed endpoint, in files with no error reference) found
-20 consumers. The clinically significant ones above are done. Still to review, lower severity:
+20 consumers. All are now handled; the scan reports **0 remaining**.
 
-`app/ask/page.tsx`, `app/professional/page.tsx`, `app/shift/active/page.tsx`,
-`app/ehr/[patientId]/documents/page.tsx`, `app/ehr/[patientId]/page.tsx`,
-`components/ProviderActivationBanner.tsx`, `components/chronic-care/CarePlanOrchestrationRail.tsx`,
-`components/clinical/InterpretedVitalsPanel.tsx`,
-`components/clinical/OfflineClinicalQueueOrchestrationPanel.tsx`,
-`components/clinical/PatientJourneyContextPanel.tsx`, `components/ehr/sections/AssessmentSection.tsx`,
-`components/encounter/EncounterCareChainRail.tsx`, `hooks/useIdentityContext.ts`.
+**Reads that stated an absence.** `AssessmentSection` said "No triage data available for this
+encounter" — on an assessment screen that means the patient is untriaged, which is what decides who
+waits. `PatientJourneyContextPanel`'s empty state described itself as "an honest empty state — not a
+simulated journey"; it was honest only while every source answered. `EncounterCareChainRail`
+rendered a bare `0` for OROS orders, the patient chart's "Returned guidance" tile collapsed to `0`,
+and the documents page said "No documents uploaded yet".
+
+`InterpretedVitalsPanel` rendered `null`, leaving the vitals looking reviewed and unremarkable. A
+panel whose only job is to flag abnormal observations cannot be silent without saying why.
+
+**Writes that looked like successes.** These four surfaces had no failure path at all, because the
+BFF used to report success whichever way the write went: care-plan goals and interventions
+(`{"performed": true}` is a claim that care was delivered), offline reconcile submission, ending a
+shift, and starting a guided pathway session. A button that simply re-enables reads as "done".
+
+**Professional standing.** The sharpest instance in this group: `app/professional/page.tsx`
+defaulted `providerStatus` to `"Active"` and `licenceValid` to `true`. A failed VARAPI read told a
+provider their registration was in good standing and their licence valid — the two facts the page
+exists to report, asserted without checking either. The licence row is now three-state, since
+"Expired" is as much a fabricated finding as "Valid" when nothing was read.
+
+`useIdentityContext` now exposes `isUnavailable`. The resolver fails closed on missing linked IDs
+and affiliations, which is safe but silent — an outage downgrades a clinician to citizen access
+indistinguishably from "you are not a provider". `ProviderActivationBanner` keyed off
+`hasProviderId`, so a failed read made it vanish and a real provider lost the ability to activate
+with no explanation; it now says so, gated on the person plausibly holding a professional identity
+so citizens do not see an error for the correct answer.
+
+### UI test baseline
+
+Full suite: 598/602 files pass. The 4 failing files — `routes.test.ts`,
+`hpa-admin-review-golden-thread.test.ts`, `WelcomeHero.test.tsx`, `Providers.test.tsx` — are
+pre-existing: they reproduce identically with these changes stashed, and none of them exercise a
+file touched by this work.
 
 ## What the test suite was proving
 
