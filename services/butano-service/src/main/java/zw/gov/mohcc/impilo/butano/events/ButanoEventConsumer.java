@@ -17,6 +17,11 @@ import org.hl7.fhir.r4.model.Enumerations;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.ImagingStudy;
 import org.hl7.fhir.r4.model.Meta;
+import org.hl7.fhir.r4.model.Observation;
+import org.hl7.fhir.r4.model.Quantity;
+import org.hl7.fhir.r4.model.StringType;
+import org.hl7.fhir.r4.model.BooleanType;
+import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
@@ -53,6 +58,8 @@ public class ButanoEventConsumer {
     private static final String ACCESSION_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pacs/accession";
     private static final String REPORT_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pacs/report-ref";
     private static final String REQUESTED_BY_KAFKA = "kafka:butano-shr";
+    /** The originating PCT observation id, used as the business identifier for idempotent archival. */
+    private static final String OBSERVATION_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pct/observation-id";
 
     private final ObjectMapper objectMapper;
     private final DaoRegistry daoRegistry;
@@ -319,6 +326,229 @@ public class ButanoEventConsumer {
         } catch (RuntimeException e) {
             log.error("BUTANO SHR: error handling PACS imaging event: {}", e.getMessage(), e);
         }
+    }
+
+
+    /**
+     * Archives discrete clinical observations recorded in pct-service into the SHR as FHIR
+     * {@link Observation}.
+     *
+     * <p>This is the seam that makes the shared health record actually shared. Growth, immunisation
+     * and labour registries are systems of record inside PCT; the SHR is where a clinician at
+     * another facility sees them. Until this listener existed, PCT emitted observation events that
+     * nothing consumed.</p>
+     *
+     * <p><strong>The SHR is CPID-only.</strong> The subject reference is resolved from the CPID to
+     * an existing FHIR Patient, and nothing else about the person crosses this boundary — no name,
+     * no date of birth, no national identifier. That is the platform's standing rule that
+     * identifying data stays in VITO, and it is enforced here rather than assumed of the producer:
+     * this consumer copies only the coded fields it knows about, so a producer that started leaking
+     * a name into its payload still could not write one into the record.</p>
+     *
+     * <p>An observation with no value is still archived, carrying its dataAbsentReason. "Nobody took
+     * the temperature" is a clinical fact worth sharing, and dropping such rows would make the SHR
+     * quietly more reassuring than the source record.</p>
+     *
+     * <p>Idempotent by the originating observation id within the tenant tag. A corrected
+     * observation re-published under the same id updates the existing resource rather than adding
+     * a second one that disagrees with the first.</p>
+     */
+    @KafkaListener(
+            topics = {"pct.observation.recorded", "impilo.pct.observation"},
+            groupId = "butano-shr"
+    )
+    public void consumePctObservation(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String correlationId = extractCorrelationId(root);
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull()) {
+                log.warn("BUTANO SHR: observation event missing payload, skipping correlationId={}",
+                        correlationId);
+                return;
+            }
+
+            String observationId = firstNonBlank(
+                    text(payload, "observation_id"), text(payload, "observationId"));
+            String patientCpid = firstNonBlank(
+                    text(payload, "subject_cpid"), text(payload, "subjectCpid"), text(payload, "cpid"));
+            String code = firstNonBlank(text(payload, "code"));
+
+            if (observationId == null || patientCpid == null || code == null) {
+                log.warn("BUTANO SHR: observation event missing observation_id, subject_cpid or code — "
+                                + "skipping correlationId={}", correlationId);
+                return;
+            }
+
+            String status = firstNonBlank(text(payload, "status"), "FINAL");
+            if ("ENTERED_IN_ERROR".equalsIgnoreCase(status)) {
+                // Deliberately not archived as a normal result. Withdrawing an already-shared
+                // observation is a different operation and is not attempted silently here.
+                log.info("BUTANO SHR: observation {} is entered-in-error; not archived as a result. "
+                                + "correlationId={}", observationId, correlationId);
+                return;
+            }
+
+            UUID tenantId = resolveTenantId(root, payload, patientCpid);
+            if (tenantId == null) {
+                log.warn("BUTANO SHR: observation event missing tenant_id, skipping observation_id={} "
+                                + "correlationId={}", observationId, correlationId);
+                return;
+            }
+
+            archiveObservation(tenantId, patientCpid, observationId, code, payload, correlationId);
+
+        } catch (JsonProcessingException e) {
+            log.error("BUTANO SHR: unreadable observation event: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("BUTANO SHR: failed to archive observation: {}", e.getMessage(), e);
+        }
+    }
+
+
+    /**
+     * Builds the FHIR Observation from the event payload.
+     *
+     * <p>Package-private and static so the boundary rule can be tested directly: this method is
+     * the only thing that decides what crosses into the shared health record, and it copies an
+     * explicit list of coded fields. A producer that began leaking a patient name, date of birth
+     * or national identifier into its payload still could not write one here, because nothing
+     * reads those keys. The rule is enforced by construction rather than trusted of the caller.</p>
+     */
+    static Observation buildObservation(String tenantTagSystem, UUID tenantId, String patientPid,
+                                        String observationId, String code, JsonNode payload) {
+        Observation obs = new Observation();
+        obs.setMeta(new Meta().addTag(new Coding(tenantTagSystem, tenantId.toString(), null)));
+        obs.setSubject(new Reference("Patient/" + patientPid));
+        obs.addIdentifier().setSystem(OBSERVATION_IDENTIFIER_SYSTEM).setValue(observationId);
+
+        String status = firstNonBlank(text(payload, "status"), "FINAL");
+        obs.setStatus("AMENDED".equalsIgnoreCase(status)
+                ? Observation.ObservationStatus.AMENDED
+                : "PRELIMINARY".equalsIgnoreCase(status)
+                        ? Observation.ObservationStatus.PRELIMINARY
+                        : Observation.ObservationStatus.FINAL);
+
+        String codeSystem = firstNonBlank(
+                text(payload, "code_system"), text(payload, "codeSystem"),
+                "https://impilo.gov.zw/clinical-observation");
+        obs.setCode(new CodeableConcept().addCoding(
+                new Coding(codeSystem, code, firstNonBlank(text(payload, "display"), null))));
+
+        String category = firstNonBlank(text(payload, "category"), null);
+        if (category != null) {
+            obs.addCategory(new CodeableConcept().addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/observation-category",
+                            category.toLowerCase().replace('_', '-'), null)));
+        }
+
+        String effectiveAt = firstNonBlank(text(payload, "effective_at"), text(payload, "effectiveAt"));
+        if (effectiveAt != null) {
+            try {
+                obs.setEffective(new DateTimeType(effectiveAt));
+            } catch (RuntimeException e) {
+                log.warn("BUTANO SHR: observation {} has an unparseable effective_at '{}'; archived "
+                                + "without a time rather than with a guessed one", observationId, effectiveAt);
+            }
+        }
+
+        applyObservationValue(obs, payload, observationId);
+
+        String interpretation = firstNonBlank(text(payload, "interpretation"), null);
+        if (interpretation != null) {
+            obs.addInterpretation(new CodeableConcept().addCoding(new Coding(
+                    "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                    interpretation, null)));
+        }
+
+        return obs;
+    }
+
+    private void archiveObservation(UUID tenantId, String patientCpid, String observationId,
+                                    String code, JsonNode payload, String correlationId) {
+        IFhirResourceDao<Patient> patientDao = daoRegistry.getResourceDao(Patient.class);
+        Optional<String> patientPid = findPatientId(patientDao, tenantId, patientCpid);
+        if (patientPid.isEmpty()) {
+            log.warn("BUTANO SHR: no FHIR Patient for CPID — cannot archive Observation {} tenant={} "
+                            + "correlationId={}", observationId, tenantId, correlationId);
+            return;
+        }
+
+        IFhirResourceDao<Observation> dao = daoRegistry.getResourceDao(Observation.class);
+        Optional<String> existing = findObservationIdBySource(dao, tenantId, observationId);
+
+        Observation obs = buildObservation(tenantTagSystem, tenantId, patientPid.get(),
+                observationId, code, payload);
+        if (existing.isPresent()) {
+            obs.setId(new IdType("Observation", existing.get()));
+            dao.update(obs, (RequestDetails) null);
+            log.info("BUTANO SHR: updated Observation code={} observation_id={} patient_cpid={} tenant={} "
+                            + "correlationId={}", code, observationId, patientCpid, tenantId, correlationId);
+            return;
+        }
+        dao.create(obs, (RequestDetails) null);
+        log.info("BUTANO SHR: archived Observation code={} observation_id={} patient_cpid={} tenant={} "
+                        + "correlationId={}", code, observationId, patientCpid, tenantId, correlationId);
+    }
+
+    /**
+     * Copies the one value shape the observation carries, or its absence reason.
+     *
+     * <p>An observation with neither is not written as an empty result: an Observation resource
+     * with no value and no dataAbsentReason reads as a completed measurement whose result happens
+     * to be missing, which is exactly the ambiguity the source table's CHECK constraint exists to
+     * prevent. It is recorded as unknown instead.</p>
+     */
+    private static void applyObservationValue(Observation obs, JsonNode payload, String observationId) {
+        JsonNode quantity = payload.get("value_quantity");
+        String unit = firstNonBlank(text(payload, "value_unit"), text(payload, "valueUnit"));
+        if (quantity != null && quantity.isNumber() && unit != null) {
+            obs.setValue(new Quantity().setValue(quantity.decimalValue()).setUnit(unit));
+            return;
+        }
+        String valueCode = firstNonBlank(text(payload, "value_code"), text(payload, "valueCode"));
+        if (valueCode != null) {
+            String valueCodeSystem = firstNonBlank(
+                    text(payload, "value_code_system"), text(payload, "valueCodeSystem"),
+                    "https://impilo.gov.zw/clinical-observation-value");
+            obs.setValue(new CodeableConcept().addCoding(new Coding(valueCodeSystem, valueCode, null)));
+            return;
+        }
+        JsonNode bool = payload.get("value_boolean");
+        if (bool != null && bool.isBoolean()) {
+            obs.setValue(new BooleanType(bool.booleanValue()));
+            return;
+        }
+        String valueText = firstNonBlank(text(payload, "value_text"), text(payload, "valueText"));
+        if (valueText != null) {
+            obs.setValue(new StringType(valueText));
+            return;
+        }
+
+        String absent = firstNonBlank(
+                text(payload, "data_absent_reason"), text(payload, "dataAbsentReason"));
+        if (absent == null) {
+            log.warn("BUTANO SHR: observation {} arrived with neither a value nor a reason for its "
+                            + "absence; recorded as unknown rather than as a blank result", observationId);
+            absent = "UNKNOWN";
+        }
+        obs.setDataAbsentReason(new CodeableConcept().addCoding(new Coding(
+                "http://terminology.hl7.org/CodeSystem/data-absent-reason",
+                absent.toLowerCase().replace('_', '-'), null)));
+    }
+
+    private Optional<String> findObservationIdBySource(IFhirResourceDao<Observation> dao, UUID tenantId,
+                                                       String observationId) {
+        SearchParameterMap map = new SearchParameterMap();
+        map.add(Observation.SP_IDENTIFIER,
+                new TokenParam(OBSERVATION_IDENTIFIER_SYSTEM, observationId));
+        map.add("_tag", new TokenParam(tenantTagSystem, tenantId.toString()));
+        IBundleProvider results = dao.search(map);
+        List<?> resources = results.getResources(0, 1);
+        if (resources.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(((Observation) resources.get(0)).getIdElement().getIdPart());
     }
 
     private void archivePacsImagingStudyIfAbsent(UUID tenantId, String patientCpid, String studyId,
