@@ -111,6 +111,12 @@ public class DiscoveryOrchestrationService {
         if (query == null || query.isBlank()) {
             if (cat.equals("pharmacy")) query = "pharmacy";
             else if (cat.equals("diagnostics")) query = "laboratory";
+            // Virtual care is a national registry listing, not a proximity search:
+            // resolveVirtualCare() asks TUSO for ACTIVE virtual services and ignores the
+            // query entirely. Seeding one here only satisfies the input gate below — the
+            // virtual branch discards the facility results anyway — so the public lane can
+            // list real virtual services without first demanding a need or a location.
+            else if (cat.equals("virtual")) query = "virtual";
         }
         // The find-care lane needs a need or a location — it does not enumerate the whole
         // registry. Without either, prompt honestly instead of reporting a false outage.
