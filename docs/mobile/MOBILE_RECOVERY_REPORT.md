@@ -74,12 +74,51 @@ Evidence: `logcat-*-launch.txt` + `screenshots/*/**-hierarchy.xml` (uiautomator 
 
 The citizen Health-info screen rendered governed guidance topics ("Danger signs…", "Antenatal care…", full newborn-care article; topic rows keyed by backend UUIDs). Proof this was fetched, not bundled: those strings are **absent from the shipped JS bundle** (`strings` audit: 0 hits) while the API host is present (1 hit). Network path from the emulator: guest DNS resolves `impilo.mohcc.gov.zw` → 41.57.127.235, guest iptables DNAT rewrites to 10.50.1.67 (hairpin-NAT workaround), TLS presents the real cert.
 
-## 10. Authentication result — **preview-infrastructure blocked**
+## 10. Authentication result — **blocked by a dead Keycloak, not by configuration**
 
-- Baked auth config is correct: `keycloakUrl=https://impilo.mohcc.gov.zw`, realm `impilo`, client `impilo-mobile-citizen`/`-provider`, PKCE redirect `impilo-citizen://auth/callback`.
-- **Blocker 1 (edge):** Keycloak is not reachable at the preview edge for mobile: `:8480` is closed on the LB, and `/realms/*` on 443 is shadowed by the UI shell (307 → `/auth/login`). Web preview avoids this via its own server-side channel; a mobile PKCE flow cannot.
-- **Blocker 2 (runtime):** the stable ATD emulator image ships no browser, so the PKCE Custom-Tab step has no handler.
-- **Action:** publish a Keycloak route on the preview edge (e.g. `auth.impilo.mohcc.gov.zw` or path-routing `/realms` + `/resources` to Keycloak) and re-run `flows/citizen-login.yaml` with seeded credentials on a browser-capable runtime.
+> **CORRECTION (2026-07-26).** This section previously claimed "the preview edge exposes no Keycloak route for mobile." **That was wrong.** The Traefik route exists and is correct (`Host(impilo.mohcc.gov.zw) && (PathPrefix(/realms) || PathPrefix(/resources))`, priority 90000, above the UI catch-all). The real cause: **Keycloak has been down for 7+ days** — pod in `Error`, `endpoints/keycloak` empty, so every `/realms/*` request returns `503 no available server`. This means **web login has been broken for a week too**, not just mobile. Nothing alerts on estate health; that is the durable finding.
+
+**The mobile auth chain is fully configured and verified end-to-end** — every link checked 2026-07-26:
+
+| Link | Verified value |
+|---|---|
+| Realm client (preview realm import) | `impilo-mobile-citizen` / `impilo-mobile-provider` — `publicClient: true`, `standardFlow: true`, `pkce.code.challenge.method: S256` |
+| Realm redirect URI | `impilo-citizen://auth/callback` / `impilo-provider://auth/callback` |
+| APK baked config (`assets/app.config`) | `keycloakUrl: https://impilo.mohcc.gov.zw`, realm `impilo`, matching clientId + redirectUri |
+| APK manifest scheme | registers `impilo-citizen` (and `https`) — callback will resolve to the app |
+| Edge route | present, priority 90000 |
+
+### RESOLVED 2026-07-26 — mobile auth PROVEN end-to-end
+
+Root cause was a **6-day-old code bug**, not configuration: commit `0b625f727` (2026-07-20, *"feat(keycloak): WebAuthn passwordless realm config for passkey login (L1)"*) added 11 realm fields as `webAuthnPasswordlessPolicy*` where Keycloak 25 expects `webAuthnPolicyPasswordless*`. Realm import rejects unknown properties, so Keycloak died at startup on **every** restart. Web and mobile login were both dead for 6 days; `endpoints/keycloak` was empty for 9.
+
+Fixed: 11 field renames in the realm JSON · live ConfigMap patched data-only (Helm ownership preserved) · `KC_PROXY_HEADERS=xforwarded` added to `templates/keycloak.yaml` so the issuer advertises `https://` through Traefik (it previously advertised `http://`, which fails strict issuer validation *after* a successful credential check) · `reconcile-client-secrets.sh` run.
+
+**Proof, in the real APK on the redroid fixture:**
+```
+app builds PKCE   client_id=impilo-mobile-citizen, code_challenge_method=S256, state=…
+ → browser opens Keycloak → Impilo login page renders (screenshot: redroid/screenshots/auth-keycloak-login.png)
+ → credentials submitted
+ → VIEW cat=[BROWSABLE] dat=impilo-citizen://auth/... → zw.gov.impilo.citizen.dev/.MainActivity
+ → app resumes foreground
+```
+Protocol-level token also verified independently: `iss: https://impilo.mohcc.gov.zw/realms/impilo`, `azp: impilo-mobile-citizen`, access+refresh+id_token.
+
+**Honest boundary:** post-login the app raises `PROFILE_LOAD_FAILED` ([AuthGuard.tsx:35](../../apps/mobile/citizen-app/src/navigation/AuthGuard.tsx#L35)). Expected — the proof account (`mobile.proof.citizen`) exists in Keycloak only and has no backend person record. The **auth layer** is proven; the **citizen data layer** needs a seeded Health ID and is now testable for the first time.
+
+**Credential trap:** `citizen.moyo` carries a `password-history` credential (password rotated to an unknown value) so it 401s, while `vashandi.worker` / `superadmin` still work on seed passwords. `MAESTRO_CITIZEN_USERNAME` points at `citizen.moyo` — reset it or repoint the flow before the citizen Maestro run.
+
+---
+
+**Historical restore runbook** (kept for reference):
+1. `kubectl delete pod keycloak-<id> -n impilo-full-preview --force --grace-period=0` (clears the stale containerd sandbox reservation left by the eviction cascade)
+2. wait for `endpoints/keycloak` to be non-empty
+3. **run `scripts/keycloak/reconcile-client-secrets.sh`** — realm-import ships *placeholder* client secrets; without this, client auth fails even with a healthy pod (a healthy-pod-plus-401s state that is easily misdiagnosed as an app defect)
+4. prove **both** login paths in the same window — they share the one dependency:
+   - **mobile:** `apps/mobile/maestro/flows-runtime/` login flows on the redroid fixture with seeded credentials
+   - **web:** an end-to-end web login against the shell. Web auth has been equally dead all week, so the web lanes have only been exercising `permitAll` surfaces; proving both in one pass unblocks every lane at once.
+
+Note the ATD emulator image ships no browser, so the PKCE Custom-Tab step needs the google_apis image or the redroid fixture — the latter is now the standing runtime.
 
 ## 11. Maestro result
 
