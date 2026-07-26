@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -41,6 +42,7 @@ public class MobileProviderExtendedController {
     private final OrosServiceClient orosClient;
     private final PacsServiceClient pacsServiceClient;
     private final InpatientServiceClient inpatientClient;
+    private final ClinicalKnowledgePlatformClient clinicalClient;
 
     public MobileProviderExtendedController(PctServiceClient pctClient,
                                             VitoServiceClient vitoClient,
@@ -48,7 +50,8 @@ public class MobileProviderExtendedController {
                                             CostaServiceClient costaClient,
                                             OrosServiceClient orosClient,
                                             PacsServiceClient pacsServiceClient,
-                                            InpatientServiceClient inpatientClient) {
+                                            InpatientServiceClient inpatientClient,
+                                            ClinicalKnowledgePlatformClient clinicalClient) {
         this.pctClient = pctClient;
         this.vitoClient = vitoClient;
         this.pharmacyClient = pharmacyClient;
@@ -56,6 +59,7 @@ public class MobileProviderExtendedController {
         this.orosClient = orosClient;
         this.pacsServiceClient = pacsServiceClient;
         this.inpatientClient = inpatientClient;
+        this.clinicalClient = clinicalClient;
     }
 
     // ── Queue Management ────────────────────────────────────────────
@@ -499,12 +503,36 @@ public class MobileProviderExtendedController {
 
     // ── CDS (Clinical Decision Support) ─────────────────────────────
 
+    /**
+     * Evaluate decision support for a clinical context, against the real engine.
+     *
+     * <p>This route previously ignored its own request body and returned one canned INFO alert —
+     * "Review applicable clinical guidelines for this presentation" — attributed to
+     * {@code "source": "CDS Engine"}. No engine ran. To a clinician on a phone, a single benign alert
+     * from a named engine reads as *the engine evaluated this patient and found nothing specific*,
+     * which is the one thing decision support must never say falsely. The empty-200 honesty register
+     * names this case explicitly: zero CDS alerts is not the neutral answer, it is the claim the
+     * prescriber acts on.
+     *
+     * <p>So it now calls CKP's {@code /internal/v1/clinical/cds/summary}, and an unreachable engine
+     * fails loudly with 502 rather than degrading to a reassuring empty list. A genuinely empty
+     * evaluation still returns 200 with no alerts — that is a real answer from a real engine.
+     */
     @PostMapping("/clinical/cds/evaluate")
     public ResponseEntity<Map<String, Object>> evaluateCDS(@RequestBody Map<String, Object> body) {
-        String context = body.getOrDefault("context", "").toString();
-        List<Map<String, Object>> alerts = new ArrayList<>();
-        alerts.add(Map.of("level", "INFO", "category", "GUIDELINE", "message", "Review applicable clinical guidelines for this presentation", "source", "CDS Engine"));
-        return ResponseEntity.ok(Map.of("data", alerts));
+        try {
+            JsonNode summary = clinicalClient.cdsSummary(body);
+            if (summary == null || summary.isNull()) {
+                throw new IllegalStateException("clinical platform returned no payload");
+            }
+            return ResponseEntity.ok(Map.of("data", summary));
+        } catch (Exception e) {
+            log.error("CDS evaluate failed against the clinical knowledge platform: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "cds_engine_unavailable",
+                    "message", "Decision support could not be evaluated because the clinical knowledge "
+                            + "platform is unreachable. Do not treat this as an absence of alerts."));
+        }
     }
 
     // ── Specialty Workspace Config ──────────────────────────────────
