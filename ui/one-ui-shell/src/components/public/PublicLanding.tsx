@@ -26,6 +26,11 @@ import {
 } from "./AdaptiveServiceLauncher";
 import { IntentLink } from "./IntentLink";
 import { PublicNoticesBoard } from "./PublicNoticesBoard";
+import {
+  PublicNearYouSection,
+  PublicVirtualCareSection,
+} from "./PublicDiscoverySections";
+import { PublicContinueSection } from "./PublicContinueSection";
 
 // Whole-health category launcher (landing concept). Every card routes to a REAL
 // existing public explorer — no dead-ends. Nutrition/exercise live under Wellness;
@@ -82,6 +87,97 @@ export function PublicLanding() {
             so drive the columns from the viewport for this full-width section. */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 [&_.public-service-launcher]:contents">
           <AdaptiveServiceLauncher actions={CATEGORY_LAUNCHER} compact />
+        </div>
+      </section>
+
+      {/* Find care near you — live results from the same anonymous discovery lane the
+          hero uses, on an explicit tap rather than an unprompted location grab. */}
+      <section className="mt-14" aria-labelledby="near-you-title">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">
+            Close to you
+          </p>
+          <h2 id="near-you-title" className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+            Find care near you
+          </h2>
+          <p className="mt-3 text-base leading-7 text-slate-600">
+            Facilities, clinics, pharmacies and diagnostics from the national register, ordered by
+            how far they are from you.
+          </p>
+        </div>
+        <div className="mt-6">
+          <PublicNearYouSection />
+        </div>
+      </section>
+
+      {/* Virtual care — the ACTIVE virtual services the registry publishes. Loads without
+          a query or a location because virtual care is a national listing, not a search. */}
+      <section className="mt-14" aria-labelledby="virtual-care-title">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">
+            Care without travelling
+          </p>
+          <h2 id="virtual-care-title" className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+            Virtual care
+          </h2>
+          <p className="mt-3 text-base leading-7 text-slate-600">
+            Consult a clinician by video, audio or message through a live virtual service, and
+            escalate into physical care when it is needed.
+          </p>
+        </div>
+        <div className="mt-6">
+          <PublicVirtualCareSection />
+        </div>
+      </section>
+
+      {/* Continue your journey — only ever renders when something real was persisted. */}
+      <PublicContinueSection />
+
+      {/* Feedback with Rito — a real intake and a real way back into an open case. */}
+      <section className="mt-14" aria-labelledby="feedback-title">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">
+            Your voice counts
+          </p>
+          <h2 id="feedback-title" className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+            Report an issue, or tell us what went well
+          </h2>
+          <p className="mt-3 text-base leading-7 text-slate-600">
+            Complaints, compliments, safety concerns and ideas all reach the same governed intake.
+            You get a reference you can use to follow the case — no account required.
+          </p>
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            href="/welcome/report"
+            className="rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-300 hover:bg-emerald-50/40"
+          >
+            <MessageSquareHeart className="h-5 w-5 text-emerald-700" aria-hidden />
+            <p className="mt-2 font-semibold text-slate-900">Report a problem</p>
+            <p className="mt-1 text-sm text-slate-600">
+              A service, a facility, a medicine or a safety concern.
+            </p>
+          </Link>
+          <Link
+            href="/welcome/report"
+            className="rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-300 hover:bg-emerald-50/40"
+          >
+            <HeartHandshake className="h-5 w-5 text-emerald-700" aria-hidden />
+            <p className="mt-2 font-semibold text-slate-900">Give a compliment or idea</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Recognise good care, or suggest something Impilo should do better.
+            </p>
+          </Link>
+          <Link
+            href="/welcome/report"
+            className="rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-300 hover:bg-emerald-50/40"
+          >
+            <BadgeCheck className="h-5 w-5 text-emerald-700" aria-hidden />
+            <p className="mt-2 font-semibold text-slate-900">Follow an existing case</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Use the reference you were given to see where your case has reached.
+            </p>
+          </Link>
         </div>
       </section>
 

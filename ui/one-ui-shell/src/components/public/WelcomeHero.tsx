@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { useI18n } from "@/lib/i18n/useI18n";
+import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { IntentLink } from "./IntentLink";
 import { HeroDiscoverySurface } from "./HeroDiscoverySurface";
 import { ReturningUserCard } from "./ReturningUserCard";
@@ -199,11 +200,23 @@ export function WelcomeHero() {
 
   return (
     <section
-      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(70%_55%_at_78%_-8%,rgba(45,212,191,.55),transparent_62%),radial-gradient(55%_45%_at_100%_35%,rgba(103,232,249,.34),transparent_60%),radial-gradient(60%_55%_at_2%_108%,rgba(52,211,153,.5),transparent_62%),radial-gradient(45%_38%_at_38%_100%,rgba(45,212,191,.3),transparent_62%),linear-gradient(135deg,#04211c_0%,#062f2b_38%,#053c40_70%,#04252e_100%)] shadow-[0_40px_110px_-40px_rgba(2,30,26,.85)]"
+      // Canvas: light at the top behind the wordmark, deepening downward with the richest
+      // teal pooled toward the lower left and a dark teal-green foundation at the bottom.
+      // Baked into this background rather than layered as blurred orb divs, which the
+      // section's overflow-hidden would clip.
+      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(62%_52%_at_-4%_104%,rgba(16,185,160,.46),transparent_64%),radial-gradient(50%_44%_at_20%_86%,rgba(45,212,191,.3),transparent_62%),radial-gradient(58%_48%_at_92%_4%,rgba(103,232,249,.24),transparent_60%),linear-gradient(180deg,#0a4a48_0%,#0b3f43_40%,#06303a_72%,#03222a_100%)] shadow-[0_40px_110px_-40px_rgba(2,30,26,.85)]"
       aria-labelledby="living-canvas-title"
     >
-      {/* Hairline top highlight — the sleek edge where the light catches. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+      {/*
+        Pale masthead. It carries its own near-white wash that fades to nothing at its
+        own bottom edge, so the light zone is exactly as tall as the wordmark row at
+        every breakpoint. A percentage stop on the section gradient could not do this:
+        the hero's height changes with content, and the transition band would drift over
+        the eyebrow and heading, leaving white text on a pale teal.
+      */}
+      <div className="relative z-10 bg-[linear-gradient(180deg,#ffffff_0%,#f1faf7_46%,rgba(241,250,247,.5)_78%,rgba(241,250,247,0)_100%)] px-6 pb-7 pt-5 sm:px-9 lg:px-12">
+        <ImpiloBrandLogo variant="hero" tone="brand" />
+      </div>
       <div className="relative z-10 grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
         {/* Left: need-first intent + inline Nompilo guidance */}
         {/* min-w-0: grid children default to min-width:auto and refuse to shrink below
@@ -216,7 +229,9 @@ export function WelcomeHero() {
           </p>
           <h1
             id="living-canvas-title"
-            className="mt-5 max-w-3xl text-[clamp(2.15rem,5vw,4rem)] font-extrabold leading-[1.03] tracking-[-0.035em] text-white [text-shadow:0_1px_40px_rgba(45,212,191,.25)]"
+            // Smaller than the earlier concept: still the loudest thing on the canvas,
+            // but no longer consuming the vertical space the discovery surface needs.
+            className="mt-4 max-w-2xl text-[clamp(1.75rem,3.4vw,2.85rem)] font-extrabold leading-[1.08] tracking-[-0.03em] text-white [text-shadow:0_1px_40px_rgba(45,212,191,.25)]"
           >
             {t("public.welcome.needFirstTitle")}
           </h1>

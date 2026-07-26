@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   BadgeCheck,
   BookOpenCheck,
@@ -45,6 +46,27 @@ export function PublicHeader() {
             One Health OS. For everyone.
           </span>
         </Link>
+
+        {/*
+          Ministry identity belongs in the top bar and nowhere else on the page — the
+          hero carries the Impilo wordmark alone, so the state seal is stated once
+          rather than competing with the product mark for the same attention.
+        */}
+        <span className="hidden shrink-0 items-center gap-2 border-l border-slate-200 pl-3 md:inline-flex">
+          <Image
+            src="/brand/mohcc-logo.png"
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-auto"
+            unoptimized
+          />
+          <span className="text-[11px] font-medium leading-tight text-slate-600">
+            Ministry of Health
+            <br />
+            and Child Care
+          </span>
+        </span>
 
         <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex" aria-label="Public">
           {PUBLIC_NAV.map(({ label, href }) => (

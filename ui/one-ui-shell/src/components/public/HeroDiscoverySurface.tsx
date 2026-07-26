@@ -31,7 +31,7 @@ import type { NdilaGeoMarker } from "@/components/ndila/NdilaMapLibre";
 import { FindCareMap } from "./find-care/FindCareMap";
 import { ResumeJourneyCard } from "./ResumeJourneyCard";
 
-interface DiscoveryResult {
+export interface DiscoveryResult {
   category: string;
   type: string;
   id: string | null;
@@ -47,7 +47,7 @@ interface DiscoveryResult {
   actionLabel: string | null;
 }
 
-interface DiscoveryResponse {
+export interface DiscoveryResponse {
   query: string | null;
   category: string;
   results: DiscoveryResult[];
