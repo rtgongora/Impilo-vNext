@@ -143,7 +143,7 @@ Heads re-verified at `b9579561d`, **including untracked files** (§1).
 | `inventory-service` (Dura) | V014 | surgery V015–V020 | **V200–V219** | emergency kit V200–02 |
 | `rito-quality-safety-service` | V007 | trauma V010–V019 | **V200–V219** | after-action linkage V200 |
 | `notification-service` | V017 | surgery V018–V020 | **V200–V219** | emergency templates V200 |
-| `vashandi-workforce-service` | V008 | trauma V015–V024 · surgery V009–V012 | **V200–V219** | emergency roster view V200 |
+| `vashandi-workforce-service` | V008 | trauma V015–V024 (pre-convention anomaly — migrates to a hundred band at trauma's next wave) · surgery V300–V329 (surgery's own lease is authoritative; the V009–V012 previously recorded here was a stale pre-band draft — corrected by coordinator 2026-07-26) · core workforce keeps the low sequential band V001–V0xx (V009 on-call/swaps landed 2026-07-26) | **V200–V219** | emergency roster view V200 |
 | `vito-service` | V048 | trauma V035–V044 | **V200–V219** | provisional-identity hardening V200 |
 | `mental-health-service` | — | — | **V001–V030** | new service — no contention, so ordinary numbering |
 | `costing-engine-service` (COSTA) | V024 | surgery V025–V028 | **none needed** | emergency override + deferred-charge reconciliation already built (V012/V014) |
