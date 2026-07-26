@@ -64,6 +64,16 @@ const authUser = {
   actorType: "PROVIDER" as const,
 };
 
+/**
+ * Expiry is computed relative to now, not hardcoded. Providers only hydrates a session whose
+ * access token is still valid, so an absolute date silently turns the "authenticated" case into
+ * the "expired" case once it passes — which is how this test began asserting that a valid session
+ * hydrates while actually exercising the rejection path.
+ */
+function futureExpiry(): string {
+  return new Date(Date.now() + 60 * 60 * 1000).toISOString();
+}
+
 describe("Providers", () => {
   beforeEach(() => {
     useAuthStore.getState().clearAuth();

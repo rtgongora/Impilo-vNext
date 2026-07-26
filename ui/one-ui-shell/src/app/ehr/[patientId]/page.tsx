@@ -313,10 +313,16 @@ export default function PatientChartPage() {
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Returned guidance</p>
+                    {/* This count is derived from clinical reads. When any of them fails it
+                        would collapse to 0, which reads as "no specialist guidance has come back". */}
                     <p className="mt-2 text-2xl font-semibold text-primary-hover">
                       {coordinationUnavailable ? "—" : coordinationPulse.referralLoopUpdates}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">Consultation notes that include referral-loop updates from teleconsult or specialist review.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {coordinationUnavailable
+                        ? "Clinical sources could not be read — not a record that no guidance has returned."
+                        : "Consultation notes that include referral-loop updates from teleconsult or specialist review."}
+                    </p>
                   </div>
                 </div>
               </div>

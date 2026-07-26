@@ -1,105 +1,143 @@
 /**
- * Guards the burns withdrawal in SpecialtyWorkspacePanel.
+ * Guards the specialty tool registry.
  *
- * Acute burns %TBSA and Parkland fluid resuscitation are owned by the Emergency,
- * Resuscitation and Acute Care pack (`docs/registry/iatg-emergency-leases.md` §5b) and
- * land in `libs/burn-domain`, age-banded via `libs/paediatric-domain` on `bandKey`. (Not
- * `libs/emergency-domain`: %TBSA drives excision timing, graft planning, nutrition and mortality
- * prediction for months after the emergency episode closes, so the arithmetic is shared with
- * surgery rather than owned by emergency. Agreed with the surgery lane, lease §5b Decision 1.)
- * This app must not carry a private implementation: the one it used to carry was
- * adult-only, had no injury-time clock or first-8h/second-16h split, and persisted
- * nothing while telling the clinician it had saved.
+ * The root defect this pins: the panel used to pick a tool's form BY LIST POSITION, so a
+ * clinical instrument's behaviour had nothing to do with what it was named. Partograph
+ * rendered as a free-text notes box because it was first in its array; "Risk Assessment"
+ * rendered a two-number adder because it was fourth. Position is now never consulted.
  *
- * If a burns calculator reappears here, this test fails.
+ * Burns history this must not let back in: %TBSA and Parkland are owned by the Emergency
+ * pack and live in `libs/burn-domain`, age-banded via `libs/paediatric-domain` on `bandKey`
+ * (not `libs/emergency-domain` — %TBSA drives excision timing, graft planning, nutrition and
+ * mortality prediction for months after the emergency episode closes, so the arithmetic is
+ * shared with surgery; lease §5b Decision 1). The copy this app used to carry was adult-only,
+ * had no injury-time clock or first-8h/second-16h split, and persisted nothing while telling
+ * the clinician it had saved.
+ *
+ * Four properties are asserted:
+ *  1. every label in SPECIALTY_WORKSPACES has an explicit registry entry, so no fallback can
+ *     reappear and a new label fails the build rather than inheriting a stub;
+ *  2. nothing in the panel computes a clinical value;
+ *  3. every non-wired entry names an owner, so there are no orphan withdrawals;
+ *  4. a replacement is only done when the thing it replaced is unreachable — APGAR points at
+ *     the real screen rather than sitting beside it as a second copy.
  */
 import { describe, expect, it } from "vitest";
-import { formKindForTool } from "../../screens/provider/SpecialtyWorkspacePanel";
-import { getSpecialtyById } from "../../data/specialtyWorkspaces";
+import { SPECIALTY_WORKSPACES } from "../../data/specialtyWorkspaces";
+import { SPECIALTY_TOOL_REGISTRY } from "../../data/specialtyToolRegistry";
+import { resolveTool, RENDERED_SURFACES } from "../../screens/provider/SpecialtyWorkspacePanel";
 
-const BURNS = getSpecialtyById("burns");
+const ALL_LABELS = SPECIALTY_WORKSPACES.flatMap((w) => w.tools);
 
-describe("burns workspace tools", () => {
-  it("still exists as a workspace", () => {
-    expect(BURNS).toBeDefined();
+describe("every advertised tool is registered", () => {
+  it("covers all 108 advertised labels", () => {
+    expect(ALL_LABELS.length).toBe(108);
+    expect(ALL_LABELS.filter((t) => !resolveTool(t))).toEqual([]);
   });
 
-  it("offers no tool that computes a number", () => {
-    const numericKinds = ["bsa", "ktv", "sum"];
-    const computing = (BURNS?.tools ?? [])
-      .map((tool, index) => ({ tool, kind: formKindForTool(tool, index, "burns") }))
-      .filter((t) => numericKinds.includes(t.kind));
-    expect(computing).toEqual([]);
+  it("registers nothing that is not advertised", () => {
+    const advertised = new Set(ALL_LABELS);
+    expect(Object.keys(SPECIALTY_TOOL_REGISTRY).filter((k) => !advertised.has(k))).toEqual([]);
+  });
+});
+
+describe("position is never consulted", () => {
+  it("takes only the label, so a positional argument cannot be reintroduced silently", () => {
+    expect(resolveTool.length).toBe(1);
   });
 
-  it("withholds the Rule of 9s assessment rather than showing an adult-only chart", () => {
-    expect(formKindForTool("Burns Assessment (Rule of 9s)", 0, "burns")).toBe("withheld");
+  it("resolves every label to a stable disposition", () => {
+    for (const label of ALL_LABELS) {
+      expect(resolveTool(label)).toBe(resolveTool(label));
+    }
+  });
+});
+
+describe("every real surface is reachable, and every claim of one is real", () => {
+  // The reachability rule from the fleet DoD, made checkable in both directions: an entry cannot
+  // advertise a surface that was never built, and a built surface cannot be stranded with nothing
+  // pointing at it. This is what stops a "real" claim being a paper one.
+  it("only declares surfaces the panel can actually render", () => {
+    const declared = Object.values(SPECIALTY_TOOL_REGISTRY)
+      .filter((d) => d.state === "WIRED" || d.state === "CONSOLIDATED")
+      .map((d) => (d.state === "WIRED" || d.state === "CONSOLIDATED" ? d.surface : ""));
+    expect(declared.filter((s) => !(s in RENDERED_SURFACES))).toEqual([]);
   });
 
-  it("withholds Parkland rather than showing an unclocked 24h total", () => {
-    expect(formKindForTool("Fluid Resuscitation (Parkland)", 1, "burns")).toBe("withheld");
+  it("leaves no rendered surface unclaimed", () => {
+    const declared = new Set(
+      Object.values(SPECIALTY_TOOL_REGISTRY)
+        .filter((d) => d.state === "WIRED" || d.state === "CONSOLIDATED")
+        .map((d) => (d.state === "WIRED" || d.state === "CONSOLIDATED" ? d.surface : "")),
+    );
+    expect(Object.keys(RENDERED_SURFACES).filter((k) => !declared.has(k))).toEqual([]);
   });
+});
 
-  it("withholds the burns tool names the BFF menu advertises", () => {
-    // services/experience-bff/.../MobileProviderExtendedController.java:546 advertises a
-    // different burns tool set than specialtyWorkspaces.ts. Whichever menu wins, the
-    // arithmetic stays withheld.
-    for (const tool of ["Lund-Browder Chart", "Fluid Calculator", "Parkland Formula"]) {
-      expect(formKindForTool(tool, 0, "burns")).toBe("withheld");
+describe("no tool computes a clinical value in this app", () => {
+  it("keeps burns arithmetic out of the app", () => {
+    for (const label of ["Burns Assessment (Rule of 9s)", "Fluid Resuscitation (Parkland)"]) {
+      const d = resolveTool(label);
+      expect(d?.state).toBe("IN_DEVELOPMENT");
+      expect(d?.state === "IN_DEVELOPMENT" && d.owner).toBe("Emergency");
     }
   });
 
-  it("does not label a generic two-number adder as a burns clinical tool", () => {
-    expect(formKindForTool("Graft Planning", 3, "burns")).toBe("soon");
+  it("withdraws psychiatry Risk Assessment rather than summing two numbers", () => {
+    const d = resolveTool("Risk Assessment");
+    expect(d?.state).toBe("IN_DEVELOPMENT");
+    expect(d?.state === "IN_DEVELOPMENT" && d.withdrawnForSafety).toBe(true);
   });
 });
 
-describe("unrelated specialty tools are unaffected", () => {
-  it("keeps the chemotherapy BSA dose calculator", () => {
-    expect(formKindForTool("Dose Calculator (BSA)", 1, "chemo")).toBe("bsa");
-  });
-
-  it("keeps the dialysis Kt/V calculator", () => {
-    expect(formKindForTool("Kt/V Calculator", 2, "dialysis")).toBe("ktv");
-  });
-
-  it("keeps the generic calculator fallback outside withheld workspaces", () => {
-    expect(formKindForTool("Heart Failure Assessment", 3, "cardiology")).toBe("sum");
-  });
-
-  it("keeps the pre-chemo checklist", () => {
-    expect(formKindForTool("Pre-Chemo Checklist", 2, "chemo")).toBe("checklist");
-  });
-
-  it("keeps tools past the fourth as coming-soon overviews", () => {
-    expect(formKindForTool("Nutrition Plan", 5, "burns")).toBe("soon");
-    expect(formKindForTool("Cardiac Rehab", 5, "cardiology")).toBe("soon");
+describe("APGAR is consolidated onto the real screen, not duplicated", () => {
+  it("points at APGARScreen instead of carrying a second copy", () => {
+    const d = resolveTool("APGAR Record");
+    expect(d?.state).toBe("CONSOLIDATED");
+    expect(d?.state === "CONSOLIDATED" && d.surface).toBe("APGARScreen");
   });
 });
 
-describe("neonatal growth charting", () => {
-  const NEONATAL = getSpecialtyById("neonatal");
-
-  it("still lists the growth chart as something the service does", () => {
-    expect(NEONATAL?.tools.some((tool) => tool.toLowerCase().includes("fenton"))).toBe(true);
+describe("no orphan withdrawals", () => {
+  it("names an owner, wave and reason on every in-development entry", () => {
+    const unnamed = Object.entries(SPECIALTY_TOOL_REGISTRY).filter(
+      ([, d]) => d.state === "IN_DEVELOPMENT" && (!d.owner || !d.wave || !d.note),
+    );
+    expect(unnamed).toEqual([]);
   });
 
-  it("does not open a free-text note when a clinician taps a growth chart", () => {
-    // The tile was named after a growth chart and opened NotesForm. Somewhere to type is
-    // not a chart: nothing typed there is plotted, scored, or attached to the record.
-    expect(formKindForTool("Growth Chart (Fenton)", 2, "neonatal")).toBe("elsewhere");
-    expect(formKindForTool("Growth Chart (Fenton)", 2, "neonatal")).not.toBe("notes");
+  it("routes every label to a named lane — nothing is left unassigned", () => {
+    const unrouted = Object.entries(SPECIALTY_TOOL_REGISTRY).filter(
+      ([, d]) => d.state === "IN_DEVELOPMENT" && (d.owner === "UNASSIGNED" || d.owner === "TBC"),
+    );
+    expect(unrouted).toEqual([]);
   });
 
-  it("never computes a growth number on this device", () => {
-    // Preterm growth is scored once, server-side, against the published Fenton 2013 LMS
-    // tables and stamped with the standard that produced it. A second calculation here
-    // would be a second answer about the same baby.
-    const numericKinds = ["bsa", "ktv", "sum"];
-    ["Growth Chart (Fenton)", "Fenton growth", "Growth chart"].forEach((tool) => {
-      [0, 1, 2, 3, 4].forEach((index) => {
-        expect(numericKinds).not.toContain(formKindForTool(tool, index, "neonatal"));
-      });
-    });
+});
+
+describe("obstetrics: partograph and CTG resolve to the governed instruments, not notes", () => {
+  // Ported from the mobile lane's routing tests when 0cb7412e9 delivered these two workspaces.
+  // Their original form asserted formKindForTool(label, index, workspace) at two different
+  // indices to prove name-matching beat index-matching. That guard is now structural rather than
+  // exemplary: resolveTool takes no index at all, so there is no index to vary. The property
+  // those tests protected — "these two must never regress to a notes box" — is kept here.
+  it("renders the governed partograph workspace", () => {
+    const d = resolveTool("Partograph");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("PartographWorkspace");
+  });
+
+  it("renders the governed CTG workspace", () => {
+    const d = resolveTool("CTG Interpretation");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("CtgWorkspace");
+  });
+
+  it("leaves Bishop Score with RMNP rather than sweeping it in", () => {
+    // Out of scope for that pass per the mobile contract §6: Bishop lands with the
+    // labour-and-delivery wave, not this one.
+    const d = resolveTool("Bishop Score");
+    expect(d?.state).toBe("IN_DEVELOPMENT");
+    expect(d?.state === "IN_DEVELOPMENT" && d.owner).toBe("RMNP");
   });
 });

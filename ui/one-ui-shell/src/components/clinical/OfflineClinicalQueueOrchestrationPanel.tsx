@@ -95,6 +95,13 @@ export function OfflineClinicalQueueOrchestrationPanel() {
           Bridging web shell → TSHEPO offline federation path…
         </div>
       )}
+      {reconcile.isError && (
+        /* A failed reconcile submit left the button simply re-enabling, which reads as done.
+           The batches are still outstanding and the offline data is still unmerged. */
+        <p className="mt-2 rounded border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-medium text-red-700">
+          Reconciliation did not run. The pending batches are still outstanding.
+        </p>
+      )}
     </section>
   );
 }

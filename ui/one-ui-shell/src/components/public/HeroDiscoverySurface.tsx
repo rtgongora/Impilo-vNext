@@ -387,6 +387,26 @@ export function HeroDiscoverySurface() {
   const notes = data?.notes ?? [];
 
   /**
+   * Feature the nearest mapped result on arrival, so the map carries an actionable card
+   * rather than waiting for a click. Only ever a result that has a pin — featuring one
+   * without coordinates would put a card on a map that cannot show where it is.
+   */
+  useEffect(() => {
+    if (selectedKey || results.length === 0) return;
+    let bestKey: string | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    results.forEach((r, i) => {
+      if (r.latitude == null || r.longitude == null) return;
+      const d = r.distanceMeters ?? Number.MAX_SAFE_INTEGER;
+      if (d < bestDistance) {
+        bestDistance = d;
+        bestKey = resultKey(r, i);
+      }
+    });
+    if (bestKey) setSelectedKey(bestKey);
+  }, [results, selectedKey]);
+
+  /**
    * Kilometres from the chosen locality to the closest result that actually has a pin.
    * The find-care lane does a registry search and annotates distance afterwards — it does
    * not do a proximity query — so a locality can legitimately have no mapped care anywhere
@@ -411,7 +431,7 @@ export function HeroDiscoverySurface() {
   return (
     <section
       aria-label="Get health services"
-      className="flex h-full min-h-[32rem] flex-col overflow-hidden rounded-[1.6rem] lg:min-h-0 border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
+      className="flex h-full min-h-[32rem] flex-col overflow-hidden rounded-[1.6rem] xl:min-h-0 border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
     >
       {/* Header + Map/List toggle */}
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pt-4 pb-3 sm:px-5">
@@ -582,7 +602,7 @@ export function HeroDiscoverySurface() {
               of it — the map resolved to 28px at 390 and 105px at 768, a strip of
               nothing. The floor makes the surface grow instead of crushing the map.
             */}
-            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200 lg:min-h-[13rem]">
+            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200 lg:min-h-[14rem] xl:min-h-[13rem]">
               <FindCareMap
                 results={[]}
                 geoMarkers={geoMarkers}
@@ -683,10 +703,9 @@ export function HeroDiscoverySurface() {
             */}
             {mappedCareIsFar && !preciseLocation && (
               <p className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">
-                No mapped facility within 30&nbsp;km of {location.label} — the nearest with
-                coordinates is {Math.round(nearestMappedKm as number)}&nbsp;km away, so the map is
-                showing a wider area. Facilities near you may still be listed without a map
-                location.
+                Nearest mapped facility is {Math.round(nearestMappedKm as number)}&nbsp;km from{" "}
+                {location.label}, so the map shows a wider area. Closer facilities may be listed
+                without map coordinates.
               </p>
             )}
 

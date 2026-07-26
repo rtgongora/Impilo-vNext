@@ -188,7 +188,6 @@ export async function evaluateCDS(body: Record<string, unknown>): Promise<unknow
   const r = await apiClient.post<{ data: unknown[] }>(`${V1}/clinical/cds/evaluate`, body);
   return r.data.data;
 }
-export async function fetchSpecialtyWorkspaces(): Promise<unknown[]> {
-  const r = await apiClient.get<{ data: unknown[] }>(`${V1}/workspaces/specialties`);
-  return r.data.data;
-}
+// fetchSpecialtyWorkspaces removed: it had zero callers and pointed at a hard-coded BFF menu
+// that disagreed with the one this app renders. Specialty tool content is owned by the governed
+// forms-service catalogue; mobile tool disposition lives in data/specialtyToolRegistry.ts.

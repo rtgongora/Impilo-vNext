@@ -91,14 +91,21 @@ export type KnowledgeArtifactId = string;
 
 // ── Purpose of Use ──────────────────────────────────────────────────
 
+// Mirrors zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse exactly. TSHEPO's
+// PolicyEngine denies any request whose purpose is outside this set (INVALID_PURPOSE),
+// so a code that exists here but not in the Java enum is a request that cannot be made.
 export type PurposeOfUse =
   | "TREATMENT"
+  | "CARE_COORDINATION"
   | "PAYMENT"
   | "OPERATIONS"
-  | "PUBLIC_HEALTH"
-  | "EMERGENCY"
   | "RESEARCH"
-  | "SELF_SERVICE";
+  | "PUBLIC_HEALTH"
+  | "SELF_SERVICE"
+  | "REGULATORY_DUTY"
+  | "EMERGENCY"
+  | "BREAK_GLASS"
+  | "SYSTEM";
 
 // ── Assurance Level ─────────────────────────────────────────────────
 

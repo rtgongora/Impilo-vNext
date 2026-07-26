@@ -21,7 +21,75 @@ This document describes the **wave-1** cross-service model implemented on the `c
 | `IDENTIFIED_LIMITED_CLINICAL` | Identifiers + restricted clinical depth. |
 | `FULL_IDENTIFIED_CLINICAL` | Full clinical (treatment / controlled escalation). |
 
-**PII** (`PiiAccessLevel`) and **clinical** (`ClinicalAccessLevel`) are **orthogonal** in the contract; both must be honoured at the PEP.
+**PII** (`PiiAccessLevel`), **clinical** (`ClinicalAccessLevel`) and **confidential categories** (`VisibilityProfile.confidentialCategories`) are **orthogonal** in the contract; all must be honoured at the PEP.
+
+> **Why confidentiality is not a tier.** The tier is a *total order* — `min`/`max` composition depends on it. A "specially protected" rung above `FULL_IDENTIFIED_CLINICAL` would assert that reaching confidential content implies reaching everything below it, which is wrong in the cases that matter: a safeguarding lead should read the safeguarding disclosure and *not* the whole clinical record, and a sexual-health nurse should not thereby reach the mental-health notes. Confidentiality is also *relational* — "protected from the guardian, not from the person" is not a disclosure level at all. So it rides a **category-scoped obligation** on the same footing as `piiAccess` and `clinicalAccess`.
+
+## The specially-protected confidentiality control (Step 4.7)
+
+`SPECIALLY_PROTECTED` covers restricted adolescent and safeguarding data, sexual and reproductive health, HIV, mental health and gender-based violence. It is the only class with its own enforcement step, because it is the only one where a *label without teeth is worse than no label*: a record that looks protected in the schema and in the UI, but is readable by exactly the same people, manufactures a false assurance for the clinician deciding whether it is safe to write something down and for the adolescent told their record is confidential.
+
+**The control splits across three layers, and each half is useless alone.**
+
+| Layer | Decides | Where |
+|---|---|---|
+| Terminology SoR | *which content* is confidential by nature | zibo governed ValueSet + `POST /internal/v1/confidentiality/classify` (migration `V008`) |
+| Governed pack | *what the control means* — confidentiality ages, category vocabulary | `tshepo-authz` `resources/policy/adolescent-confidentiality-pack.json` |
+| PDP | *which categories this requester* may receive | `PolicyEngine` Step 4.7 + `ResourceSensitivityClassifier` |
+| PEP (service) | *which records in this response* to withhold | `SpeciallyProtectedVisibilityGuard` (shared-core) |
+
+### The mechanism ships INERT
+
+The mechanism is complete and tested. The **content that decides behaviour is not**, because it is not an engineering call:
+
+- *At what age does a young person's record become confidential from their parent?* Zimbabwean law and MoHCC policy — and **not uniform**: independent consent for HIV testing, contraception and mental health care sit under different instruments.
+- *Which clinical codes are confidential by nature?* Governed terminology.
+
+So both ship as `ENGINEERING_SEED` / `PENDING_MOHCC_RATIFICATION` with provenance and fixtures, matching the danger-sign, dosing, IMNCI, EPI and growth packs. Three switches must be flipped together — they are **one governance act, not three**:
+
+| Switch | Where | Shipped as |
+|---|---|---|
+| `tshepo.authz.confidentiality-mode` | `AuthzProperties` | `SHADOW` |
+| Policy pack `approvalStatus` + `effective` | `adolescent-confidentiality-pack.json` | `ENGINEERING_SEED`, `false` |
+| `ConfidentialCategoryService.CATEGORY_MAP_RATIFIED` | zibo | `false` |
+| `policy_rule.active` for the lane rules | `V048` | `false` |
+
+While inert: Step 4.7 evaluates and **audits what it would have done**, grants nothing, and denies nothing. zibo reports which categories a record's codes matched but returns **no sensitivity class to stamp**. That last point is the load-bearing one — a record stamped `SPECIALLY_PROTECTED` before enforcement is live would carry a label that does not protect it, which is the exact failure this seam exists to prevent.
+
+`ENFORCE` additionally requires a ratified, effective pack. Without one the control **stays inert and says so at ERROR** plus a `CONFIDENTIALITY_ENFORCE_UNAVAILABLE` governance event — being quietly ineffective is the original sin, so refusing to enforce must never be silent.
+
+The PDP sees a URL, never a record, so it cannot know that row 7 of a collection is a safeguarding note. The service knows that but must not invent its own access rule. Each layer assuming the other did the work is precisely why the class was inert for so long.
+
+### The confidential lane
+
+Any route serving protected content **must** carry a lane marker — `confidential`, `safeguarding` or `protected-disclosure` — in its path. `ResourceSensitivityClassifier` recognises the marker *before* the ordinary clinical branch, which would otherwise claim `confidential-encounters` on the substring `encounter` and silently downgrade it. Markers are deliberately unambiguous: a control that fires on ordinary care gets routed around, which protects nobody.
+
+### Entitlement
+
+Default is **withheld**: no purpose-of-use envelope grants any confidential category. Within the confidential lane, in order:
+
+1. **`EMERGENCY` and `BREAK_GLASS` waive the requirement entirely**, granting every category, and log loudly. This mirrors `ClinicalAccessGuard` in pct-service so the two layers behave identically. **Over-restricting kills people too**: a teenager arriving unconscious whose HIV status or medication explains the presentation must not be invisible to the clinician treating them. The waiver is checked *before* the delegate exclusion — an accompanying adult handing over a collapsed teenager must not be the reason the picture stays hidden. This is **detection, not prevention**: it is only safe because it is audited and reviewable.
+2. **A delegated act is refused** (`PROTECTED_RECORD_DELEGATE_DENIED`). A guardian or caregiver acting on another person's behalf — `X-Subject-ID` ≠ actor with an ACTIVE Mvumo delegation — does not reach protected content. No policy rule widens this; if the governance channel could, the hole would reopen through a seed.
+3. **The subject themselves is granted every category** (`SUBJECT_SELF`). Deliberately established in code, not by a rule overlay: an overlay would hand the grant to every actor matching the route, including one who arrived at someone else's record.
+4. **Otherwise a governed rule grant applies**, narrowed to what the ratified pack permits — a `policy_rule` whose `conditions.visibility.confidentialCategories` names categories (seeded inactive in `V048`). A clinical role alone is not enough; if it were, the class would again mean nothing. A legacy overlay naming only `visibilityTier` grants **no** category. A rule asking for a category the ratified pack does not carry fails visibly (`PROTECTED_RECORD_PACK_INERT`) rather than quietly granting something else.
+
+> **Guardian linkage lives in two places, and the distinction is load-bearing.** VITO's `ClientRelationshipEntity` records the *family relationship* (`GUARDIAN_OF`, `DEPENDENT_OF`, `CAREGIVER_OF`, `NEXT_OF_KIN`, `PROXY_ACCESS_FOR`). Mvumo's `delegation_relationship` is the *act-of-record for acting on another person's behalf*. The PDP resolves Mvumo, never VITO: a relationship is not an authorisation.
+
+### Audit
+
+Both outcomes emit a dedicated governance event — `CONFIDENTIAL_ACCESS_GRANTED` and `CONFIDENTIAL_ACCESS_REFUSED` — via the transactional outbox, so the control can be reviewed without filtering the whole authz decision stream. The grant event is driven off the **composed** visibility tier rather than the entitlement flag, so any future route that can reach protected data lands in the stream even if nobody remembers to instrument it.
+
+### PEP obligations
+
+`SpeciallyProtectedVisibilityGuard` consumes the obligation: `withholds(class, category)` for a single record, `filterProtected(rows, sensitivityOf, categoryOf)` for the mixed-collection case where a request for a person's encounters is allowed but three of the forty are confidential. Filtering is **per category**, so a safeguarding grant keeps the safeguarding rows and still drops the mental-health ones.
+
+It **fails closed** on a missing profile, unlike `AggregateVisibilityGuard` and `ClinicalVisibilityGuard`, which treat absence as permissive so unwired services keep working — silence from the PDP must not mean disclosure here. The one exception is the emergency waiver, which the guard honours *locally* from `TrustContext.purposeOfUse()` so that a service not yet wired to obligation headers never becomes a place where emergency care fails.
+
+Withheld records should be answered exactly as a non-existent record is: a 403 distinguishable from a 404 tells the guardian the confidential record is there, which is most of what confidentiality was protecting.
+
+Trust header: `x-confidential-categories` (comma-separated; `*` = all), also carried in the nested `visibilityProfile` inside `x-obligations`.
+
+Rego mirror: `infra/opa/impilo/confidentiality.rego` (shadow only; Java stays authoritative).
 
 ## Resolving visibility (`x-obligations` + flat headers)
 
