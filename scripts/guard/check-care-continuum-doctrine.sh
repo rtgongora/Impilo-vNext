@@ -23,7 +23,15 @@ echo "=== Care Continuum doctrine guard ==="
 # Reads the N lines following a service's id line, so assertions are block-scoped and a
 # field on some other service cannot satisfy a check by accident.
 service_block() {
-  grep -A 40 "^  - id: $1\$" "$REGISTRY"
+  # A service's block runs from its id line to the next one. A fixed -A window silently
+  # truncated the block as soon as an entry grew past it, so a prohibition that was still
+  # present read as missing — the guard failed on entries getting longer rather than on
+  # anything being removed.
+  awk -v id="  - id: $1" '
+    $0 == id { inblock = 1; print; next }
+    inblock && /^  - id: / { exit }
+    inblock { print }
+  ' "$REGISTRY"
 }
 
 # 1. The doctrine document exists and carries its load-bearing rulings.

@@ -394,6 +394,11 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Clinical Knowledge Platform canonical records
+      - Governed clinical rule content — danger-sign rules, classification tables, dosing rules and their approval status, source citations and version (content is data, never Java constants)
+      - Immunisation schedule and due/overdue forecast rules (the administered doses themselves are pct-service's)
+      - Reproductive and maternal decision content — WHO medical eligibility criteria matrix, selected practice recommendations, antenatal and postnatal contact schedules, labour-monitoring standards, obstetric emergency bundles, and their national adaptations
+      - National policy parameters for reproductive health (age of confidential care, gestational limits, viability thresholds) — effective-dated so a past decision can be re-explained against the rule that applied at the time
+      - WHO Digital Adaptation Kit traceability — the mapping from each shipped rule, data element and indicator to its DAK identifier, version and source hash
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -402,6 +407,9 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
+      - must-not-own-clinical-records            # CKP interprets; pct-service records. It holds no patient state
+      - must-not-recompute-a-stamped-score       # a z-score or gestational age stamped at write is read, never re-derived, or the record and its interpretation drift
+      - must-not-prescribe-autonomously          # every recommendation requires clinician authorisation
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -2019,6 +2027,17 @@ services:
       - Child growth measurement registry (anthropometry with measurement conditions; WHO z-scores stamped at write with standard and engine version)
       - Immunisation administered-dose registry (dose facts only; the national schedule and the due/overdue forecast are not owned here)
       - Newborn clinical birth summary and neonatal episodes (child-anchored; civil birth notification stays ubomi-service, identity and mother-baby linkage stay vito-service)
+      - Reproductive intention registry (current intention, unmet need and its history)
+      - Contraceptive episode, device and dose registry (method facts, device in-situ and removal; the WHO medical eligibility criteria and selected practice recommendations are not owned here)
+      - Fertility-care episode records
+      - Pregnancy episode registry (one ongoing episode per person; dating, its basis, and every revision including a basis considered and rejected)
+      - Fetus records within a pregnancy (fetus-specific findings, outcomes and the recorded fetus-to-newborn match; a fetus is never a registered person and is never issued an identity)
+      - Antenatal and postnatal contact records (the contact schedules themselves are not owned here)
+      - Maternal delivery record for every birth in every setting, including births outside theatre (theatre and anaesthesia logistics stay inpatient-service and are referenced, not duplicated)
+      - Pregnancy loss, stillbirth and lawful termination clinical records (civil notification stays ubomi-service)
+      - Obstetric emergency and postpartum haemorrhage episodes
+      - Lactation and infant-feeding assessments (mother-anchored, linked to the infant record)
+      - Reproductive-health record confidentiality markings, consent-capacity assessments and safe-contact preferences
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -2030,6 +2049,10 @@ services:
       - must-not-own-form-definitions
       - must-not-own-immunisation-schedule-or-forecast-rules
       - must-not-own-civil-birth-registration
+      - must-not-own-contraceptive-eligibility-rules        # WHO MEC/SPR are governed content in clinical-knowledge-platform-service
+      - must-not-own-antenatal-or-postnatal-contact-schedule # the schedule is governed content; PCT records the contacts that happened
+      - must-not-own-labour-monitoring-standard             # partograph/Labour Care Guide thresholds are governed content, not Java constants
+      - must-not-issue-identity-for-a-fetus                 # identity begins at the birth record; VITO mints it, and never before birth
       - must-not-own-wellness-continuum          # simba-service is the peer Wellness Continuum owner (CC-1)
       - must-not-duplicate-longitudinal-SHR      # butano-service is the record-authority; PCT contributes, never forks (CC-3)
     production_status: baseline-assessed
