@@ -188,7 +188,7 @@ export function HeroDiscoverySurface() {
   return (
     <section
       aria-label="Get health services"
-      className="flex h-full min-h-[30rem] flex-col overflow-hidden rounded-[1.6rem] border border-emerald-100 bg-white shadow-sm"
+      className="flex h-full min-h-[30rem] flex-col overflow-hidden rounded-[1.6rem] border border-glass-border bg-glass-fill shadow-impilo-floating backdrop-blur-glass supports-[not(backdrop-filter:blur(0px))]:bg-glass-fallback [.low-blur_&]:bg-glass-fallback [.low-blur_&]:backdrop-blur-none"
     >
       {/* Header + Map/List toggle */}
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pt-4 pb-3 sm:px-5">

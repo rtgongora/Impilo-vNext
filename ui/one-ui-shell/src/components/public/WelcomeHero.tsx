@@ -198,10 +198,13 @@ export function WelcomeHero() {
 
   return (
     <section
-      className="public-living-canvas overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-[0_24px_70px_-36px_rgba(6,78,59,.45)]"
+      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-emerald-100/80 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/70 shadow-[0_24px_70px_-40px_rgba(6,78,59,.5)]"
       aria-labelledby="living-canvas-title"
     >
-      <div className="grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
+      {/* Soft teal-green glow — calm depth, decorative only. */}
+      <div aria-hidden className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-teal-200/35 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-emerald-200/40 blur-3xl" />
+      <div className="relative z-10 grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
         {/* Left: need-first intent + inline Nompilo guidance */}
         <div className="relative z-10 flex flex-col justify-center p-6 sm:p-9 lg:p-12">
           <p className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-800">
