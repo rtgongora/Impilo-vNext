@@ -1,4 +1,5 @@
 import { PublicShell } from "@/components/public/PublicShell";
+import { PublicPageHeader } from "@/components/public/PublicPrimitives";
 import { PublicMarketplaceBrowse } from "@/components/public/PublicMarketplaceBrowse";
 import { ReasonedSignInPrompt } from "@/components/public/ReasonedSignInPrompt";
 
@@ -16,12 +17,15 @@ export const metadata = {
 export default function MarketplacePage() {
   return (
     <PublicShell>
-      <h1 className="text-3xl font-bold text-slate-900">Health products &amp; suppliers</h1>
-      <p className="mt-3 max-w-2xl text-slate-600">
-        Find medicines, health products, services and approved suppliers — with indicative
-        prices and verification badges. Browse freely; you only need to sign in to order, pay or
-        submit a prescription.
-      </p>
+      <PublicPageHeader
+        crumbs={[{ label: "Impilo", href: "/" }, { label: "Health products" }]}
+        title="Health products &amp; suppliers"
+        lede={
+          <>
+            Find medicines, health products, services and approved suppliers — with indicative prices and verification badges. Browse freely; you only need to sign in to order, pay or submit a prescription.
+          </>
+        }
+      />
       <div className="mt-8">
         <PublicMarketplaceBrowse />
       </div>

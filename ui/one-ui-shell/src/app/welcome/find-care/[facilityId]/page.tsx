@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { PublicPageHeader } from "@/components/public/PublicPrimitives";
 import { FindCareFacilityDetail } from "@/components/public/find-care/FindCareFacilityDetail";
 
 export const metadata = {
@@ -19,17 +19,18 @@ export const metadata = {
 export default function FindCareFacilityPage({ params }: { params: { facilityId: string } }) {
   return (
     <PublicShell>
-      <nav className="text-sm text-slate-500">
-        <Link href="/welcome" className="hover:text-slate-900">
-          Welcome
-        </Link>{" "}
-        /{" "}
-        <Link href="/welcome/find-care" className="hover:text-slate-900">
-          Find health services
-        </Link>{" "}
-        / Facility
-      </nav>
-      <div className="mt-4">
+      {/* The only chrome this page had was a bare breadcrumb; the shared header gives it
+          the same preamble as every other public journey. */}
+      <PublicPageHeader
+        crumbs={[
+          { label: "Impilo", href: "/" },
+          { label: "Find health services", href: "/welcome/find-care" },
+          { label: "Facility" },
+        ]}
+        title="Facility details"
+        lede="Services offered, how to get there, and how to verify a health professional — no sign-in needed."
+      />
+      <div className="mt-6">
         <FindCareFacilityDetail facilityId={params.facilityId} />
       </div>
     </PublicShell>

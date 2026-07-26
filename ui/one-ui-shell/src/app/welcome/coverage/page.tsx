@@ -1,4 +1,5 @@
 import { PublicShell } from "@/components/public/PublicShell";
+import { PublicPageHeader } from "@/components/public/PublicPrimitives";
 import { PublicCoverageCompare } from "@/components/public/PublicCoverageCompare";
 import { ReasonedSignInPrompt } from "@/components/public/ReasonedSignInPrompt";
 
@@ -15,11 +16,15 @@ export const metadata = {
 export default function CoveragePage() {
   return (
     <PublicShell>
-      <h1 className="text-3xl font-bold text-slate-900">Health cover</h1>
-      <p className="mt-3 max-w-2xl text-slate-600">
-        Compare medical-aid and insurance plans and what they cover. Browse freely; you only
-        need to sign in to view your own membership, check eligibility or make a claim.
-      </p>
+      <PublicPageHeader
+        crumbs={[{ label: "Impilo", href: "/" }, { label: "Health cover" }]}
+        title="Health cover"
+        lede={
+          <>
+            Compare medical-aid and insurance plans and what they cover. Browse freely; you only need to sign in to view your own membership, check eligibility or make a claim.
+          </>
+        }
+      />
       <div className="mt-8">
         <PublicCoverageCompare />
       </div>

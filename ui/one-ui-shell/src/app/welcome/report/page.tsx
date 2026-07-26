@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { PublicPageHeader } from "@/components/public/PublicPrimitives";
 import { ReportIncidentTriage } from "@/components/public/ReportIncidentTriage";
 import { NompiloAdaptiveGuidance } from "@/components/intelligent/NompiloAdaptiveGuidance";
 
@@ -19,20 +19,16 @@ export const metadata = {
 export default function ReportIncidentPage() {
   return (
     <PublicShell>
-      <nav className="text-sm text-slate-500">
-        <Link href="/welcome" className="hover:text-slate-900">
-          Welcome
-        </Link>{" "}
-        / Report a health incident
-      </nav>
-
-      <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-3xl font-bold text-slate-900">Report a health incident</h1>
-        <p className="mt-3 max-w-2xl text-lg text-slate-600">
-          Tell us what happened. We&apos;ll take you to the right place — emergencies are
-          handled immediately and are never blocked by sign-in.
-        </p>
-      </section>
+      <PublicPageHeader
+        crumbs={[{ label: "Impilo", href: "/" }, { label: "Report a health incident" }]}
+        title="Report a health incident"
+        lede={
+          <>
+            Tell us what happened. We&apos;ll take you to the right place — emergencies are
+            handled immediately and are never blocked by sign-in.
+          </>
+        }
+      />
 
       {/* Advisory: anonymity and the claim code are consequential choices a person
           must not miss, so this guidance does not auto-collapse. */}
