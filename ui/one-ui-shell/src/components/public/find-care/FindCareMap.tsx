@@ -64,6 +64,12 @@ interface FindCareMapProps {
   geoMarkers?: NdilaGeoMarker[];
   /** Collapse the map's layer picker to one button — for narrow embedded maps. */
   compactChrome?: boolean;
+  /**
+   * Explicit view. Supply this when the caller knows the locality the person chose:
+   * fitting to markers instead would zoom out to whatever happens to have coordinates,
+   * which re-creates a national view the moment the only mapped results are far away.
+   */
+  view?: { latitude: number; longitude: number; zoom: number } | null;
 }
 
 export function FindCareMap({
@@ -74,6 +80,7 @@ export function FindCareMap({
   hideCaption = false,
   geoMarkers,
   compactChrome = false,
+  view = null,
 }: FindCareMapProps) {
   const markers = useMemo<NdilaGeoMarker[]>(() => {
     const facilityMarkers: NdilaGeoMarker[] = geoMarkers
@@ -102,11 +109,12 @@ export function FindCareMap({
   }, [results, origin, geoMarkers]);
 
   const center = useMemo(() => {
+    if (view) return { latitude: view.latitude, longitude: view.longitude };
     if (origin) return { latitude: origin.lat, longitude: origin.lng };
     const first = markers.find((m) => m.id !== "you");
     if (first) return { latitude: first.latitude, longitude: first.longitude };
     return { latitude: ZIMBABWE_DEFAULT_CENTER.latitude, longitude: ZIMBABWE_DEFAULT_CENTER.longitude };
-  }, [markers, origin]);
+  }, [markers, origin, view]);
 
   const mappable = markers.filter((m) => m.id !== "you").length;
 
@@ -122,7 +130,7 @@ export function FindCareMap({
       >
         <NdilaMapLibre
           center={center}
-          zoom={mappable > 0 ? 9 : ZIMBABWE_DEFAULT_ZOOM}
+          zoom={view ? view.zoom : mappable > 0 ? 9 : ZIMBABWE_DEFAULT_ZOOM}
           markers={markers}
           tileConfig={{
             provider: "OSM_OSRM",
@@ -130,7 +138,7 @@ export function FindCareMap({
             maxZoom: 14,
             attribution: "© OpenMapTiles © OpenStreetMap contributors",
           }}
-          fitToMarkers={mappable > 0}
+          fitToMarkers={!view && mappable > 0}
           clusterMarkers
           showNavigation
           compactChrome={compactChrome}

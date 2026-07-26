@@ -575,6 +575,7 @@ export function HeroDiscoverySurface() {
                 height="100%"
                 hideCaption
                 compactChrome
+                view={{ latitude: location.lat, longitude: location.lng, zoom: 11 }}
               />
               {/* Selected-result card, over the map so the map stays the dominant visual. */}
               {selectedResult && (
@@ -779,7 +780,9 @@ export function HeroDiscoverySurface() {
       {/* Footer */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-4 py-2.5 text-xs sm:px-5">
         <span className="text-slate-500">
-          {data ? `${results.length} result${results.length === 1 ? "" : "s"} · verified public data` : "Live national health data"}
+          {data
+            ? `${results.length} result${results.length === 1 ? "" : "s"} · ${geoMarkers.length} on the map · verified public data`
+            : "Live national health data"}
         </span>
         <Link href="/welcome/find-care" className="font-semibold text-emerald-800 hover:text-emerald-950">
           Open full search →
