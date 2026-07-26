@@ -174,6 +174,12 @@ public class OutboxPublisher {
             case "TASK_CREATED", "TASK_COMPLETED" -> "pct.task.updated";
 
             case "TRIAGE_RECORDED" -> "pct.triage.recorded";
+
+            // Observations get their own topic because BUTANO subscribes to them specifically to
+            // archive into the shared health record. Left on the pct.events catch-all the SHR
+            // bridge would either miss them entirely or have to filter every PCT event to find
+            // them — and it missed them entirely, which is how this route came to be added.
+            case "pct.observation.recorded" -> "pct.observation.recorded";
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             // Virtual-pool substrate: TUSO consumes pool.materialized to flip

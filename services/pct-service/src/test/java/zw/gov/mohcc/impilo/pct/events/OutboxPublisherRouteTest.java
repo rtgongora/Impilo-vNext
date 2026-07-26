@@ -43,4 +43,18 @@ class OutboxPublisherRouteTest {
         assertEquals("clinical.teleconsult.lifecycle", OutboxPublisher.routeTopic("telemedicine.session.completed.v1"));
         assertEquals("clinical.teleconsult.lifecycle", OutboxPublisher.routeTopic("telemedicine.session.expired.v1"));
     }
+
+    @org.junit.jupiter.api.Test
+    void observationsGetTheirOwnTopicSoTheShrBridgeCanSubscribeToThem() {
+        // Caught by deploying: the event fell through to the pct.events catch-all, BUTANO was
+        // listening on pct.observation.recorded, and the observation reached the shared health
+        // record never. The route is the contract between the two services.
+        assertEquals("pct.observation.recorded",
+                OutboxPublisher.routeTopic("pct.observation.recorded"));
+    }
+
+    @org.junit.jupiter.api.Test
+    void anUnroutedEventTypeStillLandsOnTheCatchAllRatherThanBeingDropped() {
+        assertEquals("pct.events", OutboxPublisher.routeTopic("something.nobody.routed"));
+    }
 }
