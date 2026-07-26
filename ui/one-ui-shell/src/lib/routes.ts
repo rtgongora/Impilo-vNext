@@ -316,6 +316,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/discharge", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Discharge", navLabel: "Discharge", navZone: "work" },
   { path: "/ehr/[patientId]/care-plans", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Care Plans", navLabel: "Care Plans", navZone: "work" },
   { path: "/ehr/[patientId]/procedures", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Procedures", navLabel: "Procedures", navZone: "work" },
+  { path: "/ehr/[patientId]/paediatrics", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Paediatric Workspace", navLabel: "Paediatrics", navZone: "work" },
   { path: "/ehr/[patientId]/growth-chart", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Growth Chart", navLabel: "Growth Chart", navZone: "work" },
   { path: "/ehr/[patientId]/family-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Family History", navLabel: "Family History", navZone: "work" },
   { path: "/ehr/[patientId]/social-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Social History", navLabel: "Social History", navZone: "work" },

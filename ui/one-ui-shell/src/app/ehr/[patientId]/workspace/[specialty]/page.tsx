@@ -76,9 +76,10 @@ const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
     label: "Paediatrics", description: "Child health assessment and care",
     icon: Baby, color: "bg-green-100 text-green-600",
     tools: [
-      { label: "Growth Chart", description: "WHO growth standards", icon: Activity },
+      { label: "Paediatric Workspace", description: "Age-aware assessment and what is due today", icon: Baby, href: "/ehr/[patientId]/paediatrics" },
+      { label: "Growth Chart", description: "WHO growth standards, plotted", icon: Activity, href: "/ehr/[patientId]/growth-chart" },
+      { label: "Immunizations", description: "Doses given (schedule forecast not available yet)", icon: Syringe, href: "/ehr/[patientId]/immunizations" },
       { label: "IMCI Protocol", description: "Integrated management of childhood illness", icon: ClipboardList },
-      { label: "Immunization Schedule", description: "EPI calendar", icon: Syringe },
     ],
     assessments: ["Paediatric early warning score (PEWS)", "Developmental milestones", "Nutritional assessment"],
     orderSets: ["Paediatric fluid management", "Neonatal sepsis workup", "Asthma protocol"],
@@ -147,11 +148,28 @@ export default function SpecialtyWorkspacePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {config.tools.map((tool) => {
               const ToolIcon = tool.icon;
-              return (
-                <div key={tool.label} className="bg-background rounded-lg border border-border p-4 hover:border-primary/25 transition-colors cursor-pointer">
+              const body = (
+                <>
                   <ToolIcon className="w-5 h-5 text-muted-foreground mb-2" />
                   <p className="text-sm font-medium text-foreground">{tool.label}</p>
                   <p className="text-xs text-muted-foreground">{tool.description}</p>
+                </>
+              );
+              // Only a tool that goes somewhere looks clickable. A cursor-pointer on a tile
+              // that does nothing tells the clinician a capability exists when it does not.
+              return tool.href ? (
+                <Link
+                  key={tool.label}
+                  href={tool.href.replace("[patientId]", patientId)}
+                  data-testid={`specialty-tool-${tool.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  className="bg-background rounded-lg border border-border p-4 hover:border-primary/25 transition-colors block"
+                >
+                  {body}
+                </Link>
+              ) : (
+                <div key={tool.label} className="bg-background rounded-lg border border-border p-4 opacity-70">
+                  {body}
+                  <p className="mt-1 text-[11px] text-muted-foreground">Not available yet</p>
                 </div>
               );
             })}
