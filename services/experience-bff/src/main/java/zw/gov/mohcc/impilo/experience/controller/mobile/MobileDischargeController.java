@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
-import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 
 import java.util.*;
@@ -26,14 +25,11 @@ public class MobileDischargeController {
     private static final Logger log = LoggerFactory.getLogger(MobileDischargeController.class);
 
     private final CostaServiceClient costaClient;
-    private final PctServiceClient pctClient;
     private final InpatientServiceClient inpatientClient;
 
     public MobileDischargeController(CostaServiceClient costaClient,
-                                     PctServiceClient pctClient,
                                      InpatientServiceClient inpatientClient) {
         this.costaClient = costaClient;
-        this.pctClient = pctClient;
         this.inpatientClient = inpatientClient;
     }
 
@@ -98,19 +94,23 @@ public class MobileDischargeController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode clearances = pctClient.getDischargeClearances(encounterId.toString());
-            if (clearances != null) {
-                return ResponseEntity.ok(Map.of(
-                        "data", clearances,
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-                ));
-            }
+            JsonNode clearances = inpatientClient.getDischargeClearances(encounterId.toString());
+            return ResponseEntity.ok(Map.of(
+                    "data", clearances != null ? clearances : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
         } catch (Exception e) {
-            log.warn("PCT getDischargeClearances failed: {}", e.getMessage());
+            // This used to call the pct-service shadow (a path pct never served), catch the
+            // guaranteed failure, and answer an empty list — "no clearances outstanding" is a
+            // discharge-safety claim, and it was being fabricated on every request.
+            log.error("Inpatient getDischargeClearances failed for encounter={}: {}",
+                    encounterId, e.getMessage());
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "discharge_clearances_unavailable",
+                    "message", "Discharge clearance status could not be retrieved. Do not treat "
+                               + "this as an absence of outstanding clearances.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
         }
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-        ));
     }
 }

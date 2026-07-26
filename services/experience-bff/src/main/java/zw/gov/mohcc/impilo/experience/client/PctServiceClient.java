@@ -988,32 +988,12 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    // ── Clinical Depth — Discharge Clearances (strangler migration) ──
-
-    public JsonNode initDischargeClearances(Map<String, Object> body) {
-        String url = baseUrl + "/v1/discharge-clearances/init";
-        log.info("PCT: Init discharge clearances for encounter={}", body.get("encounterId"));
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode getDischargeClearances(String encounterId) {
-        String url = baseUrl + "/v1/discharge-clearances?encounterId=" + encounterId;
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode clearDischargeClearance(String clearanceId, Map<String, Object> body) {
-        String url = baseUrl + "/v1/discharge-clearances/" + clearanceId + "/clear";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode waiveDischargeClearance(String clearanceId, Map<String, Object> body) {
-        String url = baseUrl + "/v1/discharge-clearances/" + clearanceId + "/waive";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
+    // Discharge clearances live in inpatient-service, not PCT. The four methods that used to sit
+    // here called pct-service at /v1/discharge-clearances/** — a path pct has never served. The
+    // working lane is InpatientServiceClient against /internal/v1/discharge-clearances/**, which
+    // is what ClinicalDepthController and MobileDischargeController use. Deleted rather than
+    // repointed: a second client path to one truth is how the shadow was born.
+    // Found by DownstreamRouteContractTest.
 
     // Resuscitation lives in inpatient-service, not PCT. The eight methods that used to sit
     // here called pct-service at /v1/emergency/{activationId}/... — a path pct has never served,
@@ -1047,14 +1027,6 @@ public class PctServiceClient {
     public JsonNode performCarePlanIntervention(String planId, String interventionId) {
         String url = baseUrl + "/v1/care-plans/" + planId + "/interventions/" + interventionId + "/perform";
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
-        return extractData(response);
-    }
-
-    // ── Clinical Depth — NEWS2 (strangler migration) ────────────
-
-    public JsonNode recordNEWS2Components(Map<String, Object> body) {
-        String url = baseUrl + "/v1/ews/news2";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 
@@ -1104,41 +1076,13 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    public JsonNode getFluidBalance(String patientId, String date) {
-        String url = baseUrl + "/v1/fluid-balance?patientId=" + patientId + (date != null ? "&date=" + date : "");
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode recordFluidBalance(Map<String, Object> body) {
-        String url = baseUrl + "/v1/fluid-balance";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode recordApgar(Map<String, Object> body) {
-        String url = baseUrl + "/v1/apgar";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode getApgar(String patientId) {
-        String url = baseUrl + "/v1/apgar?patientId=" + patientId;
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode recordEWS(Map<String, Object> body) {
-        String url = baseUrl + "/v1/ews";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode getEWS(String patientId) {
-        String url = baseUrl + "/v1/ews?patientId=" + patientId;
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
+    // Fluid balance, Apgar, early-warning scores and NEWS2 live in inpatient-service, not PCT.
+    // The seven methods that used to sit here called pct-service at /v1/fluid-balance, /v1/apgar,
+    // /v1/ews and /v1/ews/news2 — paths pct has never served, for records inpatient-service owns
+    // (its EWS is computed server-side against versioned thresholds). The working lane is
+    // InpatientServiceClient against /internal/v1/…, which is what every controller uses; the one
+    // residual caller of the NEWS2 shadow reached inpatient only via a catch block that fired on
+    // every request. Deleted rather than repointed. Found by DownstreamRouteContractTest.
 
     public JsonNode recordObservation(Map<String, Object> body) {
         String url = baseUrl + "/v1/observations";
@@ -1259,41 +1203,12 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    public JsonNode startWardRound(Map<String, Object> body) {
-        String url = baseUrl + "/v1/ward-rounds";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode addWardRoundEntry(String roundId, Map<String, Object> body) {
-        String url = baseUrl + "/v1/ward-rounds/" + roundId + "/entries";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode listWardRounds(String wardId) {
-        String url = baseUrl + "/v1/ward-rounds?wardId=" + wardId;
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode requestTransfer(Map<String, Object> body) {
-        String url = baseUrl + "/v1/transfers";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode acceptTransfer(String transferId, Map<String, Object> body) {
-        String url = baseUrl + "/v1/transfers/" + transferId + "/accept";
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode listTransfers(String patientId) {
-        String url = baseUrl + "/v1/transfers" + (patientId != null ? "?patientId=" + patientId : "");
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
+    // Ward rounds and inter-facility transfers live in inpatient-service, not PCT. The six
+    // methods that used to sit here called pct-service at /v1/ward-rounds and /v1/transfers —
+    // paths pct has never served. They had zero callers; the working lane is
+    // InpatientServiceClient against /internal/v1/…, which is what CareEmergencyInpatientController
+    // and InpatientController use. Deleted rather than repointed. Found by
+    // DownstreamRouteContractTest.
 
     // ── ED / Casualty operations (PCT V012) ─────────────────────────
 

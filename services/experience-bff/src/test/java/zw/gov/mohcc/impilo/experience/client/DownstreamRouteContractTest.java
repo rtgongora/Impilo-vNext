@@ -85,21 +85,12 @@ class DownstreamRouteContractTest {
             "TusoServiceClient -> /v1/wards",
 
             // ── Inpatient concepts on the PCT client ─────────────────────────────
-            // All of these are inpatient concepts called against pct-service, which serves none of
-            // them; inpatient-service routes under /internal/v1/… so the prefix is wrong twice
-            // over. The emergency lane triaged them (2026-07-26) and the split matters, because
-            // the two halves have opposite honest resolutions under the product-owner rule that we
-            // complete functionality rather than delete it to hide incompleteness:
-            //
-            //   SHADOWS — zero callers. A duplicate of a working path, not a capability. The live
-            //   lane is InpatientServiceClient against /internal/v1/…, which carries its own copy.
-            //   Deleting these removes nothing a user can reach. Owner: inpatient lane.
-            "PctServiceClient -> /v1/ews",
-            "PctServiceClient -> /v1/ward-rounds",
-            "PctServiceClient -> /v1/apgar",
-            "PctServiceClient -> /v1/fluid-balance",
-            "PctServiceClient -> /v1/transfers",
-            "PctServiceClient -> /v1/discharge-clearances",
+            // The six shadow prefixes that used to sit here (/v1/ews, /v1/ward-rounds, /v1/apgar,
+            // /v1/fluid-balance, /v1/transfers, /v1/discharge-clearances) were zero-caller
+            // duplicates of the live InpatientServiceClient lane and have been deleted; the two
+            // residual references (NEWS2 in ClinicalDepthController, discharge status in
+            // MobileDischargeController) now call inpatient-service directly instead of paying a
+            // doomed pct round-trip and falling through a catch block.
             //
             //   LIVE AND BROKEN — real callers on a path nobody serves. This is a broken feature,
             //   and deleting it would hide exactly the incompleteness the rule is about. /v1/vitals
