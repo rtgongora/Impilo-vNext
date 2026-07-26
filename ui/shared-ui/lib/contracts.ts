@@ -33,12 +33,18 @@ export const TRUST_HEADERS = {
 // Common Types
 // ============================================================================
 
+// Mirrors zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse exactly. TSHEPO denies any
+// request whose purpose is outside this set (INVALID_PURPOSE at PolicyEngine Step 2, before
+// rule matching), so a code missing here is unreachable and a code invented here is a denial.
 export type PurposeOfUse =
   | "TREATMENT"
+  | "CARE_COORDINATION"
   | "PAYMENT"
   | "OPERATIONS"
   | "RESEARCH"
   | "PUBLIC_HEALTH"
+  | "SELF_SERVICE"
+  | "REGULATORY_DUTY"
   | "EMERGENCY"
   | "BREAK_GLASS"
   | "SYSTEM";

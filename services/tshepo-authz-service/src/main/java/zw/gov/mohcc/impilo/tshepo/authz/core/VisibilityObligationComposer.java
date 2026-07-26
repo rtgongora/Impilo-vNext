@@ -251,7 +251,10 @@ public final class VisibilityObligationComposer {
                             .exportPolicy(ExportPolicy.FULL_AUDITED.name())
                             .drillDownAllowed(true)
                             .buildBare());
-            case TREATMENT -> new BaseObligation(
+            // HL7 ActReason models coordination-of-care (COC) as a specialization of TREAT, so
+            // it shares TREATMENT's envelope. The codes stay distinct so the decision log can
+            // separate care-team/referral/write-back traffic from direct care at the point of use.
+            case TREATMENT, CARE_COORDINATION -> new BaseObligation(
                     "PATIENT",
                     null,
                     loggingLevel,
@@ -260,6 +263,39 @@ public final class VisibilityObligationComposer {
                             .visibilityTier(DataVisibilityTier.FULL_IDENTIFIED_CLINICAL.name())
                             .piiAccess(PiiAccessLevel.FULL.name())
                             .clinicalAccess(ClinicalAccessLevel.FULL.name())
+                            .aggregateOnly(false)
+                            .exportPolicy(ExportPolicy.FULL_AUDITED.name())
+                            .drillDownAllowed(true)
+                            .buildBare());
+            // A person on their own record: full sight of their own data, but no export or
+            // drill-down rights — those are clinician/analyst affordances, not citizen ones.
+            // maxScope stays "PATIENT" (the existing subject-bound token services already
+            // understand) rather than inventing a "SELF" scope no downstream service reads.
+            case SELF_SERVICE -> new BaseObligation(
+                    "PATIENT",
+                    null,
+                    loggingLevel,
+                    null,
+                    VisibilityProfile.builder()
+                            .visibilityTier(DataVisibilityTier.FULL_IDENTIFIED_CLINICAL.name())
+                            .piiAccess(PiiAccessLevel.FULL.name())
+                            .clinicalAccess(ClinicalAccessLevel.FULL.name())
+                            .aggregateOnly(false)
+                            .exportPolicy(ExportPolicy.REDACTED.name())
+                            .drillDownAllowed(false)
+                            .buildBare());
+            // Statutory oversight: identity and operational facts about the regulated party,
+            // never their patients' clinical detail. clinicalAccess NONE is the whole point of
+            // giving regulatory duty its own code — see PurposeOfUse.REGULATORY_DUTY.
+            case REGULATORY_DUTY -> new BaseObligation(
+                    "FACILITY_SCOPE",
+                    List.of("nationalId"),
+                    loggingLevel,
+                    null,
+                    VisibilityProfile.builder()
+                            .visibilityTier(DataVisibilityTier.IDENTIFIED_OPERATIONAL_ONLY.name())
+                            .piiAccess(PiiAccessLevel.LIMITED.name())
+                            .clinicalAccess(ClinicalAccessLevel.NONE.name())
                             .aggregateOnly(false)
                             .exportPolicy(ExportPolicy.FULL_AUDITED.name())
                             .drillDownAllowed(true)

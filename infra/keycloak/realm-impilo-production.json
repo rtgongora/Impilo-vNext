@@ -125,6 +125,18 @@
         "clientRole": false
       },
       {
+        "name": "SURGEON",
+        "description": "Operating surgeon — identity role for theatre authorisation (distinct from the per-case SURGEON slot on a theatre case team)",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ANAESTHETIST",
+        "description": "Anaesthetist — identity role for theatre authorisation (distinct from the per-case ANAESTHETIST slot on a theatre case team)",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "REGISTRAR",
         "description": "Registrar / trainee doctor",
         "composite": false,
