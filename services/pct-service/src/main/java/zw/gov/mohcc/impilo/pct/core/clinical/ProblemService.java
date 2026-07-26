@@ -71,15 +71,15 @@ public class ProblemService {
         TrustContext ctx = TrustContextHolder.require();
         ProblemEntity p = new ProblemEntity();
         p.setTenantId(ctx.tenantId());
-        p.setSubjectCpid(required(body, "subject_cpid"));
-        p.setJourneyId(str(body.get("journey_id")));
-        p.setEncounterId(str(body.get("encounter_id")));
+        p.setSubjectCpid(required(body, "subject_cpid", "subjectCpid"));
+        p.setJourneyId(str(body.get("journey_id"), body.get("journeyId")));
+        p.setEncounterId(str(body.get("encounter_id"), body.get("encounterId")));
         // Subject-relationship gate (dimension 6): the actor must hold an active care context for
         // this patient. ext_authz enforces RBAC but cannot bind the body subject to consent/relationship.
         accessGuard.requireCareRelationship(ctx, p.getSubjectCpid(), p.getJourneyId(), p.getEncounterId());
         p.setCode(str(body.get("code")));
-        p.setCodeSystem(str(body.get("code_system")));
-        p.setDisplay(required(body, "display"));
+        p.setCodeSystem(str(body.get("code_system"), body.get("codeSystem")));
+        p.setDisplay(required(body, "display", "display"));
         p.setCategory(ProblemVocabulary.require("category",
                 body.getOrDefault("category", "DIAGNOSIS"), ProblemVocabulary.CATEGORIES, true));
         p.setClinicalStatus(ProblemVocabulary.require("clinical_status",
@@ -87,19 +87,20 @@ public class ProblemService {
         // No default on either of these: an unstated severity or certainty stays NULL. Defaulting
         // would record an assessment the clinician never made — "mild" is the one severity that
         // stops a reader looking, and CONFIRMED is the one certainty that ends an investigation.
-        p.setSeverity(upper(body.get("severity")));
+        p.setSeverity(upper(str(body.get("severity"))));
         p.setDiagnosticCertainty(ProblemVocabulary.require("diagnostic_certainty",
-                body.get("diagnostic_certainty"), ProblemVocabulary.CERTAINTIES, false));
-        String onset = str(body.get("onset_date"));
+                str(body.get("diagnostic_certainty"), body.get("diagnosticCertainty")),
+                ProblemVocabulary.CERTAINTIES, false));
+        String onset = str(body.get("onset_date"), body.get("onsetDate"));
         if (onset != null) {
             p.setOnsetDate(LocalDate.parse(onset));
         }
-        String reviewDate = str(body.get("review_date"));
+        String reviewDate = str(body.get("review_date"), body.get("reviewDate"));
         if (reviewDate != null) {
             p.setReviewDate(LocalDate.parse(reviewDate));
         }
         p.setEvidence(str(body.get("evidence")));
-        p.setResponsibleService(str(body.get("responsible_service")));
+        p.setResponsibleService(str(body.get("responsible_service"), body.get("responsibleService")));
         // A problem recorded directly as recurrent is one the clinician already knows has come back.
         if (ProblemVocabulary.RECURRENT_STATUSES.contains(p.getClinicalStatus())) {
             p.setLastRecurrenceAt(OffsetDateTime.now());
@@ -109,7 +110,7 @@ public class ProblemService {
 
         // Cross-clinic duplication check. A patient seen in the diabetic clinic, the renal clinic
         // and a medical ward acquires the same diagnosis three times unless something looks.
-        String resolution = upper(body.get("duplicate_resolution"));
+        String resolution = upper(str(body.get("duplicate_resolution"), body.get("duplicateResolution")));
         if (!RESOLUTION_DISTINCT_PROBLEM.equals(resolution)) {
             ProblemEntity existing = findDuplicate(ctx.tenantId(), p);
             if (existing != null) {
@@ -255,18 +256,32 @@ public class ProblemService {
         outboxRepository.save(outbox);
     }
 
-    private static String required(Map<String, Object> body, String key) {
-        Object v = body.get(key);
-        if (v == null || String.valueOf(v).isBlank()) {
-            throw new IllegalArgumentException("Missing field: " + key);
+    /** Required field, readable in either spelling; names the snake_case form when absent. */
+    private static String required(Map<String, Object> body, String snakeKey, String camelKey) {
+        String v = str(body.get(snakeKey), body.get(camelKey));
+        if (v == null) {
+            throw new IllegalArgumentException("Missing field: " + snakeKey);
         }
-        return String.valueOf(v).trim();
+        return v;
     }
 
-    private static String str(Object v) {
-        if (v == null) return null;
-        String s = String.valueOf(v).trim();
-        return s.isEmpty() ? null : s;
+    /**
+     * First non-blank of the candidates.
+     *
+     * <p>Variadic so every multi-word key can be read in both spellings. Required fields fail
+     * loudly on the wrong spelling, but an OPTIONAL field read snake-only would simply be absent —
+     * a 201 with the clinical value silently null. That is the failure mode this service must not
+     * have, because the emergency lane's handover contract requires diagnostic certainty to
+     * travel, and a certainty that vanished in transit is indistinguishable from one nobody
+     * stated. Matches the pattern already used in MaternityService.</p>
+     */
+    private static String str(Object... candidates) {
+        for (Object v : candidates) {
+            if (v == null) continue;
+            String s = String.valueOf(v).trim();
+            if (!s.isEmpty()) return s;
+        }
+        return null;
     }
 
     private static String upperOr(Object v, String def) {

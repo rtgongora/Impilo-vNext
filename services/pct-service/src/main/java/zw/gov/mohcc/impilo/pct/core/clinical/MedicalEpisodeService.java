@@ -77,25 +77,26 @@ public class MedicalEpisodeService {
         TrustContext ctx = TrustContextHolder.require();
         MedicalEpisodeEntity e = new MedicalEpisodeEntity();
         e.setTenantId(ctx.tenantId());
-        e.setSubjectCpid(required(body, "subject_cpid"));
-        accessGuard.requireCareRelationship(ctx, e.getSubjectCpid(), str(body.get("journey_id")),
-                str(body.get("encounter_id")));
+        e.setSubjectCpid(required(body, "subject_cpid", "subjectCpid"));
+        accessGuard.requireCareRelationship(ctx, e.getSubjectCpid(), str(body.get("journey_id"), body.get("journeyId")),
+                str(body.get("encounter_id"), body.get("encounterId")));
 
         e.setEpisodeType(ProblemVocabulary.require("episode_type",
-                body.get("episode_type"), MedicalEpisodeVocabulary.TYPES, true));
+                str(body.get("episode_type"), body.get("episodeType")),
+                MedicalEpisodeVocabulary.TYPES, true));
         e.setStatus(ProblemVocabulary.require("status",
                 body.getOrDefault("status", "ACTIVE"), MedicalEpisodeVocabulary.STATUSES, true));
-        e.setTitle(required(body, "title"));
-        e.setResponsibleService(str(body.get("responsible_service")));
-        e.setResponsibleActor(str(body.get("responsible_actor")));
-        e.setManagingFacilityId(str(body.get("managing_facility_id")));
+        e.setTitle(required(body, "title", "title"));
+        e.setResponsibleService(str(body.get("responsible_service"), body.get("responsibleService")));
+        e.setResponsibleActor(str(body.get("responsible_actor"), body.get("responsibleActor")));
+        e.setManagingFacilityId(str(body.get("managing_facility_id"), body.get("managingFacilityId")));
         e.setNotes(str(body.get("notes")));
         e.setCreatedBy(ctx.actorId());
 
-        String startedOn = str(body.get("started_on"));
+        String startedOn = str(body.get("started_on"), body.get("startedOn"));
         e.setStartedOn(startedOn == null ? LocalDate.now() : LocalDate.parse(startedOn));
 
-        String emergencyEpisodeId = str(body.get("emergency_episode_id"));
+        String emergencyEpisodeId = str(body.get("emergency_episode_id"), body.get("emergencyEpisodeId"));
         if (emergencyEpisodeId != null) {
             e.setEmergencyEpisodeId(UUID.fromString(emergencyEpisodeId));
         }
@@ -239,18 +240,27 @@ public class MedicalEpisodeService {
         outboxRepository.save(outbox);
     }
 
-    private static String required(Map<String, Object> body, String key) {
-        Object v = body.get(key);
-        if (v == null || String.valueOf(v).isBlank()) {
-            throw new IllegalArgumentException("Missing field: " + key);
+    /** Required field, readable in either spelling; names the snake_case form when absent. */
+    private static String required(Map<String, Object> body, String snakeKey, String camelKey) {
+        String v = str(body.get(snakeKey), body.get(camelKey));
+        if (v == null) {
+            throw new IllegalArgumentException("Missing field: " + snakeKey);
         }
-        return String.valueOf(v).trim();
+        return v;
     }
 
-    private static String str(Object v) {
-        if (v == null) return null;
-        String s = String.valueOf(v).trim();
-        return s.isEmpty() ? null : s;
+    /**
+     * First non-blank of the candidates, so every multi-word key is readable in both spellings.
+     * An optional field read snake-only is silently null when a caller sends camelCase — a 201
+     * with the clinical value missing. See ClinicalKeySpellingTest, which enforces this.
+     */
+    private static String str(Object... candidates) {
+        for (Object v : candidates) {
+            if (v == null) continue;
+            String s = String.valueOf(v).trim();
+            if (!s.isEmpty()) return s;
+        }
+        return null;
     }
 
     private String toJson(Object obj) {
