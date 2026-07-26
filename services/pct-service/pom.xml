@@ -85,6 +85,11 @@
             <artifactId>paediatric-domain</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>reproductive-domain</artifactId>
+        </dependency>
+
         <!-- Observability -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
