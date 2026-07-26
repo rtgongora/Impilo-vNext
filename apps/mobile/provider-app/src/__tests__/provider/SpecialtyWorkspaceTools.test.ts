@@ -3,7 +3,10 @@
  *
  * Acute burns %TBSA and Parkland fluid resuscitation are owned by the Emergency,
  * Resuscitation and Acute Care pack (`docs/registry/iatg-emergency-leases.md` §5b) and
- * land in `libs/emergency-domain`, age-banded via `libs/paediatric-domain` on `bandKey`.
+ * land in `libs/burn-domain`, age-banded via `libs/paediatric-domain` on `bandKey`. (Not
+ * `libs/emergency-domain`: %TBSA drives excision timing, graft planning, nutrition and mortality
+ * prediction for months after the emergency episode closes, so the arithmetic is shared with
+ * surgery rather than owned by emergency. Agreed with the surgery lane, lease §5b Decision 1.)
  * This app must not carry a private implementation: the one it used to carry was
  * adult-only, had no injury-time clock or first-8h/second-16h split, and persisted
  * nothing while telling the clinician it had saved.
