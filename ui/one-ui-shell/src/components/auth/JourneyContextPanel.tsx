@@ -30,8 +30,10 @@ export function JourneyContextPanel({ returnTo, intentGoal }: JourneyContextPane
   const findCareNeed = useFindCareJourneyStore((s) => s.need);
   const findCareService = useFindCareJourneyStore((s) => s.serviceLabel);
 
-  const isFindCareBooking =
-    returnTo?.includes("/welcome/find-care") || returnTo?.includes("/bookings") || !!findCareNeed;
+  // Only claim a saved booking when the store actually holds one — a returnTo hint alone
+  // must never fabricate a facility/appointment (no invented data on a health surface).
+  const hasRealFindCareJourney = !!(findCareService || findCareNeed);
+  const isFindCareBooking = hasRealFindCareJourney;
   const isEmergencyTrack = returnTo?.includes("/emergency") || returnTo?.includes("/welcome/emergency");
   const isRegulatory = returnTo?.includes("/regulatory") || returnTo?.includes("/organization-admin");
   const isProviderAccess = returnTo?.includes("/provider") || returnTo?.includes("/work");
@@ -61,20 +63,20 @@ export function JourneyContextPanel({ returnTo, intentGoal }: JourneyContextPane
             <div>
               <p className="text-xs font-medium text-emerald-200 uppercase tracking-wider">Facility / Service</p>
               <p className="font-semibold text-white">
-                {findCareService || findCareNeed || "Seke North Clinic"}
+                {findCareService || findCareNeed}
               </p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <Calendar className="mt-0.5 h-5 w-5 text-emerald-300 shrink-0" aria-hidden />
-            <div>
-              <p className="text-xs font-medium text-emerald-200 uppercase tracking-wider">Appointment Type</p>
-              <p className="text-sm font-medium text-emerald-50">
-                {intentGoal || "Maternal & Child Health Consultation"}
-              </p>
+          {intentGoal && (
+            <div className="flex items-start gap-3">
+              <Calendar className="mt-0.5 h-5 w-5 text-emerald-300 shrink-0" aria-hidden />
+              <div>
+                <p className="text-xs font-medium text-emerald-200 uppercase tracking-wider">Appointment Type</p>
+                <p className="text-sm font-medium text-emerald-50">{intentGoal}</p>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-start gap-3">
             <Clock className="mt-0.5 h-5 w-5 text-emerald-300 shrink-0" aria-hidden />
