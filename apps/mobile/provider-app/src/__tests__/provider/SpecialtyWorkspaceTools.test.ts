@@ -76,3 +76,30 @@ describe("unrelated specialty tools are unaffected", () => {
     expect(formKindForTool("Cardiac Rehab", 5, "cardiology")).toBe("soon");
   });
 });
+
+describe("neonatal growth charting", () => {
+  const NEONATAL = getSpecialtyById("neonatal");
+
+  it("still lists the growth chart as something the service does", () => {
+    expect(NEONATAL?.tools.some((tool) => tool.toLowerCase().includes("fenton"))).toBe(true);
+  });
+
+  it("does not open a free-text note when a clinician taps a growth chart", () => {
+    // The tile was named after a growth chart and opened NotesForm. Somewhere to type is
+    // not a chart: nothing typed there is plotted, scored, or attached to the record.
+    expect(formKindForTool("Growth Chart (Fenton)", 2, "neonatal")).toBe("elsewhere");
+    expect(formKindForTool("Growth Chart (Fenton)", 2, "neonatal")).not.toBe("notes");
+  });
+
+  it("never computes a growth number on this device", () => {
+    // Preterm growth is scored once, server-side, against the published Fenton 2013 LMS
+    // tables and stamped with the standard that produced it. A second calculation here
+    // would be a second answer about the same baby.
+    const numericKinds = ["bsa", "ktv", "sum"];
+    ["Growth Chart (Fenton)", "Fenton growth", "Growth chart"].forEach((tool) => {
+      [0, 1, 2, 3, 4].forEach((index) => {
+        expect(numericKinds).not.toContain(formKindForTool(tool, index, "neonatal"));
+      });
+    });
+  });
+});

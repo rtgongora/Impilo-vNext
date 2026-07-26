@@ -18,7 +18,7 @@ type Props = {
   onBack: () => void;
 };
 
-type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withheld";
+type ToolFormKind = "bsa" | "ktv" | "notes" | "checklist" | "sum" | "soon" | "withheld" | "elsewhere";
 
 /**
  * Burns arithmetic is withheld from this app.
@@ -62,9 +62,27 @@ const WITHHELD_BURNS_ARITHMETIC = [
  */
 const NO_GENERIC_CALCULATOR_WORKSPACES = new Set(["burns"]);
 
+/**
+ * Tools this app must not improvise because a governed implementation already exists.
+ *
+ * The neonatal workspace advertised "Growth Chart (Fenton)" and opened a free-text notes
+ * box. That is worse than an empty tile: a clinician who taps a tool named after a growth
+ * chart and is given somewhere to type has been told the app does growth charting, and
+ * whatever they type is not a plotted point, not a z-score, and not attached to the growth
+ * record.
+ *
+ * Preterm growth is real and is implemented once, in `libs/paediatric-domain`, against the
+ * published Fenton 2013 LMS tables: gestational-age corrected, scored at write, stamped
+ * with the standard and engine version, and stored in `pct.pct_growth_measurements`. It is
+ * charted on the web clinical workspace. This app will consume that same API when the
+ * mobile clinical surface lands; until then the tile says where the tool actually is.
+ */
+const TOOLS_SERVED_ELSEWHERE = ["growth chart", "fenton"];
+
 export function formKindForTool(toolName: string, index: number, workspaceId: string): ToolFormKind {
   const t = toolName.toLowerCase();
   if (WITHHELD_BURNS_ARITHMETIC.some((token) => t.includes(token))) return "withheld";
+  if (TOOLS_SERVED_ELSEWHERE.some((token) => t.includes(token))) return "elsewhere";
   if (index >= 4) return "soon";
   if (t.includes("bsa")) return "bsa";
   if (t.includes("kt/v") || t.includes("ktv")) return "ktv";
@@ -118,9 +136,16 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
           return (
             <TouchableOpacity key={`${tool}-${index}`} style={styles.toolCard} onPress={() => setModalTool({ name: tool, index })}>
               <Text style={styles.toolTitle}>{tool}</Text>
-              <Text style={[styles.toolHint, kind === "withheld" && styles.toolHintWithheld]}>
+              <Text
+                style={[
+                  styles.toolHint,
+                  (kind === "withheld" || kind === "elsewhere") && styles.toolHintWithheld,
+                ]}
+              >
                 {kind === "withheld"
                   ? "Unavailable — calculator withdrawn"
+                  : kind === "elsewhere"
+                    ? "Open in the clinical workspace"
                   : kind === "soon"
                     ? "Coming soon overview"
                     : "Tap for workspace form"}
@@ -188,6 +213,37 @@ function ToolModalBody({
             A governed, age-banded burns calculation that persists against the emergency episode is
             being delivered by the Emergency, Resuscitation and Acute Care pack. This workspace will
             use that one rather than keep a private copy.
+          </Text>
+        </ScrollView>
+        <TouchableOpacity style={styles.primaryBtn} onPress={onClose}>
+          <Text style={styles.primaryBtnText}>Close</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
+
+  if (kind === "elsewhere") {
+    return (
+      <>
+        <Text style={styles.modalTitle}>{toolName}</Text>
+        <Text style={styles.modalMeta}>{workspaceName}</Text>
+        <Text style={styles.withheldBadge}>Charted in the clinical workspace — not on this device yet</Text>
+        <ScrollView style={{ maxHeight: 320 }}>
+          <Text style={styles.modalDesc}>
+            This tile used to open a free-text note. A note is not a growth chart: nothing typed into
+            it was plotted, scored, or attached to the growth record.
+          </Text>
+          <Text style={styles.modalDesc}>
+            Preterm growth is charted against the{" "}
+            <Text style={styles.emphasis}>Fenton 2013 Preterm Growth Chart</Text>, read at
+            postmenstrual age rather than age since birth, with z-scores calculated and stored at the
+            moment of measurement. Record the weight, length and head circumference in the growth
+            screen of the clinical workspace and the chart is plotted there.
+          </Text>
+          <Text style={styles.modalDesc}>
+            This app will show the same chart from the same API once the mobile clinical surface
+            lands. It will not grow its own copy: a second growth calculation is a second answer
+            about the same baby.
           </Text>
         </ScrollView>
         <TouchableOpacity style={styles.primaryBtn} onPress={onClose}>
