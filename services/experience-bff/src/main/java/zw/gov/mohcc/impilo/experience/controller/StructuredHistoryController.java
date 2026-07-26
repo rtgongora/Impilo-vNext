@@ -59,17 +59,33 @@ public class StructuredHistoryController {
     }
 
     /**
-     * Every endpoint here falls through to an empty (or demo-patient) history when the upstream
-     * has nothing to say. That fallback is only honest when the upstream actually answered — a
-     * failed call rendered as an empty history is an affirmative clinical claim ("no surgery",
-     * "no advance directive") made at the moment the system knows least. Failures land here
-     * instead.
+     * The lane and wave that owe this capability a system of record.
+     *
+     * <p>Named on every response by product-owner rule: we do not delete things to hide incomplete
+     * functionality, we complete it — and an honest failure is only an acceptable transitional
+     * state while the backing wave is named and scheduled. An unattributed "unavailable" is
+     * indistinguishable from an outage, so nobody can tell whether to wait, escalate, or record
+     * the history somewhere else.</p>
+     */
+    private static final String OWNING_WAVE =
+            "Adult Medicine and Medical Specialties pack, wave W2 (structured history system of record)";
+
+    /**
+     * Every endpoint here falls through to an empty history when the upstream answers and holds
+     * nothing. That fallback is only honest when the upstream actually answered — a failed call
+     * rendered as an empty history is an affirmative clinical claim ("no surgery", "no advance
+     * directive") made at the moment the system knows least. Failures land here instead, and say
+     * who owes the capability.
      */
     private static ResponseEntity<Map<String, Object>> upstreamUnavailable(
             String code, String message, String requestId, String correlationId) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                 "error", code,
                 "message", message,
+                "in_development", Map.of(
+                        "owner", OWNING_WAVE,
+                        "status", "Structured history has no system of record yet. This is "
+                                  + "in development, not an outage."),
                 "meta", meta(requestId, correlationId)));
     }
 

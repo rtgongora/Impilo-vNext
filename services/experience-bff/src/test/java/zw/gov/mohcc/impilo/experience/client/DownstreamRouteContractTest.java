@@ -84,17 +84,29 @@ class DownstreamRouteContractTest {
             "TusoServiceClient -> /v1/staffing",
             "TusoServiceClient -> /v1/wards",
 
-            // ── Inpatient lane ───────────────────────────────────────────────────
-            // These are inpatient concepts called against pct-service, which serves none of them;
-            // inpatient-service routes under /internal/v1/… so the prefix is wrong twice over.
-            // Vitals is the alarming one — it is as core as a clinical read gets.
-            "PctServiceClient -> /v1/vitals",
+            // ── Inpatient concepts on the PCT client ─────────────────────────────
+            // All of these are inpatient concepts called against pct-service, which serves none of
+            // them; inpatient-service routes under /internal/v1/… so the prefix is wrong twice
+            // over. The emergency lane triaged them (2026-07-26) and the split matters, because
+            // the two halves have opposite honest resolutions under the product-owner rule that we
+            // complete functionality rather than delete it to hide incompleteness:
+            //
+            //   SHADOWS — zero callers. A duplicate of a working path, not a capability. The live
+            //   lane is InpatientServiceClient against /internal/v1/…, which carries its own copy.
+            //   Deleting these removes nothing a user can reach. Owner: inpatient lane.
             "PctServiceClient -> /v1/ews",
             "PctServiceClient -> /v1/ward-rounds",
             "PctServiceClient -> /v1/apgar",
             "PctServiceClient -> /v1/fluid-balance",
             "PctServiceClient -> /v1/transfers",
             "PctServiceClient -> /v1/discharge-clearances",
+            //
+            //   LIVE AND BROKEN — real callers on a path nobody serves. This is a broken feature,
+            //   and deleting it would hide exactly the incompleteness the rule is about. /v1/vitals
+            //   is as core as a clinical read gets; /v1/records has two callers, one of them
+            //   citizen-facing (CitizenRecordsController — someone fetching their own record).
+            //   Both routed to the coordinator for an owner; neither is this lane's to fix.
+            "PctServiceClient -> /v1/vitals",
             "PctServiceClient -> /v1/records",
 
             // ── Adult Medicine lane (mine) ───────────────────────────────────────

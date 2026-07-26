@@ -149,6 +149,26 @@ prevent.
   stops at the door. `pct_problems.severity` is a property of the disease and is this pack's to set.
   No fifth scale, and no silent translation between the two.
 
+**The FK, agreed and scheduled.** `pct_medical_episodes.emergency_episode_id` is a soft reference
+today only because `pct.emergency_episode` does not exist; a hard constraint would couple the two
+lanes' deploy order. Once the emergency lane pushes V200 it is promoted, **written by this pack in
+this pack's block** — one table, one migration block, so anyone reading V100–V129 to understand
+`pct_medical_episodes` sees its whole history rather than an incomplete picture they cannot detect.
+
+Confirmed against the estate on disk by the emergency lane, 2026-07-26:
+
+- Target is `pct.emergency_episode(episode_id)`.
+- The PK is a **single-column UUID, not composite with `tenant_id`** — the house convention across
+  every recent pct table, and every cross-table FK in pct references one column. So this pack's
+  column list does not change, and the `(tenant_id, emergency_episode_id)` index stays correct as
+  an access path.
+- **No row is ever hard-deleted.** A merge sets `MERGED` and `merged_into_id`; nothing cascades into
+  or out of the episode. `ON DELETE RESTRICT` is therefore a backstop, not a workflow.
+- Added **`NOT VALID` first, then `VALIDATE CONSTRAINT` as a separate statement**. By then the table
+  may hold rows, and a plain `ADD CONSTRAINT` takes a lock and aborts the entire migration on the
+  first dangling value — the same failure class as this pack's V100 CHECK, which is not worth
+  repeating now that it has bitten once.
+
 **What this pack needs from emergency on the handover row:** `emergency_episode_id`,
 `subject_cpid`, `journey_id`, the problems raised (as `pct_problems` ids, not free text), the
 disposition, and the requesting clinician. Nothing else is required for acceptance.
@@ -219,6 +239,23 @@ definitely new".
   service, review date, recurrence or complication linkage — so a suspected diagnosis, a working
   diagnosis and a confirmed one are today the same row. W1 evolves it; **do not build a second
   problem store in the meantime.**
+- **Completion, not deletion — and the wave is named.** Product-owner rule issued fleet-wide
+  2026-07-26: *we don't delete things to hide incomplete functionality, we complete functionality.*
+  For this pack that binds two items. The structured-history endpoints are owed **real PCT storage
+  in W2**, not a permanent honest failure; the 502 they return today is a transitional state and
+  every response now carries an `in_development` block naming this lane and W2, because an
+  unattributed "unavailable" is indistinguishable from an outage and a reader cannot tell whether
+  to wait, escalate, or record the history elsewhere. The same applies to the Child-Pugh, MELD,
+  APACHE II, SOFA and adult chronic instruments assigned to this lane: any in-development notice
+  names lane and wave until the governed forms-service definitions land.
+
+  What was removed from that controller was a **fabrication, not a capability** — a
+  `GOLDEN_PATH_DEMO_PATIENT` fixture that no user could reach, and five dead `ResultSet` mappers for
+  tables that were never created. The test for distinguishing the two, proposed by the emergency
+  lane and worth reusing: **does removing this make a capability less available to a user?** A
+  zero-caller shadow hides nothing; a live caller on a path nobody serves is a broken feature, and
+  deleting it would hide exactly the incompleteness the rule exists to surface.
+
 - **The structured-history vertical is unbacked.** `experience-bff`
   `/internal/v1/ehr/{social,family,functional,procedures,advance-directives}-history` calls
   pct-service `/v1/ehr/*` paths that **do not exist**, and falls through to a
