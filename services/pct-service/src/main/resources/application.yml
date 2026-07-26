@@ -29,6 +29,26 @@ spring:
     create-schemas: true
     baseline-on-migrate: true
     validate-on-migrate: false
+    # pct-service is written by six programmes at once, and each holds a reserved *band* of
+    # migration numbers (RMNP V058-V069, Emergency V070-V099 + V200s, Adult Medicine V100-V129,
+    # Surgery V300-V329, Paediatrics V400-V429 — see docs/registry/iatg-*-leases.md). Bands mean
+    # a lane routinely adds a migration numerically BELOW one another lane has already applied.
+    #
+    # Flyway's default refuses those as out of order. With validate-on-migrate off it does not
+    # even complain — it just never runs them. Proven on the preview estate 2026-07-26:
+    # V106__structured_history was present in the jar, the service booted green with zero errors,
+    # and pct_structured_history was never created. Green service, merged code, missing table.
+    #
+    # The band convention cannot work without this. Turning it off again silently un-ships every
+    # migration whose number is below the current maximum.
+    #
+    # What this does NOT license: a migration in one band may never depend on a migration in
+    # another. Lease law forbids it (it is why Adult Medicine's V101 deliberately carries no
+    # foreign key to emergency_episode), and the reason is that out-of-order only relaxes ordering
+    # on a database where the higher number has *already* applied. A fresh database still applies
+    # strictly ascending, so a cross-band dependency boots fine on the estate and fails on every
+    # new environment — the worst possible place to find it.
+    out-of-order: true
   data:
     redis:
       host: ${REDIS_HOST:localhost}
