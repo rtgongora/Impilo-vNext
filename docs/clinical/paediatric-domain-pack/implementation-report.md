@@ -302,7 +302,23 @@ were disease. And **one signal per family**: faltering thresholds are a severity
 independent findings, so a child crossing 1.5 z reports the one urgent action rather than burying
 it under three weaker restatements.
 
-**Wave 4 is complete.** Remaining: deepened form content; and migrating the locally declared
+**Deepened form content** closed the last Wave 4 item, and measuring it found a real gap rather
+than confirming one. Twelve inputs the child classification tables evaluate had no field on the
+child form, and no young-infant form existed at all against twenty-three inputs. The worst was
+`chestIndrawing` — the single sign separating severe pneumonia from a cold, which the engine asks
+for and the form could not record.
+
+That failure mode is silent by construction: an engine whose input is never captured does not
+error, it reports the sign as unassessed forever and the classification never resolves. A ward
+would have seen "cannot classify: complete chestIndrawing" on every coughing child, with no way to
+comply. **Adding an engine input means adding the capture field in the same change.**
+
+The capture guard was extended from one pack to three. It had checked only the danger-sign rules,
+so it reported OK while the classification engines it knew nothing about carried a twelve-field
+hole — the guard under-reported because engines were added without extending it. It now walks each
+table's screening predicate and every row, and was verified to fail when a field is removed.
+
+**Wave 4 is complete.** Remaining: and migrating the locally declared
 antigen codes onto a governed Zibo value set once zibo-service holds a vaccine terminology (it
 holds none today, which is why the schedule declares its own code system with a documented
 migration point).
