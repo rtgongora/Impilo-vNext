@@ -165,6 +165,25 @@ prevent.
   stops at the door. `pct_problems.severity` is a property of the disease and is this pack's to set.
   No fifth scale, and no silent translation between the two.
 
+> 🔴 **V108 WITHDRAWN — a cross-lane FK cannot live in the referencing lane's band.**
+> The emergency-episode foreign key was written at V108 and withdrawn before deployment. **Flyway
+> applies in version order, and V108 < V200**, so on a clean full boot the constraint would run
+> before `emergency_episode` exists: `ERROR: relation "emergency_episode" does not exist`.
+> Reproduced independently on a scratch schema. It passed a live dry-run only because the preview
+> estate already had V200 deployed — the dry-run proved the constraint *applies and bites*, and
+> never tested whether it could apply *in migration order on a clean database*. Green in one
+> environment is not green.
+>
+> **The general rule, and it binds every lane:** with one band per lane, a cross-lane foreign key
+> must live in the band of the lane that owns the **referenced** table, never the referencing one.
+> Bands solve collisions and create a dependency-ordering trap, and the trap is invisible anywhere
+> the referenced table is already deployed. Contributed by the emergency lane, whose band
+> convention surfaced it and who caught it.
+>
+> **Where the constraint now lives:** the emergency lane's block, above V200, carrying this pack's
+> migration header reasoning verbatim. `pct_medical_episodes` is still this pack's table; only the
+> constraint that references *their* table sits in *their* range, which is what the rule requires.
+
 **The FK, agreed and scheduled.** `pct_medical_episodes.emergency_episode_id` is a soft reference
 today only because `pct.emergency_episode` does not exist; a hard constraint would couple the two
 lanes' deploy order. Once the emergency lane pushes V200 it is promoted, **written by this pack in
