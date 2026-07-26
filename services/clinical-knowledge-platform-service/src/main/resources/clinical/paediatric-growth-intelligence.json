@@ -16,6 +16,16 @@
       "measure": "WEIGHT_FOR_AGE"
     },
     {
+      "code": "CROSS_STANDARD_TREND",
+      "name": "Trend not derived across a change of growth standard",
+      "severity": "NOT_DERIVABLE",
+      "priority": 15,
+      "standardChanged": true,
+      "action": "Do not read a rise or fall between these two contacts. They were scored against different growth references — an infant born preterm is read on the Fenton 2013 preterm chart until it ends at 50 weeks postmenstrual, and on the WHO standard at corrected age after that — so the step between them belongs to the charts, not to the child. Judge this contact on its own weight, classification and clinical picture, and read the trend from the next measurement on the same reference.",
+      "referralRequired": false,
+      "blocksInterpretation": false
+    },
+    {
       "code": "STATURE_MODE_ARTEFACT",
       "name": "Apparent drop explained by the switch from length to height",
       "severity": "DATA_QUALITY",
@@ -204,6 +214,93 @@
       ],
       "expectSignals": [
         "CATCH_UP_GROWTH"
+      ]
+    },
+    {
+      "name": "the step at the Fenton-to-WHO handover is not reported as faltering",
+      "points": [
+        {
+          "ageDays": 147,
+          "postmenstrual_age_weeks": 49,
+          "growth_standard": "FENTON_2013",
+          "weightKg": 5.6,
+          "weightForAgeZ": -0.3
+        },
+        {
+          "ageDays": 168,
+          "growth_standard": "WHO_2006_CHILD_GROWTH_STANDARDS",
+          "weightKg": 6.1,
+          "weightForAgeZ": -1.4
+        }
+      ],
+      "expectSignals": [
+        "CROSS_STANDARD_TREND"
+      ]
+    },
+    {
+      "name": "a large step across the handover is refused rather than blocking interpretation",
+      "points": [
+        {
+          "ageDays": 147,
+          "postmenstrual_age_weeks": 49,
+          "growth_standard": "FENTON_2013",
+          "weightKg": 5.6,
+          "weightForAgeZ": -0.4
+        },
+        {
+          "ageDays": 168,
+          "growth_standard": "WHO_2006_CHILD_GROWTH_STANDARDS",
+          "weightKg": 6.1,
+          "weightForAgeZ": -7.2
+        }
+      ],
+      "expectSignals": [
+        "CROSS_STANDARD_TREND"
+      ],
+      "expectBlocked": false
+    },
+    {
+      "name": "weight genuinely lost across the handover is still reported",
+      "points": [
+        {
+          "ageDays": 147,
+          "postmenstrual_age_weeks": 49,
+          "growth_standard": "FENTON_2013",
+          "weightKg": 5.6,
+          "weightForAgeZ": -0.3
+        },
+        {
+          "ageDays": 168,
+          "growth_standard": "WHO_2006_CHILD_GROWTH_STANDARDS",
+          "weightKg": 5.4,
+          "weightForAgeZ": -1.9
+        }
+      ],
+      "expectSignals": [
+        "CROSS_STANDARD_TREND",
+        "WEIGHT_LOSS"
+      ]
+    },
+    {
+      "name": "two contacts on the preterm chart are compared normally",
+      "points": [
+        {
+          "ageDays": 42,
+          "postmenstrual_age_weeks": 34,
+          "growth_standard": "FENTON_2013",
+          "weightKg": 2.1,
+          "weightForAgeZ": -0.4
+        },
+        {
+          "ageDays": 70,
+          "postmenstrual_age_weeks": 38,
+          "growth_standard": "FENTON_2013",
+          "weightKg": 2.9,
+          "weightForAgeZ": -1.3
+        }
+      ],
+      "expectSignals": [
+        "WEIGHT_FALTERING"
       ]
     },
     {

@@ -38,6 +38,12 @@ public record GrowthIntelligenceContent(
      * @param staticWeightMinDays       no weight gained across at least this many days
      * @param absoluteWeightLoss        weight lower than at the previous contact
      * @param statureModeChanged        the child switched between being measured lying and standing
+     * @param standardChanged           the two contacts were scored against different growth
+     *                                  references, so no difference in z between them is a
+     *                                  statement about the child. Whether that is true is the
+     *                                  engine's to decide — it is arithmetic, not policy — but what
+     *                                  a clinician should do about it is content like any other
+     *                                  action
      * @param family                    signals in the same family are a severity ladder, not
      *                                  independent findings: only the most severe applicable one is
      *                                  reported, because a clinician needs one message about the
@@ -58,6 +64,7 @@ public record GrowthIntelligenceContent(
             Integer staticWeightMinDays,
             boolean absoluteWeightLoss,
             boolean statureModeChanged,
+            boolean standardChanged,
             Integer maxAgeDays,
             String action,
             boolean referralRequired,

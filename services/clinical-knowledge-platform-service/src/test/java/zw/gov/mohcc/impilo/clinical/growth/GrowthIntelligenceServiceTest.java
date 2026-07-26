@@ -37,6 +37,16 @@ class GrowthIntelligenceServiceTest {
         return m;
     }
 
+    private static Map<String, Object> point(int ageDays, double weightKg, double wfaZ,
+                                             String standard, Integer postmenstrualAgeWeeks) {
+        Map<String, Object> m = new LinkedHashMap<>(point(ageDays, weightKg, wfaZ));
+        m.put("growth_standard", standard);
+        if (postmenstrualAgeWeeks != null) {
+            m.put("postmenstrual_age_weeks", postmenstrualAgeWeeks);
+        }
+        return m;
+    }
+
     private static List<String> codes(GrowthIntelligenceEngine.Assessment a) {
         return a.signals().stream().map(GrowthIntelligenceEngine.Signal::code).toList();
     }
@@ -140,6 +150,162 @@ class GrowthIntelligenceServiceTest {
 
         assertThat(codes(a)).doesNotContain("STATURE_MODE_ARTEFACT");
         assertThat(a.interpretationBlocked()).isFalse();
+    }
+
+    // --- two standards, one child ---------------------------------------------------------------
+
+    private static final String FENTON = "FENTON_2013";
+    private static final String WHO = "WHO_2006_CHILD_GROWTH_STANDARDS";
+
+    @Test
+    void theStepAtTheStandardHandoverIsNotReportedAsFaltering() {
+        // A preterm infant leaves the Fenton chart at 50 weeks postmenstrual and is read against
+        // WHO thereafter. The z moves because the reference population changed, and this baby is
+        // gaining weight throughout. Reporting faltering here would send a thriving child into a
+        // feeding assessment on the strength of a chart boundary.
+        var a = service.assess(List.of(
+                point(147, 5.6, -0.3, FENTON, 49),
+                point(168, 6.1, -1.4, WHO, null)));
+
+        assertThat(codes(a)).containsExactly("CROSS_STANDARD_TREND");
+        assertThat(codes(a)).doesNotContain("WEIGHT_FALTERING", "SEVERE_WEIGHT_FALTERING");
+        assertThat(a.zTrendDerivable()).isFalse();
+        assertThat(a.anyConcern()).isFalse();
+        assertThat(a.referralRequired()).isFalse();
+    }
+
+    @Test
+    void aStepLargeEnoughToLookImplausibleDoesNotBlockInterpretation() {
+        // The mirror failure, and the more dangerous one: the handover step clears the 6 z
+        // implausibility threshold, the data-quality signal blocks everything, and a child who is
+        // genuinely faltering is reported as "measurements in question" instead. The engine must
+        // not claim a measurement is in doubt on the strength of a subtraction it was never
+        // entitled to perform.
+        var a = service.assess(List.of(
+                point(147, 5.6, -0.4, FENTON, 49),
+                point(168, 6.1, -7.2, WHO, null)));
+
+        assertThat(a.interpretationBlocked()).isFalse();
+        assertThat(codes(a)).containsExactly("CROSS_STANDARD_TREND");
+        assertThat(codes(a)).doesNotContain("IMPLAUSIBLE_MEASUREMENT");
+    }
+
+    @Test
+    void whatStaysCommensurableAcrossTheHandoverIsStillInterpreted() {
+        // The refusal is scoped to z, not to the contact. A kilogram is a kilogram on either
+        // chart, so a baby who actually lost weight across the handover is still a baby who lost
+        // weight — refusing that too would be the suppression this guard exists to prevent.
+        var a = service.assess(List.of(
+                point(147, 5.6, -0.3, FENTON, 49),
+                point(168, 5.4, -1.9, WHO, null)));
+
+        assertThat(codes(a)).containsExactlyInAnyOrder("CROSS_STANDARD_TREND", "WEIGHT_LOSS");
+        assertThat(a.anyConcern()).isTrue();
+        assertThat(a.interpretationBlocked()).isFalse();
+    }
+
+    @Test
+    void theRefusalNamesBothStandardsAndWhereEachWasRead() {
+        // A clinician told only "not derivable" cannot check whether the boundary is real. The
+        // rationale carries the two references and the axis position, which is also what makes a
+        // mis-stamped standard visible rather than merely inert.
+        var a = service.assess(List.of(
+                point(147, 5.6, -0.3, FENTON, 49),
+                point(168, 6.1, -1.4, WHO, null)));
+
+        var s = a.signals().get(0);
+        assertThat(s.rationale()).contains(FENTON).contains("49 weeks postmenstrual").contains(WHO);
+        assertThat(s.measure()).as("not a finding about one measure").isNull();
+        assertThat(s.zChange()).as("no change was derived, so none is reported").isNull();
+        assertThat(s.action()).contains("Do not read a rise or fall");
+    }
+
+    @Test
+    void twoContactsOnTheSamePretermChartAreComparedNormally() {
+        // It is the change of standard that stops the comparison, not the presence of the preterm
+        // one. A preterm baby faltering while still on Fenton must still be caught.
+        var a = service.assess(List.of(
+                point(42, 2.1, -0.4, FENTON, 34),
+                point(70, 2.9, -1.3, FENTON, 38)));
+
+        assertThat(codes(a)).containsExactly("WEIGHT_FALTERING");
+        assertThat(a.zTrendDerivable()).isTrue();
+    }
+
+    @Test
+    void anUnstampedHistoryIsTreatedAsOneReferenceRatherThanRefused() {
+        // Absence of a stamp is unknown, not changed. Refusing every history recorded before the
+        // standard was stamped would withdraw growth interpretation wholesale, so the engine keeps
+        // its previous behaviour — it can only see the boundaries it is told about, which is why
+        // pct-service stamps every row.
+        var a = service.assess(List.of(point(200, 7.4, -0.4), point(260, 7.6, -1.3)));
+
+        assertThat(codes(a)).containsExactly("WEIGHT_FALTERING");
+        assertThat(a.zTrendDerivable()).isTrue();
+    }
+
+    @Test
+    void aStandardKnownOnOnlyOneSideDoesNotManufactureABoundary() {
+        var a = service.assess(List.of(
+                point(200, 7.4, -0.4, WHO, null),
+                point(260, 7.6, -1.3)));
+
+        assertThat(codes(a)).containsExactly("WEIGHT_FALTERING");
+        assertThat(a.zTrendDerivable()).isTrue();
+    }
+
+    @Test
+    void noConcernIsNotClaimedWhenTheComparisonWasNeverMade() {
+        // The quiet failure: standards differ, nothing crosses a threshold, and the response looks
+        // exactly like a healthy child. What prevents it is that the refusal is always reported,
+        // so "no concern" is never the whole of the answer.
+        var a = service.assess(List.of(
+                point(147, 5.6, -0.3, FENTON, 49),
+                point(168, 6.1, -0.35, WHO, null)));
+
+        assertThat(a.note()).as("no summary line at all — the refusal is the answer").isNull();
+        assertThat(codes(a)).containsExactly("CROSS_STANDARD_TREND");
+        assertThat(a.zTrendDerivable()).isFalse();
+    }
+
+    @Test
+    void theEngineDoesNotRelyOnContentToAvoidClaimingNoConcern() {
+        // Defence in depth, because the signal above is data. A content pack that dropped
+        // CROSS_STANDARD_TREND would leave the z-thresholds correctly ungated and the response
+        // empty — and an empty response reads as reassurance. The engine states the reason itself
+        // rather than trusting the pack to carry it.
+        GrowthIntelligenceContent withoutTheNotice = new GrowthIntelligenceContent(
+                "test", "test", "ENGINEERING_SEED", null, null,
+                List.of(new GrowthIntelligenceContent.SignalDefinition(
+                        "WEIGHT_FALTERING", "Growth faltering", "MODERATE", 50,
+                        "WEIGHT_FOR_AGE", "WEIGHT_TREND",
+                        new java.math.BigDecimal("0.67"), null, null, null,
+                        false, false, false, null, "assess feeding", false, false)),
+                List.of());
+
+        var a = GrowthIntelligenceEngine.assess(withoutTheNotice, List.of(
+                new GrowthIntelligenceEngine.Point(147, new java.math.BigDecimal("5.6"),
+                        new java.math.BigDecimal("-0.3"), null, null, null, FENTON, 49),
+                new GrowthIntelligenceEngine.Point(168, new java.math.BigDecimal("6.1"),
+                        new java.math.BigDecimal("-1.4"), null, null, null, WHO, null)));
+
+        assertThat(a.signals()).isEmpty();
+        assertThat(a.zTrendDerivable()).isFalse();
+        assertThat(a.note()).contains("different growth standards");
+        assertThat(a.note()).doesNotContain("No growth concern identified");
+    }
+
+    @Test
+    void aRefusalToDeriveATrendIsNotItselfAConcern() {
+        var a = service.assess(List.of(
+                point(147, 5.6, -0.3, FENTON, 49),
+                point(168, 6.1, -1.4, WHO, null)));
+
+        assertThat(a.signals().get(0).severity()).isEqualTo("NOT_DERIVABLE");
+        assertThat(a.anyConcern()).isFalse();
+        assertThat(GrowthIntelligenceService.toMap(a))
+                .containsEntry("z_trend_derivable", false)
+                .containsEntry("any_concern", false);
     }
 
     // --- the clinical signals ------------------------------------------------------------------------
