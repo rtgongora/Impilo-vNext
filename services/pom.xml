@@ -52,6 +52,7 @@
         <module>../libs/shared-kernel-java</module>
         <module>../libs/security-baseline</module>
         <module>../libs/paediatric-domain</module>
+        <module>../libs/reproductive-domain</module>
         <module>shared-core</module>
         <module>tshepo-service</module>
         <module>vito-service</module>
@@ -373,6 +374,13 @@
             <dependency>
                 <groupId>zw.gov.mohcc.impilo</groupId>
                 <artifactId>paediatric-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Reproductive domain: gestational dating, parity, contraceptive coverage -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>reproductive-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
