@@ -61,6 +61,16 @@ const authUser = {
   actorType: "PROVIDER" as const,
 };
 
+/**
+ * Expiry is computed relative to now, not hardcoded. Providers only hydrates a session whose
+ * access token is still valid, so an absolute date silently turns the "authenticated" case into
+ * the "expired" case once it passes — which is how this test began asserting that a valid session
+ * hydrates while actually exercising the rejection path.
+ */
+function futureExpiry(): string {
+  return new Date(Date.now() + 60 * 60 * 1000).toISOString();
+}
+
 describe("Providers", () => {
   beforeEach(() => {
     useAuthStore.getState().clearAuth();
@@ -107,7 +117,12 @@ describe("Providers", () => {
   });
 
   it("hydrates only valid facility, workspace, and shift continuity for an authenticated session", async () => {
-    sessionStorageMock.setItem("exp:expires_at", "2026-04-10T08:00:00Z");
+    // Hydration requires a non-expired access token. The cookie-only path this test used to rely
+    // on was removed deliberately in a2a2e75de because it could resurrect a stale identity, so
+    // "authenticated" now means a real token in session storage.
+    const expiresAt = futureExpiry();
+    sessionStorageMock.setItem("exp:auth_token", "token-1");
+    sessionStorageMock.setItem("exp:expires_at", expiresAt);
     sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
     sessionStorageMock.setItem("exp:facility", JSON.stringify({
       id: "facility-1",
@@ -140,9 +155,9 @@ describe("Providers", () => {
     await waitFor(() => {
       expect(useFacilityStore.getState().facility?.id).toBe("facility-1");
     });
-    expect(useAuthStore.getState().token).toBeNull();
+    expect(useAuthStore.getState().token).toBe("token-1");
     expect(useAuthStore.getState().refreshToken).toBeNull();
-    expect(useAuthStore.getState().expiresAt).toBe("2026-04-10T08:00:00Z");
+    expect(useAuthStore.getState().expiresAt).toBe(expiresAt);
     expect(useWorkspaceStore.getState().workspace).toBeNull();
     expect(useShiftStore.getState().shift).toBeNull();
     expect(sessionStorageMock.getItem("exp:workspace")).toBeNull();

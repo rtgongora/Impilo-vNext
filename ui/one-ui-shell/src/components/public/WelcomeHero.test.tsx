@@ -1,7 +1,24 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiClient } from "@/lib/api-client";
 import { classifyPublicIntent, WelcomeHero } from "./WelcomeHero";
+
+/**
+ * The hero renders two search landmarks — the Nompilo ask box here, and the directory search in
+ * HeroDiscoverySurface — so bare getByRole("search") / getByRole("searchbox") queries are both
+ * ambiguous. Select by accessible name rather than by index: an index would silently start
+ * testing the other form if the render order ever changed, and these cases are specifically about
+ * the Nompilo guidance path.
+ */
+const NOMPILO_FORM_LABEL = "Ask Nompilo about health, services or support";
+
+function nompiloForm(): HTMLElement {
+  return screen.getByRole("search", { name: NOMPILO_FORM_LABEL });
+}
+
+function nompiloAskBox(): HTMLElement {
+  return within(nompiloForm()).getByRole("searchbox");
+}
 
 const push = vi.fn();
 
@@ -40,7 +57,8 @@ describe("WelcomeHero", () => {
     expect(
       screen.getByRole("heading", { name: "How can Impilo help you today?" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Get Health Services" })).toHaveAttribute(
+    // Label is "Get care" since the landing redesign; the destination is what this asserts.
+    expect(screen.getByRole("link", { name: "Get care" })).toHaveAttribute(
       "href",
       "/welcome/find-care",
     );
@@ -73,10 +91,10 @@ describe("WelcomeHero", () => {
     });
     render(<WelcomeHero />);
 
-    fireEvent.change(screen.getByRole("searchbox"), {
+    fireEvent.change(nompiloAskBox(), {
       target: { value: "Where can I get help for anxiety?" },
     });
-    fireEvent.submit(screen.getByRole("search"));
+    fireEvent.submit(nompiloForm());
 
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith("/internal/v1/public/gateway/guidance/ask", {
@@ -91,10 +109,10 @@ describe("WelcomeHero", () => {
     post.mockRejectedValue({ status: 502 });
     render(<WelcomeHero />);
 
-    fireEvent.change(screen.getByRole("searchbox"), {
+    fireEvent.change(nompiloAskBox(), {
       target: { value: "I need a clinic open now" },
     });
-    fireEvent.submit(screen.getByRole("search"));
+    fireEvent.submit(nompiloForm());
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/temporarily unavailable/i);
     expect(screen.getByRole("link", { name: "Find care" })).toHaveAttribute(
