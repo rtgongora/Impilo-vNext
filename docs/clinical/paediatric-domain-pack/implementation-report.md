@@ -1,7 +1,7 @@
 # Paediatric Clinical Domain Pack — Implementation Report
 
-**Status as of 2026-07-26.** Waves 1 and 2 are implemented, tested and pushed. Waves 3–5 are
-designed and outstanding. Everything clinical shipped so far is `ENGINEERING_SEED` and requires
+**Status as of 2026-07-26.** Waves 1 and 2 are implemented, tested and pushed, along with the first
+slice of Wave 3. The rest of Waves 3–5 are designed and outstanding. Everything clinical shipped so far is `ENGINEERING_SEED` and requires
 MoHCC and paediatric specialist ratification before it is used to drive care.
 
 ---
@@ -70,6 +70,19 @@ newborn-without-national-ID registration and guardian linkage. None of this was 
 | Danger-sign engine | Nine rules — ETAT emergency signs, IMNCI general danger signs, young-infant possible serious bacterial infection, hypoglycaemia, complicated severe malnutrition. `POST /internal/v1/clinical/paediatric/danger-signs/evaluate`. |
 | `DoseCalculationService` | Weight-based dosing from governed content with enforced maxima, measurable volumes, shown arithmetic, and a critical non-overridable alert on overdose. Replaces the hard-coded gentamicin table. |
 
+### Wave 3 slice 1 — clinical data capture (1 commit)
+
+| Component | What it does |
+|---|---|
+| `SegmentedControl` (shared-ui) | One-of-N picking as a single interaction with every option visible, 44px targets, radiogroup keyboard semantics, automatic fallback to a select when options are too many or too wordy to fit a phone row. |
+| `clinical_assertion` / `exam_finding` field kinds | Yes/No/Unknown/Not-assessed, and the seven examination states. Options come from a canonical set so the same answer means the same thing on every form. |
+| Four unimplemented renderer kinds | `boolean`, `datetime`, `terminology_bound` and `fhir_mapped` were declared in the model and rendered the literal text "Unsupported field kind" into clinical forms — a live defect. All four now render properly. |
+
+The capture layer previously could not express the distinction the decision-support engines
+refuse to make. A danger sign left blank was indistinguishable from one explicitly ruled out.
+Recording "not assessed" now stays possible and produces a warning rather than a block, because
+forcing a clinician to pick yes or no to clear a form is how false negatives get written down.
+
 ### The safety properties that recur
 
 Three principles are enforced structurally rather than left to callers, because each addresses a
@@ -95,6 +108,7 @@ way clinical software kills people quietly:
 | `pct-service` | 259 | green |
 | `inpatient-service` | 134 | green |
 | `clinical-knowledge-platform-service` | 205 | green |
+| `one-ui-shell` clinical-forms + shared-ui | 56 | green |
 
 Two governance gates run clinical content against the live engines: `PaediatricRuleContentTest`
 executes every danger-sign rule's own fixtures, and `DoseCalculationServiceTest` executes every
@@ -126,10 +140,10 @@ behaviours, not live-proven journeys.
 
 ## 5. Remaining work
 
-**Wave 3 — experience layer.** Form renderer upgrades (four unimplemented field kinds, a real
-segmented control, and the clinical tri-state Yes/No/Unknown/Not-assessed that IMNCI needs and
-that exists nowhere in the codebase); the paediatric workspace with sticky child context and a
-"what is due today" panel; the plotted WHO growth chart; the reusable body-map framework.
+**Wave 3 — experience layer.** Slice 1 (form renderer, segmented control, clinical tri-state) is
+done. Remaining: the paediatric workspace with sticky child context and a "what is due today"
+panel; the plotted WHO growth chart; the reusable body-map framework; the paediatric BFF
+controllers.
 
 **Wave 4 — integrated under-five care.** IMNCI and PSBI classification tables; growth intelligence
 in the knowledge platform; the ZW EPI schedule as a governed Zibo artifact and the forecast engine;
@@ -154,11 +168,23 @@ on every nutrition assessment rather than substituting weight-for-age, which mea
 else. The WHO 5–19 year reference is also absent, so children over five are not scored at all.
 Both are data-acquisition tasks.
 
-**Still broken, deliberately untouched.** The maternity partograph and CTG surfaces follow exactly
-the same broken pattern as growth and immunisation did: `experience-bff` controllers and a
-well-built UI proxying to `pct-service` `/v1/maternity/**` endpoints that do not exist, with
-orphaned tables `V34`–`V36`. The maternity UI renders and persists nothing. This was out of scope
-for the paediatric pack but is the same defect class and should be scheduled.
+**Still broken, now owned.** The maternity partograph and CTG surfaces follow exactly the same
+pattern as growth and immunisation did: `experience-bff` controllers and a well-built UI proxying
+to `pct-service` `/v1/maternity/**` endpoints that do not exist, with orphaned tables `V34`–`V36`.
+The BFF swallow is explicit — `catch (Exception e) { return ok(...) }` returns HTTP 200 with empty
+defaults, so no layer above can tell it failed. Ownership of the fix has been agreed with the
+session that holds the BFF lane; it is queued, not abandoned.
+
+**Do not drop the orphaned tables without counting rows first.** "Orphaned" here means unread, not
+empty. The swallow is on the PCT call, so anything the BFF persisted locally before the vertical
+broke could still be sitting in `V33`–`V36`. Any rows are real clinical measurements needing
+migration into `pct_growth_measurements`, not deletion.
+
+**A general lesson worth carrying beyond this pack.** A downstream 404 returned as HTTP 200 with
+empty defaults is indistinguishable from "no data exists" at every layer above it, which is why
+this class of defect survived so long across three separate verticals. New BFF proxies should fail
+loudly — 502 upstream-unavailable, as `EncounterFormsController` does — rather than degrade to a
+cheerful empty list.
 
 **Decisions taken that a product owner may wish to revisit.** Emergency danger-sign alerts are
 non-overridable. A newborn rooming in with their mother is not separately admitted. Civil birth
