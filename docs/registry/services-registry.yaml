@@ -2335,6 +2335,61 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: procedures-service
+    maven_module: procedures-service
+    primary_plane: clinical
+    plane: clinical
+    domain: care-delivery
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
+    primary_protocol: rest
+    default_http_port: 8395
+    product_names:
+      - Procedures
+      - Clinical Procedures Pipeline
+    owner_team: TBD
+    system_of_record_for:
+      - Canonical procedure catalogue — definitions, requirements, versions and approval state (governed national content: a change to what a procedure requires is a content release, not a deployment)
+      - Appropriateness and duplication detection for procedure requests
+      - Competence and privilege resolution over VARAPI registration and Vashandi assignment, including supervision requirement, trainee status and countersignature
+      - Procedure readiness evaluation and safety-pause templates — ENGINE-NOT-STORE: this service evaluates, the executing service persists the verdict
+      - Sedation and anaesthesia requirement profiles (requirements side only; the anaesthesia record stays inpatient-service)
+      - Aftercare template generation
+      - Procedure execution index — the request-to-executor correlation spine, so a request that never reached an executor is a query rather than an archaeology exercise
+    consumes_from:
+      - tshepo-authz-service
+      - oros-service          # the procedure REQUEST record (order_type=PROCEDURE, ProcedureWorkflow guard) — read, never duplicated
+      - inpatient-service     # the procedure EXECUTION record (procedure_episode) — read, never duplicated
+      - varapi-service        # registration, licence, scope, per-procedure privilege
+      - vashandi-workforce-service  # facility assignment and on-duty roster
+      - tuso-service          # facility and procedure capability
+      - zibo-service          # procedure codes and value sets
+      - clinical-knowledge-platform-service  # governed decision logic
+      - pct-service           # care-continuum anchor (CC-5)
+    exposes_to:
+      - experience-bff
+      - inpatient-service     # readiness verdicts and safety-pause templates, persisted by the executor
+      - surgery-service
+      - oros-service
+    forbidden_responsibilities:
+      - must-not-own-the-procedure-request-record        # oros-service owns it (order_type=PROCEDURE since V001)
+      - must-not-own-the-procedure-execution-record      # inpatient.procedure_episode owns it, with its specimens, devices, counts and recovery
+      - must-not-store-readiness-verdicts-or-checklist-completions  # engine-not-store: two records of one fact is the duplication the guardrails forbid
+      - must-not-own-consent                             # mvumo-service
+      - must-not-own-terminology                         # zibo-service
+      - must-not-own-clinical-decision-logic             # clinical-knowledge-platform-service
+      - must-not-own-person-level-longitudinal-clinical-registries  # PCT's (care-continuum-doctrine CC-2)
+      - must-not-own-the-clinical-decision-that-opens-or-closes-a-phase-of-care  # PCT's, on the admission-handshake model (CC-2)
+    production_status: scaffold
+    implementation_status: scaffold
+    frontend_wiring_status: not-wired
+    api_contract_status: not-started
+    authz_audit_status: not-started
+    observability_status: partial
   - id: telemonitoring-service
     maven_module: telemonitoring-service
     primary_plane: clinical
