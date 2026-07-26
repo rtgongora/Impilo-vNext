@@ -21,7 +21,10 @@ vi.mock("@impilo/mobile-offline", () => ({
   useSyncEngine: () => ({ pendingCount: 0 }),
 }));
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
   Screen: ({ children }: any) => children,
   Header: ({ title }: any) => title,
   Card: ({ children }: any) => children,
@@ -30,7 +33,8 @@ vi.mock("@impilo/mobile-design-system", () => ({
   LoadingSpinner: () => null,
   EmptyState: ({ title }: any) => title,
   ErrorState: ({ title }: any) => title,
-}));
+  };
+});
 
 describe("diagnosticsService reads", () => {
   beforeEach(() => mockGet.mockReset());

@@ -7,18 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchFacilityStats,
   fetchStaffRoster,
@@ -263,11 +252,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     fontWeight: "900",
-    color: "#111827",
+    color: colors.gray[900],
   },
   statLabel: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
   listRow: {
@@ -281,23 +270,23 @@ const styles = StyleSheet.create({
   },
   boldText: {
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   detailText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   auditRow: {
     gap: 4,
   },
   auditTime: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     fontWeight: "600",
   },
   footerNote: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     marginTop: 8,
   },

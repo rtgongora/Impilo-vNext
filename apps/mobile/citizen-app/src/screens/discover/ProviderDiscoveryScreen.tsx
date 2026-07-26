@@ -6,18 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, TextInput } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  FeatureMaturityBadge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-  Avatar,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, FeatureMaturityBadge, LoadingSpinner, EmptyState, ErrorState, Avatar, colors } from "@impilo/mobile-design-system";
 import type { Provider } from "../../types";
 import { discoverProviders } from "../../services/personalHealthService";
 
@@ -158,10 +147,10 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   searchInput: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     padding: 12,
     borderRadius: 8,
     fontSize: 14,
@@ -173,7 +162,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     marginRight: 8,
   },
   filterChipActive: {
@@ -181,7 +170,7 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 13,
-    color: "#4B5563",
+    color: colors.gray[600],
   },
   filterChipTextActive: {
     color: "#FFFFFF",
@@ -200,10 +189,10 @@ const styles = StyleSheet.create({
   },
   providerSpecialty: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   providerFacility: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
 });

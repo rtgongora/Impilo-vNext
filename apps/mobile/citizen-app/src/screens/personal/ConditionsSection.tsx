@@ -6,18 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  FeatureMaturityBadge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Badge, FeatureMaturityBadge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import type { Condition } from "../../types";
 import { fetchConditions } from "../../services/personalHealthService";
 
@@ -183,12 +172,12 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   filterTabs: {
     flexDirection: "row",
     gap: 8,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     padding: 4,
     borderRadius: 8,
   },
@@ -203,10 +192,10 @@ const styles = StyleSheet.create({
   },
   filterTabText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   filterTabTextActive: {
-    color: "#1F2937",
+    color: colors.gray[800],
     fontWeight: "600",
   },
   detailRow: {
@@ -214,10 +203,10 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   detailValue: {
     fontSize: 14,
-    color: "#1F2937",
+    color: colors.gray[800],
   },
 });

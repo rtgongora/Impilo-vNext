@@ -7,18 +7,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  CardHeader,
-  Button,
-  TabBar,
-  Badge,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, CardHeader, Button, TabBar, Badge, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useEncounterStore, encounterStore } from "../../stores/encounterStore";
 import { closeEncounter, addEncounterNotes } from "../../services/encounterService";
 import { applyCoreTransactionAction, listCoreTransactions } from "../../services/coreTransactionService";
@@ -185,7 +174,7 @@ export function EncounterScreen() {
       case "triage":
         return <TriageScreen embedded />;
       case "billing":
-        return <View style={{ padding: 16 }}><Text style={{ fontSize: 14, color: "#6B7280" }}>Charge capture available from the Billing screen in Clinical Tools</Text></View>;
+        return <View style={{ padding: 16 }}><Text style={{ fontSize: 14, color: colors.gray[500] }}>Charge capture available from the Billing screen in Clinical Tools</Text></View>;
       default:
         return null;
     }
@@ -313,7 +302,7 @@ const styles = StyleSheet.create({
   startedText: {
     marginLeft: 8,
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   badgeRow: {
     flexDirection: "row",
@@ -334,11 +323,11 @@ const styles = StyleSheet.create({
   transactionState: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
   },
   transactionHint: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   transactionNext: {
     marginTop: 4,

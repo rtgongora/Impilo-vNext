@@ -12,8 +12,12 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
- * Shift management endpoints.
- * Falls back to local shift state when TUSO is unavailable.
+ * Shift management endpoints. TUSO is the system of record for duty state.
+ *
+ * <p>These used to fall back to "local shift state" when TUSO was unavailable, but the BFF is
+ * stateless — nothing was recorded. A fabricated shift makes someone appear on duty when no
+ * system knows they are, and duty state feeds work-context binding at the PDP. Failures are
+ * reported as 502 instead.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/shifts")
@@ -41,11 +45,13 @@ public class ShiftController {
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.debug("TUSO unavailable for current shift: {}", e.getMessage());
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", null);
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-            return ResponseEntity.ok(response);
+            // A null shift is exactly what "this person is not on duty" looks like, and duty state
+            // feeds work-context binding — the difference between not-on-shift and not-checked.
+            log.error("TUSO getCurrentShift failed for user={}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "current_shift_unavailable",
+                    "message", "The current shift could not be retrieved. Do not treat this as being off duty.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
 
@@ -85,26 +91,17 @@ public class ShiftController {
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            log.info("TUSO unavailable — creating local shift fallback: {}", e.getMessage());
+            // The "local shift fallback" minted a random shift id and reported status ACTIVE for
+            // a shift TUSO never opened. The BFF is stateless, so that id exists nowhere: the
+            // person appears on duty, and the later handover or end against that id cannot
+            // resolve it. Duty state is an authorization input, not a UI convenience.
+            log.error("TUSO startShift failed for user={} facility={}: {}",
+                    userId, facilityId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "shift_not_started",
+                    "message", "The shift could not be started. You are not on duty.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        // Fallback: return a local shift
-        String shiftId = UUID.randomUUID().toString();
-        String now = OffsetDateTime.now().toString();
-
-        // Return camelCase to match what the UI expects
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("status", "ACTIVE");
-        attrs.put("facilityId", facilityId);
-        attrs.put("workspaceId", workspaceId);
-        attrs.put("userId", userId);
-        attrs.put("startedAt", now);
-        attrs.put("tenantId", tenantId);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", shiftId, "type", "Shift", "attributes", attrs));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/handover")
@@ -134,18 +131,17 @@ public class ShiftController {
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.info("TUSO unavailable — recording local shift handover: {}", e.getMessage());
+            // "Recording local shift handover" recorded nothing — the BFF is stateless. It
+            // returned status HANDED_OVER with an endedAt timestamp for a handover TUSO never
+            // saw, so the outgoing nurse believes responsibility has transferred and the incoming
+            // one has no record that it did.
+            log.error("TUSO shift handover failed for shift={}: {}", shiftId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "shift_handover_not_recorded",
+                    "message", "The handover could not be recorded. You are still responsible for "
+                               + "this shift.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("status", "HANDED_OVER");
-        attrs.put("handoverNotes", notes != null ? notes : "");
-        attrs.put("endedAt", OffsetDateTime.now().toString());
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", shiftId, "type", "Shift", "attributes", attrs));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/end")
@@ -169,17 +165,14 @@ public class ShiftController {
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.info("TUSO unavailable — returning local shift end: {}", e.getMessage());
+            // As with handover: a "local shift end" is not recorded anywhere, but the response
+            // reported status ENDED with a timestamp.
+            log.error("TUSO endShift failed for shift={}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "shift_end_not_recorded",
+                    "message", "The shift could not be ended. It is still open.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("status", "ENDED");
-        attrs.put("endedAt", OffsetDateTime.now().toString());
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id, "type", "Shift", "attributes", attrs));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
     }
 
     private static String strVal(Map<String, Object> map, String... keys) {

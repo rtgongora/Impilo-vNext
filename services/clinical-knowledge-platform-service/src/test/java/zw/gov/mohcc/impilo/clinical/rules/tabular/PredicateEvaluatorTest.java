@@ -176,7 +176,52 @@ class PredicateEvaluatorTest {
                 """, Map.of("ageDays", 900, "vitals", Map.of("respiratoryRate", 70)));
 
         assertThat(result.outcome()).isEqualTo(PredicateEvaluator.Outcome.UNKNOWN);
-        assertThat(result.contentErrors()).anyMatch(e -> e.contains("No age band"));
+        // The message names the scale as well as the value: "no band covers 900" is unreadable
+        // without knowing whether 900 is an age in days or a gestation in days.
+        assertThat(result.contentErrors()).anyMatch(e -> e.contains("No band covers 900 ageDays"));
+    }
+
+    @Test
+    void bandsCanBeScoredAgainstAScaleOtherThanAge() {
+        // Anaemia in pregnancy is defined against gestation, not age: the same haemoglobin is
+        // normal in the second trimester and abnormal at term.
+        var result = evaluate("""
+                {"input": "haemoglobinGdl", "bandKey": "gestationalAgeDays", "bands": [
+                   {"bandMin": 0,   "bandMax": 195, "lt": 11.0},
+                   {"bandMin": 196, "bandMax": 294, "lt": 10.5}]}
+                """, Map.of("gestationalAgeDays", 220, "haemoglobinGdl", 10.2));
+
+        assertThat(result.outcome()).isEqualTo(PredicateEvaluator.Outcome.TRUE);
+    }
+
+    @Test
+    void aMaternalBandNeverReadsThePatientsAgeByAccident() {
+        // The shortcut this guards against is passing gestational age in as "ageDays". Facts are a
+        // flat map shared by every rule in a request, so a fact named ageDays holding 220 would read
+        // as a seven-month-old to the dosing engine. A rule banded on gestation must report the
+        // gestation missing, not silently score itself against the woman's own age.
+        var result = evaluate("""
+                {"input": "haemoglobinGdl", "bandKey": "gestationalAgeDays", "bands": [
+                   {"bandMin": 0, "bandMax": 294, "lt": 11.0}]}
+                """, Map.of("ageDays", 9000, "haemoglobinGdl", 10.2));
+
+        assertThat(result.outcome()).isEqualTo(PredicateEvaluator.Outcome.UNKNOWN);
+        assertThat(result.missingInputs()).contains("gestationalAgeDays");
+        assertThat(result.missingInputs()).doesNotContain("ageDays");
+    }
+
+    @Test
+    void existingAgeBandContentIsUnaffectedByTheNewSpelling() {
+        // Every shipped paediatric rule uses ageMinDays/ageMaxDays with no bandKey. Those must keep
+        // resolving against ageDays exactly as before, or this change would have rewritten the
+        // meaning of content that was live-proven on the estate.
+        var result = evaluate("""
+                {"input": "vitals.respiratoryRate", "bands": [
+                   {"ageMinDays": 0,  "ageMaxDays": 59,  "gte": 60},
+                   {"ageMinDays": 60, "ageMaxDays": 364, "gte": 50}]}
+                """, Map.of("ageDays", 30, "vitals", Map.of("respiratoryRate", 62)));
+
+        assertThat(result.outcome()).isEqualTo(PredicateEvaluator.Outcome.TRUE);
     }
 
     @Test

@@ -29,6 +29,7 @@ import {
   type CommsCall,
 } from "../../services/khulumaCommsService";
 import { MeetingScreen } from "./MeetingScreen";
+import { colors } from "@impilo/mobile-design-system";
 
 export const CommsHubScreen: React.FC = () => {
   const [conversations, setConversations] = useState<CommsConversationSummary[]>([]);
@@ -285,28 +286,28 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 12, backgroundColor: "#F8FAFC" },
   flex: { flex: 1 },
   header: { fontSize: 18, fontWeight: "700", marginBottom: 8 },
-  conversationRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
+  conversationRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.gray[200] },
   conversationTitle: { fontWeight: "600" },
   conversationHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 },
   headerActions: { flexDirection: "row", gap: 12 },
   messageRow: { paddingVertical: 4 },
-  sender: { fontSize: 10, color: "#6B7280" },
+  sender: { fontSize: 10, color: colors.gray[500] },
   composer: { flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 8 },
-  input: { flex: 1, borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  input: { flex: 1, borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
   sendButton: { backgroundColor: "#059669", borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10 },
   buttonText: { color: "#FFFFFF", fontWeight: "600" },
   link: { color: "#059669", fontWeight: "600" },
-  muted: { color: "#6B7280" },
-  error: { color: "#DC2626" },
+  muted: { color: colors.gray[500] },
+  error: { color: colors.ui.error.main },
   badge: { backgroundColor: "#059669", borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   badgeText: { color: "#FFFFFF", fontSize: 12 },
-  sheet: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E5E7EB" },
+  sheet: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: colors.gray[200] },
   sheetTitle: { fontWeight: "700" },
   row: { flexDirection: "row", gap: 8, marginTop: 8 },
   acceptButton: { backgroundColor: "#059669", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 8 },
-  declineButton: { backgroundColor: "#DC2626", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 8 },
+  declineButton: { backgroundColor: colors.ui.error.main, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 8 },
   callContainer: { flex: 1, padding: 12, backgroundColor: "#0A0A0A" },
   callTitle: { color: "#FFFFFF", fontWeight: "600", marginBottom: 8 },
-  endButton: { backgroundColor: "#DC2626", borderRadius: 8, padding: 12, marginTop: 12, alignItems: "center" },
+  endButton: { backgroundColor: colors.ui.error.main, borderRadius: 8, padding: 12, marginTop: 12, alignItems: "center" },
   endButtonText: { color: "#FFFFFF", fontWeight: "700" },
 });

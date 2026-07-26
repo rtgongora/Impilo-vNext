@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { Screen, Header, Button, TextField, Select } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, TextField, Select, colors } from "@impilo/mobile-design-system";
 import { reportTransfusionReaction } from "../../services/madiService";
 
 const REACTION_TYPES = [
@@ -74,7 +74,7 @@ export function MadiReactionReportScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 14 },
-  hint: { fontSize: 13, color: "#6B7280", lineHeight: 18 },
+  hint: { fontSize: 13, color: colors.gray[500], lineHeight: 18 },
   success: { fontSize: 13, color: "#059669" },
-  error: { fontSize: 13, color: "#DC2626" },
+  error: { fontSize: 13, color: colors.ui.error.main },
 });

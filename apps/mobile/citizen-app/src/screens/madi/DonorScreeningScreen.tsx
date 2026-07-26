@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import { Screen, Header, Button, LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchDonorProfile,
   requestDonorAssist,
@@ -151,15 +151,15 @@ const styles = StyleSheet.create({
   assistBox: { backgroundColor: "#F5F3FF", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#DDD6FE" },
   assistTitle: { fontSize: 13, fontWeight: "700", color: "#5B21B6", marginBottom: 6 },
   disclaimer: { fontSize: 11, color: "#6D28D9", marginBottom: 4 },
-  assistLine: { fontSize: 12, color: "#374151", marginBottom: 2 },
-  hint: { fontSize: 13, color: "#6B7280" },
-  question: { backgroundColor: "#FFF", borderRadius: 10, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
+  assistLine: { fontSize: 12, color: colors.gray[700], marginBottom: 2 },
+  hint: { fontSize: 13, color: colors.gray[500] },
+  question: { backgroundColor: "#FFF", borderRadius: 10, padding: 12, borderWidth: 1, borderColor: colors.gray[200] },
   questionLabel: { fontSize: 13, fontWeight: "600", marginBottom: 8 },
   row: { flexDirection: "row", gap: 12 },
   choice: { paddingVertical: 4, paddingHorizontal: 8 },
-  choiceOn: { color: "#DC2626", fontWeight: "700" },
-  choiceOff: { color: "#6B7280" },
+  choiceOn: { color: colors.ui.error.main, fontWeight: "700" },
+  choiceOff: { color: colors.gray[500] },
   outcomeBox: { backgroundColor: "#ECFDF5", borderRadius: 10, padding: 12, borderWidth: 1, borderColor: "#A7F3D0" },
-  outcomeTitle: { fontSize: 14, fontWeight: "600", color: "#065F46" },
+  outcomeTitle: { fontSize: 14, fontWeight: "600", color: colors.ui.success.text },
   outcomeMsg: { fontSize: 12, color: "#047857", marginTop: 4 },
 });

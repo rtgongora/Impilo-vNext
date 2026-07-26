@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { PublicPageHeader } from "@/components/public/PublicPrimitives";
 import { PublicHealthInfo } from "@/components/public/PublicHealthInfo";
 
 export const metadata = {
@@ -17,15 +18,17 @@ export const metadata = {
 export default function HealthInfoPage() {
   return (
     <PublicShell>
-      <nav className="text-sm text-slate-500">
-        <Link href="/welcome" className="hover:text-slate-900">Welcome</Link> / Health information
-      </nav>
-      <h1 className="mt-2 text-3xl font-bold text-slate-900">Health information</h1>
-      <p className="mt-3 max-w-2xl text-slate-600">
-        Plain-language health knowledge you can trust — when to seek care, keeping children
-        healthy, living with chronic conditions, using medicines safely, and preventing illness.
-        Read freely; no account is needed.
-      </p>
+      <PublicPageHeader
+        crumbs={[{ label: "Impilo", href: "/" }, { label: "Health information" }]}
+        title="Health information"
+        lede={
+          <>
+            Plain-language health knowledge you can trust — when to seek care, keeping children
+            healthy, living with chronic conditions, using medicines safely, and preventing
+            illness. Read freely; no account is needed.
+          </>
+        }
+      />
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link

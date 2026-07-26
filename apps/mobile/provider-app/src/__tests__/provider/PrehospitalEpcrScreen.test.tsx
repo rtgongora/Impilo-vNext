@@ -27,7 +27,10 @@ vi.mock("@impilo/mobile-offline", () => ({
   useSyncEngine: () => ({ pendingCount }),
 }));
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
   Card: ({ children }: any) => React.createElement("div", null, children),
   CardHeader: ({ title }: any) => React.createElement("h3", null, title),
   CardBody: ({ children }: any) => React.createElement("div", null, children),
@@ -40,7 +43,8 @@ vi.mock("@impilo/mobile-design-system", () => ({
       onChange: (e: { target: { value: string } }) => onChangeText?.(e.target.value),
     }),
   Badge: ({ label, testID }: any) => React.createElement("span", { "data-testid": testID }, label),
-}));
+  };
+});
 
 async function render(el: React.ReactElement) {
   const container = document.createElement("div");

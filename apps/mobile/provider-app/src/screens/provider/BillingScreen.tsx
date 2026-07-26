@@ -3,7 +3,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, TextInput, FlatList, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCharges, captureCharge } from "../../services/queueService";
 
@@ -45,10 +45,10 @@ export function BillingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, gap: 8 },
-  title: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
+  title: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
   row: { flexDirection: "row", gap: 8 },
-  chargeRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-  chargeDesc: { fontSize: 13, color: "#374151" },
-  chargeAmount: { fontSize: 13, fontWeight: "700", color: "#111827" },
+  chargeRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
+  chargeDesc: { fontSize: 13, color: colors.gray[700] },
+  chargeAmount: { fontSize: 13, fontWeight: "700", color: colors.gray[900] },
 });

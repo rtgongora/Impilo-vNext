@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { View, Text, StyleSheet, ActivityIndicator, Share } from "react-native";
 
-import { Button, Card, CardBody, TextField, Badge } from "@impilo/mobile-design-system";
+import { Button, Card, CardBody, TextField, Badge, colors } from "@impilo/mobile-design-system";
 
 import { appStore } from "../../stores/appStore";
 
@@ -242,13 +242,13 @@ const styles = StyleSheet.create({
 
   container: { gap: 12 },
 
-  title: { fontSize: 16, fontWeight: "800", color: "#111827" },
+  title: { fontSize: 16, fontWeight: "800", color: colors.gray[900] },
 
-  sub: { fontSize: 13, color: "#6B7280", marginTop: 6 },
+  sub: { fontSize: 13, color: colors.gray[500], marginTop: 6 },
 
-  cacheNote: { fontSize: 12, color: "#4B5563", marginTop: 8 },
+  cacheNote: { fontSize: 12, color: colors.gray[600], marginTop: 8 },
 
-  label: { fontSize: 12, fontWeight: "700", color: "#374151", marginBottom: 6 },
+  label: { fontSize: 12, fontWeight: "700", color: colors.gray[700], marginBottom: 6 },
 
   error: { color: "#B91C1C", fontSize: 13, marginTop: 8 },
 

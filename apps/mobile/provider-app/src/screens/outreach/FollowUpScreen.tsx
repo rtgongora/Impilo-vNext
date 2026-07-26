@@ -4,17 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getHouseholds, getVisitsForHousehold } from "../../services/householdService";
 import { appStore, useAppStore } from "../../stores/appStore";
 import type { Household, CommunityVisit } from "../../types";
@@ -128,7 +118,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   badgeRow: {
     flexDirection: "row",

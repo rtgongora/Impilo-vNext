@@ -6,19 +6,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  TextField,
-  Avatar,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, TextField, Avatar, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   useConversations,
   useMessages,
@@ -169,13 +157,13 @@ function ConversationView({ conversationId, currentUserId, onBack }: Conversatio
                     styles.messageBubble,
                     {
                       backgroundColor:
-                        msg.senderId === currentUserId ? "#3B82F6" : "#F3F4F6",
+                        msg.senderId === currentUserId ? "#3B82F6" : colors.gray[100],
                     },
                   ]}
                 >
                   <Text
                     style={{
-                      color: msg.senderId === currentUserId ? "#FFFFFF" : "#111827",
+                      color: msg.senderId === currentUserId ? "#FFFFFF" : colors.gray[900],
                     }}
                   >
                     {msg.content ?? msg.body}
@@ -232,11 +220,11 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   metricLabel: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 2,
   },
   conversationRow: {
@@ -252,12 +240,12 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginVertical: 2,
   },
   timestamp: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   conversationContainer: {
     flex: 1,
@@ -287,7 +275,7 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: colors.gray[200],
     flexDirection: "row",
     gap: 8,
   },

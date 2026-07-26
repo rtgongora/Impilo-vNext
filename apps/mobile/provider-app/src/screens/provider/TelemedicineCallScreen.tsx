@@ -7,15 +7,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, TextField, colors } from "@impilo/mobile-design-system";
 import { AdaptiveSessionRoomNative } from "@impilo/mobile-session";
 import { useChannel } from "@impilo/mobile-messaging";
 import type { TelemedicineSession } from "../../types";
@@ -314,7 +306,7 @@ const styles = StyleSheet.create({
   videoContainer: {
     width: "100%",
     minHeight: 300,
-    backgroundColor: "#1F2937",
+    backgroundColor: colors.gray[800],
     borderRadius: 12,
     marginVertical: 24,
     overflow: "hidden",
@@ -334,13 +326,13 @@ const styles = StyleSheet.create({
   },
   noticeText: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
     marginTop: 12,
     textAlign: "center",
   },
   noticeWarning: {
     fontSize: 12,
-    color: "#92400E",
+    color: colors.ui.warning.text,
     marginTop: 8,
     textAlign: "center",
   },

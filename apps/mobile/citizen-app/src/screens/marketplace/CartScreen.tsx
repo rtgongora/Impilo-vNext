@@ -3,14 +3,7 @@
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Card,
-  CardBody,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardBody, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchCart, removeFromCart, checkout } from "../../services/cartService";
 import type { Cart, CartItem } from "../../types";
 
@@ -160,7 +153,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   itemRow: {
     flexDirection: "row",
@@ -173,17 +166,17 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
   },
   itemDetails: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 2,
   },
   itemSubtotal: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
     marginTop: 4,
   },
   summaryContainer: {
@@ -196,25 +189,25 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   summaryValue: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#374151",
+    color: colors.gray[700],
   },
   divider: {
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.gray[200],
   },
   totalLabel: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   totalValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
 });

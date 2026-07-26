@@ -274,6 +274,11 @@ public class FacilityController {
         putBooleanIfPresent(attrs, "hasValidCoordinates", n, "hasValidCoordinates");
         putBooleanIfPresent(attrs, "missingFacilityCode", n, "missingFacilityCode");
         putTextIfPresent(attrs, "locationContext", n, "locationContext");
+        // HAR W5/W6 — the mobile citizen app reads this list. Without regulatoryStatus it cannot
+        // tell an operating Ministry facility from one of the 5,509 HPA registry listings, and
+        // renders both with an address and a phone number as though equally confirmed.
+        // This mapper is an explicit allow-list, so tuso adding the field was not enough.
+        putTextIfPresent(attrs, "regulatoryStatus", n, "regulatoryStatus");
         if (n.has("bedCapacity") && !n.get("bedCapacity").isNull()) {
             attrs.put("bedCapacity", n.get("bedCapacity").asInt());
         }

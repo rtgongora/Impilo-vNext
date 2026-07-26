@@ -55,6 +55,14 @@ public class FormResolverService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private NewbornEpisodeService newbornEpisodeService;
 
+    /**
+     * Pregnancy episodes, for the {@code pregnant} applicability fact. Field-injected and optional
+     * for the same reason as above: form resolution underpins every clinical encounter and must not
+     * fail because one collaborator is unavailable.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.pct.core.clinical.PregnancyEpisodeService pregnancyEpisodeService;
+
     public FormResolverService(EncounterRepository encounterRepository,
                                VitoIntegration vitoIntegration,
                                FormsCatalogIntegration formsCatalogIntegration,
@@ -101,7 +109,7 @@ public class FormResolverService {
                 input.acuity(), context, input.accessState()));
 
         // 2) Patient facts (explicit override, else VITO-derived).
-        PatientFacts patient = resolvePatientFacts(input, cpid);
+        PatientFacts patient = resolvePatientFacts(input, cpid, ctx.tenantId());
 
         // 3) Catalog slice from forms-service (degrade-gracefully).
         List<FormCatalogEntry> catalog = formsCatalogIntegration.fetchCatalog();
@@ -126,10 +134,22 @@ public class FormResolverService {
         return decided;
     }
 
-    private PatientFacts resolvePatientFacts(FormResolveInput input, String cpid) {
+    private PatientFacts resolvePatientFacts(FormResolveInput input, String cpid,
+                                            java.util.UUID tenantId) {
         Integer ageMonths = input.ageMonths();
         String sex = input.sex();
+        // An explicit answer from the caller always wins: a clinician who has just established
+        // that a woman is pregnant should not be overruled by a record that has not caught up.
+        //
+        // Otherwise derive it from the pregnancy register, and derive only TRUE. FALSE is never
+        // asserted from the absence of an episode: "no pregnancy has been recorded" and "she is not
+        // pregnant" are different statements, and only the first is one this system can make. Until
+        // now this fact had no source at all, which left the ANC form's requirePregnant gate
+        // resting on whatever the caller happened to pass.
         Boolean pregnant = input.pregnant();
+        if (pregnant == null) {
+            pregnant = derivePregnant(tenantId, cpid);
+        }
         List<String> programmes = input.programmes();
         List<String> conditions = input.conditionCodes();
         Integer ageDays = null;
@@ -168,6 +188,19 @@ public class FormResolverService {
      * A missing birth record is the normal case for anyone not born in the system and is not
      * an error.
      */
+    private Boolean derivePregnant(java.util.UUID tenantId, String cpid) {
+        if (blank(cpid) || tenantId == null || pregnancyEpisodeService == null) {
+            return null;
+        }
+        try {
+            return pregnancyEpisodeService.pregnant(tenantId, cpid);
+        } catch (RuntimeException e) {
+            // Unknown, not false. A failed lookup must not exclude a pregnancy-scoped form.
+            log.debug("Could not resolve pregnancy status for form applicability: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private Integer gestationalAgeWeeks(String cpid) {
         if (blank(cpid) || newbornEpisodeService == null) {
             return null;

@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Card, CardBody, Button, TextField, Badge, DiagnosisBadge, Checkbox, ErrorState } from "@impilo/mobile-design-system";
+import { Card, CardBody, Button, TextField, Badge, DiagnosisBadge, Checkbox, ErrorState, colors } from "@impilo/mobile-design-system";
 import { searchICD11, recordDiagnosis, type ICD11SearchResult } from "../../services/diagnosisService";
 import { encounterStore } from "../../stores/encounterStore";
 import { useEncounterStore } from "../../stores/encounterStore";
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   },
   resultChapter: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginLeft: 8,
   },
   diagnosesContainer: {

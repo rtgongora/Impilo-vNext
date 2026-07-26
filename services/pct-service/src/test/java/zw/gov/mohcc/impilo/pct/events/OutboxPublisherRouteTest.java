@@ -68,6 +68,17 @@ class OutboxPublisherRouteTest {
     }
 
     @org.junit.jupiter.api.Test
+    void aCriticalResultReachesTheTopicRitoAndNotificationSubscribeTo() {
+        // The estate's only ED safety event. EdDiagnosticsService emitted it from the day the ED
+        // diagnostics lane shipped, but with no case here it rode the pct.events catch-all: the
+        // publish succeeded, the outbox row was marked published, every log said the send worked,
+        // and no consumer heard it. A critical result nobody is told about is the exact failure the
+        // acknowledge-and-act loop exists to prevent.
+        assertEquals("pct.emergency.critical_result",
+                OutboxPublisher.routeTopic("pct.ed.critical_result"));
+    }
+
+    @org.junit.jupiter.api.Test
     void anUnroutedEventTypeStillLandsOnTheCatchAllRatherThanBeingDropped() {
         assertEquals("pct.events", OutboxPublisher.routeTopic("something.nobody.routed"));
     }

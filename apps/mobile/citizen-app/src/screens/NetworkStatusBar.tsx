@@ -5,7 +5,7 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
-import { StatusIndicator } from "@impilo/mobile-design-system";
+import { StatusIndicator, colors } from "@impilo/mobile-design-system";
 import { useSyncEngine } from "@impilo/mobile-offline";
 import { appStore, useAppStore } from "../stores/appStore";
 
@@ -46,7 +46,7 @@ export function NetworkStatusBar() {
       accessibilityRole="summary"
       style={[
         styles.container,
-        { backgroundColor: !isOnline ? "#FEE2E2" : failedCount > 0 ? "#FEE2E2" : "#FEF3C7" },
+        { backgroundColor: !isOnline ? colors.ui.error.light : failedCount > 0 ? colors.ui.error.light : colors.ui.warning.light },
       ]}
     >
       <StatusIndicator status={!isOnline ? "offline" : failedCount > 0 ? "error" : "syncing"} size="sm" />
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   text: {
     flex: 1,
     fontSize: 13,
-    color: "#92400E",
+    color: colors.ui.warning.text,
   },
   retry: {
     paddingHorizontal: 10,

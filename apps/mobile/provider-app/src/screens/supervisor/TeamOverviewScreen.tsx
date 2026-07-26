@@ -4,18 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  Avatar,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, Avatar, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getTeamMembers } from "../../services/supportService";
 import { useAppStore } from "../../stores/appStore";
 import type { TeamMember } from "../../types";
@@ -117,7 +106,7 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   badgeRow: {
     flexDirection: "row",

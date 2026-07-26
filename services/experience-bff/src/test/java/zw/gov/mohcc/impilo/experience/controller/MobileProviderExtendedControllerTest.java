@@ -1,9 +1,13 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
+import zw.gov.mohcc.impilo.experience.config.ClinicalPlatformProperties;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
@@ -17,6 +21,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class MobileProviderExtendedControllerTest {
 
@@ -65,6 +70,52 @@ class MobileProviderExtendedControllerTest {
         assertEquals(true, response.getBody().get("verified"));
     }
 
+    /**
+     * Decision support must come from the engine, not from the BFF.
+     *
+     * <p>This route used to ignore its request body entirely and return one canned INFO alert
+     * attributed to {@code "source": "CDS Engine"}. No engine ran. On a phone that reads as "the
+     * engine evaluated this patient and found nothing specific" — the one thing decision support
+     * must never say falsely.
+     */
+    @Test
+    void cdsEvaluateDelegatesToTheClinicalKnowledgePlatform() {
+        MobileProviderExtendedController controller = newController(
+                new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(),
+                new StubCostaClient(), new StubOrosClient());
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.evaluateCDS(Map.of("context", "CHEST_PAIN"));
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertNotNull(data, "the engine's payload must be returned, not a BFF-authored one");
+        assertEquals(true, data.get("evaluated").asBoolean());
+    }
+
+    /**
+     * An unreachable engine must fail loudly. Degrading to an empty alert list would be the same
+     * false reassurance the canned alert gave, just quieter — and the empty-200 honesty register
+     * names decision support explicitly: zero CDS alerts is not the neutral answer, it is the claim
+     * the prescriber acts on.
+     */
+    @Test
+    void cdsEvaluateFailsLoudlyWhenTheEngineIsUnreachable() {
+        MobileProviderExtendedController controller = new MobileProviderExtendedController(
+                new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(),
+                new StubCostaClient(), new StubOrosClient(),
+                new StubPacsClient(), new StubInpatientClient(), new UnreachableClinicalClient());
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.evaluateCDS(Map.of("context", "CHEST_PAIN"));
+
+        assertEquals(502, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("cds_engine_unavailable", response.getBody().get("error"));
+        assertNull(response.getBody().get("data"), "a failure must not carry a data key");
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -77,7 +128,32 @@ class MobileProviderExtendedControllerTest {
             OrosServiceClient orosClient) {
         return new MobileProviderExtendedController(
                 pctClient, vitoClient, pharmacyClient, costaClient, orosClient,
-                new StubPacsClient(), new StubInpatientClient());
+                new StubPacsClient(), new StubInpatientClient(), new StubClinicalClient());
+    }
+
+    /**
+     * Stubs {@code cdsSummary} rather than letting the real client run. The default base URL is
+     * {@code http://localhost:8270}, so an unstubbed client would aim a unit test at whatever is
+     * listening on the developer's machine — the loopback-leak pattern already identified as the
+     * cause of this suite's flakiness.
+     */
+    private static class StubClinicalClient extends ClinicalKnowledgePlatformClient {
+        StubClinicalClient() { super(new RestTemplate(), new ClinicalPlatformProperties(null)); }
+
+        @Override
+        public JsonNode cdsSummary(Map<String, Object> body) {
+            ObjectNode payload = new ObjectMapper().createObjectNode();
+            payload.putArray("alerts");
+            payload.put("evaluated", true);
+            return payload;
+        }
+    }
+
+    private static final class UnreachableClinicalClient extends StubClinicalClient {
+        @Override
+        public JsonNode cdsSummary(Map<String, Object> body) {
+            throw new IllegalStateException("clinical knowledge platform unreachable");
+        }
     }
 
     private static final class StubPctClient extends PctServiceClient {

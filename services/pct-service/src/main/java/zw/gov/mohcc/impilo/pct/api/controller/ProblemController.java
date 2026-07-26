@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.pct.core.clinical.DuplicateProblemException;
 import zw.gov.mohcc.impilo.pct.core.clinical.ProblemService;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ProblemEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -39,6 +40,26 @@ public class ProblemController {
         return ResponseEntity.ok(ApiResponse.ok(out, TrustContextHolder.require().correlationId().toString()));
     }
 
+    /**
+     * Reports a suspected duplicate as 409, carrying the problem already on the list and the two
+     * answers the caller can give. It is a question, not a refusal: the clinician is the only one
+     * who can say whether this is the same disease returning or a genuinely distinct problem.
+     */
+    @ExceptionHandler(DuplicateProblemException.class)
+    public ResponseEntity<Map<String, Object>> duplicate(DuplicateProblemException e) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", "problem_already_on_list");
+        body.put("message", e.getMessage());
+        body.put("existing", toMap(e.getExisting()));
+        body.put("resolutions", List.of(
+                Map.of("duplicate_resolution", "SAME_PROBLEM_RETURNING",
+                        "effect", "Moves the existing problem to RECURRENCE. No new entry is created."),
+                Map.of("duplicate_resolution", "DISTINCT_PROBLEM",
+                        "effect", "Records this as a separate problem alongside the existing one.")));
+        body.put("correlation_id", TrustContextHolder.require().correlationId().toString());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<Map<String, Object>>> add(@RequestBody Map<String, Object> body) {
         // Authz: RBAC enforced at ext_authz via tshepo_authz.policy_rule `clinical-problem-write-*`
@@ -56,6 +77,19 @@ public class ProblemController {
         return ResponseEntity.ok(ApiResponse.ok(toMap(p), TrustContextHolder.require().correlationId().toString()));
     }
 
+    /**
+     * Moves a problem to a new clinical status — including back out of RESOLVED when a condition
+     * returns, which is the transition that keeps one disease as one row instead of accumulating a
+     * fresh entry on the list every time it relapses.
+     */
+    @PostMapping("/{problemId}/status")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> changeStatus(
+            @PathVariable UUID problemId,
+            @RequestBody Map<String, Object> body) {
+        ProblemEntity p = problemService.changeStatus(problemId, String.valueOf(body.get("clinical_status")));
+        return ResponseEntity.ok(ApiResponse.ok(toMap(p), TrustContextHolder.require().correlationId().toString()));
+    }
+
     private Map<String, Object> toMap(ProblemEntity p) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("problem_id", p.getProblemId().toString());
@@ -67,6 +101,12 @@ public class ProblemController {
         m.put("display", p.getDisplay());
         m.put("clinical_status", p.getClinicalStatus());
         m.put("category", p.getCategory());
+        m.put("severity", p.getSeverity());
+        m.put("diagnostic_certainty", p.getDiagnosticCertainty());
+        m.put("evidence", p.getEvidence());
+        m.put("responsible_service", p.getResponsibleService());
+        m.put("review_date", p.getReviewDate() != null ? p.getReviewDate().toString() : null);
+        m.put("last_recurrence_at", p.getLastRecurrenceAt() != null ? p.getLastRecurrenceAt().toString() : null);
         m.put("onset_date", p.getOnsetDate() != null ? p.getOnsetDate().toString() : null);
         m.put("recorded_by", p.getRecordedBy());
         m.put("resolved_at", p.getResolvedAt() != null ? p.getResolvedAt().toString() : null);

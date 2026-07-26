@@ -85,6 +85,44 @@ class HpaMatchReviewTaskSeedTest {
                 .containsExactly("He said \"yes\"", "b");
     }
 
+    /**
+     * The importer stores the deterministic identifier with its source prefix; the crosswalk carries
+     * a bare id. Comparing them raw matched zero of 591 rows on live data.
+     */
+    @Test
+    void institutionIdsAreMatchedWithTheirSourcePrefix() {
+        assertThat(HpaMatchReviewTaskSeedService.identifierValue("3892")).isEqualTo("HPA-3892");
+        assertThat(HpaMatchReviewTaskSeedService.identifierValue(" 1778 ")).isEqualTo("HPA-1778");
+        // Idempotent if the source ever starts sending the prefixed form.
+        assertThat(HpaMatchReviewTaskSeedService.identifierValue("HPA-2589")).isEqualTo("HPA-2589");
+        assertThat(HpaMatchReviewTaskSeedService.identifierValue("  ")).isNull();
+        assertThat(HpaMatchReviewTaskSeedService.identifierValue(null)).isNull();
+    }
+
+    /**
+     * A CSV record is not a line. The crosswalk's free-text columns contain newlines inside quoted
+     * fields; reading line-by-line turned a 6,327-record file into 7,852 garbage rows.
+     */
+    @Test
+    void recordsSpanningNewlinesAreReadAsOneRecord() throws Exception {
+        String csv = "a,\"note\nwith newline\",c\nd,e,f\n";
+        var reader = new java.io.BufferedReader(new java.io.StringReader(csv));
+        String first = HpaMatchReviewTaskSeedService.readRecord(reader);
+        String second = HpaMatchReviewTaskSeedService.readRecord(reader);
+
+        assertThat(HpaMatchReviewTaskSeedService.parseCsvLine(first))
+                .containsExactly("a", "note\nwith newline", "c");
+        assertThat(HpaMatchReviewTaskSeedService.parseCsvLine(second)).containsExactly("d", "e", "f");
+        assertThat(HpaMatchReviewTaskSeedService.readRecord(reader)).isNull();
+    }
+
+    @Test
+    void quoteBalanceDetectsAnUnterminatedField() {
+        assertThat(HpaMatchReviewTaskSeedService.unbalancedQuotes("a,\"open")).isTrue();
+        assertThat(HpaMatchReviewTaskSeedService.unbalancedQuotes("a,\"closed\",c")).isFalse();
+        assertThat(HpaMatchReviewTaskSeedService.unbalancedQuotes("plain,row")).isFalse();
+    }
+
     /** The bundle's CSVs carry a BOM; unstripped it corrupts the first column name silently. */
     @Test
     void theByteOrderMarkIsStripped() {

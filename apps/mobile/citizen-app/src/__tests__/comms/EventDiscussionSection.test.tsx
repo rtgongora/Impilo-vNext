@@ -4,7 +4,10 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Button: ({ title, onPress, disabled, testID }: any) =>
     React.createElement("button", { onClick: onPress, disabled, "data-testid": testID }, title),
@@ -15,7 +18,8 @@ vi.mock("@impilo/mobile-design-system", () => ({
       "data-testid": testID,
       onChange: (e: { target: { value: string } }) => onChange?.(e.target.value),
     }),
-}));
+  };
+});
 
 const svc = vi.hoisted(() => ({
   eventConversation: vi.fn(),

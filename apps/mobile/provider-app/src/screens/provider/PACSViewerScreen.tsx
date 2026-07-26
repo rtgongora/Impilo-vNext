@@ -3,7 +3,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet } from "react-native";
-import { Screen, Header, LoadingSpinner, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, LoadingSpinner, Badge, colors } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useSession } from "@impilo/mobile-auth";
@@ -101,13 +101,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, gap: 8 },
   viewer: { flex: 1, backgroundColor: "#000" },
   dicomImage: { flex: 1, width: "100%" },
-  title: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  studyCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#F9FAFB", borderRadius: 8, padding: 14, marginBottom: 6 },
-  studyId: { fontSize: 13, fontFamily: "monospace", color: "#374151" },
-  seriesCard: { flex: 1, margin: 4, backgroundColor: "#1F2937", borderRadius: 8, padding: 8, alignItems: "center" },
-  seriesThumb: { width: 80, height: 80, backgroundColor: "#374151", borderRadius: 8, alignItems: "center", justifyContent: "center" },
-  thumbText: { color: "#6B7280", fontSize: 10 },
-  seriesId: { color: "#9CA3AF", fontSize: 10, marginTop: 4 },
+  title: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  studyCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: colors.gray[50], borderRadius: 8, padding: 14, marginBottom: 6 },
+  studyId: { fontSize: 13, fontFamily: "monospace", color: colors.gray[700] },
+  seriesCard: { flex: 1, margin: 4, backgroundColor: colors.gray[800], borderRadius: 8, padding: 8, alignItems: "center" },
+  seriesThumb: { width: 80, height: 80, backgroundColor: colors.gray[700], borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  thumbText: { color: colors.gray[500], fontSize: 10 },
+  seriesId: { color: colors.gray[400], fontSize: 10, marginTop: 4 },
   backBtn: { padding: 12, alignItems: "center" },
   backText: { color: "#3B82F6", fontSize: 14, fontWeight: "600" },
 });

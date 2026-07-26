@@ -3,7 +3,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, RefreshControl } from "react-native";
-import { FacilityUnconfirmedTag, Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge } from "@impilo/mobile-design-system";
+import { FacilityUnconfirmedTag, Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge, colors } from "@impilo/mobile-design-system";
 import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import { fetchFacilities, type FacilitySummary } from "../services/facilityService";
 
@@ -139,14 +139,14 @@ export function FacilityDirectoryScreen({ onOpenFacility }: { onOpenFacility?: (
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   selectedRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
-  selectedText: { flex: 1, fontSize: 13, color: "#111827", fontWeight: "600" },
-  updating: { fontSize: 12, color: "#6B7280", marginTop: 8 },
+  selectedText: { flex: 1, fontSize: 13, color: colors.gray[900], fontWeight: "600" },
+  updating: { fontSize: 12, color: colors.gray[500], marginTop: 8 },
   centered: { marginTop: 24, alignItems: "center" },
   list: { marginTop: 16, flex: 1 },
   listPad: { gap: 10, paddingBottom: 24 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   info: { flex: 1, paddingRight: 10 },
-  name: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  meta: { fontSize: 13, color: "#6B7280", marginTop: 4 },
+  name: { fontSize: 15, fontWeight: "700", color: colors.gray[900] },
+  meta: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
   inlineError: { fontSize: 12, color: "#B91C1C", marginBottom: 8 },
 });

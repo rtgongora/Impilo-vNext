@@ -180,6 +180,23 @@ public class OutboxPublisher {
             // bridge would either miss them entirely or have to filter every PCT event to find
             // them — and it missed them entirely, which is how this route came to be added.
             case "pct.observation.recorded" -> "pct.observation.recorded";
+
+            // A birth is the one clinical event that other planes must act on rather than merely
+            // record: VITO asserts the mother-child relationship from it, UBOMI raises the civil
+            // birth notification a human then attests, and BUTANO archives the birth summary.
+            // Left on the catch-all — where it sat until now — each of those consumers would have
+            // to filter every PCT event to find a birth, which in practice means none of them
+            // subscribed at all.
+            case "pct.newborn.episode.opened", "pct.newborn.record.updated" -> "pct.newborn.episode.opened";
+
+            // The estate's only ED safety event. EdDiagnosticsService has emitted
+            // pct.ed.critical_result since the ED diagnostics lane was built, but with no route
+            // case here it landed on the pct.events catch-all — so rito (safety signal) and
+            // notification (clinician paging) had to filter every PCT event to find a critical
+            // result, which means neither subscribed. A critical result nobody is told about is
+            // the precise failure the acknowledge-and-act loop exists to prevent.
+            case "pct.ed.critical_result" -> "pct.emergency.critical_result";
+
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             // Nutrition programme lifecycle. Tracing gets its own topic because it is acted on by a

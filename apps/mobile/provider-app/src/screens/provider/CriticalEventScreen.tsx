@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Alert, Animated } from "react-native";
-import { Screen, Header, Button, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, colors } from "@impilo/mobile-design-system";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@impilo/mobile-api-client";
 
@@ -13,17 +13,17 @@ type Outcome = "STABILISED" | "ADMITTED" | "TRANSFERRED" | "ESCALATED" | "DEATH"
 
 const EVENT_TYPES: { id: EventType; label: string; color: string; description: string }[] = [
   { id: "CODE_BLUE", label: "Code Blue", color: "#1D4ED8", description: "Cardiac/respiratory arrest" },
-  { id: "RAPID_RESPONSE", label: "Rapid Response", color: "#F59E0B", description: "Acute clinical deterioration" },
-  { id: "RESUSCITATION", label: "Resuscitation", color: "#DC2626", description: "Life-threatening emergency" },
+  { id: "RAPID_RESPONSE", label: "Rapid Response", color: colors.ui.warning.main, description: "Acute clinical deterioration" },
+  { id: "RESUSCITATION", label: "Resuscitation", color: colors.ui.error.main, description: "Life-threatening emergency" },
   { id: "EMERGENCY", label: "Generic Emergency", color: "#7C3AED", description: "Other critical event" },
 ];
 
 const OUTCOMES: { id: Outcome; label: string; color: string }[] = [
-  { id: "STABILISED", label: "Stabilised", color: "#22C55E" },
+  { id: "STABILISED", label: "Stabilised", color: colors.ui.success.main },
   { id: "ADMITTED", label: "Admitted", color: "#3B82F6" },
-  { id: "TRANSFERRED", label: "Transferred", color: "#F59E0B" },
+  { id: "TRANSFERRED", label: "Transferred", color: colors.ui.warning.main },
   { id: "ESCALATED", label: "Escalated", color: "#F97316" },
-  { id: "DEATH", label: "Death", color: "#DC2626" },
+  { id: "DEATH", label: "Death", color: colors.ui.error.main },
 ];
 
 interface ActionEntry {
@@ -193,13 +193,13 @@ export function CriticalEventScreen() {
 const st = StyleSheet.create({
   scroll: { flex: 1 },
   pad: { padding: 16, gap: 12, paddingBottom: 32 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  eventCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#FFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: colors.gray[900] },
+  eventCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#FFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.gray[200] },
   eventDot: { width: 12, height: 12, borderRadius: 6 },
-  eventLabel: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  eventDesc: { fontSize: 12, color: "#6B7280" },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
+  eventLabel: { fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  eventDesc: { fontSize: 12, color: colors.gray[500] },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
   activateBtn: { borderRadius: 16, padding: 20, alignItems: "center" },
   activateBtnText: { color: "#FFF", fontSize: 18, fontWeight: "900" },
   activeHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 14, gap: 8 },
@@ -211,15 +211,15 @@ const st = StyleSheet.create({
   timerLabel: { color: "rgba(255,255,255,0.7)", fontSize: 9, fontWeight: "600" },
   timerValue: { color: "#FFF", fontSize: 22, fontWeight: "900", fontVariant: ["tabular-nums"] },
   actionLog: { gap: 0 },
-  actionRow: { flexDirection: "row", gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  actionRow: { flexDirection: "row", gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
   actionTime: { width: 60, fontSize: 12, fontWeight: "700", color: "#2563EB", fontVariant: ["tabular-nums"], fontFamily: "monospace" },
-  actionDivider: { width: 2, backgroundColor: "#E5E7EB", borderRadius: 1 },
-  actionDesc: { fontSize: 13, fontWeight: "500", color: "#111827" },
-  actionUser: { fontSize: 10, color: "#9CA3AF" },
+  actionDivider: { width: 2, backgroundColor: colors.gray[200], borderRadius: 1 },
+  actionDesc: { fontSize: 13, fontWeight: "500", color: colors.gray[900] },
+  actionUser: { fontSize: 10, color: colors.gray[400] },
   newActionRow: { flexDirection: "row", gap: 8 },
   recordBtn: { backgroundColor: "#2563EB", paddingHorizontal: 14, borderRadius: 8, justifyContent: "center" },
   recordBtnText: { color: "#FFF", fontSize: 13, fontWeight: "600" },
   outcomeRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
-  outcomeBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 2, borderColor: "#E5E7EB" },
-  outcomeBtnText: { fontSize: 12, fontWeight: "600", color: "#374151" },
+  outcomeBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 2, borderColor: colors.gray[200] },
+  outcomeBtnText: { fontSize: 12, fontWeight: "600", color: colors.gray[700] },
 });

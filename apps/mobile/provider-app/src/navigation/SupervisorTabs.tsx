@@ -7,7 +7,7 @@
 import React, { useState, useCallback, useLayoutEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TabBar } from "@impilo/mobile-design-system";
+import { TabBar, useOptionalTheme, colors } from "@impilo/mobile-design-system";
 import { SupervisorDashboardScreen } from "../screens/supervisor/SupervisorDashboardScreen";
 import { TeamOverviewScreen } from "../screens/supervisor/TeamOverviewScreen";
 import { StockScreen } from "../screens/supervisor/StockScreen";
@@ -15,7 +15,6 @@ import { InventoryScreen } from "../screens/supervisor/InventoryScreen";
 import { EscalationsScreen } from "../screens/supervisor/EscalationsScreen";
 import { appStore } from "../stores/appStore";
 
-const ACCENT = "#1E40AF";
 
 type TabKey = "dashboard" | "team" | "stock" | "inventory" | "escalations";
 
@@ -28,6 +27,9 @@ const TABS: Array<{ key: TabKey; label: string; activeIcon: string; inactiveIcon
 ];
 
 export function SupervisorTabs() {
+  // Provider identity: teal, not the generic Tailwind blue this file used
+  // to hardcode. See App.tsx ThemeProvider mount.
+  const { theme } = useOptionalTheme();
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
 
   useLayoutEffect(() => {
@@ -70,13 +72,13 @@ export function SupervisorTabs() {
             <Ionicons
               name={(activeTab === t.key ? t.activeIcon : t.inactiveIcon) as never}
               size={22}
-              color={activeTab === t.key ? ACCENT : "#9CA3AF"}
+              color={activeTab === t.key ? theme.colors.primary : colors.gray[400]}
             />
           ),
         }))}
         activeKey={activeTab}
         onSelect={handleTabChange}
-        accentColor={ACCENT}
+        accentColor={theme.colors.primary}
       />
     </View>
   );

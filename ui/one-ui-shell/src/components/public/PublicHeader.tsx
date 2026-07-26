@@ -41,10 +41,7 @@ export function PublicHeader() {
           aria-label="Impilo — home"
           className="flex shrink-0 flex-col justify-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
         >
-          <ImpiloBrandLogo variant="full" tone="brand" size={32} />
-          <span className="mt-0.5 hidden text-[11px] font-medium leading-none text-slate-500 sm:block">
-            One Health OS. For everyone.
-          </span>
+          <ImpiloBrandLogo variant="full" tone="brand" size={30} />
         </Link>
 
         {/*
@@ -68,12 +65,12 @@ export function PublicHeader() {
           </span>
         </span>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex" aria-label="Public">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0 lg:flex" aria-label="Public">
           {PUBLIC_NAV.map(({ label, href }) => (
             <Link
               key={href}
               href={href}
-              className="inline-flex min-h-10 items-center rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 xl:px-3"
+              className="inline-flex min-h-10 shrink-0 items-center whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 xl:px-2.5"
             >
               {label}
             </Link>

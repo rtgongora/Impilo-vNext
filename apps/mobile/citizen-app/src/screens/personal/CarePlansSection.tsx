@@ -6,19 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-  Progress,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, Progress, colors } from "@impilo/mobile-design-system";
 import type { CarePlan } from "../../types";
 import { appStore } from "../../stores/appStore";
 import { fetchCarePlans } from "../../services/clinicalRecordsService";
@@ -205,7 +193,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   planCard: {
     borderLeftWidth: 3,
@@ -213,7 +201,7 @@ const styles = StyleSheet.create({
   },
   planDescription: {
     fontSize: 14,
-    color: "#4B5563",
+    color: colors.gray[600],
     marginBottom: 12,
   },
   goalsSection: {
@@ -222,7 +210,7 @@ const styles = StyleSheet.create({
   goalsTitle: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
     marginBottom: 8,
   },
   goalItem: {
@@ -235,12 +223,12 @@ const styles = StyleSheet.create({
   },
   goalText: {
     fontSize: 13,
-    color: "#1F2937",
+    color: colors.gray[800],
     flex: 1,
   },
   goalStatus: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   tasksSection: {
     marginTop: 12,
@@ -248,7 +236,7 @@ const styles = StyleSheet.create({
   tasksTitle: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
     marginBottom: 8,
   },
   taskItem: {
@@ -259,12 +247,12 @@ const styles = StyleSheet.create({
   },
   taskText: {
     fontSize: 13,
-    color: "#1F2937",
+    color: colors.gray[800],
     flex: 1,
   },
   moreText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontStyle: "italic",
     marginTop: 4,
   },
@@ -274,15 +262,15 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: colors.gray[200],
   },
   metaText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   completedDate: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
 });

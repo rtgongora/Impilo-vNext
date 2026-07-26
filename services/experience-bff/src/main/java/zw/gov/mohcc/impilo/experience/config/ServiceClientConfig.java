@@ -233,19 +233,38 @@ public class ServiceClientConfig {
     }
 
     /**
-     * All-null service endpoints for unit tests — the record compact constructor applies localhost defaults
-     * (including {@code workforceGovernanceBaseUrl}).
+     * A closed, privileged port. Nothing can be listening on it, so a call fails immediately with
+     * connection-refused instead of reaching a real service.
+     */
+    public static final String UNREACHABLE_TEST_ENDPOINT = "http://127.0.0.1:1";
+
+    /**
+     * Service endpoints for unit tests, every one of them unreachable.
+     *
+     * <p>This used to pass all nulls, which let the record's compact constructor apply the
+     * <em>local development</em> defaults — PCT on 8088, OROS on 8089, inventory-service on 8098.
+     * A unit test built on this helper therefore reached the developer's loopback for real
+     * whenever a stub missed an overload, and its result depended on what happened to be
+     * listening: a service started by hand, a {@code kubectl port-forward}, another project's
+     * server. That made assertions about a downstream being unavailable true by luck rather than
+     * by construction, and it is one half of why the experience-bff suite failed three different
+     * ways on three identical runs (the other half was the Spring integration contexts — see
+     * {@code ClosedLoopbackDownstreamsEnvironmentPostProcessor}).</p>
+     *
+     * <p>Tests that want a downstream to answer should stub it explicitly, with
+     * {@code MockRestServiceServer} or WireMock, not by hoping the port is free.</p>
      */
     public static ServiceEndpoints testServiceEndpoints() {
+        String u = UNREACHABLE_TEST_ENDPOINT;
         return new ServiceEndpoints(
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u, u, u,
+                u, u, u, u, u, u, u, u
         );
     }
 
@@ -316,6 +335,15 @@ public class ServiceClientConfig {
                 // Duty proof: the signed WORK_CONTEXT token the PDP introspects to make the
                 // operational context above authoritative (validated, not merely trusted).
                 forwardHeader(inbound, request, CompanionHeaders.WORK_CONTEXT_TOKEN);
+                // Clinical episode correlation. The shell sets X-Trauma-Episode-ID on every
+                // resuscitation, ED and blood write (ui/one-ui-shell/src/hooks/queries/useEmergency.ts),
+                // and pct/inpatient/madi all read it via @RequestHeader — but until this line existed
+                // the BFF silently dropped it, so every resus event reached inpatient-service with no
+                // episode id and the cross-service episode timeline was built from nothing. The
+                // existing shell-side test only asserted the shell SET the header, which is why the
+                // gap survived. Forward, do not synthesize: this header is a correlation id minted
+                // upstream by daidzai/PCT, never by the BFF.
+                forwardHeader(inbound, request, CompanionHeaders.TRAUMA_EPISODE_ID);
                 // Idempotency keys are scoped to ONE mutation: when a BFF handler fans
                 // out to several downstream mutations it must set distinct keys, and
                 // blind forwarding would clobber them (downstream then 409s the second

@@ -10,17 +10,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useAppStore } from "../../stores/appStore";
 import { fetchQueueDefinitions, type QueueDefinition } from "../../services/queueService";
 
@@ -94,12 +84,12 @@ export function QueueDefinitionsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  note: { fontSize: 12, color: "#6B7280", marginBottom: 12 },
+  note: { fontSize: 12, color: colors.gray[500], marginBottom: 12 },
   scrollArea: { flex: 1 },
   scrollContent: { gap: 12, paddingBottom: 16 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   info: { flex: 1, gap: 2 },
-  boldText: { fontWeight: "700", color: "#111827" },
-  detailText: { fontSize: 13, color: "#6B7280" },
+  boldText: { fontWeight: "700", color: colors.gray[900] },
+  detailText: { fontSize: 13, color: colors.gray[500] },
   refreshContainer: { marginTop: 8 },
 });

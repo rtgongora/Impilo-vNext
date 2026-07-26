@@ -14,6 +14,11 @@ interface NdilaMapChromeProps {
   onLocate: () => void;
   onFitCountry: () => void;
   onToggleFullscreen: () => void;
+  /**
+   * Collapse the layer picker to a single toggle. The expanded panel is ~120px wide,
+   * which is fine on a full-page map and covers a third of a 296px hero map.
+   */
+  compact?: boolean;
 }
 
 export function NdilaMapChrome({
@@ -26,6 +31,7 @@ export function NdilaMapChrome({
   onLocate,
   onFitCountry,
   onToggleFullscreen,
+  compact = false,
 }: NdilaMapChromeProps) {
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
@@ -69,6 +75,18 @@ export function NdilaMapChrome({
       </div>
 
       <div className="pointer-events-auto absolute right-3 top-3 flex flex-col gap-2">
+        {compact ? (
+          <button
+            type="button"
+            disabled={!streetsAvailable}
+            onClick={() => onLayerModeChange(layerMode === "streets" ? "admin" : "streets")}
+            className="flex h-9 w-9 items-center justify-center self-end rounded-lg border border-border/80 bg-card/95 text-foreground shadow-md backdrop-blur-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45"
+            aria-label={`Map type: ${layerMode === "streets" ? "Streets" : "Administrative"}. Switch to ${layerMode === "streets" ? "Administrative" : "Streets"}.`}
+            title={streetsAvailable ? "Switch map type" : "Configure Ndila street tile provider"}
+          >
+            <Layers className="h-4 w-4" />
+          </button>
+        ) : (
         <div className="overflow-hidden rounded-lg border border-border/80 bg-card/95 shadow-md backdrop-blur-sm">
           <div className="flex items-center gap-1 border-b border-border/70 px-2 py-1.5 text-[10px] font-medium text-muted-foreground">
             <Layers className="h-3 w-3" />
@@ -91,6 +109,7 @@ export function NdilaMapChrome({
             Streets
           </button>
         </div>
+        )}
         <button
           type="button"
           onClick={onToggleFullscreen}

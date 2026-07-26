@@ -4,17 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getStockItems, getStockAlerts, getDispatches, confirmDelivery } from "../../services/inventoryService";
 import { useAppStore } from "../../stores/appStore";
 import type { StockItem, DispatchRecord } from "../../types";
@@ -183,7 +173,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   refreshContainer: {
     marginTop: 16,

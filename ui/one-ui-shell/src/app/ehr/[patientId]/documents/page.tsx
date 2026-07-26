@@ -80,7 +80,7 @@ export default function DocumentsPage() {
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
   );
 
-  const { data: documentsData, isLoading } = useClinicalDocuments(patientId);
+  const { data: documentsData, isLoading, isError: documentsUnavailable } = useClinicalDocuments(patientId);
   const uploadDocument = useUploadDocumentFile();
 
   const documents: ClinicalDocumentResource[] = documentsData?.data ?? [];
@@ -160,21 +160,29 @@ export default function DocumentsPage() {
                 { href: `/ehr/${patientId}/orders`, label: "Orders", icon: ClipboardList, tone: "secondary" },
                 { href: `/ehr/${patientId}/results`, label: "Results", icon: FlaskConical, tone: "secondary" },
               ]}
+              /* A count is a claim about the chart. When the document list could not be read we
+                 have no count, so show "—" rather than a confident zero. */
               metrics={[
                 {
                   label: "Notes and summaries",
-                  value: String(notesAndSummaries),
-                  detail: "Clinical narrative documents already available in the chart.",
+                  value: documentsUnavailable ? "—" : String(notesAndSummaries),
+                  detail: documentsUnavailable
+                    ? "Document store unreachable — the count is unknown, not zero."
+                    : "Clinical narrative documents already available in the chart.",
                 },
                 {
                   label: "Diagnostic attachments",
-                  value: String(diagnosticsAttachments),
-                  detail: "Lab and imaging artifacts that support ordering and review decisions.",
+                  value: documentsUnavailable ? "—" : String(diagnosticsAttachments),
+                  detail: documentsUnavailable
+                    ? "Document store unreachable — the count is unknown, not zero."
+                    : "Lab and imaging artifacts that support ordering and review decisions.",
                 },
                 {
                   label: "Recent uploads",
-                  value: String(recentUploads),
-                  detail: "Files added in the last 30 days and ready for follow-through.",
+                  value: documentsUnavailable ? "—" : String(recentUploads),
+                  detail: documentsUnavailable
+                    ? "Document store unreachable — the count is unknown, not zero."
+                    : "Files added in the last 30 days and ready for follow-through.",
                 },
               ]}
             />
@@ -196,7 +204,9 @@ export default function DocumentsPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-impilo-400" />
-                <h2 className="text-sm font-semibold text-foreground">Documents ({documents.length})</h2>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Documents {documentsUnavailable ? "(unavailable)" : `(${documents.length})`}
+                </h2>
               </div>
               <button
                 type="button"
@@ -295,7 +305,17 @@ export default function DocumentsPage() {
               </form>
             )}
 
-            {documents.length === 0 ? (
+            {documentsUnavailable ? (
+              /* "No documents uploaded yet" hides referral letters, discharge summaries and
+                 consent forms behind an outage. Say the list could not be read instead. */
+              <div className="rounded-lg border border-red-200 bg-red-50 p-12 text-center">
+                <FileText className="mx-auto mb-3 h-10 w-10 text-red-500" />
+                <p className="text-sm font-medium text-red-700">
+                  Documents could not be loaded. This is not a record that there are none —
+                  referral letters, discharge summaries or consent forms may exist on this chart.
+                </p>
+              </div>
+            ) : documents.length === 0 ? (
               <div className="rounded-lg border border-border bg-card p-12 text-center">
                 <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">No documents uploaded yet</p>

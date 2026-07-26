@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
+import { Button, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchHealthId, createHealthId } from "../../services/healthIdService";
 import {
@@ -84,7 +84,7 @@ export function HealthIdSection() {
           {healthId.emergencyContactName ? (
             <View style={styles.emergencyRow}>
               <View style={styles.emergencyIconCircle}>
-                <Ionicons name="warning" size={14} color="#F59E0B" />
+                <Ionicons name="warning" size={14} color={colors.ui.warning.main} />
               </View>
               <View>
                 <Text style={styles.emergencyLabel}>Emergency Contact</Text>
@@ -105,7 +105,7 @@ export function HealthIdSection() {
           </Text>
 
           <View style={styles.qrBox}>
-            <Ionicons name="lock-closed" size={18} color="#9CA3AF" />
+            <Ionicons name="lock-closed" size={18} color={colors.gray[400]} />
             <Text style={styles.qrLabel}>QR Code</Text>
             <Text style={styles.qrIdText}>{healthId.qrCodeData}</Text>
           </View>
@@ -124,7 +124,7 @@ export function HealthIdSection() {
             <TextInput
               style={styles.input}
               placeholder="Search name or phone before registering"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.gray[400]}
               value={dedupQuery}
               onChangeText={setDedupQuery}
             />
@@ -152,7 +152,7 @@ export function HealthIdSection() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. O+"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.gray[400]}
                 value={form.bloodType}
                 onChangeText={(v) => setForm({ ...form, bloodType: v })}
               />
@@ -162,7 +162,7 @@ export function HealthIdSection() {
               <TextInput
                 style={styles.input}
                 placeholder="List known allergies"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.gray[400]}
                 value={form.allergiesSummary}
                 onChangeText={(v) => setForm({ ...form, allergiesSummary: v })}
               />
@@ -172,7 +172,7 @@ export function HealthIdSection() {
               <TextInput
                 style={styles.input}
                 placeholder="Full name"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.gray[400]}
                 value={form.emergencyContactName}
                 onChangeText={(v) => setForm({ ...form, emergencyContactName: v })}
               />
@@ -182,7 +182,7 @@ export function HealthIdSection() {
               <TextInput
                 style={styles.input}
                 placeholder="+263..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.gray[400]}
                 value={form.emergencyContactPhone}
                 onChangeText={(v) => setForm({ ...form, emergencyContactPhone: v })}
                 keyboardType="phone-pad"
@@ -205,7 +205,7 @@ export function HealthIdSection() {
   return (
     <View style={styles.container}>
       <View style={styles.emptyState}>
-        <Ionicons name="id-card-outline" size={56} color="#D1D5DB" />
+        <Ionicons name="id-card-outline" size={56} color={colors.gray[300]} />
         <Text style={styles.emptyTitle}>No Health ID Yet</Text>
         <Text style={styles.emptyText}>Create your digital health card to access services faster.</Text>
         <Button title="Create Health ID" onPress={() => setShowCreate(true)} />
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   emergencyValue: {
-    color: "#FEF3C7",
+    color: colors.ui.warning.light,
     fontSize: 12,
     marginTop: 1,
   },
@@ -342,12 +342,12 @@ const styles = StyleSheet.create({
   qrLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.5,
   },
   qrIdText: {
     fontSize: 10,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     fontFamily: "monospace",
     textAlign: "center",
   },
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   dedupPanel: {
     gap: 10,
@@ -405,11 +405,11 @@ const styles = StyleSheet.create({
   dedupBadgeText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   dedupMeta: {
     fontSize: 11,
-    color: "#4B5563",
+    color: colors.gray[600],
   },
   formFields: {
     gap: 12,
@@ -420,23 +420,23 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   input: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     borderRadius: 12,
     padding: 14,
     fontSize: 14,
-    color: "#111827",
-    backgroundColor: "#F9FAFB",
+    color: colors.gray[900],
+    backgroundColor: colors.gray[50],
   },
   cancelButton: {
     alignItems: "center",
     paddingVertical: 10,
   },
   cancelText: {
-    color: "#6B7280",
+    color: colors.gray[500],
     fontSize: 14,
     fontWeight: "500",
   },
@@ -448,11 +448,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   emptyText: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     paddingHorizontal: 24,
   },

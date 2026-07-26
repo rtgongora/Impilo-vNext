@@ -7,7 +7,7 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
-import { StatusIndicator } from "@impilo/mobile-design-system";
+import { StatusIndicator, colors } from "@impilo/mobile-design-system";
 import { useAppStore, appStore } from "../stores/appStore";
 import { useSyncEngine } from "@impilo/mobile-offline";
 
@@ -50,7 +50,7 @@ export function NetworkStatusBar() {
       testID="network-status-bar"
       style={[
         styles.container,
-        { backgroundColor: isOnline ? "#FEF3C7" : "#FEE2E2" },
+        { backgroundColor: isOnline ? colors.ui.warning.light : colors.ui.error.light },
       ]}
     >
       <StatusIndicator

@@ -115,23 +115,30 @@ public class MobileDiagnosisController {
             @RequestParam(name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        try {
-            if (patientId != null && !patientId.isBlank()) {
-                JsonNode conditions = pctClient.listConditions(patientId, page, size);
-                if (conditions != null) {
-                    return ResponseEntity.ok(Map.of(
-                            "data", conditions,
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-                    ));
-                }
-            }
-        } catch (Exception e) {
-            log.warn("PCT conditions list failed: {}", e.getMessage());
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "patient_id_required",
+                    "message", "A diagnosis list can only be read for a named patient.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
         }
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-        ));
+        try {
+            JsonNode conditions = pctClient.listProblems(patientId);
+            return ResponseEntity.ok(Map.of(
+                    "data", conditions != null ? conditions : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
+        } catch (Exception e) {
+            // Returning an empty list here told a clinician on a phone, at the bedside, that the
+            // patient had no diagnoses recorded. Say the list is unavailable instead.
+            log.error("PCT listProblems failed for patient={}: {}", patientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "diagnosis_list_unavailable",
+                    "message", "Diagnoses could not be retrieved. Do not treat this as an absence "
+                               + "of diagnoses.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
+        }
     }
 
     @DeleteMapping("/{id}")

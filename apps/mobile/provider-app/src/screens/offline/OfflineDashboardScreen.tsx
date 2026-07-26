@@ -1,13 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Badge,
-  TextField,
-  LoadingSpinner,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Badge, TextField, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useSyncEngine, useEdgeSnapshot, useConflicts } from "@impilo/mobile-offline";
 import { useAppStore } from "../../stores/appStore";
 import { apiClient } from "@impilo/mobile-api-client";
@@ -98,7 +92,7 @@ export function OfflineDashboardScreen() {
           </View>
           <View style={[styles.statusPill, { backgroundColor: isOnline ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.25)" }]}>
             <View style={[styles.statusDot, { backgroundColor: isOnline ? "#34D399" : "#F87171" }]} />
-            <Text style={[styles.statusPillText, { color: isOnline ? "#D1FAE5" : "#FEE2E2" }]}>
+            <Text style={[styles.statusPillText, { color: isOnline ? colors.ui.success.light : colors.ui.error.light }]}>
               {isOnline ? "Online" : "Offline"}
             </Text>
           </View>
@@ -110,7 +104,7 @@ export function OfflineDashboardScreen() {
               <Ionicons
                 name={syncStatus === "syncing" ? "sync-outline" : "checkmark-circle-outline"}
                 size={18}
-                color={syncStatus === "syncing" ? "#F59E0B" : "#059669"}
+                color={syncStatus === "syncing" ? colors.ui.warning.main : "#059669"}
               />
               <Text style={styles.syncStatusText}>
                 {syncStatus === "syncing" ? "Syncing..." : `${pendingCount} pending operations`}
@@ -153,19 +147,19 @@ export function OfflineDashboardScreen() {
             <Text style={styles.statLabel}>Pending Ops</Text>
           </View>
           <View style={styles.statCard}>
-            <View style={[styles.statIconCircle, { backgroundColor: conflicts.length > 0 ? "#FEE2E2" : "#F3F4F6" }]}>
-              <Ionicons name="warning-outline" size={20} color={conflicts.length > 0 ? "#DC2626" : "#9CA3AF"} />
+            <View style={[styles.statIconCircle, { backgroundColor: conflicts.length > 0 ? colors.ui.error.light : colors.gray[100] }]}>
+              <Ionicons name="warning-outline" size={20} color={conflicts.length > 0 ? colors.ui.error.main : colors.gray[400]} />
             </View>
-            <Text style={[styles.statValue, { color: conflicts.length > 0 ? "#DC2626" : "#111827" }]}>
+            <Text style={[styles.statValue, { color: conflicts.length > 0 ? colors.ui.error.main : colors.gray[900] }]}>
               {String(conflicts.length)}
             </Text>
             <Text style={styles.statLabel}>Conflicts</Text>
           </View>
           <View style={styles.statCard}>
-            <View style={[styles.statIconCircle, { backgroundColor: snapshot ? "#D1FAE5" : "#F3F4F6" }]}>
-              <Ionicons name="server-outline" size={20} color={snapshot ? "#059669" : "#9CA3AF"} />
+            <View style={[styles.statIconCircle, { backgroundColor: snapshot ? colors.ui.success.light : colors.gray[100] }]}>
+              <Ionicons name="server-outline" size={20} color={snapshot ? "#059669" : colors.gray[400]} />
             </View>
-            <Text style={[styles.statValue, { color: snapshot ? "#059669" : "#6B7280" }]}>
+            <Text style={[styles.statValue, { color: snapshot ? "#059669" : colors.gray[500] }]}>
               {snapshot ? "Yes" : "No"}
             </Text>
             <Text style={styles.statLabel}>Edge Snapshot</Text>
@@ -173,7 +167,7 @@ export function OfflineDashboardScreen() {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Ionicons name="finger-print-outline" size={16} color="#374151" />
+          <Ionicons name="finger-print-outline" size={16} color={colors.gray[700]} />
           <Text style={styles.sectionHeaderText}>Entitlement Verification</Text>
         </View>
 
@@ -223,7 +217,7 @@ export function OfflineDashboardScreen() {
               </View>
               {entitlement.validUntil && (
                 <View style={styles.validUntilRow}>
-                  <Ionicons name="calendar-outline" size={12} color="#9CA3AF" />
+                  <Ionicons name="calendar-outline" size={12} color={colors.gray[400]} />
                   <Text style={styles.validUntilText}>
                     {`Valid until: ${new Date(entitlement.validUntil).toLocaleDateString()}`}
                   </Text>
@@ -329,12 +323,12 @@ const styles = StyleSheet.create({
   },
   syncStatusText: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.gray[700],
     fontWeight: "500",
   },
   lastSyncText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   actionRow: {
     flexDirection: "row",
@@ -410,7 +404,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 10,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
     textAlign: "center",
   },
@@ -423,7 +417,7 @@ const styles = StyleSheet.create({
   sectionHeaderText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   entitlementCard: {
     backgroundColor: "#FFFFFF",
@@ -462,7 +456,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   entitlementResult: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
     borderRadius: 12,
     padding: 14,
     gap: 8,
@@ -470,7 +464,7 @@ const styles = StyleSheet.create({
   entitlementName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   entitlementBadges: {
     flexDirection: "row",
@@ -485,6 +479,6 @@ const styles = StyleSheet.create({
   },
   validUntilText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
 });

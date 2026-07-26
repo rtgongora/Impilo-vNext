@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardBody, Header, LoadingSpinner, Screen } from "@impilo/mobile-design-system";
+import { Card, CardBody, Header, LoadingSpinner, Screen, colors } from "@impilo/mobile-design-system";
 import {
   enrolCitizenInCourse,
   fetchCitizenLearningCatalog,
@@ -194,13 +194,13 @@ const styles = StyleSheet.create({
   loading: { paddingVertical: 20, alignItems: "center" },
   metricsRow: { flexDirection: "row", gap: 8 },
   metricCard: { flex: 1 },
-  metricValue: { fontSize: 22, fontWeight: "700", color: "#065F46", textAlign: "center" },
-  metricLabel: { fontSize: 11, color: "#6B7280", textAlign: "center" },
-  sectionLabel: { marginTop: 4, fontSize: 12, fontWeight: "700", color: "#6B7280", textTransform: "uppercase" },
+  metricValue: { fontSize: 22, fontWeight: "700", color: colors.ui.success.text, textAlign: "center" },
+  metricLabel: { fontSize: 11, color: colors.gray[500], textAlign: "center" },
+  sectionLabel: { marginTop: 4, fontSize: 12, fontWeight: "700", color: colors.gray[500], textTransform: "uppercase" },
   liveSessions: { gap: 8 },
   courseCard: { marginBottom: 8 },
   courseTitle: { fontSize: 14, fontWeight: "600", color: "#0F172A" },
   courseMeta: { marginTop: 2, fontSize: 12, color: "#64748B" },
   enrolHint: { marginTop: 6, fontSize: 11, fontWeight: "600", color: "#047857" },
-  emptyText: { color: "#6B7280", fontSize: 13 },
+  emptyText: { color: colors.gray[500], fontSize: 13 },
 });

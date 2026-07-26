@@ -42,8 +42,33 @@ public class ProblemEntity {
     @Column(name = "category", nullable = false)
     private String category = "DIAGNOSIS";
 
+    /** Clinician-assessed severity. NULL means not stated — never read as mild. */
+    @Column(name = "severity")
+    private String severity;
+
+    /**
+     * How certain the recorder was, orthogonal to {@link #category}. NULL means never stated and
+     * must not be resolved to CONFIRMED.
+     */
+    @Column(name = "diagnostic_certainty")
+    private String diagnosticCertainty;
+
     @Column(name = "onset_date")
     private LocalDate onsetDate;
+
+    /** When this problem last returned, set alongside a move to RECURRENCE or RELAPSE. */
+    @Column(name = "last_recurrence_at")
+    private OffsetDateTime lastRecurrenceAt;
+
+    @Column(name = "evidence")
+    private String evidence;
+
+    /** The service accountable for this problem. NULL means nobody has taken it. */
+    @Column(name = "responsible_service")
+    private String responsibleService;
+
+    @Column(name = "review_date")
+    private LocalDate reviewDate;
 
     @Column(name = "recorded_by", nullable = false)
     private String recordedBy;
@@ -102,6 +127,24 @@ public class ProblemEntity {
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public String getSeverity() { return severity; }
+    public void setSeverity(String severity) { this.severity = severity; }
+
+    public String getDiagnosticCertainty() { return diagnosticCertainty; }
+    public void setDiagnosticCertainty(String diagnosticCertainty) { this.diagnosticCertainty = diagnosticCertainty; }
+
+    public OffsetDateTime getLastRecurrenceAt() { return lastRecurrenceAt; }
+    public void setLastRecurrenceAt(OffsetDateTime lastRecurrenceAt) { this.lastRecurrenceAt = lastRecurrenceAt; }
+
+    public String getEvidence() { return evidence; }
+    public void setEvidence(String evidence) { this.evidence = evidence; }
+
+    public String getResponsibleService() { return responsibleService; }
+    public void setResponsibleService(String responsibleService) { this.responsibleService = responsibleService; }
+
+    public LocalDate getReviewDate() { return reviewDate; }
+    public void setReviewDate(LocalDate reviewDate) { this.reviewDate = reviewDate; }
 
     public LocalDate getOnsetDate() { return onsetDate; }
     public void setOnsetDate(LocalDate onsetDate) { this.onsetDate = onsetDate; }

@@ -7,7 +7,7 @@
 import React, { useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TabBar } from "@impilo/mobile-design-system";
+import { TabBar, colors } from "@impilo/mobile-design-system";
 import { OfflineDashboardScreen } from "../screens/offline/OfflineDashboardScreen";
 import { LocalQueueScreen } from "../screens/offline/LocalQueueScreen";
 import { ConflictReviewScreen } from "../screens/offline/ConflictReviewScreen";
@@ -57,7 +57,7 @@ export function OfflineTabs() {
             <Ionicons
               name={(activeTab === t.key ? t.activeIcon : t.inactiveIcon) as never}
               size={22}
-              color={activeTab === t.key ? ACCENT : "#9CA3AF"}
+              color={activeTab === t.key ? ACCENT : colors.gray[400]}
             />
           ),
         }))}

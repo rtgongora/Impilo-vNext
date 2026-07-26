@@ -12,16 +12,7 @@
 
 import React, { useCallback, useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, ErrorState, colors } from "@impilo/mobile-design-system";
 import { AdaptiveSessionRoomNative } from "@impilo/mobile-session";
 import {
   joinLiveClassroom,
@@ -193,10 +184,10 @@ const styles = StyleSheet.create({
   container: { padding: 16, gap: 16 },
   section: { gap: 8 },
   badgeRow: { flexDirection: "row", gap: 8, alignItems: "center", flexWrap: "wrap" },
-  title: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  sectionTitle: { fontSize: 13, fontWeight: "700", color: "#111827", marginTop: 4 },
-  meta: { fontSize: 13, color: "#374151" },
+  title: { fontSize: 15, fontWeight: "700", color: colors.gray[900] },
+  sectionTitle: { fontSize: 13, fontWeight: "700", color: colors.gray[900], marginTop: 4 },
+  meta: { fontSize: 13, color: colors.gray[700] },
   roomArea: { borderRadius: 12, overflow: "hidden" },
   controlsRow: { flexDirection: "row", gap: 8, justifyContent: "center", flexWrap: "wrap" },
-  notice: { fontSize: 12, color: "#6B7280", textAlign: "center" },
+  notice: { fontSize: 12, color: colors.gray[500], textAlign: "center" },
 });

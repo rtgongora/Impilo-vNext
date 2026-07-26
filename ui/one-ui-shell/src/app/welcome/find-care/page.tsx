@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { PublicPageHeader } from "@/components/public/PublicPrimitives";
 import { FindCareExperience } from "@/components/public/find-care/FindCareExperience";
 import { NompiloAdaptiveGuidance } from "@/components/intelligent/NompiloAdaptiveGuidance";
 
@@ -21,17 +22,16 @@ export const metadata = {
 export default function FindCarePage() {
   return (
     <PublicShell>
-      <nav className="text-sm text-slate-500">
-        <Link href="/welcome" className="hover:text-slate-900">
-          Welcome
-        </Link>{" "}
-        / Find health services
-      </nav>
-      <h1 className="mt-2 text-3xl font-bold text-slate-900">Find health services near you</h1>
-      <p className="mt-3 max-w-2xl text-slate-600">
-        Tell us what care you need and we&apos;ll find facilities that actually offer it — no sign-in
-        needed. To book an appointment or save a facility, create an account or sign in.
-      </p>
+      <PublicPageHeader
+        crumbs={[{ label: "Impilo", href: "/" }, { label: "Find health services" }]}
+        title="Find health services near you"
+        lede={
+          <>
+            Tell us what care you need and we&apos;ll find facilities that actually offer it — no
+            sign-in needed. To book an appointment or save a facility, create an account or sign in.
+          </>
+        }
+      />
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link

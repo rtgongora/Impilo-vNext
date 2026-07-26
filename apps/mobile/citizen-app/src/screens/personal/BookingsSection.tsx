@@ -1,18 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Button, Badge, TextField, Select, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchBookings,
   cancelBooking,
@@ -271,29 +260,29 @@ const styles = StyleSheet.create({
   facilityPicker: {
     maxHeight: 160,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     borderRadius: 12,
     backgroundColor: "#FFFFFF",
   },
   facilityPickerHint: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     padding: 12,
   },
   facilityOption: {
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.gray[100],
   },
   facilityOptionName: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
   },
   facilityOptionMeta: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 2,
   },
   mvumoHint: {

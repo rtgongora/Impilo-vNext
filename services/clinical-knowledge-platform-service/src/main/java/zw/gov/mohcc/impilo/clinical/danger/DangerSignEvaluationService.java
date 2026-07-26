@@ -57,7 +57,16 @@ public class DangerSignEvaluationService {
      * @param facts   observed findings and vitals, flat or nested
      */
     public DangerSignAssessment evaluate(Integer ageDays, Map<String, Object> facts) {
-        List<TabularRule> rules = contentLoader.load(CONTENT_PATH);
+        return evaluate(CONTENT_PATH, ageDays, facts);
+    }
+
+    /**
+     * Evaluate a named rule pack. Package-private so a test can exercise the engine against a small
+     * fixture pack rather than only against shipped clinical content — a safety property is easier
+     * to prove on three rules written to demonstrate it than on nine written to save lives.
+     */
+    DangerSignAssessment evaluate(String resourcePath, Integer ageDays, Map<String, Object> facts) {
+        List<TabularRule> rules = contentLoader.load(resourcePath);
         if (rules.isEmpty()) {
             return DangerSignAssessment.unavailable(
                     "Danger-sign content is not loaded, so no assessment could be made.");
@@ -80,6 +89,31 @@ public class DangerSignEvaluationService {
             if (!rule.appliesToAge(ageDays)) {
                 continue;
             }
+
+            // Is this rule about this patient at all? Separate question from whether it fires.
+            // FALSE means it does not apply and leaves nothing outstanding. UNKNOWN means we could
+            // not tell — and then its inputs must be reported unassessed rather than the rule
+            // quietly disappearing, because an unknown gestational age dropping every
+            // gestation-scoped rule would produce a clean-looking assessment of a woman nobody
+            // dated.
+            if (rule.appliesWhen() != null && !rule.appliesWhen().isNull()) {
+                PredicateEvaluator.Result gate =
+                        PredicateEvaluator.evaluate(rule.appliesWhen(), workingFacts);
+                if (gate.hasContentErrors()) {
+                    contentProblems.addAll(gate.contentErrors());
+                    notAssessed.addAll(rule.requiredInputs());
+                    continue;
+                }
+                if (gate.outcome() == PredicateEvaluator.Outcome.FALSE) {
+                    continue;
+                }
+                if (gate.outcome() == PredicateEvaluator.Outcome.UNKNOWN) {
+                    notAssessed.addAll(gate.missingInputs());
+                    notAssessed.addAll(rule.requiredInputs());
+                    continue;
+                }
+            }
+
             applicable++;
 
             PredicateEvaluator.Result result = PredicateEvaluator.evaluate(rule.logic(), workingFacts);
@@ -108,7 +142,8 @@ public class DangerSignEvaluationService {
                         result.usedInputs(),
                         rule.sourceRefs(),
                         rule.contentVersion(),
-                        rule.approvalStatus()));
+                        rule.approvalStatus(),
+                        rule.provenance()));
             }
         }
 
@@ -214,7 +249,8 @@ public class DangerSignEvaluationService {
             List<String> triggeringFindings,
             List<String> sourceRefs,
             String contentVersion,
-            String approvalStatus) {
+            String approvalStatus,
+            zw.gov.mohcc.impilo.clinical.rules.tabular.DakProvenance provenance) {
 
         public Map<String, Object> toMap() {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -233,6 +269,12 @@ public class DangerSignEvaluationService {
             map.put("source_refs", sourceRefs);
             map.put("content_version", contentVersion);
             map.put("approval_status", approvalStatus);
+            // Who says so, and is this the international guidance or our variation of it. Omitted
+            // rather than emitted empty when a rule declares no provenance: a blank citation looks
+            // like an answer, and the traceability guard is what reports the absence.
+            if (provenance != null) {
+                map.put("dak_provenance", provenance.toMap());
+            }
             return map;
         }
     }

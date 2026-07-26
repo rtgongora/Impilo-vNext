@@ -1,0 +1,66 @@
+{
+  "pack": "smart-fp",
+  "parseWarnings": [
+    "Master-1.0 / Where the WHO label does not match the Master Data Element Label: published cell contains an unresolved spreadsheet reference (#REF!). Content captured but not trustworthy."
+  ],
+  "workbooks": [
+    {
+      "counts": {
+        "dataElements": 11,
+        "decisionTables": 0,
+        "indicators": 0,
+        "schedules": 0,
+        "testCases": 0
+      },
+      "file": "WHO-DD.xlsx",
+      "sha256": "5588489e7ea6afce22ed8837834d76d4cc00a2c1718b52727054c20b85204725",
+      "sheetsRead": [
+        {
+          "rows": 1229,
+          "sheet": "Master 0.1"
+        },
+        {
+          "rows": 1229,
+          "sheet": "Master 0.2"
+        },
+        {
+          "rows": 1813,
+          "sheet": "Master 0.5"
+        },
+        {
+          "rows": 945,
+          "sheet": "Master-1.0"
+        },
+        {
+          "rows": 183,
+          "sheet": "Profile"
+        },
+        {
+          "rows": 202,
+          "sheet": "Structural Change Tracking"
+        },
+        {
+          "rows": 7,
+          "sheet": "Process"
+        },
+        {
+          "rows": 16,
+          "sheet": "Status Tracking "
+        },
+        {
+          "rows": 5,
+          "sheet": "Setup"
+        },
+        {
+          "rows": 601,
+          "sheet": "New DD (Stacked)"
+        },
+        {
+          "rows": 87,
+          "sheet": "Terminology Prioritization Info"
+        }
+      ],
+      "sheetsSkipped": []
+    }
+  ]
+}

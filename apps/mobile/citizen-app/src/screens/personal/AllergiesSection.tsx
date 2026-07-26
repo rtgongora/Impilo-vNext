@@ -6,19 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  FeatureMaturityBadge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, FeatureMaturityBadge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import type { Allergy } from "../../types";
 import { fetchAllergies } from "../../services/personalHealthService";
 
@@ -166,7 +154,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   summaryRow: {
     flexDirection: "row",
@@ -178,14 +166,14 @@ const styles = StyleSheet.create({
   summaryNumber: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#1F2937",
+    color: colors.gray[800],
   },
   severeNumber: {
-    color: "#DC2626",
+    color: colors.ui.error.main,
   },
   summaryLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
   detailRow: {
@@ -193,10 +181,10 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   detailValue: {
     fontSize: 14,
-    color: "#1F2937",
+    color: colors.gray[800],
   },
 });

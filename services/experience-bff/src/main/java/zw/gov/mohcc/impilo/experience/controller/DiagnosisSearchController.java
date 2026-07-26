@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -42,9 +43,13 @@ public class DiagnosisSearchController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
             ));
         } catch (Exception ex) {
-            log.warn("ICD-11 search failed: {}", ex.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // No results reads as "there is no ICD-11 code for this", which pushes the clinician
+            // to free-text a diagnosis that does have a code — a coding gap created by an outage.
+            log.error("ICD-11 search failed for query={}: {}", query, ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "diagnosis_search_unavailable",
+                    "message", "ICD-11 could not be searched. Do not treat this as an absence of "
+                               + "matching codes.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
             ));
         }

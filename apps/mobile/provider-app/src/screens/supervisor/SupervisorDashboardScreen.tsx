@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getFacilityMetrics } from "../../services/supportService";
 import { useAppStore } from "../../stores/appStore";
 import type { FacilityMetrics } from "../../types";
@@ -67,12 +62,12 @@ export function SupervisorDashboardScreen() {
 
   const tiles: TileConfig[] = [
     { label: "Patients Seen", value: metrics.patientsSeenToday, color: "#3B82F6", bgColor: "#DBEAFE", icon: "people-outline" },
-    { label: "Open Encounters", value: metrics.encountersOpen, color: "#F59E0B", bgColor: "#FEF3C7", icon: "folder-open-outline" },
-    { label: "Closed Encounters", value: metrics.encountersClosed, color: "#059669", bgColor: "#D1FAE5", icon: "checkmark-done-outline" },
+    { label: "Open Encounters", value: metrics.encountersOpen, color: colors.ui.warning.main, bgColor: colors.ui.warning.light, icon: "folder-open-outline" },
+    { label: "Closed Encounters", value: metrics.encountersClosed, color: "#059669", bgColor: colors.ui.success.light, icon: "checkmark-done-outline" },
     { label: "Avg Wait (min)", value: metrics.averageWaitTimeMinutes, color: "#6366F1", bgColor: "#EDE9FE", icon: "time-outline" },
     { label: "Pending Tasks", value: metrics.pendingTasks, color: "#8B5CF6", bgColor: "#F3E8FF", icon: "list-outline" },
-    { label: "Overdue Escalations", value: metrics.overdueEscalations, color: metrics.overdueEscalations > 0 ? "#DC2626" : "#6B7280", bgColor: metrics.overdueEscalations > 0 ? "#FEE2E2" : "#F3F4F6", icon: "alert-circle-outline" },
-    { label: "Stock Alerts", value: metrics.stockAlerts, color: metrics.stockAlerts > 0 ? "#DC2626" : "#6B7280", bgColor: metrics.stockAlerts > 0 ? "#FEE2E2" : "#F3F4F6", icon: "cube-outline" },
+    { label: "Overdue Escalations", value: metrics.overdueEscalations, color: metrics.overdueEscalations > 0 ? colors.ui.error.main : colors.gray[500], bgColor: metrics.overdueEscalations > 0 ? colors.ui.error.light : colors.gray[100], icon: "alert-circle-outline" },
+    { label: "Stock Alerts", value: metrics.stockAlerts, color: metrics.stockAlerts > 0 ? colors.ui.error.main : colors.gray[500], bgColor: metrics.stockAlerts > 0 ? colors.ui.error.light : colors.gray[100], icon: "cube-outline" },
   ];
 
   return (
@@ -207,7 +202,7 @@ const styles = StyleSheet.create({
   },
   tileLabel: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
     textAlign: "center",
   },

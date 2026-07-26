@@ -45,6 +45,20 @@ export function CarePlanOrchestrationRail({
 
   const nextIntervention = activePlan.interventions.find((i) => !i.completed);
 
+  // These four writes used to be answered optimistically by the BFF — {"updated": true},
+  // {"performed": true}, and a 201 carrying a UUID for a goal PCT never stored — so onSuccess
+  // fired, the input cleared, and the clinician had every reason to believe the plan had changed.
+  // Now they fail honestly, and a silent failure is its own version of the same lie: the form
+  // resets nothing and says nothing, so "performed" still looks like care that was delivered.
+  const writeFailures = [
+    performIntervention.isError
+      ? "The intervention was not recorded. No care was logged against this plan — retry before signing off."
+      : null,
+    addGoal.isError ? "The goal was not saved to the care plan." : null,
+    updateGoal.isError ? "The goal status was not updated — it is unchanged upstream." : null,
+    addIntervention.isError ? "The intervention was not added to the care plan." : null,
+  ].filter((m): m is string => m !== null);
+
   return (
     <section
       className="rounded-xl border border-info/25 bg-info-soft/50 px-4 py-4"
@@ -75,6 +89,17 @@ export function CarePlanOrchestrationRail({
           </button>
         ) : null}
       </div>
+
+      {writeFailures.length > 0 && (
+        <ul
+          className="mt-3 space-y-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700"
+          data-testid="care-plan-write-failures"
+        >
+          {writeFailures.map((message) => (
+            <li key={message}>{message}</li>
+          ))}
+        </ul>
+      )}
 
       <form
         className="mt-3 flex flex-wrap items-end gap-2"
@@ -174,6 +199,23 @@ export function CarePlanOrchestrationRail({
           {addIntervention.isPending ? "Adding…" : "Add intervention"}
         </button>
       </form>
+
+      {/*
+       * These four writes used to be reported as successful whichever way they went — the BFF
+       * answered a rejected PCT write with {"performed": true} or a 201 carrying a random id. The
+       * UI therefore never needed a failure path, and the button simply re-enabling now would read
+       * as "done". "Performed" is a claim that care was delivered, so a lost write has to be said
+       * out loud rather than left for the next clinician to discover from a gap in the plan.
+       */}
+      {(addGoal.isError ||
+        updateGoal.isError ||
+        addIntervention.isError ||
+        performIntervention.isError) && (
+        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+          That change was not saved to the care plan. It is not in the record — do not treat the
+          intervention as performed or the goal as updated.
+        </p>
+      )}
     </section>
   );
 }

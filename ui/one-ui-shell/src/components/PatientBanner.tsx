@@ -77,8 +77,13 @@ export function PatientBanner() {
 
   const { data: patientData } = usePatient(patientId ?? "");
   const { data: encountersData } = useEncounters(patientId ?? "");
-  const { data: allergiesData } = useAllergies(patientId ?? "");
-  const { data: conditionsData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: allergiesData, isError: allergiesUnavailable } = useAllergies(patientId ?? "");
+  // isError is load-bearing: without it a failed read falls through to `?? []` and the banner
+  // states that the patient has no conditions, which is an affirmative clinical claim made at the
+  // moment the system knows least. The allergy query above has always captured it; this one did not.
+  const { data: conditionsData, isError: conditionsUnavailable } = useQuery<
+    ApiResponse<GenericResource[]>
+  >({
     queryKey: ["conditions", { patientId }],
     queryFn: () =>
       apiClient.get<ApiResponse<GenericResource[]>>(
@@ -106,6 +111,10 @@ export function PatientBanner() {
   );
   const hasAllergies = activeAllergies.length > 0;
   const hasSevere = severeAllergies.length > 0;
+  // The empty case below renders a green "NKDA" badge — an affirmative claim that this patient
+  // has no known drug allergies. When the allergy read fails we have no basis for that claim,
+  // and it is the one a prescriber relies on, so the unavailable state must be shown instead.
+  const showNoKnownAllergies = !hasAllergies && !allergiesUnavailable;
 
   const conditions: GenericResource[] = conditionsData?.data ?? [];
   const activeConditions = conditions.filter(
@@ -224,10 +233,20 @@ export function PatientBanner() {
                   </span>
                 </span>
               </button>
-            ) : (
+            ) : showNoKnownAllergies ? (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
                 <Shield className="w-4 h-4 text-green-600" />
                 <span className="text-sm font-medium text-green-700">NKDA</span>
+              </div>
+            ) : (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg"
+                title="The allergy record could not be read. This is not a statement that the patient has no allergies."
+              >
+                <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm font-medium text-yellow-700">
+                  Allergies unavailable
+                </span>
               </div>
             )}
 
@@ -420,10 +439,20 @@ export function PatientBanner() {
             {/* Active Conditions */}
             <div className="space-y-2">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                <Stethoscope className="w-3.5 h-3.5" /> Active Conditions (
-                {activeConditions.length})
+                <Stethoscope className="w-3.5 h-3.5" /> Active Conditions
+                {conditionsUnavailable ? "" : ` (${activeConditions.length})`}
               </h4>
-              {activeConditions.length === 0 ? (
+              {conditionsUnavailable ? (
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg"
+                  title="The problem list could not be read. This is not a statement that the patient has no conditions."
+                >
+                  <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-700">
+                    Conditions unavailable
+                  </span>
+                </div>
+              ) : activeConditions.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">
                   No active conditions
                 </p>

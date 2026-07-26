@@ -1,6 +1,6 @@
 {
   "name": "one-ui-shell",
-  "description": "Impilo web experience — single user-facing orchestration layer (zones, routes, BFF-backed flows). Folder/service name one-ui-shell is packaging only; not a separate product from the Experience plane.",
+  "description": "Impilo web experience \u2014 single user-facing orchestration layer (zones, routes, BFF-backed flows). Folder/service name one-ui-shell is packaging only; not a separate product from the Experience plane.",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,6 +15,7 @@
     "test:routes": "node scripts/route-parity-check.mjs",
     "test:launchers": "node ../../scripts/frontend/check-launcher-dead-ends.mjs",
     "test:no-stubs": "node scripts/no-stub-guard.mjs",
+    "test:query-honesty": "node scripts/query-honesty-guard.mjs",
     "test:copy-audit": "node scripts/impilo-id-audit.mjs",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",

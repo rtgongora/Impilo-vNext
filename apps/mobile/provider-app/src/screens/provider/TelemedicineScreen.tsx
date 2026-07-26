@@ -7,17 +7,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useAuth } from "@impilo/mobile-auth";
 import { useAppStore } from "../../stores/appStore";
 import type { TelemedicineSession } from "../../types";
@@ -262,24 +252,24 @@ const styles = StyleSheet.create({
   },
   noticeText: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
     marginBottom: 8,
   },
   waitingRoomSection: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: colors.gray[200],
     gap: 8,
   },
   waitingRoomTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   waitingRoomEmpty: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   waitingRow: {
     flexDirection: "row",
@@ -293,11 +283,11 @@ const styles = StyleSheet.create({
   waitingName: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
   },
   waitingSince: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   waitingActions: {
     flexDirection: "row",

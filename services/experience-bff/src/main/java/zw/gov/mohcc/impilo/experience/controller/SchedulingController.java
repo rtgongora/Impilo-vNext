@@ -291,11 +291,15 @@ public class SchedulingController {
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.warn("Failed to fetch facility resources: {}", e.getMessage());
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", List.of());
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-            return ResponseEntity.ok(response);
+            // An empty resource list reads as "this facility has no clinics or rooms to book
+            // into", which closes the schedule rather than reporting that we could not read it.
+            log.error("Failed to fetch facility resources for facility={}: {}",
+                    facilityId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "facility_resources_unavailable",
+                    "message", "Facility resources could not be retrieved. Do not treat this as "
+                               + "an absence of bookable resources.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
 
@@ -389,11 +393,15 @@ public class SchedulingController {
                     "slot_source", slotSource));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.warn("Failed to check availability: {}", e.getMessage());
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", Map.of("date", date, "resource_id", resourceId, "slots", List.of()));
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-            return ResponseEntity.ok(response);
+            // An empty slot list reads as "fully booked, nothing available on this date" — the
+            // answer that sends a patient away without an appointment.
+            log.error("Failed to check availability for resource={} date={}: {}",
+                    resourceId, date, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "availability_unavailable",
+                    "message", "Availability could not be checked. Do not treat this as an "
+                               + "absence of free slots.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
 

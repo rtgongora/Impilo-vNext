@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Button, TextField } from "@impilo/mobile-design-system";
+import { Button, TextField, colors } from "@impilo/mobile-design-system";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   eventConversation,
@@ -88,10 +88,10 @@ export function EventDiscussionSection({ eventId, title }: { eventId: string; ti
 }
 
 const styles = StyleSheet.create({
-  section: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", gap: 10 },
-  title: { fontSize: 14, fontWeight: "600", color: "#111827" },
+  section: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.gray[200], gap: 10 },
+  title: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
   messages: { gap: 6 },
   msg: { paddingVertical: 2 },
-  sender: { fontSize: 10, color: "#6B7280" },
-  muted: { fontSize: 13, color: "#6B7280" },
+  sender: { fontSize: 10, color: colors.gray[500] },
+  muted: { fontSize: 13, color: colors.gray[500] },
 });

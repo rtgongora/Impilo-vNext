@@ -451,8 +451,17 @@ public class PolicyConsentController {
                 }
             }
         } catch (Exception e) {
-            log.warn("Legal-agreement revoke to Mvumo failed (fail-safe): policyType={}, err={}",
+            // This was labelled "fail-safe" but it is the opposite: the response below reports a
+            // revokedAt timestamp, so the person is told their consent was withdrawn while Mvumo
+            // still holds it as GRANTED and sharing continues under it. A withdrawal that did not
+            // happen must never be reported as one.
+            log.error("Legal-agreement revoke to Mvumo failed: policyType={}, err={}",
                     policyType, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "consent_not_revoked",
+                    "message", "Your consent could not be withdrawn and is still in force. "
+                               + "Please try again.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
 
         OffsetDateTime now = OffsetDateTime.now();
@@ -479,8 +488,14 @@ public class PolicyConsentController {
                     "data", consents != null ? consents : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            // An empty 200 reads as "you have granted no consents", which is both a legal claim
+            // about the basis for processing this person's data and, on a consent-management
+            // screen, an invitation to re-grant something already granted.
+            log.error("Consent list failed for actor={}: {}", actorId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "consents_unavailable",
+                    "message", "Your consent directives could not be retrieved. Do not treat this "
+                               + "as an absence of consents.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

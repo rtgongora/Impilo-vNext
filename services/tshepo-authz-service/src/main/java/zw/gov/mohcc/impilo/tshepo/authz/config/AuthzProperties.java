@@ -30,6 +30,16 @@ public class AuthzProperties {
     // compare token↔headers + audit divergence, decision UNCHANGED) | ENFORCE (mismatch/revoked
     // denies clinical writes). Default SHADOW — observe-only, never denies. See Phase B.
     private String workContextMode = "SHADOW";
+
+    // Specially-protected confidentiality control (Step 4.7).
+    //   OFF     — never evaluate; no audit, no grant, no denial.
+    //   SHADOW  — evaluate, grant nothing, deny nothing, AUDIT what it would have done. Default,
+    //             because the content that decides behaviour (confidentiality ages, confidential
+    //             code lists) is an ENGINEERING_SEED pending MoHCC ratification, and a protection
+    //             label that does not protect is worse than no label.
+    //   ENFORCE — deny on the confidential lane. Requires a RATIFIED + effective policy pack;
+    //             without one the engine stays inert and says so LOUDLY rather than silently.
+    private String confidentialityMode = "SHADOW";
     private String workContextIntrospectPath = "/v1/identity/tokens/introspect";
     private String auditServiceUrl = "http://localhost:8183";
     private String auditKafkaTopic = "tshepo.audit.events";
@@ -187,6 +197,9 @@ public class AuthzProperties {
     public void setConsentEvaluatePath(String consentEvaluatePath) { this.consentEvaluatePath = consentEvaluatePath; }
     public String getIdentityServiceUrl() { return identityServiceUrl; }
     public void setIdentityServiceUrl(String identityServiceUrl) { this.identityServiceUrl = identityServiceUrl; }
+
+    public String getConfidentialityMode() { return confidentialityMode; }
+    public void setConfidentialityMode(String confidentialityMode) { this.confidentialityMode = confidentialityMode; }
 
     public String getWorkContextMode() { return workContextMode; }
     public void setWorkContextMode(String workContextMode) { this.workContextMode = workContextMode; }

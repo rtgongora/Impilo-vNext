@@ -44,25 +44,31 @@ public final class VisibilityHeaderParser {
         String export = request.getHeader(TrustHeaders.EXPORT_POLICY);
         String suppress = request.getHeader(TrustHeaders.SUPPRESS_FIELDS);
         String drill = request.getHeader(TrustHeaders.DRILL_DOWN_ALLOWED);
+        String categories = request.getHeader(TrustHeaders.CONFIDENTIAL_CATEGORIES);
 
         if (tier == null && pii == null && clin == null && agg == null && sens == null
-                && grant == null && export == null && suppress == null && drill == null) {
+                && grant == null && export == null && suppress == null && drill == null
+                && categories == null) {
             return null;
         }
 
         Boolean aggregateOnly = agg == null ? null : Boolean.parseBoolean(agg);
         Boolean drillDown = drill == null ? null : Boolean.parseBoolean(drill);
-        List<String> suppressFields = null;
-        if (suppress != null && !suppress.isBlank()) {
-            suppressFields = Arrays.stream(suppress.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .collect(Collectors.toCollection(ArrayList::new));
-        }
+        List<String> suppressFields = splitCsv(suppress);
 
         return new VisibilityProfile(
                 tier, pii, clin, aggregateOnly, sens, grant, null,
-                suppressFields, null, export, drillDown);
+                suppressFields, null, export, drillDown, splitCsv(categories));
+    }
+
+    private static List<String> splitCsv(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(v -> !v.isEmpty())
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public static VisibilityProfile parseFromObligationsJson(ObjectMapper mapper, HttpServletRequest request) {
@@ -127,6 +133,9 @@ public final class VisibilityHeaderParser {
         }
         if (json.drillDownAllowed() != null) {
             b.drillDownAllowed(json.drillDownAllowed());
+        }
+        if (json.confidentialCategories() != null) {
+            b.confidentialCategories(json.confidentialCategories());
         }
         return b.build();
     }

@@ -9,18 +9,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, TextInput } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import type { BadgeVariant } from "@impilo/mobile-design-system";
 import {
   createOutbreak,
@@ -275,23 +264,23 @@ const styles = StyleSheet.create({
   scrollContent: { gap: 12, paddingBottom: 16 },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 16 },
   statItem: { width: "30%", alignItems: "center", paddingVertical: 12 },
-  statValue: { fontSize: 26, fontWeight: "900", color: "#111827" },
-  statLabel: { fontSize: 12, color: "#6B7280", marginTop: 4, textAlign: "center" },
+  statValue: { fontSize: 26, fontWeight: "900", color: colors.gray[900] },
+  statLabel: { fontSize: 12, color: colors.gray[500], marginTop: 4, textAlign: "center" },
   rowInfo: { gap: 4 },
   titleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   listRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   listRowInfo: { flex: 1, gap: 2 },
   teamActions: { flexDirection: "row", alignItems: "center", gap: 8 },
-  boldText: { fontWeight: "700", color: "#111827" },
-  detailText: { fontSize: 13, color: "#6B7280" },
+  boldText: { fontWeight: "700", color: colors.gray[900] },
+  detailText: { fontSize: 13, color: colors.gray[500] },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 8,
-    color: "#111827",
+    color: colors.gray[900],
   },
   refreshContainer: { marginTop: 8 },
 });

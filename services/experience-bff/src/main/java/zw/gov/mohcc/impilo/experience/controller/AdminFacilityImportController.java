@@ -135,6 +135,20 @@ public class AdminFacilityImportController {
         try {
             JsonNode data = ndilaClient.hpaGeocodeReviewQueue(limit);
             return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized
+                 | org.springframework.web.client.HttpClientErrorException.Forbidden e) {
+            // A 401/403 is NOT an outage, and reporting it as one sends whoever is on call to
+            // look at NDILA's health instead of at our own authorisation. The BFF calls this
+            // endpoint with trust headers and no token; NDILA now requires a role on it. Say that.
+            log.warn("NDILA refused the geocode review queue ({}). This is an authorisation gap in "
+                    + "the BFF's service-to-service call, not an NDILA fault.", e.getStatusCode());
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY)
+                    .body(Map.of("error", Map.of(
+                            "code", "HPA_GEOCODE_REVIEW_FORBIDDEN",
+                            "message", "Impilo is not authorised to read the geocode review queue "
+                                    + "from NDILA. This is a platform authorisation gap, not an "
+                                    + "NDILA outage — the queue itself is intact."),
+                            "meta", meta(requestId, correlationId)));
         } catch (Exception e) {
             return badGateway(requestId, correlationId, "HPA_GEOCODE_REVIEW_UNAVAILABLE",
                     "Unable to load the HPA geocode review queue from NDILA");

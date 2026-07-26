@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Button, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import {
   requestAssuranceUpgrade,
   type AssuranceTier,
@@ -77,7 +77,7 @@ export function AssuranceChoiceScreen() {
             onPress={() => setSelected(tier.id)}
             style={[styles.tierCard, active && styles.tierCardActive]}
           >
-            <Ionicons name={tier.icon} size={22} color={active ? GREEN : "#6B7280"} />
+            <Ionicons name={tier.icon} size={22} color={active ? GREEN : colors.gray[500]} />
             <View style={styles.tierBody}>
               <Text style={[styles.tierTitle, active && styles.tierTitleActive]}>{tier.title}</Text>
               <Text style={styles.tierDesc}>{tier.description}</Text>
@@ -111,14 +111,14 @@ export function AssuranceChoiceScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 24, paddingBottom: 48, backgroundColor: "#FFFFFF", flexGrow: 1 },
-  title: { fontSize: 24, fontWeight: "800", color: "#111827" },
-  subtitle: { marginTop: 8, fontSize: 14, color: "#6B7280", lineHeight: 20, marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: "800", color: colors.gray[900] },
+  subtitle: { marginTop: 8, fontSize: 14, color: colors.gray[500], lineHeight: 20, marginBottom: 20 },
   tierCard: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
@@ -126,10 +126,10 @@ const styles = StyleSheet.create({
   },
   tierCardActive: { borderColor: GREEN, backgroundColor: "#ECFDF5" },
   tierBody: { flex: 1 },
-  tierTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  tierTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
   tierTitleActive: { color: GREEN },
-  tierDesc: { marginTop: 4, fontSize: 13, color: "#6B7280", lineHeight: 18 },
-  errorText: { color: "#DC2626", fontSize: 13, marginBottom: 12 },
+  tierDesc: { marginTop: 4, fontSize: 13, color: colors.gray[500], lineHeight: 18 },
+  errorText: { color: colors.ui.error.main, fontSize: 13, marginBottom: 12 },
   loadingRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 16, justifyContent: "center" },
-  loadingText: { fontSize: 15, color: "#6B7280" },
+  loadingText: { fontSize: 15, color: colors.gray[500] },
 });

@@ -1,0 +1,217 @@
+{
+  "pack": "dak-pnc-v1.0.0",
+  "parseWarnings": [
+    "PNC.S.01 PNC contact schedule / Overdue: published range has its bounds inverted and can never be satisfied as written — '72 hours < \"Hours after childbirth\" < 48 hours'. Copied verbatim; do not normalise here.",
+    "PNC.S.01 PNC contact schedule / Due date: published range has its bounds inverted and can never be satisfied as written — '72 hours < \"Hours after childbirth\" < 48 hours'. Copied verbatim; do not normalise here.",
+    "PNC.S.01 PNC contact schedule / Overdue: published range has its bounds inverted and can never be satisfied as written — '14 days < \"Date of childbirth\" < 7 days'. Copied verbatim; do not normalise here.",
+    "PNC.S.01 PNC contact schedule / Due date: published range has its bounds inverted and can never be satisfied as written — '14 days < \"Date of childbirth\" < 7 days'. Copied verbatim; do not normalise here."
+  ],
+  "workbooks": [
+    {
+      "counts": {
+        "dataElements": 16,
+        "decisionTables": 0,
+        "indicators": 0,
+        "schedules": 0,
+        "testCases": 0
+      },
+      "file": "PNC DAK_core data dictionary.xlsx",
+      "sha256": "fb01d97a20b846716a05db5d94d571d6459373c50d2f0d4962b69f783a454b3f",
+      "sheetsRead": [
+        {
+          "rows": 120,
+          "sheet": "PNC.A.Registration"
+        },
+        {
+          "rows": 107,
+          "sheet": "PNC.B1.Profile & health hist"
+        },
+        {
+          "rows": 186,
+          "sheet": "PNC.B2.Preg,labour&birthinfo"
+        },
+        {
+          "rows": 166,
+          "sheet": "PNC.B3a.Mat_symptomswellbeing"
+        },
+        {
+          "rows": 123,
+          "sheet": "PNC.B3b.Nb_symptomswellbeing"
+        },
+        {
+          "rows": 172,
+          "sheet": "PNC.B4a.Maternal Physical Exam"
+        },
+        {
+          "rows": 176,
+          "sheet": "PNC.B4b. Neonatal Physical Exam"
+        },
+        {
+          "rows": 57,
+          "sheet": "PNC.B6a. Maternal C & Treat"
+        },
+        {
+          "rows": 61,
+          "sheet": "PNC.B6b.Neonatal C & Treat"
+        },
+        {
+          "rows": 26,
+          "sheet": "PNC.B7.Non-emergencyReferral"
+        },
+        {
+          "rows": 30,
+          "sheet": "PNC.C1. Emergency Referral"
+        },
+        {
+          "rows": 98,
+          "sheet": "PNC.D3a. Follow-upMat_sympwell"
+        },
+        {
+          "rows": 87,
+          "sheet": "PNC.D3b.Follow-upNb_Inf sympwel"
+        },
+        {
+          "rows": 154,
+          "sheet": "PNC.D4a. Follow-up Mat_PE"
+        },
+        {
+          "rows": 155,
+          "sheet": "PNC.D4b.Follow-up Nb_Inf PE"
+        },
+        {
+          "rows": 15,
+          "sheet": "PNC Configuration"
+        }
+      ],
+      "sheetsSkipped": [
+        {
+          "reason": "boilerplate",
+          "sheet": "COVER"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "READ ME"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "References"
+        }
+      ]
+    },
+    {
+      "counts": {
+        "dataElements": 0,
+        "decisionTables": 19,
+        "indicators": 0,
+        "schedules": 2,
+        "testCases": 0
+      },
+      "file": "PNC DAK_decision-support logic.xlsx",
+      "sha256": "4814fdca6a4d15af77266353867980e19d7859bcc10c8ca08ed57356c3e6fbd2",
+      "sheetsRead": [
+        {
+          "rows": 12,
+          "sheet": "PNC.A2.DT.1"
+        },
+        {
+          "rows": 1,
+          "sheet": "PNC.A4.DT.2"
+        },
+        {
+          "rows": 2,
+          "sheet": "PNC.B3a.DT.3"
+        },
+        {
+          "rows": 7,
+          "sheet": "PNC.B3a.DT.4"
+        },
+        {
+          "rows": 1,
+          "sheet": "PNC.B3a.DT.5"
+        },
+        {
+          "rows": 9,
+          "sheet": "PNC.B4a.DT.6"
+        },
+        {
+          "rows": 43,
+          "sheet": "PNC.B6a.DT.7"
+        },
+        {
+          "rows": 4,
+          "sheet": "PNC.B6a.DT.8"
+        },
+        {
+          "rows": 7,
+          "sheet": "PNC.B6a.DT.9"
+        },
+        {
+          "rows": 14,
+          "sheet": "PNC.B6a.DT.10"
+        },
+        {
+          "rows": 40,
+          "sheet": "PNC.C1.DT.11"
+        },
+        {
+          "rows": 9,
+          "sheet": "PNC.A2.DT.12"
+        },
+        {
+          "rows": 2,
+          "sheet": "PNCB3b.DT.13"
+        },
+        {
+          "rows": 3,
+          "sheet": "PNC.B4b.DT.14"
+        },
+        {
+          "rows": 3,
+          "sheet": "PNC.B4b.DT.15"
+        },
+        {
+          "rows": 28,
+          "sheet": "PNC.B6b.DT.16"
+        },
+        {
+          "rows": 3,
+          "sheet": "PNC.B6b.DT.17"
+        },
+        {
+          "rows": 17,
+          "sheet": "PNC.B6b.DT.18"
+        },
+        {
+          "rows": 22,
+          "sheet": "PNC.C1.DT.19"
+        },
+        {
+          "rows": 4,
+          "sheet": "PNC.S.01 PNC contact schedule"
+        },
+        {
+          "rows": 5,
+          "sheet": "PNC.S.02 NB Immunization Sched"
+        }
+      ],
+      "sheetsSkipped": [
+        {
+          "reason": "boilerplate",
+          "sheet": "COVER"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "README"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "References"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "DO NOT CHANGE List of Values"
+        }
+      ]
+    }
+  ]
+}

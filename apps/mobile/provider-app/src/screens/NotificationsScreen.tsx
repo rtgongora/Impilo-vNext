@@ -14,17 +14,7 @@ import {
   markAllRead,
   type Notification,
 } from "@impilo/mobile-messaging";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { appStore } from "../stores/appStore";
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -193,12 +183,12 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
   timestamp: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 4,
   },
   unreadDot: {

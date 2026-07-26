@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -137,10 +138,16 @@ public class PatientController {
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("VITO client search failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of("candidates", List.of()),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId, "warning", e.getMessage())));
+            // This is the search-before-create step. Zero candidates is the answer that authorises
+            // registering a new person, so an unreachable VITO here manufactures duplicate health
+            // records for people already in the registry. The meta.warning was not enough — the
+            // payload still had the shape of a completed search that found nobody.
+            log.error("VITO client search failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "patient_search_unavailable",
+                    "message", "The client registry could not be searched. Do not treat this as "
+                               + "confirmation that no matching record exists.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
 

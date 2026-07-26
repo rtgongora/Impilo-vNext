@@ -40,7 +40,7 @@ export default function ContextChooserPage() {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
   const user = useAuthStore((s) => s.user);
-  const { contextChooserOptions, isLoading } = useIdentityContext();
+  const { contextChooserOptions, isLoading, isUnavailable } = useIdentityContext();
 
   function handleSelect(href: string, operationalMode?: string) {
     if (operationalMode) {
@@ -77,8 +77,13 @@ export default function ContextChooserPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-foreground">Continue to My Life / My Health</p>
+              {/* "No work contexts are assigned to you yet" sends a provider whose affiliations
+                  simply could not be read off to request access they already hold. Keep the
+                  never-strand fallback, but do not explain it with a fabricated reason. */}
               <p className="text-xs text-muted-foreground mt-0.5">
-                No work contexts are assigned to you yet — you can request access from your profile.
+                {isUnavailable
+                  ? "Your work contexts could not be loaded. This is not a record that you have none — try again before requesting access."
+                  : "No work contexts are assigned to you yet — you can request access from your profile."}
               </p>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />

@@ -7,16 +7,7 @@
 
 import React, { useState, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  TextField,
-  Badge,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, TextField, Badge, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useAuth } from "@impilo/mobile-auth";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useAppStore } from "../../stores/appStore";
@@ -182,17 +173,17 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   warningBox: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.ui.warning.light,
     padding: 16,
     borderRadius: 8,
     marginBottom: 12,
   },
   warningTitle: {
     fontWeight: "700",
-    color: "#92400E",
+    color: colors.ui.warning.text,
   },
   warningText: {
-    color: "#92400E",
+    color: colors.ui.warning.text,
     fontSize: 14,
     marginTop: 4,
   },
@@ -209,7 +200,7 @@ const styles = StyleSheet.create({
   },
   auditNote: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   deactivateContainer: {
     marginTop: 24,
@@ -225,11 +216,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.gray[200],
   },
   auditTimestamp: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   auditAction: {
     fontSize: 12,

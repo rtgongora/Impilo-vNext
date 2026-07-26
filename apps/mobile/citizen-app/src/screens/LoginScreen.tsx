@@ -15,13 +15,13 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@impilo/mobile-auth";
-import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Button, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const GREEN = "#059669";
 const GREEN_DARK = "#047857";
-const GREEN_LIGHT = "#D1FAE5";
+const GREEN_LIGHT = colors.ui.success.light;
 
 /** Anonymous gateway destinations reachable before sign-in ("help before identity"). */
 export type GuestDestination = "health-info" | "verify" | "track-emergency";
@@ -140,10 +140,10 @@ export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: L
 
         {displayError ? (
           <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={16} color="#DC2626" />
+            <Ionicons name="alert-circle" size={16} color={colors.ui.error.main} />
             <Text style={styles.errorText}>{displayError}</Text>
             <Pressable onPress={() => setError(null)} hitSlop={8}>
-              <Ionicons name="close" size={16} color="#DC2626" />
+              <Ionicons name="close" size={16} color={colors.ui.error.main} />
             </Pressable>
           </View>
         ) : null}
@@ -168,7 +168,7 @@ export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: L
         )}
 
         <View style={styles.trustRow}>
-          <Ionicons name="shield-checkmark" size={14} color="#6B7280" />
+          <Ionicons name="shield-checkmark" size={14} color={colors.gray[500]} />
           <Text style={styles.trustText}>
             Secured by Impilo National Health Identity
           </Text>
@@ -216,7 +216,7 @@ export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: L
                 style={styles.guestTile}
                 onPress={() => onGuestDestination("track-emergency")}
               >
-                <Ionicons name="pulse-outline" size={20} color="#DC2626" />
+                <Ionicons name="pulse-outline" size={20} color={colors.ui.error.main} />
                 <Text style={styles.guestTileText}>Track SOS</Text>
               </Pressable>
             </View>
@@ -314,12 +314,12 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.gray[900],
     letterSpacing: -0.3,
   },
   sheetSubtitle: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     lineHeight: 20,
     marginBottom: 4,
   },
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     fontSize: 13,
-    color: "#DC2626",
+    color: colors.ui.error.main,
   },
   loadingRow: {
     flexDirection: "row",
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 15,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   trustRow: {
     flexDirection: "row",
@@ -357,15 +357,15 @@ const styles = StyleSheet.create({
   },
   trustText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   signUpRow: { alignItems: "center" },
-  signUpPrompt: { fontSize: 14, color: "#374151", textAlign: "center" },
+  signUpPrompt: { fontSize: 14, color: colors.gray[700], textAlign: "center" },
   guestSection: { gap: 8 },
   guestLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#9CA3AF",
+    color: colors.gray[400],
     letterSpacing: 0.6,
     textTransform: "uppercase",
     textAlign: "center",
@@ -378,17 +378,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    borderColor: colors.gray[200],
+    backgroundColor: colors.gray[50],
   },
-  guestTileText: { fontSize: 12, fontWeight: "600", color: "#374151" },
+  guestTileText: { fontSize: 12, fontWeight: "600", color: colors.gray[700] },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.gray[200],
   },
   footerText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     lineHeight: 18,
   },

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { Screen, Header, Button, TextField, Select, LoadingSpinner, EmptyState, ErrorState, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, TextField, Select, LoadingSpinner, EmptyState, ErrorState, Badge, colors } from "@impilo/mobile-design-system";
 import {
   fetchTransfusionEpisodes,
   startTransfusion,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 14 },
   section: { gap: 10 },
   sectionTitle: { fontSize: 14, fontWeight: "600" },
-  card: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", gap: 6 },
+  card: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.gray[200], gap: 6 },
   title: { fontSize: 15, fontWeight: "600" },
-  meta: { fontSize: 12, color: "#6B7280" },
+  meta: { fontSize: 12, color: colors.gray[500] },
 });

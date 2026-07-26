@@ -15,6 +15,8 @@ import {
   useConditions,
   useCreateCondition,
   useResolveCondition,
+  asDuplicateReport,
+  type DuplicateResolution,
   type ConditionResource } from "@/hooks/queries/useConditions";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -40,7 +42,8 @@ const SEVERITY_BADGE: Record<string, string> = {
 const EMPTY_FORM = {
   condition_name: "",
   icd_code: "",
-  category: "PROBLEM_LIST",
+  category: "DIAGNOSIS",
+  diagnostic_certainty: "",
   clinical_status: "ACTIVE",
   severity: "MODERATE",
   onset_date: "",
@@ -56,9 +59,10 @@ export default function ConditionsPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data: conditionsData, isLoading } = useConditions(patientId);
+  const { data: conditionsData, isLoading, isError: conditionsUnavailable } = useConditions(patientId);
   const createCondition = useCreateCondition();
   const resolveCondition = useResolveCondition();
+  const duplicateReport = asDuplicateReport(createCondition.error);
 
   const conditions: ConditionResource[] = conditionsData?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
@@ -75,23 +79,33 @@ export default function ConditionsPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function submit(duplicateResolution?: DuplicateResolution) {
     createCondition.mutate(
       {
         patientId,
         conditionName: form.condition_name,
         icdCode: form.icd_code.trim() || null,
         category: form.category,
+        clinicalStatus: form.clinical_status,
+        // Empty means the clinician did not state one; send null rather than a default.
+        diagnosticCertainty: form.diagnostic_certainty || null,
         severity: form.severity,
         onsetDate: form.onset_date || null,
-        notes: form.notes.trim() || null },
+        notes: form.notes.trim() || null,
+        duplicateResolution },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_FORM });
           setShowForm(false);
         } },
     );
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    // No resolution on the first attempt: the duplicate check exists to be run, and sending an
+    // answer before the question has been asked would skip it.
+    submit();
   }
 
   function handleResolve(id: string) {
@@ -204,9 +218,37 @@ export default function ConditionsPage() {
                         onChange={(e) => updateField("category", e.target.value)}
                         className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
-                        <option value="ENCOUNTER_DIAGNOSIS">Encounter Diagnosis</option>
-                        <option value="PROBLEM_LIST">Problem List</option>
-                        <option value="CHRONIC">Chronic</option>
+                        {/* What kind of clinical statement this is. Whether it belongs to this
+                            visit or stands on the list is answered by the encounter link, and
+                            chronicity by the status — neither is a kind, and the previous options
+                            (Encounter Diagnosis / Problem List / Chronic) conflated all three. */}
+                        <option value="DIAGNOSIS">Diagnosis</option>
+                        <option value="SYMPTOM">Symptom</option>
+                        <option value="SYNDROME">Syndrome</option>
+                        <option value="GUIDELINE_CLASSIFICATION">Guideline classification</option>
+                        <option value="RISK_FACTOR">Risk factor</option>
+                        <option value="FUNCTIONAL_CONSEQUENCE">Functional consequence</option>
+                        <option value="SOCIAL_CIRCUMSTANCE">Social circumstance</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Diagnostic certainty
+                      </label>
+                      <select
+                        value={form.diagnostic_certainty}
+                        onChange={(e) => updateField("diagnostic_certainty", e.target.value)}
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
+                      >
+                        {/* Separate from category on purpose: a symptom can be confirmed while a
+                            diagnosis is only suspected. Defaults to not stated — recording a
+                            certainty nobody expressed is worse than recording none. */}
+                        <option value="">Not stated</option>
+                        <option value="SUSPECTED">Suspected</option>
+                        <option value="DIFFERENTIAL">Differential</option>
+                        <option value="WORKING">Working</option>
+                        <option value="CONFIRMED">Confirmed</option>
+                        <option value="REFUTED">Refuted (excluded)</option>
                       </select>
                     </div>
                     <div>
@@ -219,6 +261,7 @@ export default function ConditionsPage() {
                         className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
                         <option value="ACTIVE">Active</option>
+                        <option value="REMISSION">In remission</option>
                         <option value="RESOLVED">Resolved</option>
                         <option value="INACTIVE">Inactive</option>
                       </select>
@@ -285,17 +328,71 @@ export default function ConditionsPage() {
                     </button>
                   </div>
 
-                  {createCondition.isError && (
+                  {duplicateReport ? (
+                    /* Not a failure — a question. Retrying unchanged returns the same 409
+                       forever, so the answer has to be offered here. */
+                    <div className="rounded-lg border border-warning/40 bg-warning-soft/40 p-4 space-y-3">
+                      <p className="text-sm font-medium text-foreground">
+                        Already on this patient&apos;s problem list
+                      </p>
+                      <p className="text-sm text-muted-foreground">{duplicateReport.message}</p>
+                      {duplicateReport.existing && (
+                        <div className="rounded border border-border bg-card px-3 py-2 text-sm">
+                          <span className="font-medium text-foreground">
+                            {duplicateReport.existing.attributes.conditionName}
+                          </span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            {duplicateReport.existing.attributes.clinicalStatus}
+                            {duplicateReport.existing.attributes.onsetDate
+                              ? ` · onset ${duplicateReport.existing.attributes.onsetDate}`
+                              : ""}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={createCondition.isPending}
+                          onClick={() => submit("SAME_PROBLEM_RETURNING")}
+                          className="px-3 py-2 text-sm font-medium rounded-lg border border-border hover:bg-background transition-colors"
+                        >
+                          Same problem — it has recurred
+                        </button>
+                        <button
+                          type="button"
+                          disabled={createCondition.isPending}
+                          onClick={() => submit("DISTINCT_PROBLEM")}
+                          className="px-3 py-2 text-sm font-medium rounded-lg border border-border hover:bg-background transition-colors"
+                        >
+                          A separate problem — record both
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Recording it as recurred updates the existing entry rather than adding a
+                        second one.
+                      </p>
+                    </div>
+                  ) : createCondition.isError ? (
                     <p className="text-sm text-red-600">
-                      Failed to create condition. Please try again.
+                      The condition was not saved and is not on the patient&apos;s record. Please
+                      try again.
                     </p>
-                  )}
+                  ) : null}
                 </form>
               </div>
             )}
 
             {/* Conditions table */}
-            {conditions.length === 0 ? (
+            {conditionsUnavailable ? (
+              <div className="bg-card rounded-lg border border-warning/40 p-12 text-center">
+                <HeartPulse className="w-10 h-10 text-warning mx-auto mb-3" />
+                <p className="text-warning text-sm font-medium">Problem list unavailable</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  This is not a record that the patient has no conditions. Try again, and check
+                  another source before treating.
+                </p>
+              </div>
+            ) : conditions.length === 0 ? (
               <div className="bg-card rounded-lg border border-border p-12 text-center">
                 <HeartPulse className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground text-sm">No conditions recorded yet</p>

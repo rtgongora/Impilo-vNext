@@ -4,15 +4,7 @@
 
 import React, { useState, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  EmptyState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, EmptyState, colors } from "@impilo/mobile-design-system";
 import { useSyncEngine } from "@impilo/mobile-offline";
 import type { SyncQueueItem, SyncItemStatus } from "../../types";
 
@@ -124,15 +116,15 @@ const styles = StyleSheet.create({
   },
   resourceText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   metaText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   errorText: {
     fontSize: 12,
-    color: "#DC2626",
+    color: colors.ui.error.main,
     marginTop: 4,
   },
 });

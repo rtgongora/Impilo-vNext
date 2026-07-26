@@ -28,17 +28,19 @@ export default function EmergencyPatientViewPage() {
   const { data: patientData, isLoading: loadingPatient } = usePatient(patientId);
   const { data: patientSummaryRes } = usePatientSummary(patientId);
   const { data: encountersData } = useEncounters(patientId);
-  const { data: allergiesData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: allergiesData, isError: allergiesUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["allergies", { patientId }],
     queryFn: () => apiClient.get(`/internal/v1/allergies?patient_id=${patientId}`),
     enabled: !!patientId,
   });
-  const { data: conditionsData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: conditionsData, isError: conditionsUnavailable } = useQuery<
+    ApiResponse<GenericResource[]>
+  >({
     queryKey: ["conditions", { patientId }],
     queryFn: () => apiClient.get(`/internal/v1/conditions?patient_id=${patientId}`),
     enabled: !!patientId,
   });
-  const { data: medsData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: medsData, isError: medsUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["prescriptions", { patientId, emergency: true }],
     queryFn: () => apiClient.get(`/internal/v1/pharmacy/prescriptions?patient_id=${patientId}`),
     enabled: !!patientId,
@@ -131,7 +133,14 @@ export default function EmergencyPatientViewPage() {
                 <ShieldAlert className="h-3.5 w-3.5" />
                 Allergies
               </h2>
-              {activeAllergies.length === 0 ? (
+              {allergiesUnavailable ? (
+                /* On an emergency view, "no allergies on record" is the claim most likely to be
+                   acted on immediately. Never say it on the strength of a failed read. */
+                <p className="mt-1 text-sm font-medium text-red-700">
+                  Allergy record unavailable — not a statement that there are none. Check another
+                  source before treating.
+                </p>
+              ) : activeAllergies.length === 0 ? (
                 <p className="mt-1 text-sm text-muted-foreground">No active allergies on record in this view.</p>
               ) : (
                 <ul className="mt-2 space-y-1 text-sm text-foreground">
@@ -149,7 +158,16 @@ export default function EmergencyPatientViewPage() {
               <div className="rounded-lg border border-border p-3">
                 <h2 className="text-xs font-bold uppercase text-muted-foreground">Problems (active)</h2>
                 <ul className="mt-2 space-y-1 text-sm text-foreground">
-                  {activeConditions.length === 0 && <li className="text-muted-foreground">None listed.</li>}
+                  {conditionsUnavailable ? (
+                    <li className="text-warning">
+                      Problem list unavailable — not a statement that there are none. Check another
+                      source before treating.
+                    </li>
+                  ) : (
+                    activeConditions.length === 0 && (
+                      <li className="text-muted-foreground">None listed.</li>
+                    )
+                  )}
                   {activeConditions.slice(0, 8).map((c) => (
                     <li key={c.id}>
                       {String(
@@ -165,7 +183,18 @@ export default function EmergencyPatientViewPage() {
                   Medications
                 </h2>
                 <ul className="mt-2 space-y-1 text-sm text-foreground">
-                  {activeMeds.length === 0 && <li className="text-muted-foreground">None active.</li>}
+                  {medsUnavailable ? (
+                    /* Same rule as allergies one panel up: on an emergency view the medication
+                       list drives immediate prescribing decisions, so "none active" must never be
+                       said on the strength of a failed read. These two facts sat side by side with
+                       opposite honesty until now. */
+                    <li className="font-medium text-red-700">
+                      Medication record unavailable — not a statement that there are none. Check
+                      another source before prescribing.
+                    </li>
+                  ) : (
+                    activeMeds.length === 0 && <li className="text-muted-foreground">None active.</li>
+                  )}
                   {activeMeds.slice(0, 8).map((m) => (
                     <li key={m.id}>{String(m.attributes.medicationName ?? m.attributes.name ?? m.id)}</li>
                   ))}

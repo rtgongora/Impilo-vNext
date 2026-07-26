@@ -7,7 +7,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Screen, Header, Card, CardBody, TextField, Button } from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, TextField, Button, colors } from "@impilo/mobile-design-system";
 import { TrackEmergencyScreen } from "../emergency/TrackEmergencyScreen";
 
 const GREEN = "#059669";
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   host: { flex: 1 },
   changeRow: { padding: 16 },
   body: { padding: 16, gap: 12 },
-  help: { fontSize: 13, color: "#374151", lineHeight: 19, marginBottom: 12 },
+  help: { fontSize: 13, color: colors.gray[700], lineHeight: 19, marginBottom: 12 },
   actionRow: { marginTop: 16 },
   footer: { fontSize: 12, color: "#B91C1C", fontWeight: "600", lineHeight: 18 },
 });

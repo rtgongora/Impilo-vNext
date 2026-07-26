@@ -317,6 +317,11 @@ public class ReportService {
         p.put("placedBy", order.getPlacedBy());
         p.put("referringProviderId", order.getReferringProviderId());
         p.put("accessionNumber", order.getAccessionNumber());
+        // The encounter this order belongs to. Without it a consumer cannot tell WHICH episode of
+        // care a critical result belongs to, so the ED lane had to keep its own correlation table
+        // (pct.ed_diagnostic_order) to answer a question this payload should have answered. The
+        // field has always existed on the order; it was simply never projected.
+        p.put("encounterRef", order.getEncounterRef());
         p.put("criticalReason", r.getCriticalReason());
         p.put("reportStatus", r.getReportStatus() != null ? r.getReportStatus().name() : null);
         p.put("reportedBy", r.getReportedBy());

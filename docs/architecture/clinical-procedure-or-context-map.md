@@ -53,3 +53,23 @@ No dedicated `procedure-service` or `theatre-service` is introduced in this pass
 Remaining decision:
 - whether to keep procedure episode workflow state in PCT (coordinator-only) with references, or
 - introduce a future sovereign procedure/theatre service via ADR.
+
+### RESOLVED 2026-07-26
+
+This decision is closed by
+[ADR-SURGERY-AND-PROCEDURES-SERVICE-BOUNDARIES](adr/ADR-SURGERY-AND-PROCEDURES-SERVICE-BOUNDARIES.md).
+
+Both options above were rejected. The outcome:
+
+- **`procedures-service`** (port 8395) is introduced as the cross-cutting *platform* layer —
+  catalogue, appropriateness, competence, readiness, safety-pause templates, aftercare, execution
+  index, analytics. It evaluates and does not store: it owns no copy of another service's record.
+- **`surgery-service`** (port 8396) is introduced for surgical *disease*, which nothing owned.
+- **`inpatient-service` remains the procedure execution system of record.** `procedure_episode`
+  is generalised additively (`setting`, `catalogue_ref`, `request_ref`, `lifecycle_state` beside
+  the preserved theatre `status`) rather than migrated. No dedicated `theatre-service` is
+  introduced, so this pass's conclusion stands.
+- **`oros-service` remains the procedure request system of record** — `order_type=PROCEDURE` with
+  the `ProcedureWorkflow` guard, extended rather than replaced.
+- PCT keeps the coordinator role and the `procedure` / `procedure_room` / `operating_room`
+  encounter contexts recorded above; it does not hold procedure workflow state.

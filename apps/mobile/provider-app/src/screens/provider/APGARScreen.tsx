@@ -3,7 +3,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { recordApgar, fetchApgar } from "../../services/inpatientService";
 import { useEncounterStore } from "../../stores/encounterStore";
@@ -71,7 +71,7 @@ export function APGARScreen() {
     },
   });
 
-  const interpretation = total >= 7 ? { label: "Normal", color: "#22C55E" } : total >= 4 ? { label: "Moderate Depression", color: "#F59E0B" } : { label: "Severe Depression", color: "#DC2626" };
+  const interpretation = total >= 7 ? { label: "Normal", color: colors.ui.success.main } : total >= 4 ? { label: "Moderate Depression", color: colors.ui.warning.main } : { label: "Severe Depression", color: colors.ui.error.main };
 
   return (
     <Screen><Header title="APGAR Score" />
@@ -146,28 +146,28 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 12, paddingBottom: 32 },
   minuteRow: { flexDirection: "row", gap: 8 },
-  minuteBtn: { flex: 1, padding: 12, borderRadius: 12, borderWidth: 2, borderColor: "#E5E7EB", alignItems: "center" },
+  minuteBtn: { flex: 1, padding: 12, borderRadius: 12, borderWidth: 2, borderColor: colors.gray[200], alignItems: "center" },
   minuteActive: { borderColor: "#2563EB", backgroundColor: "#EFF6FF" },
-  minuteDone: { borderColor: "#22C55E" },
-  minuteText: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
+  minuteDone: { borderColor: colors.ui.success.main },
+  minuteText: { fontSize: 14, fontWeight: "600", color: colors.gray[500] },
   minuteTextActive: { color: "#2563EB" },
-  minuteCheck: { color: "#22C55E", fontSize: 16, fontWeight: "700" },
+  minuteCheck: { color: colors.ui.success.main, fontSize: 16, fontWeight: "700" },
   totalCard: { alignItems: "center", padding: 16, borderRadius: 16, borderWidth: 3, backgroundColor: "#FFF" },
   totalScore: { fontSize: 48, fontWeight: "900" },
-  totalLabel: { fontSize: 14, fontWeight: "600", color: "#374151" },
+  totalLabel: { fontSize: 14, fontWeight: "600", color: colors.gray[700] },
   compCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 12, gap: 8 },
-  compLabel: { fontSize: 14, fontWeight: "700", color: "#111827" },
+  compLabel: { fontSize: 14, fontWeight: "700", color: colors.gray[900] },
   scoreOptions: { gap: 6 },
-  scoreOption: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 10 },
+  scoreOption: { borderWidth: 1, borderColor: colors.gray[200], borderRadius: 8, padding: 10 },
   scoreOptionActive: { backgroundColor: "#2563EB", borderColor: "#2563EB" },
   scoreHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  scoreValue: { fontSize: 20, fontWeight: "900", color: "#374151", width: 28 },
-  scoreLabel: { fontSize: 14, fontWeight: "600", color: "#374151" },
-  scoreDesc: { fontSize: 12, color: "#6B7280", marginLeft: 36 },
+  scoreValue: { fontSize: 20, fontWeight: "900", color: colors.gray[700], width: 28 },
+  scoreLabel: { fontSize: 14, fontWeight: "600", color: colors.gray[700] },
+  scoreDesc: { fontSize: 12, color: colors.gray[500], marginLeft: 36 },
   historySection: { gap: 6 },
-  historyTitle: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  historyRow: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#F9FAFB", borderRadius: 8, padding: 10 },
+  historyTitle: { fontSize: 14, fontWeight: "700", color: colors.gray[900] },
+  historyRow: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.gray[50], borderRadius: 8, padding: 10 },
   historyMinute: { fontSize: 13, fontWeight: "700", color: "#2563EB", width: 50 },
-  historyTotal: { fontSize: 16, fontWeight: "900", color: "#111827", width: 50 },
-  historyDetail: { fontSize: 11, color: "#6B7280", fontFamily: "monospace" },
+  historyTotal: { fontSize: 16, fontWeight: "900", color: colors.gray[900], width: 50 },
+  historyDetail: { fontSize: 11, color: colors.gray[500], fontFamily: "monospace" },
 });

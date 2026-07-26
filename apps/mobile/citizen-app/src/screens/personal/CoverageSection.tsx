@@ -4,16 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, TextInput } from "react-native";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchCoverage } from "../../services/coverageService";
 import {
   fetchCoveragePayerJourney,
@@ -341,7 +332,7 @@ const styles = StyleSheet.create({
   },
   planType: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   infoText: {
     fontSize: 14,
@@ -349,7 +340,7 @@ const styles = StyleSheet.create({
   },
   commandHelp: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginBottom: 8,
   },
   commandTabs: {
@@ -360,12 +351,12 @@ const styles = StyleSheet.create({
   },
   commandTab: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 12,
-    color: "#374151",
+    color: colors.gray[700],
   },
   commandTabActive: {
     borderColor: "#4F46E5",
@@ -374,7 +365,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -397,7 +388,7 @@ const styles = StyleSheet.create({
   queueTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#92400E",
+    color: colors.ui.warning.text,
     marginBottom: 4,
   },
   queueItem: {
@@ -412,7 +403,7 @@ const styles = StyleSheet.create({
   },
   queueMeta: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   journeyGrid: {
     marginTop: 10,
@@ -420,14 +411,14 @@ const styles = StyleSheet.create({
   },
   journeyItem: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 10,
   },
   journeyStage: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   journeyStatus: {
     marginTop: 2,

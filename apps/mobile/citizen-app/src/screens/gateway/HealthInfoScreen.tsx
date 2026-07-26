@@ -9,17 +9,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  TextField,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, TextField, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchPublicEducation,
   fetchPublicEducationCategories,
@@ -231,22 +221,22 @@ const styles = StyleSheet.create({
   chipRow: { gap: 8, paddingVertical: 4 },
   chip: { borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1 },
   chipActive: { backgroundColor: GREEN, borderColor: GREEN },
-  chipInactive: { backgroundColor: "#FFFFFF", borderColor: "#D1D5DB" },
+  chipInactive: { backgroundColor: "#FFFFFF", borderColor: colors.gray[300] },
   chipText: { fontSize: 12, fontWeight: "600" },
   chipTextActive: { color: "#FFFFFF" },
-  chipTextInactive: { color: "#374151" },
+  chipTextInactive: { color: colors.gray[700] },
   topicRow: { paddingVertical: 12, gap: 2 },
-  topicRowBorder: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  topicRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
   topicCategory: { fontSize: 11, fontWeight: "700", color: GREEN, textTransform: "uppercase" },
-  topicTitle: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  topicSummary: { fontSize: 13, color: "#6B7280" },
+  topicTitle: { fontSize: 15, fontWeight: "700", color: colors.gray[900] },
+  topicSummary: { fontSize: 13, color: colors.gray[500] },
   pager: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4 },
-  pagerText: { fontSize: 12, color: "#6B7280" },
+  pagerText: { fontSize: 12, color: colors.gray[500] },
   backRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 },
   backText: { color: GREEN, fontSize: 14, fontWeight: "600" },
-  articleTitle: { fontSize: 22, fontWeight: "800", color: "#111827", marginTop: 4 },
-  articleSummary: { fontSize: 14, color: "#6B7280", marginTop: 6, marginBottom: 8 },
-  articleBody: { fontSize: 15, color: "#374151", lineHeight: 22, marginTop: 8 },
-  disclaimer: { fontSize: 12, color: "#9CA3AF", marginTop: 20, lineHeight: 18 },
-  inlineError: { fontSize: 13, color: "#DC2626" },
+  articleTitle: { fontSize: 22, fontWeight: "800", color: colors.gray[900], marginTop: 4 },
+  articleSummary: { fontSize: 14, color: colors.gray[500], marginTop: 6, marginBottom: 8 },
+  articleBody: { fontSize: 15, color: colors.gray[700], lineHeight: 22, marginTop: 8 },
+  disclaimer: { fontSize: 12, color: colors.gray[400], marginTop: 20, lineHeight: 18 },
+  inlineError: { fontSize: 13, color: colors.ui.error.main },
 });

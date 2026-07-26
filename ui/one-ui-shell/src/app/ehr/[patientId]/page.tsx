@@ -61,12 +61,22 @@ export default function PatientChartPage() {
   const patientId = params.patientId;
   const facility = useFacilityStore((s) => s.facility);
 
-  const { data: patientData, isLoading: isLoadingPatient } = usePatient(patientId);
-  const { data: encountersData } = useEncounters(patientId);
-  const { data: referralsData } = useReferrals(patientId);
-  const { data: notesData } = useClinicalNotes(patientId);
-  const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
-  const { data: admissionsData } = useAdmissions(patientId);
+  const { data: patientData, isLoading: isLoadingPatient, isError: patientUnavailable } = usePatient(patientId);
+  const { data: encountersData, isError: encountersUnavailable } = useEncounters(patientId);
+  const { data: referralsData, isError: referralsUnavailable } = useReferrals(patientId);
+  const { data: notesData, isError: notesUnavailable } = useClinicalNotes(patientId);
+  const { data: telemedicineData, isError: telemedicineUnavailable } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
+  const { data: admissionsData, isError: admissionsUnavailable } = useAdmissions(patientId);
+
+  // Every tile in the coordination pulse is a count, and a count of zero is read as "nothing
+  // outstanding" — no referral waiting for closure, no returned specialist guidance. When the
+  // source could not be read the honest answer is that the number is unknown.
+  const coordinationUnavailable =
+    encountersUnavailable ||
+    referralsUnavailable ||
+    notesUnavailable ||
+    telemedicineUnavailable ||
+    admissionsUnavailable;
 
   const patient = patientData?.data;
   const admissions = (admissionsData as { data?: { id: string; attributes: Record<string, unknown> }[] } | undefined)?.data ?? [];
@@ -122,6 +132,17 @@ export default function PatientChartPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             <span className="ml-2 text-sm text-muted-foreground">Loading patient data...</span>
+          </div>
+        ) : patientUnavailable ? (
+          /* "Patient not found" is a statement about the registry's contents. A failed read is a
+             statement about the registry's reachability, and conflating them invites a clinician
+             to re-register someone who already exists. */
+          <div className="bg-red-50 rounded-lg border border-red-200 p-12 text-center">
+            <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
+            <p className="text-sm font-medium text-red-700">
+              The patient record could not be loaded. This is not a statement that no such patient
+              exists — do not register a duplicate on the strength of this screen.
+            </p>
           </div>
         ) : !patient ? (
           <div className="bg-card rounded-lg border border-border p-12 text-center">
@@ -263,25 +284,45 @@ export default function PatientChartPage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
+                  {coordinationUnavailable && (
+                    <div className="sm:col-span-2 rounded-2xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700">
+                      One or more coordination sources could not be read. The counts below are
+                      unknown, not zero — an outstanding referral response or teleconsult may exist.
+                    </div>
+                  )}
                   <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Loop closures ready</p>
-                    <p className="mt-2 text-2xl font-semibold text-warning-foreground">{coordinationPulse.closureReady}</p>
+                    <p className="mt-2 text-2xl font-semibold text-warning-foreground">
+                      {coordinationUnavailable ? "—" : coordinationPulse.closureReady}
+                    </p>
                     <p className="mt-1 text-xs text-muted-foreground">Referral responses waiting for final review or closure.</p>
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Receiving context</p>
-                    <p className="mt-2 text-2xl font-semibold text-primary">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary">
+                      {coordinationUnavailable ? "—" : coordinationPulse.receivingHere}
+                    </p>
                     <p className="mt-1 text-xs text-muted-foreground">Referrals where this facility is currently on the receiving side.</p>
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Teleconsult activity</p>
-                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.activeTeleconsults}</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">
+                      {coordinationUnavailable ? "—" : coordinationPulse.activeTeleconsults}
+                    </p>
                     <p className="mt-1 text-xs text-muted-foreground">Scheduled or active virtual consult sessions linked to this patient.</p>
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Returned guidance</p>
-                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.referralLoopUpdates}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Consultation notes that include referral-loop updates from teleconsult or specialist review.</p>
+                    {/* This count is derived from clinical reads. When any of them fails it
+                        would collapse to 0, which reads as "no specialist guidance has come back". */}
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">
+                      {coordinationUnavailable ? "—" : coordinationPulse.referralLoopUpdates}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {coordinationUnavailable
+                        ? "Clinical sources could not be read — not a record that no guidance has returned."
+                        : "Consultation notes that include referral-loop updates from teleconsult or specialist review."}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -345,7 +386,17 @@ export default function PatientChartPage() {
               })}
             </div>
 
-            {/* Recent Encounters */}
+            {/* Recent Encounters. An absent list reads as "this patient has never been seen here",
+                and an absent active-encounter banner invites a second encounter to be opened on
+                top of a live one. */}
+            {encountersUnavailable && (
+              <div className="bg-red-50 rounded-lg border border-red-200 p-5">
+                <p className="text-sm font-medium text-red-700">
+                  Encounters could not be loaded. This is not a record that the patient has none —
+                  an encounter may already be active, so check before starting a new one.
+                </p>
+              </div>
+            )}
             {encounters.length > 0 && (
               <div className="bg-card rounded-lg border border-border p-5">
                 <h3 className="font-medium text-foreground mb-3">Recent Encounters</h3>

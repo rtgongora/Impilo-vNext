@@ -6,18 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import type { Referral } from "../../types";
 import { appStore } from "../../stores/appStore";
 import { fetchReferrals } from "../../services/clinicalRecordsService";
@@ -181,21 +170,21 @@ const styles = StyleSheet.create({
   referralService: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#1F2937",
+    color: colors.gray[800],
   },
   referralFrom: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   referralExpiry: {
     fontSize: 11,
-    color: "#F59E0B",
+    color: colors.ui.warning.main,
     marginTop: 2,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 8,
   },
   detailRow: {
@@ -203,10 +192,10 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   detailValue: {
     fontSize: 14,
-    color: "#1F2937",
+    color: colors.gray[800],
   },
 });

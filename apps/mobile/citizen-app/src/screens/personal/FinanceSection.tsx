@@ -11,14 +11,7 @@
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, RefreshControl, StyleSheet, FlatList, ScrollView } from "react-native";
-import {
-  Card,
-  CardBody,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardBody, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { ApiError } from "@impilo/mobile-api-client";
 import {
   fetchBalance,
@@ -178,7 +171,7 @@ export function FinanceSection() {
                 <Text
                   style={[
                     styles.txnAmount,
-                    { color: txn.type === "CREDIT" ? "#16A34A" : "#DC2626" },
+                    { color: txn.type === "CREDIT" ? "#16A34A" : colors.ui.error.main },
                   ]}
                 >
                   {txn.type === "CREDIT" ? "+" : "-"}
@@ -249,10 +242,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   emptyText: {
-    color: "#9CA3AF",
+    color: colors.gray[400],
     fontSize: 14,
     textAlign: "center",
     paddingVertical: 12,
@@ -268,22 +261,22 @@ const styles = StyleSheet.create({
   chargeDesc: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#374151",
+    color: colors.gray[700],
   },
   chargeFacility: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 2,
   },
   chargeDate: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 2,
   },
   chargeAmount: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#DC2626",
+    color: colors.ui.error.main,
   },
   blockedCard: {
     gap: 8,
@@ -291,11 +284,11 @@ const styles = StyleSheet.create({
   blockedTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
   },
   blockedMessage: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     lineHeight: 18,
   },
   txnRow: {
@@ -316,16 +309,16 @@ const styles = StyleSheet.create({
   txnDesc: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#374151",
+    color: colors.gray[700],
     flex: 1,
   },
   txnDate: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   txnRef: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 2,
   },
   txnAmount: {

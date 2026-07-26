@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { Screen, Header, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge, colors } from "@impilo/mobile-design-system";
 import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import { fetchDrivesNearMe, registerForDrive, type DonationDriveSummary } from "../../services/madiService";
 
@@ -88,10 +88,10 @@ export function DonationDrivesScreen({ onBack }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 12 },
-  hint: { fontSize: 13, color: "#6B7280" },
-  card: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", gap: 6 },
+  hint: { fontSize: 13, color: colors.gray[500] },
+  card: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.gray[200], gap: 6 },
   title: { fontSize: 15, fontWeight: "600" },
-  meta: { fontSize: 12, color: "#6B7280" },
-  desc: { fontSize: 13, color: "#374151" },
+  meta: { fontSize: 12, color: colors.gray[500] },
+  desc: { fontSize: 13, color: colors.gray[700] },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 6 },
 });

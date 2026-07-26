@@ -1,0 +1,104 @@
+{
+  "domain": "procedures",
+  "note": "The Clinical Procedures Pipeline is a cross-cutting platform capability, so its standards baseline is deliberately narrower than the surgical one: it declares only what constrains *any* invasive intervention regardless of specialty. Specialty-specific indications belong to the owning pack's baseline, not here. Surgical standards that also bind the pipeline (the WHO Surgical Safety Checklist phases, the SSI guideline sections) are declared once in docs/clinical-governance/surgery/standards-baseline.json and referenced from the pipeline's own coverage decisions rather than duplicated — the generator rejects a standardId declared in more than one baseline file, which is the correct behaviour.",
+  "standards": [
+    {
+      "standardId": "IPC.CORE.HAND_HYGIENE",
+      "family": "WHO_IPC",
+      "kind": "GUIDELINE_SECTION",
+      "title": "Hand hygiene at the WHO Five Moments, as a precondition of any invasive procedure",
+      "sourceCitation": "WHO Guidelines on Hand Hygiene in Health Care, 2009, and WHO core components of infection prevention and control programmes at the national and acute health care facility level, 2016. https://www.who.int/publications/i/item/9789241549929"
+    },
+    {
+      "standardId": "IPC.CORE.ASEPTIC_TECHNIQUE",
+      "family": "WHO_IPC",
+      "kind": "GUIDELINE_SECTION",
+      "title": "Aseptic technique, sterile field and skin preparation for invasive procedures",
+      "sourceCitation": "WHO core components of infection prevention and control programmes, 2016; WHO Global guidelines for the prevention of surgical site infection, second edition, 2018, preoperative section."
+    },
+    {
+      "standardId": "IPC.CORE.STERILE_PROCESSING",
+      "family": "WHO_IPC",
+      "kind": "GUIDELINE_SECTION",
+      "title": "Decontamination and sterilisation of medical devices, with traceable cycle or lot identity and declared reprocessing limits",
+      "sourceCitation": "WHO/PAHO Decontamination and Reprocessing of Medical Devices for Health-care Facilities, 2016. https://www.who.int/publications/i/item/9789241549851"
+    },
+    {
+      "standardId": "IPC.CORE.INJECTION_SAFETY",
+      "family": "WHO_IPC",
+      "kind": "GUIDELINE_SECTION",
+      "title": "Injection and sharps safety, single-use device discipline, exposure incident handling and waste disposal",
+      "sourceCitation": "WHO Guideline on the use of safety-engineered syringes, 2016; WHO Safe management of wastes from health-care activities, second edition, 2014."
+    },
+    {
+      "standardId": "PS.WRONG_SITE.PREVENTION",
+      "family": "WHO_PATIENT_SAFETY",
+      "kind": "SAFETY_SOLUTION",
+      "title": "Prevention of wrong patient, wrong site, wrong side and wrong procedure — verification of identity, procedure, site, side and consent before an invasive intervention, with site marking where laterality or multiple structures apply",
+      "sourceCitation": "WHO Patient Safety Solutions volume 1, solution 4, Performance of Correct Procedure at Correct Body Site, 2007; operationalised by the WHO Surgical Safety Checklist Sign In and Time Out phases, 2009."
+    },
+    {
+      "standardId": "PS.GLOBAL_ACTION_PLAN.2021_2030",
+      "family": "WHO_PATIENT_SAFETY",
+      "kind": "POLICY_FRAMEWORK",
+      "title": "Global Patient Safety Action Plan 2021-2030 — avoidable harm in health care is eliminated by design, including safety of clinical processes and engagement of patients and families",
+      "sourceCitation": "WHO Global Patient Safety Action Plan 2021-2030: towards eliminating avoidable harm in health care, WHA74.13. https://www.who.int/teams/integrated-health-services/patient-safety/policy/global-patient-safety-action-plan"
+    },
+    {
+      "standardId": "PS.INFORMED_CONSENT",
+      "family": "WHO_PATIENT_SAFETY",
+      "kind": "STANDARD",
+      "title": "Informed consent for an invasive intervention records the procedure, purpose, benefits, material risks, alternatives, the consequences of no procedure, the questions asked, the language and interpreter used, the person obtaining consent, and the time — and is not reducible to a signature or an uploaded image",
+      "sourceCitation": "WHO Guidance on ethical considerations and informed consent, applied through the WHO Surgical Safety Checklist Sign In consent confirmation; WHO Patient Safety Curriculum Guide, multi-professional edition, 2011, topic 9."
+    },
+    {
+      "standardId": "PS.CAPACITY_ASSENT_GUARDIAN",
+      "family": "WHO_PATIENT_SAFETY",
+      "kind": "STANDARD",
+      "title": "Capacity assessment, guardian consent, child assent and lawful substitute decision-making, with refusal and withdrawal recorded as first-class outcomes",
+      "sourceCitation": "WHO/UNICEF guidance on adolescent-responsive health systems; WHO Global standards for quality health-care services for adolescents, 2015, standard 3 on confidentiality and consent."
+    },
+    {
+      "standardId": "MED.DEVICE.UDI_TRACEABILITY",
+      "family": "WHO_MEDICAL_DEVICES",
+      "kind": "STANDARD",
+      "title": "Implantable and reusable device traceability — product, manufacturer, model, lot, serial, expiry, anatomical site, insertion, removal or replacement, recall reachability, and information given to the patient",
+      "sourceCitation": "WHO Global Model Regulatory Framework for Medical Devices including in vitro diagnostic medical devices, 2017; IMDRF Unique Device Identification (UDI) system guidance, IMDRF/UDI WG/N7. https://www.who.int/publications/i/item/9789241512350"
+    },
+    {
+      "standardId": "BLOOD.TRANSFUSION.APPROPRIATE_USE",
+      "family": "WHO_BLOOD",
+      "kind": "GUIDELINE_SECTION",
+      "title": "Clinical transfusion practice — indication, consent, pretransfusion compatibility, positive patient identification at the bedside, observation during transfusion, and reaction reporting",
+      "sourceCitation": "WHO The Clinical Use of Blood, and WHO Aide-Mémoire for national health programmes: the clinical transfusion process and patient safety. https://www.who.int/publications/i/item/WHO-EHT-10-05"
+    },
+    {
+      "standardId": "SEDATION.CONTINUUM.DEPTH",
+      "family": "INTERNATIONAL_SPECIALTY",
+      "kind": "STANDARD",
+      "title": "Sedation is a continuum of depth — minimal, moderate, deep, general anaesthesia — and monitoring, provider competence, rescue capability and recovery criteria are set by the depth that may be reached, not the depth intended",
+      "sourceCitation": "WFSA-WHO International Standards for a Safe Practice of Anesthesia, 2018, Anesth Analg 2018;126:2047-2055 — jointly endorsed by WHO. https://wfsahq.org/resources/international-standards-for-a-safe-practice-of-anesthesia/"
+    },
+    {
+      "standardId": "ANAESTHESIA.WFSA_WHO.MONITORING",
+      "family": "INTERNATIONAL_SPECIALTY",
+      "kind": "STANDARD",
+      "title": "Mandatory intraoperative monitoring including continuous pulse oximetry, and the presence of a trained anaesthesia provider throughout",
+      "sourceCitation": "WFSA-WHO International Standards for a Safe Practice of Anesthesia, 2018 — HIGHLY RECOMMENDED and MANDATORY tiers. Pulse oximetry also appears in the WHO Surgical Safety Checklist Sign In."
+    },
+    {
+      "standardId": "SPECIMEN.CHAIN_OF_CUSTODY",
+      "family": "WHO_LABORATORY",
+      "kind": "STANDARD",
+      "title": "Specimen identity and chain of custody — labelled at the point of collection with patient identity, site and side, and traceable through receipt, adequacy assessment, reporting, review and clinical action",
+      "sourceCitation": "WHO Laboratory Quality Management System handbook, 2011, sections on the pre-examination phase and sample management. https://www.who.int/publications/i/item/9789241548274"
+    },
+    {
+      "standardId": "RESULTS.CRITICAL_ACKNOWLEDGEMENT",
+      "family": "WHO_PATIENT_SAFETY",
+      "kind": "SAFETY_SOLUTION",
+      "title": "Communication of critical results — a result is not complete until it has reached a clinician who can act on it, and the acknowledgement is recorded",
+      "sourceCitation": "WHO Patient Safety Solutions volume 1, solution 3, Communication During Patient Hand-Overs, 2007; WHO Global Patient Safety Action Plan 2021-2030, strategic objective 4."
+    }
+  ]
+}

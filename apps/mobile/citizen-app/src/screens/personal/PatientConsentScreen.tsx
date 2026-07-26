@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { colors } from "@impilo/mobile-design-system";
 import {
   View,
   Text,
@@ -163,8 +164,8 @@ export function PatientConsentScreen({ onGoBack }: { onGoBack?: () => void }) {
                     onValueChange={(value: boolean) =>
                       handleToggle(consent.id, value)
                     }
-                    trackColor={{ false: "#D1D5DB", true: "#93C5FD" }}
-                    thumbColor={granted ? "#2563EB" : "#9CA3AF"}
+                    trackColor={{ false: colors.gray[300], true: "#93C5FD" }}
+                    thumbColor={granted ? "#2563EB" : colors.gray[400]}
                     accessibilityLabel={`Toggle ${consent.category} consent`}
                   />
                 </View>
@@ -213,12 +214,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 8,
   },
   errorText: {
     fontSize: 14,
-    color: "#991B1B",
+    color: colors.ui.error.text,
     textAlign: "center",
   },
   retryButton: {
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
   },
   subheading: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   scrollArea: {
     flex: 1,
@@ -259,7 +260,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#F3F4F6",
+    borderColor: colors.gray[100],
     gap: 8,
   },
   consentHeader: {
@@ -288,20 +289,20 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   statusGranted: {
-    backgroundColor: "#D1FAE5",
-    color: "#065F46",
+    backgroundColor: colors.ui.success.light,
+    color: colors.ui.success.text,
   },
   statusDenied: {
-    backgroundColor: "#FEE2E2",
-    color: "#991B1B",
+    backgroundColor: colors.ui.error.light,
+    color: colors.ui.error.text,
   },
   consentDescription: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   updatedAt: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   saveButton: {
     backgroundColor: "#2563EB",

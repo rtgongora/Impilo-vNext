@@ -36,17 +36,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@ExtendWith(DockerOrExternalPostgresCondition.class)
+@ExtendWith(IntegrationEnvironmentCondition.class)
 class ImagingExperienceWireMockIT {
-
-    private static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
 
     private static final WireMockServer WIRE_MOCK =
             new WireMockServer(wireMockConfig().dynamicPort());
 
     @DynamicPropertySource
     static void registerBaseUrls(DynamicPropertyRegistry registry) {
-        REDIS.configure(registry);
+        ExperienceBffTestRedisSupport.configure(ImagingExperienceWireMockIT.class, registry);
         synchronized (WIRE_MOCK) {
             if (!WIRE_MOCK.isRunning()) {
                 WIRE_MOCK.start();
@@ -83,7 +81,6 @@ class ImagingExperienceWireMockIT {
 
     @AfterAll
     static void shutdown() {
-        REDIS.stop();
         WIRE_MOCK.stop();
     }
 

@@ -3,7 +3,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { Screen, Header, TabBar, Card, CardBody, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, TabBar, Card, CardBody, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPendingDispensing } from "../../services/queueService";
 import { PharmacyDispensingScreen } from "./PharmacyDispensingScreen";
@@ -103,8 +103,8 @@ export function PharmacyHubScreen() {
 const styles = StyleSheet.create({
   tabWrap: { paddingHorizontal: 12, paddingTop: 8 },
   content: { padding: 16, gap: 12 },
-  title: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  sub: { fontSize: 13, color: "#6B7280", marginTop: 6 },
-  rxName: { fontSize: 14, fontWeight: "600", color: "#111827" },
+  title: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  sub: { fontSize: 13, color: colors.gray[500], marginTop: 6 },
+  rxName: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
   badges: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
 });

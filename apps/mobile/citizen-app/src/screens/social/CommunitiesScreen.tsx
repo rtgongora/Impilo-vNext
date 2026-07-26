@@ -4,7 +4,7 @@
  */
 import React, { useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
-import { Badge, Button, LoadingSpinner, EmptyState } from "@impilo/mobile-design-system";
+import { Badge, Button, LoadingSpinner, EmptyState, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchSocialCommunities, joinSocialCommunity, type SocialCommunity } from "../../services/socialService";
 
@@ -106,15 +106,15 @@ export function CommunitiesScreen() {
 
 const styles = StyleSheet.create({
   container: { gap: 12 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
   filterRow: { gap: 6, paddingVertical: 4 },
-  card: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 8 },
+  card: { backgroundColor: colors.gray[50], borderRadius: 12, padding: 16, gap: 8 },
   header: { flexDirection: "row", alignItems: "center", gap: 10 },
   avatar: { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#fff", fontWeight: "700" },
-  name: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  desc: { fontSize: 13, color: "#4B5563" },
-  meta: { fontSize: 12, color: "#9CA3AF" },
+  name: { fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  desc: { fontSize: 13, color: colors.gray[600] },
+  meta: { fontSize: 12, color: colors.gray[400] },
   joinButton: { backgroundColor: "#7C3AED", borderRadius: 8, paddingVertical: 10, alignItems: "center", marginTop: 4 },
   joinButtonDisabled: { opacity: 0.6 },
   joinText: { color: "#FFF", fontSize: 14, fontWeight: "600" },

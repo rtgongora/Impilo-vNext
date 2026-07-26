@@ -14,7 +14,7 @@
  */
 import React from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
-import { ErrorState, LoadingSpinner } from "@impilo/mobile-design-system";
+import { ErrorState, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { ApiError } from "@impilo/mobile-api-client";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWallet, fetchTransactions } from "../../services/walletService";
@@ -82,7 +82,7 @@ export function WalletSection() {
               <Text
                 style={[
                   styles.txnAmount,
-                  { color: item.transactionType === "CREDIT" ? "#16A34A" : "#DC2626" },
+                  { color: item.transactionType === "CREDIT" ? "#16A34A" : colors.ui.error.main },
                 ]}
               >
                 {item.transactionType === "CREDIT" ? "+" : "-"}
@@ -124,10 +124,10 @@ const styles = StyleSheet.create({
   balanceLabel: { color: "#A7F3D0", fontSize: 11, fontWeight: "700", letterSpacing: 2 },
   balanceAmount: { color: "#FFFFFF", fontSize: 32, fontWeight: "700" },
   balanceStatus: { color: "#6EE7B7", fontSize: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  empty: { color: "#9CA3AF", fontSize: 14, textAlign: "center", paddingVertical: 20 },
-  txnRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-  txnDesc: { fontSize: 14, fontWeight: "500", color: "#374151" },
-  txnDate: { fontSize: 11, color: "#9CA3AF" },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  empty: { color: colors.gray[400], fontSize: 14, textAlign: "center", paddingVertical: 20 },
+  txnRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
+  txnDesc: { fontSize: 14, fontWeight: "500", color: colors.gray[700] },
+  txnDate: { fontSize: 11, color: colors.gray[400] },
   txnAmount: { fontSize: 14, fontWeight: "700" },
 });

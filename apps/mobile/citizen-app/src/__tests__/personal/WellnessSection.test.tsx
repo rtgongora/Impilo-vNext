@@ -5,12 +5,16 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
   Card: ({ children }: any) => children,
   Button: ({ title, onPress }: any) => null,
   Badge: ({ children }: any) => children,
   LoadingSpinner: () => null,
-}));
+  };
+});
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: vi.fn().mockReturnValue({ data: [], isLoading: false }),

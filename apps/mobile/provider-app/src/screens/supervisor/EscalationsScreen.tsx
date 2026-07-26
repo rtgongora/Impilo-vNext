@@ -4,18 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, TextField, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getEscalations, acknowledgeEscalation, resolveEscalation, getSupportTickets, createSupportTicket } from "../../services/supportService";
 import { useAppStore } from "../../stores/appStore";
 import type { Escalation, SupportTicket } from "../../types";
@@ -226,7 +215,7 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   badgeRow: {
     flexDirection: "row",
@@ -235,7 +224,7 @@ const styles = StyleSheet.create({
   },
   raisedByText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   actionRow: {
     flexDirection: "row",

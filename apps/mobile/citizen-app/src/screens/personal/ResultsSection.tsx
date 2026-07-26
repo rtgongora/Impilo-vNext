@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Badge,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Badge, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchLabResults } from "../../services/labResultService";
 import type { LabResult } from "../../types";
 
@@ -47,7 +43,7 @@ export function ResultsSection() {
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconCircle}>
-          <Ionicons name="flask-outline" size={32} color="#D1D5DB" />
+          <Ionicons name="flask-outline" size={32} color={colors.gray[300]} />
         </View>
         <Text style={styles.emptyTitle}>No results</Text>
         <Text style={styles.emptyMessage}>Your lab results and reports will appear here</Text>
@@ -79,22 +75,22 @@ export function ResultsSection() {
                     </Badge>
                   </View>
                   <View style={styles.metaRow}>
-                    <Ionicons name="grid-outline" size={12} color="#9CA3AF" />
+                    <Ionicons name="grid-outline" size={12} color={colors.gray[400]} />
                     <Text style={styles.metaText}>{lab.category}</Text>
                   </View>
                   <View style={styles.metaRow}>
-                    <Ionicons name="location-outline" size={12} color="#9CA3AF" />
+                    <Ionicons name="location-outline" size={12} color={colors.gray[400]} />
                     <Text style={styles.metaText}>{lab.facilityName}</Text>
                   </View>
                   <View style={styles.metaRow}>
-                    <Ionicons name="person-outline" size={12} color="#9CA3AF" />
+                    <Ionicons name="person-outline" size={12} color={colors.gray[400]} />
                     <Text style={styles.metaText}>{`Ordered by ${lab.orderedBy}`}</Text>
                   </View>
                 </View>
                 <Ionicons
                   name={isExpanded ? "chevron-up" : "chevron-down"}
                   size={16}
-                  color="#9CA3AF"
+                  color={colors.gray[400]}
                   style={styles.chevron}
                 />
               </View>
@@ -110,28 +106,28 @@ export function ResultsSection() {
                   ) : null}
                   {lab.referenceRange ? (
                     <View style={styles.expandedRow}>
-                      <Ionicons name="swap-horizontal-outline" size={14} color="#6B7280" />
+                      <Ionicons name="swap-horizontal-outline" size={14} color={colors.gray[500]} />
                       <Text style={styles.expandedLabel}>Reference</Text>
                       <Text style={styles.expandedValueSecondary}>{lab.referenceRange}</Text>
                     </View>
                   ) : null}
                   {lab.interpretation ? (
                     <View style={styles.expandedRow}>
-                      <Ionicons name="document-text-outline" size={14} color="#6B7280" />
+                      <Ionicons name="document-text-outline" size={14} color={colors.gray[500]} />
                       <Text style={styles.expandedLabel}>Interpretation</Text>
                       <Text style={styles.expandedValue}>{lab.interpretation}</Text>
                     </View>
                   ) : null}
                   {lab.collectedAt ? (
                     <View style={styles.expandedRow}>
-                      <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                      <Ionicons name="time-outline" size={14} color={colors.gray[400]} />
                       <Text style={styles.expandedLabel}>Collected</Text>
                       <Text style={styles.expandedValueTertiary}>{new Date(lab.collectedAt).toLocaleString()}</Text>
                     </View>
                   ) : null}
                   {lab.resultAt ? (
                     <View style={styles.expandedRow}>
-                      <Ionicons name="checkmark-circle-outline" size={14} color="#9CA3AF" />
+                      <Ionicons name="checkmark-circle-outline" size={14} color={colors.gray[400]} />
                       <Text style={styles.expandedLabel}>Result</Text>
                       <Text style={styles.expandedValueTertiary}>{new Date(lab.resultAt).toLocaleString()}</Text>
                     </View>
@@ -153,7 +149,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: 4,
@@ -167,7 +163,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
@@ -175,11 +171,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   emptyMessage: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     paddingHorizontal: 24,
   },
@@ -202,7 +198,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.ui.warning.light,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -221,7 +217,7 @@ const styles = StyleSheet.create({
   testName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     flex: 1,
   },
   metaRow: {
@@ -231,7 +227,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   chevron: {
     marginTop: 2,
@@ -252,22 +248,22 @@ const styles = StyleSheet.create({
   expandedLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.gray[500],
     width: 90,
   },
   expandedValue: {
     fontSize: 13,
-    color: "#111827",
+    color: colors.gray[900],
     flex: 1,
   },
   expandedValueSecondary: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     flex: 1,
   },
   expandedValueTertiary: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     flex: 1,
   },
 });

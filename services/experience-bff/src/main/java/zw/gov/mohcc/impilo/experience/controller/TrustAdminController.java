@@ -68,9 +68,13 @@ public class TrustAdminController {
                     "data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
+            // An empty 200 reads as "no policy rules are configured", which on an authorization
+            // admin screen invites an operator to re-create rules that already exist.
             log.error("Trust admin: list policies failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "policy_rules_unavailable",
+                    "message", "Policy rules could not be retrieved. Do not treat this as an "
+                               + "absence of policy rules.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -113,9 +117,13 @@ public class TrustAdminController {
                     "data", resources,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
+            // An empty review queue reads as "no emergency access to review" — the one answer
+            // that makes a break-glass oversight screen safe to walk away from.
             log.error("Trust admin: list break-glass reviews failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "break_glass_reviews_unavailable",
+                    "message", "Break-glass reviews could not be retrieved. Do not treat this as "
+                               + "an absence of pending reviews.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -262,9 +270,13 @@ public class TrustAdminController {
                     "data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
+            // An empty consent list reads as "this subject has consented to nothing", which is a
+            // statement about the legal basis for processing their data.
             log.error("Trust admin: list consents failed for subject={}: {}", subjectId, e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "consents_unavailable",
+                    "message", "Consent directives could not be retrieved. Do not treat this as "
+                               + "an absence of consents.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -293,9 +305,12 @@ public class TrustAdminController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
                             "page", page, "size", size)));
         } catch (Exception e) {
+            // "No audit events match this query" is the finding an investigator would act on.
             log.error("Trust admin: audit query failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "audit_trail_unavailable",
+                    "message", "Audit events could not be retrieved. Do not treat this as an "
+                               + "absence of audit events.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
                             "page", page, "size", size)));
         }

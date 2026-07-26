@@ -14,7 +14,6 @@
  * the person anchor, not a separate login.
  */
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -67,26 +66,20 @@ function useProviderNotices() {
 
 export default function ProfessionalProfilePage() {
   const { user } = useAuthStore();
-  const { data, isLoading } = useLinkedIds();
+  const { data, isLoading, isError: linkedIdsUnavailable } = useLinkedIds();
 
-  const { data: affData, isLoading: affLoading } = useAffiliations();
-  const { data: noticeData, isLoading: noticeLoading } = useProviderNotices();
+  const { data: affData, isLoading: affLoading, isError: affUnavailable } = useAffiliations();
+  const { data: noticeData, isLoading: noticeLoading, isError: noticesUnavailable } = useProviderNotices();
   const affiliations = (affData?.data ?? []).map((a) => ({ id: a.id, name: a.attributes.facilityName, role: a.attributes.role }));
   const notices = (noticeData?.data ?? []).map((n) => ({ id: n.id, text: n.attributes.text, severity: n.attributes.severity, category: n.attributes.category }));
   const linkedAttrs = data?.data?.attributes;
   const providerId = linkedAttrs?.providerId ?? user?.providerId;
-  const providerStatus = linkedAttrs?.providerStatus ?? "Active";
-  const licenceValid = linkedAttrs?.licenceValid ?? true;
-
-  const licenceExpiry = useMemo(() => {
-    const date = new Date();
-    date.setFullYear(date.getFullYear() + 1);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  }, []);
+  // These defaults used to be "Active" and true, so a failed VARAPI read told a provider their
+  // registration was in good standing and their licence valid — the two facts this page exists to
+  // report, asserted without having checked either. Regulatory standing is the one claim on this
+  // screen a provider may act on: fall back to unknown, never to reassurance.
+  const providerStatus = linkedAttrs?.providerStatus ?? (linkedIdsUnavailable ? "Unknown" : "Active");
+  const licenceValid = linkedAttrs?.licenceValid ?? (linkedIdsUnavailable ? null : true);
 
   return (
     <AppLayout>
@@ -128,6 +121,16 @@ export default function ProfessionalProfilePage() {
                 <div className="h-4 bg-neutral-100 rounded w-1/2" />
                 <div className="h-4 bg-neutral-100 rounded w-2/3" />
               </div>
+            ) : linkedIdsUnavailable ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-medium text-red-700">
+                  Registration and licence status could not be read.
+                </p>
+                <p className="mt-1 text-xs text-red-700">
+                  This screen is not evidence that your registration is active or your licence
+                  valid. Confirm with your council before relying on it for clinical practice.
+                </p>
+              </div>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center justify-between py-1">
@@ -159,13 +162,23 @@ export default function ProfessionalProfilePage() {
                 </div>
                 <div className="flex items-center justify-between py-1">
                   <span className="text-sm text-muted-foreground">Licence</span>
+                  {/* Three states, not two: "Expired" is as much a fabricated finding as "Valid"
+                      when the registry could not be read. */}
                   <span
                     className={[
                       "text-sm font-medium",
-                      licenceValid ? "text-primary-hover" : "text-brand-red",
+                      licenceValid === null
+                        ? "text-warning-foreground"
+                        : licenceValid
+                          ? "text-primary-hover"
+                          : "text-brand-red",
                     ].join(" ")}
                   >
-                    {licenceValid ? "Valid" : "Expired"} until {licenceExpiry}
+                    {licenceValid === null
+                      ? "Could not be checked"
+                      : licenceValid
+                        ? "Valid"
+                        : "Expired"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 pt-2">
@@ -205,6 +218,13 @@ export default function ProfessionalProfilePage() {
               <div className="px-6 py-6 animate-pulse space-y-3">
                 <div className="h-4 bg-neutral-100 rounded w-3/4" />
                 <div className="h-4 bg-neutral-100 rounded w-1/2" />
+              </div>
+            ) : affUnavailable ? (
+              /* "No affiliations yet — ask HR to link you" sends a provider who is already
+                 affiliated to chase a non-problem, and hides the facility context their work
+                 depends on. */
+              <div className="px-6 py-6 text-sm font-medium text-red-700 text-center bg-red-50">
+                Facility affiliations could not be read. This is not a record that you have none.
               </div>
             ) : affiliations.length === 0 ? (
               <div className="px-6 py-6 text-sm text-muted-foreground text-center">
@@ -254,6 +274,13 @@ export default function ProfessionalProfilePage() {
               <div className="px-6 py-6 animate-pulse space-y-3">
                 <div className="h-4 bg-neutral-100 rounded w-3/4" />
                 <div className="h-4 bg-neutral-100 rounded w-1/2" />
+              </div>
+            ) : noticesUnavailable ? (
+              /* Notices carry compliance alerts. "No professional notices at this time" is an
+                 all-clear on the provider's regulatory standing — never issue it from an outage. */
+              <div className="px-6 py-6 text-sm font-medium text-red-700 text-center bg-red-50">
+                Professional notices could not be read. This is not an all-clear — a compliance
+                notice may be outstanding.
               </div>
             ) : notices.length === 0 ? (
               <div className="px-6 py-6 text-sm text-muted-foreground text-center">

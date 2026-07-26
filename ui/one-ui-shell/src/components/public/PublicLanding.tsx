@@ -67,9 +67,7 @@ const TRUST_STEPS = [
 
 export function PublicLanding() {
   return (
-    <PublicShell>
-      <WelcomeHero />
-
+    <PublicShell bleed={<WelcomeHero />}>
       <section id="services" className="mt-12 scroll-mt-28" aria-labelledby="categories-title">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">

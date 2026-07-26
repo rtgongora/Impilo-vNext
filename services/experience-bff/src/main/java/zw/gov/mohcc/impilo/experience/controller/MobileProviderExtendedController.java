@@ -3,10 +3,13 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -30,6 +33,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider")
 public class MobileProviderExtendedController {
 
+    private static final Logger log = LoggerFactory.getLogger(MobileProviderExtendedController.class);
+
     private final PctServiceClient pctClient;
     private final VitoServiceClient vitoClient;
     private final PharmacyServiceClient pharmacyClient;
@@ -37,6 +42,7 @@ public class MobileProviderExtendedController {
     private final OrosServiceClient orosClient;
     private final PacsServiceClient pacsServiceClient;
     private final InpatientServiceClient inpatientClient;
+    private final ClinicalKnowledgePlatformClient clinicalClient;
 
     public MobileProviderExtendedController(PctServiceClient pctClient,
                                             VitoServiceClient vitoClient,
@@ -44,7 +50,8 @@ public class MobileProviderExtendedController {
                                             CostaServiceClient costaClient,
                                             OrosServiceClient orosClient,
                                             PacsServiceClient pacsServiceClient,
-                                            InpatientServiceClient inpatientClient) {
+                                            InpatientServiceClient inpatientClient,
+                                            ClinicalKnowledgePlatformClient clinicalClient) {
         this.pctClient = pctClient;
         this.vitoClient = vitoClient;
         this.pharmacyClient = pharmacyClient;
@@ -52,6 +59,7 @@ public class MobileProviderExtendedController {
         this.orosClient = orosClient;
         this.pacsServiceClient = pacsServiceClient;
         this.inpatientClient = inpatientClient;
+        this.clinicalClient = clinicalClient;
     }
 
     // ── Queue Management ────────────────────────────────────────────
@@ -71,7 +79,13 @@ public class MobileProviderExtendedController {
                 var result = pctClient.callNext(UUID.fromString(queueId));
                 return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of()));
             } catch (Exception e) {
-                return ResponseEntity.ok(Map.of("data", Map.of()));
+                // An empty 200 reads as "the queue is empty, nobody to call" — indistinguishable
+                // from a successful call on an empty queue, so the clinic stops calling patients.
+                log.error("PCT callNext failed for queue={}: {}", queueId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "queue_call_next_failed",
+                        "message", "The next patient could not be called. Do not treat this as an "
+                                   + "empty queue."));
             }
         }
         return ResponseEntity.ok(Map.of("data", Map.of()));
@@ -437,17 +451,30 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/clinical/mar")
     public ResponseEntity<Map<String, Object>> getMAR(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
+        // The inpatient MAR rows below are real, so a failed pharmacy sync should not blank the
+        // drug chart — but it does mean an active prescription may be missing from it, and a
+        // silently short MAR is a missed dose. Serve the rows and say the chart is incomplete.
+        boolean pharmacySyncDegraded = false;
         try {
             JsonNode prescriptions = pharmacyClient.getPatientPrescriptions(patientId, "ACTIVE", 0, 100);
             List<Map<String, Object>> rxRows = pharmacyPrescriptionsForMar(prescriptions);
             if (!rxRows.isEmpty()) {
                 inpatientClient.syncMarSchedule(Map.of("patientId", patientId, "prescriptions", rxRows));
             }
-        } catch (Exception ignored) {
-            // MAR list still returns inpatient rows when pharmacy is unavailable in preview.
+        } catch (Exception e) {
+            pharmacySyncDegraded = true;
+            log.error("Pharmacy MAR sync failed for patient={} — chart may omit active "
+                      + "prescriptions: {}", patientId, e.getMessage());
         }
         JsonNode data = inpatientClient.listMar(patientId);
-        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of()));
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("pharmacy_sync_degraded", pharmacySyncDegraded);
+        if (pharmacySyncDegraded) {
+            meta.put("message", "Active prescriptions could not be synced from pharmacy. This "
+                                + "chart may be incomplete — do not treat it as the full "
+                                + "medication list.");
+        }
+        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of(), "meta", meta));
     }
 
     private static List<Map<String, Object>> pharmacyPrescriptionsForMar(JsonNode prescriptions) {
@@ -476,12 +503,36 @@ public class MobileProviderExtendedController {
 
     // ── CDS (Clinical Decision Support) ─────────────────────────────
 
+    /**
+     * Evaluate decision support for a clinical context, against the real engine.
+     *
+     * <p>This route previously ignored its own request body and returned one canned INFO alert —
+     * "Review applicable clinical guidelines for this presentation" — attributed to
+     * {@code "source": "CDS Engine"}. No engine ran. To a clinician on a phone, a single benign alert
+     * from a named engine reads as *the engine evaluated this patient and found nothing specific*,
+     * which is the one thing decision support must never say falsely. The empty-200 honesty register
+     * names this case explicitly: zero CDS alerts is not the neutral answer, it is the claim the
+     * prescriber acts on.
+     *
+     * <p>So it now calls CKP's {@code /internal/v1/clinical/cds/summary}, and an unreachable engine
+     * fails loudly with 502 rather than degrading to a reassuring empty list. A genuinely empty
+     * evaluation still returns 200 with no alerts — that is a real answer from a real engine.
+     */
     @PostMapping("/clinical/cds/evaluate")
     public ResponseEntity<Map<String, Object>> evaluateCDS(@RequestBody Map<String, Object> body) {
-        String context = body.getOrDefault("context", "").toString();
-        List<Map<String, Object>> alerts = new ArrayList<>();
-        alerts.add(Map.of("level", "INFO", "category", "GUIDELINE", "message", "Review applicable clinical guidelines for this presentation", "source", "CDS Engine"));
-        return ResponseEntity.ok(Map.of("data", alerts));
+        try {
+            JsonNode summary = clinicalClient.cdsSummary(body);
+            if (summary == null || summary.isNull()) {
+                throw new IllegalStateException("clinical platform returned no payload");
+            }
+            return ResponseEntity.ok(Map.of("data", summary));
+        } catch (Exception e) {
+            log.error("CDS evaluate failed against the clinical knowledge platform: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "cds_engine_unavailable",
+                    "message", "Decision support could not be evaluated because the clinical knowledge "
+                            + "platform is unreachable. Do not treat this as an absence of alerts."));
+        }
     }
 
     // ── Specialty Workspace Config ──────────────────────────────────

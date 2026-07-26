@@ -15,13 +15,18 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@impilo/mobile-auth";
-import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Button, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const BLUE = "#1E40AF";
-const BLUE_DARK = "#1E3A8A";
-const BLUE_LIGHT = "#DBEAFE";
+// Provider identity: deep teal, matching the accent in App.tsx's ThemeProvider
+// mount. This screen used the generic Tailwind blue (#1E40AF/#1E3A8A/#DBEAFE)
+// the brief specifically called out — kept as static hex here (not theme-
+// reactive) since this is the pre-auth screen and the app is light-mode only
+// today; see docs/design/mobile-visual-redesign-brief.md.
+const BLUE = "#0F766E";
+const BLUE_DARK = "#115E56";
+const BLUE_LIGHT = "#CCFBF1";
 
 const FEATURE_PILLS = ["Worklist", "Encounters", "Lab Results", "Outreach"];
 
@@ -129,10 +134,10 @@ export function LoginScreen() {
 
         {displayError ? (
           <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={16} color="#DC2626" />
+            <Ionicons name="alert-circle" size={16} color={colors.ui.error.main} />
             <Text style={styles.errorText}>{displayError}</Text>
             <Pressable onPress={() => setError(null)} hitSlop={8}>
-              <Ionicons name="close" size={16} color="#DC2626" />
+              <Ionicons name="close" size={16} color={colors.ui.error.main} />
             </Pressable>
           </View>
         ) : null}
@@ -157,7 +162,7 @@ export function LoginScreen() {
         )}
 
         <View style={styles.trustRow}>
-          <Ionicons name="shield-checkmark" size={14} color="#6B7280" />
+          <Ionicons name="shield-checkmark" size={14} color={colors.gray[500]} />
           <Text style={styles.trustText}>
             Professional identity verified by Impilo Health System
           </Text>
@@ -273,12 +278,12 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.gray[900],
     letterSpacing: -0.3,
   },
   sheetSubtitle: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     lineHeight: 20,
     marginBottom: 4,
   },
@@ -295,7 +300,7 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     fontSize: 13,
-    color: "#DC2626",
+    color: colors.ui.error.main,
   },
   loadingRow: {
     flexDirection: "row",
@@ -306,7 +311,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 15,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   trustRow: {
     flexDirection: "row",
@@ -316,7 +321,7 @@ const styles = StyleSheet.create({
   },
   trustText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     flex: 1,
     textAlign: "center",
   },
@@ -342,11 +347,11 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.gray[200],
   },
   footerText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     lineHeight: 18,
   },

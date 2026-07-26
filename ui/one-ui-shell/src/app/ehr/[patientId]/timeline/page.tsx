@@ -95,7 +95,7 @@ export default function TimelinePage() {
   const patientId = params.patientId;
   const facility = useFacilityStore((s) => s.facility);
 
-  const { data: timelineData, isLoading } = useTimeline(patientId);
+  const { data: timelineData, isLoading, isError: timelineUnavailable } = useTimeline(patientId);
   const { data: referralsData } = useReferrals(patientId);
   const { data: notesData } = useClinicalNotes(patientId);
   const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
@@ -203,7 +203,11 @@ export default function TimelinePage() {
             {entries.length === 0 ? (
               <div className="bg-card rounded-lg border border-border p-12 text-center">
                 <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground text-sm">No timeline entries yet</p>
+                <p className={timelineUnavailable ? "text-sm text-red-600" : "text-muted-foreground text-sm"}>
+                  {timelineUnavailable
+                    ? "The timeline could not be loaded — this is not a record that the patient has no history."
+                    : "No timeline entries yet"}
+                </p>
               </div>
             ) : (
               <div className="relative">

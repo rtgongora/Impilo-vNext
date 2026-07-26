@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { Card, CardBody } from "@impilo/mobile-design-system";
+import { Card, CardBody, colors } from "@impilo/mobile-design-system";
 
 /**
  * PrivacyPolicyScreen — Tier-3 wave 2 placeholder for legal surface.
@@ -23,7 +23,7 @@ export function PrivacyPolicyScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 12 },
-  title: { fontSize: 16, fontWeight: "800", color: "#111827" },
-  body: { fontSize: 13, color: "#374151", marginTop: 10, lineHeight: 18 },
+  title: { fontSize: 16, fontWeight: "800", color: colors.gray[900] },
+  body: { fontSize: 13, color: colors.gray[700], marginTop: 10, lineHeight: 18 },
 });
 

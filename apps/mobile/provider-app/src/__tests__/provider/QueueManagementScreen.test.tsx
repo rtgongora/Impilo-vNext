@@ -5,7 +5,10 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
   Screen: ({ children }: any) => children,
   Header: ({ title }: any) => title,
   Card: ({ children }: any) => children,
@@ -13,7 +16,8 @@ vi.mock("@impilo/mobile-design-system", () => ({
   Button: ({ title, onPress }: any) => null,
   Badge: ({ children }: any) => children,
   LoadingSpinner: () => null,
-}));
+  };
+});
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: vi.fn().mockReturnValue({ data: [], isLoading: false }),

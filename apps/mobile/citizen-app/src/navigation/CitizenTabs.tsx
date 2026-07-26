@@ -8,7 +8,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TabBar, type TabItem } from "@impilo/mobile-design-system";
+import { TabBar, type TabItem, colors } from "@impilo/mobile-design-system";
 import { useAppStore } from "../stores/appStore";
 import type { CitizenTab } from "../types";
 
@@ -35,7 +35,7 @@ const TAB_SCREENS: Record<CitizenTab, React.FC> = {
 };
 
 function tabIcon(name: string, isActive: boolean): React.ReactNode {
-  const color = isActive ? ACCENT : "#9CA3AF";
+  const color = isActive ? ACCENT : colors.gray[400];
   return <Ionicons name={name as never} size={22} color={color} />;
 }
 

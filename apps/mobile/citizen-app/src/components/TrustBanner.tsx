@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchAssuranceStatus } from "../services/assuranceService";
+import { colors } from "@impilo/mobile-design-system";
 
 /**
  * Dashboard trust banner (G-CZO-05) — the mobile counterpart of the web
@@ -28,7 +29,7 @@ const COPY_BY_LEVEL: Record<string, BannerCopy> = {
     subtitle: "Verify your identity to unlock your health records.",
     border: "#FCD34D",
     bg: "#FFFBEB",
-    fg: "#92400E",
+    fg: colors.ui.warning.text,
     icon: "shield-outline",
   },
   LOA2: {

@@ -3,7 +3,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
-import { Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Button, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchDevices, pairDevice, syncDevice } from "../../services/monitoringService";
 import { useAppStore } from "../../stores/appStore";
@@ -129,22 +129,22 @@ export function MonitoringSection() {
 const styles = StyleSheet.create({
   container: { gap: 12 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
   addLink: { color: "#2563EB", fontSize: 14, fontWeight: "600" },
-  form: { gap: 8, backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16 },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
+  form: { gap: 8, backgroundColor: colors.gray[50], borderRadius: 12, padding: 16 },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  chip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, backgroundColor: "#E5E7EB" },
+  chip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, backgroundColor: colors.gray[200] },
   activeChip: { backgroundColor: "#2563EB" },
-  chipText: { fontSize: 10, color: "#6B7280" },
+  chipText: { fontSize: 10, color: colors.gray[500] },
   activeChipText: { color: "#FFF" },
   empty: { alignItems: "center", paddingVertical: 32 },
-  emptyText: { fontSize: 15, fontWeight: "600", color: "#374151" },
-  emptyHint: { fontSize: 13, color: "#9CA3AF" },
+  emptyText: { fontSize: 15, fontWeight: "600", color: colors.gray[700] },
+  emptyHint: { fontSize: 13, color: colors.gray[400] },
   deviceCardWrap: { gap: 8 },
-  deviceCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16 },
-  deviceName: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  deviceMeta: { fontSize: 12, color: "#6B7280" },
+  deviceCard: { flexDirection: "row", alignItems: "center", backgroundColor: colors.gray[50], borderRadius: 12, padding: 16 },
+  deviceName: { fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  deviceMeta: { fontSize: 12, color: colors.gray[500] },
   syncTime: { fontSize: 11, color: "#2563EB", marginTop: 2 },
   syncButton: { backgroundColor: "#2563EB", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   syncText: { color: "#FFF", fontSize: 13, fontWeight: "600" },

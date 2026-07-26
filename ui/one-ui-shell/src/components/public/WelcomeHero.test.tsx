@@ -1,7 +1,24 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiClient } from "@/lib/api-client";
 import { classifyPublicIntent, WelcomeHero } from "./WelcomeHero";
+
+/**
+ * The hero renders two search landmarks — the Nompilo ask box here, and the directory search in
+ * HeroDiscoverySurface — so bare getByRole("search") / getByRole("searchbox") queries are both
+ * ambiguous. Select by accessible name rather than by index: an index would silently start
+ * testing the other form if the render order ever changed, and these cases are specifically about
+ * the Nompilo guidance path.
+ */
+const NOMPILO_FORM_LABEL = "Ask Nompilo about health, services or support";
+
+function nompiloForm(): HTMLElement {
+  return screen.getByRole("search", { name: NOMPILO_FORM_LABEL });
+}
+
+function nompiloAskBox(): HTMLElement {
+  return within(nompiloForm()).getByRole("searchbox");
+}
 
 const push = vi.fn();
 
@@ -40,6 +57,7 @@ describe("WelcomeHero", () => {
     expect(
       screen.getByRole("heading", { name: "How can Impilo help you today?" }),
     ).toBeInTheDocument();
+    // Label is "Get care" since the landing redesign; the destination is what this asserts.
     expect(screen.getByRole("link", { name: "Get care" })).toHaveAttribute(
       "href",
       "/welcome/find-care",
@@ -49,7 +67,10 @@ describe("WelcomeHero", () => {
       "/welcome/emergency",
     );
     expect(screen.getByRole("link", { name: "My Impilo" })).toBeInTheDocument();
-    expect(screen.getByText(/without signing in/i)).toBeInTheDocument();
+    // The "you don't need an account" promise moved into the continuity block, which now
+    // always renders — previously a first-time visitor saw nothing where it belongs.
+    expect(screen.getByTestId("hero-continuity")).toBeInTheDocument();
+    expect(screen.getByText(/without an account/i)).toBeInTheDocument();
   });
 
   it("routes safety-critical intent immediately without waiting for Nompilo", () => {
@@ -73,10 +94,10 @@ describe("WelcomeHero", () => {
     });
     render(<WelcomeHero />);
 
-    fireEvent.change(screen.getByLabelText("Ask Nompilo"), {
+    fireEvent.change(nompiloAskBox(), {
       target: { value: "Where can I get help for anxiety?" },
     });
-    fireEvent.submit(screen.getByRole("search", { name: /ask nompilo/i }));
+    fireEvent.submit(nompiloForm());
 
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith("/internal/v1/public/gateway/guidance/ask", {
@@ -91,10 +112,10 @@ describe("WelcomeHero", () => {
     post.mockRejectedValue({ status: 502 });
     render(<WelcomeHero />);
 
-    fireEvent.change(screen.getByLabelText("Ask Nompilo"), {
+    fireEvent.change(nompiloAskBox(), {
       target: { value: "I need a clinic open now" },
     });
-    fireEvent.submit(screen.getByRole("search", { name: /ask nompilo/i }));
+    fireEvent.submit(nompiloForm());
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/temporarily unavailable/i);
     expect(screen.getByRole("link", { name: "Find care" })).toHaveAttribute(

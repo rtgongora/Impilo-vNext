@@ -3,18 +3,7 @@
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  CardHeader,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, CardHeader, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchMyAvailability, type VashandiAvailabilityRow } from "../../services/vashandiService";
 import { fetchSessionExperienceContract } from "../../services/sessionExperienceService";
 
@@ -122,9 +111,9 @@ export function VashandiAvailabilityScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#111827", marginBottom: 8 },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: colors.gray[900], marginBottom: 8 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
-  title: { fontSize: 14, fontWeight: "600", color: "#111827", textTransform: "capitalize", flex: 1 },
-  meta: { fontSize: 13, color: "#6B7280", marginTop: 4 },
+  title: { fontSize: 14, fontWeight: "600", color: colors.gray[900], textTransform: "capitalize", flex: 1 },
+  meta: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
   footer: { marginTop: 16, marginBottom: 32 },
 });

@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchClubs, joinClub } from "../../services/clubsService";
 import { useAppStore } from "../../stores/appStore";
@@ -50,15 +50,15 @@ export function ClubsScreen() {
 
 const styles = StyleSheet.create({
   container: { gap: 12 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  card: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 8 },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  card: { backgroundColor: colors.gray[50], borderRadius: 12, padding: 16, gap: 8 },
   cardHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
   icon: { fontSize: 28 },
-  clubName: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  clubMeta: { fontSize: 12, color: "#6B7280" },
-  clubDesc: { fontSize: 13, color: "#4B5563" },
-  schedule: { fontSize: 12, color: "#6B7280" },
-  location: { fontSize: 12, color: "#6B7280" },
+  clubName: { fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  clubMeta: { fontSize: 12, color: colors.gray[500] },
+  clubDesc: { fontSize: 13, color: colors.gray[600] },
+  schedule: { fontSize: 12, color: colors.gray[500] },
+  location: { fontSize: 12, color: colors.gray[500] },
   joinButton: { backgroundColor: "#2563EB", borderRadius: 8, paddingVertical: 10, alignItems: "center" },
   joinText: { color: "#FFF", fontSize: 14, fontWeight: "600" },
 });

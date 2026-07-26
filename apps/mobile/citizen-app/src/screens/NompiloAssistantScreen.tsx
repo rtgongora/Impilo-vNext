@@ -21,7 +21,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Badge, Button } from "@impilo/mobile-design-system";
+import { Badge, Button, colors } from "@impilo/mobile-design-system";
 import { useNompilo, NOMPILO_DISCLAIMER } from "@impilo/mobile-nompilo";
 import { useAppStore } from "../stores/appStore";
 
@@ -172,13 +172,13 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 12, color: "#64748B" },
   bannerWarn: {
     marginTop: 8,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.ui.warning.light,
     borderColor: "#FCD34D",
     borderWidth: 1,
     borderRadius: 10,
     padding: 8,
   },
-  bannerWarnText: { fontSize: 12, color: "#92400E" },
+  bannerWarnText: { fontSize: 12, color: colors.ui.warning.text },
   chat: { flex: 1 },
   chatContent: { paddingVertical: 12, gap: 8 },
   bubble: {
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     borderColor: "#A7F3D0",
     borderWidth: 1,
   },
-  suggestionText: { fontSize: 12, color: "#065F46", fontWeight: "600" },
+  suggestionText: { fontSize: 12, color: colors.ui.success.text, fontWeight: "600" },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -9,6 +9,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { EquipmentSearchScreen } from "./EquipmentSearchScreen";
 import { MaintenanceTasksScreen } from "./MaintenanceTasksScreen";
 import { ReportEquipmentFaultScreen } from "./ReportEquipmentFaultScreen";
+import { colors } from "@impilo/mobile-design-system";
 
 type Tab = "search" | "maintenance" | "fault";
 
@@ -51,7 +52,7 @@ const styles = StyleSheet.create({
   tab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: "#f3f4f6", marginRight: 8 },
   tabActive: { backgroundColor: "#0f766e" },
   tabDisabled: { opacity: 0.5 },
-  tabLabel: { color: "#374151", fontWeight: "600" },
+  tabLabel: { color: colors.gray[700], fontWeight: "600" },
   tabLabelActive: { color: "#ffffff" },
   body: { flex: 1 },
   hint: { padding: 16, color: "#6b7280" },

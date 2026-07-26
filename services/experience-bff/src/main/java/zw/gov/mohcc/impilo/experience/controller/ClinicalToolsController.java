@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -49,8 +50,12 @@ public class ClinicalToolsController {
             Object data = result != null && result.has("data") ? result.get("data") : (result != null ? result : new Object[0]);
             return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId)));
         } catch (Exception e) {
-            log.warn("Document list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Document list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "documents_unavailable",
+                    "message", "Documents could not be retrieved. Do not treat this as an absence of documents."));
         }
     }
 
@@ -127,9 +132,12 @@ public class ClinicalToolsController {
                     "data", pending != null ? pending : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Offline reconcile pending list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty pending list reads as "everything captured offline has been reconciled",
+            // which is how offline-captured clinical data goes missing without anyone noticing.
+            log.error("Offline reconcile pending list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "offline_reconcile_queue_unavailable",
+                    "message", "Pending offline batches could not be retrieved. Do not treat this as an empty reconcile queue.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

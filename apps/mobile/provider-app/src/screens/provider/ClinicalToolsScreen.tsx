@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, Badge, LoadingSpinner, DictationAssistButton } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, DictationAssistButton, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   checkDrugInteractions, fetchOrderSets, fetchCarePlans, createCarePlan,
@@ -340,7 +340,7 @@ function CDSPanel() {
       <Text style={styles.sectionTitle}>Clinical Decision Support</Text>
       <Button title="Evaluate CDS Rules" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
       {mutation.isSuccess && (mutation.data as Array<Record<string, unknown>>).map((alert, i) => (
-        <View key={i} style={[styles.card, { borderLeftColor: alert.level === "WARNING" ? "#F59E0B" : "#3B82F6", borderLeftWidth: 4 }]}>
+        <View key={i} style={[styles.card, { borderLeftColor: alert.level === "WARNING" ? colors.ui.warning.main : "#3B82F6", borderLeftWidth: 4 }]}>
           <Badge label={String(alert.level)} variant={alert.level === "WARNING" ? "warning" : "info"} />
           <Text style={styles.cardTitle}>{String(alert.message)}</Text>
           <Text style={styles.cardMeta}>Source: {String(alert.source)}</Text>
@@ -410,11 +410,11 @@ function SpecialtyPanel() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: { borderBottomWidth: 1, borderBottomColor: "#E5E7EB", paddingHorizontal: 8 },
+  tabBar: { borderBottomWidth: 1, borderBottomColor: colors.gray[200], paddingHorizontal: 8 },
   tabBarContent: { flexDirection: "row", gap: 4, paddingVertical: 4 },
-  tab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, backgroundColor: "#F3F4F6" },
+  tab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, backgroundColor: colors.gray[100] },
   activeTab: { backgroundColor: "#2563EB" },
-  tabText: { fontSize: 12, color: "#6B7280", fontWeight: "500" },
+  tabText: { fontSize: 12, color: colors.gray[500], fontWeight: "500" },
   activeTabText: { color: "#FFF" },
   content: { flex: 1 },
   contentPad: { padding: 16, paddingBottom: 32 },
@@ -425,17 +425,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  label: { fontSize: 13, fontWeight: "600", color: "#374151" },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
-  textArea: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 12, fontSize: 14, minHeight: 80, textAlignVertical: "top" },
-  card: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12, gap: 4 },
-  cardTitle: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  cardMeta: { fontSize: 12, color: "#6B7280" },
-  result: { fontSize: 13, color: "#22C55E", fontWeight: "500" },
-  empty: { fontSize: 13, color: "#9CA3AF", textAlign: "center", paddingVertical: 20 },
-  hint: { fontSize: 13, color: "#6B7280" },
-  scannerPlaceholder: { backgroundColor: "#1F2937", borderRadius: 12, padding: 24, alignItems: "center", gap: 4 },
-  scannerText: { color: "#9CA3AF", fontSize: 14 },
-  scannerHint: { color: "#6B7280", fontSize: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  label: { fontSize: 13, fontWeight: "600", color: colors.gray[700] },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
+  textArea: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 12, fontSize: 14, minHeight: 80, textAlignVertical: "top" },
+  card: { backgroundColor: colors.gray[50], borderRadius: 12, padding: 12, gap: 4 },
+  cardTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  cardMeta: { fontSize: 12, color: colors.gray[500] },
+  result: { fontSize: 13, color: colors.ui.success.main, fontWeight: "500" },
+  empty: { fontSize: 13, color: colors.gray[400], textAlign: "center", paddingVertical: 20 },
+  hint: { fontSize: 13, color: colors.gray[500] },
+  scannerPlaceholder: { backgroundColor: colors.gray[800], borderRadius: 12, padding: 24, alignItems: "center", gap: 4 },
+  scannerText: { color: colors.gray[400], fontSize: 14 },
+  scannerHint: { color: colors.gray[500], fontSize: 12 },
 });

@@ -12,17 +12,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchSocialFeed,
   reactToSocialPost,
@@ -251,10 +241,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarText: { color: "#fff", fontWeight: "600" },
-  authorName: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  metaText: { fontSize: 11, color: "#6B7280" },
-  feedItemTitle: { fontSize: 16, fontWeight: "600", color: "#111827", marginTop: 4 },
-  feedItemBody: { fontSize: 14, color: "#374151", lineHeight: 21, marginTop: 4 },
+  authorName: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  metaText: { fontSize: 11, color: colors.gray[500] },
+  feedItemTitle: { fontSize: 16, fontWeight: "600", color: colors.gray[900], marginTop: 4 },
+  feedItemBody: { fontSize: 14, color: colors.gray[700], lineHeight: 21, marginTop: 4 },
   topicRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
   topic: { paddingHorizontal: 8, paddingVertical: 2, backgroundColor: "#EEF2FF", borderRadius: 999 },
   topicText: { fontSize: 11, color: "#3730A3" },
@@ -264,8 +254,8 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: colors.gray[100],
     paddingTop: 8,
   },
-  commentsText: { fontSize: 12, color: "#6B7280", flex: 1 },
+  commentsText: { fontSize: 12, color: colors.gray[500], flex: 1 },
 });

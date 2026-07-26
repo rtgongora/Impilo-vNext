@@ -100,7 +100,7 @@ export default function ResultsPage() {
   const facility = useFacilityStore((state) => state.facility);
   const queryClient = useQueryClient();
   const { data: encountersData } = useEncounters(patientId);
-  const { data: ordersData, isLoading } = useLabOrders(patientId);
+  const { data: ordersData, isLoading, isError: ordersUnavailable } = useLabOrders(patientId);
   const [acknowledgingId, setAcknowledgingId] = useState<string | null>(null);
 
   const activeEncounter = (encountersData?.data ?? []).find(
@@ -205,7 +205,17 @@ export default function ResultsPage() {
               </p>
             </div>
 
-            {resultOrders.length === 0 ? (
+            {ordersUnavailable ? (
+              /* "No results available" would hide an unreviewed critical result behind an
+                 outage. Say the list could not be read instead. */
+              <div className="rounded-lg border border-red-200 bg-red-50 p-12 text-center">
+                <TestTube2 className="mx-auto mb-3 h-10 w-10 text-red-500" />
+                <p className="text-sm font-medium text-red-700">
+                  Results could not be loaded. This is not a record that there are none —
+                  unreviewed results may exist.
+                </p>
+              </div>
+            ) : resultOrders.length === 0 ? (
               <div className="rounded-lg border border-border bg-card p-12 text-center">
                 <TestTube2 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">No results available</p>

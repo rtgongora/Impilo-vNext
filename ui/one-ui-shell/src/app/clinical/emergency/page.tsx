@@ -57,7 +57,11 @@ export default function EmergencyDepartmentPage() {
   const performedBy = user?.id ?? "";
   const performedByName = user?.displayName ?? performedBy;
 
-  const { data: edVisits = [], refetch: refetchEd } = useEdVisits(facility?.id);
+  // isError is load-bearing here, not decoration. This list IS the ED trackboard: with only
+  // `data: edVisits = []`, a failed read rendered "No active ED visits." — telling a coordinator
+  // the department is empty. An empty board is the one claim on this screen that stops someone
+  // looking, and it is exactly the claim a broken read produced.
+  const { data: edVisits = [], isError: edVisitsUnavailable, refetch: refetchEd } = useEdVisits(facility?.id);
   const openEdVisit = useOpenEdVisit();
   const [newPatient, setNewPatient] = useState<PatientHit | null>(null);
   const [newComplaint, setNewComplaint] = useState("");
@@ -185,7 +189,12 @@ export default function EmergencyDepartmentPage() {
               </button>
             </form>
             <ul className="mt-4 space-y-2 text-sm">
-              {edVisits.length === 0 ? (
+              {edVisitsUnavailable ? (
+                <li className="font-medium text-red-700" data-testid="ed-visits-unavailable">
+                  ED trackboard unavailable — this is not an empty department. Patients may be
+                  waiting who are not shown. Retry, or work from the paper board.
+                </li>
+              ) : edVisits.length === 0 ? (
                 <li className="text-muted-foreground">No active ED visits.</li>
               ) : edVisits.map((v) => (
                 <li key={String(v.visit_id)} className="flex items-center justify-between rounded border bg-card px-3 py-2">

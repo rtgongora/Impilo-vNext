@@ -39,7 +39,19 @@ public record ClassificationTable(
         List<String> sourceRefs,
         List<TestCase> testCases) {
 
+    /**
+     * True when this table's age window covers the patient.
+     *
+     * <p>A table that declares no age window applies to everyone, including a patient of unknown
+     * age — it never claimed to be about age. One that declares a window and is given no age matches
+     * nothing, because there is no way to tell whether the window covers them. Robson classification
+     * is the case that forced the distinction: its ten groups turn on parity, plurality,
+     * presentation, gestation and onset of labour, and never on how old the woman is.
+     */
     public boolean appliesToAge(Integer ageDays) {
+        if (ageMinDays == null && ageMaxDays == null) {
+            return true;
+        }
         if (ageDays == null) {
             return false;
         }
@@ -66,7 +78,8 @@ public record ClassificationTable(
             String action,
             List<String> treatments,
             boolean referralRequired,
-            boolean urgentReferral) {
+            boolean urgentReferral,
+            zw.gov.mohcc.impilo.clinical.rules.tabular.DakProvenance provenance) {
 
         public boolean isDefault() {
             return logic == null || logic.isNull();

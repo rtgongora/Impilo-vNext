@@ -3,18 +3,7 @@
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  CardHeader,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, CardHeader, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useAppStore } from "../../stores/appStore";
 import {
   fetchMyAttendance,
@@ -149,9 +138,9 @@ export function VashandiFacilityStaffScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16 },
-  hint: { fontSize: 13, color: "#6B7280", lineHeight: 18 },
+  hint: { fontSize: 13, color: colors.gray[500], lineHeight: 18 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
-  title: { fontSize: 14, fontWeight: "600", color: "#111827", textTransform: "capitalize", flex: 1 },
-  meta: { fontSize: 13, color: "#6B7280", marginTop: 4 },
+  title: { fontSize: 14, fontWeight: "600", color: colors.gray[900], textTransform: "capitalize", flex: 1 },
+  meta: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
   footer: { marginTop: 16, marginBottom: 32 },
 });

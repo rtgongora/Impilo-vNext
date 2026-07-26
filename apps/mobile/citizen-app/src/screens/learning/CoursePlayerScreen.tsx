@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardBody, Header, LoadingSpinner, Screen } from "@impilo/mobile-design-system";
+import { Card, CardBody, Header, LoadingSpinner, Screen, colors } from "@impilo/mobile-design-system";
 import {
   fetchCourseVideoLessons,
   fetchLessonMediaAsset,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   videoWrap: { borderRadius: 12, overflow: "hidden", backgroundColor: "#000" },
   video: { width: "100%", aspectRatio: 16 / 9 },
   section: { gap: 6, marginTop: 4 },
-  sectionLabel: { fontSize: 12, fontWeight: "700", color: "#6B7280", textTransform: "uppercase" },
+  sectionLabel: { fontSize: 12, fontWeight: "700", color: colors.gray[500], textTransform: "uppercase" },
   rowCard: { marginBottom: 6 },
   rowCardActive: { marginBottom: 6, borderColor: "#047857", borderWidth: 1 },
   rowTitle: { fontSize: 13, fontWeight: "600", color: "#0F172A" },
@@ -320,5 +320,5 @@ const styles = StyleSheet.create({
   progressText: { fontSize: 12, color: "#334155" },
   completedText: { fontSize: 12, fontWeight: "600", color: "#047857" },
   transcript: { fontSize: 12, color: "#334155", lineHeight: 18 },
-  emptyText: { fontSize: 13, color: "#6B7280" },
+  emptyText: { fontSize: 13, color: colors.gray[500] },
 });

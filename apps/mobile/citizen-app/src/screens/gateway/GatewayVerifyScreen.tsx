@@ -6,18 +6,7 @@
 import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  TextField,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, TextField, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   verifyPractitioner,
   searchPublicFacilities,
@@ -259,18 +248,18 @@ function Field({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   tabRow: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 8 },
   body: { padding: 16, gap: 12 },
-  help: { fontSize: 13, color: "#6B7280", lineHeight: 19 },
+  help: { fontSize: 13, color: colors.gray[500], lineHeight: 19 },
   searchRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   searchField: { flex: 1 },
   resultHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
-  resultName: { fontSize: 16, fontWeight: "800", color: "#111827", flexShrink: 1, paddingRight: 8 },
-  field: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 6, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
-  fieldLabel: { fontSize: 12, color: "#6B7280" },
-  fieldValue: { fontSize: 13, fontWeight: "600", color: "#111827", flexShrink: 1, textAlign: "right", paddingLeft: 12 },
+  resultName: { fontSize: 16, fontWeight: "800", color: colors.gray[900], flexShrink: 1, paddingRight: 8 },
+  field: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 6, borderTopWidth: 1, borderTopColor: colors.gray[100] },
+  fieldLabel: { fontSize: 12, color: colors.gray[500] },
+  fieldValue: { fontSize: 13, fontWeight: "600", color: colors.gray[900], flexShrink: 1, textAlign: "right", paddingLeft: 12 },
   facilityRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 12 },
-  facilityRowBorder: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-  facilityName: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  facilityMeta: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  facilityRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
+  facilityName: { fontSize: 15, fontWeight: "700", color: colors.gray[900] },
+  facilityMeta: { fontSize: 12, color: colors.gray[500], marginTop: 2 },
   backRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   backText: { color: GREEN, fontSize: 14, fontWeight: "600" },
 });

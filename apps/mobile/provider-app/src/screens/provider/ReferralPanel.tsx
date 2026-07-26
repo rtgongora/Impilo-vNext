@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Card, CardBody, Button, TextField, Select, Badge, ErrorState } from "@impilo/mobile-design-system";
+import { Card, CardBody, Button, TextField, Select, Badge, ErrorState, colors } from "@impilo/mobile-design-system";
 import { createReferral, getReferralsForEncounter, searchReferralFacilities } from "../../services/referralService";
 import { encounterStore, useEncounterStore } from "../../stores/encounterStore";
 import { useAppStore } from "../../stores/appStore";
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
   helper: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 8,
   },
   candidateList: {
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   },
   reason: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   badgeRow: {
     flexDirection: "row",

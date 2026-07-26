@@ -5,7 +5,7 @@
  */
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, LayoutAnimation, Platform, UIManager } from "react-native";
-import { Screen, Header, LoadingSpinner, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, LoadingSpinner, Badge, colors } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useEncounterStore } from "../../stores/encounterStore";
@@ -21,13 +21,13 @@ interface VitalConfig {
 }
 
 const VITAL_CONFIGS: VitalConfig[] = [
-  { id: "HEART_RATE", label: "Heart Rate", unit: "bpm", normalMin: 60, normalMax: 100, criticalMin: 40, criticalMax: 150, color: "#DC2626", icon: "❤️" },
+  { id: "HEART_RATE", label: "Heart Rate", unit: "bpm", normalMin: 60, normalMax: 100, criticalMin: 40, criticalMax: 150, color: colors.ui.error.main, icon: "❤️" },
   { id: "BLOOD_PRESSURE_SYS", label: "Systolic BP", unit: "mmHg", normalMin: 90, normalMax: 140, criticalMin: 70, criticalMax: 200, color: "#F97316", icon: "🩸" },
-  { id: "BLOOD_PRESSURE_DIA", label: "Diastolic BP", unit: "mmHg", normalMin: 60, normalMax: 90, criticalMin: 40, criticalMax: 120, color: "#F59E0B", icon: "🩸" },
+  { id: "BLOOD_PRESSURE_DIA", label: "Diastolic BP", unit: "mmHg", normalMin: 60, normalMax: 90, criticalMin: 40, criticalMax: 120, color: colors.ui.warning.main, icon: "🩸" },
   { id: "TEMPERATURE", label: "Temperature", unit: "°C", normalMin: 36.1, normalMax: 38.0, criticalMin: 35.0, criticalMax: 40.0, color: "#EAB308", icon: "🌡️" },
   { id: "RESPIRATORY_RATE", label: "Resp. Rate", unit: "/min", normalMin: 12, normalMax: 20, criticalMin: 8, criticalMax: 30, color: "#8B5CF6", icon: "💨" },
   { id: "OXYGEN_SATURATION", label: "SpO₂", unit: "%", normalMin: 95, normalMax: 100, criticalMin: 88, criticalMax: 100, color: "#3B82F6", icon: "🫁" },
-  { id: "BLOOD_GLUCOSE", label: "Blood Glucose", unit: "mmol/L", normalMin: 3.9, normalMax: 7.8, criticalMin: 2.5, criticalMax: 20.0, color: "#22C55E", icon: "🍬" },
+  { id: "BLOOD_GLUCOSE", label: "Blood Glucose", unit: "mmol/L", normalMin: 3.9, normalMax: 7.8, criticalMin: 2.5, criticalMax: 20.0, color: colors.ui.success.main, icon: "🍬" },
 ];
 
 function getStatus(value: number, config: VitalConfig): "NORMAL" | "WARNING" | "CRITICAL" {
@@ -45,9 +45,9 @@ function getTrend(values: number[]): "RISING" | "FALLING" | "STABLE" {
   return "STABLE";
 }
 
-const STATUS_COLORS = { NORMAL: "#22C55E", WARNING: "#F59E0B", CRITICAL: "#DC2626" };
+const STATUS_COLORS = { NORMAL: colors.ui.success.main, WARNING: colors.ui.warning.main, CRITICAL: colors.ui.error.main };
 const TREND_ICONS = { RISING: "↑", FALLING: "↓", STABLE: "→" };
-const TREND_COLORS = { RISING: "#DC2626", FALLING: "#3B82F6", STABLE: "#6B7280" };
+const TREND_COLORS = { RISING: colors.ui.error.main, FALLING: "#3B82F6", STABLE: colors.gray[500] };
 
 export function VitalsMonitorScreen() {
   const { activeEncounter } = useEncounterStore();
@@ -217,8 +217,8 @@ function VitalCard({ config, value, lastUpdated, status, trend, sparklineValues,
         </View>
       )}
       {status === "WARNING" && (
-        <View style={[st.alertBanner, { backgroundColor: "#FEF3C7" }]}>
-          <Text style={[st.alertText, { color: "#92400E" }]}>⚡ Outside normal range</Text>
+        <View style={[st.alertBanner, { backgroundColor: colors.ui.warning.light }]}>
+          <Text style={[st.alertText, { color: colors.ui.warning.text }]}>⚡ Outside normal range</Text>
         </View>
       )}
     </Animated.View>
@@ -228,31 +228,31 @@ function VitalCard({ config, value, lastUpdated, status, trend, sparklineValues,
 const st = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 12, gap: 8, paddingBottom: 32 },
-  toolbar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
-  hint: { fontSize: 11, color: "#9CA3AF" },
-  toggleBtn: { backgroundColor: "#F3F4F6", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 },
-  toggleText: { fontSize: 12, fontWeight: "600", color: "#374151" },
+  toolbar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray[200] },
+  hint: { fontSize: 11, color: colors.gray[400] },
+  toggleBtn: { backgroundColor: colors.gray[100], paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 },
+  toggleText: { fontSize: 12, fontWeight: "600", color: colors.gray[700] },
   grid: { gap: 10 },
   compactGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   compactCard: { width: "47%", backgroundColor: "#FFF", borderRadius: 12, padding: 12, alignItems: "center", borderWidth: 2, gap: 2 },
   compactIcon: { fontSize: 20 },
   compactValue: { fontSize: 24, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  compactUnit: { fontSize: 10, color: "#6B7280" },
-  compactLabel: { fontSize: 10, color: "#9CA3AF", textAlign: "center" },
+  compactUnit: { fontSize: 10, color: colors.gray[500] },
+  compactLabel: { fontSize: 10, color: colors.gray[400], textAlign: "center" },
   card: { backgroundColor: "#FFF", borderRadius: 14, padding: 14, borderWidth: 2, gap: 6 },
   cardHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   cardIcon: { fontSize: 20 },
-  cardLabel: { fontSize: 13, fontWeight: "600", color: "#111827" },
-  cardTime: { fontSize: 10, color: "#9CA3AF" },
+  cardLabel: { fontSize: 13, fontWeight: "600", color: colors.gray[900] },
+  cardTime: { fontSize: 10, color: colors.gray[400] },
   valueRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
   value: { fontSize: 36, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  unit: { fontSize: 14, color: "#6B7280" },
+  unit: { fontSize: 14, color: colors.gray[500] },
   trendBadge: { flexDirection: "row", alignItems: "center", gap: 2, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, marginLeft: "auto" },
   trendIcon: { fontSize: 16, fontWeight: "900" },
   trendText: { fontSize: 11, fontWeight: "600" },
   sparkContainer: { flexDirection: "row", alignItems: "flex-end", gap: 2, height: 36, paddingVertical: 2 },
   sparkBar: { flex: 1, borderRadius: 2, minWidth: 4 },
-  range: { fontSize: 10, color: "#9CA3AF" },
-  alertBanner: { backgroundColor: "#FEE2E2", borderRadius: 6, padding: 6, marginTop: 2 },
-  alertText: { fontSize: 11, fontWeight: "600", color: "#991B1B", textAlign: "center" },
+  range: { fontSize: 10, color: colors.gray[400] },
+  alertBanner: { backgroundColor: colors.ui.error.light, borderRadius: 6, padding: 6, marginTop: 2 },
+  alertText: { fontSize: 11, fontWeight: "600", color: colors.ui.error.text, textAlign: "center" },
 });

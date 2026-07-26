@@ -32,7 +32,7 @@ export function UtilityStrip() {
   const { facility } = useFacilityStore();
   const { workspace } = useWorkspaceStore();
 
-  const { data: cdsData } = useCDSAlerts();
+  const { data: cdsData, isError: cdsUnavailable } = useCDSAlerts();
   const activeCDSAlerts = cdsData?.data?.count ?? 0;
 
   return (
@@ -56,7 +56,17 @@ export function UtilityStrip() {
 
       {/* Right: CDS Alerts, Help, Workspace, User */}
       <div className="flex items-center gap-2">
-        {/* Active CDS Alerts */}
+        {/* Active CDS Alerts. An absent badge reads as "no alerts", so when the count cannot be
+            read we show an explicit unknown state rather than a silent all-clear. */}
+        {cdsUnavailable && (
+          <span
+            className="flex items-center gap-1 px-2 py-1 text-xs text-warning-foreground bg-warning-soft border border-warning/35 rounded-md"
+            title="The decision-support alert count could not be read. This is not an all-clear."
+          >
+            <Activity className="h-3.5 w-3.5" />
+            <span className="font-medium">Alerts unavailable</span>
+          </span>
+        )}
         {activeCDSAlerts > 0 && (
           <button
             className="relative flex items-center gap-1 px-2 py-1 text-xs text-warning-foreground bg-warning-soft border border-warning/35 rounded-md hover:bg-amber-100 transition-colors"

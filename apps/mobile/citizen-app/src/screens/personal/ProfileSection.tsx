@@ -1,15 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Card,
-  CardBody,
-  Button,
-  TextField,
-  Avatar,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardBody, Button, TextField, Avatar, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useAppStore, appStore } from "../../stores/appStore";
 import { updateProfile } from "../../services/profileService";
 
@@ -70,19 +62,19 @@ export function ProfileSection() {
         <View style={styles.metaChips}>
           {profile.dateOfBirth ? (
             <View style={styles.metaChip}>
-              <Ionicons name="calendar-outline" size={12} color="#6B7280" />
+              <Ionicons name="calendar-outline" size={12} color={colors.gray[500]} />
               <Text style={styles.metaChipText}>{profile.dateOfBirth}</Text>
             </View>
           ) : null}
           {profile.sex ? (
             <View style={styles.metaChip}>
-              <Ionicons name="body-outline" size={12} color="#6B7280" />
+              <Ionicons name="body-outline" size={12} color={colors.gray[500]} />
               <Text style={styles.metaChipText}>{profile.sex}</Text>
             </View>
           ) : null}
           {profile.nationalId ? (
             <View style={styles.metaChip}>
-              <Ionicons name="card-outline" size={12} color="#6B7280" />
+              <Ionicons name="card-outline" size={12} color={colors.gray[500]} />
               <Text style={styles.metaChipText}>{profile.nationalId}</Text>
             </View>
           ) : null}
@@ -181,14 +173,14 @@ const styles = StyleSheet.create({
   },
   avatarRing: {
     borderWidth: 3,
-    borderColor: "#D1FAE5",
+    borderColor: colors.ui.success.light,
     borderRadius: 999,
     padding: 3,
   },
   profileName: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginTop: 4,
   },
   metaChips: {
@@ -202,14 +194,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     borderRadius: 12,
     paddingVertical: 4,
     paddingHorizontal: 10,
   },
   metaChipText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
   },
   formCard: {
@@ -226,7 +218,7 @@ const styles = StyleSheet.create({
   formSectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
@@ -255,7 +247,7 @@ const styles = StyleSheet.create({
   infoSectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
@@ -268,13 +260,13 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.gray[100],
   },
   infoIconCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.ui.success.light,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -285,13 +277,13 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
   infoValue: {
     fontSize: 14,
-    color: "#111827",
+    color: colors.gray[900],
     fontWeight: "500",
     marginTop: 1,
   },

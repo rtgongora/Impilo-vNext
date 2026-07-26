@@ -145,7 +145,9 @@ public class ClassificationContentLoader {
                 action,
                 stringList(node.path("treatments")),
                 node.path("referralRequired").asBoolean(false),
-                node.path("urgentReferral").asBoolean(false));
+                node.path("urgentReferral").asBoolean(false),
+                zw.gov.mohcc.impilo.clinical.rules.tabular.DakProvenance.from(
+                        node.get("dakRef"), node.get("adaptation")));
     }
 
     private List<ClassificationTable.TestCase> parseTestCases(JsonNode node) {

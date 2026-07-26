@@ -11,36 +11,90 @@ import {
   Alert,
 } from "react-native";
 import type { SpecialtyWorkspaceDef } from "../../data/specialtyWorkspaces";
-import { DictationAssistButton } from "@impilo/mobile-design-system";
+import { DictationAssistButton, colors } from "@impilo/mobile-design-system";
+import { PartographWorkspace, CtgWorkspace } from "./MaternityWorkspaces";
 
 type Props = {
   workspace: SpecialtyWorkspaceDef;
   onBack: () => void;
 };
 
-type ToolFormKind = "rule9" | "bsa" | "parkland" | "ktv" | "notes" | "checklist" | "sum" | "soon";
+type ToolFormKind =
+  | "bsa"
+  | "ktv"
+  | "notes"
+  | "checklist"
+  | "sum"
+  | "soon"
+  | "withheld"
+  | "partograph"
+  | "ctg";
 
-function formKindForTool(toolName: string, index: number): ToolFormKind {
-  if (index >= 4) return "soon";
+/**
+ * Burns arithmetic is withheld from this app.
+ *
+ * A Rule-of-9s form and a Parkland form used to live here, and both produced
+ * plausible-looking numbers that were clinically wrong:
+ *
+ *  - Rule of 9s used fixed *adult* region percentages with no age adjustment. Paediatric
+ *    body proportions differ substantially (a child's head is a far larger share of body
+ *    surface), which is the reason Lund–Browder is age-banded — and this app is used for
+ *    children.
+ *  - Parkland rendered `4 ml × kg × %TBSA` as a flat 24-hour total. Parkland is clocked
+ *    from the **time of injury, not arrival**, and is given as half over the first 8 hours
+ *    from injury and half over the following 16. The form had no clock input and no split,
+ *    so a patient arriving three hours after a burn — who has already spent three hours of
+ *    the first-half window — was shown a number wrong in the under-resuscitating direction.
+ *  - Neither persisted. Rule of 9s "saved" with `Alert.alert("Saved", …recorded locally)`,
+ *    telling the clinician it had been recorded while recording nothing.
+ *
+ * Acute burns %TBSA estimation and fluid resuscitation belong to the Emergency,
+ * Resuscitation and Acute Care pack and land in `libs/emergency-domain`
+ * (`docs/registry/iatg-emergency-leases.md` §5b), age-banded through
+ * `libs/paediatric-domain` using the `bandKey` convention rather than overloading
+ * `ageDays`. This app consumes that governed implementation once it exists; it does not
+ * grow a fourth one. Do not restore these forms by adding a save to the old arithmetic.
+ */
+const WITHHELD_BURNS_ARITHMETIC = [
+  "rule of 9",
+  "rule of nine",
+  "lund",
+  "tbsa",
+  "parkland",
+  "fluid resuscitation",
+  "fluid calculator",
+];
+
+/**
+ * Workspaces where the generic `sum` fallback must not stand in for a clinical tool.
+ * In Burns it labelled a two-number adder "Graft Planning", which reads as a clinical
+ * result. These fall through to the honest "not implemented" state instead.
+ */
+const NO_GENERIC_CALCULATOR_WORKSPACES = new Set(["burns"]);
+
+/**
+ * Governed maternal instruments, backed by pct-service V056 and the RMNP pack's mobile contract
+ * (docs/clinical/rmnp/partograph-ctg-mobile-contract.md). Matched by name rather than index —
+ * unlike the fallbacks below, these two no longer depend on where they happen to sit in
+ * `specialtyWorkspaces.ts`'s tool array, so reordering that array cannot silently regress them
+ * back to the generic notes box.
+ */
+const GOVERNED_MATERNAL_INSTRUMENTS: Record<string, ToolFormKind> = {
+  partograph: "partograph",
+  "ctg interpretation": "ctg",
+};
+
+export function formKindForTool(toolName: string, index: number, workspaceId: string): ToolFormKind {
   const t = toolName.toLowerCase();
-  if (t.includes("rule of 9")) return "rule9";
+  if (t in GOVERNED_MATERNAL_INSTRUMENTS) return GOVERNED_MATERNAL_INSTRUMENTS[t];
+  if (WITHHELD_BURNS_ARITHMETIC.some((token) => t.includes(token))) return "withheld";
+  if (index >= 4) return "soon";
   if (t.includes("bsa")) return "bsa";
-  if (t.includes("parkland")) return "parkland";
   if (t.includes("kt/v") || t.includes("ktv")) return "ktv";
   if (t.includes("checklist") || t.includes("pre-chemo")) return "checklist";
-  if (index === 3) return "sum";
+  if (index === 3) return NO_GENERIC_CALCULATOR_WORKSPACES.has(workspaceId) ? "soon" : "sum";
   return "notes";
 }
-
-const RULE9_REGIONS: { key: string; label: string; pct: number }[] = [
-  { key: "head", label: "Head / neck", pct: 9 },
-  { key: "ra", label: "Right arm", pct: 9 },
-  { key: "la", label: "Left arm", pct: 9 },
-  { key: "torso", label: "Chest / abdomen", pct: 18 },
-  { key: "back", label: "Back", pct: 18 },
-  { key: "rl", label: "Right leg", pct: 18 },
-  { key: "ll", label: "Left leg", pct: 18 },
-];
 
 export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
   const [modalTool, setModalTool] = useState<{ name: string; index: number } | null>(null);
@@ -82,12 +136,21 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
 
       <Text style={styles.sectionLabel}>Specialty tools</Text>
       <ScrollView style={styles.toolList} contentContainerStyle={{ paddingBottom: 24 }}>
-        {workspace.tools.map((tool, index) => (
-          <TouchableOpacity key={`${tool}-${index}`} style={styles.toolCard} onPress={() => setModalTool({ name: tool, index })}>
-            <Text style={styles.toolTitle}>{tool}</Text>
-            <Text style={styles.toolHint}>{index < 4 ? "Tap for workspace form" : "Coming soon overview"}</Text>
-          </TouchableOpacity>
-        ))}
+        {workspace.tools.map((tool, index) => {
+          const kind = formKindForTool(tool, index, workspace.id);
+          return (
+            <TouchableOpacity key={`${tool}-${index}`} style={styles.toolCard} onPress={() => setModalTool({ name: tool, index })}>
+              <Text style={styles.toolTitle}>{tool}</Text>
+              <Text style={[styles.toolHint, kind === "withheld" && styles.toolHintWithheld]}>
+                {kind === "withheld"
+                  ? "In development — Emergency pack W1"
+                  : kind === "soon"
+                    ? "Coming soon overview"
+                    : "Tap for workspace form"}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       <Modal visible={!!modalTool} animationType="slide" transparent onRequestClose={() => setModalTool(null)}>
@@ -95,6 +158,7 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
           <View style={styles.modalSheet}>
             {modalTool && (
               <ToolModalBody
+                workspaceId={workspace.id}
                 workspaceName={workspace.name}
                 toolName={modalTool.name}
                 toolIndex={modalTool.index}
@@ -109,17 +173,57 @@ export function SpecialtyWorkspacePanel({ workspace, onBack }: Props) {
 }
 
 function ToolModalBody({
+  workspaceId,
   workspaceName,
   toolName,
   toolIndex,
   onClose,
 }: {
+  workspaceId: string;
   workspaceName: string;
   toolName: string;
   toolIndex: number;
   onClose: () => void;
 }) {
-  const kind = formKindForTool(toolName, toolIndex);
+  const kind = formKindForTool(toolName, toolIndex, workspaceId);
+
+  if (kind === "withheld") {
+    return (
+      <>
+        <Text style={styles.modalTitle}>{toolName}</Text>
+        <Text style={styles.modalMeta}>{workspaceName}</Text>
+        <Text style={styles.withheldBadge}>Calculator withdrawn — do not use a remembered value</Text>
+        <ScrollView style={{ maxHeight: 320 }}>
+          <Text style={styles.modalDesc}>
+            This calculator has been removed because it produced numbers that looked right and were
+            not. The %TBSA estimate used fixed adult body proportions with no age adjustment, and the
+            Parkland total was shown as a flat 24-hour volume with no injury-time clock and no
+            first-8h / second-16h split. Nothing it produced was ever saved to the record.
+          </Text>
+          <Text style={styles.modalDesc}>
+            Estimate %TBSA from an age-appropriate Lund–Browder chart, and clock fluid resuscitation
+            from the <Text style={styles.emphasis}>time of injury</Text> — not from arrival — giving
+            half the calculated volume over the first 8 hours from injury and half over the next 16.
+            Record the result in the burns chart or the encounter note, and titrate against urine
+            output.
+          </Text>
+          <Text style={styles.modalDesc}>
+            <Text style={styles.emphasis}>In development — Emergency, Resuscitation and Acute Care
+            pack, wave W1.</Text> The governed calculation now exists: age-banded Lund–Browder and
+            injury-clocked Parkland, in the shared <Text style={styles.emphasis}>burn-domain</Text>
+            library, with the age bands verified to sum to 100% of body surface. What is not yet
+            built is this screen&apos;s connection to it and the write to the patient&apos;s burn
+            assessment, so the calculation is deliberately not offered here until entering a value
+            also records it. This workspace will use the shared calculation rather than keep a
+            private copy.
+          </Text>
+        </ScrollView>
+        <TouchableOpacity style={styles.primaryBtn} onPress={onClose}>
+          <Text style={styles.primaryBtnText}>Close</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
 
   if (kind === "soon") {
     return (
@@ -133,14 +237,30 @@ function ToolModalBody({
     );
   }
 
+  // Partograph and CTG get their own bounded-height container rather than the generic 360px
+  // ScrollView below: both carry a running observation/annotation list plus a governed form,
+  // which the toy calculators below never needed room for.
+  if (kind === "partograph" || kind === "ctg") {
+    return (
+      <>
+        <Text style={styles.modalTitle}>{toolName}</Text>
+        <Text style={styles.modalMeta}>{workspaceName}</Text>
+        <View style={{ height: 480 }}>
+          {kind === "partograph" ? <PartographWorkspace /> : <CtgWorkspace />}
+        </View>
+        <TouchableOpacity style={styles.secondaryBtn} onPress={onClose}>
+          <Text style={styles.secondaryBtnText}>Close</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
+
   return (
     <>
       <Text style={styles.modalTitle}>{toolName}</Text>
       <Text style={styles.modalMeta}>{workspaceName}</Text>
       <ScrollView style={{ maxHeight: 360 }}>
-        {kind === "rule9" && <RuleOf9Form toolName={toolName} />}
         {kind === "bsa" && <BsaForm />}
-        {kind === "parkland" && <ParklandForm />}
         {kind === "ktv" && <KtVForm />}
         {kind === "checklist" && <ChecklistForm />}
         {kind === "sum" && <SumForm />}
@@ -150,29 +270,6 @@ function ToolModalBody({
         <Text style={styles.secondaryBtnText}>Close</Text>
       </TouchableOpacity>
     </>
-  );
-}
-
-function RuleOf9Form({ toolName }: { toolName: string }) {
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const pct = useMemo(
-    () => RULE9_REGIONS.filter((r) => selected[r.key]).reduce((s, r) => s + r.pct, 0),
-    [selected],
-  );
-  return (
-    <View style={styles.formBlock}>
-      <Text style={styles.formLabel}>{toolName}</Text>
-      {RULE9_REGIONS.map((r) => (
-        <View key={r.key} style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{r.label} ({r.pct}%)</Text>
-          <Switch value={!!selected[r.key]} onValueChange={(v) => setSelected((prev) => ({ ...prev, [r.key]: v }))} />
-        </View>
-      ))}
-      <Text style={styles.result}>Estimated TBSA: {pct}%</Text>
-      <TouchableOpacity style={styles.primaryBtn} onPress={() => Alert.alert("Saved", `TBSA ${pct}% recorded locally.`)}>
-        <Text style={styles.primaryBtnText}>Save snapshot</Text>
-      </TouchableOpacity>
-    </View>
   );
 }
 
@@ -196,29 +293,6 @@ function BsaForm() {
       <TouchableOpacity style={styles.primaryBtn} onPress={() => Alert.alert("BSA", bsa != null ? `${bsa.toFixed(2)} m²` : "Incomplete")}>
         <Text style={styles.primaryBtnText}>Save</Text>
       </TouchableOpacity>
-    </View>
-  );
-}
-
-function ParklandForm() {
-  const [tbsa, setTbsa] = useState("");
-  const [weight, setWeight] = useState("");
-  const fluid = useMemo(() => {
-    const p = parseFloat(tbsa);
-    const kg = parseFloat(weight);
-    if (!Number.isFinite(p) || !Number.isFinite(kg) || p <= 0 || kg <= 0) return null;
-    return 4 * kg * p;
-  }, [tbsa, weight]);
-  return (
-    <View style={styles.formBlock}>
-      <Text style={styles.formLabel}>Parkland (24h crystalloid estimate)</Text>
-      <Text style={styles.inputLabel}>TBSA %</Text>
-      <TextInput style={styles.input} keyboardType="decimal-pad" value={tbsa} onChangeText={setTbsa} />
-      <Text style={styles.inputLabel}>Weight (kg)</Text>
-      <TextInput style={styles.input} keyboardType="decimal-pad" value={weight} onChangeText={setWeight} />
-      <Text style={styles.result}>
-        {fluid != null ? `First 24h ringers lactate ≈ ${Math.round(fluid)} ml (4 ml × kg × %TBSA)` : "Enter TBSA % and weight"}
-      </Text>
     </View>
   );
 }
@@ -319,9 +393,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconBadgeText: { fontSize: 18, fontWeight: "800", color: "#1D4ED8" },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  sub: { fontSize: 12, color: "#6B7280", marginTop: 2 },
-  sectionLabel: { fontSize: 13, fontWeight: "600", color: "#374151", marginTop: 4 },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  sub: { fontSize: 12, color: colors.gray[500], marginTop: 2 },
+  sectionLabel: { fontSize: 13, fontWeight: "600", color: colors.gray[700], marginTop: 4 },
   quickRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   quickChip: {
     paddingHorizontal: 12,
@@ -332,15 +406,16 @@ const styles = StyleSheet.create({
   quickChipText: { fontSize: 12, fontWeight: "600", color: "#4338CA" },
   toolList: { flex: 1 },
   toolCard: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
   },
-  toolTitle: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  toolHint: { fontSize: 12, color: "#6B7280", marginTop: 4 },
+  toolTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  toolHint: { fontSize: 12, color: colors.gray[500], marginTop: 4 },
+  toolHintWithheld: { color: "#B45309", fontWeight: "600" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
   modalSheet: {
     backgroundColor: "#fff",
@@ -350,9 +425,19 @@ const styles = StyleSheet.create({
     gap: 12,
     maxHeight: "88%",
   },
-  modalTitle: { fontSize: 17, fontWeight: "700", color: "#111827" },
-  modalMeta: { fontSize: 12, color: "#6B7280" },
-  modalDesc: { fontSize: 14, color: "#4B5563", lineHeight: 20 },
+  modalTitle: { fontSize: 17, fontWeight: "700", color: colors.gray[900] },
+  modalMeta: { fontSize: 12, color: colors.gray[500] },
+  modalDesc: { fontSize: 14, color: colors.gray[600], lineHeight: 20, marginBottom: 10 },
+  emphasis: { fontWeight: "700", color: colors.gray[800] },
+  withheldBadge: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#92400E",
+    backgroundColor: "#FEF3C7",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
   formBlock: { gap: 10 },
   notesLabelRow: {
     flexDirection: "row",
@@ -360,17 +445,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
-  formLabel: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  inputLabel: { fontSize: 12, fontWeight: "600", color: "#374151" },
+  formLabel: { fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  inputLabel: { fontSize: 12, fontWeight: "600", color: colors.gray[700] },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 10,
     fontSize: 14,
   },
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  switchLabel: { flex: 1, fontSize: 13, color: "#374151" },
+  switchLabel: { flex: 1, fontSize: 13, color: colors.gray[700] },
   result: { fontSize: 14, fontWeight: "600", color: "#009739" },
   primaryBtn: { backgroundColor: "#2563EB", borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: 4 },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },

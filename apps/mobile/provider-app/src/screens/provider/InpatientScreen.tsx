@@ -4,7 +4,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, TextInput, ScrollView, TouchableOpacity, FlatList, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchCarePlans, createCarePlan, fetchFluidBalance, recordFluid,
@@ -135,8 +135,8 @@ function FluidBalancePanel() {
       {summary && (
         <View style={s.statsRow}>
           <View style={[s.statCard, { borderLeftColor: "#3B82F6" }]}><Text style={{ fontSize: 12, color: "#3B82F6" }}>💧</Text><Text style={s.statNum}>{summary.totalIntake}ml</Text><Text style={s.statLabel}>Total Intake</Text></View>
-          <View style={[s.statCard, { borderLeftColor: "#F59E0B" }]}><Text style={{ fontSize: 12, color: "#F59E0B" }}>📈</Text><Text style={s.statNum}>{summary.totalOutput}ml</Text><Text style={s.statLabel}>Total Output</Text></View>
-          <View style={[s.statCard, { borderLeftColor: summary.balance >= 0 ? "#22C55E" : "#DC2626" }]}><Text style={{ fontSize: 12 }}>⚖️</Text><Text style={[s.statNum, { color: summary.balance >= 0 ? "#22C55E" : "#DC2626" }]}>{summary.balance > 0 ? "+" : ""}{summary.balance}ml</Text><Text style={s.statLabel}>Net Balance</Text></View>
+          <View style={[s.statCard, { borderLeftColor: colors.ui.warning.main }]}><Text style={{ fontSize: 12, color: colors.ui.warning.main }}>📈</Text><Text style={s.statNum}>{summary.totalOutput}ml</Text><Text style={s.statLabel}>Total Output</Text></View>
+          <View style={[s.statCard, { borderLeftColor: summary.balance >= 0 ? colors.ui.success.main : colors.ui.error.main }]}><Text style={{ fontSize: 12 }}>⚖️</Text><Text style={[s.statNum, { color: summary.balance >= 0 ? colors.ui.success.main : colors.ui.error.main }]}>{summary.balance > 0 ? "+" : ""}{summary.balance}ml</Text><Text style={s.statLabel}>Net Balance</Text></View>
         </View>
       )}
 
@@ -146,22 +146,22 @@ function FluidBalancePanel() {
           <Text style={{ fontSize: 13, fontWeight: "700", color: "#3B82F6" }}>INTAKE</Text>
           {Object.entries(intakeByCat).map(([cat, vol]) => (
             <View key={cat} style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Text style={{ fontSize: 12, color: "#374151" }}>{cat}</Text>
-              <Text style={{ fontSize: 12, fontWeight: "600", color: "#111827", fontVariant: ["tabular-nums"] }}>{vol}ml</Text>
+              <Text style={{ fontSize: 12, color: colors.gray[700] }}>{cat}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: colors.gray[900], fontVariant: ["tabular-nums"] }}>{vol}ml</Text>
             </View>
           ))}
-          {Object.keys(intakeByCat).length === 0 && <Text style={{ fontSize: 11, color: "#9CA3AF" }}>No intake recorded</Text>}
+          {Object.keys(intakeByCat).length === 0 && <Text style={{ fontSize: 11, color: colors.gray[400] }}>No intake recorded</Text>}
         </View>
-        <View style={{ width: 1, backgroundColor: "#E5E7EB" }} />
+        <View style={{ width: 1, backgroundColor: colors.gray[200] }} />
         <View style={{ flex: 1, gap: 4 }}>
-          <Text style={{ fontSize: 13, fontWeight: "700", color: "#F59E0B" }}>OUTPUT</Text>
+          <Text style={{ fontSize: 13, fontWeight: "700", color: colors.ui.warning.main }}>OUTPUT</Text>
           {Object.entries(outputByCat).map(([cat, vol]) => (
             <View key={cat} style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Text style={{ fontSize: 12, color: "#374151" }}>{cat}</Text>
-              <Text style={{ fontSize: 12, fontWeight: "600", color: "#111827", fontVariant: ["tabular-nums"] }}>{vol}ml</Text>
+              <Text style={{ fontSize: 12, color: colors.gray[700] }}>{cat}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: colors.gray[900], fontVariant: ["tabular-nums"] }}>{vol}ml</Text>
             </View>
           ))}
-          {Object.keys(outputByCat).length === 0 && <Text style={{ fontSize: 11, color: "#9CA3AF" }}>No output recorded</Text>}
+          {Object.keys(outputByCat).length === 0 && <Text style={{ fontSize: 11, color: colors.gray[400] }}>No output recorded</Text>}
         </View>
       </View>
 
@@ -210,7 +210,7 @@ function EmergencyPanel() {
       </View>
       <Text style={s.title}>Recent Activations</Text>
       {(activations as Array<Record<string, unknown>>).map((a) => (
-        <View key={String(a.id)} style={[s.card, { borderLeftColor: a.status === "ACTIVE" ? "#DC2626" : "#22C55E", borderLeftWidth: 4 }]}>
+        <View key={String(a.id)} style={[s.card, { borderLeftColor: a.status === "ACTIVE" ? colors.ui.error.main : colors.ui.success.main, borderLeftWidth: 4 }]}>
           <Text style={s.cardTitle}>{String(a.protocol_type ?? "").replace(/_/g, " ")}</Text>
           <Badge label={String(a.status)} variant={a.status === "ACTIVE" ? "destructive" : "success"} />
           <Text style={s.meta}>{a.activation_time ? new Date(a.activation_time as string).toLocaleString() : ""}</Text>
@@ -230,14 +230,14 @@ function EWSPanel() {
     mutationFn: () => recordEWS({ patientId: pid, encounterId: activeEncounter?.id, totalScore: parseInt(total), scoreType: "NEWS2", components: "{}" }),
     onSuccess: (data) => { qc.invalidateQueries({ queryKey: ["ews"] }); Alert.alert("EWS Recorded", `Risk: ${data.riskLevel}${data.escalationRequired ? " — ESCALATION REQUIRED" : ""}`); setTotal(""); },
   });
-  const riskColors: Record<string, string> = { NONE: "#22C55E", LOW: "#3B82F6", MEDIUM: "#F59E0B", HIGH: "#DC2626" };
+  const riskColors: Record<string, string> = { NONE: colors.ui.success.main, LOW: "#3B82F6", MEDIUM: colors.ui.warning.main, HIGH: colors.ui.error.main };
   return (
     <View style={s.section}>
       <Text style={s.title}>Early Warning Score (NEWS2)</Text>
       <TextInput style={s.input} placeholder="Total score (0-20)" value={total} onChangeText={setTotal} keyboardType="numeric" />
       <Button title="Record EWS" onPress={() => mutation.mutate()} disabled={!total || mutation.isPending} />
       {(scores as Array<Record<string, unknown>>).map((sc) => (
-        <View key={String(sc.id)} style={[s.card, { borderLeftColor: riskColors[String(sc.risk_level)] ?? "#6B7280", borderLeftWidth: 4 }]}>
+        <View key={String(sc.id)} style={[s.card, { borderLeftColor: riskColors[String(sc.risk_level)] ?? colors.gray[500], borderLeftWidth: 4 }]}>
           <Text style={s.cardTitle}>Score: {String(sc.total_score)} — {String(sc.risk_level)}</Text>
           {Boolean(sc.escalation_required) ? (
             <Badge label="ESCALATION REQUIRED" variant="destructive" />
@@ -269,7 +269,7 @@ function EscalationsPanel() {
     mutationFn: (id: string) => respondEscalation(id, "Reviewed at bedside"),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["escalations"] }); Alert.alert("Responded"); },
   });
-  const riskColors: Record<string, string> = { LOW: "#3B82F6", MEDIUM: "#F59E0B", HIGH: "#DC2626" };
+  const riskColors: Record<string, string> = { LOW: "#3B82F6", MEDIUM: colors.ui.warning.main, HIGH: colors.ui.error.main };
   return (
     <View style={s.section}>
       <Text style={s.title}>Deterioration Escalations</Text>
@@ -284,7 +284,7 @@ function EscalationsPanel() {
         (escalations as InpatientEscalation[]).map((e) => {
           const id = e.escalation_id ?? e.id ?? "";
           return (
-            <View key={id} style={[s.card, { borderLeftColor: riskColors[String(e.risk_level)] ?? "#6B7280", borderLeftWidth: 4 }]}>
+            <View key={id} style={[s.card, { borderLeftColor: riskColors[String(e.risk_level)] ?? colors.gray[500], borderLeftWidth: 4 }]}>
               <Text style={s.cardTitle}>EWS {e.total_score} — {e.risk_level}</Text>
               <Text style={s.meta}>Patient {e.subject_cpid} · {e.status}</Text>
               {e.response_due_at ? <Text style={s.meta}>Response due {new Date(e.response_due_at).toLocaleString()}</Text> : null}
@@ -400,31 +400,31 @@ function TransfersPanel() {
 }
 
 const s = StyleSheet.create({
-  tabBar: { borderBottomWidth: 1, borderBottomColor: "#E5E7EB", paddingHorizontal: 8 },
+  tabBar: { borderBottomWidth: 1, borderBottomColor: colors.gray[200], paddingHorizontal: 8 },
   tabBarContent: { flexDirection: "row", gap: 4, paddingVertical: 4 },
-  tab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, backgroundColor: "#F3F4F6" },
+  tab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, backgroundColor: colors.gray[100] },
   activeTab: { backgroundColor: "#7C3AED" },
-  tabText: { fontSize: 12, color: "#6B7280", fontWeight: "500" },
+  tabText: { fontSize: 12, color: colors.gray[500], fontWeight: "500" },
   activeTabText: { color: "#FFF" },
   content: { flex: 1 },
   pad: { padding: 16, paddingBottom: 32 },
   section: { gap: 12 },
-  title: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
+  title: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
   row: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
-  chip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, backgroundColor: "#E5E7EB" },
+  chip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, backgroundColor: colors.gray[200] },
   activeChip: { backgroundColor: "#7C3AED" },
-  chipText: { fontSize: 11, color: "#6B7280" },
+  chipText: { fontSize: 11, color: colors.gray[500] },
   activeChipText: { color: "#FFF" },
-  card: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12, gap: 4 },
-  cardTitle: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  meta: { fontSize: 12, color: "#6B7280" },
-  empty: { fontSize: 13, color: "#9CA3AF", textAlign: "center", paddingVertical: 20 },
+  card: { backgroundColor: colors.gray[50], borderRadius: 12, padding: 12, gap: 4 },
+  cardTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  meta: { fontSize: 12, color: colors.gray[500] },
+  empty: { fontSize: 13, color: colors.gray[400], textAlign: "center", paddingVertical: 20 },
   statsRow: { flexDirection: "row", gap: 8 },
   statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 8, padding: 10, borderLeftWidth: 3, alignItems: "center" },
-  statNum: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  statLabel: { fontSize: 10, color: "#6B7280" },
-  sosButton: { backgroundColor: "#DC2626", borderRadius: 16, padding: 24, alignItems: "center", gap: 4 },
+  statNum: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  statLabel: { fontSize: 10, color: colors.gray[500] },
+  sosButton: { backgroundColor: colors.ui.error.main, borderRadius: 16, padding: 24, alignItems: "center", gap: 4 },
   sosText: { color: "#FFF", fontSize: 20, fontWeight: "900" },
   sosSubtext: { color: "#FCA5A5", fontSize: 13 },
 });

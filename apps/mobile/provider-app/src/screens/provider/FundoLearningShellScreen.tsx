@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
-import { Button, Card, CardBody, Header, LoadingSpinner, Screen } from "@impilo/mobile-design-system";
+import { Button, Card, CardBody, Header, LoadingSpinner, Screen, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@impilo/mobile-auth";
 import { useAppStore } from "../../stores/appStore";
@@ -402,10 +402,10 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { padding: 12, gap: 10 },
   section: { gap: 8 },
-  title: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  meta: { fontSize: 12, color: "#6B7280" },
-  body: { fontSize: 14, color: "#374151", lineHeight: 20 },
-  item: { backgroundColor: "#FFFFFF", borderColor: "#E5E7EB", borderWidth: 1, borderRadius: 10, padding: 10 },
-  itemTitle: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  itemMeta: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  title: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  meta: { fontSize: 12, color: colors.gray[500] },
+  body: { fontSize: 14, color: colors.gray[700], lineHeight: 20 },
+  item: { backgroundColor: "#FFFFFF", borderColor: colors.gray[200], borderWidth: 1, borderRadius: 10, padding: 10 },
+  itemTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  itemMeta: { fontSize: 12, color: colors.gray[500], marginTop: 2 },
 });

@@ -8,17 +8,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, TextField, ErrorState, colors } from "@impilo/mobile-design-system";
 import { AdaptiveSessionRoomNative, PreJoinNative, type PreJoinChoices } from "@impilo/mobile-session";
 import {
   joinSession,
@@ -504,7 +494,7 @@ const styles = StyleSheet.create({
   },
   infoTextSecondary: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   durationText: {
     fontSize: 20,
@@ -522,16 +512,16 @@ const styles = StyleSheet.create({
   waitingCopyTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginTop: 4,
   },
   waitingCopy: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
   },
   consentLine: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontStyle: "italic",
   },
   waitingStatus: {
@@ -544,13 +534,13 @@ const styles = StyleSheet.create({
     color: "#1E40AF",
   },
   deniedBox: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.ui.warning.light,
     borderRadius: 8,
     padding: 12,
   },
   deniedText: {
     fontSize: 13,
-    color: "#92400E",
+    color: colors.ui.warning.text,
   },
   activeSessionArea: {
     borderRadius: 12,
@@ -579,7 +569,7 @@ const styles = StyleSheet.create({
   postConsultTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   summaryText: {
     fontSize: 14,

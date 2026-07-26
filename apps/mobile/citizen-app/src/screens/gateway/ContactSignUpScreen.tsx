@@ -13,7 +13,7 @@
 import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, TextField, OtpCodeInput, isOtpComplete } from "@impilo/mobile-design-system";
+import { Button, TextField, OtpCodeInput, isOtpComplete, colors } from "@impilo/mobile-design-system";
 import { useAuth } from "@impilo/mobile-auth";
 import {
   requestContactOtp,
@@ -238,9 +238,9 @@ const styles = StyleSheet.create({
   container: { padding: 24, paddingBottom: 48, backgroundColor: "#FFFFFF", flexGrow: 1 },
   backRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 16 },
   backText: { color: GREEN, fontSize: 14, fontWeight: "600" },
-  title: { fontSize: 24, fontWeight: "800", color: "#111827" },
-  subtitle: { marginTop: 8, fontSize: 14, color: "#6B7280", lineHeight: 20, marginBottom: 12 },
-  label: { fontSize: 12, fontWeight: "600", color: "#374151", marginTop: 16, marginBottom: 6 },
+  title: { fontSize: 24, fontWeight: "800", color: colors.gray[900] },
+  subtitle: { marginTop: 8, fontSize: 14, color: colors.gray[500], lineHeight: 20, marginBottom: 12 },
+  label: { fontSize: 12, fontWeight: "600", color: colors.gray[700], marginTop: 16, marginBottom: 6 },
   hintText: { fontSize: 12, color: "#B45309", marginTop: 4 },
   channelRow: { flexDirection: "row", gap: 8, marginTop: 16 },
   actionRow: { marginTop: 24 },
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     borderColor: "#FECACA",
     marginTop: 12,
   },
-  errorText: { color: "#DC2626", fontSize: 13 },
+  errorText: { color: colors.ui.error.main, fontSize: 13 },
   noticeBox: {
     backgroundColor: "#ECFDF5",
     borderRadius: 10,
@@ -263,5 +263,5 @@ const styles = StyleSheet.create({
     borderColor: "#A7F3D0",
     marginTop: 12,
   },
-  noticeText: { color: "#065F46", fontSize: 13 },
+  noticeText: { color: colors.ui.success.text, fontSize: 13 },
 });

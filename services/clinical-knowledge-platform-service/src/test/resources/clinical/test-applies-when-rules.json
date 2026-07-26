@@ -1,0 +1,42 @@
+{
+  "packId": "impilo.test.appliesWhen",
+  "version": "test-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "TEST_FIXTURE_NOT_FOR_CLINICAL_USE",
+  "provenance": "Test fixture only. Exercises the appliesWhen gate — whether a rule is about this patient at all — separately from whether the rule fires. Not clinical content and never loaded by the service in production.",
+  "rules": [
+    {
+      "code": "TEST_POSTPARTUM_ONLY",
+      "name": "Applies only after birth",
+      "layer": "DANGER",
+      "ruleType": "ALERT",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "appliesWhen": {"input": "postpartumDay", "op": "present"},
+      "requiredInputs": ["bleedingHeavy"],
+      "logic": {"finding": "bleedingHeavy", "present": true},
+      "message": "Heavy bleeding after birth.",
+      "explanation": "Test rule.",
+      "requiredAction": "Act.",
+      "sourceRefs": ["test fixture"]
+    },
+    {
+      "code": "TEST_ALWAYS_APPLIES",
+      "name": "Applies to everyone",
+      "layer": "DANGER",
+      "ruleType": "ALERT",
+      "severity": "HIGH",
+      "interruptive": true,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["convulsing"],
+      "logic": {"finding": "convulsing", "present": true},
+      "message": "Convulsing.",
+      "explanation": "Test rule with no age window and no gate.",
+      "requiredAction": "Act.",
+      "sourceRefs": ["test fixture"]
+    }
+  ]
+}

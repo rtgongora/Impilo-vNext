@@ -71,7 +71,15 @@ public class LabOrdersController {
                     return ResponseEntity.ok(response);
                 }
             } catch (Exception e) {
-                log.warn("OROS listOrdersByEncounter failed: {}", e.getMessage());
+                // Falling through to the empty list below would report "no orders on this
+                // encounter" — the finding a clinician uses to decide nothing was sent to the lab.
+                log.error("OROS listOrdersByEncounter failed for encounter={}: {}",
+                        encounterId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "lab_orders_unavailable",
+                        "message", "Lab orders could not be retrieved. Do not treat this as an "
+                                   + "absence of orders or results.",
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
         if (patientId != null) {
@@ -87,7 +95,15 @@ public class LabOrdersController {
                     return ResponseEntity.ok(response);
                 }
             } catch (Exception e) {
-                log.warn("OROS getPatientOrders failed: {}", e.getMessage());
+                // As above — an empty list here is an affirmative "nothing pending for this
+                // patient", including no unreviewed critical results.
+                log.error("OROS getPatientOrders failed for patient={}: {}",
+                        patientId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "lab_orders_unavailable",
+                        "message", "Lab orders could not be retrieved. Do not treat this as an "
+                                   + "absence of orders or results.",
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
 
@@ -212,7 +228,10 @@ public class LabOrdersController {
             orosClient.collectSpecimen(id, body);
             log.info("OROS specimen collected for order={}", id);
         } catch (Exception e) {
-            log.warn("OROS specimen collect failed (non-blocking): {}", e.getMessage());
+            // Category (b): defensible. Unlike the result/acknowledge/cancel paths, this does not
+            // claim the transition happened — it returns a distinct COLLECT_PENDING status the
+            // caller can act on, so the 200 body is not a fabricated success.
+            log.warn("OROS specimen collect failed, reporting COLLECT_PENDING: {}", e.getMessage());
             status = "COLLECT_PENDING";
         }
 
@@ -246,7 +265,15 @@ public class LabOrdersController {
                 orosClient.postResult(id, "LAB", body.get("result_data"), hasCritical);
                 log.info("OROS result posted for order={}", id);
             } catch (Exception e) {
-                log.warn("OROS result delegation failed (non-blocking): {}", e.getMessage());
+                // "non-blocking" meant the response still claimed status RESULTED for a result
+                // OROS never stored — including critical results. The order is the system of
+                // record; if the write did not land, the caller must not be told it did.
+                log.error("OROS result delegation failed for order={}: {}", id, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", "lab_result_not_recorded",
+                        "message", "The result could not be recorded against the order. It has "
+                                   + "not been saved — do not treat it as filed.",
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
 
@@ -282,7 +309,15 @@ public class LabOrdersController {
             orosClient.acknowledgeOrder(id, "CLINICIAN", notes);
             log.info("OROS acknowledgement posted for order={}", id);
         } catch (Exception e) {
-            log.warn("OROS acknowledgement failed (non-blocking): {}", e.getMessage());
+            // Acknowledgement is the audit trail for "a clinician has seen this result". A 200
+            // reporting REVIEWED when OROS rejected the write leaves the result unreviewed in the
+            // record while the ward believes it was signed off.
+            log.error("OROS acknowledgement failed for order={}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "lab_acknowledgement_not_recorded",
+                    "message", "The acknowledgement could not be recorded. This result is still "
+                               + "unreviewed.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -308,7 +343,13 @@ public class LabOrdersController {
                     reason != null ? reason : "Cancelled from experience UI");
             log.info("OROS order cancelled for lab order={}", id);
         } catch (Exception e) {
-            log.warn("OROS cancel failed (non-blocking): {}", e.getMessage());
+            // A 200 reporting CANCELLED for an order OROS still holds as active means the
+            // specimen keeps moving through the lab after the clinician believes they stopped it.
+            log.error("OROS cancel failed for order={}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "lab_order_not_cancelled",
+                    "message", "The order could not be cancelled and is still active.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
 
         Map<String, Object> response = new LinkedHashMap<>();

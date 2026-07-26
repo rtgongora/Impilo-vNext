@@ -162,21 +162,40 @@ public final class PredicateEvaluator {
         return anyUnknown ? Outcome.UNKNOWN : Outcome.TRUE;
     }
 
-    /** At least one child must hold. A single true is decisive even if others are unknown. */
+    /**
+     * At least one child must hold. A single true is decisive even if others are unknown.
+     *
+     * <p><b>The verdict short-circuits; the evidence does not.</b> Every child is evaluated even
+     * after one has held, so {@code usedInputs} lists everything that actually qualified rather than
+     * everything up to the first match.
+     *
+     * <p>This was found by deploying the paediatric pack: a ten-day-old fired the young-infant
+     * infection rule on poor feeding and the alert did not mention the qualifying temperature of
+     * 35.0, because evaluation stopped at the first true. There the under-reporting was cosmetic —
+     * the alert and the action were identical either way.
+     *
+     * <p>In the maternal domain it would not be. {@code triggeringFindings} is what selects which
+     * emergency response opens, and a woman who is both convulsing and bleeding must open the
+     * eclampsia pathway and the haemorrhage pathway. Stopping at the first match would open one of
+     * them and leave the other invisible, with the record showing a complete-looking assessment.
+     */
     private static Outcome combineAny(JsonNode children, Map<String, Object> facts, Result result) {
         if (!children.isArray() || children.isEmpty()) {
             result.contentErrors.add("'any' needs a non-empty array");
             return Outcome.UNKNOWN;
         }
+        boolean anyTrue = false;
         boolean anyUnknown = false;
         for (JsonNode child : children) {
             Outcome outcome = evaluateNode(child, facts, result);
             if (outcome == Outcome.TRUE) {
-                return Outcome.TRUE;
-            }
-            if (outcome == Outcome.UNKNOWN) {
+                anyTrue = true;
+            } else if (outcome == Outcome.UNKNOWN) {
                 anyUnknown = true;
             }
+        }
+        if (anyTrue) {
+            return Outcome.TRUE;
         }
         return anyUnknown ? Outcome.UNKNOWN : Outcome.FALSE;
     }
@@ -303,14 +322,27 @@ public final class PredicateEvaluator {
     }
 
     /**
-     * Age-banded thresholds: the same physiological sign means different things at different
-     * ages. Without an age no band applies, and the predicate is unknown rather than false.
+     * Banded thresholds: the same physiological sign means different things at different points on
+     * some scale. Without a value for that scale no band applies, and the predicate is unknown
+     * rather than false.
+     *
+     * <p>The scale defaults to {@code ageDays} — the paediatric case, where the same heart rate is
+     * unremarkable in a neonate and alarming in a ten-year-old. Content may name a different one
+     * with {@code bandKey}: gestational age, or hours since birth.
+     *
+     * <p><b>Why a second key rather than reusing {@code ageDays}.</b> The obvious shortcut is to
+     * pass gestational age in as {@code ageDays} for maternal rules. It must never be done. Facts
+     * are a flat map shared by every rule evaluated in a request, so a fact named {@code ageDays}
+     * holding 196 would read as a six-month-old to every paediatric rule that saw it — including
+     * the dosing engine. Two scales that are both "days" and mean entirely different things need
+     * two names.
      */
     private static Outcome evaluateBands(JsonNode node, String input, Object value,
                                          Map<String, Object> facts, Result result) {
-        Double ageDays = asNumber(lookup(facts, "ageDays"));
-        if (ageDays == null) {
-            result.missingInputs.add("ageDays");
+        String bandKey = node.path("bandKey").asText("ageDays");
+        Double bandValue = asNumber(lookup(facts, bandKey));
+        if (bandValue == null) {
+            result.missingInputs.add(bandKey);
             return Outcome.UNKNOWN;
         }
         if (value == null) {
@@ -325,9 +357,13 @@ public final class PredicateEvaluator {
         result.usedInputs.add(input);
 
         for (JsonNode band : node.get("bands")) {
-            double min = band.path("ageMinDays").asDouble(0);
-            double max = band.has("ageMaxDays") ? band.get("ageMaxDays").asDouble() : Double.MAX_VALUE;
-            if (ageDays < min || ageDays > max) {
+            // ageMinDays/ageMaxDays are the original spelling and stay accepted, so no existing
+            // content changes. bandMin/bandMax read correctly when the scale is not an age.
+            double min = band.has("bandMin") ? band.get("bandMin").asDouble()
+                    : band.path("ageMinDays").asDouble(0);
+            double max = band.has("bandMax") ? band.get("bandMax").asDouble()
+                    : band.has("ageMaxDays") ? band.get("ageMaxDays").asDouble() : Double.MAX_VALUE;
+            if (bandValue < min || bandValue > max) {
                 continue;
             }
             if (band.has("gte")) {
@@ -345,9 +381,12 @@ public final class PredicateEvaluator {
             result.contentErrors.add("Band for input " + input + " has no comparison");
             return Outcome.UNKNOWN;
         }
-        // No band covers this age: the content does not speak to this patient. Saying "false"
-        // would assert the sign is absent, which the content never claimed.
-        result.contentErrors.add("No age band covers " + ageDays.intValue() + " days for input " + input);
+        // No band covers this patient: the content does not speak to them. Saying "false" would
+        // assert the sign is absent, which the content never claimed. The message names the scale,
+        // because "no band covers 196" is unreadable without knowing whether that is an age or a
+        // gestation.
+        result.contentErrors.add("No band covers " + bandValue.intValue() + " " + bandKey
+                + " for input " + input);
         return Outcome.UNKNOWN;
     }
 

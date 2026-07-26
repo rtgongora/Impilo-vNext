@@ -9,18 +9,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, TextInput } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchRevenueSummary,
   fetchPendingClaims,
@@ -198,7 +187,7 @@ export function FinanceOverviewScreen() {
                 <CardBody>
                   <View style={styles.revenueGrid}>
                     <View style={styles.revenueItem}>
-                      <Text style={[styles.revenueValue, { color: "#22C55E" }]}>
+                      <Text style={[styles.revenueValue, { color: colors.ui.success.main }]}>
                         {formatCurrency(revenue.todayRevenue, revenue.currency)}
                       </Text>
                       <Text style={styles.revenueLabel}>Today</Text>
@@ -493,7 +482,7 @@ const styles = StyleSheet.create({
   },
   revenueLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
   claimsSummary: {
@@ -507,21 +496,21 @@ const styles = StyleSheet.create({
   claimsCount: {
     fontSize: 32,
     fontWeight: "900",
-    color: "#F59E0B",
+    color: colors.ui.warning.main,
   },
   claimsTotal: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#F59E0B",
+    color: colors.ui.warning.main,
   },
   claimsLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 4,
   },
   commandHelp: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginBottom: 8,
   },
   commandTabs: {
@@ -532,12 +521,12 @@ const styles = StyleSheet.create({
   },
   commandTab: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 12,
-    color: "#374151",
+    color: colors.gray[700],
   },
   commandTabActive: {
     borderColor: "#4F46E5",
@@ -546,7 +535,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -569,7 +558,7 @@ const styles = StyleSheet.create({
   queueTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#92400E",
+    color: colors.ui.warning.text,
     marginBottom: 4,
   },
   queueItem: {
@@ -584,7 +573,7 @@ const styles = StyleSheet.create({
   },
   queueMeta: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   journeyGrid: {
     marginTop: 10,
@@ -592,14 +581,14 @@ const styles = StyleSheet.create({
   },
   journeyItem: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 10,
   },
   journeyStage: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   journeyStatus: {
     marginTop: 2,
@@ -610,7 +599,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginTop: 8,
   },
   paymentRow: {
@@ -625,15 +614,15 @@ const styles = StyleSheet.create({
   paymentPatient: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   paymentDate: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   paymentRef: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   paymentRight: {
     alignItems: "flex-end",
@@ -642,7 +631,7 @@ const styles = StyleSheet.create({
   paymentAmount: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.gray[900],
   },
   refreshContainer: {
     marginTop: 8,

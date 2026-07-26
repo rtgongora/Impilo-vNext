@@ -107,6 +107,18 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/clinical/dictation", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Voice Dictation", navLabel: "Dictation", navZone: "work" },
   { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
   { path: "/clinical/nutrition-tracing", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Nutrition Defaulter Tracing", navLabel: "Nutrition Tracing", navZone: "work" },
+  // The three ED child routes below shipped unregistered. matchRouteDefinition anchors every
+  // pattern with ^...$, so "/clinical/emergency" never matched "/clinical/emergency/resus/<id>":
+  // the matcher returned null, AuthGuardProvider returned early, and the resuscitation workspace,
+  // the episode timeline and the ED visit journey ran with NO facility or role guard at all.
+  // Registering them is the guard.
+  //
+  // ORDERING: a dynamic segment compiles to [^/]+, so "/clinical/emergency/[visitId]" matches any
+  // single child segment — including a future literal like "/clinical/emergency/offline". First
+  // match wins, so every literal child must be registered ABOVE the [visitId] entry.
+  { path: "/clinical/emergency/resus/[activationId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Resuscitation", navLabel: "Resuscitation", navZone: "work" },
+  { path: "/clinical/emergency/episode/[episodeId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Episode", navLabel: "Emergency Episode", navZone: "work" },
+  { path: "/clinical/emergency/[visitId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED Visit", navLabel: "ED Visit", navZone: "work" },
 
   // Inpatient workspace (Wave 20 production readiness)
   { path: "/clinical/inpatient", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Care", navLabel: "Inpatient", navZone: "work" },
@@ -1022,9 +1034,12 @@ export const ROUTES: RouteDefinition[] = [
 // monitoring home with §14.6 patient-wording law).
 // Khuluma first-class communication front door (Jul 2026): +7 role-aware hub routes.
 // Ruvimbo canonical product face (Jul 2026): +6 role-aware financing routes. Total 798.
+// Paediatric workspace (26 Jul 2026): +1 — /ehr/[patientId]/paediatrics. Total 799.
+// Emergency pack W0 (Jul 2026): +3 ED child routes that shipped unregistered and therefore
+// unguarded — resus/[activationId], episode/[episodeId], [visitId]. Total 803.
 // IMAM nutrition treatment (Jul 2026): +2 — the child's treatment episode and the facility's
-// defaulter tracing worklist, which are different jobs done by different people.
-export const EXPECTED_ROUTE_COUNT = 802;
+// defaulter tracing worklist, which are different jobs done by different people. Total 805.
+export const EXPECTED_ROUTE_COUNT = 805;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

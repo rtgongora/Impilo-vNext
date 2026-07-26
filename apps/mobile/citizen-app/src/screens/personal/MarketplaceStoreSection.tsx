@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
+import { LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchMarketplaceHome,
@@ -25,7 +25,7 @@ const RISK_COLOR: Record<string, string> = {
   LOW_RISK: "#0284C7",
   MODERATE_RISK: "#D97706",
   HIGH_RISK: "#EA580C",
-  REGULATED: "#DC2626",
+  REGULATED: colors.ui.error.main,
 };
 
 const REGULATED = new Set(["HIGH_RISK", "REGULATED"]);
@@ -122,8 +122,8 @@ function MarketplaceStoreBody({
           <View key={l.listingId} style={styles.listingCard} testID={`marketplace-listing-${l.listingId}`}>
             <View style={styles.listingHeader}>
               <Text style={styles.listingTitle}>{l.title}</Text>
-              <View style={[styles.riskBadge, { borderColor: RISK_COLOR[l.riskClassification] ?? "#9CA3AF" }]}>
-                <Text style={[styles.riskText, { color: RISK_COLOR[l.riskClassification] ?? "#6B7280" }]}>
+              <View style={[styles.riskBadge, { borderColor: RISK_COLOR[l.riskClassification] ?? colors.gray[400] }]}>
+                <Text style={[styles.riskText, { color: RISK_COLOR[l.riskClassification] ?? colors.gray[500] }]}>
                   {l.riskClassification.replace("_", " ")}
                 </Text>
               </View>
@@ -146,19 +146,19 @@ function MarketplaceStoreBody({
 
 const styles = StyleSheet.create({
   container: { paddingBottom: 24 },
-  title: { fontSize: 20, fontWeight: "700", color: "#111827" },
-  subtitle: { marginTop: 4, fontSize: 13, color: "#6B7280" },
+  title: { fontSize: 20, fontWeight: "700", color: colors.gray[900] },
+  subtitle: { marginTop: 4, fontSize: 13, color: colors.gray[500] },
   searchRow: { flexDirection: "row", gap: 8, marginTop: 16 },
   searchInput: {
     flex: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     fontSize: 14,
-    color: "#111827",
+    color: colors.gray[900],
   },
   searchBtn: {
     width: 44,
@@ -169,22 +169,22 @@ const styles = StyleSheet.create({
   },
   activityLink: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
   activityLinkText: { fontSize: 13, fontWeight: "600", color: "#059669" },
-  sectionHeader: { marginTop: 20, fontSize: 15, fontWeight: "700", color: "#111827" },
-  empty: { marginTop: 8, fontSize: 13, color: "#6B7280" },
+  sectionHeader: { marginTop: 20, fontSize: 15, fontWeight: "700", color: colors.gray[900] },
+  empty: { marginTop: 8, fontSize: 13, color: colors.gray[500] },
   listingCard: {
     marginTop: 12,
     padding: 14,
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
   },
   listingHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 8 },
-  listingTitle: { flex: 1, fontSize: 15, fontWeight: "600", color: "#111827" },
+  listingTitle: { flex: 1, fontSize: 15, fontWeight: "600", color: colors.gray[900] },
   riskBadge: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   riskText: { fontSize: 10, fontWeight: "600" },
-  listingSummary: { marginTop: 4, fontSize: 13, color: "#6B7280" },
-  listingMeta: { marginTop: 6, fontSize: 12, color: "#374151" },
-  regulatedHint: { marginTop: 6, fontSize: 11, color: "#DC2626" },
+  listingSummary: { marginTop: 4, fontSize: 13, color: colors.gray[500] },
+  listingMeta: { marginTop: 6, fontSize: 12, color: colors.gray[700] },
+  regulatedHint: { marginTop: 6, fontSize: 11, color: colors.ui.error.main },
   warn: { marginTop: 16, fontSize: 12, color: "#D97706" },
 });

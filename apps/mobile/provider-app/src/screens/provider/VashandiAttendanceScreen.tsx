@@ -3,18 +3,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Alert } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  CardHeader,
-  Badge,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, CardHeader, Badge, Button, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   checkInAttendance,
   checkOutAttendance,
@@ -179,9 +168,9 @@ export function VashandiAttendanceScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#111827", marginBottom: 8 },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: colors.gray[900], marginBottom: 8 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
-  title: { fontSize: 14, fontWeight: "600", color: "#111827", textTransform: "capitalize" },
-  meta: { fontSize: 13, color: "#6B7280", marginTop: 4 },
+  title: { fontSize: 14, fontWeight: "600", color: colors.gray[900], textTransform: "capitalize" },
+  meta: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
   actionRow: { flexDirection: "row", gap: 8, marginTop: 12 },
 });

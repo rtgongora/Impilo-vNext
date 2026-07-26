@@ -21,7 +21,7 @@ import { useI18n } from "@/lib/i18n/useI18n";
 import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { IntentLink } from "./IntentLink";
 import { HeroDiscoverySurface } from "./HeroDiscoverySurface";
-import { ReturningUserCard } from "./ReturningUserCard";
+import { HeroContinuity } from "./HeroContinuity";
 
 interface GuidanceAnswer {
   answer?: string;
@@ -200,54 +200,47 @@ export function WelcomeHero() {
 
   return (
     <section
-      // Canvas: light at the top behind the wordmark, deepening downward with the richest
-      // teal pooled toward the lower left and a dark teal-green foundation at the bottom.
-      // Baked into this background rather than layered as blurred orb divs, which the
-      // section's overflow-hidden would clip.
-      className="public-living-canvas relative overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(62%_52%_at_-4%_104%,rgba(16,185,160,.46),transparent_64%),radial-gradient(50%_44%_at_20%_86%,rgba(45,212,191,.3),transparent_62%),radial-gradient(58%_48%_at_92%_4%,rgba(103,232,249,.24),transparent_60%),linear-gradient(180deg,#0a4a48_0%,#0b3f43_40%,#06303a_72%,#03222a_100%)] shadow-[0_40px_110px_-40px_rgba(2,30,26,.85)]"
+      // Full-bleed living canvas beneath the white shell — not an inset card. The gradient
+      // sits BEHIND the composition: pale mint behind the wordmark, soft teal through the
+      // middle-left, deeper teal-green toward the lower-left and bottom, and a lighter mist
+      // behind the right-hand discovery surface so the map panel reads as lifted, not sunk.
+      // Baked into the background because the section is overflow-hidden and would clip
+      // blurred orb divs.
+      className="public-living-canvas relative overflow-hidden border-y border-white/10 bg-[radial-gradient(38%_46%_at_10%_-6%,rgba(233,250,246,.30),transparent_62%),radial-gradient(52%_60%_at_78%_18%,rgba(178,232,226,.20),transparent_66%),radial-gradient(56%_58%_at_-6%_104%,rgba(16,185,160,.42),transparent_66%),linear-gradient(150deg,#12615b_0%,#0d4d4d_34%,#093c42_64%,#05282f_88%,#03222a_100%)] shadow-[0_30px_90px_-46px_rgba(2,30,26,.8)]"
       aria-labelledby="living-canvas-title"
     >
-      {/*
-        Pale masthead. It carries its own near-white wash that fades to nothing at its
-        own bottom edge, so the light zone is exactly as tall as the wordmark row at
-        every breakpoint. A percentage stop on the section gradient could not do this:
-        the hero's height changes with content, and the transition band would drift over
-        the eyebrow and heading, leaving white text on a pale teal.
-      */}
-      <div className="relative z-10 bg-[linear-gradient(180deg,#ffffff_0%,#f1faf7_46%,rgba(241,250,247,.5)_78%,rgba(241,250,247,0)_100%)] px-6 pb-7 pt-5 sm:px-9 lg:px-12">
-        <ImpiloBrandLogo variant="hero" tone="brand" />
-      </div>
-      <div className="relative z-10 grid min-h-[34rem] lg:grid-cols-[minmax(0,1.02fr)_minmax(24rem,.98fr)]">
+      {/* 38/62 split: intent and continuity left, service discovery right. Both zones start
+          at the same top edge and run to the same depth — the right side must never begin
+          halfway down the viewport. */}
+      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 xl:h-[min(44rem,calc(100vh-4.6rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-6">
         {/* Left: need-first intent + inline Nompilo guidance */}
         {/* min-w-0: grid children default to min-width:auto and refuse to shrink below
             their content, which clipped the hero text on narrow screens (the section's
             overflow-hidden hid the symptom instead of scrolling). */}
-        <div className="relative z-10 flex min-w-0 flex-col justify-center p-6 sm:p-9 lg:p-12">
-          <p className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-100 backdrop-blur-sm">
-            <ShieldCheck className="h-4 w-4" aria-hidden />
-            {t("public.welcome.eyebrow")}
-          </p>
+        <div className="relative z-10 flex min-w-0 flex-col">
+          {/* Wordmark + tagline + question read as ONE compact composition, not a floating
+              brand block with the message far below it. */}
+          <div className="flex flex-col gap-1">
+            <ImpiloBrandLogo variant="full" tone="white" size={34} />
+            <p className="text-sm font-medium text-teal-100/80">One Health OS. For everyone.</p>
+          </div>
           <h1
             id="living-canvas-title"
             // Smaller than the earlier concept: still the loudest thing on the canvas,
             // but no longer consuming the vertical space the discovery surface needs.
-            className="mt-4 max-w-2xl text-[clamp(1.75rem,3.4vw,2.85rem)] font-extrabold leading-[1.08] tracking-[-0.03em] text-white [text-shadow:0_1px_40px_rgba(45,212,191,.25)]"
+            className="mt-4 max-w-xl text-[clamp(1.5rem,2.2vw,2.1rem)] font-extrabold leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_1px_40px_rgba(45,212,191,.25)]"
           >
             {t("public.welcome.needFirstTitle")}
           </h1>
-          <p className="mt-4 max-w-2xl text-[clamp(1rem,1.6vw,1.15rem)] leading-7 text-emerald-50/85">
+          <p className="mt-3 max-w-xl text-[15px] leading-6 text-emerald-50/85">
             {t("public.welcome.needFirstIntro")}
-          </p>
-          <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-teal-200">
-            <ShieldCheck className="h-4 w-4" aria-hidden />
-            Many services are available without signing in.
           </p>
 
           <form
             onSubmit={submit}
             role="search"
             aria-label="Ask Nompilo about health, services or support"
-            className="mt-7"
+            className="mt-5"
           >
             <label htmlFor="public-nompilo-intent" className="text-sm font-semibold text-white">
               Ask Nompilo
@@ -279,7 +272,7 @@ export function WelcomeHero() {
           </form>
 
           <div className="mt-3 flex flex-wrap gap-2" aria-label="Example questions">
-            {QUICK_PROMPTS.map((prompt) => (
+            {QUICK_PROMPTS.slice(0, 3).map((prompt) => (
               <button
                 key={prompt}
                 type="button"
@@ -291,8 +284,10 @@ export function WelcomeHero() {
             ))}
           </div>
 
-          {/* Returning-user greeting (only when a masked opt-in hint exists). */}
-          <ReturningUserCard />
+          {/* Continuity: welcome-back when recognised, a compact sign-in invitation when
+              not. It always renders — the previous card showed nothing to a first-time
+              visitor, leaving a hole where the continuation belongs. */}
+          <HeroContinuity />
 
           {/* Journey continuity now lives inside the discovery surface on the right, where
               it uses the space the fill recovered instead of lengthening this column (which
@@ -397,40 +392,13 @@ export function WelcomeHero() {
             </Link>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-            <Link
-              href="/verify/practitioner"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-teal-200 hover:text-white"
-            >
-              <Building2 className="h-4 w-4" aria-hidden />
-              Find or verify
-            </Link>
-            <IntentLink
-              pillar="my-health"
-              goal="open-my-impilo"
-              dest="/home"
-              from="/"
-              href="/auth/login?returnTo=%2Fhome"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-100 hover:text-white"
-            >
-              <UserRound className="h-4 w-4" aria-hidden />
-              My Impilo
-            </IntentLink>
-            <Link
-              href="/provider/get-access"
-              className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-100 hover:text-white"
-            >
-              <BriefcaseMedical className="h-4 w-4" aria-hidden />
-              Work on Impilo
-            </Link>
-          </div>
         </div>
 
         {/* Right: unified Get Health Services discovery (care, medicines, wellness — honest, real). */}
         {/* flex + flex-col so the surface's own h-full resolves against a definite box.
             Relying on grid stretch alone left the surface sized by its content, which is
             how the map and list ended up capped with dead space beneath them. */}
-        <div className="flex min-w-0 flex-col p-3 sm:p-5 lg:p-6 lg:pl-0">
+        <div className="mt-6 flex min-w-0 flex-col lg:mt-0">
           <HeroDiscoverySurface />
         </div>
       </div>

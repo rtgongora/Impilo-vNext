@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Button,
-  Badge,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Button, Badge, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchPrescriptions, requestRefill } from "../../services/prescriptionService";
 import type { Prescription } from "../../types";
 
@@ -60,7 +55,7 @@ export function PrescriptionsSection() {
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconCircle}>
-          <Ionicons name="receipt-outline" size={32} color="#D1D5DB" />
+          <Ionicons name="receipt-outline" size={32} color={colors.gray[300]} />
         </View>
         <Text style={styles.emptyTitle}>No prescriptions</Text>
         <Text style={styles.emptyMessage}>Your prescriptions will appear here after a visit</Text>
@@ -90,14 +85,14 @@ export function PrescriptionsSection() {
                 {`${rx.dosage} \u2022 ${rx.frequency} \u2022 ${rx.duration}`}
               </Text>
               <View style={styles.metaRow}>
-                <Ionicons name="person-outline" size={12} color="#9CA3AF" />
+                <Ionicons name="person-outline" size={12} color={colors.gray[400]} />
                 <Text style={styles.metaText}>
                   {`${rx.prescribedBy} \u2022 ${rx.facilityName}`}
                 </Text>
               </View>
               <View style={styles.refillRow}>
                 <View style={styles.refillCountPill}>
-                  <Ionicons name="refresh-outline" size={11} color="#6B7280" />
+                  <Ionicons name="refresh-outline" size={11} color={colors.gray[500]} />
                   <Text style={styles.refillCountText}>{`${rx.refillsRemaining} refills left`}</Text>
                 </View>
                 {rx.lastFilledAt ? (
@@ -133,7 +128,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: 4,
@@ -147,7 +142,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
@@ -155,11 +150,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   emptyMessage: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     paddingHorizontal: 24,
   },
@@ -200,7 +195,7 @@ const styles = StyleSheet.create({
   medicationName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     flex: 1,
   },
   badgeStack: {
@@ -209,7 +204,7 @@ const styles = StyleSheet.create({
   },
   dosageText: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
   },
   metaRow: {
     flexDirection: "row",
@@ -218,7 +213,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   refillRow: {
     flexDirection: "row",
@@ -230,19 +225,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     borderRadius: 10,
     paddingVertical: 3,
     paddingHorizontal: 8,
   },
   refillCountText: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "600",
   },
   lastFilledText: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   refillButtonWrapper: {
     marginTop: 6,

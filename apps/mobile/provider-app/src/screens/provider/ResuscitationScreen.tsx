@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Vibration } from "react-native";
-import { Screen, Header, Button, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@impilo/mobile-api-client";
 
@@ -175,9 +175,9 @@ export function ResuscitationScreen() {
         {phase === "RESUSCITATION" && (
           <View style={styles.section}>
             {/* CPR Timer */}
-            <View style={[styles.cprCard, cprRunning && { borderColor: "#DC2626" }]}>
+            <View style={[styles.cprCard, cprRunning && { borderColor: colors.ui.error.main }]}>
               <Text style={styles.cprLabel}>CPR Cycle {cprCycleCount}</Text>
-              <Text style={[styles.cprTimer, cprSecs > 100 && { color: "#DC2626" }]}>{fmt(cprSecs)}</Text>
+              <Text style={[styles.cprTimer, cprSecs > 100 && { color: colors.ui.error.main }]}>{fmt(cprSecs)}</Text>
               <Text style={styles.cprHint}>{cprRunning ? "2-min cycle — vibrates on completion" : "Start a cycle"}</Text>
               <View style={styles.cprActions}>
                 {!cprRunning ? (
@@ -246,33 +246,33 @@ export function ResuscitationScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 32 },
-  bigActivateBtn: { backgroundColor: "#DC2626", borderRadius: 24, padding: 40, alignItems: "center", width: "100%" },
+  bigActivateBtn: { backgroundColor: colors.ui.error.main, borderRadius: 24, padding: 40, alignItems: "center", width: "100%" },
   bigActivateText: { color: "#FFF", fontSize: 24, fontWeight: "900" },
   bigActivateSub: { color: "#FCA5A5", fontSize: 14, marginTop: 8 },
   scroll: { flex: 1 },
   pad: { padding: 16, gap: 12, paddingBottom: 32 },
-  timerBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1F2937", borderRadius: 12, padding: 16 },
+  timerBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: colors.gray[800], borderRadius: 12, padding: 16 },
   elapsed: { color: "#FFF", fontSize: 32, fontWeight: "900", fontVariant: ["tabular-nums"] },
   section: { gap: 10 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#111827" },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: colors.gray[900] },
   roleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  roleLabel: { width: 130, fontSize: 13, fontWeight: "600", color: "#374151" },
-  roleInput: { flex: 1, borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 8, fontSize: 13 },
+  roleLabel: { width: 130, fontSize: 13, fontWeight: "600", color: colors.gray[700] },
+  roleInput: { flex: 1, borderWidth: 1, borderColor: colors.gray[300], borderRadius: 6, padding: 8, fontSize: 13 },
   chipRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
-  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: "#E5E7EB" },
-  activeChip: { backgroundColor: "#DC2626" },
-  chipText: { fontSize: 11, color: "#374151", fontWeight: "500" },
+  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: colors.gray[200] },
+  activeChip: { backgroundColor: colors.ui.error.main },
+  chipText: { fontSize: 11, color: colors.gray[700], fontWeight: "500" },
   activeChipText: { color: "#FFF" },
-  cprCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 20, alignItems: "center", borderWidth: 3, borderColor: "#E5E7EB" },
-  cprLabel: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
-  cprTimer: { fontSize: 64, fontWeight: "900", color: "#111827", fontVariant: ["tabular-nums"] },
-  cprHint: { fontSize: 12, color: "#9CA3AF" },
+  cprCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 20, alignItems: "center", borderWidth: 3, borderColor: colors.gray[200] },
+  cprLabel: { fontSize: 14, fontWeight: "600", color: colors.gray[500] },
+  cprTimer: { fontSize: 64, fontWeight: "900", color: colors.gray[900], fontVariant: ["tabular-nums"] },
+  cprHint: { fontSize: 12, color: colors.gray[400] },
   cprActions: { marginTop: 12, width: "100%" },
   medBtn: { backgroundColor: "#EFF6FF", borderRadius: 8, padding: 10, borderWidth: 1, borderColor: "#BFDBFE" },
   medBtnText: { fontSize: 13, fontWeight: "600", color: "#1D4ED8" },
   logSection: { gap: 2 },
-  medLog: { fontSize: 12, color: "#6B7280" },
+  medLog: { fontSize: 12, color: colors.gray[500] },
   summaryCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 20, gap: 8 },
-  summaryTitle: { fontSize: 20, fontWeight: "700", color: "#111827" },
-  summaryItem: { fontSize: 14, color: "#374151" },
+  summaryTitle: { fontSize: 20, fontWeight: "700", color: colors.gray[900] },
+  summaryItem: { fontSize: 14, color: colors.gray[700] },
 });

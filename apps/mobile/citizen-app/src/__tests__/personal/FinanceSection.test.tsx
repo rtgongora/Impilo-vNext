@@ -14,14 +14,18 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
   Card: ({ children }: any) => children,
   CardBody: ({ children }: any) => children,
   Badge: ({ children }: any) => children,
   LoadingSpinner: () => null,
   EmptyState: ({ title }: any) => title,
   ErrorState: ({ title }: any) => title,
-}));
+  };
+});
 
 vi.mock("@impilo/mobile-api-client", () => ({
   ApiError: class ApiError extends Error {

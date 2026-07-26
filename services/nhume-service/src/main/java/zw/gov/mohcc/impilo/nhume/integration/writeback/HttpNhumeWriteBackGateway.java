@@ -199,7 +199,12 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
     /**
      * Msika Flow dispatch-status is a service-originated (system) call, not an
      * actor-attributed clinical transition: actor is pinned to nhume-service /
-     * SYSTEM and purpose-of-use to LOGISTICS per the internal contract.
+     * SYSTEM, and purpose-of-use to SYSTEM to match.
+     *
+     * <p>This previously sent LOGISTICS, which is not a PurposeOfUse code — so
+     * TSHEPO denied every one of these write-backs with INVALID_PURPOSE at Step 2,
+     * before any rule was consulted. SYSTEM is the code that expresses what the
+     * call already declares itself to be.
      */
     private Consumer<HttpHeaders> msikaFlowHeaders(WriteBackContext ctx, String idempotencySuffix) {
         return headers -> {
@@ -214,7 +219,7 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
             headers.set("X-Idempotency-Key", idempotencyKey);
             headers.set("X-Actor-ID", "nhume-service");
             headers.set("X-Actor-Type", "SYSTEM");
-            headers.set("X-Purpose-Of-Use", "LOGISTICS");
+            headers.set("X-Purpose-Of-Use", "SYSTEM");
             if (ctx.bearerToken() != null && !ctx.bearerToken().isBlank()) {
                 headers.set(HttpHeaders.AUTHORIZATION, ctx.bearerToken());
             }

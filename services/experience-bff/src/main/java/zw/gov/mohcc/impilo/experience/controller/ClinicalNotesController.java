@@ -67,9 +67,13 @@ public class ClinicalNotesController {
                     "data", pctData != null ? pctData : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT listClinicalNotes failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty 200 here reads as "nothing has been documented about this patient", which
+            // is an affirmative clinical finding and would be a fabricated one. Fail loudly.
+            log.error("PCT listClinicalNotes failed for patient={}: {}", patientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "clinical_notes_unavailable",
+                    "message", "Clinical notes could not be retrieved. Do not treat this as an "
+                               + "absence of notes.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

@@ -3,7 +3,7 @@
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import { Screen, Header, LoadingSpinner, Button } from "@impilo/mobile-design-system";
+import { Screen, Header, LoadingSpinner, Button, colors } from "@impilo/mobile-design-system";
 import {
   resolveMobileVashandiNav,
   type MobileVashandiNavItem,
@@ -126,15 +126,15 @@ const styles = StyleSheet.create({
   menu: { flex: 1 },
   menuContent: { padding: 16, gap: 12, paddingBottom: 32 },
   menuCard: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
   },
-  menuTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  menuMeta: { fontSize: 12, color: "#6B7280", marginTop: 4 },
+  menuTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  menuMeta: { fontSize: 12, color: colors.gray[500], marginTop: 4 },
   blocked: { padding: 24, gap: 12 },
-  blockedTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  blockedMessage: { fontSize: 14, color: "#6B7280", lineHeight: 20 },
+  blockedTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  blockedMessage: { fontSize: 14, color: colors.gray[500], lineHeight: 20 },
 });

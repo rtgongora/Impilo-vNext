@@ -1,77 +1,330 @@
 {
   "formKey": "impilo.anc.contact1.v1",
   "name": "Antenatal Care — First Contact",
-  "description": "WHO ANC first-contact exemplar: history, examination, screening, counselling, referral decision. Female pregnant applicability.",
+  "description": "WHO ANC first contact: dating, obstetric history, examination, screening, counselling, referral. Female pregnant applicability.",
   "formType": "PROGRAMME_VISIT",
-  "careSettings": ["OUTPATIENT", "COMMUNITY"],
-  "careStages": ["ASSESSMENT", "CONSULTATION"],
-  "specialties": ["MIDWIFERY", "OBSTETRICS", "NURSING"],
-  "encounterTypes": ["ANTENATAL", "ANC", "MATERNITY", "OBSTETRICS"],
-  "encounterContexts": ["outpatient", "community"],
+  "careSettings": [
+    "OUTPATIENT",
+    "COMMUNITY"
+  ],
+  "careStages": [
+    "ASSESSMENT",
+    "CONSULTATION"
+  ],
+  "specialties": [
+    "MIDWIFERY",
+    "OBSTETRICS",
+    "NURSING"
+  ],
+  "encounterTypes": [
+    "ANTENATAL",
+    "ANC",
+    "MATERNITY",
+    "OBSTETRICS"
+  ],
+  "encounterContexts": [
+    "outpatient",
+    "community"
+  ],
   "requiredWorkflow": "ASSESS",
   "obligationDefault": "MANDATORY",
-  "permittedCadres": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER"],
+  "permittedCadres": [
+    "MIDWIFE",
+    "NURSE",
+    "PHYSICIAN",
+    "CLINICAL_OFFICER"
+  ],
   "minAgeMonths": 120,
   "sexApplicability": "FEMALE",
   "requirePregnant": true,
-  "programmeApplicability": ["ANC", "MATERNAL"],
+  "programmeApplicability": [
+    "ANC",
+    "MATERNAL"
+  ],
   "requiresCountersign": false,
   "offlineCapable": true,
   "sensitivity": "SENSITIVE",
   "governanceAuthor": "MOHCC",
-  "sourceGuideline": "WHO recommendations on antenatal care (exemplar subset)",
+  "sourceGuideline": "WHO recommendations on antenatal care for a positive pregnancy experience; dating arithmetic from WHO SMART ANC ANCS01",
   "publish": true,
   "resourceMappings": {
     "mappings": [
-      {"linkId": "lmp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8665-2", "display": "Last menstrual period"}},
-      {"linkId": "bp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "85354-9", "display": "Blood pressure panel"}}
+      {
+        "linkId": "lmp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8665-2",
+          "display": "Last menstrual period start date"
+        }
+      },
+      {
+        "linkId": "systolicBp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "mm[Hg]",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8480-6",
+          "display": "Systolic blood pressure"
+        }
+      },
+      {
+        "linkId": "diastolicBp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "mm[Hg]",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8462-4",
+          "display": "Diastolic blood pressure"
+        }
+      },
+      {
+        "linkId": "fundalHeight",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "cm",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "11881-0",
+          "display": "Uterine fundal height tape measure"
+        }
+      }
     ]
   },
-  "indicators": {"indicators": [{"programmeIndicatorCode": "ANC1_COVERAGE"}]},
+  "indicators": {
+    "indicators": [
+      {
+        "programmeIndicatorCode": "ANC1_COVERAGE"
+      }
+    ]
+  },
   "definition": {
     "id": "impilo.anc.contact1.v1",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "title": "Antenatal Care — First Contact",
-    "description": "WHO ANC-aligned exemplar.",
+    "description": "WHO ANC-aligned first contact. Captures what opening a pregnancy episode requires: a dating basis with its certainty, and blood pressure as two numbers rather than a sentence.",
     "dakReference": "WHO ANC DAK",
     "healthDomain": "MATERNAL",
     "programme": "ANC",
-    "encounterTypes": ["ANTENATAL", "ANC", "MATERNITY", "OBSTETRICS"],
+    "encounterTypes": [
+      "ANTENATAL",
+      "ANC",
+      "MATERNITY",
+      "OBSTETRICS"
+    ],
     "minAgeMonths": 120,
-    "sexApplicability": ["FEMALE"],
-    "providerRoles": ["MIDWIFE", "NURSE", "DOCTOR", "CLINICAL_OFFICER"],
+    "sexApplicability": [
+      "FEMALE"
+    ],
+    "providerRoles": [
+      "MIDWIFE",
+      "NURSE",
+      "DOCTOR",
+      "CLINICAL_OFFICER"
+    ],
     "offlineCapable": true,
-    "audit": {"dataCustodian": "MOHCC", "sensitivity": "SENSITIVE"},
+    "audit": {
+      "dataCustodian": "MOHCC",
+      "sensitivity": "SENSITIVE"
+    },
     "sections": [
       {
         "id": "history",
-        "title": "Obstetric history",
+        "title": "Dating and obstetric history",
         "fields": [
-          {"id": "lmp", "linkId": "lmp", "label": "Last menstrual period", "kind": "date", "validation": {"required": true}},
-          {"id": "gravida", "linkId": "gravida", "label": "Gravida", "kind": "numeric_with_unit", "unit": "count", "validation": {"min": 0, "max": 20, "required": true}},
-          {"id": "parity", "linkId": "parity", "label": "Parity", "kind": "numeric_with_unit", "unit": "count", "validation": {"min": 0, "max": 20, "required": true}}
+          {
+            "id": "lmp",
+            "linkId": "lmp",
+            "label": "Last menstrual period",
+            "kind": "date",
+            "validation": {
+              "required": false
+            },
+            "description": "Leave blank if she does not know it. A guessed date produces a confident gestational age that is wrong, which is worse than an absent one."
+          },
+          {
+            "id": "lmpCertainty",
+            "linkId": "lmpCertainty",
+            "label": "How sure is she of that date?",
+            "kind": "coded_single",
+            "description": "Decides whether a later scan may redate the pregnancy. An uncertain date is not a worse date, it is a different kind of evidence.",
+            "options": [
+              {
+                "code": "CERTAIN",
+                "display": "Certain, cycles regular"
+              },
+              {
+                "code": "UNCERTAIN",
+                "display": "Uncertain, or cycles irregular"
+              },
+              {
+                "code": "UNKNOWN",
+                "display": "She does not know"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "datingUltrasoundDate",
+            "linkId": "datingUltrasoundDate",
+            "label": "Dating ultrasound date",
+            "kind": "date",
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "datingUltrasoundGaDays",
+            "linkId": "datingUltrasoundGaDays",
+            "label": "Gestational age measured on that scan",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "description": "In completed days. The scan's own measurement, not the gestation implied by the last menstrual period.",
+            "validation": {
+              "min": 0,
+              "max": 300,
+              "required": false
+            }
+          },
+          {
+            "id": "gravida",
+            "linkId": "gravida",
+            "label": "Gravida",
+            "kind": "numeric_with_unit",
+            "unit": "count",
+            "validation": {
+              "min": 0,
+              "max": 20,
+              "required": false
+            },
+            "description": "As she reports it. The record derives its own count from previous pregnancies and flags a disagreement rather than overwriting hers."
+          },
+          {
+            "id": "parity",
+            "linkId": "parity",
+            "label": "Parity",
+            "kind": "numeric_with_unit",
+            "unit": "count",
+            "validation": {
+              "min": 0,
+              "max": 20,
+              "required": false
+            },
+            "description": "Pregnancies carried to viability, not babies delivered. Twins are 1."
+          }
         ]
       },
       {
         "id": "exam",
         "title": "Examination & screening",
         "fields": [
-          {"id": "bp", "linkId": "bp", "label": "Blood pressure", "kind": "text", "validation": {"required": true}},
-          {"id": "fundalHeight", "linkId": "fundalHeight", "label": "Fundal height", "kind": "numeric_with_unit", "unit": "cm", "validation": {"min": 0, "max": 50}},
-          {"id": "hivStatus", "linkId": "hivStatus", "label": "HIV status", "kind": "coded_single", "options": [{"code": "NEG", "display": "Negative"}, {"code": "POS", "display": "Positive"}, {"code": "UNKNOWN", "display": "Unknown / declined"}]}
+          {
+            "id": "systolicBp",
+            "linkId": "systolicBp",
+            "label": "Systolic blood pressure",
+            "kind": "numeric_with_unit",
+            "unit": "mmHg",
+            "description": "Hypertensive disease is the condition antenatal care most exists to catch. A threshold cannot be applied to a sentence.",
+            "validation": {
+              "min": 40,
+              "max": 300,
+              "required": true
+            }
+          },
+          {
+            "id": "diastolicBp",
+            "linkId": "diastolicBp",
+            "label": "Diastolic blood pressure",
+            "kind": "numeric_with_unit",
+            "unit": "mmHg",
+            "validation": {
+              "min": 20,
+              "max": 200,
+              "required": true
+            }
+          },
+          {
+            "id": "fundalHeight",
+            "linkId": "fundalHeight",
+            "label": "Fundal height",
+            "kind": "numeric_with_unit",
+            "unit": "cm",
+            "validation": {
+              "min": 0,
+              "max": 50
+            }
+          },
+          {
+            "id": "hivStatus",
+            "linkId": "hivStatus",
+            "label": "HIV status",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "NEG",
+                "display": "Negative"
+              },
+              {
+                "code": "POS",
+                "display": "Positive"
+              },
+              {
+                "code": "UNKNOWN",
+                "display": "Unknown / declined"
+              }
+            ]
+          }
         ]
       },
       {
         "id": "plan",
         "title": "Counselling & plan",
         "fields": [
-          {"id": "counselling", "linkId": "counselling", "label": "Counselling provided", "kind": "coded_multi", "options": [
-            {"code": "NUTRITION", "display": "Nutrition"},
-            {"code": "DANGER_SIGNS", "display": "Danger signs"},
-            {"code": "BIRTH_PLAN", "display": "Birth plan"},
-            {"code": "PMTCT", "display": "PMTCT"}
-          ]},
-          {"id": "referralDecision", "linkId": "referralDecision", "label": "Referral decision", "kind": "coded_single", "options": [{"code": "NONE", "display": "Continue routine ANC"}, {"code": "REFER", "display": "Refer"}]}
+          {
+            "id": "counselling",
+            "linkId": "counselling",
+            "label": "Counselling provided",
+            "kind": "coded_multi",
+            "options": [
+              {
+                "code": "NUTRITION",
+                "display": "Nutrition"
+              },
+              {
+                "code": "DANGER_SIGNS",
+                "display": "Danger signs"
+              },
+              {
+                "code": "BIRTH_PLAN",
+                "display": "Birth plan"
+              },
+              {
+                "code": "PMTCT",
+                "display": "PMTCT"
+              }
+            ]
+          },
+          {
+            "id": "referralDecision",
+            "linkId": "referralDecision",
+            "label": "Referral decision",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "NONE",
+                "display": "Continue routine ANC"
+              },
+              {
+                "code": "REFER",
+                "display": "Refer"
+              }
+            ]
+          }
         ]
       }
     ]

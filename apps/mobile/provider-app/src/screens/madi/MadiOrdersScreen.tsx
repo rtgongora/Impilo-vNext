@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
-import { Screen, Header, Button, Badge, LoadingSpinner, EmptyState, ErrorState } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchBloodOrders, submitBloodOrder, type BloodOrder } from "../../services/madiService";
 
 export function MadiOrdersScreen() {
@@ -69,8 +69,8 @@ export function MadiOrdersScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  card: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: "#E5E7EB", gap: 4 },
+  card: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.gray[200], gap: 4 },
   title: { fontSize: 15, fontWeight: "600" },
-  meta: { fontSize: 12, color: "#6B7280" },
+  meta: { fontSize: 12, color: colors.gray[500] },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
 });

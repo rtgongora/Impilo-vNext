@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -38,9 +39,12 @@ public class DispatchController {
                     "data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Dispatch task list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            // An empty task list reads as "nothing to dispatch", which is how a queue of pending
+            // work becomes invisible to the team meant to action it.
+            log.error("Dispatch task list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "dispatch_tasks_unavailable",
+                    "message", "Dispatch tasks could not be retrieved. Do not treat this as an empty task list.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -59,9 +63,11 @@ public class DispatchController {
                     "data", data,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Dispatch task get failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of(),
+            // An empty object is indistinguishable from a task that does not exist.
+            log.error("Dispatch task get failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "dispatch_task_unavailable",
+                    "message", "The dispatch task could not be retrieved. Do not treat this as a missing task.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

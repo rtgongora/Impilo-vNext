@@ -9,17 +9,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TextInput, TouchableOpacity, Alert } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, LoadingSpinner, EmptyState, colors } from "@impilo/mobile-design-system";
 import {
   listNhumeDeliveries,
   getNhumeTimeline,
@@ -255,5 +245,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   cancelLink: { alignItems: "center", paddingVertical: 12 },
-  cancelText: { color: "#DC2626", fontSize: 14, fontWeight: "500" },
+  cancelText: { color: colors.ui.error.main, fontSize: 14, fontWeight: "500" },
 });

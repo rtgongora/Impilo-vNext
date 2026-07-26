@@ -110,6 +110,7 @@ public class RuleContentLoader {
                 node.path("referralRequired").asBoolean(false),
                 integer(node, "ageMinDays"),
                 integer(node, "ageMaxDays"),
+                node.hasNonNull("appliesWhen") ? node.get("appliesWhen") : null,
                 strings(node.path("requiredInputs")),
                 logic,
                 message,
@@ -120,6 +121,7 @@ public class RuleContentLoader {
                 node.path("approvalStatus").asText(packApproval),
                 node.path("adaptationAuthority").asText(authority),
                 contentVersion,
+                DakProvenance.from(node.get("dakRef"), node.get("adaptation")),
                 testCases(node.path("testCases")));
     }
 

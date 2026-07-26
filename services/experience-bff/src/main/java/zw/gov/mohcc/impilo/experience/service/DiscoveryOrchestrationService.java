@@ -11,6 +11,7 @@ import zw.gov.mohcc.impilo.experience.client.MsikaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SimbaServiceClient;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,11 +97,39 @@ public class DiscoveryOrchestrationService {
             addWellness(all, results, notes);
         }
 
+        // Rank the unfiltered blend care-first. Previously the order was simply the order
+        // the lanes were called, so an "All" search with no stated intent led with oxygen
+        // cylinders and resuscitators — goods are legitimate results, but a person who has
+        // not expressed a product intent is looking for care. Goods stay first-class and
+        // searchable; they just stop being the front page of a care-discovery surface.
+        // Within a rank, closer things come first when a distance is actually known.
+        if (all) {
+            results.sort(Comparator
+                    .comparingInt((DiscoveryResult r) -> categoryRank(r.category()))
+                    .thenComparing(r -> r.distanceMeters() == null
+                            ? Double.MAX_VALUE : r.distanceMeters()));
+        }
+
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (DiscoveryResult r : results) {
             counts.merge(r.category(), 1, Integer::sum);
         }
         return new DiscoveryResponse(q, cat, results, counts, notes);
+    }
+
+    /** Care before commerce. Lower sorts earlier; anything unrecognised sorts last. */
+    private static int categoryRank(String category) {
+        if (category == null) return 99;
+        return switch (category) {
+            case "care" -> 0;
+            case "virtual" -> 1;
+            case "pharmacy" -> 2;
+            case "diagnostics" -> 3;
+            case "wellness" -> 4;
+            case "coverage" -> 5;
+            case "marketplace" -> 6;
+            default -> 99;
+        };
     }
 
     private void addFindCare(String cat, boolean all, String q, String lat, String lng,

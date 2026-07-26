@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProviders } from "../../services/professionalPagesService";
 
@@ -39,16 +39,16 @@ export function ProfessionalPagesScreen() {
 
 const styles = StyleSheet.create({
   container: { gap: 12 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  card: { flexDirection: "row", backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 12 },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  card: { flexDirection: "row", backgroundColor: colors.gray[50], borderRadius: 12, padding: 16, gap: 12 },
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#DBEAFE", alignItems: "center", justifyContent: "center" },
   avatarText: { fontSize: 20, fontWeight: "700", color: "#2563EB" },
-  name: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  role: { fontSize: 13, color: "#6B7280" },
-  facility: { fontSize: 12, color: "#6B7280" },
+  name: { fontSize: 15, fontWeight: "700", color: colors.gray[900] },
+  role: { fontSize: 13, color: colors.gray[500] },
+  facility: { fontSize: 12, color: colors.gray[500] },
   metaRow: { flexDirection: "row", gap: 12, flexWrap: "wrap" },
-  rating: { fontSize: 12, color: "#F59E0B", fontWeight: "600" },
-  exp: { fontSize: 12, color: "#6B7280" },
+  rating: { fontSize: 12, color: colors.ui.warning.main, fontWeight: "600" },
+  exp: { fontSize: 12, color: colors.gray[500] },
   fee: { fontSize: 12, color: "#009739", fontWeight: "600" },
-  bio: { fontSize: 12, color: "#4B5563", marginTop: 4 },
+  bio: { fontSize: 12, color: colors.gray[600], marginTop: 4 },
 });

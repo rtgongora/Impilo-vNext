@@ -5,7 +5,10 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
   Screen: ({ children }: any) => children,
   Header: ({ title }: any) => title,
   Card: ({ children }: any) => children,
@@ -15,7 +18,8 @@ vi.mock("@impilo/mobile-design-system", () => ({
   Badge: ({ children }: any) => children,
   LoadingSpinner: () => null,
   ErrorState: ({ title }: any) => title,
-}));
+  };
+});
 
 vi.mock("../../stores/appStore", () => ({
   useAppStore: vi.fn().mockReturnValue({ facilityId: "fac-1", isOnline: true }),

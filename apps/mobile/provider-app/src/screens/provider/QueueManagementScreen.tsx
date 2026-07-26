@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Screen, Header, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchQueue, callNext, completeEntry, fetchQueueStats } from "../../services/queueService";
 import { useAppStore } from "../../stores/appStore";
@@ -30,7 +30,7 @@ export function QueueManagementScreen() {
   const callMutation = useMutation({ mutationFn: () => callNext(String(nextWaiting?.id ?? "")), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["provider-queue"] }) });
   const completeMutation = useMutation({ mutationFn: (id: string) => completeEntry(id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["provider-queue"] }) });
 
-  const priorityColors: Record<string, string> = { URGENT: "#DC2626", HIGH: "#F59E0B", NORMAL: "#3B82F6", LOW: "#6B7280" };
+  const priorityColors: Record<string, string> = { URGENT: colors.ui.error.main, HIGH: colors.ui.warning.main, NORMAL: "#3B82F6", LOW: colors.gray[500] };
 
   return (
     <Screen>
@@ -46,14 +46,14 @@ export function QueueManagementScreen() {
               <Text style={styles.statLabel}>Waiting</Text>
             </View>
             <View style={styles.statCard}>
-              <View style={[styles.statIconCircle, { backgroundColor: "#FEF3C7" }]}>
-                <Ionicons name="pulse" size={20} color="#F59E0B" />
+              <View style={[styles.statIconCircle, { backgroundColor: colors.ui.warning.light }]}>
+                <Ionicons name="pulse" size={20} color={colors.ui.warning.main} />
               </View>
-              <Text style={[styles.statNum, { color: "#F59E0B" }]}>{stats.inProgress}</Text>
+              <Text style={[styles.statNum, { color: colors.ui.warning.main }]}>{stats.inProgress}</Text>
               <Text style={styles.statLabel}>In Progress</Text>
             </View>
             <View style={styles.statCard}>
-              <View style={[styles.statIconCircle, { backgroundColor: "#D1FAE5" }]}>
+              <View style={[styles.statIconCircle, { backgroundColor: colors.ui.success.light }]}>
                 <Ionicons name="checkmark-circle" size={20} color="#059669" />
               </View>
               <Text style={[styles.statNum, { color: "#059669" }]}>{stats.completedToday}</Text>
@@ -90,14 +90,14 @@ export function QueueManagementScreen() {
             renderItem={({ item }) => (
               <View
                 testID={`queue-entry-${String(item.id)}`}
-                style={[styles.queueItem, { borderLeftColor: priorityColors[String(item.priority)] ?? "#6B7280" }]}
+                style={[styles.queueItem, { borderLeftColor: priorityColors[String(item.priority)] ?? colors.gray[500] }]}
               >
                 <View style={styles.queueItemLeft}>
-                  <View style={[styles.priorityDot, { backgroundColor: priorityColors[String(item.priority)] ?? "#6B7280" }]} />
+                  <View style={[styles.priorityDot, { backgroundColor: priorityColors[String(item.priority)] ?? colors.gray[500] }]} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.patientName}>{String(item.patient_name ?? "Patient")}</Text>
                     <View style={styles.metaRow}>
-                      <Ionicons name="location-outline" size={11} color="#9CA3AF" />
+                      <Ionicons name="location-outline" size={11} color={colors.gray[400]} />
                       <Text style={styles.meta}>{String(item.service_point ?? "")}</Text>
                       <Text style={styles.metaDot}>·</Text>
                       <Text style={styles.meta}>{String(item.status)}</Text>
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
   },
   callNextButton: {
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   patientName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 3,
   },
   metaRow: {
@@ -232,11 +232,11 @@ const styles = StyleSheet.create({
   },
   meta: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   metaDot: {
     fontSize: 12,
-    color: "#D1D5DB",
+    color: colors.gray[300],
   },
   completeBtn: {
     backgroundColor: "#059669",

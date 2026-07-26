@@ -63,9 +63,14 @@ public class AllergiesController {
                     "data", pctData != null ? pctData : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("PCT listAllergies failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
+            // An empty 200 here reads as "no known allergies", which is the single most dangerous
+            // thing this endpoint can say: it is the finding a prescriber relies on before giving
+            // a drug. "PCT has no rows" and "PCT could not be reached" must not share a response.
+            log.error("PCT listAllergies failed for patient={}: {}", patientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "allergy_list_unavailable",
+                    "message", "Allergies could not be retrieved. Do not treat this as an "
+                               + "absence of allergies.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
