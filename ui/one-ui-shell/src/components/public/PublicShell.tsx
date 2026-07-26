@@ -14,7 +14,18 @@ import { ServiceAdvisoryBanner } from "@/components/advisory/ServiceAdvisoryBann
  * This is the guest entry the Health OS previously lacked (G-CZO-02): an ordinary
  * person can understand what Impilo is and how to get started before signing in.
  */
-export function PublicShell({ children }: { children: ReactNode }) {
+export function PublicShell({
+  children,
+  bleed,
+}: {
+  children: ReactNode;
+  /**
+   * Full-bleed content rendered directly under the header, outside the centred
+   * max-w container. The landing hero uses this so it reads as a screen-wide living
+   * canvas rather than a large rounded card floating inside the page gutter.
+   */
+  bleed?: ReactNode;
+}) {
   return (
     <div className="min-h-screen overflow-x-clip bg-[linear-gradient(180deg,#effdf9_0%,#dbf5ef_44%,#f8fafc_100%)] text-slate-900">
       {/* a11y (C8): keyboard/SR users jump past the chrome to the main landmark. */}
@@ -32,12 +43,24 @@ export function PublicShell({ children }: { children: ReactNode }) {
       */}
       <ServiceAdvisoryBanner />
 
-      <main id="main-content" className="mx-auto max-w-[90rem] px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:px-8">
+      {bleed}
+
+      <main
+        id="main-content"
+        className={`mx-auto max-w-[90rem] px-4 pb-24 sm:px-6 lg:px-8 ${bleed ? "pt-10" : "py-6 sm:py-8"}`}
+      >
         {children}
       </main>
 
-      {/* Doctrine §7: persistent, clearly labelled Emergency Help on every public page. */}
-      <EmergencyHelpButton />
+      {/*
+        Doctrine §7: Emergency is persistently reachable on every public page. On desktop
+        the header already carries it, so the floating button is a duplicate control in the
+        corner — it stays for narrow viewports, where the header condenses and the header
+        action can scroll out of reach.
+      */}
+      <div className="lg:hidden">
+        <EmergencyHelpButton />
+      </div>
 
       <PublicFooter />
     </div>

@@ -49,7 +49,10 @@ describe("WelcomeHero", () => {
       "/welcome/emergency",
     );
     expect(screen.getByRole("link", { name: "My Impilo" })).toBeInTheDocument();
-    expect(screen.getByText(/without signing in/i)).toBeInTheDocument();
+    // The "you don't need an account" promise moved into the continuity block, which now
+    // always renders — previously a first-time visitor saw nothing where it belongs.
+    expect(screen.getByTestId("hero-continuity")).toBeInTheDocument();
+    expect(screen.getByText(/without an account/i)).toBeInTheDocument();
   });
 
   it("routes safety-critical intent immediately without waiting for Nompilo", () => {

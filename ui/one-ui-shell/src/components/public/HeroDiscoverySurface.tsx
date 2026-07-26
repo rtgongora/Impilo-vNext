@@ -57,6 +57,35 @@ export interface DiscoveryResponse {
 
 type GeoStatus = "idle" | "requesting" | "denied" | "unsupported" | "error";
 
+interface Place {
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+/**
+ * Committed Zimbabwe localities (public/geo/zimbabwe-places.geojson). Map-first only
+ * means something if the map opens somewhere useful: a national view of Zimbabwe with
+ * no pins is a decorative map, not a discovery surface. So discovery starts on a city
+ * fallback — labelled as a fallback, never presented as the person's real location —
+ * and one tap swaps it for their actual position.
+ */
+const PLACES: Place[] = [
+  { label: "Harare", lat: -17.829, lng: 31.053 },
+  { label: "Bulawayo", lat: -20.157, lng: 28.583 },
+  { label: "Mutare", lat: -18.973, lng: 32.671 },
+  { label: "Gweru", lat: -19.455, lng: 29.825 },
+  { label: "Kwekwe", lat: -18.928, lng: 29.815 },
+  { label: "Kadoma", lat: -18.333, lng: 29.915 },
+  { label: "Masvingo", lat: -20.074, lng: 30.83 },
+  { label: "Chinhoyi", lat: -17.354, lng: 30.2 },
+  { label: "Victoria Falls", lat: -17.932, lng: 25.857 },
+  { label: "Marondera", lat: -18.185, lng: 31.552 },
+  { label: "Rusape", lat: -18.527, lng: 32.128 },
+  { label: "Bindura", lat: -17.301, lng: 31.093 },
+];
+const DEFAULT_PLACE = PLACES[0];
+
 /** Display chips → backend category value. "providers" is handled honestly client-side. */
 const CATEGORIES: { label: string; value: string }[] = [
   { label: "All", value: "all" },
@@ -232,7 +261,13 @@ export function HeroDiscoverySurface() {
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
-  const [location, setLocation] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number; label: string }>({
+    lat: DEFAULT_PLACE.lat,
+    lng: DEFAULT_PLACE.lng,
+    label: DEFAULT_PLACE.label,
+  });
+  /** False while we are showing a city fallback rather than the person's real position. */
+  const [preciseLocation, setPreciseLocation] = useState(false);
   // Map is the default discovery view: the brief treats spatial context as the primary
   // way people find care. List stays one click away for low-bandwidth and screen readers.
   const [view, setView] = useState<"map" | "list">("map");
@@ -278,9 +313,10 @@ export function HeroDiscoverySurface() {
     [],
   );
 
-  // Initial load: a broad blend (real products, plans, screening) before any input.
+  // Initial load searches at the city fallback rather than nowhere, so the blend leads
+  // with real facilities that have coordinates instead of unmappable commodities.
   useEffect(() => {
-    void runSearch("", "all", null);
+    void runSearch("", "all", { lat: DEFAULT_PLACE.lat, lng: DEFAULT_PLACE.lng });
   }, [runSearch]);
 
   const requestLocation = useCallback(() => {
@@ -292,6 +328,7 @@ export function HeroDiscoverySurface() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGeoStatus("idle");
+        setPreciseLocation(true);
         const loc = {
           lat: Number(pos.coords.latitude.toFixed(5)),
           lng: Number(pos.coords.longitude.toFixed(5)),
@@ -359,7 +396,7 @@ export function HeroDiscoverySurface() {
   return (
     <section
       aria-label="Get health services"
-      className="flex h-full min-h-[30rem] flex-col overflow-hidden rounded-[1.6rem] border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
+      className="flex h-full min-h-[32rem] flex-col overflow-hidden rounded-[1.6rem] border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
     >
       {/* Header + Map/List toggle */}
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pt-4 pb-3 sm:px-5">
@@ -415,27 +452,54 @@ export function HeroDiscoverySurface() {
           </div>
         </form>
 
-        {/* Category chips */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Discovery categories">
-          {location ? (
-            <span className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-900">
-              <Navigation className="h-3.5 w-3.5" aria-hidden />
-              {location.label}
-              <button type="button" aria-label="Clear location" onClick={() => setLocation(null)} className="rounded-full p-0.5 hover:bg-emerald-200/70">
-                <X className="h-3 w-3" aria-hidden />
+        {/* Location + categories. The row wraps: a horizontal scrollbar under the chips
+            reads as a browser artefact and clipped "Wellness" mid-word. */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-900">
+            <Navigation className="h-3.5 w-3.5" aria-hidden />
+            {preciseLocation ? location.label : `Showing ${location.label}`}
+          </span>
+          {!preciseLocation && (
+            <>
+              <button
+                type="button"
+                onClick={requestLocation}
+                disabled={geoStatus === "requesting"}
+                className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60"
+              >
+                {geoStatus === "requesting" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                ) : (
+                  <Navigation className="h-3.5 w-3.5" aria-hidden />
+                )}
+                Use my location
               </button>
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={requestLocation}
-              disabled={geoStatus === "requesting"}
-              className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60"
-            >
-              {geoStatus === "requesting" ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <Navigation className="h-3.5 w-3.5" aria-hidden />}
-              Near me
-            </button>
+              <label className="sr-only" htmlFor="discovery-place">
+                Choose a locality
+              </label>
+              <select
+                id="discovery-place"
+                value={location.label}
+                onChange={(e) => {
+                  const place = PLACES.find((pl) => pl.label === e.target.value) ?? DEFAULT_PLACE;
+                  const loc = { lat: place.lat, lng: place.lng, label: place.label };
+                  setLocation(loc);
+                  setSelectedKey(null);
+                  void runSearch(query, category === "providers" ? "care" : category, loc);
+                }}
+                className="min-h-8 shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:border-emerald-300"
+              >
+                {PLACES.map((pl) => (
+                  <option key={pl.label} value={pl.label}>
+                    {pl.label}
+                  </option>
+                ))}
+              </select>
+            </>
           )}
+        </div>
+
+        <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Discovery categories">
           {CATEGORIES.map((c) => {
             const count = countFor(c.value);
             return (
@@ -503,11 +567,11 @@ export function HeroDiscoverySurface() {
               of it — the map resolved to 28px at 390 and 105px at 768, a strip of
               nothing. The floor makes the surface grow instead of crushing the map.
             */}
-            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200">
+            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200 lg:min-h-[20rem]">
               <FindCareMap
                 results={[]}
                 geoMarkers={geoMarkers}
-                origin={location ? { lat: location.lat, lng: location.lng } : null}
+                origin={preciseLocation ? { lat: location.lat, lng: location.lng } : null}
                 height="100%"
                 hideCaption
                 compactChrome
@@ -576,7 +640,7 @@ export function HeroDiscoverySurface() {
                   {results.length === 0 ? (
                     <DiscoveryEmptyState
                       notes={notes}
-                      hasLocation={!!location}
+                      hasLocation={preciseLocation}
                       geoStatus={geoStatus}
                       onRequestLocation={requestLocation}
                       compact
@@ -595,7 +659,7 @@ export function HeroDiscoverySurface() {
             {results.length > 0 && (
               <div className="shrink-0">
                 <p className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  {location ? "Nearby results" : "In these results"}
+                  {preciseLocation ? "Nearby results" : `Around ${location.label}`}
                 </p>
                 <ul className="flex gap-2 overflow-x-auto pb-1">
                   {results.slice(0, 12).map((r, i) => {
@@ -663,7 +727,7 @@ export function HeroDiscoverySurface() {
                       Search a service, medicine or wellness need to see results.
                     </p>
                   )}
-                  {!location && (
+                  {!preciseLocation && (
                     <button
                       type="button"
                       onClick={requestLocation}
