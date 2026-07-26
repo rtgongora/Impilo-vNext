@@ -152,6 +152,18 @@ public class InpatientServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Provision a ward and its beds. Pairs with {@link #listWards(String)} — writes now land in the
+     * service the reads come from. Previously this went to {@code tuso /v1/wards}, a path no
+     * service in the estate serves.
+     */
+    public JsonNode createWard(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/beds/wards";
+        log.info("INPATIENT: createWard name={} facilityId={}", body.get("name"), body.get("facilityId"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode listBeds(String facilityId, String wardId, String status) {
         StringBuilder url = new StringBuilder(baseUrl + "/internal/v1/beds?facility_id=" + facilityId);
         if (wardId != null) url.append("&ward_id=").append(wardId);

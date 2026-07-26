@@ -63,6 +63,14 @@ public class FormResolverService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private zw.gov.mohcc.impilo.pct.core.clinical.PregnancyEpisodeService pregnancyEpisodeService;
 
+    /**
+     * Observations, for the adult clinical facts — weight and renal function. Field-injected and
+     * optional for the same reason as the two above: form resolution underpins every clinical
+     * encounter and must not fail because one collaborator is unavailable.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.pct.persistence.repository.ObservationRepository observationRepository;
+
     public FormResolverService(EncounterRepository encounterRepository,
                                VitoIntegration vitoIntegration,
                                FormsCatalogIntegration formsCatalogIntegration,
@@ -179,7 +187,58 @@ public class FormResolverService {
                 programmes == null ? List.of() : programmes,
                 conditions == null ? List.of() : conditions,
                 ageDays,
-                gestationalAgeWeeks(cpid));
+                gestationalAgeWeeks(cpid),
+                latestMeasurement(tenantId, cpid, WEIGHT_CODES, "MEASURED"),
+                latestMeasurement(tenantId, cpid, EGFR_CODES, null),
+                // Hepatic impairment and the current medicine list are deliberately not derived
+                // here. Both live outside pct-service — hepatic staging in the governed Child-Pugh
+                // instrument this lane owes, the medicine list in OROS — and a service-to-service
+                // call needs its own client_credentials token (fleet DoD; trust headers are not
+                // authentication). Deriving them from whatever is locally to hand would produce a
+                // fact that looks authoritative and is not, which is worse than null: null makes a
+                // rule decline to score and say why.
+                null,
+                null);
+    }
+
+    /** LOINC codes for body weight. */
+    private static final List<String> WEIGHT_CODES = List.of("29463-7", "3141-9");
+    /** LOINC codes for estimated GFR. */
+    private static final List<String> EGFR_CODES = List.of("62238-1", "48642-3", "48643-1", "33914-3");
+
+    /**
+     * The most recent observation matching any of the given codes, as a dated measurement.
+     *
+     * <p>Returns null rather than a zero when nothing has been recorded, and skips observations
+     * carrying a {@code data_absent_reason} — an observation that says why there is no value is
+     * evidence that the measurement was attempted and failed, which is not a measurement. Reading
+     * one as a value would turn a documented gap into a number.</p>
+     */
+    private DatedMeasurement latestMeasurement(java.util.UUID tenantId, String cpid,
+                                               List<String> codes, String defaultSource) {
+        if (blank(cpid) || tenantId == null || observationRepository == null) {
+            return null;
+        }
+        try {
+            for (String code : codes) {
+                for (var obs : observationRepository
+                        .findByTenantIdAndSubjectCpidAndCodeOrderByEffectiveAtDesc(tenantId, cpid, code)) {
+                    if (obs.getValueQuantity() == null) {
+                        continue;
+                    }
+                    return DatedMeasurement.of(
+                            obs.getValueQuantity().doubleValue(),
+                            obs.getValueUnit(),
+                            obs.getEffectiveAt() == null ? null : obs.getEffectiveAt().toLocalDate(),
+                            defaultSource);
+                }
+            }
+        } catch (RuntimeException e) {
+            // Unknown, not zero. A failed lookup must leave the fact absent so a rule needing it
+            // declines to score, rather than scoring against a fabricated value.
+            log.debug("Could not resolve clinical measurement for form applicability: {}", e.getMessage());
+        }
+        return null;
     }
 
     /**

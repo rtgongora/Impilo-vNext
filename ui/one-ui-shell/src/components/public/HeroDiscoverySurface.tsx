@@ -387,6 +387,26 @@ export function HeroDiscoverySurface() {
   const notes = data?.notes ?? [];
 
   /**
+   * Feature the nearest mapped result on arrival, so the map carries an actionable card
+   * rather than waiting for a click. Only ever a result that has a pin — featuring one
+   * without coordinates would put a card on a map that cannot show where it is.
+   */
+  useEffect(() => {
+    if (selectedKey || results.length === 0) return;
+    let bestKey: string | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    results.forEach((r, i) => {
+      if (r.latitude == null || r.longitude == null) return;
+      const d = r.distanceMeters ?? Number.MAX_SAFE_INTEGER;
+      if (d < bestDistance) {
+        bestDistance = d;
+        bestKey = resultKey(r, i);
+      }
+    });
+    if (bestKey) setSelectedKey(bestKey);
+  }, [results, selectedKey]);
+
+  /**
    * Kilometres from the chosen locality to the closest result that actually has a pin.
    * The find-care lane does a registry search and annotates distance afterwards — it does
    * not do a proximity query — so a locality can legitimately have no mapped care anywhere

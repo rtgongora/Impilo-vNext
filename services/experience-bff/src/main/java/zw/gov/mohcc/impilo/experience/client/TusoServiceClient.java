@@ -776,14 +776,14 @@ public class TusoServiceClient {
     }
 
     // ── Ward Management ───────────────────────────────────────────────
-
-    /** Create a ward (delegates to TUSO facility registry). */
-    public JsonNode createWard(Map<String, Object> body) {
-        String url = baseUrl + "/v1/wards";
-        log.info("TUSO: Creating ward name={}", body.get("name"));
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
-        return extractData(response);
-    }
+    //
+    // createWard() lived here and POSTed to tuso /v1/wards, which no service serves — ward creation
+    // had never worked. Hospital wards are inpatient-service's (inpatient.ward), which is also where
+    // the BFF already reads them from; see InpatientServiceClient.createWard.
+    //
+    // Tuso does own a `wards` surface, but it is zw_admin_ward — electoral wards on the geography
+    // API (ZwGeoReferenceController), reached via RegistryGeoLocalityController. Same word, different
+    // thing: do not reintroduce a hospital-ward call here.
 
     // Regulatory facility lifecycle operations
 

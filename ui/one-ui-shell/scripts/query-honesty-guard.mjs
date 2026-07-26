@@ -144,6 +144,29 @@ console.log("===================");
 console.log(`Outstanding (baseline): ${baseline.total}`);
 console.log(`Outstanding (now):      ${total}`);
 
+// A file that has been fixed must LOSE its allowance, not keep it. Otherwise the ratchet quietly
+// stops ratcheting: the file sits at 0 with a baseline of 1, and a regression back to 1 passes.
+// Borrowed from DownstreamRouteContractTest, which asserts the same thing about its own baseline —
+// the two guards should not disagree about what a baseline means.
+const staleAllowances = [];
+for (const [file, allowed] of Object.entries(baseline.files)) {
+  const current = counts[file] ?? 0;
+  if (current < allowed) {
+    staleAllowances.push(`  ${file}: fixed to ${current}, baseline still allows ${allowed}`);
+  }
+}
+
+if (staleAllowances.length > 0 && regressions.length === 0) {
+  console.error("\nFixed files are still holding an allowance — re-baseline to lock the gain in:\n");
+  console.error(staleAllowances.join("\n"));
+  console.error(
+    "\n  npm run test:query-honesty -- --write-baseline\n" +
+      "\nUntil then these files could regress to their old count without failing, which is the one\n" +
+      "thing the ratchet exists to prevent.\n",
+  );
+  process.exit(1);
+}
+
 if (regressions.length > 0) {
   console.error("\nNEW unguarded query reads — a read that failed is not an empty result:\n");
   console.error(regressions.join("\n"));

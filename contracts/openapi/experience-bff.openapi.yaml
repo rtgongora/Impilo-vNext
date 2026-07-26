@@ -10571,15 +10571,6 @@ paths:
       responses:
         '200':
           description: Success
-  /workspaces/specialties:
-    get:
-      operationId: experiencebff_get__workspaces_specialties
-      tags:
-        - Generated-From-Handler
-      summary: Documented from experience-bff handler (complete-not-delete sync)
-      responses:
-        '200':
-          description: Success
   /catalogs:
     get:
       operationId: experiencebff_get__catalogs
