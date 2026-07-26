@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Screen, Header, type TabItem } from "@impilo/mobile-design-system";
+import { Screen, Header, type TabItem, colors } from "@impilo/mobile-design-system";
 import { SocialFeedScreen } from "./SocialFeedScreen";
 import { ClubsScreen } from "./ClubsScreen";
 import { ProfessionalPagesScreen } from "./ProfessionalPagesScreen";
@@ -37,7 +37,7 @@ function TabBar({ tab, setTab }: { tab: SocialTab; setTab: (t: SocialTab) => voi
             <Ionicons
               name={t.icon}
               size={16}
-              color={tab === t.id ? "#059669" : "#6B7280"}
+              color={tab === t.id ? "#059669" : colors.gray[500]}
               style={styles.tabIcon}
             />
             <Text style={[styles.tabText, tab === t.id && styles.activeTabText]}>{t.label}</Text>
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
   tabBarContainer: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.gray[200],
     paddingHorizontal: 12,
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
@@ -99,12 +99,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     gap: 5,
   },
-  activeTab: { backgroundColor: "#D1FAE5" },
+  activeTab: { backgroundColor: colors.ui.success.light },
   tabIcon: { marginRight: 1 },
-  tabText: { fontSize: 13, color: "#6B7280", fontWeight: "500" },
+  tabText: { fontSize: 13, color: colors.gray[500], fontWeight: "500" },
   activeTabText: { color: "#059669", fontWeight: "600" },
   content: { flex: 1 },
   scrollContent: { padding: 16 },

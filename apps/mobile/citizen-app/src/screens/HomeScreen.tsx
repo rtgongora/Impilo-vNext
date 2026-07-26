@@ -6,19 +6,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  Avatar,
-  DashboardSection,
-  ServiceCard,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, LoadingSpinner, Avatar, DashboardSection, ServiceCard, colors } from "@impilo/mobile-design-system";
 import { buildCitizenServiceCards } from "../navigation/citizenServiceNavigation";
 import { buildCitizenCommsKpis } from "../lib/homeCommsKpis";
 
@@ -50,12 +38,12 @@ interface QuickAction {
 }
 
 const QUICK_ACTIONS: ReadonlyArray<QuickAction> = [
-  { id: "book",          label: "Book",          icon: "calendar-outline",  color: "#059669", bg: "#D1FAE5", target: { kind: "tab", tab: "personal" } },
+  { id: "book",          label: "Book",          icon: "calendar-outline",  color: "#059669", bg: colors.ui.success.light, target: { kind: "tab", tab: "personal" } },
   { id: "refill",        label: "Refill",        icon: "refresh-outline",   color: "#1E40AF", bg: "#DBEAFE", target: { kind: "tab", tab: "personal" } },
   { id: "message",       label: "Message",       icon: "chatbubble-outline", color: "#7C3AED", bg: "#EDE9FE", target: { kind: "tab", tab: "messaging" } },
   { id: "telehealth",    label: "Video",         icon: "videocam-outline",  color: "#0891B2", bg: "#CFFAFE", target: { kind: "tab", tab: "telehealth" } },
   { id: "track",         label: "Track",         icon: "cube-outline",      color: "#0F766E", bg: "#CCFBF1", target: { kind: "track" } },
-  { id: "records",       label: "Records",       icon: "folder-outline",    color: "#D97706", bg: "#FEF3C7", target: { kind: "tab", tab: "personal" } },
+  { id: "records",       label: "Records",       icon: "folder-outline",    color: "#D97706", bg: colors.ui.warning.light, target: { kind: "tab", tab: "personal" } },
   { id: "public-health", label: "Public Health", icon: "pulse-outline",     color: "#0369A1", bg: "#E0F2FE", target: { kind: "tab", tab: "public_health" } },
 ];
 
@@ -320,11 +308,11 @@ export function HomeScreen() {
                     <View style={styles.apptDetails}>
                       <Text style={styles.apptType}>{nextAppointment.appointmentType}</Text>
                       <View style={styles.apptMetaRow}>
-                        <Ionicons name="location-outline" size={12} color="#6B7280" />
+                        <Ionicons name="location-outline" size={12} color={colors.gray[500]} />
                         <Text style={styles.apptFacility}>{nextAppointment.facilityName}</Text>
                       </View>
                       <View style={styles.apptMetaRow}>
-                        <Ionicons name="time-outline" size={12} color="#6B7280" />
+                        <Ionicons name="time-outline" size={12} color={colors.gray[500]} />
                         <Text style={styles.apptTime}>
                           {new Date(nextAppointment.scheduledAt).toLocaleTimeString([], {
                             hour: "2-digit",
@@ -337,7 +325,7 @@ export function HomeScreen() {
                   </View>
                 ) : (
                   <View style={styles.emptyRow}>
-                    <Ionicons name="calendar-outline" size={32} color="#D1D5DB" />
+                    <Ionicons name="calendar-outline" size={32} color={colors.gray[300]} />
                     <Text style={styles.emptyText}>No upcoming appointments</Text>
                     <Button
                       title="Book Now"
@@ -383,7 +371,7 @@ export function HomeScreen() {
                   ))
                 ) : (
                   <View style={styles.emptyRow}>
-                    <Ionicons name="medical-outline" size={32} color="#D1D5DB" />
+                    <Ionicons name="medical-outline" size={32} color={colors.gray[300]} />
                     <Text style={styles.emptyText}>No active medications</Text>
                   </View>
                 )}
@@ -409,7 +397,7 @@ export function HomeScreen() {
                         idx < pendingResults.length - 1 ? styles.listRowBorder : undefined,
                       ]}
                     >
-                      <View style={[styles.rxIconWrap, { backgroundColor: "#FEF3C7" }]}>
+                      <View style={[styles.rxIconWrap, { backgroundColor: colors.ui.warning.light }]}>
                         <Ionicons name="flask" size={16} color="#D97706" />
                       </View>
                       <View style={styles.listText}>
@@ -446,7 +434,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     right: 0,
-    backgroundColor: "#DC2626",
+    backgroundColor: colors.ui.error.main,
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -509,11 +497,11 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   profileFacility: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   profileFacilityActions: {
     marginTop: 10,
@@ -521,13 +509,13 @@ const styles = StyleSheet.create({
   },
   profileCpid: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     fontFamily: "monospace",
   },
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: -8,
@@ -566,24 +554,24 @@ const styles = StyleSheet.create({
   commsValue: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.gray[900],
   },
   commsHint: {
     fontSize: 10,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
   },
   commsWarning: {
     borderWidth: 1,
     borderColor: "#FCD34D",
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.ui.warning.light,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
   commsWarningText: {
     fontSize: 11,
-    color: "#92400E",
+    color: colors.ui.warning.text,
   },
   loadingBox: {
     paddingVertical: 32,
@@ -627,7 +615,7 @@ const styles = StyleSheet.create({
   apptType: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   apptMetaRow: {
     flexDirection: "row",
@@ -636,11 +624,11 @@ const styles = StyleSheet.create({
   },
   apptFacility: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   apptTime: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   emptyRow: {
     alignItems: "center",
@@ -649,7 +637,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
   },
   listRow: {
@@ -660,7 +648,7 @@ const styles = StyleSheet.create({
   },
   listRowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.gray[100],
   },
   rxIconWrap: {
     width: 36,
@@ -677,10 +665,10 @@ const styles = StyleSheet.create({
   listTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   listSub: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
 });

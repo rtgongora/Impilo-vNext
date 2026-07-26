@@ -5,20 +5,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, TextField, Select, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchServices,
   fetchServiceRequests,
@@ -200,7 +187,7 @@ export function MarketplaceScreen() {
               <Ionicons
                 name={t.icon}
                 size={15}
-                color={tab === t.id ? "#059669" : "#6B7280"}
+                color={tab === t.id ? "#059669" : colors.gray[500]}
               />
               <Text style={[styles.tabPillText, tab === t.id && styles.tabPillTextActive]}>
                 {t.label}
@@ -260,7 +247,7 @@ export function MarketplaceScreen() {
         {tab === "browse" ? (
           <>
             <View style={styles.searchRow}>
-              <Ionicons name="search-outline" size={18} color="#9CA3AF" style={styles.searchIcon} />
+              <Ionicons name="search-outline" size={18} color={colors.gray[400]} style={styles.searchIcon} />
               <TextField
                 value={search}
                 onChange={setSearch}
@@ -288,7 +275,7 @@ export function MarketplaceScreen() {
               </View>
             ) : services.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="storefront-outline" size={48} color="#D1D5DB" />
+                <Ionicons name="storefront-outline" size={48} color={colors.gray[300]} />
                 <Text style={styles.emptyTitle}>No services found</Text>
                 <Text style={styles.emptyMessage}>Try adjusting your search or category filter</Text>
               </View>
@@ -323,7 +310,7 @@ export function MarketplaceScreen() {
                   </View>
                   <Text style={styles.serviceDescText} numberOfLines={2}>{svc.description}</Text>
                   <View style={styles.serviceMeta}>
-                    <Ionicons name="business-outline" size={12} color="#9CA3AF" />
+                    <Ionicons name="business-outline" size={12} color={colors.gray[400]} />
                     <Text style={styles.facilityText}>{svc.facilityName}</Text>
                     {svc.rating !== undefined ? (
                       <>
@@ -346,7 +333,7 @@ export function MarketplaceScreen() {
               </View>
             ) : requests.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="receipt-outline" size={48} color="#D1D5DB" />
+                <Ionicons name="receipt-outline" size={48} color={colors.gray[300]} />
                 <Text style={styles.emptyTitle}>No requests yet</Text>
                 <Text style={styles.emptyMessage}>Browse services and make your first booking</Text>
               </View>
@@ -358,14 +345,14 @@ export function MarketplaceScreen() {
                       <Text style={styles.requestServiceName}>{req.serviceName}</Text>
                       <Text style={styles.requestFacility}>{req.facilityName}</Text>
                       <View style={styles.requestMetaRow}>
-                        <Ionicons name="calendar-outline" size={12} color="#9CA3AF" />
+                        <Ionicons name="calendar-outline" size={12} color={colors.gray[400]} />
                         <Text style={styles.requestDate}>
                           {new Date(req.requestedAt).toLocaleDateString()}
                         </Text>
                       </View>
                       {req.scheduledAt ? (
                         <View style={styles.requestMetaRow}>
-                          <Ionicons name="time-outline" size={12} color="#9CA3AF" />
+                          <Ionicons name="time-outline" size={12} color={colors.gray[400]} />
                           <Text style={styles.scheduledText}>
                             {new Date(req.scheduledAt).toLocaleString()}
                           </Text>
@@ -373,7 +360,7 @@ export function MarketplaceScreen() {
                       ) : null}
                       {req.trackingNumber ? (
                         <View style={styles.requestMetaRow}>
-                          <Ionicons name="barcode-outline" size={12} color="#9CA3AF" />
+                          <Ionicons name="barcode-outline" size={12} color={colors.gray[400]} />
                           <Text style={styles.trackingText}>{req.trackingNumber}</Text>
                         </View>
                       ) : null}
@@ -416,7 +403,7 @@ export function MarketplaceScreen() {
               <View style={styles.centered}><LoadingSpinner size="md" /></View>
             ) : deliveries.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="bicycle-outline" size={48} color="#D1D5DB" />
+                <Ionicons name="bicycle-outline" size={48} color={colors.gray[300]} />
                 <Text style={styles.emptyTitle}>No deliveries yet</Text>
               </View>
             ) : (
@@ -475,15 +462,15 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingVertical: 9,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   tabPillActive: {
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.ui.success.light,
   },
   tabPillText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   tabPillTextActive: {
     color: "#059669",
@@ -503,11 +490,11 @@ const styles = StyleSheet.create({
   bookingTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   bookingDescription: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.gray[700],
   },
   priceBadgeRow: {
     flexDirection: "row",
@@ -516,7 +503,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.ui.success.light,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
@@ -553,14 +540,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 11,
     borderRadius: 12,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     alignItems: "center",
     justifyContent: "center",
   },
   cancelBtnText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   searchRow: {
     position: "relative",
@@ -582,15 +569,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   categoryChipActive: {
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.ui.success.light,
   },
   categoryChipText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   categoryChipTextActive: {
     color: "#059669",
@@ -608,11 +595,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   emptyMessage: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     paddingHorizontal: 24,
   },
@@ -640,7 +627,7 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   serviceBadgeRow: {
     flexDirection: "row",
@@ -659,7 +646,7 @@ const styles = StyleSheet.create({
     color: "#1E40AF",
   },
   servicePriceBadge: {
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.ui.success.light,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -682,7 +669,7 @@ const styles = StyleSheet.create({
   },
   serviceDescText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     lineHeight: 18,
   },
   serviceMeta: {
@@ -692,7 +679,7 @@ const styles = StyleSheet.create({
   },
   facilityText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     flex: 1,
   },
   ratingText: {
@@ -723,12 +710,12 @@ const styles = StyleSheet.create({
   requestServiceName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 2,
   },
   requestFacility: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   requestMetaRow: {
     flexDirection: "row",
@@ -737,22 +724,22 @@ const styles = StyleSheet.create({
   },
   requestDate: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   scheduledText: {
     fontSize: 12,
-    color: "#374151",
+    color: colors.gray[700],
   },
   trackingText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   requestActions: {
     alignItems: "flex-end",
     gap: 8,
   },
   cancelRequestBtn: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 10,
@@ -760,6 +747,6 @@ const styles = StyleSheet.create({
   cancelRequestBtnText: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
 });

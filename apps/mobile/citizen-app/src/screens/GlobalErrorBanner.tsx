@@ -4,7 +4,7 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Button } from "@impilo/mobile-design-system";
+import { Button, colors } from "@impilo/mobile-design-system";
 import { useAppStore } from "../stores/appStore";
 
 export function GlobalErrorBanner() {
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 12,
     paddingHorizontal: 16,
-    backgroundColor: "#FEE2E2",
+    backgroundColor: colors.ui.error.light,
     borderBottomWidth: 1,
     borderBottomColor: "#FECACA",
     flexDirection: "row",
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "#991B1B",
+    color: colors.ui.error.text,
     fontSize: 14,
     flex: 1,
   },

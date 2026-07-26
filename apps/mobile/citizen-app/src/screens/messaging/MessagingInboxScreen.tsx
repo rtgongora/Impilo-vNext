@@ -5,20 +5,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-  Avatar,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, TextField, Select, Avatar, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useCommunicationDashboard, type Conversation } from "@impilo/mobile-messaging";
 import {
   fetchConversations,
@@ -206,7 +193,7 @@ export function MessagingInboxScreen() {
           </View>
         ) : conversations.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubbles-outline" size={48} color="#D1D5DB" />
+            <Ionicons name="chatbubbles-outline" size={48} color={colors.gray[300]} />
             <Text style={styles.emptyTitle}>No conversations</Text>
             <Text style={styles.emptyMessage}>Start a conversation with your provider or support team</Text>
           </View>
@@ -283,16 +270,16 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
   },
   kpiValue: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   kpiLabel: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginTop: 2,
   },
   filterRow: {
@@ -303,15 +290,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   filterPillActive: {
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.ui.success.light,
   },
   filterPillText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   filterPillTextActive: {
     color: "#059669",
@@ -327,7 +314,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   newMessageBtnCancel: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   newMessageBtnText: {
     fontSize: 13,
@@ -335,7 +322,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   newMessageBtnTextCancel: {
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   btnIcon: {
     marginRight: 2,
@@ -353,7 +340,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 14,
   },
   formContainer: {
@@ -388,11 +375,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   emptyMessage: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     paddingHorizontal: 24,
   },
@@ -425,13 +412,13 @@ const styles = StyleSheet.create({
   conversationTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     flex: 1,
     marginRight: 8,
   },
   lastMessageText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginBottom: 6,
   },
   conversationMeta: {
@@ -462,7 +449,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginLeft: "auto",
   },
 });

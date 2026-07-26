@@ -17,6 +17,7 @@ import { TrackByReferenceScreen } from "../screens/gateway/TrackByReferenceScree
 import { AssuranceChoiceScreen } from "../screens/auth/AssuranceChoiceScreen";
 import { appStore, useAppStore } from "../stores/appStore";
 import { fetchProfile } from "../services/profileService";
+import { colors } from "@impilo/mobile-design-system";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -98,6 +99,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
 });

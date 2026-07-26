@@ -5,20 +5,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, TextField, Select, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchSessions, requestTeleconsult } from "../../services/telehealthService";
 import type { TelehealthSession } from "../../types";
 import { TelehealthSessionScreen } from "./TelehealthSessionScreen";
@@ -45,7 +32,7 @@ const SESSION_ICON_COLOR: Record<string, string> = {
 
 const SESSION_ICON_BG: Record<string, string> = {
   VIDEO: "#EFF6FF",
-  AUDIO: "#D1FAE5",
+  AUDIO: colors.ui.success.light,
   CHAT: "#F5F3FF",
 };
 
@@ -231,7 +218,7 @@ export function TelehealthListScreen() {
           </View>
         ) : sessions.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="videocam-outline" size={48} color="#D1D5DB" />
+            <Ionicons name="videocam-outline" size={48} color={colors.gray[300]} />
             <Text style={styles.emptyTitle}>No teleconsultations</Text>
             <Text style={styles.emptyMessage}>Request your first teleconsultation using the button above</Text>
           </View>
@@ -241,23 +228,23 @@ export function TelehealthListScreen() {
               <View
                 style={[
                   styles.sessionIconCircle,
-                  { backgroundColor: SESSION_ICON_BG[session.sessionType] ?? "#F3F4F6" },
+                  { backgroundColor: SESSION_ICON_BG[session.sessionType] ?? colors.gray[100] },
                 ]}
               >
                 <Ionicons
                   name={SESSION_ICON_MAP[session.sessionType] ?? "videocam"}
                   size={22}
-                  color={SESSION_ICON_COLOR[session.sessionType] ?? "#6B7280"}
+                  color={SESSION_ICON_COLOR[session.sessionType] ?? colors.gray[500]}
                 />
               </View>
               <View style={styles.sessionInfo}>
                 <Text style={styles.sessionType}>{session.sessionType}</Text>
                 <View style={styles.metaRow}>
-                  <Ionicons name="person-outline" size={12} color="#9CA3AF" />
+                  <Ionicons name="person-outline" size={12} color={colors.gray[400]} />
                   <Text style={styles.providerText}>{`Dr. ${session.providerName}`}</Text>
                 </View>
                 <View style={styles.metaRow}>
-                  <Ionicons name="time-outline" size={12} color="#9CA3AF" />
+                  <Ionicons name="time-outline" size={12} color={colors.gray[400]} />
                   <Text style={styles.scheduledText}>
                     {new Date(session.scheduledAt).toLocaleString()}
                   </Text>
@@ -309,7 +296,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#9CA3AF",
+    color: colors.gray[400],
     letterSpacing: 0.8,
   },
   requestBtn: {
@@ -322,7 +309,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   requestBtnCancel: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   requestBtnText: {
     fontSize: 13,
@@ -330,7 +317,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   requestBtnTextCancel: {
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   btnIcon: {
     marginRight: 1,
@@ -348,7 +335,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 14,
   },
   formContainer: {
@@ -381,11 +368,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   emptyMessage: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     paddingHorizontal: 24,
   },
@@ -417,7 +404,7 @@ const styles = StyleSheet.create({
   sessionType: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 2,
   },
   metaRow: {
@@ -427,15 +414,15 @@ const styles = StyleSheet.create({
   },
   providerText: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
   },
   scheduledText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   notesText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 2,
   },
   sessionActions: {

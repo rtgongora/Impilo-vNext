@@ -10,6 +10,7 @@ import {
   type NompiloSeverity,
 } from "../../services/nompiloGuidanceService";
 import { appStore } from "../../stores/appStore";
+import { colors } from "@impilo/mobile-design-system";
 
 /**
  * Nompilo Contextual Guidance — mobile.
@@ -86,7 +87,7 @@ function GuidanceCard({ item, routePath }: { item: NompiloGuidanceItem; routePat
             testID={`nompilo-followup-${item.key}`}
             onPress={() => followUp.mutate()}
           >
-            <Ionicons name="notifications-outline" size={12} color="#374151" />
+            <Ionicons name="notifications-outline" size={12} color={colors.gray[700]} />
             <Text style={styles.followUpText}>
               {followUp.isSuccess ? "Follow-up requested" : "Remind me"}
             </Text>
@@ -170,12 +171,12 @@ export function NompiloGuidanceSection({
 const styles = StyleSheet.create({
   container: { marginTop: 12, marginBottom: 4 },
   headerRow: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6, marginBottom: 2 },
-  header: { fontSize: 13, fontWeight: "600", color: "#111827" },
+  header: { fontSize: 13, fontWeight: "600", color: colors.gray[900] },
   teaser: { flex: 1, fontSize: 12, color: "#6b7280" },
   badge: {
     fontSize: 10,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
     backgroundColor: "#f3f4f6",
     paddingHorizontal: 6,
     paddingVertical: 1,
@@ -192,12 +193,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  title: { flex: 1, fontSize: 14, fontWeight: "600", color: "#111827", paddingRight: 8 },
+  title: { flex: 1, fontSize: 14, fontWeight: "600", color: colors.gray[900], paddingRight: 8 },
   body: { fontSize: 12, color: "#4b5563", marginTop: 2 },
   actions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginTop: 8, gap: 10 },
   cta: { flexDirection: "row", alignItems: "center", gap: 4 },
   ctaText: { fontSize: 12, fontWeight: "600", color: "#0f766e" },
   followUp: { flexDirection: "row", alignItems: "center", gap: 4 },
-  followUpText: { fontSize: 12, color: "#374151" },
+  followUpText: { fontSize: 12, color: colors.gray[700] },
   via: { fontSize: 10, color: "#9ca3af", textTransform: "uppercase" },
 });

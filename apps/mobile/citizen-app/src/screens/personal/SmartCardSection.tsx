@@ -13,7 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import QRCode from "react-native-qrcode-svg";
 import * as LocalAuthentication from "expo-local-authentication";
-import { Button, LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
+import { Button, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMyCards,
@@ -255,7 +255,7 @@ export function SmartCardSection() {
         <TextInput
           style={styles.input}
           placeholder="Amount (USD)"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.gray[400]}
           keyboardType="decimal-pad"
           value={payAmount}
           onChangeText={setPayAmount}
@@ -281,14 +281,14 @@ export function SmartCardSection() {
         <TextInput
           style={styles.input}
           placeholder="What's it for? (e.g. Hospital bill)"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.gray[400]}
           value={billTitle}
           onChangeText={setBillTitle}
         />
         <TextInput
           style={styles.input}
           placeholder="Target amount (optional)"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.gray[400]}
           keyboardType="decimal-pad"
           value={billTarget}
           onChangeText={setBillTarget}
@@ -359,20 +359,20 @@ const styles = StyleSheet.create({
     borderColor: "#F1F5F9",
   },
   panelHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
-  panelTitle: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  panelText: { fontSize: 12, color: "#6B7280", lineHeight: 17 },
+  panelTitle: { fontSize: 14, fontWeight: "700", color: colors.gray[900] },
+  panelText: { fontSize: 12, color: colors.gray[500], lineHeight: 17 },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   input: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: "#111827",
+    color: colors.gray[900],
   },
-  hintMuted: { fontSize: 11, color: "#9CA3AF" },
+  hintMuted: { fontSize: 11, color: colors.gray[400] },
   emptyCard: { alignItems: "center", gap: 8, padding: 24 },
-  emptyTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  emptyText: { fontSize: 13, color: "#6B7280", textAlign: "center", lineHeight: 19 },
+  emptyTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900] },
+  emptyText: { fontSize: 13, color: colors.gray[500], textAlign: "center", lineHeight: 19 },
 });

@@ -11,9 +11,11 @@ const identityMocks = vi.hoisted(() => ({
   verifyPatientRecovery: vi.fn(),
 }));
 
-vi.mock("@impilo/mobile-design-system", async () => {
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
   const React = await import("react");
   return {
+    ...actual,
     Screen: ({ children }: { children: React.ReactNode }) => React.createElement("main", null, children),
     Header: ({ title }: { title: string }) => React.createElement("h1", null, title),
     Card: ({ children }: { children: React.ReactNode }) => React.createElement("section", null, children),

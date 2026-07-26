@@ -4,7 +4,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from "react-native";
 import { apiClient } from "@impilo/mobile-api-client";
-import { Screen, Header, Card, CardBody, Button, LoadingSpinner, ErrorState, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, LoadingSpinner, ErrorState, Badge, colors } from "@impilo/mobile-design-system";
 import { appStore, useAppStore } from "../stores/appStore";
 import {
   FacilityDisclosure,
@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
   pad: { padding: 16, gap: 12, paddingBottom: 32 },
   banner: { fontSize: 12, color: "#B91C1C", marginBottom: 4 },
   titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10 },
-  name: { flex: 1, fontSize: 16, fontWeight: "800", color: "#111827" },
-  meta: { fontSize: 13, color: "#6B7280", marginTop: 6 },
-  field: { fontSize: 13, color: "#374151", marginTop: 10 },
+  name: { flex: 1, fontSize: 16, fontWeight: "800", color: colors.gray[900] },
+  meta: { fontSize: 13, color: colors.gray[500], marginTop: 6 },
+  field: { fontSize: 13, color: colors.gray[700], marginTop: 10 },
   actions: { gap: 10, marginTop: 4 },
 });

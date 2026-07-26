@@ -7,13 +7,7 @@
 
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
-import {
-  Button,
-  Card,
-  CardBody,
-  TextField,
-  Select,
-} from "@impilo/mobile-design-system";
+import { Button, Card, CardBody, TextField, Select, colors } from "@impilo/mobile-design-system";
 import {
   createSocialPost,
   nompiloComposerAssist,
@@ -265,13 +259,13 @@ function extractText(result: unknown): string | null {
 const styles = StyleSheet.create({
   composerPrompt: {
     fontSize: 15,
-    color: "#6B7280",
+    color: colors.gray[500],
     paddingVertical: 6,
   },
   label: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
     marginBottom: 4,
   },
   chipRow: { gap: 8, paddingVertical: 2 },
@@ -299,8 +293,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 6,
   },
-  nompiloLabel: { fontSize: 12, fontWeight: "600", color: "#374151" },
-  hint: { fontSize: 11, color: "#6B7280" },
+  nompiloLabel: { fontSize: 12, fontWeight: "600", color: colors.gray[700] },
+  hint: { fontSize: 11, color: colors.gray[500] },
   actionRow: {
     flexDirection: "row",
     justifyContent: "flex-end",

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Screen, Header } from "@impilo/mobile-design-system";
+import { Screen, Header, colors } from "@impilo/mobile-design-system";
 import { WalletOverviewSection } from "./WalletOverviewSection";
 import { MarketplaceStoreSection } from "./MarketplaceStoreSection";
 import { ProfileSection } from "./ProfileSection";
@@ -258,7 +258,7 @@ export function PersonalScreen() {
                   <Ionicons
                     name={tab.icon}
                     size={14}
-                    color={isActive ? "#059669" : "#9CA3AF"}
+                    color={isActive ? "#059669" : colors.gray[400]}
                   />
                   <Text
                     style={[
@@ -293,12 +293,12 @@ export function PersonalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
   },
   tabBarWrapper: {
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.gray[200],
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -323,10 +323,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   tabPillActive: {
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.ui.success.light,
   },
   tabPillInactive: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   tabLabel: {
     fontSize: 12,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   },
   tabLabelInactive: {
     fontWeight: "400",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   sectionContainer: {
     flex: 1,

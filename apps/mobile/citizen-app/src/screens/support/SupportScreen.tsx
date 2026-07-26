@@ -4,18 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Button, Badge, TextField, Select, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchTickets, createTicket, fetchArticles } from "../../services/supportService";
 import type { SupportTicket, KnowledgeArticle } from "../../services/supportService";
 
@@ -287,7 +276,7 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: "row",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     borderRadius: 8,
     padding: 4,
   },
@@ -307,10 +296,10 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   tabTextActive: {
-    color: "#111827",
+    color: colors.gray[900],
     fontWeight: "600",
   },
   headerRow: {
@@ -334,17 +323,17 @@ const styles = StyleSheet.create({
   },
   ticketCategory: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginVertical: 2,
   },
   ticketDescription: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
     marginVertical: 2,
   },
   ticketDate: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 4,
   },
   resolutionText: {
@@ -366,20 +355,20 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 12,
-    color: "#6B7280",
-    backgroundColor: "#F3F4F6",
+    color: colors.gray[500],
+    backgroundColor: colors.gray[100],
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
   },
   articleBody: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
     lineHeight: 18,
     marginBottom: 4,
   },
   articleDate: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
 });

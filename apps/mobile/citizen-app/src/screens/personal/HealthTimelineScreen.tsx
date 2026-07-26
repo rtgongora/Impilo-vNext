@@ -4,11 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import {
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getTimeline } from "../../services/healthTimelineService";
 import type { TimelineEntry, TimelineEntryType } from "../../types";
 
@@ -24,7 +20,7 @@ const TYPE_DOT_COLOR: Record<TimelineEntryType, string> = {
   ENCOUNTER: "#3B82F6",
   LAB_RESULT: "#8B5CF6",
   PRESCRIPTION: "#10B981",
-  APPOINTMENT: "#F59E0B",
+  APPOINTMENT: colors.ui.warning.main,
   IMMUNIZATION: "#EF4444",
 };
 
@@ -69,7 +65,7 @@ export function HealthTimelineScreen() {
 
         <View style={styles.timeline}>
           {entries.map((entry, index) => {
-            const dotColor = TYPE_DOT_COLOR[entry.type] ?? "#9CA3AF";
+            const dotColor = TYPE_DOT_COLOR[entry.type] ?? colors.gray[400];
             const icon = TYPE_ICON[entry.type] ?? "\u{1F4CB}";
             const isLast = index === entries.length - 1;
 
@@ -144,7 +140,7 @@ const styles = StyleSheet.create({
   connector: {
     width: 2,
     flex: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.gray[200],
     marginVertical: 4,
   },
   entryContent: {
@@ -164,34 +160,34 @@ const styles = StyleSheet.create({
   entryType: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.gray[500],
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   entryDate: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginLeft: "auto",
   },
   entryTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     marginBottom: 2,
   },
   entryDescription: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
     marginVertical: 2,
   },
   entryFacility: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginVertical: 2,
   },
   entryProvider: {
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginVertical: 2,
   },
 });

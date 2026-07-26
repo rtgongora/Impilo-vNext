@@ -4,7 +4,7 @@
  */
 import React, { useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
-import { Badge, Button, LoadingSpinner, EmptyState } from "@impilo/mobile-design-system";
+import { Badge, Button, LoadingSpinner, EmptyState, colors } from "@impilo/mobile-design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchSocialPages, followSocialPage, type SocialPage } from "../../services/socialService";
 
@@ -97,16 +97,16 @@ export function PagesScreen() {
 
 const styles = StyleSheet.create({
   container: { gap: 12 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
   filterRow: { gap: 6, paddingVertical: 4 },
-  card: { flexDirection: "row", backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 12 },
+  card: { flexDirection: "row", backgroundColor: colors.gray[50], borderRadius: 12, padding: 16, gap: 12 },
   avatar: { width: 48, height: 48, borderRadius: 12, backgroundColor: "#EEF2FF", alignItems: "center", justifyContent: "center" },
   avatarText: { fontSize: 18, fontWeight: "700", color: "#3730A3" },
-  name: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  meta: { fontSize: 12, color: "#6B7280" },
-  bio: { fontSize: 12, color: "#4B5563" },
+  name: { fontSize: 15, fontWeight: "700", color: colors.gray[900] },
+  meta: { fontSize: 12, color: colors.gray[500] },
+  bio: { fontSize: 12, color: colors.gray[600] },
   followButton: { backgroundColor: "#7C3AED", borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14, alignSelf: "flex-start", marginTop: 4 },
-  followingButton: { backgroundColor: "#E5E7EB" },
+  followingButton: { backgroundColor: colors.gray[200] },
   followText: { color: "#FFF", fontSize: 13, fontWeight: "600" },
-  followingText: { color: "#374151" },
+  followingText: { color: colors.gray[700] },
 });

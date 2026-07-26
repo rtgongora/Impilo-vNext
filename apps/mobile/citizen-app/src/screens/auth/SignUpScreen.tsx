@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, TextInput, Pressable, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Button, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import {
   fetchRegistrationReadiness,
   registerCitizen,
@@ -178,20 +178,20 @@ const styles = StyleSheet.create({
   container: { padding: 24, paddingBottom: 48, backgroundColor: "#FFFFFF", flexGrow: 1 },
   backRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 16 },
   backText: { color: GREEN, fontSize: 14, fontWeight: "600" },
-  title: { fontSize: 24, fontWeight: "800", color: "#111827" },
-  subtitle: { marginTop: 8, fontSize: 14, color: "#6B7280", lineHeight: 20, marginBottom: 20 },
-  label: { fontSize: 12, fontWeight: "600", color: "#374151", marginTop: 12, marginBottom: 4 },
+  title: { fontSize: 24, fontWeight: "800", color: colors.gray[900] },
+  subtitle: { marginTop: 8, fontSize: 14, color: colors.gray[500], lineHeight: 20, marginBottom: 20 },
+  label: { fontSize: 12, fontWeight: "600", color: colors.gray[700], marginTop: 12, marginBottom: 4 },
   input: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
-    color: "#111827",
+    color: colors.gray[900],
   },
   checkboxRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 16 },
-  checkboxLabel: { fontSize: 14, color: "#374151" },
+  checkboxLabel: { fontSize: 14, color: colors.gray[700] },
   errorBox: {
     backgroundColor: "#FEF2F2",
     borderRadius: 10,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderColor: "#FECACA",
     marginBottom: 12,
   },
-  errorText: { color: "#DC2626", fontSize: 13 },
+  errorText: { color: colors.ui.error.main, fontSize: 13 },
   warnBox: {
     backgroundColor: "#FFFBEB",
     borderRadius: 10,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     borderColor: "#FDE68A",
     marginBottom: 12,
   },
-  warnText: { color: "#92400E", fontSize: 13 },
+  warnText: { color: colors.ui.warning.text, fontSize: 13 },
   loadingRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 16, justifyContent: "center" },
-  loadingText: { fontSize: 15, color: "#6B7280" },
+  loadingText: { fontSize: 15, color: colors.gray[500] },
 });

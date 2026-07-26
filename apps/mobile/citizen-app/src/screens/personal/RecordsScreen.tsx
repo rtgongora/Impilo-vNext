@@ -4,14 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, FlatList, Pressable, ScrollView } from "react-native";
-import {
-  Card,
-  CardBody,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardBody, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getRecords } from "../../services/recordsService";
 import type { MedicalRecord, RecordType } from "../../types";
 
@@ -162,7 +155,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
   },
   filterChipActive: {
     backgroundColor: "#2563EB",
@@ -170,7 +163,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   filterChipTextActive: {
     color: "#FFFFFF",
@@ -202,22 +195,22 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.gray[700],
     marginVertical: 2,
   },
   providerText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginVertical: 2,
   },
   facilityText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginVertical: 2,
   },
   summaryText: {
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 4,
   },
 });

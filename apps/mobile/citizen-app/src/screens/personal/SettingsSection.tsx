@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Button,
-  Switch,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Button, Switch, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useAuth } from "@impilo/mobile-auth";
 import { getPreferences, updatePreference, type NotificationPreference } from "@impilo/mobile-messaging";
 import { fetchConsents, updateConsent, deleteAccount } from "../../services/profileService";
@@ -160,7 +155,7 @@ export function SettingsSection() {
         <View style={styles.card}>
           <View style={styles.accountRow}>
             <View style={styles.accountIconCircle}>
-              <Ionicons name="log-out-outline" size={18} color="#6B7280" />
+              <Ionicons name="log-out-outline" size={18} color={colors.gray[500]} />
             </View>
             <View style={styles.accountContent}>
               <Text style={styles.accountActionLabel}>Sign Out</Text>
@@ -197,7 +192,7 @@ export function SettingsSection() {
           {showDeleteConfirm ? (
             <View style={styles.deleteConfirmBox}>
               <View style={styles.deleteWarningHeader}>
-                <Ionicons name="warning" size={18} color="#991B1B" />
+                <Ionicons name="warning" size={18} color={colors.ui.error.text} />
                 <Text style={styles.deleteWarningTitle}>Are you sure?</Text>
               </View>
               <Text style={styles.deleteWarningText}>
@@ -238,7 +233,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
@@ -257,7 +252,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    color: "#9CA3AF",
+    color: colors.gray[400],
     fontSize: 14,
   },
   consentRow: {
@@ -267,7 +262,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.gray[100],
   },
   lastRow: {
     borderBottomWidth: 0,
@@ -276,7 +271,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.ui.success.light,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -287,18 +282,18 @@ const styles = StyleSheet.create({
   consentCategory: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   consentDescription: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 2,
   },
   notifRow: {
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.gray[100],
     gap: 10,
   },
   notifTop: {
@@ -318,7 +313,7 @@ const styles = StyleSheet.create({
   notifCategory: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   notifToggles: {
     flexDirection: "row",
@@ -329,14 +324,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
     borderRadius: 10,
     paddingVertical: 6,
     paddingHorizontal: 10,
   },
   toggleLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
   },
   accountRow: {
@@ -346,19 +341,19 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.gray[100],
   },
   accountIconCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
   dangerIconCircle: {
-    backgroundColor: "#FEE2E2",
+    backgroundColor: colors.ui.error.light,
   },
   accountContent: {
     flex: 1,
@@ -366,14 +361,14 @@ const styles = StyleSheet.create({
   accountActionLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   dangerLabel: {
     color: "#EF4444",
   },
   accountActionSub: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 1,
   },
   deleteConfirmBox: {
@@ -393,7 +388,7 @@ const styles = StyleSheet.create({
   deleteWarningTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#991B1B",
+    color: colors.ui.error.text,
   },
   deleteWarningText: {
     color: "#B91C1C",

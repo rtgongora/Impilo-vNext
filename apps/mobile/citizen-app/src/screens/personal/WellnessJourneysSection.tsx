@@ -10,7 +10,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Card, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Card, Button, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchPlans,
@@ -138,9 +138,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   heading: { fontSize: 16, fontWeight: "600" },
-  sectionTitle: { fontSize: 14, fontWeight: "700", marginTop: 16, marginBottom: 8, color: "#374151" },
-  itemTitle: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  muted: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+  sectionTitle: { fontSize: 14, fontWeight: "700", marginTop: 16, marginBottom: 8, color: colors.gray[700] },
+  itemTitle: { fontSize: 15, fontWeight: "600", color: colors.gray[900] },
+  muted: { fontSize: 13, color: colors.gray[500], marginTop: 2 },
   caution: { fontSize: 12, color: "#B45309", marginTop: 6 },
   success: { fontSize: 13, color: "#047857", marginTop: 8 },
 });

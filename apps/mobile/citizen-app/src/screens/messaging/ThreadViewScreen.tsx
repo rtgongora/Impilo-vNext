@@ -4,17 +4,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  TextField,
-  Avatar,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, TextField, Avatar, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import type { Conversation, Message } from "@impilo/mobile-messaging";
 import { fetchMessages, sendMessage, markConversationRead } from "../../services/messagingService";
 import { useAppStore } from "../../stores/appStore";
@@ -129,7 +119,7 @@ export function ThreadViewScreen({ conversation, onBack }: ThreadViewScreenProps
                   style={[
                     styles.messageBubble,
                     {
-                      backgroundColor: isOwnMessage(msg) ? "#2563EB" : "#F3F4F6",
+                      backgroundColor: isOwnMessage(msg) ? "#2563EB" : colors.gray[100],
                     },
                   ]}
                 >
@@ -139,7 +129,7 @@ export function ThreadViewScreen({ conversation, onBack }: ThreadViewScreenProps
                   <Text
                     style={[
                       styles.messageBody,
-                      { color: isOwnMessage(msg) ? "white" : "#111827" },
+                      { color: isOwnMessage(msg) ? "white" : colors.gray[900] },
                     ]}
                   >
                     {msg.body}
@@ -148,7 +138,7 @@ export function ThreadViewScreen({ conversation, onBack }: ThreadViewScreenProps
                     style={[
                       styles.messageTime,
                       {
-                        color: isOwnMessage(msg) ? "rgba(255,255,255,0.7)" : "#9CA3AF",
+                        color: isOwnMessage(msg) ? "rgba(255,255,255,0.7)" : colors.gray[400],
                       },
                     ]}
                   >
@@ -207,7 +197,7 @@ const styles = StyleSheet.create({
   senderName: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.gray[500],
     marginBottom: 4,
   },
   messageBody: {
@@ -223,7 +213,7 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: colors.gray[200],
     flexDirection: "row",
     gap: 8,
     alignItems: "center",

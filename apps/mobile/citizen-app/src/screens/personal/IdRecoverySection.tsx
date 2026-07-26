@@ -7,7 +7,7 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet, ScrollView } from "react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Screen, Header, Card, CardBody, Button } from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, colors } from "@impilo/mobile-design-system";
 import {
   resolvePatientIdentity,
   searchIdentities,
@@ -120,23 +120,23 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   contentContainer: { padding: 16, gap: 16 },
   panel: { gap: 10 },
-  title: { fontSize: 18, fontWeight: "800", color: "#111827" },
-  hint: { fontSize: 13, color: "#6B7280", lineHeight: 18 },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
+  title: { fontSize: 18, fontWeight: "800", color: colors.gray[900] },
+  hint: { fontSize: 13, color: colors.gray[500], lineHeight: 18 },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
   textArea: {
     minHeight: 90,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 10,
     fontSize: 12,
     fontFamily: "monospace",
     textAlignVertical: "top",
   },
-  label: { fontSize: 12, fontWeight: "700", color: "#374151" },
-  resultRow: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 8, backgroundColor: "#F9FAFB" },
-  resultTitle: { fontSize: 12, fontWeight: "700", color: "#111827" },
-  resultMeta: { fontSize: 11, color: "#6B7280", marginTop: 2 },
+  label: { fontSize: 12, fontWeight: "700", color: colors.gray[700] },
+  resultRow: { borderWidth: 1, borderColor: colors.gray[200], borderRadius: 8, padding: 8, backgroundColor: colors.gray[50] },
+  resultTitle: { fontSize: 12, fontWeight: "700", color: colors.gray[900] },
+  resultMeta: { fontSize: 11, color: colors.gray[500], marginTop: 2 },
   error: { fontSize: 12, color: "#B91C1C" },
-  preview: { fontSize: 11, color: "#374151", backgroundColor: "#F3F4F6", borderRadius: 8, padding: 8 },
+  preview: { fontSize: 11, color: colors.gray[700], backgroundColor: colors.gray[100], borderRadius: 8, padding: 8 },
 });

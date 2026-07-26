@@ -15,10 +15,14 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
   LoadingSpinner: () => null,
   ErrorState: ({ title }: any) => title,
-}));
+  };
+});
 
 vi.mock("@impilo/mobile-api-client", () => ({
   ApiError: class ApiError extends Error {

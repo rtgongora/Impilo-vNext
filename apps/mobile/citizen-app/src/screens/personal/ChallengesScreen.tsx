@@ -3,16 +3,7 @@
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, TextInput, ScrollView, StyleSheet } from "react-native";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchChallenges,
   joinChallenge,
@@ -280,9 +271,9 @@ export function ChallengesScreen() {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-  HIGH: "#DC2626",
+  HIGH: colors.ui.error.main,
   MEDIUM: "#D97706",
-  LOW: "#6B7280",
+  LOW: colors.gray[500],
 };
 
 const styles = StyleSheet.create({
@@ -295,7 +286,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   goalsSectionHeader: {
     flexDirection: "row",
@@ -314,20 +305,20 @@ const styles = StyleSheet.create({
   challengeTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
     flex: 1,
   },
   challengeDesc: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   challengeMeta: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   progressBar: {
     height: 6,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.gray[200],
     borderRadius: 3,
     marginVertical: 4,
   },
@@ -341,7 +332,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.gray[300],
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
@@ -360,20 +351,20 @@ const styles = StyleSheet.create({
   goalTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
     flex: 1,
   },
   goalDesc: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   goalProgress: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#374151",
+    color: colors.gray[700],
   },
   goalDate: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
 });

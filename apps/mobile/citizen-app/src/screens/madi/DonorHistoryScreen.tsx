@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { Screen, Header, LoadingSpinner, EmptyState, ErrorState } from "@impilo/mobile-design-system";
+import { Screen, Header, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { fetchDonorHistory, type DonorHistory } from "../../services/madiService";
 
 interface Props {
@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 16 },
   section: { gap: 8 },
-  sectionTitle: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  row: { backgroundColor: "#FFFFFF", borderRadius: 10, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
+  sectionTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
+  row: { backgroundColor: "#FFFFFF", borderRadius: 10, padding: 12, borderWidth: 1, borderColor: colors.gray[200] },
   rowTitle: { fontSize: 14, fontWeight: "600" },
-  rowMeta: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  rowMeta: { fontSize: 12, color: colors.gray[500], marginTop: 2 },
 });

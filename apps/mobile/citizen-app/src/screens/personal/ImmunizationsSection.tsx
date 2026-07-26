@@ -6,18 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
-import {
-  Screen,
-  Header,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardHeader, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import type { Immunization } from "../../types";
 import { appStore } from "../../stores/appStore";
 import { fetchImmunizations } from "../../services/clinicalRecordsService";
@@ -177,15 +166,15 @@ const styles = StyleSheet.create({
   summaryNumber: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#1F2937",
+    color: colors.gray[800],
     textAlign: "center",
   },
   dueNumber: {
-    color: "#F59E0B",
+    color: colors.ui.warning.main,
   },
   summaryLabel: {
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.gray[500],
     textAlign: "center",
     marginTop: 4,
   },
@@ -194,10 +183,10 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   detailValue: {
     fontSize: 14,
-    color: "#1F2937",
+    color: colors.gray[800],
   },
 });

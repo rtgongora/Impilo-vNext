@@ -11,9 +11,11 @@ const authMocks = vi.hoisted(() => ({ establishFromTokenResponse: vi.fn() }));
 vi.mock("../../services/contactOtpService", () => otpMocks);
 vi.mock("@impilo/mobile-auth", () => ({ useAuth: () => authMocks }));
 
-vi.mock("@impilo/mobile-design-system", async () => {
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
   const React = await import("react");
   return {
+    ...actual,
     Button: ({ title, onPress, disabled, testID }: { title: string; onPress: () => void; disabled?: boolean; testID?: string }) =>
       React.createElement("button", { disabled, onClick: onPress, "data-testid": testID }, title),
     TextField: ({ value, onChangeText, testID, placeholder }: { value: string; onChangeText: (v: string) => void; testID?: string; placeholder?: string }) =>

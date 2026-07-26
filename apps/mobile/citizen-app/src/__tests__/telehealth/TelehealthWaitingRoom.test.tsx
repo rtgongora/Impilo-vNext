@@ -51,9 +51,11 @@ vi.mock("@impilo/mobile-session", async () => {
   };
 });
 
-vi.mock("@impilo/mobile-design-system", async () => {
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
   const React = await import("react");
   return {
+    ...actual,
     Screen: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children),
     Header: ({ title, leftElement }: { title: string; leftElement?: React.ReactNode }) =>
       React.createElement("header", null, leftElement, title),

@@ -10,7 +10,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import NetInfo from "@react-native-community/netinfo";
-import { ThemeProvider } from "@impilo/mobile-design-system";
+import { ThemeProvider, colors } from "@impilo/mobile-design-system";
 import { authStore } from "@impilo/mobile-auth";
 import { onStepUpRequired } from "@impilo/mobile-api-client";
 import { AppNavigator } from "./navigation/AppNavigator";
@@ -89,6 +89,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 18,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
 });

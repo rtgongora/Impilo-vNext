@@ -8,17 +8,7 @@ import {
   useNotifications,
   type Notification,
 } from "@impilo/mobile-messaging";
-import {
-  Screen,
-  Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { appStore } from "../stores/appStore";
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -157,12 +147,12 @@ const styles = StyleSheet.create({
   },
   notificationBody: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginVertical: 4,
   },
   notificationTimestamp: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   unreadDot: {
     width: 8,

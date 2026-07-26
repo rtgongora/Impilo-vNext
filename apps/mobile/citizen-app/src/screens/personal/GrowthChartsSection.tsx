@@ -6,7 +6,7 @@
 
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
-import { Screen, Header, Card, CardBody, Select, EmptyState, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Select, EmptyState, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import type { GrowthMeasurement } from "../../types";
 
@@ -104,16 +104,16 @@ const styles = StyleSheet.create({
   chartTitle: { fontSize: 16, fontWeight: "600", marginBottom: 12 },
   chartPlaceholder: {
     height: 200,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
   },
   placeholderText: { fontSize: 48, marginBottom: 8 },
-  placeholderLabel: { color: "#6B7280" },
+  placeholderLabel: { color: colors.gray[500] },
   sectionTitle: { fontSize: 16, fontWeight: "600", marginTop: 16 },
   measurementCard: { marginTop: 8 },
   measurementValue: { fontSize: 20, fontWeight: "600" },
-  measurementMeta: { fontSize: 14, color: "#6B7280", marginTop: 4 },
+  measurementMeta: { fontSize: 14, color: colors.gray[500], marginTop: 4 },
   percentile: { fontSize: 14, color: "#2563EB", marginTop: 4 },
 });

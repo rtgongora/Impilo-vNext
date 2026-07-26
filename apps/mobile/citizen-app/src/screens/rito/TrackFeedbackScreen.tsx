@@ -8,15 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  LoadingSpinner,
-} from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Button, Badge, TextField, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { ApiError } from "@impilo/mobile-api-client";
 import { trackCase, caseTimeline } from "../../services/ritoFeedbackService";
 import type { RitoCase, RitoCaseEvent } from "../../services/ritoFeedbackService";
@@ -215,18 +207,18 @@ const styles = StyleSheet.create({
   },
   subText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   formContainer: {
     gap: 14,
   },
   errorText: {
     fontSize: 13,
-    color: "#DC2626",
+    color: colors.ui.error.main,
   },
   notFoundText: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.gray[700],
   },
   caseBody: {
     gap: 10,
@@ -238,7 +230,7 @@ const styles = StyleSheet.create({
   },
   referenceLabel: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
   },
   resolutionText: {
@@ -248,7 +240,7 @@ const styles = StyleSheet.create({
   },
   emptyTimeline: {
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   timeline: {
     gap: 12,
@@ -271,18 +263,18 @@ const styles = StyleSheet.create({
   timelineType: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
   },
   timelineStatus: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.gray[700],
   },
   timelineNote: {
     fontSize: 13,
-    color: "#4B5563",
+    color: colors.gray[600],
   },
   timelineDate: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
 });

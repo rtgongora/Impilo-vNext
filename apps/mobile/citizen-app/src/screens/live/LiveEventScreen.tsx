@@ -2,15 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Alert, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Screen,
-  Header,
-  Button,
-  Badge,
-  TextField,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, TextField, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchEvent,
   joinEvent,
@@ -151,7 +143,7 @@ export function LiveEventScreen({ eventId, onBack }: Props) {
         {showMadiLink ? (
           <View style={styles.madiCard} testID="live-madi-followup">
             <View style={styles.madiHeader}>
-              <Ionicons name="heart" size={20} color="#DC2626" />
+              <Ionicons name="heart" size={20} color={colors.ui.error.main} />
               <Text style={styles.madiTitle}>Blood donation follow-up</Text>
             </View>
             <Text style={styles.madiDesc}>
@@ -217,12 +209,12 @@ export function LiveEventScreen({ eventId, onBack }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { flex: 1, backgroundColor: colors.gray[50] },
   content: { padding: 16, gap: 16, paddingBottom: 32 },
-  hero: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", gap: 8 },
+  hero: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.gray[200], gap: 8 },
   badges: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  description: { fontSize: 14, color: "#374151", lineHeight: 20 },
-  meta: { fontSize: 12, color: "#6B7280" },
+  description: { fontSize: 14, color: colors.gray[700], lineHeight: 20 },
+  meta: { fontSize: 12, color: colors.gray[500] },
   actions: { gap: 8 },
   madiCard: {
     backgroundColor: "#FEF2F2",
@@ -233,8 +225,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   madiHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  madiTitle: { fontSize: 15, fontWeight: "600", color: "#991B1B" },
+  madiTitle: { fontSize: 15, fontWeight: "600", color: colors.ui.error.text },
   madiDesc: { fontSize: 13, color: "#7F1D1D", lineHeight: 18 },
-  section: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", gap: 10 },
-  sectionTitle: { fontSize: 14, fontWeight: "600", color: "#111827" },
+  section: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.gray[200], gap: 10 },
+  sectionTitle: { fontSize: 14, fontWeight: "600", color: colors.gray[900] },
 });

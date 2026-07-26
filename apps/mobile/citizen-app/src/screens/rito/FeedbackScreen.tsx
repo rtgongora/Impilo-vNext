@@ -8,16 +8,7 @@
 
 import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-  Switch,
-} from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Button, Badge, TextField, Select, Switch, colors } from "@impilo/mobile-design-system";
 import { submitFeedback } from "../../services/ritoFeedbackService";
 import type { RitoCase, RitoCaseType } from "../../services/ritoFeedbackService";
 import { appStore } from "../../stores/appStore";
@@ -181,21 +172,21 @@ const styles = StyleSheet.create({
   },
   subText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   formContainer: {
     gap: 14,
   },
   errorText: {
     fontSize: 13,
-    color: "#DC2626",
+    color: colors.ui.error.main,
   },
   successBody: {
     gap: 14,
   },
   successText: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.gray[700],
   },
   referenceRow: {
     flexDirection: "row",
@@ -204,7 +195,7 @@ const styles = StyleSheet.create({
   },
   referenceLabel: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     fontWeight: "500",
   },
 });

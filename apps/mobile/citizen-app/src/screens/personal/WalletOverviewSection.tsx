@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
+import { LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPersonWalletOverview } from "../../services/personHealthWalletService";
 import { NompiloGuidanceSection } from "./NompiloGuidanceSection";
@@ -178,23 +178,23 @@ export function WalletOverviewSection() {
 
 const styles = StyleSheet.create({
   container: { paddingBottom: 24 },
-  title: { fontSize: 20, fontWeight: "700", color: "#111827" },
+  title: { fontSize: 20, fontWeight: "700", color: colors.gray[900] },
   tagline: { marginTop: 2, fontSize: 14, fontWeight: "600", color: "#2563EB" },
-  subtitle: { marginTop: 4, fontSize: 13, color: "#6B7280" },
+  subtitle: { marginTop: 4, fontSize: 13, color: colors.gray[500] },
   meterCard: {
     marginTop: 16,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     backgroundColor: "#FFFFFF",
   },
   meterRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  meterLabel: { fontSize: 13, fontWeight: "600", color: "#111827" },
-  meterPercent: { fontSize: 13, fontWeight: "700", color: "#111827" },
-  meterTrack: { height: 8, borderRadius: 8, backgroundColor: "#F3F4F6", overflow: "hidden" },
+  meterLabel: { fontSize: 13, fontWeight: "600", color: colors.gray[900] },
+  meterPercent: { fontSize: 13, fontWeight: "700", color: colors.gray[900] },
+  meterTrack: { height: 8, borderRadius: 8, backgroundColor: colors.gray[100], overflow: "hidden" },
   meterFill: { height: 8, borderRadius: 8, backgroundColor: "#10B981" },
-  meterHint: { marginTop: 6, fontSize: 11, color: "#6B7280" },
+  meterHint: { marginTop: 6, fontSize: 11, color: colors.gray[500] },
   nextCard: {
     marginTop: 16,
     padding: 12,
@@ -203,22 +203,22 @@ const styles = StyleSheet.create({
     borderColor: "#FDE68A",
     backgroundColor: "#FFFBEB",
   },
-  nextHeader: { fontSize: 12, fontWeight: "700", color: "#92400E", marginBottom: 6 },
+  nextHeader: { fontSize: 12, fontWeight: "700", color: colors.ui.warning.text, marginBottom: 6 },
   nextItem: { marginBottom: 6 },
-  nextTitle: { fontSize: 13, fontWeight: "600", color: "#111827" },
-  nextWhy: { fontSize: 11, color: "#6B7280" },
+  nextTitle: { fontSize: 13, fontWeight: "600", color: colors.gray[900] },
+  nextWhy: { fontSize: 11, color: colors.gray[500] },
   grid: { marginTop: 16, flexDirection: "row", flexWrap: "wrap", gap: 12 },
   card: {
     width: "47%",
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     backgroundColor: "#FFFFFF",
     gap: 4,
   },
-  cardLabel: { fontSize: 13, fontWeight: "600", color: "#111827" },
-  cardCount: { fontSize: 11, color: "#6B7280" },
-  cardMutedWarn: { fontSize: 11, color: "#9CA3AF" },
-  cardSource: { fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" },
+  cardLabel: { fontSize: 13, fontWeight: "600", color: colors.gray[900] },
+  cardCount: { fontSize: 11, color: colors.gray[500] },
+  cardMutedWarn: { fontSize: 11, color: colors.gray[400] },
+  cardSource: { fontSize: 9, color: colors.gray[400], textTransform: "uppercase" },
 });

@@ -4,18 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardHeader, CardBody, Button, Badge, TextField, Select, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getReminders, createReminder, updateReminder, deleteReminder } from "../../services/remindersService";
 import type { Reminder, ReminderType, Recurrence } from "../../types";
 
@@ -285,17 +274,17 @@ const styles = StyleSheet.create({
   },
   dateTimeText: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.gray[700],
     marginVertical: 2,
   },
   recurrenceText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
     marginVertical: 2,
   },
   descriptionText: {
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginVertical: 2,
   },
   statusText: {
@@ -305,7 +294,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   statusDisabled: {
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   actionColumn: {
     alignItems: "center",
@@ -322,7 +311,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#10B981",
   },
   toggleOff: {
-    backgroundColor: "#D1D5DB",
+    backgroundColor: colors.gray[300],
   },
   toggleText: {
     fontSize: 12,

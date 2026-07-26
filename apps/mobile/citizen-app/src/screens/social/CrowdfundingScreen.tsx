@@ -7,7 +7,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert, Switch, Linking } from "react-native";
-import { Badge, Button, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Badge, Button, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCampaigns, donate } from "../../services/crowdfundingService";
 import type { CrowdfundingCampaign } from "../../types";
@@ -160,27 +160,27 @@ export function CrowdfundingScreen() {
 
 const styles = StyleSheet.create({
   container: { gap: 12 },
-  title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  emptyText: { fontSize: 13, color: "#6B7280" },
-  errorText: { fontSize: 13, color: "#DC2626" },
-  card: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 8 },
+  title: { fontSize: 18, fontWeight: "700", color: colors.gray[900] },
+  emptyText: { fontSize: 13, color: colors.gray[500] },
+  errorText: { fontSize: 13, color: colors.ui.error.main },
+  card: { backgroundColor: colors.gray[50], borderRadius: 12, padding: 16, gap: 8 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  campaignTitle: { fontSize: 16, fontWeight: "700", color: "#111827", flex: 1 },
-  story: { fontSize: 13, color: "#4B5563", lineHeight: 18 },
+  campaignTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900], flex: 1 },
+  story: { fontSize: 13, color: colors.gray[600], lineHeight: 18 },
   progressSection: { gap: 4 },
-  progressBar: { height: 8, backgroundColor: "#E5E7EB", borderRadius: 4 },
-  progressFill: { height: 8, backgroundColor: "#22C55E", borderRadius: 4 },
+  progressBar: { height: 8, backgroundColor: colors.gray[200], borderRadius: 4 },
+  progressFill: { height: 8, backgroundColor: colors.ui.success.main, borderRadius: 4 },
   progressMeta: { flexDirection: "row", gap: 4, alignItems: "baseline" },
-  raised: { fontSize: 16, fontWeight: "700", color: "#22C55E" },
-  goal: { fontSize: 13, color: "#6B7280" },
-  donors: { fontSize: 12, color: "#9CA3AF" },
-  deadline: { fontSize: 12, color: "#F59E0B" },
+  raised: { fontSize: 16, fontWeight: "700", color: colors.ui.success.main },
+  goal: { fontSize: 13, color: colors.gray[500] },
+  donors: { fontSize: 12, color: colors.gray[400] },
+  deadline: { fontSize: 12, color: colors.ui.warning.main },
   donateForm: { gap: 8 },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
+  input: { borderWidth: 1, borderColor: colors.gray[300], borderRadius: 8, padding: 10, fontSize: 14 },
   anonymousRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  anonymousLabel: { fontSize: 13, color: "#4B5563" },
+  anonymousLabel: { fontSize: 13, color: colors.gray[600] },
   donateActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  cancelText: { color: "#6B7280", fontSize: 14 },
-  donateButton: { backgroundColor: "#DC2626", borderRadius: 8, paddingVertical: 12, alignItems: "center" },
+  cancelText: { color: colors.gray[500], fontSize: 14 },
+  donateButton: { backgroundColor: colors.ui.error.main, borderRadius: 8, paddingVertical: 12, alignItems: "center" },
   donateButtonText: { color: "#FFF", fontSize: 14, fontWeight: "600" },
 });

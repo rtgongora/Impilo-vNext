@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, Alert, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Button,
-  Badge,
-  LoadingSpinner,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Button, Badge, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchAppointments,
   cancelAppointment,
@@ -120,7 +115,7 @@ export function AppointmentsSection() {
       {appointments.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
-            <Ionicons name="calendar-outline" size={32} color="#D1D5DB" />
+            <Ionicons name="calendar-outline" size={32} color={colors.gray[300]} />
           </View>
           <Text style={styles.emptyTitle}>No appointments yet</Text>
           <Text style={styles.emptyMessage}>
@@ -149,17 +144,17 @@ export function AppointmentsSection() {
                     </Badge>
                   </View>
                   <View style={styles.metaRow}>
-                    <Ionicons name="location-outline" size={13} color="#9CA3AF" />
+                    <Ionicons name="location-outline" size={13} color={colors.gray[400]} />
                     <Text style={styles.metaText}>{appt.facilityName}</Text>
                   </View>
                   {appt.providerName ? (
                     <View style={styles.metaRow}>
-                      <Ionicons name="person-outline" size={13} color="#9CA3AF" />
+                      <Ionicons name="person-outline" size={13} color={colors.gray[400]} />
                       <Text style={styles.metaText}>{`Dr. ${appt.providerName}`}</Text>
                     </View>
                   ) : null}
                   <View style={styles.metaRow}>
-                    <Ionicons name="time-outline" size={13} color="#9CA3AF" />
+                    <Ionicons name="time-outline" size={13} color={colors.gray[400]} />
                     <Text style={styles.metaText}>{time}</Text>
                   </View>
                   {appt.reason ? (
@@ -236,13 +231,13 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6B7280",
+    color: colors.gray[500],
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
   sectionSubtitle: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 2,
   },
   emptyContainer: {
@@ -254,7 +249,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.gray[100],
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
@@ -262,11 +257,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.gray[700],
   },
   emptyMessage: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     textAlign: "center",
     paddingHorizontal: 24,
   },
@@ -320,7 +315,7 @@ const styles = StyleSheet.create({
   appointmentType: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
     flex: 1,
   },
   metaRow: {
@@ -330,11 +325,11 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   reasonText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
     marginTop: 2,
   },
   actionRow: {
@@ -347,12 +342,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 10,
     borderRadius: 10,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.gray[50],
     gap: 6,
   },
   messageLine: {
     fontSize: 12,
-    color: "#374151",
+    color: colors.gray[700],
   },
   messageComposer: {
     flexDirection: "row",
@@ -363,7 +358,7 @@ const styles = StyleSheet.create({
   messageInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.gray[200],
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,

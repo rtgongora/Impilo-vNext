@@ -5,14 +5,18 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 
-vi.mock("@impilo/mobile-design-system", () => ({
+vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
   Card: ({ children }: any) => children,
   CardBody: ({ children }: any) => children,
   Button: ({ title, onPress }: any) => null,
   LoadingSpinner: () => null,
   EmptyState: ({ title }: any) => title,
   ErrorState: ({ title }: any) => title,
-}));
+  };
+});
 
 vi.mock("../../services/cartService", () => ({
   fetchCart: vi.fn().mockResolvedValue({ id: "cart-1", items: [], totalItems: 0, totalAmount: 0, currency: "ZAR" }),

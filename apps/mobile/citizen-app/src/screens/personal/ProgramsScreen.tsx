@@ -3,15 +3,7 @@
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import {
-  Card,
-  CardBody,
-  Button,
-  Badge,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
+import { Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import {
   fetchPrograms,
   enrollInProgram,
@@ -172,7 +164,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   myProgramsTitle: {
     marginTop: 8,
@@ -183,11 +175,11 @@ const styles = StyleSheet.create({
   programName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.gray[900],
   },
   programDesc: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.gray[500],
   },
   programMeta: {
     flexDirection: "row",
@@ -196,7 +188,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
   enrollmentContent: {
     gap: 6,
@@ -209,17 +201,17 @@ const styles = StyleSheet.create({
   enrollmentName: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.gray[900],
     flex: 1,
   },
   enrollmentProgress: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#374151",
+    color: colors.gray[700],
   },
   progressBar: {
     height: 6,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.gray[200],
     borderRadius: 3,
   },
   progressFill: {
@@ -229,6 +221,6 @@ const styles = StyleSheet.create({
   },
   enrollmentDate: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.gray[400],
   },
 });
