@@ -41,6 +41,7 @@ public record TabularRule(
         String approvalStatus,
         String adaptationAuthority,
         String contentVersion,
+        DakProvenance provenance,
         List<TestCase> testCases) {
 
     /**

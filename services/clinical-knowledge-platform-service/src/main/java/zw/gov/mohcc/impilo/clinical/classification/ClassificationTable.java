@@ -78,7 +78,8 @@ public record ClassificationTable(
             String action,
             List<String> treatments,
             boolean referralRequired,
-            boolean urgentReferral) {
+            boolean urgentReferral,
+            zw.gov.mohcc.impilo.clinical.rules.tabular.DakProvenance provenance) {
 
         public boolean isDefault() {
             return logic == null || logic.isNull();

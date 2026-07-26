@@ -121,6 +121,7 @@ public class RuleContentLoader {
                 node.path("approvalStatus").asText(packApproval),
                 node.path("adaptationAuthority").asText(authority),
                 contentVersion,
+                DakProvenance.from(node.get("dakRef"), node.get("adaptation")),
                 testCases(node.path("testCases")));
     }
 

@@ -142,7 +142,8 @@ public class DangerSignEvaluationService {
                         result.usedInputs(),
                         rule.sourceRefs(),
                         rule.contentVersion(),
-                        rule.approvalStatus()));
+                        rule.approvalStatus(),
+                        rule.provenance()));
             }
         }
 
@@ -248,7 +249,8 @@ public class DangerSignEvaluationService {
             List<String> triggeringFindings,
             List<String> sourceRefs,
             String contentVersion,
-            String approvalStatus) {
+            String approvalStatus,
+            zw.gov.mohcc.impilo.clinical.rules.tabular.DakProvenance provenance) {
 
         public Map<String, Object> toMap() {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -267,6 +269,12 @@ public class DangerSignEvaluationService {
             map.put("source_refs", sourceRefs);
             map.put("content_version", contentVersion);
             map.put("approval_status", approvalStatus);
+            // Who says so, and is this the international guidance or our variation of it. Omitted
+            // rather than emitted empty when a rule declares no provenance: a blank citation looks
+            // like an answer, and the traceability guard is what reports the absence.
+            if (provenance != null) {
+                map.put("dak_provenance", provenance.toMap());
+            }
             return map;
         }
     }
