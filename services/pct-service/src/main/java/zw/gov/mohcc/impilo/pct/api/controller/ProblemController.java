@@ -4,8 +4,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.pct.core.clinical.DuplicateProblemException;
+import zw.gov.mohcc.impilo.pct.core.clinical.ProblemLinkService;
 import zw.gov.mohcc.impilo.pct.core.clinical.ProblemService;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ProblemEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.ProblemLinkEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
@@ -26,9 +28,11 @@ import java.util.stream.Collectors;
 public class ProblemController {
 
     private final ProblemService problemService;
+    private final ProblemLinkService linkService;
 
-    public ProblemController(ProblemService problemService) {
+    public ProblemController(ProblemService problemService, ProblemLinkService linkService) {
         this.problemService = problemService;
+        this.linkService = linkService;
     }
 
     @GetMapping
@@ -88,6 +92,44 @@ public class ProblemController {
             @RequestBody Map<String, Object> body) {
         ProblemEntity p = problemService.changeStatus(problemId, String.valueOf(body.get("clinical_status")));
         return ResponseEntity.ok(ApiResponse.ok(toMap(p), TrustContextHolder.require().correlationId().toString()));
+    }
+
+    // ── Links: what this problem rests on, caused, and is treated by ────────────
+
+    @GetMapping("/{problemId}/links")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> links(@PathVariable UUID problemId) {
+        List<Map<String, Object>> out = linkService.list(problemId)
+                .stream().map(ProblemController::linkToMap).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok(out, TrustContextHolder.require().correlationId().toString()));
+    }
+
+    @PostMapping("/{problemId}/links")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> link(
+            @PathVariable UUID problemId,
+            @RequestBody Map<String, Object> body) {
+        ProblemLinkEntity link = linkService.link(problemId, body);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(linkToMap(link), TrustContextHolder.require().correlationId().toString()));
+    }
+
+    @DeleteMapping("/links/{linkId}")
+    public ResponseEntity<Void> unlink(@PathVariable UUID linkId) {
+        linkService.unlink(linkId);
+        return ResponseEntity.noContent().build();
+    }
+
+    private static Map<String, Object> linkToMap(ProblemLinkEntity link) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("link_id", link.getLinkId().toString());
+        m.put("problem_id", link.getProblemId().toString());
+        m.put("link_type", link.getLinkType());
+        m.put("target_type", link.getTargetType());
+        m.put("target_ref", link.getTargetProblemId() != null
+                ? link.getTargetProblemId().toString() : link.getTargetRef());
+        m.put("note", link.getNote());
+        m.put("recorded_by", link.getRecordedBy());
+        m.put("created_at", link.getCreatedAt() != null ? link.getCreatedAt().toString() : null);
+        return m;
     }
 
     private Map<String, Object> toMap(ProblemEntity p) {
