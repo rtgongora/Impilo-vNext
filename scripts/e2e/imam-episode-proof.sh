@@ -28,7 +28,7 @@ TOK=$(ccurl -X POST "$BASE/internal/v1/auth/login" -H 'Content-Type: application
 mkh(){ HDRS=(-H "Content-Type: application/json" -H "X-Tenant-ID: $TENANT" -H "X-Pod-ID: national-spine"
               -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)" -H "X-Correlation-ID: $RUN"
               -H "Authorization: Bearer $TOK" -H "X-Actor-Type: PROVIDER"
-              -H "X-Purpose-Of-Use: TREATMENT"
+              -H "X-Purpose-Of-Use: TREATMENT" -H "X-Actor-ID: nurse.chienda"
               -H "Idempotency-Key: $RUN-$(cat /proc/sys/kernel/random/uuid | cut -c1-8)"); }
 
 echo "== 1. the tracing worklist the /clinical/nutrition-tracing screen reads =="
@@ -76,7 +76,7 @@ for c in cs: print('  %-28s %s' % (c['code'], 'MET' if c['met'] else 'not met'))
 
 echo "== 4. recording a review through the UI's write path =="
 mkh; VISIT=$(ccurl -X POST "$BASE/internal/v1/imam/episodes/$TARGET/visits" "${HDRS[@]}" \
-  -d "{\"attended\":true,\"visit_date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"muac_cm\":11.9,\"weight_kg\":7.4,\"oedema\":\"ABSENT\",\"danger_signs_present\":false,\"rutf_sachets_issued\":21,\"clinical_note\":\"$RUN\"}")
+  -d "{\"attended\":true,\"recorded_by\":\"nurse.chienda\",\"visit_date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"muac_cm\":11.9,\"weight_kg\":7.4,\"oedema\":\"ABSENT\",\"danger_signs_present\":false,\"rutf_sachets_issued\":21,\"clinical_note\":\"$RUN\"}")
 printf '%s' "$VISIT" | jq_py "import json,sys
 v=json.load(sys.stdin)['data']
 assert v.get('imam_visit_id'), 'no visit id'
