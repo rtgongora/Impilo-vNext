@@ -519,6 +519,27 @@ From the session that landed `19429a2a7` (adopted onto canonical in `3cb08e4b9`)
   are named after the component (`ParklandForm`), not the formula. Grep the arithmetic too
   (`4 \* kg`, `* weight *`). This is why §5b's original "burns is absent" claim was wrong.
 
+## 5h. Coordinator rulings taken into scope
+
+**Definition of done, all remaining waves.** A slice is done only when **UI + BFF + contract/API +
+backend are all wired** — no orphan endpoints, no UI over demo fixtures. And **every new
+service→service call must carry its own `client_credentials` token** (the mvumo
+`ClientCredentialsTokenProvider` / pct `ServiceTokenProvider` pattern). **Trust headers are not
+authentication**, and a unit test that mocks the client mocks away the 401 — so an S2S call proven
+only by a mocked-client test is not proven. This binds every cross-service call this pack adds:
+PCT→daidzai continuum-link and adopt, PCT→CKP triage and pathway evaluation, PCT→madi MHP
+activation, PCT→inpatient activation, and the emergency→mental-health handover. A coordinated S2S
+token wave is building the BFF-side minting seam; this pack consumes it rather than minting its own.
+
+**Mobile specialty-workspace slice.** The coordinator's sweep found 66 of 108 labels attach clinical
+instrument names to a fake adder or a non-persisting notes box; the burns session does the mechanical
+withdrawal and per-lane replacements go through **forms-service governed definitions**. This pack's
+slice: **GCS, NIHSS, RASS/ICU sedation**, plus **PHQ-9, GAD-7 and Safety Plan as forms-service
+questionnaires now, with interpretation deferred to `mental-health-service` (8397)**. The split
+matters — capturing a PHQ-9 score is a form; acting on item 9 is a clinical decision that needs the
+service, so shipping the questionnaire without the interpretation is honest only while the deferral
+is stated on the surface.
+
 ## 6. Defects fixed in W0 that other lanes depend on
 
 All three were verified in code, not inferred, and are pushed.
