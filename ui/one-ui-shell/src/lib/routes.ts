@@ -106,6 +106,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/clinical/control-tower", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Control Tower", navLabel: "Control Tower", navZone: "work" },
   { path: "/clinical/dictation", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Voice Dictation", navLabel: "Dictation", navZone: "work" },
   { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
+  { path: "/clinical/nutrition-tracing", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Nutrition Defaulter Tracing", navLabel: "Nutrition Tracing", navZone: "work" },
 
   // Inpatient workspace (Wave 20 production readiness)
   { path: "/clinical/inpatient", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Care", navLabel: "Inpatient", navZone: "work" },
@@ -318,6 +319,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/procedures", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Procedures", navLabel: "Procedures", navZone: "work" },
   { path: "/ehr/[patientId]/paediatrics", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Paediatric Workspace", navLabel: "Paediatrics", navZone: "work" },
   { path: "/ehr/[patientId]/growth-chart", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Growth Chart", navLabel: "Growth Chart", navZone: "work" },
+  { path: "/ehr/[patientId]/imam", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Nutrition Treatment", navLabel: "Nutrition Treatment", navZone: "work" },
   { path: "/ehr/[patientId]/family-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Family History", navLabel: "Family History", navZone: "work" },
   { path: "/ehr/[patientId]/social-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Social History", navLabel: "Social History", navZone: "work" },
   { path: "/ehr/[patientId]/functional-status", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Functional Status", navLabel: "Functional Status", navZone: "work" },
@@ -1020,7 +1022,9 @@ export const ROUTES: RouteDefinition[] = [
 // monitoring home with §14.6 patient-wording law).
 // Khuluma first-class communication front door (Jul 2026): +7 role-aware hub routes.
 // Ruvimbo canonical product face (Jul 2026): +6 role-aware financing routes. Total 798.
-export const EXPECTED_ROUTE_COUNT = 800;
+// IMAM nutrition treatment (Jul 2026): +2 — the child's treatment episode and the facility's
+// defaulter tracing worklist, which are different jobs done by different people.
+export const EXPECTED_ROUTE_COUNT = 802;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
