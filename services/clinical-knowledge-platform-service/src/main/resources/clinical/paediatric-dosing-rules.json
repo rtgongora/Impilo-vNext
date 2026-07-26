@@ -1,0 +1,139 @@
+{
+  "packId": "impilo.paediatric.dosing",
+  "version": "engineering-seed-1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": "Weight-based paediatric dosing derived from the WHO Model List of Essential Medicines for Children and conventional paediatric practice. These values are an engineering seed and are NOT a ratified national formulary: every rule requires MoHCC and paediatric specialist sign-off before it is used to prescribe. See docs/clinical-governance/edliz-engineering-seed-policy.md.",
+  "rules": [
+    {
+      "code": "AMOXICILLIN_ORAL_PNEUMONIA_CHILD",
+      "genericName": "amoxicillin",
+      "atcCode": "J01CA04",
+      "indication": "PNEUMONIA",
+      "route": "ORAL",
+      "ageMinDays": 60,
+      "ageMaxDays": 1824,
+      "weightMinKg": 3.0,
+      "weightMaxKg": 30.0,
+      "mgPerKgPerDose": 40,
+      "dosesPerDay": 2,
+      "maxSingleDoseMg": 1000,
+      "maxDailyDoseMg": 2000,
+      "durationDays": 5,
+      "roundToMg": 5,
+      "concentrations": [
+        {"label": "125 mg/5 mL suspension", "mgPerMl": 25},
+        {"label": "250 mg/5 mL suspension", "mgPerMl": 50}
+      ],
+      "sourceRefs": ["WHO IMNCI — treat the child: oral amoxicillin for pneumonia"],
+      "testCases": [
+        {"name": "8.4 kg child gets 336 mg rounded to 335", "ageDays": 400, "weightKg": 8.4, "expectMgPerDose": 335},
+        {"name": "large child is capped at the maximum single dose", "ageDays": 1800, "weightKg": 30, "expectMgPerDose": 1000, "expectCapped": true}
+      ]
+    },
+    {
+      "code": "GENTAMICIN_IV_NEONATE",
+      "genericName": "gentamicin",
+      "atcCode": "J01GB03",
+      "indication": "POSSIBLE_SERIOUS_BACTERIAL_INFECTION",
+      "route": "INTRAVENOUS",
+      "ageMinDays": 0,
+      "ageMaxDays": 28,
+      "weightMinKg": 0.5,
+      "weightMaxKg": 6.0,
+      "mgPerKgPerDose": 5,
+      "dosesPerDay": 1,
+      "maxSingleDoseMg": 30,
+      "maxDailyDoseMg": 30,
+      "durationDays": 7,
+      "roundToMg": 0.5,
+      "specialistOnly": true,
+      "renalCaution": true,
+      "concentrations": [
+        {"label": "10 mg/mL paediatric ampoule", "mgPerMl": 10}
+      ],
+      "monitoring": "Monitor renal function and, where available, gentamicin levels. Extend the interval in prematurity per the neonatal unit chart.",
+      "sourceRefs": ["WHO — management of possible serious bacterial infection in young infants", "WHO Model List of Essential Medicines for Children"],
+      "testCases": [
+        {"name": "3 kg neonate gets 15 mg", "ageDays": 5, "weightKg": 3.0, "expectMgPerDose": 15},
+        {"name": "1.1 kg preterm gets 5.5 mg", "ageDays": 2, "weightKg": 1.1, "expectMgPerDose": 5.5}
+      ]
+    },
+    {
+      "code": "PARACETAMOL_ORAL_CHILD",
+      "genericName": "paracetamol",
+      "atcCode": "N02BE01",
+      "route": "ORAL",
+      "ageMinDays": 90,
+      "ageMaxDays": 4382,
+      "weightMinKg": 4.0,
+      "weightMaxKg": 50.0,
+      "mgPerKgPerDose": 15,
+      "dosesPerDay": 4,
+      "maxSingleDoseMg": 1000,
+      "maxDailyDoseMg": 4000,
+      "durationDays": 3,
+      "roundToMg": 5,
+      "concentrations": [
+        {"label": "120 mg/5 mL suspension", "mgPerMl": 24},
+        {"label": "250 mg/5 mL suspension", "mgPerMl": 50}
+      ],
+      "sourceRefs": ["WHO Model List of Essential Medicines for Children — paracetamol"],
+      "testCases": [
+        {"name": "10 kg child gets 150 mg", "ageDays": 400, "weightKg": 10.0, "expectMgPerDose": 150},
+        {"name": "daily maximum is respected for a large child", "ageDays": 4000, "weightKg": 50.0, "expectMgPerDose": 750}
+      ]
+    },
+    {
+      "code": "ORAL_AMOXICILLIN_YOUNG_INFANT",
+      "genericName": "amoxicillin",
+      "atcCode": "J01CA04",
+      "indication": "PNEUMONIA",
+      "route": "ORAL",
+      "ageMinDays": 0,
+      "ageMaxDays": 59,
+      "weightMinKg": 1.5,
+      "weightMaxKg": 6.0,
+      "mgPerKgPerDose": 50,
+      "dosesPerDay": 2,
+      "maxSingleDoseMg": 300,
+      "maxDailyDoseMg": 600,
+      "durationDays": 7,
+      "roundToMg": 5,
+      "specialistOnly": true,
+      "concentrations": [
+        {"label": "125 mg/5 mL suspension", "mgPerMl": 25}
+      ],
+      "monitoring": "A young infant treated for possible serious bacterial infection is normally referred; oral therapy applies only where referral is not possible and national policy permits it.",
+      "sourceRefs": ["WHO — management of possible serious bacterial infection when referral is not feasible"],
+      "testCases": [
+        {"name": "4 kg infant gets 200 mg", "ageDays": 30, "weightKg": 4.0, "expectMgPerDose": 200}
+      ]
+    },
+    {
+      "code": "ZINC_ORAL_DIARRHOEA_CHILD",
+      "genericName": "zinc sulfate",
+      "atcCode": "A12CB01",
+      "indication": "DIARRHOEA",
+      "route": "ORAL",
+      "ageMinDays": 183,
+      "ageMaxDays": 1824,
+      "weightMinKg": 5.0,
+      "weightMaxKg": 30.0,
+      "fixedDoseMg": 20,
+      "dosesPerDay": 1,
+      "maxSingleDoseMg": 20,
+      "maxDailyDoseMg": 20,
+      "durationDays": 14,
+      "roundToMg": 1,
+      "concentrations": [
+        {"label": "20 mg dispersible tablet", "mgPerMl": 0}
+      ],
+      "sourceRefs": ["WHO IMNCI — zinc supplementation in childhood diarrhoea"],
+      "testCases": [
+        {"name": "fixed dose does not scale with weight", "ageDays": 400, "weightKg": 9.0, "expectMgPerDose": 20},
+        {"name": "same fixed dose for a heavier child", "ageDays": 1500, "weightKg": 18.0, "expectMgPerDose": 20}
+      ]
+    }
+  ]
+}

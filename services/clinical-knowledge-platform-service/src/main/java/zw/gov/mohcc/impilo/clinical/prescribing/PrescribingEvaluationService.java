@@ -32,10 +32,17 @@ public class PrescribingEvaluationService {
         this.sourceDocumentRepository = sourceDocumentRepository;
     }
 
+    /**
+     * Weight-based paediatric dose calculator. Field-injected so the shared constructor stays
+     * a stable merge surface, matching the convention used elsewhere in the clinical plane.
+     */
+    @org.springframework.beans.factory.annotation.Autowired
+    private DoseCalculationService doseCalculationService;
+
     @Transactional
     public Map<String, Object> evaluate(Map<String, Object> body) {
         ClinicalEvaluationContext ctx = ClinicalEvaluationContext.fromMap(mergeProposedIntoContext(body == null ? Map.of() : body));
-        List<RuleAlert> alerts = rulesEngine.evaluate(ctx);
+        List<RuleAlert> alerts = new ArrayList<>(rulesEngine.evaluate(ctx));
 
         List<Map<String, Object>> therapyRows = new ArrayList<>();
         for (MedicationLineInput line : parseProposed(body)) {
@@ -59,13 +66,23 @@ public class PrescribingEvaluationService {
             } else {
                 row.put("policy_metadata", null);
             }
+            // Paediatric dosing: suggest from governed content and check what was proposed
+            // against the maximum. A proposed dose above the ceiling is a hard stop, not a hint.
+            var suggestion = doseCalculationService.calculate(
+                    line.genericName(), indicationOf(body), ctx.ageDays(), ctx.weightKg());
+            if (isPaediatric(ctx)) {
+                row.put("paediatric_dose", suggestion.toMap());
+                RuleAlert unsafe = unsafeDoseAlert(line, suggestion);
+                if (unsafe != null) {
+                    alerts.add(unsafe);
+                }
+            }
             therapyRows.add(row);
         }
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("alerts", alerts.stream().map(RuleAlert::toMap).toList());
         out.put("therapy_evaluation", therapyRows);
-        out.put("neonatal_gentamicin_hint", neonatalHint(ctx));
 
         if (body != null && Boolean.TRUE.equals(body.get("record_trace"))) {
             String actorId = Objects.toString(body.get("actor_id"), "anonymous");
@@ -106,13 +123,43 @@ public class PrescribingEvaluationService {
         return m;
     }
 
-    private static Map<String, Object> neonatalHint(ClinicalEvaluationContext ctx) {
-        if (ctx.ageDays() == null || ctx.weightKg() == null || ctx.ageDays() > 28) {
-            return Map.of();
+    /** Below thirteen years the paediatric dosing rules apply. */
+    private static boolean isPaediatric(ClinicalEvaluationContext ctx) {
+        if (ctx.ageDays() != null) {
+            return ctx.ageDays() < 13 * 365;
         }
-        return NeonatalGentamicinDosing.suggestMgPerDose(ctx.weightKg(), ctx.ageDays())
-                .map(d -> Map.<String, Object>of("gentamicin_seed_dose", d))
-                .orElse(Map.of());
+        return ctx.ageYears() != null && ctx.ageYears() < 13;
+    }
+
+    private static String indicationOf(Map<String, Object> body) {
+        Object indication = body == null ? null : body.get("indication");
+        return indication == null ? null : String.valueOf(indication);
+    }
+
+    /**
+     * Compares a proposed dose against the calculated maximum. A dose above the ceiling is a
+     * critical, non-overridable alert: in paediatrics an overdose is usually a decimal-point
+     * slip that looks entirely ordinary on the page, so it must stop the prescription rather
+     * than warn beside it.
+     */
+    private static RuleAlert unsafeDoseAlert(MedicationLineInput line,
+                                             DoseCalculationService.DoseSuggestion suggestion) {
+        if (line.doseMg() == null || !suggestion.calculated() || suggestion.doseMg() == null) {
+            return null;
+        }
+        double proposed = line.doseMg();
+        double calculated = suggestion.doseMg();
+        if (proposed <= calculated * 1.25) {
+            return null;
+        }
+        return new RuleAlert(
+                "UNSAFE_DOSE_PAEDIATRIC",
+                "CRITICAL",
+                "Proposed dose of " + line.genericName() + " (" + proposed + " mg) exceeds the"
+                        + " weight-based dose of " + calculated + " mg — recheck the weight and the decimal point.",
+                suggestion.basis(),
+                true,
+                false);
     }
 
     private record MedicationLineInput(String genericName, Double doseMg, String route, Integer daysOnTherapy) {
