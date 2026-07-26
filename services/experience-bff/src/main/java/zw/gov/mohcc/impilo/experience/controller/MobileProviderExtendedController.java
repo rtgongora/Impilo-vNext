@@ -536,21 +536,17 @@ public class MobileProviderExtendedController {
     }
 
     // ── Specialty Workspace Config ──────────────────────────────────
+    //
+    // CONSOLIDATED, not deleted. This endpoint served a hard-coded menu of 10 specialties x 3
+    // tool labels that no client ever called (fetchSpecialtyWorkspaces had zero callers), and it
+    // disagreed with the 18 x 6 menu the provider app actually renders. Specialty tool content is
+    // now owned by the governed forms-service catalogue, resolved per patient, cadre and setting
+    // through the encounter-forms path, which is the canonical source for what a clinician may
+    // fill in. Tool disposition on the mobile side is declared in
+    // apps/mobile/provider-app/src/data/specialtyToolRegistry.ts, with owners and waves recorded
+    // in docs/clinical/specialty-tool-ownership-map.md.
+    //
+    // Do not reintroduce a hard-coded menu here: a second list of tool names is how the two menus
+    // came to disagree, and how burns advertised three calculators that did not exist.
 
-    @GetMapping("/workspaces/specialties")
-    public ResponseEntity<Map<String, Object>> getSpecialtyWorkspaces() {
-        List<Map<String, Object>> workspaces = List.of(
-                Map.of("id", "trauma", "name", "Trauma", "icon", "alert-triangle", "tools", List.of("GCS Scale", "Injury Severity Score", "FAST Exam")),
-                Map.of("id", "labour-delivery", "name", "Labour & Delivery", "icon", "baby", "tools", List.of("Partograph", "APGAR Score", "Bishop Score")),
-                Map.of("id", "theatre", "name", "Theatre", "icon", "scissors", "tools", List.of("WHO Checklist", "Anaesthesia Record", "Op Note")),
-                Map.of("id", "burns", "name", "Burns", "icon", "flame", "tools", List.of("Lund-Browder Chart", "Fluid Calculator", "Parkland Formula")),
-                Map.of("id", "paediatrics", "name", "Paediatrics", "icon", "baby", "tools", List.of("Growth Charts", "IMCI Protocol", "Immunization Schedule")),
-                Map.of("id", "mental-health", "name", "Mental Health", "icon", "brain", "tools", List.of("PHQ-9", "GAD-7", "Safety Plan")),
-                Map.of("id", "dialysis", "name", "Dialysis", "icon", "droplet", "tools", List.of("HD Prescription", "Fluid Balance", "Kt/V Calculator")),
-                Map.of("id", "physiotherapy", "name", "Physiotherapy", "icon", "activity", "tools", List.of("ROM Assessment", "Muscle Grading", "Gait Analysis")),
-                Map.of("id", "resuscitation", "name", "Resuscitation", "icon", "heart", "tools", List.of("ACLS Protocol", "Drug Calculator", "Defib Timer")),
-                Map.of("id", "oncology", "name", "Oncology", "icon", "target", "tools", List.of("Chemo Protocol", "ECOG Score", "TNM Staging"))
-        );
-        return ResponseEntity.ok(Map.of("data", workspaces));
-    }
 }
