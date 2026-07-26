@@ -1,11 +1,45 @@
 # Impilo Citizen & Provider — mobile visual redesign brief
 
-**Status:** handed to the session that owns `apps/mobile`. Not implemented by the web lane.
+**Status:** Foundation + full token adoption **shipped** 2026-07-26 by the mobile
+session (see below). Deep-screen polish (larger radii/gradients/gloss beyond what
+token adoption gave for free) and the §10/§12/§13 navigation restructure are
+**not** in scope of this pass — that was a deliberate PO choice among lighter-
+vs heavier-touch options, not an oversight.
 **Source:** product-owner redesign brief §7–§16, plus a code inventory of `apps/mobile`
 taken 2026-07-26.
 **Companion work:** the web half (§2–§6) landed on
 `claude/staging-ux-orchestration-remediation-Yypyl` — see the "one Impilo family"
 section below for the palette and surface decisions the web now uses.
+
+### Mobile lane — what shipped (2026-07-26)
+
+- **Finding 1 (orphaned token layer)** and **finding 2 (design system hardcodes
+  citizen green)** — fixed. `ThemeProvider`/`Button`/`Badge` are theme-aware;
+  `App.tsx` in each app now passes an explicit `accentColor` (citizen `#009739`
+  Impilo green, provider `#0F766E` deep teal — matching this doc's own §8
+  direction for each app, chosen independently before re-reading §8).
+- **Finding 3 (provider is generic Tailwind blue)** — fixed; provider no longer
+  shares citizen's blue, and reads as its own product rather than "citizen
+  recolored." Before/after: `artifacts/mobile/7ffe9055847dc61bfae15ddef1d182f188d7b956/redroid/screenshots/provider-login-redroid.png`
+  vs `artifacts/mobile/aaaf58282a81f8ab99a4004dfdf6825ff7dcffc4/redroid/screenshots-redesign/provider-signin-after.png`.
+- **Token adoption across ~225 hardcoded-hex screen files** (189 citizen +
+  provider screens) — done via a whitelist-only exact-match codemod onto two
+  new additive token blocks, `colors.gray[*]` and `colors.ui.*` (see
+  `packages/mobile-design-system/src/tokens/colors.ts`). Additive, not a
+  remap onto the *existing* `neutral`/`error`/`warning` tokens — those were
+  found to be disconnected from actual on-screen values (e.g. old
+  `warning.main` was a neon `#FCE300` vs the `#F59E0B` muted amber every
+  screen actually renders), so remapping onto them would have silently
+  repainted the whole product. Both apps' full test suites restored to
+  their pre-codemod baseline after the change (citizen 209/209, provider
+  234/234) before anything was committed.
+- **One correction to this doc:** `Card.tsx` does **not** hardcode brand green
+  the way `Button.tsx`/`Badge.tsx` did — it only uses neutral white/gray.
+  Verified by reading the file; the other two primitives' claims held.
+- **Finding 4 (buried timeline)** and the **navigation-load section** below
+  are untouched — out of scope for this pass, unchanged from before.
+- Rebuilt both preview APKs (`aaaf58282`) and reinstalled on the `redroid`
+  device fixture; screenshots above are real on-device renders, not mocks.
 
 ---
 
