@@ -104,6 +104,9 @@ public class RegulatoryAppointmentService {
                 tenantId, appt.getOrganizationId(), appt.getPersonHealthId(), appt.getRoleCode(), GRANT_STATUS_ACTIVE)) {
             throw new IllegalStateException("an ACTIVE appointment already exists for this person, org and role");
         }
+        // Checked at the moment of activation rather than at create: an appointment sitting
+        // PENDING is harmless, and the seat it claims may have been filled while it waited.
+        assertBootstrapRoleAllowed(tenantId, appt.getOrganizationId(), appt.getRoleCode());
         appt.setStatus(GRANT_STATUS_ACTIVE);
         appt.setVerifiedBy(verifiedBy);
         appt.setVerifiedAt(OffsetDateTime.now());
@@ -118,12 +121,36 @@ public class RegulatoryAppointmentService {
         return saved;
     }
 
+    /**
+     * End or revoke an appointment.
+     *
+     * <p><b>Succession guard (RB-2).</b> Ending the last ACTIVE administrator is refused: a
+     * regulator left with nobody who can administer it cannot add a user, cannot fix its own
+     * access, and cannot even appoint a replacement — recovery would mean a platform-root
+     * intervention on a live regulator. This is also the mandatory-second-administrator invariant
+     * viewed from the other end, and it is checked here rather than trusted to a process, because
+     * the moment it matters is exactly the moment somebody is in a hurry.</p>
+     *
+     * <p>It could not be implemented in RB-1: "administrator" had no definition until V009 marked
+     * the role class. The expiry sweep deliberately does NOT consult this guard — expiry is a fact
+     * about the world, and declining to record it in order to keep somebody signed in would be the
+     * system granting regulatory authority to itself. A lapse that empties the administrator seat
+     * is surfaced loudly instead.</p>
+     */
     @Transactional
     public RegulatoryAppointmentEntity end(UUID tenantId, UUID appointmentId, String reason, String actor)
             throws Exception {
         RegulatoryAppointmentEntity appt = require(tenantId, appointmentId);
         if ("ENDED".equals(appt.getStatus()) || "REVOKED".equals(appt.getStatus())) {
             return appt;
+        }
+        if (GRANT_STATUS_ACTIVE.equals(appt.getStatus()) && isAdministrative(appt.getRoleCode())
+                && appointmentRepository.countActiveAdministrators(
+                        tenantId, appt.getOrganizationId(), appt.getId()) == 0) {
+            throw new IllegalStateException(
+                    "LAST_ADMINISTRATOR: this is the only active administrator at this regulator. "
+                    + "Appoint a replacement first — a regulator with no administrator cannot add "
+                    + "users, restore its own access, or appoint anyone.");
         }
         appt.setStatus("REVOKED".equalsIgnoreCase(reason) ? "REVOKED" : "ENDED");
         RegulatoryAppointmentEntity saved = appointmentRepository.save(appt);
@@ -185,6 +212,36 @@ public class RegulatoryAppointmentService {
 
     public List<RegulatoryAppointmentEntity> listForPerson(UUID tenantId, String personHealthId) {
         return appointmentRepository.findByTenantIdAndPersonHealthId(tenantId, personHealthId);
+    }
+
+    /**
+     * Whether a role administers the regulator (V009). Read from the vocabulary rather than matched
+     * against a hard-coded list, so a role added later is administrative because it is flagged, not
+     * because somebody remembered to update this class.
+     */
+    private boolean isAdministrative(String roleCode) {
+        return roleRepository.findById(roleCode)
+                .map(AppointmentRoleEntity::isAdministrative)
+                .orElse(false);
+    }
+
+    /**
+     * Bootstrap-only roles exist to solve the cold start — the first administrator cannot be
+     * appointed by an administrator — so they may be granted only while the seat is genuinely
+     * empty. Without this a founding role could be handed out later as an ordinary appointment,
+     * bypassing the four-eyes rail it was created to require.
+     */
+    private void assertBootstrapRoleAllowed(UUID tenantId, UUID organizationId, String roleCode) {
+        AppointmentRoleEntity role = roleRepository.findById(roleCode).orElse(null);
+        if (role == null || !role.isBootstrapOnly()) {
+            return;
+        }
+        if (appointmentRepository.countActiveAdministrators(tenantId, organizationId, null) > 0) {
+            throw new IllegalStateException(
+                    "BOOTSTRAP_ROLE_NOT_AVAILABLE: " + roleCode + " may only be granted while the "
+                    + "regulator has no active administrator. Appoint through the ordinary "
+                    + "administrative roles instead.");
+        }
     }
 
     private RegulatoryAppointmentEntity require(UUID tenantId, UUID id) {

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.orgregistry.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import zw.gov.mohcc.impilo.orgregistry.persistence.entity.RegulatoryAppointmentEntity;
 
 import java.time.LocalDate;
@@ -28,4 +30,21 @@ public interface RegulatoryAppointmentRepository extends JpaRepository<Regulator
      */
     List<RegulatoryAppointmentEntity> findByStatusAndValidToBeforeAndExpirySweptAtIsNull(
             String status, LocalDate asOf);
+
+    /**
+     * How many ACTIVE administrators an organisation has (V009). Drives both the succession guard
+     * — a regulator must never be left with nobody who can administer it — and bootstrap
+     * eligibility, since a founding administrator may only be granted while this is zero.
+     *
+     * <p>Counts by joining the role vocabulary rather than matching role-code prefixes: a role
+     * added later is administrative because it is flagged, not because someone remembered to
+     * update a string list here.</p>
+     */
+    @Query("SELECT COUNT(a) FROM RegulatoryAppointmentEntity a, AppointmentRoleEntity r "
+            + "WHERE a.roleCode = r.roleCode AND r.administrative = true "
+            + "AND a.tenantId = :tenantId AND a.organizationId = :organizationId "
+            + "AND a.status = 'ACTIVE' AND (:excludingId IS NULL OR a.id <> :excludingId)")
+    long countActiveAdministrators(@Param("tenantId") UUID tenantId,
+                                   @Param("organizationId") UUID organizationId,
+                                   @Param("excludingId") UUID excludingId);
 }
