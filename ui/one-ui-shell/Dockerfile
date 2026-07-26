@@ -6,12 +6,25 @@
 FROM node:20-bookworm-slim AS base
 WORKDIR /workspace
 
-# Preview/production: leave empty so the browser uses same-origin relative paths
-# (Traefik routes /internal/* to experience-bff). Compose/local dev overrides at build time.
+# BROWSER-facing base URLs: preview/production leave these EMPTY so the browser uses
+# same-origin relative paths (Traefik routes /internal/* straight to experience-bff).
+# Compose/local dev overrides at build time.
 ARG NEXT_PUBLIC_BFF_URL=
 ARG NEXT_PUBLIC_API_GATEWAY_URL=
 ENV NEXT_PUBLIC_BFF_URL=$NEXT_PUBLIC_BFF_URL
 ENV NEXT_PUBLIC_API_GATEWAY_URL=$NEXT_PUBLIC_API_GATEWAY_URL
+
+# SERVER-side proxy targets for next.config rewrites(). These are a DIFFERENT concern
+# from the NEXT_PUBLIC_* pair above: rewrites are evaluated at BUILD time and baked into
+# routes-manifest.json, so whatever is set here is compiled into the image permanently —
+# runtime env cannot change it. They must therefore default to the in-cluster service, not
+# to localhost: a localhost target is unreachable from a single-container pod and produced
+# ECONNREFUSED 500s on every /api/v1/* route (facility claim, lifecycle, site self-service,
+# authorize, speech-to-text) while the deployment and its runtime env both looked correct.
+ARG API_GATEWAY_URL=http://experience-bff:8160
+ARG BFF_URL=http://experience-bff:8160
+ENV API_GATEWAY_URL=$API_GATEWAY_URL
+ENV BFF_URL=$BFF_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 

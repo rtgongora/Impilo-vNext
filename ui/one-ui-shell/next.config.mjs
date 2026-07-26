@@ -34,14 +34,45 @@ const nextConfig = {
     return config;
   },
   async rewrites() {
-    const gateway =
-      process.env.API_GATEWAY_URL ||
-      process.env.NEXT_PUBLIC_API_GATEWAY_URL ||
-      "http://localhost:10000";
-    const bff =
-      process.env.BFF_URL ||
-      process.env.NEXT_PUBLIC_BFF_URL ||
-      "http://localhost:8160";
+    /**
+     * Next evaluates rewrites at BUILD time and bakes the result into
+     * routes-manifest.json; `next start` never re-reads these vars. So an image
+     * built without them has the localhost fallback compiled in permanently, and
+     * no amount of correct runtime env can fix it.
+     *
+     * That is exactly how /api/* shipped pointing at localhost:10000 — a host
+     * that cannot exist in a single-container pod — and every /api/v1/* feature
+     * (facility claim, facility lifecycle, site self-service, authorize,
+     * speech-to-text) returned 500 via ECONNREFUSED while the deployment looked
+     * healthy and its runtime env looked correct.
+     *
+     * A localhost default is only ever right for local dev. In a production
+     * build, fail loudly and name the variable instead of baking in a target
+     * that is guaranteed to be unreachable.
+     */
+    const requireUpstream = (value, envNames, devFallback) => {
+      if (value) return value;
+      if (process.env.NODE_ENV === "production") {
+        throw new Error(
+          `[next.config] Missing ${envNames.join(" / ")} at BUILD time. ` +
+            `Rewrites are baked into the build, so this would ship "${devFallback}" ` +
+            `into the image and every proxied route would fail with ECONNREFUSED at runtime. ` +
+            `Export it before building (e.g. --build-arg / docker build env).`,
+        );
+      }
+      return devFallback;
+    };
+
+    const gateway = requireUpstream(
+      process.env.API_GATEWAY_URL || process.env.NEXT_PUBLIC_API_GATEWAY_URL,
+      ["API_GATEWAY_URL", "NEXT_PUBLIC_API_GATEWAY_URL"],
+      "http://localhost:10000",
+    );
+    const bff = requireUpstream(
+      process.env.BFF_URL || process.env.NEXT_PUBLIC_BFF_URL,
+      ["BFF_URL", "NEXT_PUBLIC_BFF_URL"],
+      "http://localhost:8160",
+    );
     return [
       {
         source: "/internal/:path*",
