@@ -1,0 +1,1975 @@
+{
+  "sheets": [
+    {
+      "columns": [
+        "Activity ID",
+        "Activity name",
+        "Data element ID",
+        "Data element label",
+        "Description and definition",
+        "Data type",
+        "List to include this data element in",
+        "Quantity sub-type",
+        "Calculation",
+        "Validation condition",
+        "Optionality",
+        "Explain conditionality",
+        "Functional grouping of data elements",
+        "Linkages to decision-support tables",
+        "Linkages to scheduling logic tables",
+        "Linkages to aggregate indicators",
+        "Annotations",
+        "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release",
+        "ICD-11 Uniform Resource Identifier (URI)",
+        "ICD-11 code title",
+        "ICD-11 relationship",
+        "ICD-11\ncomments and considerations",
+        "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release",
+        "ICD-10 code title",
+        "ICD-10 relationship",
+        "ICD-10\ncomments and considerations",
+        "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*",
+        "LOINC version 2.80 long common name",
+        "LOINC version 2.80 relationship",
+        "LOINC version 2.80\ncomments and considerations",
+        "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release",
+        "ICHI\nURI",
+        "ICHI code title",
+        "ICHI relationship",
+        "ICHI\ncomments and considerations",
+        "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release",
+        "ICF URI",
+        "ICF category name",
+        "ICF relationship",
+        "ICF\ncomments and considerations",
+        "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*",
+        "SNOMED GPS preferred name",
+        "SNOMED GPS\nrelationship",
+        "SNOMED GPS\ncomments and considerations",
+        "Anatomical Therapeutic Chemical (ATC) code*",
+        "ATC substance name",
+        "ATC relationship",
+        "ATC comments and considerations"
+      ],
+      "coversIds": [],
+      "hitPolicy": null,
+      "id": "SMBP.A",
+      "idsFromSheetName": [],
+      "idsFromSheetNote": [],
+      "metadata": {},
+      "rowEncoding": "element-index",
+      "rows": [
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Identifiers not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Patient identifier",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "76435-7",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Universally Unique Identifier (foundation metadata concept)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "900000000000474003"
+          },
+          "id": "SMBP.A9.DE.1",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Names not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "First Name",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45392-8",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Patient forename (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "184095009"
+          },
+          "id": "SMBP.A9.DE.2",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Names not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Last Name",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45394-4",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Patient surname (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "184096005"
+          },
+          "id": "SMBP.A9.DE.3",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Dates not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Birth date",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "21112-8",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Date of birth (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "184099003"
+          },
+          "id": "SMBP.A9.DE.4",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Address not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Address",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "56799-0",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Patient address (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "184097001"
+          },
+          "id": "SMBP.A9.DE.5",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Contact details not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Patient phone number",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "42077-8",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Patient telephone number (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "184103008"
+          },
+          "id": "SMBP.A9.DE.6",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Contact details not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Patient Email address",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "76458-9",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Patient email address (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "424966008"
+          },
+          "id": "SMBP.A9.DE.7",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Numbers not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Body height",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8302-2",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Body height (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "1153637007"
+          },
+          "id": "SMBP.A9.DE.8",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Numbers not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Body weight",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "29463-7",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Body weight (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "27113001"
+          },
+          "id": "SMBP.A9.DE.9",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Numbers not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Body mass index (BMI) [Percentile]",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "59574-4",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Body mass index (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "60621009"
+          },
+          "id": "SMBP.A9.DE.10",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Dates not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Delivery date Estimated",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "11778-8",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Estimated date of delivery (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "161714006"
+          },
+          "id": "SMBP.A9.DE.11",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "id": "SMBP.A9.DE.12",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI : http://id.who.int/icd/entity/1017953135",
+            "ICD-11 code title": "Telephone, mobile phone, cellular phone",
+            "ICD-11 relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "XE2A3",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Consent given for communication by short message service text messaging",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "699237001"
+          },
+          "id": "SMBP.A9.DE.13",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI : http://id.who.int/icd/entity/1017953135",
+            "ICD-11 code title": "Telephone, mobile phone, cellular phone",
+            "ICD-11 relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "XE2A3",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Are you able to receive a call on a cell phone [PROMIS]",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "79060-0",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Telephone follow-up (procedure)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "386473003"
+          },
+          "id": "SMBP.A9.DE.14",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Patient Email address",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "76458-9",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Consent given for communication by email",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "705025004"
+          },
+          "id": "SMBP.A9.DE.15",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Procedure declined by patient (situation)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "105480006"
+          },
+          "id": "SMBP.A9.DE.16",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Preferred language",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "54899-0",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Language preference (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "428996008"
+          },
+          "id": "SMBP.A9.DE.17",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Emergency contact Name",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "56861-8",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Emergency contact details (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "406548001"
+          },
+          "id": "SMBP.A9.DE.18",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Emergency contact Phone number",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "56863-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Emergency contact details (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "406548001"
+          },
+          "id": "SMBP.A9.DE.19",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10\ncomments and considerations": "Names not classifiable",
+            "ICD-11\ncomments and considerations": "Names not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Name [Identifier] Facility",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "76696-4",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Institution name (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "398321007"
+          },
+          "id": "SMBP.A9.DE.20",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10\ncomments and considerations": "Numbers not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Phone number Facility",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "65651-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Telephone number (property) (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "734005006"
+          },
+          "id": "SMBP.A9.DE.21",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Facility Address",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "65833-6",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Street address (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "398099009"
+          },
+          "id": "SMBP.A9.DE.22",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Primary practitioner name",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "18711-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Person name (property) (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "734006007"
+          },
+          "id": "SMBP.A9.DE.23",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10\ncomments and considerations": "Numbers not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Personnel Business phone number",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "71726-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Telephone number (property) (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "734005006"
+          },
+          "id": "SMBP.A9.DE.24",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Personnel Address",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "71720-7",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Street address (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "398099009"
+          },
+          "id": "SMBP.A9.DE.25",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Primary practitioner name",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "18711-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Person name (property) (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "734006007"
+          },
+          "id": "SMBP.A9.DE.26",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10\ncomments and considerations": "Numbers not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Personnel Business phone number",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "71726-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Telephone number (property) (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "734005006"
+          },
+          "id": "SMBP.A9.DE.27",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Personnel Address",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "71720-7",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Street address (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "398099009"
+          },
+          "id": "SMBP.A9.DE.28",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Primary practitioner name",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "18711-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Person name (property) (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "734006007"
+          },
+          "id": "SMBP.A9.DE.29",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10\ncomments and considerations": "Numbers not classifiable",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Personnel Business phone number",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "71726-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Telephone number (property) (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "734005006"
+          },
+          "id": "SMBP.A9.DE.30",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Personnel Address",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "71720-7",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Street address (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "398099009"
+          },
+          "id": "SMBP.A9.DE.31",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "id": "SMBP.A9.DE.32",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Pre-existing essential hypertension complicating pregnancy, childbirth and the puerperium",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/1126579721",
+            "ICD-11 code title": "Pre-existing essential hypertension complicating pregnancy, childbirth or the puerperium",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "O10.0",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "JA20.0",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Hypertension [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45643-4",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Pre-existing hypertension in obstetric context (disorder)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "86041002"
+          },
+          "id": "SMBP.A9.DE.33",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Gestational [pregnancy-induced] hypertension",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/2118553363",
+            "ICD-11 code title": "Gestational hypertension",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "O13",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "JA23",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Hypertension [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45643-4",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Pregnancy-induced hypertension (disorder)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "48194001"
+          },
+          "id": "SMBP.A9.DE.34",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Pre-eclampsia, unspecified",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Parent Foundation URI: http://id.who.int/icd/entity/229121159",
+            "ICD-11 code title": "Pre-eclampsia, unspecified",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "O14.9",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "JA24.Z",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Pre-eclampsia (disorder)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "398254007"
+          },
+          "id": "SMBP.A9.DE.35",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Pre-eclampsia superimposed on chronic hypertension",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/1872761464",
+            "ICD-11 code title": "Pre-eclampsia superimposed on chronic hypertension",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "O11",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "JA21",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Pre-eclampsia added to pre-existing hypertension (disorder)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "67359005"
+          },
+          "id": "SMBP.A9.DE.36",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "id": "SMBP.A9.DE.37",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Normal general body function (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "81323004"
+          },
+          "id": "SMBP.A9.DE.38",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Undetermined (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "373068000"
+          },
+          "id": "SMBP.A9.DE.39",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Diabetes mellitus arising in pregnancy",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/1320503631",
+            "ICD-11 code title": "Diabetes mellitus arising in pregnancy",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "O24.4",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "JA63.2",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Diabetes mellitus [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45636-8",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Gestational diabetes mellitus (disorder)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "11687002"
+          },
+          "id": "SMBP.A9.DE.40",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Pre-existing diabetes mellitus, unspecified",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Parent Foundation URI: http://id.who.int/icd/entity/169360210",
+            "ICD-11 code title": "Other specified diabetes mellitus in pregnancy",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "O24.3",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "JA63.Y",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Diabetes mellitus [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45636-8",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Pre-existing diabetes mellitus in pregnancy (disorder)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "609563008"
+          },
+          "id": "SMBP.A9.DE.41",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Other category (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "394841004"
+          },
+          "id": "SMBP.A9.DE.42",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "id": "SMBP.A9.DE.43",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Patient not on medication (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "242571000000102"
+          },
+          "id": "SMBP.A9.DE.44",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Undetermined (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "373068000"
+          },
+          "id": "SMBP.A9.DE.45",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "Synonym",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/372746086",
+            "ICD-11 code title": "Acetylsalicylic acid",
+            "ICD-11 relationship": "Equivalent",
+            "ICF URI": "Foundation URI: http://id.who.int/icd/entity/464886707",
+            "ICF category name": "Maintaining one's health",
+            "ICF relationship": "Related to",
+            "ICHI\nURI": "Foundation URI: http://id.who.int/icd/entity/284817135",
+            "ICHI code title": "Administering pharmacotherapy, per orifice",
+            "ICHI relationship": "Source is narrower than target",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "XM4G06",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "d5702",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "PZA.DB.AC",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Aspirin therapy (procedure)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "717854002"
+          },
+          "id": "SMBP.A9.DE.46",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/125756262",
+            "ICD-11 code title": "Calcium",
+            "ICD-11 relationship": "Equivalent",
+            "ICF URI": "Foundation URI: http://id.who.int/icd/entity/464886707",
+            "ICF category name": "Maintaining one's health",
+            "ICF relationship": "Related to",
+            "ICHI\nURI": "Foundation URI: http://id.who.int/icd/entity/284817135",
+            "ICHI code title": "Administering pharmacotherapy, per orifice",
+            "ICHI relationship": "Source is narrower than target",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "XM8KC2",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "d5702",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "PZA.DB.AC",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Calcium supplement therapy (regime/therapy)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "438841000124104"
+          },
+          "id": "SMBP.A9.DE.47",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/707965616",
+            "ICD-11 code title": "Antihypertensive drug",
+            "ICD-11 relationship": "Equivalent",
+            "ICF URI": "Foundation URI: http://id.who.int/icd/entity/464886707",
+            "ICF category name": "Maintaining one's health",
+            "ICF relationship": "Related to",
+            "ICHI\nURI": "Foundation URI: http://id.who.int/icd/entity/284817135",
+            "ICHI code title": "Administering pharmacotherapy, per orifice",
+            "ICHI relationship": "Source is narrower than target",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "XM2PT6",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "d5702",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "PZA.DB.AC",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Antihypertensive therapy (procedure)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "308116003"
+          },
+          "id": "SMBP.A9.DE.48",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "too vague in current form for classification purposes",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "Not classifiable in SNOMED"
+          },
+          "id": "SMBP.A9.DE.49",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICD-11\ncomments and considerations": "need to know what the specific medication or supplement is",
+            "ICF URI": "Foundation URI: http://id.who.int/icd/entity/464886707",
+            "ICF category name": "Maintaining one's health",
+            "ICF relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "d5702",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Other category (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "394841004"
+          },
+          "id": "SMBP.A9.DE.50",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "id": "SMBP.A9.DE.51",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "75367002"
+          },
+          "id": "SMBP.A9.DE.52",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "75367002"
+          },
+          "id": "SMBP.A9.DE.53",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "id": "SMBP.A9.DE.54",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Date of procedure",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "80989-7",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Date of procedure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "439272007"
+          },
+          "id": "SMBP.A9.DE.55",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Systolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8508-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting systolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407554009"
+          },
+          "id": "SMBP.A9.DE.56",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Diastolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8496-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting diastolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407555005"
+          },
+          "id": "SMBP.A9.DE.57",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "id": "SMBP.A9.DE.58",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "Not classifiable in SNOMED"
+          },
+          "id": "SMBP.A9.DE.59",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "Not classifiable in SNOMED"
+          },
+          "id": "SMBP.A9.DE.60",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "Not classifiable in SNOMED"
+          },
+          "id": "SMBP.A9.DE.61",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Systolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8508-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting systolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407554009"
+          },
+          "id": "SMBP.A9.DE.62",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Date of procedure",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "80989-7",
+            "SNOMED GPS\nrelationship": "Source is broader than target",
+            "SNOMED GPS preferred name": "Start time of procedure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "442371002"
+          },
+          "id": "SMBP.A9.DE.63",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Systolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8508-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting systolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407554009"
+          },
+          "id": "SMBP.A9.DE.64",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Date of procedure",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "80989-7",
+            "SNOMED GPS\nrelationship": "Source is broader than target",
+            "SNOMED GPS preferred name": "Start time of procedure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "442371002"
+          },
+          "id": "SMBP.A9.DE.65",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Systolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8508-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting systolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407554009"
+          },
+          "id": "SMBP.A9.DE.66",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Diastolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8496-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting diastolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407555005"
+          },
+          "id": "SMBP.A9.DE.67",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Date of procedure",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "80989-7",
+            "SNOMED GPS\nrelationship": "Source is broader than target",
+            "SNOMED GPS preferred name": "Start time of procedure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "442371002"
+          },
+          "id": "SMBP.A9.DE.68",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Diastolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8496-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting diastolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407555005"
+          },
+          "id": "SMBP.A9.DE.69",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Date of procedure",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "80989-7",
+            "SNOMED GPS\nrelationship": "Source is broader than target",
+            "SNOMED GPS preferred name": "Start time of procedure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "442371002"
+          },
+          "id": "SMBP.A9.DE.70",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Diastolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8496-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting diastolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407555005"
+          },
+          "id": "SMBP.A9.DE.71",
+          "label": "Download and set up personal health tracking"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Date of procedure",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "80989-7",
+            "SNOMED GPS\nrelationship": "Source is broader than target",
+            "SNOMED GPS preferred name": "Start time of procedure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "442371002"
+          },
+          "id": "SMBP.A9.DE.72",
+          "label": "Download and set up personal health tracking"
+        }
+      ],
+      "sheet": "SMBP.A Identification & prep",
+      "sourceFile": "SMBP DAK_core data dictionary.xlsx"
+    },
+    {
+      "columns": [
+        "Activity ID",
+        "Activity name",
+        "Data element ID",
+        "Data element label",
+        "Description and definition",
+        "Data type",
+        "List to include this data element in",
+        "Quantity sub-type",
+        "Calculation",
+        "Validation condition",
+        "Optionality",
+        "Explain conditionality",
+        "Functional grouping of data elements",
+        "Linkages to decision-support tables",
+        "Linkages to scheduling logic tables",
+        "Linkages to aggregate indicators",
+        "Annotations",
+        "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release",
+        "ICD-11 Uniform Resource Identifier (URI)",
+        "ICD-11 code title",
+        "ICD-11 relationship",
+        "ICD-11\ncomments and considerations",
+        "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release",
+        "ICD-10 code title",
+        "ICD-10 relationship",
+        "ICD-10\ncomments and considerations",
+        "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*",
+        "LOINC version 2.80 long common name",
+        "LOINC version 2.80 relationship",
+        "LOINC version 2.80\ncomments and considerations",
+        "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release",
+        "ICHI\nURI",
+        "ICHI code title",
+        "ICHI relationship",
+        "ICHI\ncomments and considerations",
+        "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release",
+        "ICF URI",
+        "ICF category name",
+        "ICF relationship",
+        "ICF\ncomments and considerations",
+        "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*",
+        "SNOMED GPS preferred name",
+        "SNOMED GPS\nrelationship",
+        "SNOMED GPS\ncomments and considerations"
+      ],
+      "coversIds": [],
+      "hitPolicy": null,
+      "id": "SMBP.Conduct",
+      "idsFromSheetName": [],
+      "idsFromSheetNote": [],
+      "metadata": {},
+      "rowEncoding": "element-index",
+      "rows": [
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Date of procedure",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "80989-7",
+            "SNOMED GPS\nrelationship": "Source is broader than target",
+            "SNOMED GPS preferred name": "Start time of procedure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "442371002"
+          },
+          "id": "SMBP.B4.DE.1",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Systolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8508-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting systolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407554009"
+          },
+          "id": "SMBP.B4.DE.2",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Systolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8508-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting systolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407554009"
+          },
+          "id": "SMBP.B4.DE.3",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Systolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8508-4",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting systolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407554009"
+          },
+          "id": "SMBP.B4.DE.4",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Diastolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8496-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting diastolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407555005"
+          },
+          "id": "SMBP.B4.DE.5",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Diastolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8496-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting diastolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407555005"
+          },
+          "id": "SMBP.B4.DE.6",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICHI\nURI": "Foundation URI : http://id.who.int/icd/entity/521243686",
+            "ICHI code title": "Measurement of blood pressure",
+            "ICHI relationship": "Related to",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "ITA.AB.AH",
+            "LOINC version 2.80 long common name": "Brachial artery Diastolic blood pressure",
+            "LOINC version 2.80 relationship": "Source is narrower than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "8496-2",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Sitting diastolic blood pressure (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "407555005"
+          },
+          "id": "SMBP.B4.DE.7",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "id": "SMBP.B4.DE.8",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Caffeine intake (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "1208604004"
+          },
+          "id": "SMBP.B4.DE.9",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "How long has it been since you last smoked part or all of a cigarette [PhenX]",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "63630-8",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Maternal tobacco use (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "427189007"
+          },
+          "id": "SMBP.B4.DE.10",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "How much time did you usually spend on one of those days walking in your leisure time during the last 7 days [IPAQ]",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "88404-9",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Exercise time (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "255257008"
+          },
+          "id": "SMBP.B4.DE.11",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Finding of urinary bladder emptying (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "300462002"
+          },
+          "id": "SMBP.B4.DE.12",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "id": "SMBP.B4.DE.13",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Client's or patient's home (environment)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "394778007"
+          },
+          "id": "SMBP.B4.DE.14",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Pharmacy (environment)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "264372000"
+          },
+          "id": "SMBP.B4.DE.15",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Community clinic (environment)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "310391008"
+          },
+          "id": "SMBP.B4.DE.16",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Friendly environment (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "1186689004"
+          },
+          "id": "SMBP.B4.DE.17",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Healthcare facility (environment)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "257622000"
+          },
+          "id": "SMBP.B4.DE.18",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Other category (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "394841004"
+          },
+          "id": "SMBP.B4.DE.19",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "id": "SMBP.B4.DE.20",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Temperature normal (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "87273009"
+          },
+          "id": "SMBP.B4.DE.21",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "High temperature (physical force)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "285717004"
+          },
+          "id": "SMBP.B4.DE.22",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Low temperature (physical force)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "285686007"
+          },
+          "id": "SMBP.B4.DE.23",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "id": "SMBP.B4.DE.24",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Quiet (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "255357006"
+          },
+          "id": "SMBP.B4.DE.25",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Noisy environment (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "1186693005"
+          },
+          "id": "SMBP.B4.DE.26",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Active (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "55561003"
+          },
+          "id": "SMBP.B4.DE.27",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Source is narrower than target",
+            "SNOMED GPS preferred name": "Inactive (qualifier value)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "73425007"
+          },
+          "id": "SMBP.B4.DE.28",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "id": "SMBP.B4.DE.29",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Speaking (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "87335007"
+          },
+          "id": "SMBP.B4.DE.30",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Using device (attribute)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "424226004"
+          },
+          "id": "SMBP.B4.DE.31",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Reading (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "50360004"
+          },
+          "id": "SMBP.B4.DE.32",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Related to",
+            "SNOMED GPS preferred name": "Sitting position (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "33586001"
+          },
+          "id": "SMBP.B4.DE.33",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "id": "SMBP.B4.DE.34",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "Not classifiable in SNOMED"
+          },
+          "id": "SMBP.B4.DE.35",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "Not classifiable in SNOMED"
+          },
+          "id": "SMBP.B4.DE.36",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "Not classifiable in SNOMED"
+          },
+          "id": "SMBP.B4.DE.37",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "Not classifiable in SNOMED"
+          },
+          "id": "SMBP.B4.DE.38",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Standing up (observable entity)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "258148007"
+          },
+          "id": "SMBP.B4.DE.39",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "id": "SMBP.B4.DE.40",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "Not classifiable in ICD-10",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "Not classifiable in ICD-11",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "Not classifiable in LOINC",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Asymptomatic (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "84387000"
+          },
+          "id": "SMBP.B4.DE.41",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Dyspnoea",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/960305085",
+            "ICD-11 code title": "Dyspnoea",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "R06.0",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "MD11.5",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Dyspnea [ALSFRS-R]",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "82950-7",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Dyspnea (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "267036007"
+          },
+          "id": "SMBP.B4.DE.42",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Abnormal uterine and vaginal bleeding, unspecified",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Parent Foundation URI: http://id.who.int/icd/entity/1324937831",
+            "ICD-11 code title": "Abnormal uterine or vaginal bleeding, unspecified",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "N93.9",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "GA2Z",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "I have vaginal bleeding or spotting in the past 7 days [FACIT]",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "70381-9",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Bleeding from vagina (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "289530006"
+          },
+          "id": "SMBP.B4.DE.43",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Other and unspecified convulsions",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Parent Foundation URI: http://id.who.int/icd/entity/539646260",
+            "ICD-11 code title": "Type of seizure, unspecified",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "R56.8",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "8A68.Z",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Seizure disorder [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45662-4",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Seizure (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "91175000"
+          },
+          "id": "SMBP.B4.DE.44",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Fever, unspecified",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/915343154",
+            "ICD-11 code title": "Fever of other or unknown origin",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "R50.9",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "MG26",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Fever [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45701-0",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Fever (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "386661006"
+          },
+          "id": "SMBP.B4.DE.45",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Headache",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/1405405864",
+            "ICD-11 code title": "Headache, not elsewhere classified",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "R51",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "MB4D",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Headache [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45715-0",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Headache (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "25064002"
+          },
+          "id": "SMBP.B4.DE.46",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Other and unspecified abdominal pain",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Parent Foundation URI: http://id.who.int/icd/entity/1404135736",
+            "ICD-11 code title": "Other specified acute pain",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "R10.4",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "MG31.Y",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Other pain [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45721-8",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Severe pain (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "76948002"
+          },
+          "id": "SMBP.B4.DE.47",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Vomiting of pregnancy, unspecified",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Parent Foundation URI: http://id.who.int/icd/entity/1745892781",
+            "ICD-11 code title": "Excessive vomiting in pregnancy, unspecified",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "O21.9",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "JA60.Z",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Vomiting [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Equivalent",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45708-5",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Excessive vomiting in pregnancy (disorder)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "14094001"
+          },
+          "id": "SMBP.B4.DE.48",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Other and unspecified abdominal pain",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11\ncomments and considerations": "Synonym",
+            "ICD-11 Uniform Resource Identifier (URI)": "Foundation URI: http://id.who.int/icd/entity/245796173",
+            "ICD-11 code title": "Acute abdomen",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "R10.4",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "MD81.3",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Abdominal pain [HIV-SSC]",
+            "LOINC version 2.80 relationship": "Source is broader than target",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "28538-7",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Abdominal pain (finding)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "21522001"
+          },
+          "id": "SMBP.B4.DE.49",
+          "label": "Input result into personal health tracking application"
+        },
+        {
+          "codes": {
+            "ICD-10 code title": "Other visual disturbances",
+            "ICD-10 relationship": "Equivalent",
+            "ICD-11 Uniform Resource Identifier (URI)": "Parent Foundation URI: http://id.who.int/icd/entity/878967589",
+            "ICD-11 code title": "Other specified symptoms or signs involving the visual system",
+            "ICD-11 relationship": "Equivalent",
+            "International Classification of Diseases 10th Revision (ICD-10)\ncode* 2019 latest release": "H53.8",
+            "International Classification of Diseases 11th Revision (ICD-11) code* 2025 release": "MC1Y",
+            "International Classification of Functioning, Disability and Health (ICF)\ncategory* 2025 release": "Not classifiable in ICF",
+            "International Classification of Health Interventions (ICHI) (Beta 3)\ncode* 2025 release": "Not classifiable in ICHI",
+            "LOINC version 2.80 long common name": "Vision [Minimum Data Set]",
+            "LOINC version 2.80 relationship": "Related to",
+            "Logical Observation Identifiers Names and Codes (LOINC) version 2.80 code*": "45407-4",
+            "SNOMED GPS\nrelationship": "Equivalent",
+            "SNOMED GPS preferred name": "Visual disturbance (disorder)",
+            "Systematized Nomenclature of Medicine Clinical Terms (SNOMED) Global Patient Set (GPS) code*": "63102001"
+          },
+          "id": "SMBP.B4.DE.50",
+          "label": "Input result into personal health tracking application"
+        }
+      ],
+      "sheet": "SMBP.Conduct SMBP",
+      "sourceFile": "SMBP DAK_core data dictionary.xlsx"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "pack": "dak-smbp-v1.0.0",
+  "parseWarnings": [],
+  "workbooks": [
+    {
+      "counts": {
+        "dataElements": 2,
+        "decisionTables": 0,
+        "indicators": 0,
+        "schedules": 0,
+        "testCases": 0
+      },
+      "file": "SMBP DAK_core data dictionary.xlsx",
+      "sha256": "7369c1420c9f659b56610e83752a885139859bbd78f47482816e33e526102890",
+      "sheetsRead": [
+        {
+          "rows": 72,
+          "sheet": "SMBP.A Identification & prep"
+        },
+        {
+          "rows": 50,
+          "sheet": "SMBP.Conduct SMBP"
+        }
+      ],
+      "sheetsSkipped": [
+        {
+          "reason": "boilerplate",
+          "sheet": "OVERVIEW"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "README"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "References"
+        }
+      ]
+    },
+    {
+      "counts": {
+        "dataElements": 0,
+        "decisionTables": 3,
+        "indicators": 0,
+        "schedules": 0,
+        "testCases": 0
+      },
+      "file": "SMBP DAK_decision-support logic.xlsx",
+      "sha256": "847eac6f5d441ed919da5e30e57206fcefa168ea73d0d80291def0f400c1523f",
+      "sheetsRead": [
+        {
+          "rows": 6,
+          "sheet": "SMBP.B4.DT Contextual data "
+        },
+        {
+          "rows": 13,
+          "sheet": "SMBP.B7.DT SMBP health actions"
+        },
+        {
+          "rows": 10,
+          "sheet": "SMBP.B7.DT Danger signs"
+        }
+      ],
+      "sheetsSkipped": [
+        {
+          "reason": "boilerplate",
+          "sheet": "OVERVIEW"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "README"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "References"
+        }
+      ]
+    }
+  ]
+}

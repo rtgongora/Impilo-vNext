@@ -1,0 +1,2598 @@
+{
+  "tables": [
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.A2.DT.01"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.A2.DT.1",
+      "idsFromSheetName": [
+        "PNC.A2.DT.01"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Before each contact the health worker should check whether the woman has any of the danger signs listed here; if yes, she should be referred to the hospital urgently if home contact or to high-level care if at the hospital or facility; if no, regular contact should be continued as usual.",
+        "decisionId": "PNC.A2.DT.1",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.A2. Reception and assessment of danger signs"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Proceed with postnatal care (PNC) contact",
+          "Annotation(s)": "If no danger signs are present, the health worker can continue with the routine postnatal care (PNC) contact",
+          "Guidance": "Routine Care: Continue with the standard postnatal care (PNC) contact.",
+          "Input 1": "Woman’s danger signs = \"No danger signs\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "The woman is bleeding more than expected in her postpartum phase.\n- Urgent assessment is required. \n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Abnormal vaginal bleeding\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.2"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "Bluish discoloration around the mucous membranes in the mouth, lips and tongue.\n- Urgent assessment is required. \n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Central cyanosis\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.3"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "Convulsions observed.\n- Urgent assessment is required. \n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Convulsing\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.4"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "Elevated temperature detected.\n- Initiate assessment for the source of infection or the fever protocol.\n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Fever\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.5"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "The woman appears severely ill.\n- Urgent assessment is required. \n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Looks very ill\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.6"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "Severe headache reported! \n- Monitor for other neurological signs and proceed with the investigation of hypertensive disorders.\n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Severe headache\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.7"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "Woman has severe pain.\n- Administer relief.\n- Urgent assessment is required. \n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Severe pain\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.8"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "Woman has severe vomiting.\n- Check hydration status.\n- Start management to prevent dehydration.\n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Severe vomiting\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.9"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "Woman has severe abdominal pain.\n- Administer relief.\n- Urgent assessment is required. \n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Severe abdominal pain\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.10"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "The woman is unconscious! Immediate medical attention required.\n- Urgent assessment is required. \n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and ask her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Unconscious\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.11"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR \nReferral",
+          "Guidance": "Visual disturbance detected.\n- Check blood pressure and signs of pre-eclampsia. \n- Monitor for other neurological signs and proceed with the investigation of hypertensive disorders.\n- Consider high-level management or transfer to a treatment room. \n- Call for help if necessary and reassure the woman while asking her companion to stay.",
+          "Input 1": "Woman’s danger signs = \"Visual disturbance\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.1.12"
+        }
+      ],
+      "sheet": "PNC.A2.DT.1",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.A4.DT.02"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.A4.DT.2",
+      "idsFromSheetName": [
+        "PNC.A4.DT.02"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "If the client is an adolescent, conduct a Home, Education/Employment, Eating, Activity, Drugs, Sexuality, Safety, Suicide/Depression (HEADSS) assessment",
+        "decisionId": "PNC.A4.DT.2",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.A4. Collect client details"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct a Home, Education/Employment, Eating, Activity, Drugs, Sexuality, Safety, Suicide/Depression (HEADSS) assessment",
+          "Guidance": "Conduct a Home, Education/Employment, Eating, Activity, Drugs, Sexuality, Safety, Suicide/Depression (HEADSS) assessment. Questions to consider include:\n-Does the adolescent study or work?\n-How do they perceive their home situation?\n-How do they perceive their relationship with their teachers, fellow students or employers, and colleagues?\n-Have there been any recent changes in their situation?\n-Do they feel safe at home, in the community, in their study or work and on the road?",
+          "Input 1": "\"Age\" < 19",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A4.DT.2.1",
+          "Reference(s)": "Adolescent job aid (2010) (2): p. 11"
+        }
+      ],
+      "sheet": "PNC.A4.DT.2",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B3A.DT.03"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B3a.DT.3",
+      "idsFromSheetName": [
+        "PNC.B3A.DT.03"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Assess woman's status",
+        "decisionId": "PNC.B3a.DT.3",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B3a. Check symptoms and well-being within 24 hours after birth (maternal) AND PNC.D3a. Check symptoms and well-being during follow up contact (maternal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Proceed PNC.B3a. Check symptoms and well-being within 24 hours after birth (maternal)",
+          "Annotation(s)": "All postpartum women should have regular assessments of vaginal bleeding, uterine tonus, fundal height, temperature, and heart rate (pulse) routinely during the first 24 hours, starting from the first hour after birth. Blood pressure should be measured shortly after birth. If normal, the second blood pressure measurement should be taken within 6 hours. Urine void should be documented within 6 hours.",
+          "Guidance": "Register maternal postpartum assessment data from the first 24 hours after birth",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Hours after childbirth\" ≤ 24",
+          "Output Type": "PlanDefinition",
+          "R": "PNC.B3a.DT.3.1",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A1"
+        },
+        {
+          "Action": "Proceed PNC.D3a. Check symptoms and well-being during follow up contact (maternal)",
+          "Annotation(s)": "At each subsequent postnatal contact beyond 24 hours after birth, enquiries should continue to be made about general well-being and assessments made regarding the following: micturition and urinary incontinence, bowel function, healing of any perineal wound, headache, fatigue, back pain, perineal pain and perineal hygiene, breast pain and uterine tenderness and lochia.",
+          "Guidance": "Register maternal postpartum assessment data from each subsequent postnatal contact beyond 24 hours after birth",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Hours after childbirth\" > 24",
+          "Output Type": "PlanDefinition",
+          "R": "PNC.B3a.DT.3.2",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A1"
+        }
+      ],
+      "sheet": "PNC.B3a.DT.3",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B3A.DT.04"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B3a.DT.4",
+      "idsFromSheetName": [
+        "PNC.B3A.DT.04"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Depending on the woman’s clinical elements identified during the contact and/or population level characteristics, additional examinations may or may not be required",
+        "decisionId": "PNC.B3a.DT.4",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B3a. Check symptoms and well-being within 24 hours after birth (maternal) AND PNC.D3a. Check symptoms and well-being during follow up contact (maternal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Provide HIV catch-up testing",
+          "Annotation(s)": "In high HIV burden settings, catch-up postpartum HIV testing is needed for women of HIV-negative or unknown status who missed early antenatal contact testing or retesting in late pregnancy at a third trimester visit.",
+          "Guidance": "Provide HIV catch-up testing",
+          "Input 1": "\"Prevalence of HIV in pregnant women in the catchment area\" ≥ 5%",
+          "Input 2": "\"HIV testing at early pregnancy and retesting in the third trimester\" ≠ \"Positive\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B3a.DT.4.1",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.2a, A.2b"
+        },
+        {
+          "Action": "Consider HIV catch-up testing",
+          "Annotation(s)": "In low HIV burden settings, catch-up postpartum HIV testing can be considered for women of HIV-negative or unknown status who missed early antenatal contact testing or retesting in late pregnancy at a third trimester visit as part of the effort to eliminate mother-to-child transmission of HIV. Countries could consider this only for women who are in serodiscordant relationships, where the partner is not virally suppressed on antiretroviral therapy (ART), or who had other known ongoing HIV risks in late pregnancy at a third trimester visit.",
+          "Guidance": "Consider HIV catch-up testing",
+          "Input 1": "\"Prevalence of HIV in pregnant women in the catchment area\" < 5%",
+          "Input 2": "\"HIV testing at early pregnancy and retesting in the third trimester\" = \"Not done/unknown\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B3a.DT.4.2"
+        },
+        {
+          "Action": "Consider HIV catch-up testing",
+          "Annotation(s)": "In low HIV burden settings, catch-up postpartum HIV testing can be considered for women of HIV-negative or unknown status who missed early antenatal contact testing or retesting in late pregnancy at a third trimester visit as part of the effort to eliminate mother-to-child transmission of HIV. Countries could consider this only for women who are in serodiscordant relationships, where the partner is not virally suppressed on antiretroviral therapy (ART), or who had other known ongoing HIV risks in late pregnancy at a third trimester visit.",
+          "Guidance": "Consider HIV catch-up testing",
+          "Input 2": "\"Partner HIV status (reported)\" = \"Positive\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B3a.DT.4.3"
+        },
+        {
+          "Action": "Consider HIV catch-up testing",
+          "Annotation(s)": "In low HIV burden settings, catch-up postpartum HIV testing can be considered for women of HIV-negative or unknown status who missed early antenatal contact testing or retesting in late pregnancy at a third trimester visit as part of the effort to eliminate mother-to-child transmission of HIV. Countries could consider this only for women who are in serodiscordant relationships, where the partner is not virally suppressed on antiretroviral therapy (ART), or who had other known ongoing HIV risks in late pregnancy at a third trimester visit.",
+          "Guidance": "Consider HIV catch-up testing",
+          "Input 2": "\"Occupation\" = \"Employment that puts woman at increased risk for HIV (e.g. sex worker)\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B3a.DT.4.4"
+        },
+        {
+          "Action": "Provide screening for tuberculosis (TB) disease",
+          "Annotation(s)": "Household contacts and other close contacts of individuals with tuberculosis (TB) disease, including women in the postpartum period and newborns/infants, should be systematically screened for TB disease.",
+          "Guidance": "Provide screening for tuberculosis (TB) disease",
+          "Input 1": "\"Household or close contacts with tuberculosis (TB) disease\" = \"Yes\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B3a.DT.4.5",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.3a-3c"
+        },
+        {
+          "Action": "Provide screening for tuberculosis (TB) disease",
+          "Annotation(s)": "In settings where the tuberculosis (TB) disease prevalence in the general population is 100 per 100 000 population or higher, systematic screening for TB disease may be conducted in women during the postpartum period.",
+          "Guidance": "Provide screening for tuberculosis (TB) disease",
+          "Input 1": "\"Population prevalence of tuberculosis (TB) per 100 000 persons\" ≥ 100",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B3a.DT.4.6"
+        },
+        {
+          "Action": "Provide screening for tuberculosis (TB) disease",
+          "Annotation(s)": "Systematic screening for tuberculosis (TB) disease may be conducted among the general population, including for women during the postpartum period, in areas with an estimated TB disease prevalence of 0.5% or higher.",
+          "Guidance": "Provide screening for tuberculosis (TB) disease",
+          "Input 1": "\"Population prevalence of tuberculosis (TB) percentage\" ≥ 0.5%",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B3a.DT.4.7"
+        }
+      ],
+      "sheet": "PNC.B3a.DT.4",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Input 3",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B3A.DT.05"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B4a.DT.5",
+      "idsFromSheetName": [
+        "PNC.B3A.DT.05"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Provide counselling on all relevant health topics. Provide comprehensive contraceptive information and services.",
+        "decisionId": "PNC.B4a.DT.5",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B3a. Check symptoms and well-being within 24 hours after birth (maternal) AND PNC.D3a. Check symptoms and well-being during follow up contact (maternal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct counselling on postpartum family planning",
+          "Annotation(s)": "Note: the lactational amenorrhea method (LAM) is an effective method for breastfeeding women who are amenorrhoeic and their infant < 6 months of age;\n\nBreastfeeding women < 6 weeks postpartum are generally advised not to use injectables and should not use combined hormonal contraceptives (CHCs);\n\nBreastfeeding women ≥ 6 weeks can use injectables without restriction; breastfeeding women ≥ 6 weeks to < 6 months postpartum (primarily breastfeeding) generally should not use CHCs unless other more appropriate methods are not available or acceptable.",
+          "Guidance": "Conduct counselling on postpartum family planning:\n- Possible methods include: levonorgestrel intrauterine device (IUD), copper IUD, implants, lactational amenorrhea method (LAM), oral contraceptive pills, sterilization, tubal ligation",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Intrauterine device (IUD) placement after birth\" ≠ \"Yes\"",
+          "Input 3": "\"Female sterilization after birth\" ≠ \"Yes\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B3a.DT.5.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1): C16\nWHO PNC recommendations (2022) (3): A24\nMedical eligibility criteria for contraceptive use (2015) (4)"
+        }
+      ],
+      "sheet": "PNC.B3a.DT.5",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B4A.DT.06"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B4a.DT.6",
+      "idsFromSheetName": [
+        "PNC.B4A.DT.06"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Conduct physical examination. Depending on the results of the physical exam, additional examinations or repeat measurements may be required.",
+        "decisionId": "PNC.B4a.DT.6",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B4a. Conduct physical exam within 24 hours after birth (maternal) AND PNC.D4a. Conduct physical exam during follow-up contact (maternal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Measure blood pressure (BP) again after 10–15 minutes’ rest",
+          "Guidance": "Given abnormal values (systolic blood pressure [SBP] ≥ 140 or < 90 mmHg) at the first measurement, BP should be measured again.",
+          "Input 1": "90 > \"Systolic blood pressure\" ≥ 140 mmHg",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.1",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A1\nManaging complications in pregnancy and childbirth (2017) (5)"
+        },
+        {
+          "Action": "Measure blood pressure (BP) again after 10–15 minutes’ rest",
+          "Guidance": "Given high values (diastolic blood pressure [DBP] ≥ 90 or < 60 mmHg) at the first measurement, BP should be measured again.",
+          "Input 1": "60 > \"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.2"
+        },
+        {
+          "Action": "Measure temperature again",
+          "Guidance": "Temperature < 36°C or ≥ 38°C. Measure temperature again. Consider measuring temperature orally.",
+          "Input 1": "36 > \"Body temperature\" ≥  38°C",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.3"
+        },
+        {
+          "Action": "Check again after 10 minutes’ rest",
+          "Guidance": "Pulse rate < 60 or > 100 bpm. Measure pulse rate again after 10–15 minutes.",
+          "Input 1": "60 > \"Pulse rate\" > 100",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.4"
+        },
+        {
+          "Action": "Conduct oximetry test",
+          "Guidance": "Woman has an abnormal respiratory exam result or respiratory distress. Conduct oximetry test.",
+          "Input 1": "\"Respiratory exam result\" ≠ \"Normal\"",
+          "Input 2": "\"Respiratory exam result\" ≠ \"Not done\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.5"
+        },
+        {
+          "Action": "Consider breast examination",
+          "Guidance": "It is recommended to assess breast conditions during the postpartum period.",
+          "Input 1": "\"Breast examination result\" = \"Not done\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.6"
+        },
+        {
+          "Action": "Proceed with further investigation",
+          "Guidance": "Flaccid fundal tone. Risk of bleeding or infection.\n– Check for history or signs of bleeding and infection\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance.",
+          "Input 1": "\"Fundal tone\" = \"Flaccid\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.7"
+        },
+        {
+          "Action": "Consider pelvic examination",
+          "Guidance": "It is recommended to assess pelvic conditions during the postpartum period, especially to assess wounds, haematomas, lochia and secretions.",
+          "Input 1": "\"Pelvic exam result\"  = \"Not done\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.8"
+        },
+        {
+          "Action": "Consider caesarean-section examination",
+          "Guidance": "It is recommended to assess caesarean-section wound conditions during the postpartum period, especially to assess signs of bleeding and infection.",
+          "Input 1": "\"Caesarean-section wound inspection: findings\" = \"Not done\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4a.DT.6.9"
+        }
+      ],
+      "sheet": "PNC.B4a.DT.6",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Input 3",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B6A.DT.07"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B6a.DT.7",
+      "idsFromSheetName": [
+        "PNC.B6A.DT.07"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "If the woman presents with any of the following suggested diagnoses, conduct management, counselling or referral as needed",
+        "decisionId": "PNC.B6a.DT.7",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B6a. AND PNC.D6a. Provide counselling, management & and treatment (maternal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct hypertension counselling",
+          "Guidance": "Woman has hypertension – systolic blood pressure (SBP) of 140 mmHg or higher or diastolic blood pressure (DBP) of 90 mmHg or higher and no proteinuria. \n\nCounselling consists of:\n– advising the woman to reduce workload and to rest;\n– advising the woman on danger signs;\n– reassessing the woman at the next contact or in 1 week;\n– if hypertension persists after 1 week or at the next contact, referring the woman to the hospital or discussing the case with the doctor, if available.",
+          "Input 1": "\"Existing chronic health conditions\" = \"Hypertension\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Guidance": "Woman has hypertension – systolic blood pressure (SBP) of 140 mmHg or higher or diastolic blood pressure (DBP) of 90 mmHg or higher and no proteinuria. \n\nCounselling consists of:\n– advising the woman to reduce workload and to rest;\n– advising the woman on danger signs;\n– reassessing the woman at the next contact or in 1 week;\n– if hypertension persists after 1 week or at the next contact, referring the woman to the hospital or discussing the case with the doctor, if available.",
+          "Input 1": "140 mmHg ≤ \"Systolic blood pressure\" < 160 mmHg",
+          "Input 2": "140 mmHg ≤ \"Repeat systolic blood pressure\" < 160 mmHg",
+          "Input 3": "\"Urine dipstick result – protein\" = \"+\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.2"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Guidance": "Woman has hypertension – systolic blood pressure (SBP) of 140 mmHg or higher or diastolic blood pressure (DBP) of 90 mmHg or higher and no proteinuria. \n\nCounselling consists of:\n– advising the woman to reduce workload and to rest;\n– advising the woman on danger signs;\n– reassessing the woman at the next contact or in 1 week;\n– if hypertension persists after 1 week or at the next contact, referring the woman to the hospital or discussing the case with the doctor, if available.",
+          "Input 1": "90 mmHg ≤ \"Diastolic blood pressure\" < 110 mmHg",
+          "Input 2": "90 mmHg ≤ \"Repeat diastolic blood pressure\" < 110 mmHg",
+          "Input 3": "\"Urine dipstick result – protein\" = \"+\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.3"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Guidance": "Woman has hypertension – systolic blood pressure (SBP) of 140 mmHg or higher or diastolic blood pressure (DBP) of 90 mmHg or higher and no proteinuria. \n\nCounselling consists of:\n– advising the woman to reduce workload and to rest;\n– advising the woman on danger signs;\n– reassessing the woman at the next contact or in 1 week;\n– if hypertension persists after 1 week or at the next contact, referring the woman to the hospital or discussing the case with the doctor, if available.",
+          "Input 1": "140 mmHg ≤ \"Systolic blood pressure\" < 160 mmHg",
+          "Input 2": "140 mmHg ≤ \"Repeat systolic blood pressure\" < 160 mmHg",
+          "Input 3": "Urine dipstick result – protein\" = \"None\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.4"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Guidance": "Woman has hypertension – systolic blood pressure (SBP) of 140 mmHg or higher or diastolic blood pressure (DBP) of 90 mmHg or higher and no proteinuria. \n\nCounselling consists of:\n– advising the woman to reduce workload and to rest;\n– advising the woman on danger signs;\n– reassessing the woman at the next contact or in 1 week;\n– if hypertension persists after 1 week or at the next contact, referring the woman to the hospital or discussing the case with the doctor, if available.",
+          "Input 1": "90 mmHg ≤ \"Diastolic blood pressure\" < 110 mmHg",
+          "Input 2": "90 mmHg ≤ \"Repeat diastolic blood pressure\" < 110 mmHg",
+          "Input 3": "\"Urine dipstick result – protein\" = \"None\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.5"
+        },
+        {
+          "Action": "Refer for further HIV testing",
+          "Annotation(s)": "In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all antenatal care settings. In low-prevalence settings, PITC can be considered for pregnant women in antenatal care settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems.",
+          "Guidance": "HIV test inconclusive; refer for further testing.",
+          "Input 1": "HIV catch-up testing at admission for labour\" = \"Inconclusive\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.6",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.2a, A.2b"
+        },
+        {
+          "Action": "Refer for further HIV testing",
+          "Annotation(s)": "In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all antenatal care settings. In low-prevalence settings, PITC can be considered for pregnant women in antenatal care settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems.",
+          "Guidance": "HIV test inconclusive; refer for further testing.",
+          "Input 1": "HIV catch-up testing after birth\" = \"Inconclusive\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.7"
+        },
+        {
+          "Action": "Conduct counselling on HIV",
+          "Annotation(s)": "In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all antenatal care settings. In low-prevalence settings, PITC can be considered for pregnant women in antenatal care settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems.",
+          "Guidance": "Woman is HIV-positive:\n– Counsel for HIV-positive test\n– Refer for further testing and confirmation\n– Refer for HIV services\n– Advise on opportunistic infections and need to seek medical help\n– Proceed with systematic screening for active tuberculosis (TB)",
+          "Input 1": "\"HIV testing at early pregnancy and retesting in the third trimester\" = \"Positive\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.8",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.2a, A.2b"
+        },
+        {
+          "Action": "Conduct counselling on HIV",
+          "Annotation(s)": "In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all antenatal care settings. In low-prevalence settings, PITC can be considered for pregnant women in antenatal care settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems.",
+          "Guidance": "Woman is HIV-positive:\n– Counsel for HIV-positive test\n– Refer for further testing and confirmation\n– Refer for HIV services\n– Advise on opportunistic infections and need to seek medical help\n– Proceed with systematic screening for active tuberculosis (TB)",
+          "Input 1": "\"HIV catch-up testing at admission for labour\" = \"Positive\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.9",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.2a, A.2b"
+        },
+        {
+          "Action": "Conduct counselling on HIV",
+          "Annotation(s)": "In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all antenatal care settings. In low-prevalence settings, PITC can be considered for pregnant women in antenatal care settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems.",
+          "Guidance": "Woman is HIV-positive:\n– Counsel for HIV-positive test\n– Refer for further testing and confirmation\n– Refer for HIV services\n– Advise on opportunistic infections and need to seek medical help\n– Proceed with systematic screening for active tuberculosis (TB)",
+          "Input 1": "\"HIV catch-up testing after birth\" = \"Positive\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.10",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.2a, A.2b"
+        },
+        {
+          "Action": "Conduct counselling on HIV",
+          "Annotation(s)": "In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all antenatal care settings. In low-prevalence settings, PITC can be considered for pregnant women in antenatal care settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems.",
+          "Guidance": "Woman is HIV-positive:\n– Counsel for HIV-positive test\n– Refer for further testing and confirmation\n– Refer for HIV services\n– Advise on opportunistic infections and need to seek medical help\n– Proceed with systematic screening for active tuberculosis (TB)",
+          "Input 1": "\"Existing chronic health conditions\" = \"HIV-positive\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.11",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.2a, A.2b"
+        },
+        {
+          "Action": "Conduct counselling on HIV",
+          "Annotation(s)": "Oral pre-exposure prophylaxis (PrEP) for HIV prevention.\nOral (PrEP) containing tenofovir disoproxil fumarate (TDF) should be started or continued as an additional prevention choice for postpartum or lactating women at substantial risk of HIV infection as part of combination HIV prevention approaches.",
+          "Guidance": "Woman has substantial risk of HIV infection.\nProvide oral pre-exposure prophylaxis (PrEP) for HIV prevention containing tenofovir disoproxil fumarate (TDF).",
+          "Input 1": "\"Population incidence of HIV in the absence of pre-exposure prophylaxis (PrEP)\" > 3",
+          "Input 2": "\"HIV testing at early pregnancy and retesting in the third trimester\" ≠  \"Positive\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.12",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.2a, A.2b"
+        },
+        {
+          "Action": "Conduct counselling on HIV",
+          "Annotation(s)": "Oral pre-exposure prophylaxis (PrEP) for HIV prevention.\nOral (PrEP) containing tenofovir disoproxil fumarate (TDF) should be started or continued as an additional prevention choice for postpartum or lactating women at substantial risk of HIV infection as part of combination HIV prevention approaches.",
+          "Guidance": "Woman has substantial risk of HIV infection.\nProvide oral pre-exposure prophylaxis (PrEP)  for HIV prevention containing tenofovir disoproxil fumarate (TDF).",
+          "Input 2": "\"HIV catch-up testing after birth\" = \"Negative\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.13"
+        },
+        {
+          "Action": "Further investigation for anaemia",
+          "Guidance": "Further investigation for anaemia:\n– Measure haemoglobin if there is a history of bleeding\n– Count the number of breaths and pulse in 1 minute.\n– Check for other signs and symptoms of anaemia\n– Check pallor severity. If pallor is severe, give double dose of iron (1 tablet 60 mg twice daily for 3 months). Refer urgently to hospital or high-level assistance. Follow up in less than 2 weeks to check clinical progress and treatment compliance.",
+          "Input 1": "\"Labour or birth complications\" = \"Postpartum haemorrhage\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.14",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Further investigation for anaemia",
+          "Guidance": "Further investigation for anaemia:\n– Measure haemoglobin if there is a history of bleeding\n– Count the number of breaths and pulse in 1 minute.\n– Check for other signs and symptoms of anaemia\n– Check pallor severity. If pallor is severe, give double dose of iron (1 tablet 60 mg twice daily for 3 months). Refer urgently to hospital or high-level assistance. Follow up in less than 2 weeks to check clinical progress and treatment compliance.",
+          "Input 1": "\"Specific complaint\" = \"Excessive bleeding\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.15"
+        },
+        {
+          "Action": "Advise about breast care and breastfeeding preparation",
+          "Guidance": "Advise about breast care and breastfeeding preparation:\n– Teach mother to express breast-milk every 3 hours. \n– Help mother to express breast-milk if necessary. \n– Ensure infant receives mother’s milk. \n– Help mother to establish or re-establish breastfeeding as soon as possible.",
+          "Input 1": "\"Mother and newborn cohabitation status\" ≠ \"Together\"",
+          "Input 2": "\"Newborn’s current location\" ≠ \"Died\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.16"
+        },
+        {
+          "Action": "Counselling after neonatal death",
+          "Guidance": "Give supportive care and advise about breast care:\n– Inform the parents as soon as possible after the infant’s death. \n– If the mother/couple wants to see the infant, show the infant to the mother/couple, and give the infant to the mother/couple to hold, where culturally appropriate. \n– Offer the parents and family to be with the dead infant in privacy for as long as they need. \n– Discuss with them the events before the death and the possible causes of death. \n– Advise the mother about breast care. \n– Counsel on an appropriate family planning method. \n– Record the event. Complete the perinatal death certificate.",
+          "Input 2": "\"Newborn’s current location\" = \"Died\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.17"
+        },
+        {
+          "Action": "Conduct couselling on psychosocial interventions to prevent postpartum depression and anxiety",
+          "Annotation(s)": "Two or more of the above symptoms during the same 2-week period representing a change from normal (usually after 2 weeks of birth) = postpartum depression:\n– Provide emotional support. \n– Urgently refer the woman to hospital or ask for high-level assistance. \n\nAny of the above for less than 2 weeks (usually in the first week) = postpartum anxiety or depression:\n– Assure the woman that this is very common. \n– Listen to her concerns. Give emotional encouragement and support. \n– Counsel the woman’s partner and family to provide assistance to the woman.\n– Follow up in 2 weeks, and refer if no improvement",
+          "Guidance": "Look for signs of depression and/or anxiety and provide emotional support.\n– Inappropriate guilt or negative persistent sad or anxious mood, irritability.\n– Low interest in or pleasure from activities that used to be enjoyable.\n– Difficulties carrying out usual work, school, domestic or social activities.\n– Negative or hopeless feelings about herself or her newborn.\n– Multiple symptoms (aches, pains, palpitations, numbness) with no clear physical cause.",
+          "Input 1": "\"Specific complaint\" = \"Anxiety\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.18",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Conduct couselling on psychosocial interventions to prevent postpartum depression and anxiety",
+          "Annotation(s)": "Two or more of the above symptoms during the same 2-week period representing a change from normal (usually after 2 weeks of birth) = postpartum depression:\n– Provide emotional support. \n– Urgently refer the woman to hospital or ask for high-level assistance. \n\nAny of the above for less than 2 weeks (usually in the first week) = postpartum anxiety or depression:\n– Assure the woman that this is very common. \n– Listen to her concerns. Give emotional encouragement and support. \n– Counsel the woman’s partner and family to provide assistance to the woman.\n– Follow up in 2 weeks, and refer if no improvement",
+          "Guidance": "Look for signs of depression and/or anxiety and provide emotional support.\n– Inappropriate guilt or negative persistent sad or anxious mood, irritability.\n– Low interest in or pleasure from activities that used to be enjoyable.\n– Difficulties carrying out usual work, school, domestic or social activities.\n– Negative or hopeless feelings about herself or her newborn.\n– Multiple symptoms (aches, pains, palpitations, numbness) with no clear physical cause.",
+          "Input 1": "\"Specific complaint\" = \"Depression\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.19",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Conduct couselling on psychosocial interventions to prevent postpartum depression and anxiety",
+          "Annotation(s)": "Two or more of the above symptoms during the same 2-week period representing a change from normal (usually 2 weeks after birth) = postpartum depression:\n– Provide emotional support. \n– Urgently refer the woman to hospital or ask for high level assistance. \n\nAny of the above for less than 2 weeks (usually in the first week) = postpartum anxiety or depression:\n– Assure the woman that this is very common. \n– Listen to her concerns. Give emotional encouragement and support. \n– Counsel the woman’s partner and family to provide assistance to the woman. \n– Follow up in 2 week and refer if no improvement",
+          "Guidance": "Look for signs of postpartum anxiety or depression and provide emotional support:\n– Inappropriate guilt or negative persistent sad or anxious mood, irritability. \n– Low interest in or pleasure from activities that used to be enjoyable. \n– Difficulties carrying out usual work, school, domestic or social activities. \n– Negative or hopeless feelings about herself or her infant.\n– Multiple symptoms (aches, pains, palpitations, numbness) with no clear physical cause.",
+          "Input 1": "\"Screening for postnatal depression and anxiety\" = \"Positive\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.20",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Provide adequate syphilis treatment for the woman and her newborn",
+          "Guidance": "Provide adequate syphilis treatment for the woman and her newborn:\n– Give benzathine benzylpenicillin intramuscularly (2.4 million units in 5 ml), 2.4 million units intramuscular injection once only. Give as two intramuscular injections at separate sites. \n– If the woman is allergic to penicillin, give erythromycin (1 tablet = 250 mg) 500 mg (2 tablets) every 6 hours for 15 days. \n– Plan to treat newborn.\n– Counsel on correct and consistent use of condoms.",
+          "Input 1": "\"Syphilis treatment\" ≠ \"Complete or adequate\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.21"
+        },
+        {
+          "Action": "Provide counselling on Rh factor negative",
+          "Guidance": "Provide counselling on Rh factor negative:\n– Woman is at risk of alloimmunization if the infant’s status is Rh-positive or unknown.\n– Proceed with local protocol to investigate sensitization and the need for referral.\n– If non-sensitized, the woman should receive anti-D prophylaxis postnatally within 72 hours from birth.",
+          "Input 1": "\"Woman’s blood type Rh factor\" = \"Negative\"",
+          "Input 2": "\"Newborn/infant’s blood type Rh factor\" = \"Positive\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.22"
+        },
+        {
+          "Action": "Provide counselling on Rh factor negative",
+          "Guidance": "Provide counselling on Rh factor negative:\n– Woman is at risk of alloimmunization if the infant’s status is Rh-positive or unknown\n– Proceed with local protocol to investigate sensitization and the need for referral \n– If non-sensitized, the woman should receive anti-D prophylaxis postnatally within 72 hours from birth.",
+          "Input 2": "\"Newborn/infant’s blood type Rh factor\" = \"Unknown\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.23"
+        },
+        {
+          "Action": "Conduct counselling if tuberculosis (TB) screening is positive",
+          "Annotation(s)": "Treat according to local protocol or refer for treatment\nIn settings where the tuberculosis (TB) prevalence in the general population is 100 per 100 000 population or higher, systematic screening for active TB should be considered for pregnant women as part of antenatal care (6)",
+          "Guidance": "Conduct counselling if tuberculosis (TB) screening is positive. Treat according to local protocol or refer for treatment.",
+          "Input 1": "\"Tuberculosis (TB) screening result\" = \"Positive for TB\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.24",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A3a-3c"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal respiratory exam or respiratory distress:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance.",
+          "Input 1": "\"Respiratory exam result\" ≠ \"Normal\"",
+          "Input 2": "\"Respiratory exam result\" ≠ \"Not done\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.25",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Further investigation for anaemia",
+          "Guidance": "Further investigation for anaemia:\n– Check record for bleeding in pregnancy, delivery or postpartum. \n– Measure haemoglobin if there is a history of bleeding\n– Count number of breaths in 1 minute. \n– Check for other signs and symptoms of anaemia\n– Check pallor severity. If pallor is severe, give double dose of iron (1 tablet 60 mg twice daily for 3 months). Refer urgently to hospital or high-level assistance. Follow up in less than 2 weeks to check clinical progress and treatment compliance",
+          "Input 1": "\"Pallor (palmar or conjunctival)\" = \"Yes\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.26"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal cardiac exam:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Cardiac exam result\" ≠ \"Normal\"",
+          "Input 2": "\"Cardiac exam result\" ≠ \"Not done\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.27"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Proceed to further investigation on breast condition:\n–  Counsel and support to practise responsive breastfeeding, good positioning and attachment of the infant to the breast, hand expression of breast-milk, and the use of warm or cold compresses, based on a woman’s preferences. \n- Look for signs of mastitis\n- Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Breast exam result\" ≠ \"Lactating\"",
+          "Input 2": "\"Breast exam result\" ≠ \"Not done\"",
+          "Input 3": "\"Breast exam result\" ≠ \"Flaccid\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.28"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal abdominal examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Abdominal examination result\"  ≠ \"Normal\"",
+          "Input 2": "\"Abdominal examination result\"  ≠ \"Not done\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.29"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal pelvic examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Pelvic exam result\"  ≠ \"Normal\"",
+          "Input 2": "\"Pelvic exam result\"  ≠ \"Not done\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.30"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal perineal examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Perineal laceration, wound, tear, episiotomy inspection: findings (visual)\" = \"Dehiscent\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.31"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal perineal examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Perineal laceration, wound, tear, episiotomy inspection: findings (visual)\" = \"Haematoma\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.32"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal perineal examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Perineal laceration, wound, tear, episiotomy inspection: findings (visual)\" = \"Redness\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.33"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal perineal examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Perineal laceration, wound, tear, episiotomy inspection: findings (visual)\" = \"Swelling\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.34"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal perineal examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Perineal laceration, wound, tear, episiotomy inspection: findings (visual)\" = \"Warmth\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.35"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has a perineal infection:\n– Assess additional signs and symptoms of infection\n– Remove sutures, if present\n– Clean wound. Counsel woman on care and hygiene\n– Give paracetamol for pain\n– If mild infection, follow up in 2 days. If no improvement, refer to the hospital\n– If more than a mild infection, give antibiotics and refer to hospital",
+          "Input 1": "\"Perineal laceration, wound, tear, episiotomy inspection: findings (visual)\" = \"Foul-smelling/purulent secretion\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.36"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal Caesarean-section wound examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Caesarean-section wound inspection: findings (visual)\" = \"Dehiscent\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.37"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal Caesarean-section wound examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Caesarean-section wound inspection: findings (visual)\" = \"Haematoma\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.38"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal Caesarean-section wound examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Caesarean-section wound inspection: findings (visual)\" = \"Redness\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.39"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal Caesarean-section wound examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Caesarean-section wound inspection: findings (visual)\" = \"Swelling\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.40"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has abnormal Caesarean-section wound examination:\n– Assess additional signs and symptoms\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Caesarean-section wound inspection: findings (visual)\" = \"Warmth\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.7.41"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has severe oedema:\n– Assess additional signs and symptoms, especially blood pressure, leg pain and leg redness\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Oedema severity\" = \"+++\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ObservationDefinition",
+          "R": "PNC.B6a.DT.7.42"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has severe oedema:\n– Assess additional signs and symptoms, especially blood pressure, leg pain and leg redness\n– Conduct further investigation and, if necessary, refer to a hospital or high-level assistance",
+          "Input 1": "\"Oedema severity\" = \"++++\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ObservationDefinition",
+          "R": "PNC.B6a.DT.7.43"
+        }
+      ],
+      "sheet": "PNC.B6a.DT.7",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Input 3",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B6A.DT.08"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B6a.DT.8",
+      "idsFromSheetName": [
+        "PNC.B6A.DT.08"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Intervention for woman's common physiological signs and symptoms",
+        "decisionId": "PNC.B6a.DT.8",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B6a. AND PNC.D6a. Provide counselling, management and treatment (maternal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Counselling for local cooling for perineal pain relief",
+          "Annotation(s)": "The evidence reviewed included intermittent application of local cooling in the form of crushed ice between layers of a pad, or a gel pack, for 10–20 minutes, from a single application to multiple applications in the first 48 hours after childbirth\n\nNon-pharmacological pain relief options can vary widely across settings and contexts, which might favour other non-pharmacological pain relief interventions and traditional and complementary medicine not evaluated during the guideline process, such as sitz baths, acupuncture or acupressure, aromatherapy, music, relaxation techniques, therapeutic ultrasound, transcutaneous electrical nerve stimulation (TENS) and laser therapy",
+          "Guidance": "Advise local cooling for perineal pain relief, such as with ice packs or cold pads, in the immediate postpartum period for the relief of acute pain from perineal trauma sustained during childbirth, based on a woman’s preferences and available options.\nAdvise on danger signs and symptoms, including any exacerbation of perineal pain as a manifestation of postpartum complications, such as haematomas, haemorrhoids and infection",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Type of birth\" ≠ \"Elective Caesarean-section\"",
+          "Input 3": "\"Hours after childbirth\" < 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.8.1",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.4"
+        },
+        {
+          "Action": "Provide pharmacological relief for perineal pain",
+          "Guidance": "Oral paracetamol is recommended as the first-line choice when oral analgesia is required for the relief of postpartum perineal pain. When local perineal cooling or paracetamol is not effective in relieving perineal pain, women should be told about other pharmacological pain relief options based on a safety profile (e.g. allergies, adverse effects, contraindications), availability, experience with a particular analgesic and cost",
+          "Input 1": "\"Specific complaint\" = \"Perineal pain\"",
+          "Input 2": "--",
+          "Input 3": "--",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.8.2",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.5"
+        },
+        {
+          "Action": "Provide pharmacological relief for uterine cramping",
+          "Annotation(s)": "Use the lowest effective dose for the shortest period of time, and be mindful of adverse effects and contraindications, including breastfeeding. Some options are: acetylsalicylic acid (aspirin) 500 mg, ibuprofen 400 mg or diclofenac sodium 50 mg. Aspirin is contraindicated during breastfeeding\n\nAll women should be informed about uterine involution and changes in lochia postpartum. They should be asked about abdominal pain and vaginal discharge during their postpartum stay in health facilities and at each postnatal care contact. Women should be advised of danger signs and symptoms, including any exacerbation of uterine pain as a manifestation of postpartum complications, such as endometritis",
+          "Guidance": "Provide pharmacological relief for uterine cramping. Oral non-steroidal anti-inflammatory drugs (NSAIDs) can be used when analgesia is required. Some options are: acetylsalicylic acid (aspirin) 500 mg, ibuprofen 400 mg or diclofenac sodium 50 mg. Aspirin is contraindicated during breastfeeding",
+          "Input 1": "\"Specific complaint\" = \"Uterine cramping\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.8.3",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.6"
+        },
+        {
+          "Action": "Counselling for treatment of breast engorgement",
+          "Annotation(s)": "To treat breast engorgement in the postpartum period, women should be counselled and supported to practise responsive breastfeeding, good positioning and attachment of the infant to the breast, expression of breast-milk, and the use of warm or cold compresses, based on the woman’s preferences. \n\nAll women should be told about common breast conditions associated with lactation, such as sore or cracked nipples, engorgement and mastitis, and encouraged to report any signs and symptoms to their health worker. \n\nThe use of pharmacological interventions, such as subcutaneous oxytocin and proteolytic enzyme therapy for the treatment of breast engorgement during the postpartum period is not recommended.",
+          "Guidance": "Provide non-pharmacological relief for breast engorgement. Women should be counselled and supported to practise responsive breastfeeding, good positioning and attachment of the infant to the breast, expression of breast-milk, and the use of warm or cold compresses, based on the woman’s preferences.",
+          "Input 1": "\"Breastfeeding/Breast issue\" = Breast engorgement",
+          "Input 2": "\"Mother and infant cohabitation status\" = \"Together\"",
+          "Input 3": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.8.4",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.8"
+        }
+      ],
+      "sheet": "PNC.B6a.DT.8",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B6A.DT.09"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B6a.DT.9",
+      "idsFromSheetName": [
+        "PNC.B6A.DT.09"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Depending on the woman’s clinical elements identified during the contact and/or population level characteristics, provide preventive/risk reduction measures",
+        "decisionId": "PNC.B6a.DT.9",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B6a. AND PNC.D6a. Provide counselling, management and treatment (maternal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Counselling for prevention of postpartum mastitis",
+          "Annotation(s)": "Responsive breastfeeding refers to the mother responding to her infant’s cues, as well as her own desire to breastfeed. Responsive feeding is distinct from demand feeding because it recognizes the reciprocal mother–infant relationship and benefits of breastfeeding beyond the alleviation of hunger.\n\nAll women should be advised of common breast conditions associated with lactation, such as sore or cracked nipples, engorgement and mastitis, and encouraged to report any signs and symptoms to their health worker.",
+          "Guidance": "Provide non-pharmacological interventions to prevent postpartum mastitis:\n- Woman should be counselled and supported to practise responsive breastfeeding, good positioning and attachment of the infant to the breast, hand expression of breast-milk, and the use of warm or cold compresses, based on a woman’s preferences.\n- Routine oral or topical antibiotic prophylaxis for the prevention of mastitis in the postpartum period is not recommended.",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Mother and infant cohabitation status\" = \"Together\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.9.1",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.10"
+        },
+        {
+          "Action": "Give preventive anthelmintic treatment",
+          "Annotation(s)": "Preventive chemotherapy (deworming), using annual single-dose albendazole (400 mg) or mebendazole (500 mg), is recommended as a public health intervention for all non-pregnant adolescent girls and women of reproductive age, including postpartum or lactating women, living in areas where the baseline prevalence of any soil-transmitted helminth infection is 20% or more among adolescent girls and women of reproductive age, to reduce the worm burden of soil-transmitted helminths.",
+          "Guidance": "Give preventive anthelmintic treatment using annual single-dose albendazole (400 mg) or mebendazole (500 mg)",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Population prevalence of soil-transmitted helminth infection\" ≥ 20%",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.9.2",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.15"
+        },
+        {
+          "Action": "Give preventive schistosomiasis treatment",
+          "Annotation(s)": "In endemic communities with a Schistosoma spp. prevalence of 10% or higher, WHO recommends annual preventive chemotherapy with praziquantel in a single dose for ≥ 75% up to 100% of pregnant women after the first trimester, and non-pregnant adolescent girls and women of reproductive age, including postpartum or lactating women, to control schistosomiasis morbidity and move towards eliminating the disease as a public health problem.",
+          "Guidance": "Give preventive schistosomiasis treatment with annual preventive chemotherapy with praziquantel in a single dose",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Population prevalence of Schistosoma spp. infection\" ≥ 10%",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.9.3",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.16"
+        },
+        {
+          "Action": "Counselling on preventive schistosomiasis treatment",
+          "Annotation(s)": "In endemic communities with a Schistosoma spp. prevalence of less than 10%, WHO suggests one of two approaches based on the programmes’ objectives and resources: (1) where there has been a programme of regular preventive chemotherapy, continuing preventive chemotherapy at the same or a reduced frequency towards interruption of transmission; and (2) where there has not been a programme of regular preventive chemotherapy, a clinical approach of test-and-treat, instead of preventive chemotherapy targeting a population.",
+          "Guidance": "Consider preventive schistosomiasis treatment based on local protocols",
+          "Input 2": "\"Population prevalence of Schistosoma spp. infection\" < 10%",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.9.4"
+        },
+        {
+          "Action": "Counsel on high risk for HIV infection and prescription of pre-exposure prophylaxis (PrEP)",
+          "Annotation(s)": "Oral pre-exposure prophylaxis (PrEP) containing tenofovir disoproxil fumarate (TDF) should be started or continued as an additional prevention choice for postpartum or lactating women at substantial risk of HIV infection as part of combination HIV prevention approaches.",
+          "Guidance": "Conduct counselling on oral pre-exposure prophylaxis (PrEP) for HIV prevention: \n- Oral (PrEP) containing tenofovir disoproxil fumarate (TDF) should be started or continued as an additional prevention choice for postpartum or lactating women at substantial risk of HIV infection",
+          "Input 1": "\"Population incidence of HIV in the absence of pre-exposure prophylaxis (PrEP)\" > 3",
+          "Input 2": "\"HIV testing at early pregnancy and retesting in the third trimester\"  ≠  \"Positive\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.9.5",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.17"
+        },
+        {
+          "Action": "Counsel on high risk for HIV infection and prescription of pre-exposure prophylaxis (PrEP)",
+          "Annotation(s)": "Oral pre-exposure prophylaxis (PrEP) containing tenofovir disoproxil fumarate (TDF) should be started or continued as an additional prevention choice for postpartum or lactating women at substantial risk of HIV infection as part of combination HIV prevention approaches.",
+          "Guidance": "Conduct counselling on oral pre-exposure prophylaxis (PrEP) for HIV prevention: \n- Oral (PrEP) containing tenofovir disoproxil fumarate (TDF) should be started or continued as an additional prevention choice for postpartum or lactating women at substantial risk of HIV infection",
+          "Input 2": "\"HIV catch-up testing at admission of labour\" = \"Negative\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.9.6"
+        },
+        {
+          "Action": "Counsel on high risk for HIV infection and prescription of pre-exposure prophylaxis (PrEP)",
+          "Annotation(s)": "Oral pre-exposure prophylaxis (PrEP) containing tenofovir disoproxil fumarate (TDF) should be started or continued as an additional prevention choice for postpartum or lactating women at substantial risk of HIV infection as part of combination HIV prevention approaches.",
+          "Guidance": "Conduct counselling on oral pre-exposure prophylaxis (PrEP) for HIV prevention: \n- Oral (PrEP) containing tenofovir disoproxil fumarate (TDF) should be started or continued as an additional prevention choice for postpartum or lactating women at substantial risk of HIV infection",
+          "Input 2": "\"HIV catch-up testing after birth\" = \"Negative\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.9.7"
+        }
+      ],
+      "sheet": "PNC.B6a.DT.9",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B6A.DT.10"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B6a.DT.10",
+      "idsFromSheetName": [
+        "PNC.B6A.DT.10"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Depending on the woman’s reported behaviours or the risk conditions identified during the contact, additional counselling may or may not be required",
+        "decisionId": "PNC.B6a.DT.10",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B6a. AND PNC.D6a. Provide counselling, management and and treatment (maternal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Counsel on postpartum iron and folic acid supplementation",
+          "Guidance": "Oral iron supplementation, either alone or in combination with folic acid supplementation, may be provided to postpartum women for 6–12 weeks after childbirth to reduce the risk of anaemia in settings where gestational anaemia is of public health concern",
+          "Input 1": "\"Population prevalence of gestational anaemia\" ≥ 20%",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.1",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.20"
+        },
+        {
+          "Action": "Counsel on tobacco cessation",
+          "Annotation(s)": "Health workers should routinely offer advice and psychosocial interventions for tobacco cessation to all women who are either current tobacco users or recent tobacco quitters and advise them to avoid exposure to second-hand smoke.",
+          "Guidance": "Offer advice and psychosocial interventions for tobacco cessation and advise the woman to avoid exposure to second-hand smoke.",
+          "Input 1": "\"Tobacco use\" = \"Current use of tobacco products\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.2",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)\n'WHO ANC recommendations (2016) (6): B.1.5"
+        },
+        {
+          "Action": "Counsel on exposure to second-hand smoke",
+          "Annotation(s)": "Health workers should routinely offer advice and psychosocial interventions for tobacco cessation to all women who are either current tobacco users or recent tobacco quitters and advise them to avoid exposure to second-hand smoke.",
+          "Guidance": "Offer advice and psychosocial interventions for tobacco cessation and advise the woman to avoid exposure to second-hand smoke.",
+          "Input 1": "\"Tobacco use\" = \"Exposure to second-hand smoke\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.3"
+        },
+        {
+          "Action": "Counsel on condom use",
+          "Guidance": "Advise to use condoms to prevent Zika, HIV and other sexually transmitted infections; if necessary, reassure that it is OK to continue to have sex postnatally after the bleeding stops.",
+          "Input 1": "\"Use of male condoms\" = \"No\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.4",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)\nPregnancy management with Zika (2016) (7)"
+        },
+        {
+          "Action": "Counsel on condom use",
+          "Guidance": "Advise to use condoms to prevent Zika, HIV and other sexually transmitted infections; if necessary, reassure it is OK to continue to have sex postnatally after the bleeding stops.",
+          "Input 1": "\"Use of female condoms\" = \"No\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.5"
+        },
+        {
+          "Action": "Counsel on condom use",
+          "Guidance": "Advise to use condoms to prevent Zika, HIV and other sexually transmitted infections; if necessary, reassure it is OK to continue to have sex postnatally after the bleeding stops.",
+          "Input 1": "\"Partner HIV status (reported)\" = \"HIV-positive\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.6"
+        },
+        {
+          "Action": "Counsel on alcohol and substance use",
+          "Guidance": "Advise women dependent on alcohol or drugs to cease their alcohol or drug use and offer, or refer them to, detoxification services under medical supervision, where necessary and applicable",
+          "Input 1": "\"Current alcohol or other substance use\" ≠  \"No alcohol or substances\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.7",
+          "Reference(s)": "WHO ANC recommendations (2016) (6): B.1.6"
+        },
+        {
+          "Action": "Counsel on high risk for HIV infection and prescription of pre-exposure prophylaxis (PrEP)",
+          "Guidance": "Provide comprehensive HIV prevention options: \n– Sexually transmitted infection screening and treatment (syndromic and syphilis)\n– Condom promotion\n– Risk reduction counselling\n– Pre-exposure prophylaxis (PrEP) with emphasis on adherence\n– Emphasize the importance of follow-up postnatal care contact visits",
+          "Input 1": "\"HIV testing at early pregnancy and retesting in the third trimester\" = \"Negative\"",
+          "Input 2": "\"Prevalence of HIV in pregnant women in the catchment area\" ≥ 5%",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.9",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)\nWHO ANC recommendations (2016) (6): B.1.7, C.7"
+        },
+        {
+          "Action": "Counsel on high risk for HIV infection and prescription of pre-exposure prophylaxis (PrEP)",
+          "Guidance": "Provide comprehensive HIV prevention options: \n– Sexually transmitted infection screening and treatment (syndromic and syphilis)\n– Condom promotion\n– Risk reduction counselling\n– Pre-exposure prophylaxis (PrEP) with emphasis on adherence\n– Emphasize the importance of follow-up postnatal care contact visits",
+          "Input 2": "\"Partner HIV status (reported)\" = \"HIV-positive\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.10"
+        },
+        {
+          "Action": "Counsel on high risk for HIV infection and prescription of pre-exposure prophylaxis (PrEP)",
+          "Guidance": "Provide comprehensive HIV prevention options: \n– Sexually transmitted infection screening and treatment (syndromic and syphilis)\n– Condom promotion\n– Risk reduction counselling\n– Pre-exposure prophylaxis (PrEP) with emphasis on adherence\n– Emphasize importance of follow-up postnatal care contact visits",
+          "Input 2": "\"Current alcohol or other substance use\" = \"Injectable drugs\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.11"
+        },
+        {
+          "Action": "Counsel on high risk for HIV infection and prescription of pre-exposure prophylaxis (PrEP)",
+          "Guidance": "Provide comprehensive HIV prevention options: \n– Sexually transmitted infection screening and treatment (syndromic and syphilis)\n– Condom promotion\n– Risk reduction counselling\n– Pre-exposure prophylaxis (PrEP) with emphasis on adherence\n– Emphasize importance of follow-up postnatal care contact visits",
+          "Input 2": "\"Occupation\" = \"Employment that puts woman at increased risk for HIV (e.g. sex worker)\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.12"
+        },
+        {
+          "Action": "Counsel on length of stay",
+          "Annotation(s)": "Timing of discharge from the health facility should be guided by the following:\n- The time needed to complete the assessment of a comprehensive set of criteria to evaluate maternal and newborn well-being and needs, and the findings of these assessments;\n- The health system’s capacity to organize postnatal care contacts after discharge through community-based services (e.g. home visits) or in outpatient services (e.g. in the health facility or provider’s office). Most healthy women and newborns would be ready for discharge 24 hours after birth, provided functioning and accessible follow-up services are available;\n- Unnecessarily prolonged stays in health facilities after birth should be avoided considering the increased risk of health-care-associated infections, costs to the health system and to service users, and women’s and families’ preferences. \n- Discharge within 24 hours after caesarean birth increases the risk of adverse maternal and neonatal outcomes and reduced breastfeeding at 6 weeks. The content of postnatal discharge criteria and discharge preparation would also need to consider postoperative outcomes and the needs of women and newborns after a caesarean birth;\n- As part of birth preparedness and complication readiness during pregnancy, women, parents and caregivers should be informed that stay in the heath facility after birth is recommended for a minimum of 24 hours. However, length of stay in the health facility will  depend on individual health outcomes and needs, particularly after a caesarean birth, and the availability of postnatal care services for follow-up after discharge.",
+          "Guidance": "Length of stay of at least 24 hours in health facilities after birth is recommended",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Hours after birth\" ≤ 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.13",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): C.45, C.46"
+        },
+        {
+          "Action": "Assess criteria prior to discharge from health facility",
+          "Guidance": "Access criteria for discharge.\nBefore discharging women and newborns after birth from the health facility to the home, health workers should assess the following criteria to improve maternal and newborn outcomes:\n• the woman’s and newborn’s physical well-being and the woman’s emotional well-being;\n• the skills and confidence of the woman to care for herself and the skills and confidence of the parents and caregivers to care for the newborn; and\n• the home environment and other factors that may influence the ability to provide care for the woman and the newborn in the home, and care-seeking behaviour.",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Hours after birth\" > 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.14"
+        },
+        {
+          "Action": "Counsel on preparation for discharge",
+          "Guidance": "Preparation for discharge from the health facility to home after birth is recommended. Information provision, educational interventions and counselling are recommended to prepare women, parents and caregivers for discharge from the health facility after birth to improve maternal and newborn health outcomes, and to facilitate the transition to the home. Educational materials, such as written and digital education booklets, pictorials for semi-literate populations and job aids should be available.",
+          "Input 1": "\"Who will be evaluated now?\" = \"Woman\"",
+          "Input 2": "\"Hours after birth\" > 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6a.DT.10.15"
+        }
+      ],
+      "sheet": "PNC.B6a.DT.10",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Input 3",
+        "Input 4",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.C1.DT.11"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.C1.DT.11",
+      "idsFromSheetName": [
+        "PNC.C1.DT.11"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Physical symptoms and examination results requiring higher level assistance or referral. If the woman has any of the following physical examination results, proceed with rapid assessment and management  (RAM), transfer to high-level assistance or refer to the hospital",
+        "decisionId": "PNC.C1.DT.11",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.C1. Emergency referral"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia with severity symptoms.\nWoman has hypertension and symptom(s) of severe pre-eclampsia! Refer urgently to a hospital or high-level assistance for further investigation and management.\n\nProcedure:\n– Give magnesium sulphate\n– Give appropriate anti-hypertensives\n– Refer urgently to a hospital",
+          "Input 1": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Input 2": "\"Repeat systolic blood pressure\" ≥ 140 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" ≠ \"No symptoms of severe pre-eclampsia\"",
+          "Input 4": "--",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1):  C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-53, Table S-12"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia with severity symptoms.\nWoman has hypertension and symptom(s) of severe pre-eclampsia! Refer urgently to a hospital or high-level assistance for further investigation and management.\n\nProcedure:\n– Give magnesium sulphate\n– Give appropriate anti-hypertensives\n– Refer urgently to a hospital",
+          "Input 1": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 2": "\"Repeat diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" ≠ \"No symptoms of severe pre-eclampsia\"",
+          "Input 4": "--",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.2",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1): C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-53, Table S-13"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia diagnosis. Refer to a hospital.\nWoman has pre-eclampsia – systolic blood pressure (SBP) of 140 mmHg or above or diastolic blood pressure (DBP) of 90 mmHg or above and proteinuria >= 2+ and no symptom of severe pre-eclampsia.\n\nProcedure:\n– Refer to a hospital",
+          "Input 1": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Input 2": "\"Repeat systolic blood pressure\" ≥ 140 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" = \"No symptoms of severe pre-eclampsia\"",
+          "Input 4": "\"Urine dipstick result – protein\" = \"++\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.3",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1): C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-53, Table S-21"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia diagnosis. Refer to a hospital.\nWoman has pre-eclampsia – systolic blood pressure (SBP) of 140 mmHg or above or diastolic blood pressure (DBP) of 90 mmHg or above and proteinuria 2+ and no symptoms of severe pre-eclampsia.\n\nProcedure:\n– Refer to a hospital",
+          "Input 1": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 2": "\"Repeat diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" = \"No symptoms of severe pre-eclampsia\"",
+          "Input 4": "\"Urine dipstick result – protein\" = \"++\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.4",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1): C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-53, Table S-21"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia diagnosis. Refer to a hospital.\nWoman has pre-eclampsia – systolic blood pressure (SBP) of 140 mmHg or above or diastolic blood pressure (DBP) of 90 mmHg or above and proteinuria 2+ and no symptoms of severe pre-eclampsia.\n\nProcedure:\n– Refer to a hospital",
+          "Input 1": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Input 2": "\"Repeat systolic blood pressure\" ≥ 140 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" = \"No symptoms of severe pre-eclampsia\"",
+          "Input 4": "\"Urine dipstick result – protein\" = \"+++\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.5",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1): recommendation C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-53, Table S-21"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia diagnosis. Refer to a hospital.\nWoman has pre-eclampsia – systolic blood pressure (SBP) of 140 mmHg or above or diastolic blood pressure (DBP) of 90 mmHg or above and proteinuria 2+ and no symptom of severe pre-eclampsia.\n\nProcedure:\n– Refer to a hospital",
+          "Input 1": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 2": "\"Repeat diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" = \"No symptoms of severe pre-eclampsia\"",
+          "Input 4": "\"Urine dipstick result – protein\" = \"+++\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.6",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1):  C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-53, Table S-21"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia diagnosis. Refer to hospital.\nWoman has pre-eclampsia – systolic blood pressure (SBP) of 140 mmHg or above or diastolic blood pressure (DBP) of 90 mmHg or above and proteinuria 2+ and no symptom of severe pre-eclampsia.\n\nProcedure:\n– Refer to a hospital",
+          "Input 1": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Input 2": "\"Repeat systolic blood pressure\" ≥ 140 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" = \"No symptoms of severe pre-eclampsia\"",
+          "Input 4": "\"Urine dipstick result – protein\" = \"++++\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.7",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1): recommendation C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-53, Table S-21"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia diagnosis. Refer to hospital.\nWoman has pre-eclampsia – systolic blood pressure (SBP) of 140 mmHg or above or diastolic blood pressure (DBP) of 90 mmHg or above and proteinuria 2+ and no symptom of severe pre-eclampsia.\n\nProcedure:\n– Refer to a hospital",
+          "Input 1": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 2": "\"Repeat diastolic blood pressure\" ≥ 90 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" = \"None\"",
+          "Input 4": "\"Urine dipstick result – protein\" = \"++++\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.8",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1): C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-53, Table S-21"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Pre-eclampsia diagnosis. Refer to hospital.\nWoman has pre-eclampsia – systolic blood pressure (SBP) of 140 mmHg or above or diastolic blood pressure (DBP) of 90 mmHg or above and proteinuria 2+ and no symptom of severe pre-eclampsia.\n\nProcedure:\n– Refer to a hospital",
+          "Input 1": "\"Systolic blood pressure\" > 160 mmHg",
+          "Input 2": "\"Repeat systolic blood pressure\" > 160 mmHg",
+          "Input 3": "\"Symptoms of severe pre-eclampsia\" = \"No symptoms of severe pre-eclampsia\"",
+          "Input 4": "\"Urine dipstick result – protein\" = \"++\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.9",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1): C3\nManaging complications in pregnancy and childbirth (2017) (5): Section S-52, Table S-12\nWHO pre-eclampsia and eclampsia recommendations (2011) (8): 6, 7"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Woman has severe hypertension. If systolic blood pressure (SBP) is 160 mmHg or higher or diastolic blood pressure (DBP) is 110 mmHg or higher, then refer urgently to the hospital for further investigation and management.",
+          "Input 1": "\"Systolic blood pressure\" ≥ 160 mmHg",
+          "Input 2": "\"Repeat systolic blood pressure\" ≥ 160 mmHg",
+          "Input 3": "\"Urine dipstick result – protein\" = \"+\"",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.10",
+          "Reference(s)": "Managing complications in pregnancy and childbirth (2017) (5): S-61\nWHO pre-eclampsia and eclampsia recommendations (2011) (8): 4"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Woman has severe hypertension. If systolic blood pressure (SBP) is 160 mmHg or higher or diastolic blood pressure (DBP) is 110 mmHg or higher, then refer urgently to the hospital for further investigation and management.",
+          "Input 1": "\"Diastolic blood pressure\" ≥ 110 mmHg",
+          "Input 2": "\"Repeat diastolic blood pressure\" ≥ 110 mmHg",
+          "Input 3": "\"Urine dipstick result – protein\" = \"+\"",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.11"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Woman has severe hypertension. If systolic blood pressure (SBP) is 160 mmHg or higher or diastolic blood pressure (DBP) is 110 mmHg or higher, then refer urgently to the hospital for further investigation and management.",
+          "Input 1": "\"Systolic blood pressure\" ≥ 160 mmHg",
+          "Input 2": "\"Repeat systolic blood pressure\" ≥ 160 mmHg",
+          "Input 3": "\"Urine dipstick result – protein\" = \"None\"",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.12",
+          "Reference(s)": "Managing complications in pregnancy and childbirth (2017) (5): S-61\nWHO pre-eclampsia and eclampsia recommendations (2011) (8): 4"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Guidance": "Woman has severe hypertension. If systolic blood pressure (SBP) is 160 mmHg or higher or diastolic blood pressure (DBP) is 110 mmHg or higher, then refer urgently to the hospital for further investigation and management.",
+          "Input 1": "\"Diastolic blood pressure\" ≥ 110 mmHg",
+          "Input 2": "\"Repeat diastolic blood pressure\" ≥ 110 mmHg",
+          "Input 3": "\"Urine dipstick result – protein\" = \"None\"",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.13"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics:\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 1": "\"Specific complaint = \"Fever\"",
+          "Input 2": "\"Abdominal examination result\" = \"Pain on deep compression\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.14",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Fundal tone\" ≠ \"Contracted\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.15"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Uterus tenderness\" = TRUE",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.16"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high–level assistance",
+          "Input 2": "\"Lochia characteristics (visual)\" = \"Purulent\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.17"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Lochia characteristics (visual)\" = \"Foul-smelling\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.18"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Labour or birth complications\" = \"Postpartum haemorrhage\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.19"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Specific complaint\" = \"Excessive bleeding\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.20"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Caesarean-section inspection: finding (visual)\" = \"Foul-smelling/purulent secretion\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.21"
+        },
+        {
+          "Action": "Further investigation for respiratory tract infection",
+          "Guidance": "Further investigation for respiratory tract infection:\n– Check vital signs (respiratory rate, pulse, blood pressure, oximetry)\n– Consider appropriate intramuscular (IM)/intravenous (IV) antibiotics\n– Refer urgently to the hospital or ask for high-level assistance",
+          "Input 2": "\"Specific complaint\" = \"Cough\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.22"
+        },
+        {
+          "Action": "Further investigation for respiratory tract infection",
+          "Guidance": "Further investigation for respiratory tract infection:\n– Check vital signs (respiratory rate, pulse, blood pressure, oximetry)\n– Consider appropriate intramuscular (IM)/intravenous (IV) antibiotics\n– Refer urgently to the hospital or ask for high-level assistance",
+          "Input 2": "\"Specific complaint\" = \"Flu symptoms\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.23"
+        },
+        {
+          "Action": "Refer to the hospital or to higher level of assistance",
+          "Guidance": "Abnormal pulse rate – refer for further investigation.\nProcedure:\n– Check for fever, infection, respiratory distress, arrhythmia\n– Refer for further investigation",
+          "Input 1": "60 bpm > \"Second pulse rate\" > 100 bpm",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.24",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): A.1\nManaging complications in pregnancy and childbirth (2017) (5)"
+        },
+        {
+          "Action": "Further investigation for infection",
+          "Guidance": "Woman has a fever: provide treatment and refer urgently to hospital or high-level assistance.\nProcedure:\n– Insert an intravenous (IV) line\n– Give fluids slowly\n– Feel lower abdomen and flanks for tenderness. \n– Check breast for signs of infection or engorgement. \n– Look for abnormal lochia. \n– Measure temperature again. Consider measuring temperature orally\n– Look or feel for stiff neck. \n– Look for lethargy",
+          "Input 1": "\"Body temperature\" ≥ 38 degree Celsius",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.25",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high–level assistance",
+          "Input 1": "\"Body temperature\" ≥ 38 degree Celsius",
+          "Input 2": "\"Abdominal examination result\" = \"Pain on deep compression\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.26"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Fundal tone\" ≠ \"Contracted\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.27"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Uterus tenderness\" = TRUE",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.28"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours.\n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Lochia characteristics (visual)\" = \"Purulent\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.29"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Lochia characteristics (visual)\" = \"Foul-smelling\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.30"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Labour or birth complications\" = \"Postpartum haemorrhage\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.31"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Specific complaint\" = \"Excessive bleeding\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.32"
+        },
+        {
+          "Action": "Further investigation for postpartum infection",
+          "Guidance": "Proceed to investigation of postpartum infection:\n– Insert an intravenous (IV) line and give fluids rapidly\n     - Ringer’s lactate or normal saline\n     - Infuse 1 litre in 2–3 hours. \n– Give appropriate intramuscular (IM)/IV antibiotics\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 2": "\"Caesarean-section wound inspection: finding (visual)\" = \"Foul-smelling/purulent secretion\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.33"
+        },
+        {
+          "Action": "Further investigation for respiratory tract infection",
+          "Guidance": "Further investigation for respiratory tract infection:\n– Check vital signs (respiratory rate, pulse, blood pressure, oximetry)\n– Consider appropriate intramuscular/intravenous antibiotics\n– Refer urgently to hospital or ask for high-level assistance",
+          "Input 2": "\"Specific complaint\" = \"Cough\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.34"
+        },
+        {
+          "Action": "Further investigation for respiratory tract infection",
+          "Guidance": "Further investigation for respiratory tract infection:\n– Check vital signs (respiratory rate, pulse, blood pressure, oximetry)\n– Consider appropriate intramuscular/intravenous antibiotics\n– Refer urgently to the hospital or ask for high-level assistance",
+          "Input 2": "\"Specific complaint\" = \"Flu symptoms\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.35"
+        },
+        {
+          "Action": "Proceed to further investigation",
+          "Guidance": "Woman has low oximetry (< 92%) – she should be referred urgently to the hospital or high-level assistance.",
+          "Input 1": "\"Oximetry\" < 92%",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.36"
+        },
+        {
+          "Action": "Proceed to rapid assessment and management and referral",
+          "Guidance": "Woman has postpartum bleeding. Proceed to rapid assessment and management and referral:\n- Call for extra help. \n- Massage uterus until it is hard and give oxytocin 10 IU intramuscularly.\n- Insert an intravenous (IV) line and give IV fluids with 20 IU oxytocin at 60 drops per minute. \n- Empty bladder. Catheterize if necessary. \n- Check and record blood pressure and pulse every 15 minutes. If systolic BP < 90 mmHg or pulse >110 per minute: \n         •\tPosition the woman on her left side with legs higher than chest. \n         •\tInsert an IV. \n         •\tGive fluids rapidly. \n         •\tIf unable to insert IV, give oral rehydration solution (300 to 500 ml in 1 hour) by mouth if able to drink or by nasogastric tube. \n         •\tKeep her warm (cover her). \n         •\tRefer her urgently to hospital.\n- Check uterus tenderness, fundal height, fundal tone, lacerations, vital signs. \n- Consider 0.2 mg ergometrine intramuscularly.\n- Consider appropriate intramuscular (IM)/IV antibiotics. \n- Manage as in rapid assessment and management. \n- Refer urgently to the hospital or high-level assistance",
+          "Input 1": "\"Lochia volume (visual) ≠ \"Light\"",
+          "Input 2": "\"Lochia characteristics (visual)\" = \"Large clots\"",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.37"
+        },
+        {
+          "Action": "Proceed to rapid assessment and management and referral",
+          "Guidance": "Uterine infection suspected.\n– Feel lower abdomen and flanks for tenderness. \n– Measure temperature. \n– Look or feel for stiff neck. \n– Look for lethargy\n– Insert an intravenous (IV) line and give fluids rapidly. \n– Give appropriate intramuscular (IM)/IV antibiotics.\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 1": "\"Lochia characteristics (visual)\" = \"Purulent\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.38"
+        },
+        {
+          "Action": "Proceed to rapid assessment and management and referral",
+          "Guidance": "Uterine infection suspected.\n– Feel lower abdomen and flanks for tenderness. \n– Measure temperature. \n– Look or feel for stiff neck. \n– Look for lethargy\n– Insert an intravenous (IV) line and give fluids rapidly. \n– Give appropriate intramuscular (IM)/IV antibiotics.\n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 1": "\"Lochia characteristics (visual)\" = \"Foul-smelling\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.39"
+        },
+        {
+          "Action": "Proceed to rapid assessment and management and referral",
+          "Guidance": "Wound infection suspected.\n– Feel lower abdomen and flanks for tenderness. \n– Measure temperature. \n– Look or feel for stiff neck. \n– Look for lethargy\n– Insert an intravenous (IV) line and give fluids rapidly. \n– Give appropriate intramuscular (IM)/IV antibiotics. \n     - Clindamycin 150 mg IV/IM/orally every 6–8 hours\n     - Gentamicin 80 mg IM every 8 hours\n– Refer urgently to the hospital or high-level assistance",
+          "Input 1": "\"Caesarean-section wound inspection: findings (visual)\" = \"Foul-smelling/purulent secretion\"",
+          "Input 2": "–",
+          "Input 3": "–",
+          "Input 4": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.11.40"
+        }
+      ],
+      "sheet": "PNC.C1.DT.11",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.A2.DT.12"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.A2.DT.12",
+      "idsFromSheetName": [
+        "PNC.A2.DT.12"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Before each contact, the health worker should check whether the newborn/infant has any of the danger signs listed here; if yes, the newborn/infant should be referred to the hospital urgently; if no, the contact should be continued as normal.",
+        "decisionId": "PNC.A2.DT.12",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.A2 Reception and assessment of danger signs"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Proceed with postnatal care (PNC) contact",
+          "Annotation(s)": "If no danger signs are present, the health worker can continue with the routine postnatal care (PNC) contact",
+          "Guidance": "Routine care",
+          "Input 1": "\"Child Danger Sign\"  = \"No danger signs\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)\nWHO PNC recommendations (2022) (3): B.25"
+        },
+        {
+          "Action": "Proceed to PNC.B1 OR Proceed with rapid assessment and management (RAM) OR referral",
+          "Guidance": "Follow-up steps and further investigations up to the clinician’s discretion. \n\nThis is a danger sign that indicates that the newborn needs urgent assessment.",
+          "Input 1": "\"Child Danger Sign\"  = \"Not able to feed at all or not feeding well\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.2"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR referral",
+          "Guidance": "Emergency for the newborn.\n\nThis is a danger sign that indicates that the newborn needs urgent assessment and management. Transfer the newborn to the treatment room for immediate newborn care. Ask the mother or caregiver to stay.",
+          "Input 1": "\"Child Danger Sign\" = \"Fits or convulsions\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.3"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR referral",
+          "Guidance": "Emergency for the newborn.\n\nFast breathing (more than 60 breaths per minute). This is a danger sign that indicates that the newborn needs urgent assessment and management. Transfer the newborn to the treatment room for immediate newborn care. Ask the mother or caregiver to stay.",
+          "Input 1": "\"Child Danger Sign\" = \"Fast breathing (breathing rate ≥ 60/min)\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.4"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR referral",
+          "Guidance": "Emergency for the newborn.\n\nSevere inward movement of the lower chest wall when the child breathes in. This is a danger sign that indicates that the newborn needs urgent assessment and management. Transfer the newborn to the treatment room for immediate newborn care. Ask the mother or caregiver to stay.",
+          "Input 1": "\"Child Danger Sign\" = \"Severe chest in-drawing\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.5"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR referral",
+          "Guidance": "Emergency for the newborn.\n\nThis is a danger sign that indicates that the newborn needs urgent assessment and management. Transfer the newborn to the treatment room for immediate newborn care. Ask the mother or caregiver to stay.",
+          "Input 1": "\"Child Danger Sign\" = \"Movement only when stimulated or no movement at all\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.6"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR referral",
+          "Guidance": "Emergency for the newborn.\n\nTemperature > 37.5 °C. This is a danger sign that indicates that the newborn needs urgent assessment and management.",
+          "Input 1": "\"Child Danger Sign\" = \"Fever\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.7"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR referral",
+          "Guidance": "Emergency for the newborn.\n\nTemperature < 35.5 °C. This is a danger sign that indicates that the newborn needs urgent assessment and management.",
+          "Input 1": "\"Child Danger Sign\" = \"Low body temperature\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.8"
+        },
+        {
+          "Action": "Proceed with rapid assessment and management (RAM) OR referral",
+          "Guidance": "Emergency for the newborn.\n\nThis is a danger sign that indicates that the newborn needs urgent assessment and management. Transfer the newborn to the treatment room for immediate newborn care. Ask the mother or caregiver to stay.",
+          "Input 1": "\"Child Danger Sign\" = \"Jaundice\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.A2.DT.12.9"
+        }
+      ],
+      "sheet": "PNC.A2.DT.12",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B3b.DT.13",
+      "idsFromSheetName": [],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Assess newborn's/infant's postnatal status",
+        "decisionId": "PNC.B3b.DT.13",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B3b. Check symptoms and well-being within 24 hours after birth (neonatal/infant) AND PNC.D3b. Check symptoms and well-being during follow up contact (neonatal/infant)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Proceed PNC.B3a. Check symptoms and well-being within 24 hours after birth (neonatal)",
+          "Annotation(s)": "During the firsth 24 hours after birth, conduct a postpartum newborn assessment.\n\nWash hands, explain to the mother/caretaker that you will be examining the newborn thoroughly, inform the mother/caretaker of the examination findings and reassure, as necessary. Re-examine the newborn whenever the mother/caretaker raises a concern or if a danger sign is noted.",
+          "Guidance": "Register neonatal assessment data from the first 24 hours after birth.",
+          "Input 1": "\"Who will be evaluated now?\" = \"Newborn/infant\"",
+          "Input 2": "\"Hours after birth\" ≤ 24",
+          "Output Type": "PlanDefinition",
+          "R": "PNC.B3b.DT.13.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)\nWHO PNC recommendations (2022) (3): B.25, C.46\nEarly essential newborn care: clinical practice pocket guide (2022) (9)"
+        },
+        {
+          "Action": "Proceed PNC.D3a. Check symptoms and well-being during follow up contact (neonatal/infant)",
+          "Annotation(s)": "At each subsequent postnatal contact beyond 24 hours after birth, conduct a postpartum newborn assessment.\n\nWash hands, explain to the mother/caretaker that you will be examining the newborn/infant thoroughly, examine the newborn/infant, inform the mother/caretaker of the examination findings, and reassure, as necessary. Re-examine the newborn/infant whenever the mother/caretaker raises a concern or if a danger sign is noted.",
+          "Guidance": "Register neonatal/infant assessment data from each subsequent postnatal contact beyond 24 hours after birth.",
+          "Input 1": "\"Who will be evaluated now?\" = \"Newborn/infant\"",
+          "Input 2": "\"Hours after birth\" >  24",
+          "Output Type": "PlanDefinition",
+          "R": "PNC.B3b.DT.13.2",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)\nWHO PNC recommendations (2022) (3): B.25\nEarly essential newborn care: clinical practice pocket guide (2022) (9)"
+        }
+      ],
+      "sheet": "PNCB3b.DT.13",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B4B.DT.14"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B4b.DT.14",
+      "idsFromSheetName": [
+        "PNC.B4B.DT.14"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Conduct physical examination. Depending on the results of the physical exam, additional examinations or repeat measurements may be required",
+        "decisionId": "PNC.B4b.DT.14",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.4b. Conduct physical exam within 24 hours after birth (neonatal) AND PNC.D4b. Conduct physical exam during follow up contact (neonatal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Re-examine the newborn",
+          "Guidance": "Sleeping uncomfortably. Re-examine the newborn whenever the mother raises a concern or if a danger sign is noted.",
+          "Input 1": "\"Appearance\" = \"Sleeping uncomfortably\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4b.DT.14.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)\nManaging complications guide (2017) (5)"
+        },
+        {
+          "Action": "Measure temperature",
+          "Guidance": "Measure temperature. Check if the clothes are adequate and measure the newborn's temperature.",
+          "Input 1": "\"Warmth\" ≠ \"Normal\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4b.DT.14.2"
+        },
+        {
+          "Action": "Warm the newborn",
+          "Guidance": "Mild hypothermia. Re-warm the newborn skin-to-skin. If the temperature not rising after 2 hours, reassess the newborn.",
+          "Input 1": "35.5 < \"Temperature (°C)\" < 36.4",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4b.DT.14.3"
+        }
+      ],
+      "sheet": "PNC.B4b.DT.14",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B4B.DT.15"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B4b.DT.15",
+      "idsFromSheetName": [
+        "PNC.B4B.DT.15"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Neonatal universal screening",
+        "decisionId": "PNC.B4b.DT.15",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B4b. Conduct physical exam within 24 hours after birth (neonatal)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Proceed to universal screening for abnormalities of the eye",
+          "Guidance": "Screening for abnormalities of the eye is recommended. \n\nUniversal newborn screening for abnormalities of the eye should be done before discharge after a health-facility birth or at the first postnatal care contact in an outpatient setting after a home birth. Ideally, screening should be done within the first 6 weeks after birth. \n\nAn external examination of the eye and red reflex test should be done using standard equipment (e.g. a direct ophthalmoscope) by a trained health worker.",
+          "Input 1": "\"Red Reflex\" = \"Not done\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4b.DT.15.1",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): B.26"
+        },
+        {
+          "Action": "Proceed to universal screening for hearing impairment",
+          "Guidance": "Screening for hearing impairment is recommended.\n\nUniversal newborn hearing screening (UNHS) with otoacoustic emissions (OAEs) or automated auditory brainstem response (AABR) is recommended for early identification of permanent bilateral hearing loss (PBHL). UNHS should be accompanied by diagnostic and management services for infants identified with hearing loss. \n\nScreening is usually completed before discharge or can be completed at a postnatal visit. \n\nPBHL is defined as bilateral permanent conductive or sensorineural hearing loss of 35 dB or greater in the better ear.\nIf UNHS indicates possible PBHL, a follow-up definitive test must be done as soon as possible after screening. This involves testing by an audiologist with a more detailed diagnostic auditory brainstem response in a highly controlled environment. It takes 30–60 minutes to complete the diagnostic test.",
+          "Input 1": "\"Screening for hearing impairment (otoacoustic emissions [OAEs])\" = \"Not done\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4b.DT.15.2",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): B.27"
+        },
+        {
+          "Action": "Proceed to universal screening for neonatal hyperbilirubinaemia",
+          "Guidance": "Screening for neonatal hyperbilirubinaemia is recommended.\n\nUniversal screening for neonatal hyperbilirubinaemia by transcutaneous bilirubinometry (TcB) is recommended at health facility discharge. \n\nThe postnatal age for universal TcB screening at discharge should be guided by the timing of the health facility discharge.\n\nTranscutaneous bilirubin screening at discharge should be followed up with serum bilirubin measurement, appropriate treatment and follow-up as indicated by age-appropriate nomograms.",
+          "Input 1": "\"Screening for neonatal hyperbilirubinaemia\" = \"Not done\"",
+          "Input 2": "\"Hours after birth\" ≥ 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B4b.DT.15.3",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): B.28, B.29"
+        }
+      ],
+      "sheet": "PNC.B4b.DT.15",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B6B.DT.16"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B6b.DT.16",
+      "idsFromSheetName": [
+        "PNC.B6B.DT.16"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Conduct physical examination. Depending on the results of some physical examinations, additional examinations or repeat measures are required.",
+        "decisionId": "PNC.B6b.DT.16",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B6b. Provide counselling, management and treatment for newborn"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Advice for preparedness for breastfeeding",
+          "Guidance": "If the mother is not able to care for the newborn, advise the mother to express breast-milk. Ensure the newborn receives breast-milk or consider alternative feeding methods until the mother is well. Provide care for the newborn and ensure warmth. Ensure the mother can see her newborn regularly. Provide care for the newborn and regular visits with the mother. Transfer the newborn with the mother if possible. Ensure care for the newborn at home.",
+          "Input 1": "\"Mother and newborn cohabitation status\" ≠ \"Together\"",
+          "Input 2": "\"Where is the mother?\" ≠ \"Died\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Re-examine the newborn",
+          "Guidance": "Sleeping uncomfortably. Re-examine the newborn whenever the mother raises a concern or if a danger sign is noted.",
+          "Input 1": "\"Appearance\" = \"Sleeping uncomfortably\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.2"
+        },
+        {
+          "Action": "Measure temperature",
+          "Guidance": "Measure temperature. Check if the clothes are adequate and measure the newborn’s temperature",
+          "Input 1": "\"Warmth\" ≠ \"Normal\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.3"
+        },
+        {
+          "Action": "Warm the newborn",
+          "Guidance": "Mild hypothermia. Re-warm the newborn skin-to-skin. If the temperature not rising after 2 hours, reassess the newborn",
+          "Input 1": "35.5 < \"Temperature (°C)\" < 36.4",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.4"
+        },
+        {
+          "Action": "Provide counselling on small newborn care",
+          "Guidance": "Small newborn. Provide as close to continuous Kangaroo mother care as possible: \n- Give special support to breastfeed the small newborn\n- Ensure appropriate caloric intake. \n- Ensure additional care for a small newborn\n- Reassess daily. \n- Do not discharge before feeding well, gaining weight and the body temperature is stable. \n- If feeding difficulties persist for 3 days and the newborn is otherwise well, refer for breastfeeding counselling.",
+          "Input 1": "32 < \"Gestational age at birth\" < 36",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.5"
+        },
+        {
+          "Action": "Provide counselling on twin care",
+          "Guidance": "Twins.\nGive special support to the mother to breastfeed twins:\n- Do not discharge until both twins can go home.",
+          "Input 1": "\"Number of newborns\" > 1",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.6"
+        },
+        {
+          "Action": "Counsel on eye infection",
+          "Guidance": "Gonococcal eye infection suspected:\n- Give single dose of appropriate antibiotic for the eye infection. \n- Teach the mother to treat the eyes of her newborn\n- Follow up in 2 days. If no improvement or worse, refer urgently to the hospital. \n- Assess and treat the mother and her partner for possible gonorrhoea",
+          "Input 1": "\"Eyes\" = \"Swollen and draining pus\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.7"
+        },
+        {
+          "Action": "Counsel on abnormal red reflex",
+          "Guidance": "Abnormal red reflex. If the eyes show red reflex abnormality, additional care could be warranted. Follow-up steps and further investigations should be carried out at the clinician’s discretion.",
+          "Input 1": "\"Eyes\" = \"Red reflex abnormal\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.8",
+          "Reference(s)": "Pocket book of hospital care for children (2013) (10)"
+        },
+        {
+          "Action": "Counsel on birth bumps",
+          "Guidance": "Birth bumps. In addition to moulding, a bit of swelling or bruising of the scalp immediately after delivery is not uncommon for newborns:\n- Explain to parents that it does not hurt the newborn, that it will disappear in a week or two and that no special treatment is needed.",
+          "Input 1": "\"Head\" = \"Bumps on one or both sides\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.9",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Counsel on head abnormalities",
+          "Guidance": "Abnormal head examination. If a fracture is suspected, refer to appropriate specialist care",
+          "Input 1": "\"Head\" ≠ \"Normal\"",
+          "Input 2": "\"Head\" ≠ \"Bumps on one or both sides\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.10",
+          "Reference(s)": "Early Essential Newborn Care: Clinical Practice Pocket Guide (2022) (9)"
+        },
+        {
+          "Action": "Counsel on foot malformation",
+          "Guidance": "Club foot detected:\n- Refer to appropriate specialist care (in the same facility or another facility)\n- Document carefully and report as required by the national birth defect surveillance programme\n- Help mother to breastfeed. If not successful, teach her alternative feeding methods. Plan to follow up. \n- Advise on surgical correction when the infant is aged several months.",
+          "Input 1": "\"Malformation\" = \"Club foot\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.11",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)\nEarly Essential Newborn Care: Clinical Practice Pocket Guide (2022) (9)"
+        },
+        {
+          "Action": "Counsel on palate and lip malformation",
+          "Guidance": "Cleft palate or lip detected:\n- Refer to appropriate specialist care (in the same facility or another facility)\n- Document carefully and report as required by the national birth defect surveillance programme\n- Help mother to breastfeed. If not successful, teach her alternative feeding methods. Plan to follow up. \n- Advise on surgical correction when the infant is aged several months.",
+          "Input 1": "\"Malformation\" = \"Cleft palate or lip\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.12"
+        },
+        {
+          "Action": "Counsel on malformation",
+          "Guidance": "Odd looking, unusual appearance detected:\n- Refer to appropriate specialist care (in the same facility or another facility)\n- Document carefully and report as required by the national birth defect surveillance programme\n- Help mother to breastfeed. If not successful, teach her alternative feeding methods. Plan to follow up.",
+          "Input 1": "\"Malformation\" = \"Odd looking, unusual appearance\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.13"
+        },
+        {
+          "Action": "Counsel on malformation",
+          "Guidance": "Open tissue on head, abdomen, back, perineum or genital areas detected:\n- Refer to appropriate specialist care (in the same facility or another facility)\n- If the infant has an abdominal malformation or no anal opening, place a nasogastric tube (NGT) (size 8G) on open drainage during referral and transport to minimize the risk of abdominal distension or bloating\n- Document carefully and report as required by the national birth defect surveillance programme\n- Help mother to breastfeed. If not successful, teach her alternative feeding methods. Plan to follow up. \n- Advise on surgical correction when the infant is aged several months. \n- Cover with sterile tissues soaked with sterile saline solution before referral. \n- Manage according to national guidelines.",
+          "Input 1": "\"Malformation\" = \"Open tissue on head, abdomen, back, perineum or genital areas\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.14"
+        },
+        {
+          "Action": "Counsel on malformation",
+          "Guidance": "Other malformation detected:\n- Refer to appropriate specialist care (in the same facility or another facility)\n- Document carefully and report as required by the national birth defect surveillance programme\n- Help mother to breastfeed. If not successful, teach her alternative feeding methods. Plan to follow up. \n- Advise on surgical correction when the infant is aged several months.",
+          "Input 1": "\"Malformation\" = \"Other (specify)\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.15"
+        },
+        {
+          "Action": "Provide antibiotics for the newborn",
+          "Guidance": "Risk of bacterial infection:\n- Give newborn intramuscular antibiotics for 5 days. \n- Assess newborn daily",
+          "Input 1": "\"Hours after birth\" < 24",
+          "Input 2": "\"Interval between rupture of membranes and childbirth (hours)\" > 18",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.16",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Provide antibiotics for the newborn",
+          "Guidance": "Risk of bacterial infection:\n- Give newborn intramuscular antibiotics for 5 days. \n- Assess newborn daily",
+          "Input 1": "\"Maternal current medications\" = \"Antibiotics\"",
+          "Input 2": "\"Lochia characteristics (visual)\" = \"Purulent\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.17"
+        },
+        {
+          "Action": "Provide antibiotics for the newborn",
+          "Guidance": "Risk of bacterial infection:\n- Give newborn intramuscular antibiotics for 5 days. \n- Assess newborn daily",
+          "Input 1": "\"Fever during labour or childbirth\" = \"Yes\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.18"
+        },
+        {
+          "Action": "Provide syphilis treatment for the newborn",
+          "Guidance": "Risk of congenital syphilis:\n- Give newborn a single dose of benzathine penicillin. \n- Ensure that both mother and partner are treated. \n- Follow up in 2 weeks.",
+          "Input 1": "\"Antenatal care complications\" = \"Syphilis\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.19"
+        },
+        {
+          "Action": "Counsel on HIV transmission prevention",
+          "Guidance": "Risk of HIV transmission:\n- Give antiretroviral therapy (ART) to the newborn. \n- Teach mother to give ART to her newborn \n- Counsel on newborn feeding options. \n- Give special counselling to mother who is breastfeeding. \n- Teach the mother safe replacement feeding. \n- Follow up in 2 weeks",
+          "Input 1": "\"HIV testing at early pregnancy and retesting in the third trimester\" = \"Positive\" OR \"HIV catch-up testing at admission for labour\" = \"Positive\" OR \"HIV catch-up testing after birth\" = \"Positive\" OR \"Existing chronic health conditions\" = \"HIV-positive\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.20"
+        },
+        {
+          "Action": "Counsel on tuberculosis (TB) risk",
+          "Guidance": "Risk of tuberculosis (TB):\n- Give infant isoniazid prophylaxis for 6 months. \n- Give Bacillus Calmette–Guérin (BCG) vaccination to the infant only when their treatment is completed. \n- Follow up in 2 weeks.",
+          "Input 1": "\"Tuberculosis (TB) screening result\" = \"Positive for tuberculosis (TB)\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.21"
+        },
+        {
+          "Action": "Provide support for the mother or family member",
+          "Guidance": "Risk for the newborn. Provide support for the mother or family member",
+          "Input 1": "\"Does the mother or family member feel motivated to take care of the infant?\" = FALSE",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.22",
+          "Reference(s)": "Early essential newborn care: clinical practice pocket guide (2022) (9)"
+        },
+        {
+          "Action": "Reassess bowel movements",
+          "Guidance": "Reassess bowel movements. Counsel on adequate breastfeeding.",
+          "Input 1": "\"Bowel movements in the last 24 hours\" ≠ \"Yes\"",
+          "Input 2": "–",
+          "Output Type": "ObservationDefinition",
+          "R": "PNC.B6b.DT.16.23",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Reassess urine voiding",
+          "Guidance": "Reassess urine voiding. Counsel on adequate breastfeeding",
+          "Input 1": "\"Urine voided in the last 24 hours\" ≠ \"Yes\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.24"
+        },
+        {
+          "Action": "Provide counselling on caring for a small infant",
+          "Guidance": "Low weight.\nProvide as close to continuous Kangaroo mother care as possible: \n- Give special support to breastfeed the small infant\n- Ensure appropriate caloric intake \n- Ensure additional care for a small infant. \n- Reassess daily. \n- Do not discharge before feeding well, gaining weight and body temperature stable. \n- If feeding difficulties persist for 3 days and the infant is otherwise well, refer for breastfeeding counselling.",
+          "Input 1": "1500 < \"Newborn’s weight at birth\" < 2500",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.25"
+        },
+        {
+          "Action": "Counsel on length of stay",
+          "Annotation(s)": "Timing of discharge from the health facility should be guided by the following:\n- The time needed to complete the assessment of a comprehensive set of criteria to evaluate maternal and newborn well-being and needs, and the findings of these assessments;\n- The health system’s capacity to organize postnatal care contacts after discharge through community-based services (e.g. home visits) or in outpatient services (e.g. in the health facility or provider’s office). Most healthy women and newborns would be ready for discharge 24 hours after birth, provided functioning and accessible follow-up services are available;\n- Unnecessarily prolonged stays in health facilities after birth should be avoided considering the increased risk of health-care-associated infections, costs to the health system and to service users, and women’s and families’ preferences. \n- Discharge within 24 hours after caesarean birth increases the risk of adverse maternal and neonatal outcomes and reduced breastfeeding at 6 weeks. The content of postnatal discharge criteria and discharge preparation would also need to consider postoperative outcomes and the needs of women and newborns after a caesarean birth;\n- As part of birth preparedness and complication readiness during pregnancy, women, parents and caregivers should be informed that stay in the heath facility after birth is recommended for a minimum of 24 hours. However, length of stay in the health facility will  depend on individual health outcomes and needs, particularly after a caesarean birth, and the availability of postnatal care services for follow-up after discharge.",
+          "Guidance": "Length of stay of at least 24 hours in health facilities after birth is recommended",
+          "Input 1": "\"Who will be evaluated now?\" = \"Newborn\"",
+          "Input 2": "\"Hours after birth\" ≤ 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.26",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): C.45"
+        },
+        {
+          "Action": "Access criteria for discharge",
+          "Guidance": "Access criteria for discharge.\nBefore discharging women and newborns after birth from the health facility to the home, health workers should assess the following criteria to improve maternal and newborn outcomes:\n• the woman’s and newborn’s physical well-being and the woman’s emotional well-being;\n• the skills and confidence of the woman to care for herself and the skills and confidence of the parents and caregivers to care for the newborn; and\n• the home environment and other factors that may influence the ability to provide care for the woman and the newborn in the home, and care-seeking behaviour.",
+          "Input 1": "\"Who will be evaluated now?\" = \"Newborn\"",
+          "Input 2": "\"Hours after birth\" > 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.27"
+        },
+        {
+          "Action": "Counsel on preparation for discharge",
+          "Guidance": "Preparation for discharge from the health facility to home after birth is recommended. Information provision, educational interventions and counselling are recommended to prepare women, parents and caregivers for discharge from the health facility after birth to improve maternal and newborn health outcomes, and to facilitate the transition to the home. Educational materials, such as written and digital education booklets, pictorials for semi-literate populations and job aids should be available.",
+          "Input 1": "\"Who will be evaluated now?\" = \"Newborn\"",
+          "Input 2": "\"Hours after birth\" > 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.16.28"
+        }
+      ],
+      "sheet": "PNC.B6b.DT.16",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B6B.DT.17"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B6b.DT.17",
+      "idsFromSheetName": [
+        "PNC.B6B.DT.17"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Counselling for the newborn/infant",
+        "decisionId": "PNC.B6b.DT.17",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B6b. Provide counselling, management & treatment for newborn"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Counsel on the timing of the first bath",
+          "Annotation(s)": "The first bath of a healthy newborn born at term should be delayed for at least 24 hours after birth. There is no evidence to support an early first bath after birth for any special reason, such as meconium staining or for preventing the risk of transmission of infection from the mother. \nAll measures should be taken to minimize heat loss during bathing, which include maintaining a neutral thermal environment, immediate drying, appropriate clothing of the newborn for the ambient temperature (this means 1–2 layers of clothes more than adults and using hats or caps), and allowing the mother and newborn to remain together at all times.",
+          "Guidance": "Delay the first bath for at least 24 hours to prevent hypothermia and its sequelae",
+          "Input 1": "\"Who will be evaluated now?\" = \"Newborn\"",
+          "Input 2": "\"Hours after birth\" <= 24",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.17.1",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): B.30"
+        },
+        {
+          "Action": "Advice for sleeping position",
+          "Guidance": "Advice for sleeping position to prevent sudden infant death syndrome (SIDS). Putting the infant to sleep in the supine position during the first year is recommended to prevent SIDS and sudden unexpected death in infancy (SUDI).",
+          "Input 1": "\"Sleeping position\" ≠ \"Supine (back)\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.17.2",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): B.33"
+        },
+        {
+          "Action": "Counselling on cleaning the umbilical cord stump",
+          "Guidance": "Risk of umbilical cord infection.\nApplication of chlorhexidine to the umbilical cord stump for the prevention of neonatal infection. 4% chlorhexidine in the first week after birth in newborns with non-hygienic (harmful) cord care. In newborns with non-hygienic cord care, chlorhexidine reduces mortality. In newborns without non-hygienic cord care, chlorhexidine does not reduce mortality.",
+          "Input 1": "\"How was the umbilical cord stump cared for?\" ≠ \"Clean, dry care\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.17.3",
+          "Reference(s)": "Early essential newborn care: clinical practice pocket guide (2022) (9)"
+        }
+      ],
+      "sheet": "PNC.B6b.DT.17",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Input 2",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.B6B.DT.18"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.B6b.DT.18",
+      "idsFromSheetName": [
+        "PNC.B6B.DT.18"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Nutritional interventions for the newborn/infant",
+        "decisionId": "PNC.B6b.DT.18",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.B6b. Provide counselling, management & treatment for newborn"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Provide counselling on breastfeeding",
+          "Guidance": "Support exclusive breastfeeding:\n- Help the mother to initiate breastfeeding. \n- Teach correct positioning and attachment. \n- Advise to feed more frequently, day and night. \n- Reassure her that she has enough milk. \n- Advise the mother to stop feeding the infant other foods or drinks. \n- Reassess soon.",
+          "Input 1": "\"Feeding status\" = \"Not yet breastfed (first hours of life)\"",
+          "Input 2": "\"Where is the mother?\" ≠ \"Died\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Provide counselling on breastfeeding",
+          "Guidance": "Support exclusive breastfeeding:\n- Help the mother to initiate breastfeeding. \n- Teach correct positioning and attachment. \n- Advise to feed more frequently, day and night. \n- Reassure her that she has enough milk. \n- Advise the mother to stop feeding the infant other foods or drinks. \n- Reassess soon.",
+          "Input 1": "\"Feeding status\" = \"Not yet breastfed (first hours of life)\"",
+          "Input 2": "\"Where is the mother?\" ≠ \"Hospitalized/in intensive care unit (ICU)\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.2"
+        },
+        {
+          "Action": "Counsel on exclusive breastfeeding",
+          "Guidance": "Counsel on exclusive breastfeeding:\nAll infants should be exclusively breastfed from birth until 6 months of age. Mothers should be counselled and provided with support for exclusive breastfeeding at each postnatal contact. \n\nAll mothers should be supported to initiate breastfeeding within the first hour after birth. Mothers should receive practical support to enable them to initiate and establish breastfeeding and manage common breastfeeding difficulties. \n\nSome exceptions to exclusive breastfeeding for newborns born full-term are mentioned in the WHO document. There are acceptable medical reasons for the use of breast-milk substitutes. These exceptions include infants with classic galactosaemia, maple syrup urine diseas and phenylketonuria.",
+          "Input 1": "\"Feeding status\" ≠ \"Breastfeeding exclusively on demand (day and night)\"",
+          "Input 2": "\"Where is the mother?\" ≠ \"Hospitalized/in intensive care unit (ICU)\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.3",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): B.42"
+        },
+        {
+          "Action": "Counsel on exclusive breastfeeding",
+          "Guidance": "Counsel on exclusive breastfeeding.\nAll infants should be exclusively breastfed from birth until 6 months of age. Mothers should be counselled and provided with support for exclusive breastfeeding at each postnatal contact. \n\nAll mothers should be supported to initiate breastfeeding within the first hour after birth. Mothers should receive practical support to enable them to initiate and establish breastfeeding and manage common breastfeeding difficulties. \n\nSome exceptions to exclusive breastfeeding for newborns born full-term are mentioned in the WHO document. There are acceptable medical reasons for the use of breast-milk substitutes. These exceptions include infants with classic galactosaemia, maple syrup urine diseas and phenylketonuria.",
+          "Input 1": "\"Feeding status\" ≠ \"Breastfeeding exclusively on demand (day and night)\"",
+          "Input 2": "\"Where is the mother?\" ≠ \"Died\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.4"
+        },
+        {
+          "Action": "Counsel on exclusive breastfeeding",
+          "Guidance": "Counsel on exclusive breastfeeding.\nAll infants should be exclusively breastfed from birth until 6 months of age. Mothers should be counselled and provided with support for exclusive breastfeeding at each postnatal contact. \n\nAll mothers should be supported to initiate breastfeeding within the first hour after birth. Mothers should receive practical support to enable them to initiate and establish breastfeeding and manage common breastfeeding difficulties. \n\nSome exceptions to exclusive breastfeeding for newborns born full-term are mentioned in the WHO document. There are acceptable medical reasons for the use of breast-milk substitutes. These exceptions include infants with classic galactosaemia, maple syrup urine disease and phenylketonuria.",
+          "Input 1": "\"Has the newborn/infant received with any prelacteal feeds?\" ≠ \"No\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.5"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Encourage the mother to continue breastfeeding. Teach correct positioning and attachment. Reassess after two feeds (or 1 day). If not better, teach the mother how to express breast-milk from the affected breast and feed the infant using a cup, and continue breastfeeding on the healthy side. Keep the mother and infant together in bed or within easy reach. Do not separate them. Encourage breastfeeding on demand, day and night, as long as the infant wants it.\n\nAn infant needs to feed day and night, eight or more times in 24 hours from birth. Only on the first day may an infant born full-term sleep many hours after a good feed. Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of the areola visible above the infant’s mouth; \n→ mouth wide open; \n→ lower lip turned outwards; \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Breastfeeding/breast issues\" = \"Maternal pain\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.6",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Encourage the mother to continue breastfeeding. Teach correct positioning and attachment. Reassess after two feeds (or 1 day). If not better, teach the mother how to express breast-milk from the affected breast and feed the infant using a cup, and continue breastfeeding on the healthy side. Keep the mother and infant together in bed or within easy reach. Do not separate them. Encourage breastfeeding on demand, day and night, as long as the infant wants it\n\nAn infant needs to feed day and night, eight or more times in 24 hours from birth. Only on the first day may an infant born full-term sleep many hours after a good feed. Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth; \n→ mouth wide open; \n→ lower lip turned outwards; \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Breastfeeding/breast issues\" = \"Breast engorgement\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.7"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Encourage the mother to continue breastfeeding. Teach correct positioning and attachment. Reassess after two feeds (or 1 day). If not better, teach the mother how to express breast-milk from the affected breast and feed the infant using a cup, and continue breastfeeding on the healthy side. Keep the mother and infant together in bed or within easy reach. Do not separate them. Encourage breastfeeding on demand, day and night, as long as the infant wants it\n\nAn infant needs to feed day and night, eight or more times in 24 hours from birth. Only on the first day may an infant born full-term sleep many hours after a good feed. Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth; \n→ mouth wide open; \n→ lower lip turned outwards; \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Breastfeeding/breast issues\" = \"Sore nipple\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.8"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Encourage the mother to continue breastfeeding. Teach correct positioning and attachment. Give cloxacillin for 10 days. Reassess in 2 days. If no improvement or worse, refer to the hospital. If the mother is HIV-infected, let her breastfeed on the healthy breast. If pain is severe, give paracetamol. \n\nKeep the mother and infant together in bed or within easy reach. Do not separate them. Encourage breastfeeding on demand, day and night, as long as the infant wants it\n\nAn infant needs to feed day and night, eight or more times in 24 hours from birth. Only on the first day may an infant born full-term sleep many hours after a good feed. Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth; \n→ mouth wide open; \n→ lower lip turned outwards; \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Breastfeeding/breast issues\" = \"Nipple infection\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.9"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Encourage the mother to continue breastfeeding. Teach correct positioning and attachment. Give cloxacillin for 10 days. Reassess in 2 days. If no improvement or worse, refer to the hospital. If the mother is HIV-infected, let her breastfeed on the healthy breast. If pain is severe, give paracetamol. \n\nKeep the mother and infant together in bed or within easy reach. Do not separate them. Encourage breastfeeding on demand, day and night, as long as the infant wants it\n\nAn infant needs to feed day and night, eight or more times in 24 hours from birth. Only on the first day may an infant born full-term sleep many hours after a good feed. Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth; \n→ mouth wide open; \n→ lower lip turned outwards; \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Breastfeeding/breast issues\" = \" Mastitis/abscess\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.10"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Encourage the mother to continue breastfeeding. Teach correct positioning and attachment. Reassess after two feeds (or 1 day). If not better, teach the mother how to express breast-milk from the affected breast and feed the infant using a cup, and continue breastfeeding on the healthy side. Keep the mother and infant together in bed or within easy reach. Do not separate them. Encourage breastfeeding on demand, day and night, as long as the infant wants it\n\nAn infant needs to feed day and night, eight or more times in 24 hours from birth. Only on the first day may an infant born full-term sleep many hours after a good feed. Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth \n→ mouth wide open \n→ lower lip turned outwards \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Breastfeeding/breast issues\" = \"Poor milk production\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.11"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth \n→ mouth wide open; \n→ lower lip turned outwards; \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Breastfeeding/breast issues\" = \"Positioning issues\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.12"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth; \n→ mouth wide open; \n→ lower lip turned outwards; \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Positioning\" = \"Inadequate\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.13"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth; \n→ mouth wide open; \n→ lower lip turned outwards;\n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Breastfeeding/breast issues\" = \"Latch issues\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.14"
+        },
+        {
+          "Action": "Counsel on breastfeeding",
+          "Guidance": "Show the mother how to hold her infant. She should: \n→ make sure the infant’s head and body are in a straight line; \n→ make sure the infant is facing the breast and the infant’s nose is opposite her nipple; \n→ hold the infant’s body close to her body; \n→ support the infant’s whole body, not just the neck and shoulders. \n\nShow the mother how to help her infant to attach. She should: \n→ touch her infant’s lips with her nipple; \n→ wait until her infant’s mouth is opened wide; \n→ move her infant quickly onto her breast, aiming the infant’s lower lip well below the nipple. \n\nLook for signs of good attachment, such as: \n→ more of areola visible above the infant’s mouth; \n→ mouth wide open; \n→ lower lip turned outwards; \n→ infant’s chin touching the breast. \n\nLook for signs of effective suckling (i.e. slow, deep sucks, sometimes pausing). If the attachment or suckling is not good, try again. Then, reassess.",
+          "Input 1": "\"Suckling\" = \"Not suckling effectively\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.15"
+        },
+        {
+          "Action": "Counsel on feeding",
+          "Guidance": "An infant needs to feed day and night, eight or more times in 24 hours from birth. Only on the first day may an infant born full-term sleep many hours after a good feed.",
+          "Input 1": "\"Replacement Feeding\" ≠ \"Feeding eight times in 24 hours on demand day and night\"",
+          "Input 2": "–",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.16"
+        },
+        {
+          "Action": "Counsel on supplementation with Vitamin A",
+          "Guidance": "In settings with recent (within the last five years) and reliable data that indicate a high infant mortality rate (greater than 50 per 1000 live births) and a high prevalence of maternal vitamin A deficiency (≥ 10% of pregnant women with serum retinol concentrations < 0.70 µmol/L), providing newborns with a single oral dose of 50 000 IU of vitamin A within the first three days after birth may be considered to reduce infant mortality.",
+          "Input 1": "\"Infant mortality rate\" > 50",
+          "Input 2": "\"Population prevalence of maternal vitamin A deficiency\" ≥ 10%",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.B6b.DT.18.17",
+          "Reference(s)": "WHO PNC recommendations (2022) (3): B.35b"
+        }
+      ],
+      "sheet": "PNC.B6b.DT.18",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "R",
+        "Input 1",
+        "Output Type",
+        "Action",
+        "Guidance",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.C1.DT.19"
+      ],
+      "hitPolicy": "Rule Order",
+      "id": "PNC.DT.19",
+      "idsFromSheetName": [
+        "PNC.C1.DT.19"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Physical symptoms and examination results requiring higher level assistance or referral. If the newborn/infant has any of the following physical examination results, proceed to rapid assessment and management, transfer to high-level assistance or refer to the hospital",
+        "decisionId": "PNC.DT.19",
+        "hitPolicyIndicator": "Rule Order",
+        "trigger": "PNC.C1. Emergency referral"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Possible serious illness. Urgent assessment of the newborn. Evaluate the need for high-level management or referral.",
+          "Input 1": "\"Complications/danger signs in the last 24 hours\" ≠ \"None\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.1",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Possible serious illness. Urgent assessment of the newborn. Evaluate the need for high-level management or referral.",
+          "Input 1": "\"Complications/danger signs between last contact and today\" ≠ \"None\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.2"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Possible serious illness. Urgent assessment of the newborn. Evaluate the need for high-level management or referral.",
+          "Input 1": "\"Danger sign\" ≠ \"None\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.3"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Very low weight.\nRefer newborn urgently to the hospital or provide high-level assistance:\n- Ensure extra warmth during referral\n- Ensure appropriate caloric intake.",
+          "Input 1": "\"Newborn’s weight at birth\" < 1500 g",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.4"
+        },
+        {
+          "Action": "Proceed with additional assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Preterm birth.\nProceed with additional assessment. Evaluate high-level assistance or referral:\n- Ensure the infant is warm.\n- Ensure appropriate caloric intake.\n- Provide advice on exclusive breastfeeding.\nPlan to discharge when:\n» the infant is breastfeeding well and gaining at least 15 g/kg body weight per day for 3 consecutive days;\n» the infant’s body temperature is between 36.5° and 37.5°C for 3 consecutive days; and\n» the mother is able and confident in caring for her infant.",
+          "Input 1": "\"Gestational age at birth\" < 32 weeks",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.5",
+          "Reference(s)": "Early essential newborn care: clinical practice pocket guide (2022) (9)"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Possible serious illness. Refer infant urgently to the hospital:\n- Encourage breastfeeding on the way. \n- If feeding is difficult, give expressed breast-milk using a cup",
+          "Input 1": "\"Appearance\" = \"Lethargic\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.6",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015) (1)"
+        },
+        {
+          "Action": "Proceed with additional assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal skin finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Skin\" ≠ \"Normal findings\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.7"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal movements were found. Possible serious illness. Proceed to urgent assessment OR referral. Re-warm or keep warm during referral.",
+          "Input 1": "\"Spontaneous movements\" ≠ \"Normal and symmetrical\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.8"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal tone was found. Possible serious illness. Proceed to urgent assessment OR referral. Re-warm or keep warm during referral.",
+          "Input 1": "\"Tone\" = \"Abnormal (specify)\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.9"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal mouth and palate finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Mouth and palate\" ≠ \"Normal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.10"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal neck and clavicle finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Neck and clavicles\" ≠ \"Normal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.11"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal heart finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Heart\" ≠ \"Normal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.12"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal lung finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Lungs\" ≠ \"Normal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.13"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal abdomen finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Abdomen\" ≠ \"Normal findings\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.14"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Local umbilical infection:\n- Teach mother to treat umbilical infection.\n- If no improvement in 2 days, or if worse, refer urgently to hospital.",
+          "Input 1": "\"Umbilical cord\" = \"Red or swollen umbilicus or skin around it\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.15"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal genitalia finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Genitalia\" = \"Unusual appearance\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.16"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal anus finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Anus\" ≠ \"Normal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.17"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal limbs finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Limbs\" ≠ \"Normal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.18"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal back and spine finding. Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Back and spine\" ≠ \"Normal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.19"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal otoacoustic emissions (OAEs). Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Screening for hearing impairment (otoacoustic emissions [OAEs])\" = \"Otoacoustic emissions (OAEs) abnormal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.20"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal transcutaneous bilirubin (TcB). Assess for possible serious illness. Proceed with high-level management or referral if necessary.",
+          "Input 1": "\"Screening for neonatal hyperbilirubinaemia\" = \"Transcutaneous bilirubin (TcB) abnormal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.21"
+        },
+        {
+          "Action": "Proceed with urgent assessment. Evaluate high-level assistance or referral",
+          "Guidance": "Abnormal fontanelle examination. Bulging or tense fontanelles can be the sign of a critical illness. Emergency for the newborn, proceed to rapid assessment and management (RAM) OR referral.",
+          "Input 1": "\"Fontanelles\" ≠ \"Normal\"",
+          "Output Type": "ActivityDefinition",
+          "R": "PNC.C1.DT.19.22",
+          "Reference(s)": "Pocket book of hospital care for children (2013) (10)"
+        }
+      ],
+      "sheet": "PNC.C1.DT.19",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    }
+  ]
+}

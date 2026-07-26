@@ -1,0 +1,242 @@
+{
+  "tables": [
+    {
+      "columns": [
+        "Input(s)",
+        "Outputs",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [],
+      "hitPolicy": null,
+      "id": "SMBP.B4.DT",
+      "idsFromSheetName": [],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "activityId": "SMBP.B4",
+        "activityName": "Input results into personal health tracking application",
+        "decisionName": "Contextual data for SMBP",
+        "decisionSupportTableId": "SMBP.B4.DT.01"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Outputs": "System action"
+        },
+        {
+          "Annotations": "Since the blood pressure (BP) reading is high, input further information about the client's behaviour and environment immediately prior to and during the time when the measurement was taken. These factors can affect BP levels and how the measurement data are interpreted. Data on current symptoms are input to provide additional context for the measurement and to track any concerning symptoms.",
+          "Input(s)": "1",
+          "Outputs": "Contextual data for measurement required is True",
+          "Reference(s)": "WHO technical specifications for automated non-invasive blood pressure measuring devices with cuff (2020) (1)    \n\nWHO guidelines for managing complications in pregnancy and childbirth (2017) (3)"
+        },
+        {
+          "Annotations": "Since the BP reading is high, input further information about the client's behaviour and environment immediately prior to and during the time when the measurement was taken. These factors can affect BP levels and how the measurement data are interpreted. Data on current symptoms are input to provide additional context for the measurement and to track any concerning symptoms.",
+          "Input(s)": "2",
+          "Outputs": "Contextual data for measurement required is True",
+          "Reference(s)": "WHO technical specifications for automated non-invasive blood pressure measuring devices with cuff (2020) (1)\n\nWHO guidelines for managing complications in pregnancy and childbirth (2017) (3)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (4)"
+        },
+        {
+          "Annotations": "Since the BP reading is high, input further information about the client's behaviour and environment immediately prior to and during the time when the measurement was taken. These factors can affect BP levels and how the measurement data are interpreted. Data on current symptoms are input to provide additional context for the measurement and to track any concerning symptoms.",
+          "Input(s)": "3",
+          "Outputs": "Contextual data for measurement required is True",
+          "Reference(s)": "WHO technical specifications for automated non-invasive blood pressure measuring devices with cuff (2020) (1)\n\nWHO guidelines for managing complications in pregnancy and childbirth (2017) (3)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (4)"
+        },
+        {
+          "Annotations": "Since the BP reading is high, input further information about the client's behaviour and environment immediately prior to and during the time when the measurement was taken. These factors can affect BP levels and how the measurement data are interpreted. Data on current symptoms are input to provide additional context for the measurement and to track any concerning symptoms.",
+          "Input(s)": "4",
+          "Outputs": "Contextual data for measurement required is True",
+          "Reference(s)": "WHO technical specifications for automated non-invasive blood pressure measuring devices with cuff (2020) (3)\n\nWHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (2)"
+        },
+        {
+          "Annotations": "Since the BP reading is high, input further information about the client's behaviour and environment immediately prior to and during the time when the measurement was taken. These factors can affect BP levels and how the measurement data are interpreted. Data on current symptoms are input to provide additional context for the measurement and to track any concerning symptoms.",
+          "Input(s)": "5",
+          "Outputs": "Contextual data for measurement required is True",
+          "Reference(s)": "WHO technical specifications for automated non-invasive blood pressure measuring devices with cuff (2020) (3)\n\nWHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (2)"
+        }
+      ],
+      "sheet": "SMBP.B4.DT Contextual data ",
+      "sourceFile": "SMBP DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "Input(s)",
+        "Output",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [],
+      "hitPolicy": null,
+      "id": "SMBP.B7.DT",
+      "idsFromSheetName": [],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "activityId": "SMBP.B7",
+        "activityName": "Review health actions based on SMBP results",
+        "decisionName": "SMBP health actions",
+        "decisionSupportTableId": "SMBP.B7.DT.01"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Output": "Guidance displayed to client"
+        },
+        {
+          "Annotations": "Your blood pressure is controlled, so continue taking all the steps to control and monitor it. You and your family should continue to watch for the danger signs of pregnancy even though your blood pressure is not high.",
+          "Input(s)": "1",
+          "Output": "Continue SMBP and watch carefully for danger signs",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (3)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (4)"
+        },
+        {
+          "Annotations": "Your blood pressure is controlled, so continue taking all the steps to control and monitor it. You and your family should continue to watch for the danger signs of pregnancy even though your blood pressure is not high.",
+          "Input(s)": "2",
+          "Output": "Continue SMBP and watch carefully for danger signs",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (3)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (4)"
+        },
+        {
+          "Annotations": "Your blood pressure is controlled, so continue taking all the steps to control and monitor it. You and your family should continue to watch for the danger signs of pregnancy even though your blood pressure is not high. Also, be sure to follow your treatment plan for diabetes.",
+          "Input(s)": "3",
+          "Output": "Continue SMBP and watch carefully for danger signs",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (3)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (4)"
+        },
+        {
+          "Annotations": "Your blood pressure is controlled, so continue taking all the steps to control and monitor it. You and your family should continue to watch for the danger signs of pregnancy even though your blood pressure is not high. Also, be sure to follow your treatment plan for diabetes.",
+          "Input(s)": "4",
+          "Output": "Continue SMBP and watch carefully for danger signs",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (3)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (4)"
+        },
+        {
+          "Annotations": "Your blood pressure is very high. You need to go to a health facility right now to help protect you and your baby.",
+          "Input(s)": "5",
+          "Output": "Go to a health facility right away",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (3)"
+        },
+        {
+          "Annotations": "Your blood pressure is very high. You need to go to a health facility right now to help protect you and your baby.",
+          "Input(s)": "6",
+          "Output": "Go to a health facility right away",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth  (2017) (3)"
+        },
+        {
+          "Annotations": "Your blood pressure is very high. You need to go to a health facility right now to help protect you and your baby.",
+          "Input(s)": "7",
+          "Output": "Go to a health facility or contact health worker",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (3)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (4)"
+        },
+        {
+          "Annotations": "Your blood pressure is very high. You need to go to a health facility right now to help protect you and your baby.",
+          "Input(s)": "8",
+          "Output": "Go to a health facility or contact health worker",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (3)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (4)"
+        },
+        {
+          "Annotations": "Your blood pressure is high and you also have one or more danger signs of pregnancy. You need to contact a health worker right away to help protect you and your baby.",
+          "Input(s)": "9",
+          "Output": "Go to a health facility or contact health worker",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (3)"
+        },
+        {
+          "Annotations": "Your blood pressure is high and you also have one or more danger signs of pregnancy. You need to contact a health worker right away to help protect you and your baby.",
+          "Input(s)": "10",
+          "Output": "Go to a health facility or contact health worker",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)"
+        },
+        {
+          "Annotations": "Your blood pressure is high and you also have one or more danger signs of pregnancy. You need to contact a health worker right away to help protect you and your baby.",
+          "Input(s)": "11",
+          "Output": "Go to a health facility or contact health worker",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (2)"
+        },
+        {
+          "Annotations": "Your blood pressure is high and you also have one or more danger signs of pregnancy. You need to contact a health worker right away to help protect you and your baby.",
+          "Input(s)": "12",
+          "Output": "Go to a health facility or contact health worker",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nHEARTS technical package for cardiovascular disease management in primary health care (2018) (2)"
+        }
+      ],
+      "sheet": "SMBP.B7.DT SMBP health actions",
+      "sourceFile": "SMBP DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "Input",
+        "Outputs",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [],
+      "hitPolicy": null,
+      "id": "SMBP.B7.DT",
+      "idsFromSheetName": [],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "activityId": "SMBP.B7",
+        "activityName": "Review health actions based on SMBP results",
+        "decisionName": "Danger signs",
+        "decisionSupportTableId": "SMBP.B7.DT.02"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Input": "Danger signs\nSymptom classified as a danger sign of pregnancy; \"No symptoms\" indicates that there is none at the moment",
+          "Outputs": "System action"
+        },
+        {
+          "Annotations": "You should contact a health worker and go to your nearest health facility right away.",
+          "Input": "Danger signs has Breathing difficulty",
+          "Outputs": "Danger signs present? is True",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        },
+        {
+          "Annotations": "You should contact a health worker and go to your nearest health facility right away.",
+          "Input": "Danger signs has Bleeding vaginally",
+          "Outputs": "Danger signs present? is True",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        },
+        {
+          "Annotations": "You should contact a health worker and go to your nearest health facility right away.",
+          "Input": "Danger signs has Convulsing",
+          "Outputs": "Danger signs present? is True",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        },
+        {
+          "Annotations": "You should contact a health worker and go to your nearest health facility right away.",
+          "Input": "Danger signs has Severe headache",
+          "Outputs": "Danger signs present? is True",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        },
+        {
+          "Annotations": "You should contact a health worker and go to your nearest health facility right away.",
+          "Input": "Danger signs has Visual disturbance",
+          "Outputs": "Danger signs present? is True",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        },
+        {
+          "Annotations": "You should contact a health worker and go to your nearest health facility right away.",
+          "Input": "Danger signs has Severe abdominal pain",
+          "Outputs": "Danger signs present? is True",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        },
+        {
+          "Annotations": "You should contact a health worker and go to your nearest health facility right away.",
+          "Input": "Danger signs has Fever",
+          "Outputs": "Danger signs present? is True",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        },
+        {
+          "Annotations": "You should contact a health worker and go to your nearest health facility right away.",
+          "Input": "Danger signs has Severe vomiting",
+          "Outputs": "Danger signs present? is True",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        },
+        {
+          "Annotations": "Your current symptom is not a danger sign of pregnancy. Continue to self-monitor regularly for danger signs.",
+          "Input": "Danger signs is No symptoms",
+          "Outputs": "Danger signs present? is False",
+          "Reference(s)": "WHO guidelines for managing complications in pregnancy and childbirth (2017) (1)\n\nPregnancy, childbirth, postpartum and newborn care: a guide for essential practice (IMPAC) (2015) (4)\n\nWHO ANC recommendations (5)"
+        }
+      ],
+      "sheet": "SMBP.B7.DT Danger signs",
+      "sourceFile": "SMBP DAK_decision-support logic.xlsx"
+    }
+  ]
+}

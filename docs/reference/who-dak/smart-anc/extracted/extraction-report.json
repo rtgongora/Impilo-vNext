@@ -1,0 +1,256 @@
+{
+  "pack": "smart-anc",
+  "parseWarnings": [
+    "FP.LO.004-3. PregTestNegative / Inputs: published cell contains an unresolved spreadsheet reference (#REF!). Content captured but not trustworthy.",
+    "ANC.DT.07–14 Laboratory&imaging: the sheet title and the sheet's own note disagree about which tables it contains — title says ['ANC.DT.07', 'ANC.DT.08', 'ANC.DT.09', 'ANC.DT.10', 'ANC.DT.11', 'ANC.DT.12', 'ANC.DT.13', 'ANC.DT.14'], note says ['ANC.DT.07', 'ANC.DT.08', 'ANC.DT.09', 'ANC.DT.10', 'ANC.DT.11', 'ANC.DT.12', 'ANC.DT.13']. Both recorded; resolve when authoring."
+  ],
+  "workbooks": [
+    {
+      "counts": {
+        "dataElements": 2,
+        "decisionTables": 0,
+        "indicators": 0,
+        "schedules": 0,
+        "testCases": 0
+      },
+      "file": "ANC Test Cases.xlsx",
+      "sha256": "13a792fdad69a2962924a001d4373cc0f4c5924cbf3092e9a9a285e4463d3dcf",
+      "sheetsRead": [
+        {
+          "rows": 67,
+          "sheet": "TestCases"
+        },
+        {
+          "rows": 127,
+          "sheet": "Map"
+        }
+      ],
+      "sheetsSkipped": []
+    },
+    {
+      "counts": {
+        "dataElements": 10,
+        "decisionTables": 0,
+        "indicators": 0,
+        "schedules": 0,
+        "testCases": 0
+      },
+      "file": "WHO-ANC.xlsx",
+      "sha256": "d90ddec4977b2c005b34c8d784261d1906738dee089369207779ef96c5590e2c",
+      "sheetsRead": [
+        {
+          "rows": 23,
+          "sheet": "ANC.A. Registration"
+        },
+        {
+          "rows": 63,
+          "sheet": "ANC.B5 Quick check"
+        },
+        {
+          "rows": 167,
+          "sheet": "ANC.B6 Profile"
+        },
+        {
+          "rows": 108,
+          "sheet": "ANC.B7 Symptoms & Follow-up"
+        },
+        {
+          "rows": 136,
+          "sheet": "ANC.B8 Physical exam"
+        },
+        {
+          "rows": 215,
+          "sheet": "ANC.B9 Lab tests & imaging"
+        },
+        {
+          "rows": 282,
+          "sheet": "ANC.B10 Counselling & treatment"
+        },
+        {
+          "rows": 13,
+          "sheet": "ANC.C. Referral"
+        },
+        {
+          "rows": 18,
+          "sheet": "ANC.Configuration"
+        },
+        {
+          "rows": 59,
+          "sheet": "ANC.End End"
+        }
+      ],
+      "sheetsSkipped": [
+        {
+          "reason": "boilerplate",
+          "sheet": "Overview"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "READ ME"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "COVER"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "Dev"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "References"
+        }
+      ]
+    },
+    {
+      "counts": {
+        "dataElements": 1,
+        "decisionTables": 16,
+        "indicators": 0,
+        "schedules": 5,
+        "testCases": 0
+      },
+      "file": "WHO-SRH-21.2-eng.xlsx",
+      "sha256": "88ab7403a2492ccd57705c9ead596020f329ce72c28ee5213656c6f545e02118",
+      "sheetsRead": [
+        {
+          "rows": 9,
+          "sheet": "FP.LO.004-3. PregTestNegative"
+        },
+        {
+          "rows": 14,
+          "sheet": "ANC.DT.01 Danger signs"
+        },
+        {
+          "rows": 1,
+          "sheet": "ANC.DT.02 HEADSS assessment"
+        },
+        {
+          "rows": 46,
+          "sheet": "ANC.DT.03 Check symptoms"
+        },
+        {
+          "rows": 18,
+          "sheet": "ANC.DT.04-05 Physical exam"
+        },
+        {
+          "rows": 46,
+          "sheet": "ANC.DT.06 Physical exam refer"
+        },
+        {
+          "rows": 60,
+          "sheet": "ANC.DT.07–14 Laboratory&imaging"
+        },
+        {
+          "rows": 30,
+          "sheet": "ANC.DT.15 Behaviour counselling"
+        },
+        {
+          "rows": 9,
+          "sheet": "ANC.DT.16 Dietary counselling"
+        },
+        {
+          "rows": 90,
+          "sheet": "ANC.DT.17–24 Diagnosis & treat"
+        },
+        {
+          "rows": 16,
+          "sheet": "ANC.DT.25 Anaemia IFA"
+        },
+        {
+          "rows": 5,
+          "sheet": "ANC.DT.26 Nutrition–Ca+VitA"
+        },
+        {
+          "rows": 56,
+          "sheet": "ANC.DT.27–30 Risk counselling"
+        },
+        {
+          "rows": 13,
+          "sheet": "ANC.DT.31–32 Immunizations"
+        },
+        {
+          "rows": 27,
+          "sheet": "ANC.DT.33–35General counselling"
+        },
+        {
+          "rows": 43,
+          "sheet": "ANC.DT.36-37 IPV "
+        },
+        {
+          "rows": 5,
+          "sheet": "ANC.DT.38 Deworming & malaria"
+        },
+        {
+          "rows": 69,
+          "sheet": "ANC.S.01 ANC contact schedule"
+        },
+        {
+          "rows": 15,
+          "sheet": "ANC.S.02 Lab & tests schedule"
+        },
+        {
+          "rows": 51,
+          "sheet": "ANC.S.03 Counselling schedule"
+        },
+        {
+          "rows": 10,
+          "sheet": "ANC.S.04 Immunization schedule"
+        },
+        {
+          "rows": 3,
+          "sheet": "ANC.S.05 Malaria prophylaxis sc"
+        }
+      ],
+      "sheetsSkipped": [
+        {
+          "reason": "boilerplate",
+          "sheet": "COVER"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "README"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "Dev"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "References"
+        }
+      ]
+    },
+    {
+      "counts": {
+        "dataElements": 0,
+        "decisionTables": 0,
+        "indicators": 1,
+        "schedules": 0,
+        "testCases": 0
+      },
+      "file": "WHO-SRH-21.3-eng.xlsx",
+      "sha256": "705f0438cf8b1d2273514645dc78c2ceecfcec4b20177886991bde31e72f2b4d",
+      "sheetsRead": [
+        {
+          "rows": 15,
+          "sheet": "Indicator table"
+        }
+      ],
+      "sheetsSkipped": [
+        {
+          "reason": "boilerplate",
+          "sheet": "README"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "References"
+        },
+        {
+          "reason": "boilerplate",
+          "sheet": "COVER"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "schedules": [
+    {
+      "columns": [
+        "Service name",
+        "Service description",
+        "Trigger event",
+        "Trigger date",
+        "Create condition",
+        "Due date",
+        "Overdue",
+        "Expiration",
+        "Completion",
+        "Potential risks and alternative schedules",
+        "Comments",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.S.01"
+      ],
+      "hitPolicy": null,
+      "id": "Postnatal care (PNC) schedule",
+      "idsFromSheetName": [
+        "PNC.S.01"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "scheduleId": "Postnatal care (PNC) schedule"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Completion": "Contact completed",
+          "Create condition": "The first postnatal care (PNC) contact should be made in the first 24 hours after birth",
+          "Due date": "\"Hours after childbirth\" <= 24 hours",
+          "Expiration": "\"Date of childbirth\" + 49 days",
+          "Overdue": "72 hours < \"Hours after childbirth\" < 48 hours",
+          "Potential risks and alternative schedules": "Following the schedule may ensure the recognition of abnormalities and the implementation of preventive measures in a timely fashion",
+          "Reference(s)": "WHO PNC recommendations (2022) (3)",
+          "Service description": "This is the contact in the first 24 hours after birth",
+          "Service name": "Postnatal care (PNC) contact 1",
+          "Trigger date": "None",
+          "Trigger event": "None"
+        },
+        {
+          "Completion": "Contact completed",
+          "Create condition": "The second postnatal care (PNC) contact should be made between 48 and 72 hours after birth",
+          "Due date": "72 hours < \"Hours after childbirth\" < 48 hours",
+          "Expiration": "\"Date of childbirth\" + 49 days",
+          "Overdue": "14 days < \"Date of childbirth\" < 7 days",
+          "Potential risks and alternative schedules": "Following the schedule may ensure the recognition of abnormalities and the implementation of preventive measures in a timely fashion",
+          "Service description": "This is the contact between 48 and 72 hours after birth",
+          "Service name": "Postnatal care (PNC) contact 2",
+          "Trigger date": "Date of childbirth AND timing of childbirth",
+          "Trigger event": "Date of childbirth AND timing of childbirth"
+        },
+        {
+          "Completion": "Contact completed",
+          "Create condition": "The third postnatal care (PNC) contact should be made between 7 and 14 days after birth",
+          "Due date": "14 days < \"Date of childbirth\" < 7 days",
+          "Expiration": "\"Date of childbirth\" + 49 days",
+          "Overdue": "\"Date of childbirth\" + 42 days",
+          "Potential risks and alternative schedules": "Following the schedule may ensure the recognition of abnormalities and the implementation of preventive measures in a timely fashion",
+          "Service description": "This is the contact between 7 and 14 days after birth",
+          "Service name": "Postnatal care (PNC) contact 3",
+          "Trigger date": "Date of childbirth AND timing of childbirth",
+          "Trigger event": "Date of childbirth AND timing of childbirth"
+        },
+        {
+          "Completion": "Contact completed",
+          "Create condition": "The fourth postnatal care (PNC) contact should be made 6 weeks after birth",
+          "Due date": "\"Date of childbirth\" + 42 days",
+          "Expiration": "\"Date of childbirth\" + 49 days",
+          "Overdue": "\"Date of childbirth\" + 49 days",
+          "Potential risks and alternative schedules": "Following the schedule may ensure the recognition of abnormalities and the implementation of preventive measures in a timely fashion",
+          "Service description": "This is the contact at week 6 after birth",
+          "Service name": "Postnatal care (PNC) contact 4",
+          "Trigger date": "Date of childbirth AND timing of childbirth",
+          "Trigger event": "Date of childbirth AND timing of childbirth"
+        }
+      ],
+      "sheet": "PNC.S.01 PNC contact schedule",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    },
+    {
+      "columns": [
+        "Service name",
+        "Service description",
+        "Trigger event",
+        "Trigger date",
+        "Create condition",
+        "Due date",
+        "Overdue",
+        "Expiration",
+        "Completion",
+        "Potential risks and alternative schedules",
+        "Comments",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "PNC.S.02"
+      ],
+      "hitPolicy": null,
+      "id": "Newborn/infant immunization schedule",
+      "idsFromSheetName": [
+        "PNC.S.02"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "scheduleId": "Newborn/infant immunization schedule"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Comments": "For further information on remaining Hepatitis B vaccine doses and related updates, please refer to the Digital adaptation kit for immunizations: operational requirements for implementing WHO recommendations in digital systems.",
+          "Completion": "Hepatitis B birth dose was administered\nCount of vaccines administered (where \"Vaccine type\" = \"Hepatitis B-containing vaccines\" and \"Birth Dose\" = TRUE) = 1",
+          "Create condition": "All infants should receive a first dose of the hepatitis B-containing vaccine as soon as possible after birth, ideally within 24 hours",
+          "Due date": "\"Date of birth\"",
+          "Expiration": "To be determined by Member States",
+          "Overdue": "\"Date of birth\" + 24 hours",
+          "Potential risks and alternative schedules": "From Hepatitis B birth dose schedule: All infants should receive the first dose of the hepatitis B vaccine as soon as possible after birth, ideally within 24 hours, to prevent horizontal transmission.",
+          "Reference(s)": "WHO PNC recommendations (2022) (3)\n\nDigital adaptation kit for immunizations: operational requirements for implementing WHO recommendations in digital systems (2024) (12)",
+          "Service description": "Provision of hepatitis B birth dose/dose 1",
+          "Service name": "Hepatitis B birth dose/dose 1",
+          "Trigger date": "\"Date of birth\"",
+          "Trigger event": "Child's birth"
+        },
+        {
+          "Comments": "For further information on remaining Hepatitis B vaccine doses and related updates, please refer to the Digital adaptation kit for immunizations: operational requirements for implementing WHO recommendations in digital systems.",
+          "Completion": "Second hepatitis B dose from the primary series was administered. The primary series has been completed for client whose weight at birth was over 2000 g and was not a premature infant\nCount of vaccines administered (where \"Vaccine type\" = \"Hepatitis B-containing vaccines\" and \"Type of dose\"= \"Primary series\") = 2\n\"Completed the primary vaccination series\" = TRUE (where \"Vaccine type\" = \"Hepatitis B-containing vaccines\")",
+          "Create condition": "The following option is considered appropriate: a 3-dose schedule with the first dose (monovalent) being given at birth and the second and third (monovalent or as part of a combined vaccine) given at the same time as the first and third doses of DTP-containing vaccine.\nThe interval between doses should be at least 4 weeks.",
+          "Due date": "Latest \"Date and time of vaccination\" (where \"Vaccine type\" = \"Hepatitis B-containing vaccines\") + 4 weeks",
+          "Expiration": "To be determined by Member States; however, there is no recommended expiration date and individuals are always eligible to be vaccinated.",
+          "Overdue": "To be determined by Member States; however, there is no recommended overdue date.",
+          "Potential risks and alternative schedules": "From Hepatitis B 3-dose schedule (birth dose + 2 primary series doses), on-time start. \nFor further information on alternative shedules, please refer to the Digital adaptation kit for immunizations: operational requirements for implementing WHO recommendations in digital systems.",
+          "Service description": "Provision of hepatitis B dose 2",
+          "Service name": "Hepatitis B dose 2",
+          "Trigger date": "Latest \"Date and time of vaccination\" (where \"Vaccine type\" = \"Hepatitis B-containing vaccines\")",
+          "Trigger event": "First hepatitis B dose from the primary series was administered\nCount of vaccines administered (where \"Vaccine type\" = \"Hepatitis B-containing vaccines\" and \"Type of dose\"= \"Primary series\") = 1"
+        },
+        {
+          "Comments": "For further information, please refer to the Digital adaptation kit for immunizations: operational requirements for implementing WHO recommendations in digital systems.",
+          "Completion": "One BCG dose from the primary series was administered. The primary series has been completed\n\"Completed the primary vaccination series\" = TRUE (where \"Vaccine type\" = \"BCG vaccines\")",
+          "Create condition": "BCG dose should be provided if the client has not received any BCG doses and is in a high incidence of tuberculosis (TB) and/or high leprosy burden. It should also be provided after a negative test result for tuberculin skin test (TST) or interferon-gamma release assay (IGRA) tests. The client should also receive vaccination if they are infected with HIV, on antiretroviral therapy (ART) and clinically well and immunologically stable. This dose also applies to neonates born to women with an unknown HIV status, as well as neonates with an unknown HIV status who were born to women infected with HIV.",
+          "Due date": "\"Date of birth\"",
+          "Expiration": "To be determined by Member States; however, there is no recommended expiration date and individuals are always eligible to be vaccinated",
+          "Overdue": "To be determined by Member States; however, there is no recommended overdue date and individuals are always eligible to be vaccinated",
+          "Potential risks and alternative schedules": "In countries or settings with a high incidence of TB disease or leprosy, a single dose of the BCG vaccine should be given to neonates at birth, or as soon as possible thereafter, to prevent TB and leprosy.",
+          "Service description": "Provision of the BCG dose",
+          "Service name": "Bacille Calmette–Guérin (BCG) dose 1",
+          "Trigger date": "\"Date of birth\"",
+          "Trigger event": "Child's birth"
+        },
+        {
+          "Comments": "For further information on remaining polio vaccine doses and related updates, please refer to the Digital adaptation kit for immunizations: operational requirements for implementing WHO recommendations in digital systems.",
+          "Completion": "Polio birth dose (a zero dose) was administered",
+          "Create condition": "bOPV birth dose (a zero dose) should be provided within the first week of life and if the client is in a polio-endemic country or a country at high risk for importation and subsequent spread of polio",
+          "Due date": "\"Date of birth\"",
+          "Expiration": "\"Date of birth\" + 1 week",
+          "Overdue": "\"Date of birth\" + 1 day",
+          "Potential risks and alternative schedules": "From Birth dose schedule:\nIn countries that are polio-endemic or at high risk for importation and subsequent spread of polio that follow the combined bOPV–IPV schedule.",
+          "Service description": "Provision of bOPV birth dose (a zero dose)",
+          "Service name": "bivalent Oral Polio Vaccine (bOPV) birth dose (a zero dose)",
+          "Trigger date": "\"Date of birth\"",
+          "Trigger event": "Child's birth"
+        },
+        {
+          "Comments": "For further information on remaining polio vaccine doses and related updates, please refer to the Digital adaptation kit for immunizations: operational requirements for implementing WHO recommendations in digital systems.",
+          "Completion": "First IPV dose from the primary series was administered.\nCount of vaccines administered (where \"Type of poliovirus dose\" = \"IPV\") = 1",
+          "Create condition": "The first IPV dose should be administered from a minimum of 14 weeks of age",
+          "Due date": "\"Date of birth\" + 14 weeks",
+          "Expiration": "To be determined by Member States; however, there is no recommended overdue date and individuals are always eligible to be vaccinated",
+          "Overdue": "To be determined by Member States; however, there is no recommended overdue date and individuals are always eligible to be vaccinated",
+          "Potential risks and alternative schedules": "From bOPV plus IPV schedule.",
+          "Service description": "Provision of IPV dose 1",
+          "Service name": "Inactivated polio vaccine (IPV) dose 1",
+          "Trigger date": "\"Date of birth\"",
+          "Trigger event": "Child's birth"
+        }
+      ],
+      "sheet": "PNC.S.02 NB Immunization Sched",
+      "sourceFile": "PNC DAK_decision-support logic.xlsx"
+    }
+  ]
+}

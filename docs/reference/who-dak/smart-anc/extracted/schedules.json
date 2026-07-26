@@ -1,0 +1,1727 @@
+{
+  "schedules": [
+    {
+      "columns": [
+        "Service Name",
+        "Service Description",
+        "Trigger Event",
+        "Trigger Date",
+        "Create Condition",
+        "Service Due Date",
+        "Service Overdue",
+        "Expiration",
+        "Completion",
+        "Comments",
+        "References"
+      ],
+      "coversIds": [
+        "ANC.S.01"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.S.01:",
+      "idsFromSheetName": [
+        "ANC.S.01"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "scheduleId": "ANC.S.01: Contact schedule"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Comments": "Recommended services to be provided to the woman varies according to the ANC contact number",
+          "Completion": "Contact completed",
+          "Create Condition": "The first ANC contact is recommended when the woman is less than 20 weeks pregnant",
+          "Expiration": "GA = 41 weeks",
+          "References": "WHO ANC recommendations (2016) (3)",
+          "Service Description": "The first time a woman visits a health-care provider for ANC",
+          "Service Due Date": "GA = 12 weeks",
+          "Service Name": "ANC Contact 1",
+          "Service Overdue": "Due date + 7 days",
+          "Trigger Date": "None",
+          "Trigger Event": "None"
+        },
+        {
+          "Completion": "Contact completed",
+          "Create Condition": "If GA < 20 weeks, contacts should be scheduled approximately every 8 weeks",
+          "Expiration": "GA = 41 weeks",
+          "Service Description": "The second time a woman visits a health-care provider for ANC",
+          "Service Due Date": "GA = 20 weeks",
+          "Service Name": "ANC Contact 2",
+          "Service Overdue": "Due date + 7 days",
+          "Trigger Date": "Date of ANC Contact 1",
+          "Trigger Event": "ANC Contact 1"
+        },
+        {
+          "Completion": "Contact completed",
+          "Expiration": "GA = 41 weeks",
+          "Service Description": "The third time a woman visits a health-care provider for ANC",
+          "Service Due Date": "GA = 26 weeks",
+          "Service Name": "ANC Contact 3",
+          "Service Overdue": "Due date + 7 days",
+          "Trigger Date": "Date of ANC Contact 2",
+          "Trigger Event": "ANC Contact 1"
+        },
+        {
+          "Completion": "Contact completed",
+          "Create Condition": "If GA ≥ 20 weeks, contacts should be scheduled every 6 weeks",
+          "Expiration": "GA = 41 weeks",
+          "Service Description": "The fourth time a woman visits a health-care provider for ANC",
+          "Service Due Date": "GA = 30 weeks",
+          "Service Name": "ANC Contact 4",
+          "Service Overdue": "Due date + 7 days",
+          "Trigger Date": "Date of ANC Contact 3",
+          "Trigger Event": "ANC Contact 1"
+        },
+        {
+          "Completion": "Contact completed",
+          "Expiration": "GA = 41 weeks",
+          "Service Description": "The fifth time a woman visits a health care provider for ANC",
+          "Service Due Date": "GA = 34 weeks",
+          "Service Name": "ANC Contact 5",
+          "Service Overdue": "Due date + 7 Days",
+          "Trigger Date": "Date of ANC Contact 4",
+          "Trigger Event": "ANC Contact 1"
+        },
+        {
+          "Completion": "Contact completed",
+          "Create Condition": "If GA ≥ 26 weeks, contacts should be scheduled every 4 weeks",
+          "Expiration": "GA = 41 weeks",
+          "Service Description": "The sixth time a woman visits a health-care provider for ANC",
+          "Service Due Date": "GA = 36 weeks",
+          "Service Name": "ANC Contact 6",
+          "Service Overdue": "Due date + 7 days",
+          "Trigger Date": "Date of ANC Contact 5",
+          "Trigger Event": "ANC Contact 1"
+        },
+        {
+          "Completion": "Contact completed",
+          "Expiration": "GA = 41 weeks",
+          "Service Description": "The seventh time a woman visits a health-care provider for ANC",
+          "Service Due Date": "GA = 38 weeks",
+          "Service Name": "ANC Contact 7",
+          "Service Overdue": "Due date + 7 days",
+          "Trigger Date": "Date of ANC Contact 6",
+          "Trigger Event": "ANC Contact 1"
+        },
+        {
+          "Completion": "Contact completed",
+          "Create Condition": "If GA ≥ 34 weeks, contacts should be scheduled every 2 weeks",
+          "Expiration": "GA = 41 weeks",
+          "Service Description": "The eighth time a woman visits a health-care provider for ANC",
+          "Service Due Date": "GA = 40 weeks",
+          "Service Name": "ANC Contact 8",
+          "Service Overdue": "Due date + 7 days",
+          "Trigger Date": "Date of ANC Contact 7",
+          "Trigger Event": "ANC Contact 1"
+        },
+        {
+          "Comments": "Delivery times may arrive before some recommended contact dates.",
+          "Completion": "Given birth",
+          "Create Condition": "Does not count as a contact",
+          "Expiration": "GA > 41 weeks",
+          "Service Description": "The date on which a pregnant woman gives birth",
+          "Service Due Date": "GA = 41 weeks",
+          "Service Name": "Refer for delivery",
+          "Service Overdue": "Due date + 7 days",
+          "Trigger Date": "GA = 41 weeks",
+          "Trigger Event": "N/A"
+        },
+        {
+          "Service Name": "Example ANC schedule"
+        },
+        {
+          "Service Description": "Interval rules and deviations"
+        },
+        {
+          "Service Description": "Rule 1",
+          "Trigger Event": "< 20 weeks, contacts should be scheduled every 8 weeks"
+        },
+        {
+          "Service Description": "Rule 2",
+          "Trigger Event": "≥ 20 weeks, contacts should be scheduled every 6 weeks"
+        },
+        {
+          "Service Description": "Rule 3",
+          "Trigger Event": "≥ 26 weeks, contacts should be scheduled every 4 weeks"
+        },
+        {
+          "Service Description": "Rule 4",
+          "Trigger Event": "≥ 34 weeks, contacts should be scheduled every 2 weeks"
+        },
+        {
+          "Service Description": "Rule 5",
+          "Trigger Event": "If the logic skips the 40 weeks contact, she must come in anyway, so add"
+        },
+        {
+          "Service Description": "Rule 6",
+          "Trigger Event": "The woman must come in at 41 weeks if she has not given birth already (however, this does not count as an official contact)"
+        },
+        {
+          "Service Description": "Rule 7",
+          "Trigger Event": "If the woman comes in for the first time at 22 weeks or later, we have changed the logic to increase the number of visits, especially those in the 3rd trimester, as follows: \n– women who come in at 22 to 23 weeks have one visit added by increasing visits to every 2 weeks after 30 weeks (rather than after 34 weeks)\n– women who come in at 28 to 29 weeks have one visit added by increasing visits to every 2 weeks after 32 weeks (rather than after 34 weeks)\n– women who come in after 30 weeks will have all their visits are every 2 weeks"
+        },
+        {
+          "Service Description": "Key"
+        },
+        {
+          "Trigger Event": "Cells that deviate from the norm because of Rule 7"
+        },
+        {
+          "Trigger Event": "Does not count as a contact, delivery only"
+        },
+        {
+          "Comments": "Contact 8",
+          "Completion": "Contact 7",
+          "Create Condition": "Contact 3",
+          "Expiration": "Contact 6",
+          "References": "Contact 9",
+          "Service Due Date": "Contact 4",
+          "Service Overdue": "Contact 5",
+          "Trigger Date": "Contact 2",
+          "Trigger Event": "Contact 1"
+        },
+        {
+          "Comments": "38",
+          "Completion": "36",
+          "Create Condition": "20",
+          "Expiration": "34",
+          "References": "40",
+          "Service Description": "Number of weeks pregnant",
+          "Service Due Date": "26",
+          "Service Overdue": "30",
+          "Trigger Date": "12",
+          "Trigger Event": "4"
+        },
+        {
+          "Comments": "39",
+          "Completion": "37",
+          "Create Condition": "21",
+          "Expiration": "35",
+          "References": "40",
+          "Service Due Date": "27",
+          "Service Overdue": "31",
+          "Trigger Date": "13",
+          "Trigger Event": "5"
+        },
+        {
+          "Comments": "40",
+          "Completion": "38",
+          "Create Condition": "22",
+          "Expiration": "36",
+          "References": "41",
+          "Service Due Date": "28",
+          "Service Overdue": "32",
+          "Trigger Date": "14",
+          "Trigger Event": "6"
+        },
+        {
+          "Comments": "40",
+          "Completion": "39",
+          "Create Condition": "23",
+          "Expiration": "37",
+          "References": "41",
+          "Service Due Date": "29",
+          "Service Overdue": "33",
+          "Trigger Date": "15",
+          "Trigger Event": "7"
+        },
+        {
+          "Comments": "40",
+          "Completion": "38",
+          "Create Condition": "24",
+          "Expiration": "36",
+          "References": "41",
+          "Service Due Date": "30",
+          "Service Overdue": "34",
+          "Trigger Date": "16",
+          "Trigger Event": "8"
+        },
+        {
+          "Comments": "40",
+          "Completion": "39",
+          "Create Condition": "25",
+          "Expiration": "37",
+          "References": "41",
+          "Service Due Date": "31",
+          "Service Overdue": "35",
+          "Trigger Date": "17",
+          "Trigger Event": "9"
+        },
+        {
+          "Comments": "40",
+          "Completion": "38",
+          "Create Condition": "26",
+          "Expiration": "36",
+          "References": "41",
+          "Service Due Date": "30",
+          "Service Overdue": "34",
+          "Trigger Date": "18",
+          "Trigger Event": "10"
+        },
+        {
+          "Comments": "40",
+          "Completion": "39",
+          "Create Condition": "27",
+          "Expiration": "37",
+          "References": "41",
+          "Service Due Date": "31",
+          "Service Overdue": "35",
+          "Trigger Date": "19",
+          "Trigger Event": "11"
+        },
+        {
+          "Comments": "40",
+          "Completion": "38",
+          "Create Condition": "26",
+          "Expiration": "36",
+          "References": "41",
+          "Service Due Date": "30",
+          "Service Name": "End of 1st trimester",
+          "Service Overdue": "34",
+          "Trigger Date": "20",
+          "Trigger Event": "12"
+        },
+        {
+          "Comments": "40",
+          "Completion": "39",
+          "Create Condition": "27",
+          "Expiration": "37",
+          "References": "41",
+          "Service Due Date": "31",
+          "Service Overdue": "35",
+          "Trigger Date": "21",
+          "Trigger Event": "13"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "28",
+          "Expiration": "38",
+          "Service Due Date": "32",
+          "Service Overdue": "36",
+          "Trigger Date": "22",
+          "Trigger Event": "14"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "29",
+          "Expiration": "39",
+          "Service Due Date": "33",
+          "Service Overdue": "37",
+          "Trigger Date": "23",
+          "Trigger Event": "15"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "30",
+          "Expiration": "38",
+          "Service Due Date": "34",
+          "Service Overdue": "36",
+          "Trigger Date": "24",
+          "Trigger Event": "16"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "31",
+          "Expiration": "39",
+          "Service Due Date": "35",
+          "Service Overdue": "37",
+          "Trigger Date": "25",
+          "Trigger Event": "17"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "30",
+          "Expiration": "38",
+          "Service Due Date": "34",
+          "Service Overdue": "36",
+          "Trigger Date": "26",
+          "Trigger Event": "18"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "31",
+          "Expiration": "39",
+          "Service Due Date": "35",
+          "Service Overdue": "37",
+          "Trigger Date": "27",
+          "Trigger Event": "19"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "30",
+          "Expiration": "38",
+          "Service Due Date": "34",
+          "Service Name": "Middle of pregnancy",
+          "Service Overdue": "36",
+          "Trigger Date": "26",
+          "Trigger Event": "20"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "31",
+          "Expiration": "39",
+          "Service Due Date": "35",
+          "Service Overdue": "37",
+          "Trigger Date": "27",
+          "Trigger Event": "21"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "32",
+          "Expiration": "38",
+          "Service Due Date": "34",
+          "Service Overdue": "36",
+          "Trigger Date": "28",
+          "Trigger Event": "22"
+        },
+        {
+          "Comments": "41",
+          "Completion": "40",
+          "Create Condition": "33",
+          "Expiration": "39",
+          "Service Due Date": "35",
+          "Service Overdue": "37",
+          "Trigger Date": "29",
+          "Trigger Event": "23"
+        },
+        {
+          "Completion": "41",
+          "Create Condition": "34",
+          "Expiration": "40",
+          "Service Due Date": "36",
+          "Service Overdue": "38",
+          "Trigger Date": "30",
+          "Trigger Event": "24"
+        },
+        {
+          "Completion": "41",
+          "Create Condition": "35",
+          "Expiration": "40",
+          "Service Due Date": "37",
+          "Service Overdue": "39",
+          "Trigger Date": "31",
+          "Trigger Event": "25"
+        },
+        {
+          "Completion": "41",
+          "Create Condition": "34",
+          "Expiration": "40",
+          "Service Due Date": "36",
+          "Service Overdue": "38",
+          "Trigger Date": "30",
+          "Trigger Event": "26"
+        },
+        {
+          "Completion": "41",
+          "Create Condition": "35",
+          "Expiration": "40",
+          "Service Due Date": "37",
+          "Service Overdue": "39",
+          "Trigger Date": "31",
+          "Trigger Event": "27"
+        },
+        {
+          "Completion": "41",
+          "Create Condition": "34",
+          "Expiration": "40",
+          "Service Due Date": "36",
+          "Service Name": "End of 2nd trimester",
+          "Service Overdue": "38",
+          "Trigger Date": "32",
+          "Trigger Event": "28"
+        },
+        {
+          "Completion": "41",
+          "Create Condition": "35",
+          "Expiration": "40",
+          "Service Due Date": "37",
+          "Service Overdue": "39",
+          "Trigger Date": "33",
+          "Trigger Event": "29"
+        },
+        {
+          "Completion": "41",
+          "Create Condition": "34",
+          "Expiration": "40",
+          "Service Due Date": "36",
+          "Service Overdue": "38",
+          "Trigger Date": "32",
+          "Trigger Event": "30"
+        },
+        {
+          "Completion": "41",
+          "Create Condition": "35",
+          "Expiration": "40",
+          "Service Due Date": "37",
+          "Service Overdue": "39",
+          "Trigger Date": "33",
+          "Trigger Event": "31"
+        },
+        {
+          "Create Condition": "36",
+          "Expiration": "41",
+          "Service Due Date": "38",
+          "Service Overdue": "40",
+          "Trigger Date": "34",
+          "Trigger Event": "32"
+        },
+        {
+          "Create Condition": "37",
+          "Expiration": "41",
+          "Service Due Date": "39",
+          "Service Overdue": "40",
+          "Trigger Date": "35",
+          "Trigger Event": "33"
+        },
+        {
+          "Create Condition": "38",
+          "Service Due Date": "40",
+          "Service Overdue": "41",
+          "Trigger Date": "36",
+          "Trigger Event": "34"
+        },
+        {
+          "Create Condition": "39",
+          "Service Due Date": "40",
+          "Service Overdue": "41",
+          "Trigger Date": "37",
+          "Trigger Event": "35"
+        },
+        {
+          "Create Condition": "40",
+          "Service Due Date": "41",
+          "Trigger Date": "38",
+          "Trigger Event": "36"
+        },
+        {
+          "Create Condition": "40",
+          "Service Due Date": "41",
+          "Trigger Date": "39",
+          "Trigger Event": "37"
+        },
+        {
+          "Create Condition": "41",
+          "Trigger Date": "40",
+          "Trigger Event": "38"
+        },
+        {
+          "Create Condition": "41",
+          "Trigger Date": "40",
+          "Trigger Event": "39"
+        },
+        {
+          "Trigger Date": "41",
+          "Trigger Event": "40"
+        },
+        {
+          "Trigger Event": "41"
+        },
+        {
+          "Service Description": "Example woman \"Lucy\""
+        },
+        {
+          "Comments": "Actual /observed scenario (1)",
+          "Completion": "Actual /observed scenario (1)",
+          "Create Condition": "Actual /observed scenario (2)",
+          "Expiration": "Actual /observed scenario (1)",
+          "References": "Actual (8):",
+          "Service Description": "Contact 1: at 10 weeks",
+          "Service Due Date": "Actual /observed scenario (3)",
+          "Service Overdue": "Actual /observed scenario (1)",
+          "Trigger Date": "Actual /observed scenario (1)",
+          "Trigger Event": "Expected:"
+        },
+        {
+          "Comments": "30 weeks",
+          "Completion": "30 weeks",
+          "Create Condition": "20 weeks",
+          "Expiration": "16 weeks",
+          "References": "37 weeks",
+          "Service Description": "Contact 2:",
+          "Service Due Date": "22 weeks",
+          "Service Overdue": "25 weeks",
+          "Trigger Date": "19 weeks",
+          "Trigger Event": "18 weeks"
+        },
+        {
+          "Comments": "37 weeks",
+          "Completion": "34 weeks",
+          "Create Condition": "26 weeks",
+          "Expiration": "24 weeks",
+          "References": "39 weeks",
+          "Service Description": "Contact 3:",
+          "Service Due Date": "28 weeks",
+          "Service Overdue": "31 weeks",
+          "Trigger Date": "27 weeks",
+          "Trigger Event": "26 weeks"
+        },
+        {
+          "Comments": "39 weeks",
+          "Completion": "36 weeks",
+          "Create Condition": "30 weeks",
+          "Expiration": "30 weeks",
+          "References": "40 weeks",
+          "Service Description": "Contact 4:",
+          "Service Due Date": "32 weeks",
+          "Service Overdue": "35 weeks",
+          "Trigger Date": "31 weeks",
+          "Trigger Event": "30 weeks"
+        },
+        {
+          "Comments": "40 weeks",
+          "Completion": "38 weeks",
+          "Create Condition": "34 weeks",
+          "Expiration": "34 weeks",
+          "References": "N/A",
+          "Service Description": "Contact 5:",
+          "Service Due Date": "36 weeks",
+          "Service Overdue": "37 weeks",
+          "Trigger Date": "35 weeks",
+          "Trigger Event": "34 weeks"
+        },
+        {
+          "Comments": "N/A",
+          "Completion": "40 weeks",
+          "Create Condition": "36 weeks",
+          "Expiration": "36 weeks",
+          "References": "N/A",
+          "Service Description": "Contact 6:",
+          "Service Due Date": "38 weeks",
+          "Service Overdue": "39 weeks",
+          "Trigger Date": "37 weeks",
+          "Trigger Event": "36 weeks"
+        },
+        {
+          "Comments": "N/A",
+          "Completion": "N/A",
+          "Create Condition": "38 weeks",
+          "Expiration": "38 weeks",
+          "References": "N/A",
+          "Service Description": "Contact 7:",
+          "Service Due Date": "40 weeks",
+          "Service Overdue": "40 weeks",
+          "Trigger Date": "39 weeks",
+          "Trigger Event": "38 weeks"
+        },
+        {
+          "Comments": "N/A",
+          "Completion": "N/A",
+          "Create Condition": "40 weeks",
+          "Expiration": "40 weeks",
+          "References": "N/A",
+          "Service Description": "Contact 8:",
+          "Service Due Date": "N/A",
+          "Service Overdue": "N/A",
+          "Trigger Date": "40 weeks",
+          "Trigger Event": "40 weeks"
+        }
+      ],
+      "sheet": "ANC.S.01 ANC contact schedule",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Service Name",
+        "Service Description",
+        "Trigger Event",
+        "Trigger Date",
+        "Create Condition",
+        "Due Date",
+        "Overdue",
+        "Expiration",
+        "Completion",
+        "Comments",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.S.02"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.S.02",
+      "idsFromSheetName": [
+        "ANC.S.02"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "scheduleId": "ANC.S.02 ANC Lab and tests schedule"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Comments": "One ultrasound scan before 24 weeks of gestation (early ultrasound) is recommended for pregnant women to estimate gestational age, improve detection of fetal anomalies and multiple pregnancies, reduce induction of labour for post-term pregnancy, and improve a woman’s pregnancy experience",
+          "Completion": "\"Ultrasound scan conducted\" = TRUE OR \"Ultrasound scan ordered\" = TRUE",
+          "Create Condition": "An ultrasound is recommended for all women before 24 weeks gestation or even after if deemed necessary (e.g. to identify the number of fetuses, fetal presentation or placenta location); the ultrasound can be provided at the health-care facility or at a referral health-care facility",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Gestational age\" > 24 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): B.2.4. Ultrasound scan (3)",
+          "Service Description": "A recommended ultrasound scan",
+          "Service Name": "Ultrasound scan",
+          "Trigger Date": "\"Contact date\" WHEN \"Gestational age\" < 24 weeks",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Completion": "\"Blood type test conducted\" = TRUE",
+          "Create Condition": "One blood type test is required during pregnancy to test for blood type and Rh factor; it is flagged (on the system) every visit until completed",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017) (3)",
+          "Service Description": "A blood test for blood type and Rh factor",
+          "Service Name": "Blood type test",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Comments": "In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all ANC settings. In low-prevalence settings, PITC can be considered for pregnant women in ANC settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems.",
+          "Completion": "\"HIV test conducted\" = TRUE",
+          "Create Condition": "An HIV test is required for all pregnant women women in settings with generalized and concentrated HIV epidemics at the first contact in pregnancy",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)",
+          "Service Description": "Test to see if the woman is HIV positive during the first contact",
+          "Service Name": "First HIV test",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Comments": "On re-testing: \n– In settings with a concentrated HIV epidemic (where HIV prevalence is consistently over 5% in at least one defined key population [men who have sex with men, people in prison or other closed settings, people who inject drugs, sex workers and transgender people], but is below 1% in pregnant women attending antenatal clinics, but is not well established in the general population), retest HIV-negative pregnant in the 3rd trimester. \n– In settings with generalized HIV epidemic (where HIV prevalence is consistently over 1% in pregnant women attending antenatal clinics), re-test HIV-negative pregnant women in the 3rd trimester. \n– Regardless of setting women who are in a serodiscordant couple or from a key population group should also be re-tested.",
+          "Completion": "\"HIV test conducted\" = TRUE",
+          "Create Condition": "If the woman has not been diagnosed with HIV, another HIV test is required for all pregnant women women in settings with generalized and concentrated HIV epidemics when the gestational age ≥ 29 weeks",
+          "Due Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 29 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" WHEN \"Gestational age\" ≥ 30 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)\nConsolidated guidelines on HIV testing services (6)",
+          "Service Description": "Test to see if the woman is HIV positive after gestational age is ≥ 29 weeks",
+          "Service Name": "Second HIV test",
+          "Trigger Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 29 weeks",
+          "Trigger Event": "\"Gestational age\" ≥ 29 weeks"
+        },
+        {
+          "Comments": "In settings with a ≥ 2% or ≥ 5% HBsAg seroprevalence in the general population, it is recommended that HBsAg serological testing be routinely offered to all pregnant women in antenatal clinics, with linkage to prevention, care and treatment services. Couples and partners in antenatal care settings should be offered HBV testing services.",
+          "Completion": "\"Hepatitis B test conducted\" = TRUE",
+          "Create Condition": "If Hep B prevalence is intermediate (2% or higher) or high (5% or higher), then woman should be tested for Hep B",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017) (4)",
+          "Service Description": "Test if woman is infected with hepatitis B",
+          "Service Name": "Hepatitis B test",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Comments": "In settings with a ≥2% or ≥5% HCV antibody seroprevalence in the general population, it is recommended that all adults have access to and be offered HCV serological testing with linkage to prevention, care and treatment services. In all settings, it is recommended that serological testing for HCV antibody (anti-HCV) be offered with linkage to prevention, care and treatment services to the following individuals:\n– adults and adolescents from populations most affected by HCV infection (i.e. who are either part of a population with high HCV seroprevalence or who have a history of exposure and/or high-risk behaviours for HCV infection)\n– adults, adolescents and children with a clinical suspicion of chronic viral hepatitis (i.e. symptoms, signs, laboratory markers).",
+          "Completion": "\"Hepatitis C test conducted\" = TRUE",
+          "Create Condition": "Test for hepatitis C in the first contact in settings where the proportion of HCV antibody seroprevalence in the general population is 2% or higher, or the woman is HIV positive, injects drugs or is a sex worker",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017) (4)",
+          "Service Description": "Test if woman is infected with hepatitis C",
+          "Service Name": "Hepatitis C test",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Comments": "To prevent mother-to-child transmission of syphilis, all pregnant women should be screened for syphilis at the first ANC visit in the first trimester and again in the third trimester of pregnancy",
+          "Completion": "\"Syphilis test conducted\" = TRUE",
+          "Create Condition": "A syphilis test is recommended for all pregnant women at the first contact and again at the first contact of 3rd trimester (28 weeks); women who are already confirmed positive for syphilis do not need to be tested",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)\nWHO syphilis guideline for pregnant women (2017) (15)\nWHO syphilis PMTCT (IMPAC) (date) (16)",
+          "Service Description": "Test if woman is infected with syphilis during first contact",
+          "Service Name": "First syphilis test",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Comments": "To prevent mother-to-child transmission of syphilis, all pregnant women should be screened for syphilis at the first ANC visit in the first trimester and again in the third trimester of pregnancy",
+          "Completion": "\"Syphilis test conducted\" = TRUE",
+          "Create Condition": "A syphilis test is recommended for all pregnant women at the first contact and again at the first contact of 3rd trimester (28 weeks); women who are already confirmed positive for syphilis do not need to be tested",
+          "Due Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 29 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" WHEN \"Gestational age\" ≥ 30 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)\nWHO syphilis guideline for pregnant women (2017) (15)\nWHO syphilis PMTCT (IMPAC) (date) (16)",
+          "Service Description": "Test if woman is infected with syphilis once gestational age is ≥ 29 weeks",
+          "Service Name": "Second syphilis test",
+          "Trigger Date": "\"Contact date\" IF \"Gestational age\" ≥ 29 weeks",
+          "Trigger Event": "\"Gestational age\" ≥ 29 weeks"
+        },
+        {
+          "Comments": "Midstream urine culture is the recommended method for diagnosing symptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gram-staining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy.",
+          "Completion": "\"Urine test conducted\" = TRUE",
+          "Create Condition": "A urine test is required at the first contact",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)",
+          "Service Description": "First urine test in the pregnancy",
+          "Service Name": "Urine test 1",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Completion": "\"Urine test 2 conducted\" = TRUE",
+          "Create Condition": "A urine test is required again at the last contact in 2nd trimester",
+          "Due Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 26 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" WHEN \"Gestational age\" ≥ 27 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)",
+          "Service Description": "Second urine test in the pregnancy",
+          "Service Name": "Urine test 2",
+          "Trigger Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 26 weeks",
+          "Trigger Event": "\"Gestational age\" ≥ 26 weeks"
+        },
+        {
+          "Completion": "\"Urine test 3 conducted\" = TRUE",
+          "Create Condition": "A urine test is required again at the 2nd contact in 3rd trimester",
+          "Due Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 34 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" WHEN \"Gestational age\" ≥ 35 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)",
+          "Service Description": "Third urine test in the pregnancy",
+          "Service Name": "Urine test 3",
+          "Trigger Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 34 weeks",
+          "Trigger Event": "\"Gestational age\" ≥ 34 weeks"
+        },
+        {
+          "Comments": "In settings where the tuberculosis (TB) prevalence in the general population is 100/100 000 population or higher, systematic screening for active TB should be considered for pregnant women as part of ANC",
+          "Completion": "\"TB screening conducted\" = TRUE",
+          "Create Condition": "In high prevalence area or if a woman is positive for HIV, TB screening should be conducted",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.8. Tuberculosis (TB) (3)",
+          "Service Description": "Screening for TB",
+          "Service Name": "TB screening",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Comments": "Blood haemoglobin testing is necessary for diagnosing anaemia in pregnancy.\nComplete blood count test is the preferred method for testing for anaemia in pregnancy; if complete blood count test is not available, haemoglobinometer is recommended over haemoglobin colour scale",
+          "Completion": "\"Blood haemoglobin test conducted\" = TRUE",
+          "Create Condition": "A blood haemoglobin test is recommended at the first contact",
+          "Due Date": "Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)",
+          "Service Description": "First blood haemoglobin test in the pregnancy – an Hb test is required for all women multiple times during pregnancy to determine whether she is anaemic",
+          "Service Name": "Blood haemoglobin test 1 (Hb test 1)",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"ANC contact number\" = 1"
+        },
+        {
+          "Comments": "Blood haemoglobin testing is necessary for diagnosing anaemia in pregnancy.\nComplete blood count test is the preferred method for testing for anaemia in pregnancy; if complete blood count test is not available, haemoglobinometer is recommended over haemoglobin colour scale",
+          "Completion": "\"Blood haemoglobin test conducted\" = TRUE",
+          "Create Condition": "A blood haemoglobin test is recommended again when gestational age is 26 weeks or more",
+          "Due Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 26 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" WHEN \"Gestational age\" ≥ 27 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)",
+          "Service Description": "Second blood haemoglobin test in the pregnancy – an Hb test is required for all women multiple times during pregnancy to determine whether she is anaemic",
+          "Service Name": "Blood haemoglobin test 2 (Hb test 2)",
+          "Trigger Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 26 weeks",
+          "Trigger Event": "\"Gestational age\" ≥ 26 weeks"
+        },
+        {
+          "Comments": "Blood haemoglobin testing is necessary for diagnosing anaemia in pregnancy.\nComplete blood count test is the preferred method for testing for anaemia in pregnancy; if complete blood count test is not available, haemoglobinometer is recommended over haemoglobin colour scale",
+          "Completion": "\"Blood haemoglobin test conducted\" = TRUE",
+          "Create Condition": "A blood haemoglobin test is recommended again when gestational age is 36 weeks or more",
+          "Due Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 36 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" WHEN \"Gestational age\" ≥ 37 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)",
+          "Service Description": "Third blood haemoglobin test in the pregnancy – an Hb test is required for all women multiple times during pregnancy to determine whether she is anaemic",
+          "Service Name": "Blood haemoglobin test 3 (Hb test 3)",
+          "Trigger Date": "\"Contact date\" WHEN \"Gestational age\" ≥ 34 weeks",
+          "Trigger Event": "\"Gestational age\" ≥ 36 week"
+        }
+      ],
+      "sheet": "ANC.S.02 Lab & tests schedule",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Service Name",
+        "Service Description",
+        "Trigger Event",
+        "Trigger Date",
+        "Create Condition",
+        "Due Date",
+        "Overdue",
+        "Expiration",
+        "Completion",
+        "Comments",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.S.03"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.S.03",
+      "idsFromSheetName": [
+        "ANC.S.03"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "scheduleId": "ANC.S.03 Counselling schedule"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Comments": "Lowering daily caffeine intake during pregnancy is recommended to reduce the risk of pregnancy loss and low-birth-weight neonates.\n\nThis includes any product, beverage or food containing caffeine (e.g. brewed coffee, tea, cola-type soft drinks, caffeinated energy drinks, chocolate, caffeine tablets). Caffeine-containing teas (black tea and green tea) and soft drinks (colas and iced tea) usually contain less than 50 mg per 250 ml serving.",
+          "Completion": "\"Counselling conducted on caffeine reduction\" = TRUE",
+          "Create Condition": "Conduct counselling at every contact if relevant and woman continues to have a high caffeine intake",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (2)",
+          "Service Description": "Counselling on lowering caffeine intake",
+          "Service Name": "Counselling on caffeine reduction",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "Counselling required on caffeine reduction"
+        },
+        {
+          "Comments": "Health-care providers should routinely offer advice and psychosocial interventions for tobacco cessation to all pregnant women who are either current tobacco users or recent tobacco quitters",
+          "Completion": "\"Counselling conducted on tobacco cessation\" = TRUE",
+          "Create Condition": "Conduct counselling at every contact if relevant and woman continues to use tobacco",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (2)",
+          "Service Description": "Counselling on tobacco cessation",
+          "Service Name": "Counselling on tobacco cessation",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "Counselling required on tobacco cessation"
+        },
+        {
+          "Comments": "Provide pregnant women, their partners and other household members with advice and information about the risks of second-hand smoke (SHS) exposure from all forms of smoked tobacco, as well as strategies to reduce SHS in the home",
+          "Completion": "\"Counselling conducted on second-hand smoke\" = TRUE",
+          "Create Condition": "Conduct counselling at every contact if relevant and woman continues to be exposed to second-hand smoke",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (2)",
+          "Service Description": "Counselling on second-hand smoke cessation",
+          "Service Name": "Counselling on second-hand smoke",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "Counselling required on second-hand smoke"
+        },
+        {
+          "Comments": "Advise to use condoms to prevent Zika, HIV and other STIs; if necessary, reassure it is OK to continue to have sex during pregnancy",
+          "Completion": "\"Counselling conducted  on condom use\" = TRUE",
+          "Create Condition": "Conduct counselling at every contact if relevant and woman continues not to use condoms",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (2)\nWHO syphilis guideline for pregnant women (2017) (14)\nWHO syphilis PMTCT (IMPAC) (date) (15) \nGuidelines on hepatitis B and C testing (2017) (4)",
+          "Service Description": "Counselling on condom use",
+          "Service Name": "Counselling conducted on condom use",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "Counselling required on condom use"
+        },
+        {
+          "Comments": "Health-care providers should, at the earliest opportunity, advise pregnant women dependent on alcohol or drugs to cease their alcohol or drug use and offer, or refer them to, detoxification services under medical supervision, where necessary and applicable",
+          "Completion": "\"Counselling conducted on alcohol / substance use\" = TRUE",
+          "Create Condition": "Conduct counselling at every contact if relevant and woman continues to consume alcohol or use substances",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.6. Substance use (2)",
+          "Service Description": "Counselling on alcohol and illicit substance cessation",
+          "Service Name": "Counselling on alcohol / substance use",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "Counselling required on alcohol / substance use"
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on non-pharmacological measures to relieve nausea and vomiting\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.1. Nausea and vomiting (2)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on non-pharmacological measures to relieve nausea and vomiting",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Current physiological symptoms\" = \"Nausea and vomiting\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on pharmacological treatments for nausea and vomiting counselling conducted\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.1. Nausea and vomiting (2)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on pharmacological treatments for nausea and vomiting",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Persistent physiological symptoms\" = \"Nausea and vomiting\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on diet and lifestyle changes to prevent and relieve heartburn\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.2. Heartburn (2)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on diet and lifestyle changes to prevent and relieve heartburn",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Current physiological symptoms\" = \"Heartburn\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on antacid preparations to relieve heartburn\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.2. Heartburn (2)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on antacid preparations to relieve heartburn",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Persistent physiological symptoms\" = \"Heartburn\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on non-pharmacological treatment for the relief of leg cramps\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.3. Leg cramps (2)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on non-pharmacological treatment for the relief of leg cramps",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Current physiological symptoms\" = \"Leg cramps\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on magnesium and calcium to relieve leg cramps\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.3. Leg cramps (3)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on magnesium and calcium to relieve leg cramps",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Persistent physiological symptoms\" = \"Leg cramps\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on dietary modifications to relieve constipation\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.5. Constipation (3)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on dietary modifications to relieve constipation",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Current physiological symptoms\" = \"Constipation\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "Counselling conducted on wheat bran or other fibre supplements to relieve constipation\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.5. Constipation (3)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on wheat bran or other fibre supplements to relieve constipation",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Persistent physiological symptoms\" = \"Constipation\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on regular exercise, physiotherapy, support belts and acupuncture to relieve low back and pelvic pain\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.4. Low back and pelvic pain (3)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on regular exercise, physiotherapy, support belts and acupuncture to relieve low back and pelvic pain",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Current physiological symptoms\" = \"Low back pain\" OR \"Pelvic pain\"; OR \"Persistent physiological symptoms\" = \"Low back pain\" OR \"Pelvic pain\"; AND \"Current physiological symptoms\" ≠ \"Contractions\" OR \"Pain during urination (dysuria)\" OR \"Extreme pelvic pain, cannot walk (symphysis pubis dysfunction)\""
+        },
+        {
+          "Comments": "Type of counselling and treatment needed will depend on the physiological symptom itself",
+          "Completion": "\"Counselling conducted on non-pharmacological options for varicose veins and oedema\" = TRUE",
+          "Create Condition": "Counsel and treat new and/or persistant physiological symptoms as relevant",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): D.6. Varicose veins and oedema (3)",
+          "Service Description": "Counselling on physiological symptoms",
+          "Service Name": "Counselling on non-pharmacological options for varicose veins and oedema",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Current physiological symptoms\" = \"Varicose veins\" OR \"Oedema\"; OR \"Persistent physiological symptoms\" = \"Varicose veins\" OR \"Oedema\"; AND \"Current physiological symptoms\" ≠ \"Leg pain\" OR \"Leg redness\""
+        },
+        {
+          "Comments": "Healthy eating and keeping physically active during pregnancy is recommended for pregnant women to stay healthy and to prevent excessive weight gain during pregnancy",
+          "Completion": "\"Counselling conducted on healthy eating and keeping physically active\" = TRUE",
+          "Create Condition": "Counsel on healthy eating and keeping physically active",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.1.1. Dietary interventions (3)",
+          "Service Description": "Counselling on diet",
+          "Service Name": "Counselling on healthy eating and keeping physically active",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Counselling conducted on healthy eating and keeping physically active\" = FALSE"
+        },
+        {
+          "Comments": "Increase daily energy and protein intake to reduce the risk of low-birth-weight neonates",
+          "Completion": "\"Counselling conducted on increase daily energy and protein intake\" = TRUE",
+          "Create Condition": "Counsel on healthy eating and keeping physically active",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.1.2. Dietary interventions (3)",
+          "Service Description": "Counselling on diet",
+          "Service Name": "Counselling on increase daily energy and protein intake",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Population prevalence of undernourishment\" ≥ 20% AND \"Weight category\" = \"Underweight\""
+        },
+        {
+          "Comments": "Balanced energy and protein dietary supplementation is recommended for pregnant women to reduce the risk of stillbirths and small-for-gestational-age neonates",
+          "Completion": "\"Counselling conducted on balanced energy and protein dietary supplementation\" = TRUE",
+          "Create Condition": "Counsel on healthy eating and keeping physically active",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.1.3. Dietary interventions (3)",
+          "Service Description": "Counselling on diet",
+          "Service Name": "Counselling on balanced energy and protein dietary supplementation",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Population prevalence of undernourishment\" ≥ 20% AND \"Weight category\" = \"Underweight\""
+        },
+        {
+          "Comments": "Danger signs include: \n– Headache\n– No fetal movement\n– Contractions\n– Abnormal vaginal discharge\n– Fever\n– Abdominal pain\n– Feeling ill\n– Swollen fingers, face or legs",
+          "Completion": "\"Counselling conducted on seeking care for danger signs\" = TRUE",
+          "Create Condition": "Counsel women on how to look out for danger signs and seek care accordingly",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO recommendations on health promotion interventions (2015) (11)",
+          "Service Description": "Counselling on danger signs",
+          "Service Name": "Counselling on seking care for danger signs",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Counselling conducted on seeking care for danger sign\" = FALSE"
+        },
+        {
+          "Comments": "Severe danger signs include:\n– Vaginal bleeding\n– Convulsions/fits\n– Severe headaches with blurred vision\n– Fever and too weak to get out of bed\n– Severe abdominal pain\n– Fast or difficult breathing",
+          "Completion": "\"Counsel to immediately go to the hospital if severe danger signs are present\" = TRUE",
+          "Create Condition": "Counsel women on the importance of immediately going to the hospital if severe danger signs are present",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO recommendations on health promotion interventions (2015) (11)",
+          "Service Description": "Counselling on danger signs",
+          "Service Name": "Counsel to immediately go to the hospital if severe danger signs are present",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Counsel to immediately go to the hospital if severe danger signs are present\" = FALSE"
+        },
+        {
+          "Completion": "\"Counselling conducted on ANC contact schedule\" = TRUE",
+          "Create Condition": "It is recommended that a woman sees a health-care provider 8 times during pregnancy (this can change if the woman has any complications); this schedule shows when the woman should come in to be able to access all the important care and information",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): E.7. Antenatal care contact schedule (3)",
+          "Service Description": "Counselling on contact schedule",
+          "Service Name": "Counselling on ANC contact schedule",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Counselling conducted on ANC contact schedule counselling\" = FALSE"
+        },
+        {
+          "Comments": "This includes: \n– Skilled birth attendant\n– Labour and birth companion\n– Location of the closest facility for birth and in case of complications\n– Funds for any expenses related to birth and in case of complications\n– Supplies and materials necessary to bring to the facility\n– Support to look after the home and other children while woman is away\n– Transport to a facility for birth or in case of a complication \n– Identification of compatible blood donors in case of complications",
+          "Completion": "\"Counselling conducted on birth preparedness and complications readiness\" = TRUE",
+          "Create Condition": "Counsel women on preparing for birth and possible complications that may arise",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO recommendations on health promotion interventions (2015) (11)",
+          "Service Description": "Counselling on birth plan",
+          "Service Name": "Counselling on birth preparedness and complications readiness",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Counselling on birth preparedness and complications readiness\" = FALSE"
+        },
+        {
+          "Comments": "Counselling:\n– Woman is at risk of alloimmunisation if the baby's father is Rh positive or unknown\n– Proceed with local protocol to investigate sensitization and the need for referral \n– If non-sensitized, woman should receive anti-D prophylaxis postnatally if the baby is Rh positive",
+          "Completion": "\"Counselling conducted on Rh factor negative\" = TRUE",
+          "Create Condition": "If the woman is Rh negative, counsel on the potential of alloimmunization",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): C.3. Antenatal anti-D immunoglobulin administration (3)",
+          "Service Description": "Counselling on birth plan",
+          "Service Name": "Counselling on Rh factor negative",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Rh factor\" = \"Rh negative\""
+        },
+        {
+          "Completion": "Counselling conducted on intrapartum antibiotic to prevent early neonatal Group B Streptococcus (GBS) infection\" = TRUE",
+          "Create Condition": "Pregnant women with GBS colonization should receive intrapartum antibiotic administration to prevent early neonatal GBS infection",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): C.1. Antibiotics for asymptomatic bacteriuria (ASB) (3)",
+          "Service Description": "Counselling on birth plan",
+          "Service Name": "Counselling on intrapartum antibiotic to prevent early neonatal Group B Streptococcus (GBS) infection",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Midstream urine culture (recommended)\" = \"Positive – Group B Streptococcus (GBS)\""
+        },
+        {
+          "Completion": "\"Counselling conducted on postpartum family planning\" = TRUE",
+          "Create Condition": "Counsel woman on postpartum family planning methods",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "Medical eligibility criteria for contraceptive use (2015) (10)",
+          "Service Description": "Counselling on family planning",
+          "Service Name": "Counselling on postpartum family planning",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Counselling conducted on postpartum family planning\" =FALSE"
+        },
+        {
+          "Comments": "To enable mothers to establish and sustain exclusive breastfeeding for 6 months, WHO and UNICEF recommend:\n– Initiation of breastfeeding within the first hour of life\n– Exclusive breastfeeding – that is, the infant only receives breast-milk without any additional food or drink, not even water\n– Breastfeeding on demand – that is, as often as the child wants, day and night\n– No use of bottles, teats or pacifiers",
+          "Completion": "\"Counselling conducted on breastfeeding\" = TRUE",
+          "Create Condition": "Counsel women on the importance of breastfeeding for 6 months after birth",
+          "Due Date": "\"Gestational age\" > 32 weeks",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO recommendations on health promotion interventions (2015) (11)",
+          "Service Description": "Counselling on breastfeeding",
+          "Service Name": "Counselling on breastfeeding",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Counselling conducted on breastfeeding\" = FALSE"
+        },
+        {
+          "Comments": "Never raise the issue of partner violence unless a woman is alone. Even if she is with another woman, that woman could be the mother or sister of an abuser.\nIf you do ask her about violence, do it in an empathic, non-judgemental manner. Use language that is appropriate and relevant to the culture and community you are working in. Some women may not like the words “violence” and “abuse”.\nCultures and communities have ways of referring to the problem with other words. It is important to use the words that women themselves use.\nThe job aid on the next page provides examples of the type of statements and questions you can use to ask about intimate partner violence.",
+          "Completion": "\"Clinical enquiry for intimate partner violence (IPV) done\" = TRUE",
+          "Create Condition": "WHO does not recommend universal screening for violence of women attending health care. WHO does encourage health-care providers to raise the topic with women who have injuries or conditions that they suspect may be related to violence.",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.3. Intimate partner violence (IPV) (3)\n\nIPV handbook (2014) (12)",
+          "Service Description": "Provision of risk assessment and intimate partner violence (IPV) counselling, if relevant",
+          "Service Name": "Counselling on intimate partner violence",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Woman suspected or confirmed to be subjected to intimate partner violence or sexual violence\" = TRUE"
+        },
+        {
+          "Comments": "In areas with a population prevalence of infection with any soil-transmitted helminths is 20% or higher OR a population anaemia prevalence 40% or higher, preventive antihelminthic treatment with single dose albendazole 400 mg or mebendazole 500 mg is recommended for pregnant women after the first trimester as part of worm infection reduction programmes",
+          "Completion": "\"Preventive antihelminthic treatment provided\" = \"Single-dose albendazole 400 mg\" OR \"Single-dose mebendazole 500 mg\"",
+          "Create Condition": "Counselling on deworming should be conducted every contact until preventative treatment is provided",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): C.4. Preventive anthelminthic treatment (3)",
+          "Service Description": "Provision of preventive antihelminthic counselling",
+          "Service Name": "Counselling on deworming",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Population prevalence of soil-transmitted helminth infection\" ≥ 20% OR \"Population prevalence of anaemia\" ≥ 40%"
+        },
+        {
+          "Comments": "Sleeping under an insecticide-treated bednet and the importance of seeking care and getting treatment at first sign of any symptoms",
+          "Completion": "\"Counselling conducted on malaria prevention\" = TRUE for EVERY CONTACT",
+          "Create Condition": "Counselling on malaria prevention should be conducted during every contact in malaria-endemic settings (where there is moderate to high malaria transmission)",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): C.6. Malaria prevention: intermittent preventive treatment in pregnancy (IPTp) (3)",
+          "Service Description": "Counselling on malaria prevention",
+          "Service Name": "Counselling on mlaria prophylaxis",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Malaria-endemic setting\" = TRUE"
+        },
+        {
+          "Completion": "\"Taking calcium supplements\" = TRUE",
+          "Create Condition": "After the woman has been prescribed calcium supplements, check whether the woman is still continuing to take her calcium supplements",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.3. Calcium supplements (3)",
+          "Service Description": "The health worker checking whether the woman is taking her daily calcium supplements",
+          "Service Name": "Calcium supplement check",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Amount of daily calcium supplements provided\" > 0"
+        },
+        {
+          "Completion": "Has side-effects from calcium supplements\" = NOT EMPTY",
+          "Create Condition": "After the woman has been prescribed calcium supplements, check whether the woman has any side-effects",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.3. Calcium supplements (3)",
+          "Service Description": "The health worker checking whether the woman has any side-effects from her daily calcium supplements",
+          "Service Name": "Side-effects from calcium supplement check",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Amount of daily calcium supplements provided\" > 0"
+        },
+        {
+          "Completion": "\"Taking iron and folic acid (IFA) tablets\" = TRUE",
+          "Create Condition": "After the woman has been prescribed IFA tablets, check whether the woman is still continuing to take her IFA tablets",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.2.1. & A.2.2. Iron and folic accid supplements (3)",
+          "Service Description": "The health worker checking whether the woman is taking her iron and folic acid (IFA) tablets",
+          "Service Name": "IFA tablet check",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Amount of iron prescribed\" > 0 AND \"Amount of daily dose of folic acid prescribed\" > 0"
+        },
+        {
+          "Completion": "\"Has side-effects from iron and folic acid supplements\" = NOT EMPTY",
+          "Create Condition": "After the woman has been prescribed IFA tablets, check whether the woman has any side-effects",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.2.1. & A.2.2. Iron and folic accid supplements (3)",
+          "Service Description": "The health worker checking whether the woman has any side-effects from her IFA tablets",
+          "Service Name": "Side-effects from IFA tablet check",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Amount of iron prescribed\" > 0 AND \"Amount of daily dose of folic acid prescribed\" > 0"
+        },
+        {
+          "Completion": "\"Taking aspirin tablets\" = TRUE",
+          "Create Condition": "After the woman has been prescribed aspirin, check whether the woman is still continuing to take her aspirin tablets",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO recommendations for prevention and treatment of pre-eclampsia and eclampsia (2011) (5)",
+          "Service Description": "The health worker checking whether the woman is taking her aspirin tablets",
+          "Service Name": "Aspirin tablet check",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Amount of daily aspirin until delivery prescribed\" > 0"
+        },
+        {
+          "Completion": "\"Taking vitamin A supplements\" = TRUE",
+          "Create Condition": "After the woman has been prescribed vitamin A supplements, check whether the woman is still continuing to take her vitamin A supplements",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.4. Vitamin A supplements (3)",
+          "Service Description": "The health worker checking whether the woman is taking her daily vitamin A supplements",
+          "Service Name": "Vitamin A supplement check",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Amount of vitamin A supplementation provided\" > 0"
+        },
+        {
+          "Comments": "A maximum of up to 3 weekly doses may be required\n\n[Syphilis compliance]",
+          "Completion": "\"Taking her penicillin treatment for syphilis\" = TRUE",
+          "Create Condition": "After the woman has been prescribed treatment for syphilis, check whether the woman is adhering to treatment",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)",
+          "Service Description": "The health worker checking whether the woman is taking her medication for syphilis",
+          "Service Name": "Treatment for syphilis check",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Syphilis diagnosis\" = \"Syphilis positive\""
+        },
+        {
+          "Completion": "\"Counselling provided on pre-eclampsia risk\" = TRUE",
+          "Create Condition": "Provide counselling to reduce risk of developing pre-eclampsia if the woman is deemed to be at risk for developing pre-eclampsia",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO recommendations for prevention and treatment of pre-eclampsia and eclampsia (2011) (5)",
+          "Service Description": "Counselling on risk reduction",
+          "Service Name": "Counselling on pre-eclampsia risk",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Risk of pre-eclampsia\" = TRUE"
+        },
+        {
+          "Completion": "\"Counselling conducted on HIV risk\" = TRUE",
+          "Create Condition": "Provide counselling to reduce risk of contracting HIV if the woman is deemed to be at risk for contracting HIV",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)",
+          "Service Description": "Counselling on risk reduction",
+          "Service Name": "Counselling on HIV risk",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"High risk for HIV\" = TRUE"
+        },
+        {
+          "Completion": "\"Counselling conducted on gestational diabetes mellitus (GDM) risk\" = TRUE",
+          "Create Condition": "Provide counselling to reduce risk of developing GDM if the woman is deemed to be at risk of developing GDM",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Service Description": "Counselling on risk reduction",
+          "Service Name": "Counselling on gestational diabetes mellitus (GDM) risk",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Risk of gestational diabetes mellitus\" = TRUE"
+        },
+        {
+          "Completion": "\"Counselling conducted on hypertension\" = TRUE",
+          "Create Condition": "If diagnosed with hypertension, provide counselling as recommended",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO recommendations for prevention and treatment of pre-eclampsia and eclampsia (2011) (5)",
+          "Service Description": "Counselling:\n– Advise to reduce workload and to rest\n– Advise on danger signs\n– Reassess at the next contact or in 1 week if 8 months pregnant\n– If hypertension persists after 1 week or at next contact, refer to hospital or discuss case with the doctor, if available",
+          "Service Name": "Counselling on hypertension",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Hypertension\" = TRUE"
+        },
+        {
+          "Completion": "\"Counselling conducted on HIV-positive\" = TRUE",
+          "Create Condition": "If woman tested positive for HIV, provide counselling",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)",
+          "Service Description": "Counselling when a woman has tested positive for HIV",
+          "Service Name": "Counselling on HIV-positive",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"HIV test result\" = \"HIV positive\""
+        },
+        {
+          "Completion": "\"Counselling conducted on hepatitis B positive\" = TRUE",
+          "Create Condition": "If woman tested positive for hepatitis B, provide counselling",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017) (4)",
+          "Service Description": "Counselling when a woman has tested positive for hepatitis B",
+          "Service Name": "Counselling on hepatitis B positive",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Hepatitis B test result\" = \"Hepatitis B positive\""
+        },
+        {
+          "Completion": "\"Counselling conducted on hepatitis C positive\" = TRUE",
+          "Create Condition": "If woman tested positive for hepatitis C, provide counselling",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017) (4)",
+          "Service Description": "Counselling when a woman has been tested positive for hepatitis C",
+          "Service Name": "Counselling on hepatitis C positive",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Hepatitis C test result\" = \"Hepatitis C positive\""
+        },
+        {
+          "Completion": "\"Counselling conducted on syphilis and treatment provided\" = TRUE",
+          "Create Condition": "In low prevalence areas, if a woman tests positive for syphilis simply provide treatment.\nIn high prevalence areas, if a woman tests positive on on-site rapid syphilis test (RST), provide first dose of treatment. Then run rapid plasma reagin (RPR) test. If RPR is also positive, provide treatment according to duration of syphilis.",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)",
+          "Service Description": "Provision of treatment and counselling for syphilis",
+          "Service Name": "Syphilis counselling and treatment",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Syphilis test result\" = \"Syphilis positive\""
+        },
+        {
+          "Completion": "\"Syphilis counselling and further testing\" = TRUE",
+          "Create Condition": "In high prevalence areas, if a woman tests positive on onsite rapid syphilis test (RST), provide first dose of treatment. Then run rapid plasma reagin (RPR) test. If RPR is also positive, provide treatment according to duration of syphilis.",
+          "Due Date": "Every contact",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)",
+          "Service Description": "Initial treatment and counselling for syphilis with further testing",
+          "Service Name": "Syphilis counselling and further testing",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Syphilis test result\" = \"Syphilis positive\""
+        },
+        {
+          "Completion": "\"Seven-day antibiotic regimen for asymptomatic bacteriuria (ASB) provided\" = TRUE",
+          "Create Condition": "If the woman tested positive, provide counselling and treatment",
+          "Due Date": "\"Contact date\"",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): C.1. Antibiotics for asymptomatic bacteriuria (ASB) (3)",
+          "Service Description": "Antibiotic regimen for ASB",
+          "Service Name": "Seven-day antibiotic regimen for asymptomatic bacteriuria (ASB)",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Asymptomatic bacteriuria (ASB) diagnosis\" = \"Positive ASB\""
+        },
+        {
+          "Completion": "\"Seven-day antibiotic regimen for asymptomatic bacteriuria (ASB) provided\" = TRUE",
+          "Create Condition": "If the woman tested positive, provide counselling and treatment",
+          "Due Date": "\"Contact date\"",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): C.1. Antibiotics for asymptomatic bacteriuria (ASB) (3)",
+          "Service Description": "Intrapartum antibiotic to prevent early neonatal infection",
+          "Service Name": "Counselling on intrapartum antibiotic to prevent early neonatal Group B Streptococcus (GBS) infection",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Midstream urine culture (recommended)\" = \"Positive – Group B Streptococcus (GBS)\""
+        },
+        {
+          "Completion": "\"Counselling conducted on gestational diabetes mellitus (GDM)\" = TRUE",
+          "Create Condition": "If the woman is diagnosed with GDM, provide treatment and counselling accordingly",
+          "Due Date": "\"Contact date\"",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Service Description": "Treatment for GDM during pregnancy",
+          "Service Name": "Counselling on gestational diabetes mellitus (GDM)",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Gestational diabetes mellitus (GDM) diagnosis\" = \"GDM positive\""
+        },
+        {
+          "Completion": "\"Counselling conducted on diabetes mellitus (DM)\" = TRUE",
+          "Create Condition": "If the woman is diagnosed with DM, provide treatment and counselling accordingly",
+          "Due Date": "\"Contact date\"",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Service Description": "Treatment for DM during pregnancy",
+          "Service Name": "Counselling on diabetes mellitus (DM)",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Diabetes mellitus (DM) during pregnancy diagnosis\" = \"DM positive\""
+        },
+        {
+          "Completion": "\"Counselling conducted on anaemia\" = TRUE",
+          "Create Condition": "If the woman has been diagnosed with anaemia, provide counselling and treatment accordingly",
+          "Due Date": "\"Contact date\"",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): A.2.1. & A.2.2. Iron and folic accid supplements (3)\nWHO ANC recommendations (2016): B.1.1. Anaemia (3)",
+          "Service Description": "Treatment for anaemia during pregnancy",
+          "Service Name": "Counselling on anaemia",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Anaemia diagnosis\" = \"Positive for anaemia\""
+        },
+        {
+          "Completion": "\"Counselling conducted on TB screening positive\" = TRUE",
+          "Create Condition": "If TB screening resut is positive, treat according to local protocol and/or refer for treatment",
+          "Due Date": "\"Contact date\"",
+          "Expiration": "End of contact",
+          "Overdue": "N/A",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.8. Tuberculosis (TB) (3)",
+          "Service Description": "Treatment for TB after screening positive for TB",
+          "Service Name": "Counselling on positive TB screening",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"TB Screening result\" = \"Positive for TB\""
+        }
+      ],
+      "sheet": "ANC.S.03 Counselling schedule",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Service Name",
+        "Service Description",
+        "Trigger Event",
+        "Trigger Date",
+        "Create Condition",
+        "Due Date",
+        "Overdue",
+        "Expiration",
+        "Completion",
+        "Comments",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.S.04"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.S.03",
+      "idsFromSheetName": [
+        "ANC.S.04"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "scheduleId": "ANC.S.03 Immunization schedule"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Service Name": "Flu immunization schedule"
+        },
+        {
+          "Comments": "Pregnant women should be vaccinated with trivalent inactivated influenza vaccine at any stage of pregnancy",
+          "Completion": "\"Flu immunization provided\" = TRUE",
+          "Create Condition": "The seasonal flu immunization only needs to be provided once",
+          "Due Date": "\"Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "Every subsequent contact",
+          "Reference(s)": "Vaccines against influenza position paper (2012) (7)",
+          "Service Description": "Provision of the seasonal flu vaccine",
+          "Service Name": "Flu immunization",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Flu immunization history\" = \"No doses\" OR \"Unknown\""
+        },
+        {
+          "Service Name": "Tetanus toxoid-containing vaccine (TTCV) immunization – no previous"
+        },
+        {
+          "Comments": "If a pregnant woman has not previously been vaccinated, or if her immunization status is unknown, she should receive two doses of a TTCV one month apart, with the second dose given at least two weeks before delivery; two doses protect against tetanus infection for 1–3 years in most people",
+          "Completion": "\"Tetanus toxoid-containing vaccine (TTVC) 1 provided\" = TRUE",
+          "Create Condition": "TTCV 1 should be provided during the first contact if the woman has not previously had any TTCV and/or if her immunization status is unknown",
+          "Due Date": "\"Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "ANC close",
+          "Overdue": "\"Contact date\" > First \"Contact date\"",
+          "Reference(s)": "WHO ANC recommendations (2016): C.5. Tetanus toxoid vaccination (3)",
+          "Service Description": "First dose of TTCV if a pregnant woman has not previously been vaccinated, or if her immunization status is unknown",
+          "Service Name": "TTCV 1",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Under immunized\" OR \"No doses\" OR \"Unknown\""
+        },
+        {
+          "Completion": "\"Tetanus toxoid-containing vaccine (TTVC) 2 provided\" = TRUE",
+          "Create Condition": "If a pregnant woman has not previously been vaccinated, or if her immunization status is unknown, she should receive two doses of a TTCV one month apart, with the second dose given at least two weeks before delivery",
+          "Due Date": "\"Date tetanus toxoid 1 immunization was received\" + 1 month",
+          "Expiration": "ANC close",
+          "Overdue": "Gestational age\" < 38 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): C.5. Tetanus toxoid vaccination (3)",
+          "Service Description": "Second dose of TTCV if a pregnant woman has not previously been vaccinated, or if her immunization status is unknown",
+          "Service Name": "TTCV 2",
+          "Trigger Date": "\"Date tetanus toxoid 1 immunization was received\"",
+          "Trigger Event": "\"Tetanus toxoid-containing vaccine (TTCV) 1 immunization provided\" = TRUE"
+        },
+        {
+          "Completion": "\"Tetanus toxoid-containing vaccine (TTVC) 3 provided\" = TRUE",
+          "Create Condition": "A third dose is recommended six months after the second dose, which should extend protection to at least five years",
+          "Due Date": "\"Date tetanus toxoid 2 immunization was received\" + 6 months",
+          "Expiration": "ANC close",
+          "Overdue": "Gestational age\" < 38 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): C.5. Tetanus toxoid vaccination (3)",
+          "Service Description": "Third dose of TTCV if a pregnant woman has not previously been vaccinated, or if her immunization status is unknown",
+          "Service Name": "TTCV 3",
+          "Trigger Date": "\"Date tetanus toxoid 2 immunization was received\"",
+          "Trigger Event": "\"Tetanus toxoid-containing vaccine (TTCV) 2 immunization provided\" = TRUE"
+        },
+        {
+          "Comments": "Two further doses for women who are first vaccinated against tetanus during pregnancy should be given after the third dose, in the two subsequent years or during two subsequent pregnancies",
+          "Completion": "\"Tetanus toxoid-containing vaccine (TTVC) 4 provided\" =  TRUE",
+          "Due Date": "\"Date tetanus toxoid 3 immunization was received\" + 1 year OR during next pregnancy",
+          "Expiration": "\"Gestational age\" < 38 weeks of subsequent pregnancy #1",
+          "Overdue": "One year after TTCV 3 or \"Contact date\" > First \"Contact date\" of subsequent pregnancy #1",
+          "Reference(s)": "WHO ANC recommendations (2016): C.5. Tetanus toxoid vaccination (3)",
+          "Service Description": "Fourth dose of TTCV if a pregnant woman has not previously been vaccinated, or if her immunization status is unknown",
+          "Service Name": "TTCV 4",
+          "Trigger Date": "\"Date tetanus toxoid 3 immunization was received\"",
+          "Trigger Event": "\"Tetanus toxoid-containing vaccine (TTCV) 3 immunization provided\" = TRUE"
+        },
+        {
+          "Completion": "\"Tetanus toxoid-containing vaccine (TTVC) 5 provided\" =  TRUE",
+          "Due Date": "\"Date tetanus toxoid 4 immunization was received\" + 1 year OR during next pregnancy",
+          "Expiration": "\"Gestational age\" < 38 weeks of subsequent pregnancy #2",
+          "Overdue": "One year after TTVC 4 or \"Contact date\" > First \"Contact date\" of subsequent pregnancy #2",
+          "Reference(s)": "WHO ANC recommendations (2016): C.5. Tetanus toxoid vaccination (3)",
+          "Service Description": "Fifth dose of TTCV if a pregnant woman has not previously been vaccinated, or if her immunization status is unknown",
+          "Service Name": "TTCV 5",
+          "Trigger Date": "\"Date tetanus toxoid 4 immunization was received\"",
+          "Trigger Event": "\"Tetanus toxoid-containing vaccine (TTCV) 4 immunization provided\" = TRUE"
+        },
+        {
+          "Service Name": "Tetanus toxoid-containing vaccine (TTCV) – with previous"
+        },
+        {
+          "Comments": "If a woman has had 1–4 doses of a TTCV in the past, she should receive one dose of a TTCV during each subsequent pregnancy to a total of five doses (five doses protects throughout the childbearing years)",
+          "Completion": "\"Tetanus toxoid-containing vaccine (TTVC) 5 provided\" = TRUE",
+          "Create Condition": "If a woman has had 1–4 doses of a TTCV in the past, she should receive one dose of a TTCV during each subsequent pregnancy to a total of five doses (five doses protects throughout the childbearing years)",
+          "Due Date": "\"Contact date\" WHEN \"ANC contact number\" = 1",
+          "Expiration": "\"Gestational age\" < 38 weeks",
+          "Overdue": "Every subsequent contact",
+          "Reference(s)": "WHO ANC recommendations (2016): C.5. Tetanus toxoid vaccination (3)",
+          "Service Description": "Provision of the TTCV if the woman has had 1–4 doses of a TTCV in the past",
+          "Service Name": "TTCV",
+          "Trigger Date": "\"Contact date\"",
+          "Trigger Event": "\"Tetanus toxoid-containing vaccine (TTCV) 1 immunization provided\" = TRUE\nAND \"Tetanus toxoid-containing vaccine (TTCV) 2 immunization provided\" = TRUE\nAND \"Tetanus toxoid-containing vaccine (TTCV) 3 immunization provided\" = TRUE\nAND \"Tetanus toxoid (TT) 4 immunization provided\" = TRUE"
+        }
+      ],
+      "sheet": "ANC.S.04 Immunization schedule",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Service Name",
+        "Service Description",
+        "Trigger Event",
+        "Trigger Date",
+        "Create Condition",
+        "Due Date",
+        "Overdue",
+        "Expiration",
+        "Completion",
+        "Comments",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.S.05"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.S.05",
+      "idsFromSheetName": [
+        "ANC.S.05"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "scheduleId": "ANC.S.05 Malaria prophylaxis schedule",
+        "trigger": "\"Malaria-endemic setting\" = TRUE"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Comments": "Intermittent preventive treatment in pregnancy of malaria with sulfadoxine–pyrimethamine (IPTp-SP) is recommended in malaria-endemic areas. Doses should be given at least one month apart, starting in the 2nd trimester, with the objective of ensuring that at least three doses are received.",
+          "Completion": "\"IPTp-SP dose 1 provided\" = TRUE",
+          "Create Condition": "In malaria-endemic settings, malaria prophylaxis should be provided when \"Gestational age\" is greater than 13 weeks",
+          "Due Date": "\"Gestational age\" > 13 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Gestational age\" ≥ 14 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): C.6. Malaria prevention: intermittent preventive treatment in pregnancy (IPTp) (3)",
+          "Service Description": "Provision of the first dose of intermittent preventative treatment in pregnancy (IPTp) with sulfadoxine–pyrimethamine (SP) in areas with moderate to high malaria transmission as part of antenatal care services",
+          "Service Name": "IPTp-SP dose 1",
+          "Trigger Date": "Contact date",
+          "Trigger Event": "\"Gestational age\""
+        },
+        {
+          "Comments": "Intermittent preventive treatment in pregnancy of malaria with sulfadoxine–pyrimethamine (IPTp-SP) is recommended in malaria-endemic areas. Doses should be given at least one month apart, starting in the 2nd trimester, with the objective of ensuring that at least three doses are received.",
+          "Completion": "\"IPTp-SP dose 2 provided\" = TRUE",
+          "Create Condition": "The second dose should be provided 4 weeks after the first dose was provided",
+          "Due Date": "\"IPTp-SP dose 1 date\" + 4 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Gestational age\" > 20 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): C.6. Malaria prevention: intermittent preventive treatment in pregnancy (IPTp) (3)",
+          "Service Description": "Provision of the second dose of intermittent preventative treatment in pregnancy (IPTp) with sulfadoxine–pyrimethamine (SP) in areas with moderate to high malaria transmission as part of antenatal care services",
+          "Service Name": "IPTp-SP dose 2",
+          "Trigger Date": "\"IPTp-SP dose 1 date\"",
+          "Trigger Event": "\"IPTp-SP dose 1 provided\" = TRUE"
+        },
+        {
+          "Comments": "Intermittent preventive treatment in pregnancy of malaria with sulfadoxine–pyrimethamine (IPTp-SP) is recommended in malaria-endemic areas. Doses should be given at least one month apart, starting in the 2nd trimester, with the objective of ensuring that at least three doses are received.",
+          "Completion": "\"IPTp-SP dose 3 provided\" = TRUE",
+          "Create Condition": "The third dose should be provided 4 weeks after the second dose was provided",
+          "Due Date": "\"IPTp-SP dose 2 date\" + 4 weeks",
+          "Expiration": "ANC close",
+          "Overdue": "\"Gestational age\" > 26 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): C.6. Malaria prevention: intermittent preventive treatment in pregnancy (IPTp) (3)",
+          "Service Description": "Provision of the third dose of intermittent preventative treatment in pregnancy (IPTp) with sulfadoxine–pyrimethamine (SP) in areas with moderate to high malaria transmission as part of antenatal care services",
+          "Service Name": "IPTp-SP dose 3",
+          "Trigger Date": "\"IPTp-SP dose 2 date\"",
+          "Trigger Event": "\"IPTp-SP dose 2 provided\" = TRUE"
+        }
+      ],
+      "sheet": "ANC.S.05 Malaria prophylaxis sc",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    }
+  ]
+}

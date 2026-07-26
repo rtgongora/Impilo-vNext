@@ -1,0 +1,3083 @@
+{
+  "tables": [
+    {
+      "columns": [
+        "Input(s)",
+        "Output",
+        "Action",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.01"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.01",
+      "idsFromSheetName": [
+        "ANC.DT.01"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Before each contact, during the Quick Check, the health worker should check whether the woman has any of the danger signs listed here – if yes, she should be referred to the hospital urgently; if no, the normal contact should be continued as normal",
+        "decisionId": "ANC.DT.01 Danger signs",
+        "trigger": "ANC.B5 Quick check"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Proceed with ANC contact",
+          "Annotation(s)": "If no danger signs are present, the health worker can continue with the normal ANC contact",
+          "Input(s)": "\"Danger signs\" = \"No danger signs\"",
+          "Output": "Proceed with ANC contact",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral for Central cyanosis",
+          "Annotation(s)": "Bluish discolouration around the mucous membranes in the mouth, lips and tongue.",
+          "Input(s)": "\"Danger signs\" = \"Central cyanosis\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion for Central cyanosis",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Bleeding vaginally\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Convulsing\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Fever\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Severe headache\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Visual disturbance\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Imminent delivery\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Labour\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Looks very ill\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Severe vomiting\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Severe pain\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Severe abdominal pain\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Proceed with ANC contact OR \nReferral",
+          "Annotation(s)": "This is a danger sign that indicates that the woman needs urgent management",
+          "Input(s)": "\"Danger signs\" = \"Unconscious\"",
+          "Output": "Follow-up steps/investigations: clinician's discretion",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        }
+      ],
+      "sheet": "ANC.DT.01 Danger signs",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Inputs",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.02"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.02",
+      "idsFromSheetName": [
+        "ANC.DT.02"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "If client is an adolescent, conduct Home-Eating-Activity-Drugs-Sexuality-Safety-Suicide (HEADSS) assessment",
+        "decisionId": "ANC.DT.02 Adolescent HEADSS asessement",
+        "trigger": "Client is an adolescent (age >19)"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct HEADSS assessment",
+          "Annotations": "Questions to consider include:\n-Whether the adolescent studies/works?\n-How they perceive their home situation?\n-How they perceive their relation with their teachers and fellow students/employers\nand colleagues?\n-Whether there have been any recent changes in their situation?\n-Whether they feel safe at home, in the community, in their place of study or work;\non the road, etc?",
+          "Inputs": "\"Age\" > 19",
+          "Output": "Conduct HEADSS assessment",
+          "Reference(s)": "Adolescent job aid: a handy desk reference tool for primary level health (2010) pp.11 (2)"
+        }
+      ],
+      "sheet": "ANC.DT.02 HEADSS assessment",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Inputs",
+        "Output",
+        "Action",
+        "Annotation(s)",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.03"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.03",
+      "idsFromSheetName": [
+        "ANC.DT.03"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Depending on current and/or persistant symptoms, physiological symptoms counselling may be required",
+        "decisionId": "ANC.DT.03 Check symptoms and follow up",
+        "trigger": "ANC.B7 Check symptoms and follow up"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "Ginger, chamomile, vitamin B6 and/or acupuncture are recommended for the relief of nausea in early pregnancy, depending on a woman’s preferences and available options. Women should be informed that symptoms of nausea and vomiting usually resolve in the second half of pregnancy.",
+          "Inputs": "\"Current physiological symptoms\" = \"Nausea and vomiting\"",
+          "Output": "Counselling on non-pharmacological treatments for nausea and vomiting",
+          "Reference(s)": "WHO ANC recommendations (2016): D.1. Nausea and vomiting (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "Pharmacological treatments for nausea and vomiting, such as doxylamine and metoclopramide, should be reserved for those pregnant women experiencing distressing symptoms that are not relieved by non-pharmacological options, under the supervision of a medical doctor",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Nausea and vomiting\"",
+          "Output": "Counselling on pharmacological treatments for nausea and vomiting",
+          "Reference(s)": "WHO ANC recommendations (2016): D.1. Nausea and vomiting (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "Advice on diet and lifestyle is recommended to prevent and relieve heartburn in pregnancy. Antacid preparations can be offered to women with troublesome symptoms that are not relieved by lifestyle modification.",
+          "Inputs": "\"Current physiological symptoms\" = \"Heartburn\"",
+          "Output": "Counselling on diet and lifestyle changes to prevent and relieve heartburn",
+          "Reference(s)": "WHO ANC recommendations (2016): D.2. Heartburn (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "Antacid preparations can be offered to women with troublesome symptoms that are not relieved by lifestyle modification. Magnesium carbonate and aluminium hydroxide preparations are probably unlikely to cause harm in recommended dosages.",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Heartburn\"",
+          "Output": "Counselling on antacid preparations to relieve heartburn",
+          "Reference(s)": "WHO ANC recommendations (2016): D.2. Heartburn (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "Non-pharmacological therapies, including muscle stretching, relaxation, heat therapy, dorsiflexion of the foot, and massage can be used for the relief of leg cramps in pregnancy",
+          "Inputs": "\"Current physiological symptoms\" = \"Leg cramps\"",
+          "Output": "Counselling on non-pharmacological treatment for the relief of leg cramps",
+          "Reference(s)": "WHO ANC recommendations (2016): D.3. Leg cramps (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "If leg cramps are not relieved with non-pharmacological measures, then give 300–360 mg magnesium per day in two or three divided doses; give calcium 1 g twice daily for two weeks",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Leg cramps\"",
+          "Output": "Counselling on magnesium and calcium to relieve leg cramps",
+          "Reference(s)": "WHO ANC recommendations (2016): D.3. Leg cramps (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Annotation(s)": "Regular exercise throughout pregnancy is recommended to prevent low back and pelvic pain. There are a number of different treatment options that can be used, such as physiotherapy, support belts and acupuncture, depending and based on a woman’s preferences and available options.",
+          "Inputs": "\"Current physiological symptoms\" = \"Low back pain\"",
+          "Output": "Counselling on regular exercise, physiotherapy, support belts and acupuncture to relieve low back and pelvic pain",
+          "Reference(s)": "WHO ANC recommendations (2016): D.4. Low back and pelvic pain (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "\"Current physiological symptoms\" = \"Pelvic pain\"",
+          "Output": "Counselling on regular exercise, physiotherapy, support belts and acupuncture to relieve low back and pelvic pain",
+          "Reference(s)": "WHO ANC recommendations (2016): D.4. Low back and pelvic pain (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Low back pain\"",
+          "Output": "Counselling on regular exercise, physiotherapy, support belts and acupuncture to relieve low back and pelvic pain"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Pelvic pain\"",
+          "Output": "Counselling on regular exercise, physiotherapy, support belts and acupuncture to relieve low back and pelvic pain"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "Dietary modifications to relieve constipation include promoting adequate intake of water and dietary fibre (found in vegetables, nuts, fruits and whole grains)",
+          "Inputs": "\"Current physiological symptoms\" = \"Constipation\"",
+          "Output": "Counselling on dietary modifications to relieve constipation",
+          "Reference(s)": "WHO ANC recommendations (2016): D.5. Constipation (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "Wheat bran or other fibre supplements can be used to relieve constipation, if dietary modifications are not enough, and if they are available and appropriate",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Constipation\"",
+          "Output": "Counselling on wheat bran or other fibre supplements to relieve constipation",
+          "Reference(s)": "WHO ANC recommendations (2016): D.5. Constipation (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Annotation(s)": "Non-pharmacological options, such as compression stockings, leg elevation and water immersion, can be used for the management of varicose veins and oedema in pregnancy, depending and based on a woman’s preferences and available options",
+          "Inputs": "\"Current physiological symptoms\" = \"Varicose veins\"",
+          "Output": "Counselling on non-pharmacological options for varicose veins and oedema",
+          "Reference(s)": "WHO ANC recommendations (2016): D.6. Varicose veins and oedema (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Inputs": "\"Current physiological symptoms\" = \"Oedema\"",
+          "Output": "Counselling on non-pharmacological options for varicose veins and oedema",
+          "Reference(s)": "WHO ANC recommendations (2016): D.6. Varicose veins and oedema (3)\nWHO consolidated self-care interventions guidelines (2019) (4)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Varicose veins\"",
+          "Output": "Counselling on non-pharmacological options for varicose veins and oedema"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms (see Annotations for pop-up message)",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Oedema\"",
+          "Output": "Counselling on non-pharmacological options for varicose veins and oedema"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Annotation(s)": "Please investigate any possible complications or onset of labour, related to low back and pelvic pain",
+          "Inputs": "\"Current physiological symptoms\" = \"Contractions\"",
+          "Output": "Investigate any possible complications or onset of labour",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): C-3 (3)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "Current physiological symptoms\" = \"Extreme pelvic pain, cannot walk (symphysis pubis dysfunction)\"",
+          "Output": "Investigate any possible complications or onset of labour",
+          "Reference(s)": "WHO ANC recommendations (2016): D.4. Low back and pelvic pain (3)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Contractions\"",
+          "Output": "Investigate any possible complications or onset of labour"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "Persistent physiological symptoms\" = \"Extreme pelvic pain, cannot walk (symphysis pubis dysfunction)\"",
+          "Output": "Investigate any possible complications or onset of labour"
+        },
+        {
+          "Action": "Conduct laboratory tests and imaging",
+          "Annotation(s)": "Woman has dysuria – please investigate urinary tract infection and treat if positive",
+          "Inputs": "\"Current physiological symptoms\" = \"Pain during urination (dysuria)\"",
+          "Output": "\"Urine test conducted\" OR \"Urine test ordered \"",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-114 (5)"
+        },
+        {
+          "Action": "Conduct laboratory tests and imaging",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Pain during urination (dysuria)\"",
+          "Output": "\"Urine test conducted\" OR \"Urine test ordered \""
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Annotation(s)": "Please investigate any possible complications, including thrombosis, related to varicose veins and oedema",
+          "Inputs": "\"Current physiological symptoms\" = \"Leg pain\"",
+          "Output": "Investigate any possible complications including thrombosis, related to varicose veins and oedema",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-128 (5)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "\"Current physiological symptoms\" = \"Leg redness\"",
+          "Output": "Investigate any possible complications including thrombosis, related to varicose veins and oedema",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Leg pain\"",
+          "Output": "Investigate any possible complications, including thrombosis, related to varicose veins and oedema"
+        },
+        {
+          "Action": "Conduct counselling on physiological symptoms",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Leg redness\"",
+          "Output": "Investigate any possible complications, including thrombosis, related to varicose veins and oedema"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Abnormal vaginal discharge\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-9 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Breathing difficulty\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-114, S-150 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Breathless during routine activities\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-114, S-150 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Cough lasting more than 3 weeks\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-114 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Fever\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-113 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Gets tired easily\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-150, S-151 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Headache\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-49 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Vaginal bleeding\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-21 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Vaginal discharge\"",
+          "Output": "N/A",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Current physiological symptoms\" = \"Visual disturbance\"",
+          "Output": "N/A",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): S-49 (5)"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Abnormal vaginal discharge\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Breathing difficulty\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Breathless during routine activities\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Cough lasting more than 3 weeks\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Fever\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Gets tired easily\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Headache\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Vaginal bleeding\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Vaginal discharge\"",
+          "Output": "N/A"
+        },
+        {
+          "Action": "Follow-up steps/investigations: clinician's discretion",
+          "Inputs": "\"Persistent physiological symptoms\" = \"Visual disturbance\"",
+          "Output": "N/A"
+        }
+      ],
+      "sheet": "ANC.DT.03 Check symptoms",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Inputs",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.04",
+        "ANC.DT.05"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.04",
+      "idsFromSheetName": [
+        "ANC.DT.04",
+        "ANC.DT.05"
+      ],
+      "idsFromSheetNote": [
+        "ANC.DT.04",
+        "ANC.DT.05"
+      ],
+      "metadata": {
+        "businessRule": "Depending on the results of some physical exams, additional examinations or repeat measurements are required",
+        "decisionId": "ANC.DT.04 Conducting physical exams",
+        "trigger": "ANC.B8 Conduct physical exam"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Measure BP again after 10–15 minutes rest",
+          "Annotations": "Given high values (SBP ≥ 140 or DBP ≥ 90) upon first measure, blood pressure should be measured again",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "Measure BP again after 10–15 minutes rest",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-51 (5)"
+        },
+        {
+          "Action": "Measure BP again after 10–15 minutes rest",
+          "Annotations": "Given high values (SBP ≥ 140 or DBP ≥ 90) upon first measure, blood pressure should be measured again",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "Measure BP again after 10–15 minutes rest",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-51 (5)"
+        },
+        {
+          "Action": "Measure temperature again",
+          "Annotations": "The health worker should retake the woman's temperature if the first reading is over 38°C",
+          "Inputs": "\"Body temperature\" ≥ 38°C",
+          "Output": "Measure temperature again",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-113 (5)"
+        },
+        {
+          "Action": "Check again after 10 minutes rest",
+          "Annotations": "The health worker should retake the woman's pulse rate if the first reading is lower than 60 or higher than 100 beats per minute",
+          "Inputs": "60 > Pulse rate > 100",
+          "Output": "Abnormal pulse rate",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-1 (5)"
+        },
+        {
+          "Action": "Conduct oximetry test",
+          "Annotations": "If the woman has an abnormal respiratory exam result or respiratory distress, conduct oximetry test",
+          "Inputs": "\"Respiratory exam result\" = \"Dyspnoea\"",
+          "Output": "Conduct oximetry test",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Conduct oximetry test",
+          "Inputs": "\"Respiratory exam result\" = \"Cough\"",
+          "Output": "Conduct oximetry test",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Conduct oximetry test",
+          "Inputs": "\"Respiratory exam result\" = \"Rapid breathing\"",
+          "Output": "Conduct oximetry test",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Conduct oximetry test",
+          "Inputs": "\"Respiratory exam result\" = \"Slow breathing\"",
+          "Output": "Conduct oximetry test",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Conduct oximetry test",
+          "Inputs": "\"Respiratory exam result\" = \"Wheezing\"",
+          "Output": "Conduct oximetry test",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Conduct oximetry test",
+          "Inputs": "\"Respiratory exam result\" = \"Rales\"",
+          "Output": "Conduct oximetry test",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Conduct oximetry test",
+          "Inputs": "\"Respiratory exam result\" = \"Other abnormal respiratory exam result (specify)\"",
+          "Output": "Conduct oximetry test",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Measure the fetal heart rate again",
+          "Annotations": "Fetal heart rate out of normal range (100–180) – please have the woman lay on her left side for 15 minutes and check again",
+          "Inputs": "100 bpm > Fetal heart rate > 180 bpm",
+          "Output": "100 bpm > Fetal heart rate > 180 bpm",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): C-89 (5)"
+        },
+        {
+          "Inputs": "Decision ID",
+          "Output": "ANC.DT.05 Evaluating labour"
+        },
+        {
+          "Inputs": "Business Rule",
+          "Output": "During a cervical exam, if cervical dilation is greater than 2 cm evaluate the possibility of labour"
+        },
+        {
+          "Inputs": "Trigger",
+          "Output": "ANC.B8 Conduct physical exam"
+        },
+        {
+          "Action": "Output",
+          "Annotations": "Action",
+          "Inputs": "Inputs",
+          "Reference(s)": "Annotations"
+        },
+        {
+          "Action": "Evaluate labour > 37 weeks",
+          "Annotations": "Evaluate labour > 37 weeks",
+          "Inputs": "\"Cervical dilation\" > 2 cm",
+          "Output": "\"Gestational age\" > 37 weeks",
+          "Reference(s)": "Cervix is more than 2 cm dilated: check for other signs and symptoms of labour (if GA is 37 weeks or later)"
+        },
+        {
+          "Action": "Evaluate labour < 37 week",
+          "Annotations": "Evaluate labour < 37 week",
+          "Inputs": "\"Cervical dilation\" > 2cm",
+          "Output": "\"Gestational age\" < 37 weeks",
+          "Reference(s)": "Cervix is more than 2 cm dilated: check for other signs and symptoms of pre-term labour and other related complications (if GA is less than 37 weeks)"
+        }
+      ],
+      "sheet": "ANC.DT.04-05 Physical exam",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Input(s)",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.06"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.06",
+      "idsFromSheetName": [
+        "ANC.DT.06"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "If the woman has any of the following physical exam results, refer to the hospital",
+        "decisionId": "ANC.DT.06 Physical symptoms and exam results requiring referral",
+        "trigger": "ANC.B8. Conduct physical exam"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct further investigation and, if necessary, refer urgently if treatment not available at your facility",
+          "Annotations": "Woman has a fever – provide treatment and refer urgently to hospital!\nProcedure:\n– Insert an IV line\n– Give fluids slowly",
+          "Input(s)": "\"Body temperature\" ≥ 38°C",
+          "Output": "\"Current physiological symptoms\" = \"Fever\"",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-113 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Annotations": "Abnormal pulse rate – refer for further investigation\nProcedure:\n– Check for fever, infection, respiratory distress, arrhythmia\n– Refer for further investigation",
+          "Input(s)": "60 bpm > \"Second pulse rate\" > 100 bpm",
+          "Output": "\"Current physiological symptoms\" = \"Abnormal pulse rate\"",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-1 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Annotations": "Woman has respiratory distress – refer urgently to the hospital!",
+          "Input(s)": "\"Respiratory exam result\" = \"Dyspnoea\"",
+          "Output": "\"Respiratory exam result\" = \"Dyspnoea\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Respiratory exam result\" = \"Cough\"",
+          "Output": "\"Respiratory exam result\" = \"Cough\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Respiratory exam result\" = \"Rapid breathing\"",
+          "Output": "\"Respiratory exam result\" = \"Rapid breathing\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Respiratory exam result\" = \"Slow breathing\"",
+          "Output": "\"Respiratory exam result\" = \"Slow breathing\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Respiratory exam result\" = \"Wheezing\"",
+          "Output": "\"Respiratory exam result\" = \"Wheezing\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Respiratory exam result\" = \"Rales\"",
+          "Output": "\"Respiratory exam result\" = \"Rales\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Respiratory exam result\" = \"Other abnormal respiratory exam result (specify)\"",
+          "Output": "\"Respiratory exam result\" = \"Other abnormal respiratory exam result (specify)\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-149 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Annotations": "Woman has low oximetry (<92%) – she should be referred urgently to the hospital",
+          "Input(s)": "\"Oximetry\" < 92%",
+          "Output": "\"Oximetry\" < 92",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-58 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Annotations": "Woman's cardiac condition is abnormal and she should be referred urgently to the hospital",
+          "Input(s)": "\"Cardiac exam result\" = \"Heart murmur\"",
+          "Output": "\"Cardiac exam result\" = \"Heart murmur\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-150 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Cardiac exam result\" = \"Weak pulse\"",
+          "Output": "\"Cardiac exam result\" = \"Weak pulse\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Sections S-1, S-150 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Cardiac exam result\" = \"Tachycardia\"",
+          "Output": "\"Cardiac exam result\" = \"Tachycardia\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Sections S-114, S-161 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Cardiac exam result\" = \"Bradycardia\"",
+          "Output": "\"Cardiac exam result\" = \"Bradycardia\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-150 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Cardiac exam result\" = \"Arrhythmia\"",
+          "Output": "\"Cardiac exam result\" = \"Arrhythmia\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-150 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Cardiac exam result\" = \"Cyanosis\"",
+          "Output": "\"Cardiac exam result\" = \"Cyanosis\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-150 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Cardiac exam result\" = \"Cold sweats\"",
+          "Output": "\"Cardiac exam result\" = \"Cold sweats\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-1 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Input(s)": "\"Cardiac exam result\" = \"Other abnormal cardiac exam result (specify)\"",
+          "Output": "\"Cardiac exam result\" = \"Other abnormal cardiac exam result (specify)\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-150 (5)"
+        },
+        {
+          "Action": "Conduct further investigation and, if necessary, refer urgently to a hospital",
+          "Annotations": "Woman's breast exam was abnormal and she should be referred to hospital for further investigation",
+          "Input(s)": "\"Breast exam result\" = \"Nodule\"",
+          "Output": "\"Breast exam result\" = \"Nodule\""
+        },
+        {
+          "Action": "Conduct further investigation and, if necessary, refer urgently to a hospital",
+          "Input(s)": "\"Breast exam result\" = \"Discharge\"",
+          "Output": "\"Breast exam result\" = \"Discharge\""
+        },
+        {
+          "Action": "Conduct further investigation and, if necessary, refer urgently to a hospital",
+          "Input(s)": "\"Breast exam result\" = \"Flushing\"",
+          "Output": "\"Breast exam result\" = \"Flushing\""
+        },
+        {
+          "Action": "Conduct further investigation and, if necessary, refer urgently to a hospital",
+          "Input(s)": "\"Breast exam result\" = \"Local pain\"",
+          "Output": "\"Breast exam result\" = \"Local pain\""
+        },
+        {
+          "Action": "Conduct further investigation and, if necessary, refer urgently to a hospital",
+          "Input(s)": "\"Breast exam result\" = \"Bleeding\"",
+          "Output": "\"Breast exam result\" = \"Bleeding\""
+        },
+        {
+          "Action": "Conduct further investigation and, if necessary, refer urgently to a hospital",
+          "Input(s)": "\"Breast exam result\" = \"Increased temperature\"",
+          "Output": "\"Breast exam result\" = \"Increased temperature\""
+        },
+        {
+          "Action": "Conduct further investigation and, if necessary, refer urgently to a hospital",
+          "Input(s)": "\"Breast exam result\" = \"Other breast exam result (specify)\"",
+          "Output": "\"Breast exam result\" = \"Other breast exam result (specify)\""
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Annotations": "Woman's abdominal exam was abnormal and she should be referred or further evaluated",
+          "Input(s)": "\"Abdominal exam result\" = \"Mass/tumour\"",
+          "Output": "\"Abdominal exam result\" = \"Mass/tumour\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B2.2 (2)\nManaging complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-139 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Abdominal exam result\" = \"Pain on superficial palpation\"",
+          "Output": "\"Abdominal exam result\" = \"Pain on superficial palpation\"",
+          "Reference(s)": "WHO ANC recommendations: B2.2 (2)\nManaging complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-138 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Abdominal exam result\" = \"Pain on deep palpation\"",
+          "Output": "\"Abdominal exam result\" = \"Pain on deep palpation\"",
+          "Reference(s)": "WHO ANC recommendations: B2.2 (2)\nManaging complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-138 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Abdominal exam result\" = \"Painful decompression\"",
+          "Output": "\"Abdominal exam result\" = \"Painful decompression\"",
+          "Reference(s)": "WHO ANC recommendations: B2.2 (2)\nManaging complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-138 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Abdominal exam result\" = \"Other abnormal abdominal exam result (specify)\"",
+          "Output": "\"Abdominal exam result\" = \"Other abnormal abdominal exam result (specify)\"",
+          "Reference(s)": "WHO ANC recommendations: B2.2 (2)\nManaging complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-138 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Abnormal vaginal discharge\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Abnormal vaginal discharge\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Sections S-9, S-43, S-114 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Evidence of amniotic fluid\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Evidence of amniotic fluid\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Sections S-51, C-91 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Foul-smelling vaginal discharge\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Foul-smelling vaginal discharge\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-9 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Clusters of erythematous papules\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Clusters of erythematous papules\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-128 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Vesicles\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Vesicles\""
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Genital ulcer\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Genital ulcer\"",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Genital pain\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Genital pain\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-9 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Tender bilateral inguinal and femoral lymphadenopathy\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Tender bilateral inguinal and femoral lymphadenopathy\""
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Cervical friability\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Cervical friability\""
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Mucopurulent cervicitis\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Mucopurulent cervicitis\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-161 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Tender unilateral lymphadenopathy\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Tender unilateral lymphadenopathy\""
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Curd-like vaginal discharge\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Curd-like vaginal discharge\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Sections S-9, S-43, S-114 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Other abnormal pelvic exam (visual) result (specify)\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Other abnormal pelvic exam (visual) result (specify)\"",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Section S-150 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Annotations": "Woman should be referred urgently if there is evidence of amniotic fluid, which could indicate the start of labour",
+          "Input(s)": "\"Pelvic exam result (visual)\" = \"Evidence of amniotic fluid\"",
+          "Output": "\"Pelvic exam result (visual)\" = \"Evidence of amniotic fluid\" - \"Gestational age\" < 37 weeks",
+          "Reference(s)": "Managing complications in pregnancy and childbirth guide (IMPAC) (2017): Sections S-51, C-91 (5)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Annotations": "If no fetal heartbeat is observed, inform the woman that there might be a problem and that she needs to be referred to the hospital for further examination and next steps.\n\nProcedure:\n– Inform the woman that you cannot find the heartbeat and need to refer her to check if there's a problem\n– Refer to hospital",
+          "Input(s)": "\"Fetal heartbeat present\" = FALSE",
+          "Output": "\"Fetal heartbeat present\" = FALSE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C7 (1)"
+        },
+        {
+          "Action": "Refer to a hospital",
+          "Annotations": "Fetal heart rate is abnormal after two readings: the woman should be referred to hospital",
+          "Input(s)": "100 bpm > \"Second fetal heart rate\" > 180 bpm",
+          "Output": "100 bpm > \"Second fetal heart rate\" > 180 bpm",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C7 (1)"
+        }
+      ],
+      "sheet": "ANC.DT.06 Physical exam refer",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Inputs",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.07",
+        "ANC.DT.08",
+        "ANC.DT.09",
+        "ANC.DT.10",
+        "ANC.DT.11",
+        "ANC.DT.12",
+        "ANC.DT.13",
+        "ANC.DT.14"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.07",
+      "idsFromSheetName": [
+        "ANC.DT.07",
+        "ANC.DT.08",
+        "ANC.DT.09",
+        "ANC.DT.10",
+        "ANC.DT.11",
+        "ANC.DT.12",
+        "ANC.DT.13",
+        "ANC.DT.14"
+      ],
+      "idsFromSheetNote": [
+        "ANC.DT.07",
+        "ANC.DT.08",
+        "ANC.DT.09",
+        "ANC.DT.10",
+        "ANC.DT.11",
+        "ANC.DT.12",
+        "ANC.DT.13"
+      ],
+      "metadata": {
+        "businessRule": "An ultrasound is recommended for all pregnant women before 24 weeks of gestation (early ultrasound). If there's no ultrasound available at that health-carte facility, the woman should be referred to another facility in which she can receive an ultrasound.",
+        "decisionId": "ANC.DT.07 Ultrasound recommendation",
+        "trigger": "During woman’s history/profile or lab and imaging tests"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct ultrasound at the health-care facility or the referral facility",
+          "Annotations": "An ultrasound is recommended for all women before 24 weeks gestation",
+          "Inputs": "\"Gestational age\" < 24 weeks",
+          "Output": "\"Ultrasound scan required\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.2.4. Ultrasound scan (3)"
+        },
+        {
+          "Action": "Conduct ultrasound at the health-care facility or the referral facility optional if deemed necessary by the health worker",
+          "Annotations": "An ultrasound is recommended for all women even after 24 weeks gestation if deemed necessary (e.g. to identify the number of fetuses, fetal presentation or placenta location)",
+          "Inputs": "\"Gestational age\" ≥ 24 weeks",
+          "Output": "\"Ultrasound scan required\" = Optional",
+          "Reference(s)": "WHO ANC recommendations (2016): B.2.4. Ultrasound scan (3)"
+        },
+        {
+          "Action": "Conduct ultrasound scan",
+          "Annotations": "An ultrasound is recommended for all women before 24 weeks gestation or even after if deemed necessary (e.g. to identify the number of fetuses, fetal presentation or placenta location). \nAn early ultrasound is key to estimate gestational age, improve detection of fetal anomalies and multiple fetuses, reduce induction of labour for post-term pregnancy, and improve a woman’s pregnancy experience.",
+          "Inputs": "\"Ultrasound scan conducted\" = FALSE",
+          "Output": "\"Referral for screening including diagnostics and lab testing\" = FALSE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.2.4. Ultrasound scan (3)"
+        },
+        {
+          "Action": "Refer to a facility with ultrasound equipment",
+          "Annotations": "If an ultrasound cannot be conducted at the health-care facility, the woman should be referred to another health-care facility in which she can receive an ultrasound. \nAn ultrasound is recommended for all women before 24 weeks gestation or even after if deemed necessary (e.g. to identify the number of fetuses, fetal presentation or placenta location). \nAn early U/S is key to estimate gestational age, improve detection of fetal anomalies and multiple fetuses, reduce induction of labour for post-term pregnancy, and improve a woman’s pregnancy experience.",
+          "Inputs": "\"Ultrasound scan conducted\" = FALSE",
+          "Output": "\"Referral for screening including diagnostics and lab testing\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.2.4. Ultrasound scan (3)"
+        },
+        {
+          "Action": "Ultrasound scan is optional",
+          "Annotations": "An ultrasound is recommended for all women before 24 weeks gestation or even after if deemed necessary (e.g. to identify the number of fetuses, fetal presentation or placenta location)",
+          "Inputs": "\"Ultrasound scan conducted\" = FALSE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.2.4. Ultrasound scan (3)"
+        },
+        {
+          "Action": "Ultrasound scan is optional",
+          "Annotations": "An ultrasound is recommended for all women before 24 weeks gestation or even after if deemed necessary (e.g. to identify the number of fetuses, fetal presentation or placenta location)",
+          "Inputs": "\"Ultrasound scan conducted\" = FALSE",
+          "Reference(s)": "WHO ANC recommendations: B.2.4. Ultrasound scan (3)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Action": "Action",
+          "Annotations": "Annotations",
+          "Inputs": "Inputs",
+          "Output": "Output",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "Conduct HIV test",
+          "Annotations": "In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all ANC settings\n\nAn HIV test is required for all pregnant women at the first contact in pregnancy if the HIV prevalence in the pregnant woman population is 5% or higher.",
+          "Inputs": "\"Population prevalence of HIV in pregnant women\" ≥ 5%",
+          "Output": "\"HIV test required\" = TRUE - First Contact",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Action": "Conduct HIV test",
+          "Annotations": "Another HIV test is required for all pregnant women at the first contact of the 3rd trimester (28 weeks), if the HIV prevalence in the pregnant woman population is 5% or higher",
+          "Inputs": "\"Population prevalence of HIV in pregnant women\" ≥ 5%",
+          "Output": "\"HIV test required\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Action": "HIV test is optional",
+          "Annotations": "In low-prevalence settings, provider-initiated testing and counselling (PITC) can be considered for pregnant women in ANC settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems",
+          "Inputs": "\"Population prevalence of HIV in pregnant women\" < 5%",
+          "Output": "\"HIV test required\" = OPTIONAL",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Action": "HIV test is not required",
+          "Annotations": "A test is not required if the woman is already confirmed HIV positive",
+          "Inputs": "\"HIV status\" = \"HIV positive\"",
+          "Output": "\"HIV test required\" = FALSE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Action": "Action",
+          "Annotations": "Annotations",
+          "Inputs": "Inputs",
+          "Output": "Output",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "Conduct hepatitis B test",
+          "Annotations": "Hepatitis B testing is recommended for at-risk women.\nHBsAg laboratory-based immunoassay is the preferred method for testing for Hep B infection in pregnancy; if immunoassay is not available, HBsAg rapid diagnostic test (RDT) is recommended over dried blood spot (DBS) HBsAg testing.",
+          "Inputs": "\"Population prevalence of hepatitis B\" ≥ 2%",
+          "Output": "\"Hepatitis B test required\" = TRUE",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017): Recommendation 2 (4)"
+        },
+        {
+          "Action": "Conduct hepatitis B test",
+          "Inputs": "\"HIV status\" = \"HIV positive\"",
+          "Output": "\"Hepatitis B test required\" = TRUE",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017): Recommendation (4)"
+        },
+        {
+          "Action": "Conduct hepatitis B test",
+          "Inputs": "Current alcohol and/or other substance use\" = \"Injectable drugs\"",
+          "Output": "\"Hepatitis B test required\" = TRUE",
+          "Reference(s)": "Guidelines on hepatitis B and C testing 92017): Recommendation 11 (4)"
+        },
+        {
+          "Action": "Conduct hepatitis B test",
+          "Inputs": "\"Occupation\" = \"Employment that puts woman at increased risk for HIV (e.g. sex worker)\"",
+          "Output": "\"Hepatitis B test required\" = TRUE",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017): Recommendation 14 (4)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Action": "Annotations",
+          "Inputs": "Input",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "In settings where the proportion of HCV antibody seroprevalence in the general population is 2% or higher, then a hepatitis C test is required.\n\nAnti-HCV laboratory-based immunoassay is the preferred method for testing for Hep C infection in pregnancy; if immunoassay is not available, anti-HCV rapid diagnostic test (RDT) is recommended over dried blood spot (DBS) anti-HCV testing.",
+          "Inputs": "\"Population prevalence of hepatitis C\" ≥ 2%",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017): Recommendation 6.1 (4)"
+        },
+        {
+          "Action": "If the woman is HIV positive, then a hepatitis C test is required.\n\nAnti-HCV laboratory-based immunoassay is the preferred method for testing for Hep C infection in pregnancy; if immunoassay is not available, anti-HCV rapid diagnostic test (RDT) is recommended over dried blood spot (DBS) anti-HCV testing",
+          "Inputs": "\"HIV status\" = \"HIV positive\"",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017): Recommendation 6.1 (4)"
+        },
+        {
+          "Action": "If the woman injects drugs, then a hepatitis C test is required.\n\nAnti-HCV laboratory-based immunoassay is the preferred method for testing for Hep C infection in pregnancy; if immunoassay is not available, anti-HCV rapid diagnostic test (RDT) is recommended over dried blood spot (DBS) anti-HCV testing.",
+          "Inputs": "\"Current alcohol and/or other substance use\" = \"Injectable drugs\"",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017): Recommendation 6.1 (4)"
+        },
+        {
+          "Action": "If a woman is a sex worker, then a hepatitis C test is required.\n\nAnti-HCV laboratory-based immunoassay is the preferred method for testing for Hep C infection in pregnancy; if immunoassay is not available, anti-HCV rapid diagnostic test (RDT) is recommended over dried blood spot (DBS) anti-HCV testing.",
+          "Inputs": "\"Occupation\" = \"Informal employment (sex worker)\"",
+          "Reference(s)": "Guidelines on hepatitis B and C testing (2017): Recommendation 6.1 (4)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Action": "Annotations",
+          "Inputs": "Input",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "A syphilis test is recommended for all pregnant women at the first contact",
+          "Inputs": "\"ANC contact number\" = 1",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Action": "A syphilis test is recommended again at the first contact of 3rd trimester (28 weeks)",
+          "Inputs": "\"Gestational age\" ≥ 29 weeks",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Action": "Women who are already confirmed positive for syphilis do not need to be tested",
+          "Inputs": "\"Syphilis diagnosis\" = \"Syphilis positive\"",
+          "Output": "Provide counselling and  treatment",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Inputs": "Input",
+          "Output": "Action(s)",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Inputs": "\"Current physiological symptoms\" = \"Pain during urination (dysuria)\"",
+          "Output": "Conduct urine test",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-51 (3)"
+        },
+        {
+          "Inputs": "\"Repeat systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "Do urine dipstick test for protein",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-51 (3)"
+        },
+        {
+          "Inputs": "\"Repeat diastolic blood pressure\" ≥ 90mmHg",
+          "Output": "Do urine dipstick test for protein",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-51 (3)"
+        },
+        {
+          "Inputs": "\"ANC contact number\" = 1",
+          "Output": "Conduct urine test",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Gestational age\" ≥ 26 weeks",
+          "Output": "Conduct urine test",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Gestational age\" ≥ 34 weeks",
+          "Output": "Conduct urine test",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Action": "Annotations",
+          "Inputs": "Input",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "In settings where the tuberculosis (TB) prevalence in the general population is 100/100,000 persons or higher or in settings with sub-populations that have very poor access to health care, or if the woman is HIV positive, TB screening is recommended",
+          "Inputs": "\"Population prevalence of tuberculosis (TB)\" ≥ 100 per 100 000 population",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.8. Tuberculosis (TB) (3)"
+        },
+        {
+          "Inputs": "\"HIV status\" = \"HIV positive\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.8. Tuberculosis (TB) (3)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Action": "Annotations",
+          "Inputs": "Inputs",
+          "Reference(s)": "References"
+        },
+        {
+          "Action": "Hematocrit levels too low!",
+          "Inputs": "\"Hematocrit (Ht)\" < 20%",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Sections S-7, S-47, S-151 (5)"
+        },
+        {
+          "Action": "White blood cell count too high!",
+          "Inputs": "\"White blood cell (WBC) count\" > 16 000",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-151 (5)"
+        },
+        {
+          "Action": "Platelet count too low!",
+          "Inputs": "\"Platelet count\" < 100 000 cells/microlitre (μl)",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Section S-53 (5)"
+        }
+      ],
+      "sheet": "ANC.DT.07–14 Laboratory&imaging",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Input",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.15"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.15",
+      "idsFromSheetName": [
+        "ANC.DT.15"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Depending on the woman's behaviours reported during the first contact and the woman's reported persistent behaviours, additional counselling may or may not be required",
+        "decisionId": "ANC.DT.15 Behaviour counselling required",
+        "trigger": "ANC.B10. Counselling, in-facility management & treatment"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Annotations": "Lowering daily caffeine intake during pregnancy is recommended to reduce the risk of pregnancy loss and low-birth-weight neonates.\n\nThis includes any product, beverage or food containing caffeine (e.g. brewed coffee, tea, cola-type soft drinks, caffeinated energy drinks, chocolate, caffeine tablets); caffeine-containing teas (black tea and green tea) and soft drinks (colas and iced tea) usually contain less than 50 mg per 250 ml serving",
+          "Input": "\"Daily caffeine intake\" = \"More than 2 cups of coffee (brewed, filter, instant or espresso)\"",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "\"Daily caffeine intake\" = \"More than 4 cups of tea\"",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "\"Daily caffeine intake\" = \"More than 12 bars (50g) of chocolate\"",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "\"Daily caffeine intake\" = \"More than one can of soda or energy drink\"",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "\"Daily caffeine intake\" = \"None of the above daily caffeine intake\"",
+          "Output": "Conduct counselling on caffeine reduction"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "IF \"Daily caffeine intake\" = \"More than 2 cups of coffee (brewed, filter, instant, or espresso)\" ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "IF  \"Daily caffeine intake\" = \"More than 4 cups of tea\" ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "IF \"Daily caffeine intake\" = \"More than 12 bars (50 g) of chocolate\" ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "IF \"Daily caffeine intake\" = \"More than one can of soda or energy drink\" ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "IF \"Daily caffeine intake\" = \"None of the above daily caffeine intake\" ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on caffeine reduction",
+          "Input": "\"Persistant behaviours\" = \"High caffeine intake\"",
+          "Output": "Conduct counselling on caffeine reduction",
+          "Reference(s)": "WHO ANC recommendations (2016): A.10. Restricting caffeine intake (3)"
+        },
+        {
+          "Action": "Conduct counselling on tobacco cessation",
+          "Annotations": "Health-care providers should routinely offer advice and psychosocial interventions for tobacco cessation to all pregnant women who are either current tobacco users or recent tobacco quitters",
+          "Input": "\"Tobacco use\" = TRUE",
+          "Output": "Conduct counselling on tobacco cessation",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (3)"
+        },
+        {
+          "Action": "Conduct counselling on tobacco cessation",
+          "Input": "IF \"Tobacco use\" = TRUE ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on tobacco cessation",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (3)"
+        },
+        {
+          "Action": "Conduct counselling on tobacco cessation",
+          "Input": "\"Recently quit tobacco products\" = TRUE",
+          "Output": "Conduct counselling on tobacco cessation",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (3)"
+        },
+        {
+          "Action": "Conduct counselling on tobacco cessation",
+          "Input": "IF \"Recently quit tobacco products\" = TRUE ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on tobacco cessation",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (3)"
+        },
+        {
+          "Action": "Conduct counselling on tobacco cessation",
+          "Input": "\"Persistant behaviours\" = \"Current tobacco use or recently quit\"",
+          "Output": "Conduct counselling on tobacco cessation",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (3)"
+        },
+        {
+          "Action": "Conduct counselling on second-hand smoke",
+          "Annotations": "Provide pregnant women, their partners and other household members with advice and information about the risks of second-hand smoke (SHS) exposure from all forms of smoked tobacco, as well as strategies to reduce SHS in the home",
+          "Input": "\"Exposure to second\"hand smoke\" = TRUE",
+          "Output": "Conduct counselling on second-hand smoke",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (3)"
+        },
+        {
+          "Action": "Conduct counselling on second-hand smoke",
+          "Input": "IF \"Exposure to second-hand smoke\" = TRUE ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on second-hand smoke",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (3)"
+        },
+        {
+          "Action": "Conduct counselling on second-hand smoke",
+          "Input": "\"Persistent behaviours\" = \"Exposure to second-hand smoke in the home\"",
+          "Output": "Conduct counselling on second-hand smoke",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5. Tobacco use (3)"
+        },
+        {
+          "Action": "Conduct counselling on condom use",
+          "Annotations": "Advise to use condoms to prevent Zika, HIV and other STIs; if necessary, reassure it is OK to continue to have sex during pregnancy",
+          "Input": "\"Contraceptive use of male condoms\" = FALSE",
+          "Output": "Conduct counselling on condom use",
+          "Reference(s)": "Pregnancy management with Zika (2017) (19)"
+        },
+        {
+          "Action": "Conduct counselling on condom use",
+          "Input": "\"Contraceptive use of female condoms\" = FALSE",
+          "Output": "Conduct counselling on condom use"
+        },
+        {
+          "Action": "Conduct counselling on condom use",
+          "Input": "IF \"Contraceptive use of male condoms\" = FALSE ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on condom use"
+        },
+        {
+          "Action": "Conduct counselling on condom use",
+          "Input": "IF \"Contraceptive use of female condoms\" = FALSE ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on condom use"
+        },
+        {
+          "Action": "Conduct counselling on condom use",
+          "Input": "\"Persistent behaviours\" = \"No condom use during sex\"",
+          "Output": "Conduct counselling on condom use"
+        },
+        {
+          "Action": "Conduct counselling on alcohol/substance use",
+          "Annotations": "Health-care providers should at the earliest opportunity advise pregnant women dependent on alcohol or drugs to cease their alcohol or drug use and offer, or refer them to, detoxification services under medical supervision, where necessary and applicable",
+          "Input": "\"Current alcohol and/or other substance use\" = \"Alcohol\"",
+          "Output": "Conduct counselling on alcohol/substance use",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.6. Substance use (3)"
+        },
+        {
+          "Action": "Conduct counselling on alcohol/substance use",
+          "Input": "IF  \"Current alcohol and/or other substance use\" = \"Alcohol\" ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on alcohol/substance use",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.6. Substance use (3)"
+        },
+        {
+          "Action": "Conduct counselling on alcohol/substance use",
+          "Input": "\"Persistent behaviours\" = \"Alcohol use\"",
+          "Output": "Conduct counselling on alcohol/substance use",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.6. Substance use (3)"
+        },
+        {
+          "Action": "Conduct counselling on alcohol/substance use",
+          "Input": "\"Current alcohol and/or other substance use\" = \"Marijuana\" AND/OR \"Cocaine\" AND/OR \"Crack\" AND/OR \"Injectable drugs\" AND/OR \"Other substance use (specify)\"",
+          "Output": "Conduct counselling on alcohol/substance use",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.6. Substance use (3)"
+        },
+        {
+          "Action": "Conduct counselling on alcohol/substance use",
+          "Input": "IF \"Current alcohol and/or other substance use\" = \"Marijuana\" AND/OR \"Cocaine\" AND/OR \"Crack\" AND/OR \"Injectable drugs\" AND/OR \"Other substance use (specify)\" ON MORE THAN ONE CONTACT",
+          "Output": "Conduct counselling on alcohol/substance use",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.6. Substance use (3)"
+        },
+        {
+          "Action": "Conduct counselling on alcohol/substance use",
+          "Input": "\"Persistent behaviours\" = \"Substance use\"",
+          "Output": "Conduct counselling on alcohol/substance use",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.6. Substance use (3)"
+        }
+      ],
+      "sheet": "ANC.DT.15 Behaviour counselling",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Inputs",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.16"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.16",
+      "idsFromSheetName": [
+        "ANC.DT.16"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "ALL women should have \"Healthy eating and keeping physically active counselling\" with guidance on nutrition and exercise. If a woman is classified as \"underweight\" AND she is part of a population whereby the prevalence of undernourishment is greater than or equal to 20%, then additional dietary counselling is needed.",
+        "decisionId": "ANC.DT.16 Dietary counselling",
+        "trigger": "ANC.B10. Counselling, in-facility management & treatment"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct counselling on dietary interventions",
+          "Annotations": "Increase daily energy and protein intake to reduce the risk of low-birth-weight neonates\n\n[Protein Sources and Energy Sources]",
+          "Inputs": "\"Population prevalence of undernourishment\" ≥ 20%",
+          "Output": "Counselling on increasing daily energy and protein intake",
+          "Reference(s)": "WHO ANC recommendations (2016): A1.2. Dietary interventions (3)"
+        },
+        {
+          "Action": "Conduct counselling on dietary interventions",
+          "Annotations": "Balanced energy and protein dietary supplementation is recommended for pregnant women to reduce the risk of stillbirths and small-for-gestational-age neonates",
+          "Inputs": "\"Population prevalence of undernourishment\" ≥ 20%",
+          "Output": "Counselling on balanced energy and protein dietary supplementation",
+          "Reference(s)": "WHO ANC recommendations (2016): A1.3. Dietary interventions (3)"
+        },
+        {
+          "Inputs": "Dietary supplements NOT recommended include:",
+          "Output": "Reference(s)"
+        },
+        {
+          "Inputs": "– High protein supplement \n– Zinc supplement\n– Vitamin B6 supplement: Moderate certainty evidence shows that vitamin B6 (pyridoxine) probably provides some relief for nausea during pregnancy\n– Vitamins C and E supplement: Vitamin C is important for improving the bioavailability of oral iron – low-certainty evidence on vitamin C alone suggests that it may prevent pre-labour rupture of membranes (PROM); however, it is relatively easy to consume sufficient quantities of vitamin C from food sources\n– Vitamin D supplement: Pregnant women should be advised that sunlight is the most important source of vitamin D; for pregnant women with documented vitamin D deficiency, vitamin D supplements may be given at the current recommended nutrient intake (RNI) of 200 IU (5 μg) per day",
+          "Output": "WHO ANC recommendations (2016): A.1.4. Dietary interventions (3)"
+        },
+        {
+          "Output": "WHO ANC recommendations (2016): A.5. Zinc supplements (3)"
+        },
+        {
+          "Output": "WHO ANC recommendations (2016): A.6. Multiple micronutrient supplements (3)"
+        },
+        {
+          "Output": "WHO ANC recommendations (2016): A.7. Vitamin B6 (pyridoxine) supplements (3)"
+        },
+        {
+          "Output": "WHO ANC recommendations (2016): A.8. Vitamin E and C supplements (3)"
+        },
+        {
+          "Output": "WHO ANC recommendations (2016): A.9. Vitamin D supplements (3)"
+        }
+      ],
+      "sheet": "ANC.DT.16 Dietary counselling",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Inputs",
+        "Output",
+        "Action",
+        "Annotations",
+        "References"
+      ],
+      "coversIds": [
+        "ANC.DT.17",
+        "ANC.DT.18",
+        "ANC.DT.19",
+        "ANC.DT.20",
+        "ANC.DT.21",
+        "ANC.DT.22",
+        "ANC.DT.23",
+        "ANC.DT.24"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.17",
+      "idsFromSheetName": [
+        "ANC.DT.17",
+        "ANC.DT.18",
+        "ANC.DT.19",
+        "ANC.DT.20",
+        "ANC.DT.21",
+        "ANC.DT.22",
+        "ANC.DT.23",
+        "ANC.DT.24"
+      ],
+      "idsFromSheetNote": [
+        "ANC.DT.17",
+        "ANC.DT.18",
+        "ANC.DT.19",
+        "ANC.DT.20",
+        "ANC.DT.21",
+        "ANC.DT.22",
+        "ANC.DT.23",
+        "ANC.DT.24"
+      ],
+      "metadata": {
+        "businessRule": "If the woman presents with any of the following symptoms and/or test results, conduct counselling and referral as needed",
+        "decisionId": "ANC.DT.17 Pre-eclampsia, severe pre-eclampsia and hypertension diagnosis",
+        "trigger": "ANC.B10.4. Diagnosis and treatment"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Refer urgently to a hospital",
+          "Annotations": "Symptom(s) of severe pre-eclampsia! Refer urgently to hospital!\nWoman has hypertension. If she is experiencing a symptom of severe pre-eclampsia, then refer urgently to the hospital for further investigation and management.\n\nProcedure\n– Give magnesium sulphate\n– Give appropriate anti-hypertensives\n– Revise the birth plan\n– Refer urgently to hospital",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-12 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-13 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-14 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-15 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-16 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-17 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-18 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-19 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-20 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-21 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-21 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-21 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-21 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-21 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Systolic blood pressure\" ≥ 140 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-21 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 90 mmHg",
+          "Output": "\"Severe pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-53, Table S-21 (5)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Annotations": "Pre-eclampsia diagnosis! Refer to hospital and revise birth plan.\nWoman has pre-eclampsia – SBP of 140 mmHg or above and/or DBP of 90 mmHg or above and proteinuria 2+ and no symptom of severe pre-eclampsia.\n\nProcedure: \n– Refer to hospital \n– Revise the birth plan",
+          "Inputs": "\"Systolic blood pressure\" ≤ 140 mmHg",
+          "Output": "\"Pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1) \nManaging complications guide (IMPAC) (2017): Section S-52, Table S-12 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 6, 7 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Systolic blood pressure\" > 160 mmHg",
+          "Output": "\"Pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1) \nManaging complications guide (IMPAC) (2017): Section S-52, Table S-12 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 6, 7 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "90 mmHg ≤ \"Diastolic blood pressure\" < 110 mmHg",
+          "Output": "\"Pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-52, Table S-12 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 6, 7 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "140 mmHg ≤ \"Systolic blood pressure\" < 160 mmHg",
+          "Output": "\"Pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-52, Table S-12 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 6, 7 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "90 mmHg ≤ \"Diastolic blood pressure\" < 110 mmHg",
+          "Output": "\"Pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-52, Table S-12 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 6, 7 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "140 mmHg ≤ \"Systolic blood pressure\" < 160 mmHg",
+          "Output": "\"Pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-52, Table S-12 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 6, 7 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "90 mmHg ≤ \"Diastolic blood pressure\" < 110 mmHg",
+          "Output": "\"Pre-eclampsia\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): recommendation C3 (1)\nManaging complications guide (IMPAC) (2017): Section S-52, Table S-12 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 6, 7 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Annotations": "Woman has severe hypertension. If SBP is 160 mmHg or higher and/or DBP is 110 mmHg or higher, then refer urgently to the hospital for further investigation and management.",
+          "Inputs": "\"Systolic blood pressure\" ≥ 160 mmHg",
+          "Output": "\"Severe hypertension\" = TRUE",
+          "References": "Managing complications guide (IMPAC) (2017): S-61 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 4 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 110 mmHg",
+          "Output": "\"Severe hypertension\" = TRUE"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Annotations": "Woman has severe hypertension. If SBP is 160 mmHg or higher and/or DBP is 110 mmHg or higher, then refer urgently to the hospital for further investigation and management.",
+          "Inputs": "\"Systolic blood pressure\" ≥ 160 mmHg",
+          "Output": "\"Severe hypertension\" = TRUE",
+          "References": "Managing complications guide (IMPAC) (2017): S-61 (5)\nWHO pre-eclampsia and eclampsia recommendations (2011): 4 (7)"
+        },
+        {
+          "Action": "Refer urgently to a hospital",
+          "Inputs": "\"Diastolic blood pressure\" ≥ 110 mmHg",
+          "Output": "\"Severe hypertension\" = TRUE"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Annotations": "Woman has hypertension – SBP of 140 mmHg or higher and/or DBP of 90 mmHg or higher and no proteinuria.\n\nCounselling:\n– Advice to reduce workload and to rest\n– Advise on danger signs\n– Reassess at the next contact or in 1 week if 8 months pregnant\n– If hypertension persists after 1 week or at next contact, refer to hospital or discuss case with the doctor, if available",
+          "Inputs": "\"Existing chronic health conditions\" = \"Hypertension\"",
+          "Output": "\"Existing chronic health conditions\" = \"Hypertension\"",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C3 (1)"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Inputs": "140 mmHg ≤ \"Systolic blood pressure\" < 160 mmHg",
+          "Output": "\"Hypertension\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C3 (1)"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Inputs": "90 mmHg ≤ \"Diastolic blood pressure\" < 110 mmHg",
+          "Output": "\"Hypertension\" = TRUE"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Inputs": "140 mmHg ≤ \"Systolic blood pressure\" < 160 mmHg",
+          "Output": "\"Hypertension\" = TRUE"
+        },
+        {
+          "Action": "Conduct hypertension counselling",
+          "Inputs": "90 mmHg ≤ \"Diastolic blood pressure\" < 110 mmHg",
+          "Output": "\"Hypertension\" = TRUE",
+          "References": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C3 (1)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Inputs": "Input",
+          "Output": "Annotations"
+        },
+        {
+          "Inputs": "\"HIV test result\" = \"Inconclusive\"",
+          "Output": "HIV test inconclusive, refer for further testing.\n\"In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all antenatal care settings. In low-prevalence settings, PITC can be considered for pregnant women in antenatal care settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems\" (2)"
+        },
+        {
+          "Inputs": "\"HIV test result\" = \"HIV positive\"",
+          "Output": "– Counsel for HIV positive test \n– Refer for further testing and confirmation\n– Refer for HIV services \n– Advise on opportunistic infections and need to seek medical help\n– Proceed with systematic screening for active TB\n\"In high-prevalence settings, provider-initiated testing and counselling (PITC) for HIV should be considered a routine component of the package of care for pregnant women in all antenatal care settings. In low-prevalence settings, PITC can be considered for pregnant women in antenatal care settings as a key component of the effort to eliminate mother-to-child transmission of HIV, and to integrate HIV testing with syphilis, viral or other key tests, as relevant to the setting, and to strengthen the underlying maternal and child health systems\" (2)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Inputs": "Input",
+          "Output": "Annotations"
+        },
+        {
+          "Inputs": "\"Hepatitis B test result\" = \"Hepatitis B negative\"",
+          "Output": "Counselling:\n– Provide post-testing counselling\n– Advise retesting and immunisation if ongoing risk or known exposure"
+        },
+        {
+          "Inputs": "\"Hepatitis B test result\" = \"Hepatitis B positive\"",
+          "Output": "Counseling:\n– Provide post-testing counselling\n– Request confirmatory nucleic acid testing (NAT)\n– Refer to hospital"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Inputs": "Input",
+          "Output": "Annotations"
+        },
+        {
+          "Inputs": "\"Hepatitis C test result\" = \"Hepatitis C positive\"",
+          "Output": "Counseling:\n– Provide post-testing counselling\n– Request confirmatory nucleic acid testing (NAT)\n– Refer to hospital"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Inputs": "Inputs",
+          "Output": "Action",
+          "References": "Reference(s)"
+        },
+        {
+          "Inputs": "\"Population prevalence of syphilis in pregnant women\" ≥ 5%",
+          "Output": "Conduct syphilis counselling and further testing",
+          "References": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Inputs": "\"Population prevalence of syphilis in pregnant women\" ≥ 5%",
+          "Output": "Conduct syphilis counselling and further testing",
+          "References": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Inputs": "\"Population prevalence of syphilis in pregnant women\" < 5%",
+          "Output": "Conduct syphilis counselling and further testing",
+          "References": "WHO ANC recommendations (2016): B.1.7. Human immunodeficiency virus (HIV) and syphilis (3)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Inputs": "Input",
+          "Output": "Annotations",
+          "References": "Reference(s)"
+        },
+        {
+          "Inputs": "\"Midstream urine culture (recommended)\" = \"Positive – any agent\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Midstream urine culture (recommended)\" = \"Positive – Group B Streptococcus (GBS)\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Midstream urine Gram-staining\" = \"Positive\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Urine dipstick result – nitrites\" = \"+\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Urine dipstick result – nitrites\" = \"++\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Urine dipstick result – nitrites\" = \"+++\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Urine dipstick result – nitrites\" = \"++++\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Urine dipstick result – leukocytes\" = \"+\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Urine dipstick result – leukocytes\" = \"++\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Urine dipstick result – leukocytes\" = \"+++\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Urine dipstick result – leukocytes\" = \"++++\"",
+          "Output": "A woman is considered to have ASB if she has one of the following test results:\n– Positive culture (> 100,000 bacteria/ml)\n– Gram-staining positive\n– Urine dipstick test positive (nitrites or leukocytes)\n\nSeven-day antibiotic regimen is recommended for all pregnant women with asymptomatic bacteriuria (ASB) to prevent persistent bacteriuria, preterm birth and low birth weight.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "\"Midstream urine culture (recommended)\" = \"Positive – Group B Streptococcus (GBS)\"",
+          "Output": "Pregnant women with Group B Streptococcus (GBS) colonization should receive intrapartum antibiotic administration to prevent early neonatal GBS infection.\n\"Midstream urine culture is the recommended method for diagnosing asymptomatic bacteriuria (ASB) in pregnancy. In settings where urine culture is not available, on-site midstream urine Gramstaining is recommended over the use of dipstick tests as the method for diagnosing ASB in pregnancy\" (2)",
+          "References": "WHO ANC recommendations (2016): B.1.2. Asymptomatic bacteriuria (ASB) (3)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Annotations": "Reference(s)",
+          "Inputs": "Input",
+          "Output": "Annotations"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "92 mg/dL ≤ \"Fasting plasma glucose results\" < 126 mg/dL",
+          "Output": "– The woman has gestational diabetes mellitus (GDM) if her fasting plasma glucose is 92–125 mg/dL\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "92 mg/dL ≤ \"75 g OGTT – fasting glucose results\" < 126 mg/dL",
+          "Output": "– The woman has gestational diabetes mellitus (GDM) if her 75 g OGTT – fasting glucose is 92–125 mg/dL\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "180 mg/dL ≤ \"75 g OGTT – 1 hour results\" < 200 mg/dL",
+          "Output": "– The woman has gestational diabetes mellitus (GDM) if her 75g OGTT – 1 hour is 180–199 mg/dL\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "153 mg/dL ≤ \"75 g OGTT – 2 hours results\" < 200 mg/dL",
+          "Output": "– The woman has gestational diabetes mellitus (GDM) if her 75 g OGTT – 2 hours is 153–199 mg/dL\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "\"Fasting plasma glucose results\" ≥ 126 mg/dL",
+          "Output": "– The woman has diabetes mellitus (DM) in pregnancy if her fasting plasma glucose is 126 mg/dL or higher\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "\"75 g OGTT – fasting glucose results\" ≥ 126 mg/dL",
+          "Output": "– The woman has diabetes mellitus (DM) in pregnancy if her 75 g OGTT – fasting glucose is 126 mg/dL or higher\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "\"75 g OGTT – 1 hour results\" ≥ 200 mg/dL",
+          "Output": "– The woman has diabetes mellitus (DM) in pregnancy if her 75 g OGTT – 1 hour is 200 mg/dL or higher\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "\"75 g OGTT – 2 hours results\" ≥ 200 mg/dL",
+          "Output": "– The woman has diabetes mellitus (DM) in pregnancy if her fasting 75 g OGTT – 2 hours is 200 mg/dL or higher\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.4. Gestational diabetes mellitus (GDM) (3)",
+          "Inputs": "\"Random plasma glucose test results\" ≥ 200 mg/dL",
+          "Output": "– The woman has diabetes mellitus (DM) in pregnancy if her random plasma glucose level is 200 mg/dL or higher\n– Woman with hyperglycemia, reassert dietary intervention and refer to high-level care\n\"Hyperglycaemia first detected at any time during pregnancy should be classified as either gestational diabetes mellitus (GDM) or diabetes mellitus in pregnancy, according to WHO criteria\" (2)"
+        },
+        {
+          "Inputs": "Decision ID"
+        },
+        {
+          "Inputs": "Business Rule"
+        },
+        {
+          "Inputs": "Trigger"
+        },
+        {
+          "Annotations": "Reference(s)",
+          "Inputs": "Input",
+          "Output": "Annotations"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): B.1.8. Tuberculosis (TB) (3)",
+          "Inputs": "\"TB screening result\" = \"Positive for TB\"",
+          "Output": "Treat according to local protocol and/or refer for treatment.\n\"In settings where the tuberculosis (TB) prevalence in the general population is 100/100 000 population or higher, systematic screening for active TB should be considered for pregnant women as part of antenatal care\" (2)"
+        }
+      ],
+      "sheet": "ANC.DT.17–24 Diagnosis & treat",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Inputs",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.25"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.25",
+      "idsFromSheetName": [
+        "ANC.DT.25"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Testing for anaemia is recommended for all pregnant women. Regardless of test results, iron and folic acid supplementation is recommended. The amount of iron and folic acid supplementation will vary depending on anaemia diagnosis, population prevalence of anaemia, and whether the woman has side-effects due to iron and folic acid supplementation.",
+        "decisionId": "ANC.DT.25 Anaemia, iron and folic acid supplementation",
+        "trigger": "ANC.B9. Conduct laboratory tests and imaging"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct REQUIRED anaemia counselling",
+          "Annotations": "Anaemia can be diagnosed if Hb level is less than 11 in first or third trimester or Hb level less than 10.5 in second trimester; OR there is no Hb test result recorded, but woman has pallor.\n\nIf a woman is diagnosed with anaemia during pregnancy, conduct counselling for managing and treating anaemia. \n\nHer daily elemental iron should be increased to 120 mg until her haemoglobin (Hb) concentration rises to normal (Hb 110 g/L or higher). Thereafter, she can resume the standard daily antenatal iron dose to prevent recurrence of anaemia.\n\nThe equivalent of 120 mg of elemental iron equals 600 mg of ferrous sulfate heptahydrate, 360 mg of ferrous fumarate or 1000 mg of ferrous gluconate.\n\nPlease refer to iron sources listed below for additional guidance that can be provided.",
+          "Inputs": "\"Blood haemoglobin test result\" < 110 g/L",
+          "Output": "\"Anaemia diagnosis = \"Positive for anaemia\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B1.1, A.2.1, A.2.2 (3)\nPregnancy, childbirth, postpartum and newborn care guide (2015): C4 (1)"
+        },
+        {
+          "Action": "Conduct REQUIRED anaemia counselling",
+          "Inputs": "\"Blood haemoglobin test result\" < 110 g/L",
+          "Output": "\"Anaemia diagnosis = \"Positive for anaemia\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B1.1, A.2.1, A.2.3 (3)\nPregnancy, childbirth, postpartum and newborn care guide (2015): C4 (1)"
+        },
+        {
+          "Action": "Conduct REQUIRED anaemia counselling",
+          "Inputs": "\"Blood haemoglobin test result\" < 105 g/L",
+          "Output": "\"Anaemia diagnosis = \"Positive for anaemia\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B1.1, A.2.1, A.2.4 (3)\nPregnancy, childbirth, postpartum and newborn care guide (2015): C4 (1)"
+        },
+        {
+          "Action": "Conduct REQUIRED anaemia counselling",
+          "Inputs": "\"Blood haemoglobin test conducted\" = FALSE",
+          "Output": "\"Anaemia diagnosis = \"Positive for anaemia\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B1.1, A.2.1, A.2.5 (3)\nPregnancy, childbirth, postpartum and newborn care guide (2015): C4 (1)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Annotations": "If a woman is not diagnosed for anaemia, iron and folic acid supplementation is still recommended. \n\nDue to the population's high anaemia prevalence, a daily dose of 60 mg of elemental iron is preferred over a lower dose. A daily dose of 400 micrograms (0.4 mg) folic acid is also recommended.\n\nThe equivalent of 60 mg of elemental iron is 300 mg of ferrous sulfate heptahydrate, 180 mg of ferrous fumarate or 500 mg of ferrous gluconate.\n\nPlease refer to iron sources listed below for additional guidance that can be provided.",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 110 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.1. Daily iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 110 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.1. Daily iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 105 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.1. Daily iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test conducted\" = FALSE",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\"",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.1. Daily iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Annotations": "If a woman is not diagnosed for anaemia, iron and folic acid supplementation is still recommended. \n\nDaily oral iron and folic acid supplementation with 30–60 mg of elemental iron and 400 micrograms (0.4 mg) of folic acidc to prevent maternal anaemia, puerperal sepsis, low birth weight and preterm birth.\n\nThe equivalent of 60 mg of elemental iron is 300 mg of ferrous sulfate hepahydrate, 180 mg of ferrous fumarate or 500 mg of ferrous gluconate.\n\nPlease refer to iron sources listed below for additional guidance that can be provided.",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 110 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\" Iron and Folic side-effects",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.1. Daily iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 110 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\" Iron and Folic side-effects",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.1. Daily iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 105 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\" Iron and Folic side-effects",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.1. Daily iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test conducted\" = FALSE",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\" Iron and Folic side-effects",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.1. Daily iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Annotations": "If a woman is not diagnosed for anaemia, iron and folic acid supplementation is still recommended. \n\nIf daily iron is not acceptable due to side-effects, provide intermittent iron and folic acid supplementation instead (120 mg of elemental iron and 2.8 mg of folic acid once weekly).\n\nThe equivalent of 120 mg of elemental iron is 600 mg of ferrous sulfate heptahydrate, 360 mg of ferrous fumarate or 1000 mg of ferrous gluconate.\n\nPlease refer to iron sources listed below for additional guidance that can be provided.",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 110 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\" No Iron or Folic side-effects",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.2. Intermittent iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 110 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\" No Iron or Folic side-effects",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.2. Intermittent iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test result\" ≥ 105 g/L",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\" No Iron or Folic side-effects",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.2. Intermittent iron and folic acid supplements (3)"
+        },
+        {
+          "Action": "\"Anaemia counselling conducted\" IS OPTIONAL",
+          "Inputs": "\"Blood haemoglobin test conducted\" = FALSE",
+          "Output": "\"Anaemia diagnosis = \"Negative for anaemia\" No Iron or Folic side-effects",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.1. Anaemia (3)\nWHO ANC recommendations (2016): A.2.2. Intermittent iron and folic acid supplements (3)"
+        }
+      ],
+      "sheet": "ANC.DT.25 Anaemia IFA",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Input",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.26"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.26",
+      "idsFromSheetName": [
+        "ANC.DT.26"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "Depending on the population, additional calcium and/or vitamin A supplements maybe required",
+        "decisionId": "ANC.DT.26 Calcium and vitamin A supplementation",
+        "trigger": "IF \"Population with low dietary calcium intake\" = TRUE AND/OR IF \"Population with vitamin A deficiency\" = TRUE"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Provide calcium supplementation",
+          "Annotations": "In populations with low dietary calcium intake, daily calcium supplementation (1.5–2.0 g oral elemental calcium) is recommended for pregnant women to reduce the risk of pre-eclampsia. \n\nDietary counselling of pregnant women should promote adequate calcium intake through locally available, calcium-rich foods.\n\n– Divide the total dose into three doses, preferably taken at meal-time.\n– Iron and calcium should preferably be administered several hours apart rather than concomitantly.\n\nPlease refer to calcium sources listed below for additional guidance that can be provided.",
+          "Input": "IF \"Population with low dietary calcium intake\" = TRUE",
+          "Output": "Provide calcium supplementation",
+          "Reference(s)": "WHO ANC recommendations (2016): A.3. Calcium supplements (3)"
+        },
+        {
+          "Action": "Do not provide calcium supplementation",
+          "Annotations": "Dietary counselling of pregnant women should promote adequate calcium intake through locally available, calcium-rich foods.\n\nPlease refer to calcium sources listed below for additional guidance that can be provided.",
+          "Input": "IF \"Population with low dietary calcium intake\" = FALSE",
+          "Output": "Do not provide calcium supplementation",
+          "Reference(s)": "WHO ANC recommendations (2016): A.3. Calcium supplements (3)"
+        },
+        {
+          "Action": "Provide vitamin A supplementation",
+          "Annotations": "Give a dose of up to 10,000 IU vitamin A per day, or a weekly dose of up to 25,000 IU.\n\nA single dose of a vitamin A supplement greater than 25,000 IU is not recommended as its safety is uncertain. Furthermore, a single dose of a vitamin A supplement greater than 25,000 IU might be teratogenic if consumed between day 15 and day 60 from conception.\n\nPlease refer to vitaminA sources listed below for additional guidance that can be provided.",
+          "Input": "IF \"Population with vitamin A deficiency\" = TRUE",
+          "Output": "Provide vitamin A supplementation",
+          "Reference(s)": "WHO ANC recommendations (2016): A.4. Vitamin A supplements (3)"
+        },
+        {
+          "Reference(s)": "WHO ANC recommendations (2016): A.4. Vitamin A supplements (3)"
+        },
+        {
+          "Action": "Do not provide vitamin A supplementation",
+          "Annotations": "There is no demonstrated benefit from taking vitamin A supplements in populations where habitual daily vitamin A intakes exceed 8000 IU or 2400 micrograms, and the potential risk of adverse events increases with higher intakes (above 10 000 IU) if supplements are routinely taken by people in these populations.\n\nPlease refer to vitaminA sources listed below for additional guidance that can be provided.",
+          "Input": "IF \"Population with vitamin A deficiency\" = FALSE",
+          "Output": "Do not provide vitamin A supplementation",
+          "Reference(s)": "WHO ANC recommendations (2016): A.4. Vitamin A supplements (3)"
+        }
+      ],
+      "sheet": "ANC.DT.26 Nutrition–Ca+VitA",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Input(s)",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.27",
+        "ANC.DT.28",
+        "ANC.DT.29",
+        "ANC.DT.30"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.27",
+      "idsFromSheetName": [
+        "ANC.DT.27",
+        "ANC.DT.28",
+        "ANC.DT.29",
+        "ANC.DT.30"
+      ],
+      "idsFromSheetNote": [
+        "ANC.DT.27",
+        "ANC.DT.28",
+        "ANC.DT.29",
+        "ANC.DT.30"
+      ],
+      "metadata": {
+        "businessRule": "If the woman has risk factors for developing pre-eclampsia, provide counselling to reduce risk of developing pre-eclampsia",
+        "decisionId": "ANC.DT.27 Pre-eclampsia risk counselling",
+        "trigger": "ANC.B6. Collect woman's profile & history"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Annotations": "The woman is at risk of developing pre-eclampsia – provide counselling",
+          "Input(s)": "\"Number of fetuses\" ≥ 2",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 2 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Pre-eclampsia\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 3 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Eclampsia\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 4 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Convulsions\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 5 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Autoimmune disease\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 6 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Diabetes\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 7 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Hypertension\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 8 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Kidney disease\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 9 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Annotations": "The woman is at risk of developing pre-eclampsia: provide counselling; prescribe aspirin 75 mg daily until delivery (starting at 12 weeks gestation) for pre-eclampsia risk",
+          "Input(s)": "\"Number of fetuses\" ≥ 2",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 10 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Pre-eclampsia\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 11 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Eclampsia\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 12 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Convulsions\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 13 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Autoimmune disease\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 14 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Diabetes\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 15 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Hypertension\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 16 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Kidney disease\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 17 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Annotations": "The woman is at risk of developing pre-eclampsia: provide counselling; prescribe aspirin 75 mg daily until delivery (starting at 12 weeks gestation) and ensure that she continues to take her daily calcium supplement of 1.5–2 g until delivery for pre-eclampsia risk",
+          "Input(s)": "\"Number of fetuses\" ≥ 2",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks Population with low calcium intake",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 18 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Pre-eclampsia\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks Population with low calcium intake",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 19 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Eclampsia\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks Population with low calcium intake",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 20 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Convulsions\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks Population with low calcium intake",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 21 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Autoimmune disease\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks Population with low calcium intake",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 22 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Diabetes\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks Population with low calcium intake",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 23 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Hypertension\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks Population with low calcium intake",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 24 (5)"
+        },
+        {
+          "Action": "Provide counselling on pre-eclampsia risk",
+          "Input(s)": "\"Existing chronic health conditions\" = \"Kidney disease\"",
+          "Output": "\"Risk of pre-eclampsia\" = TRUE Gestational age >= 12 weeks Population with low calcium intake",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (2015): C3 (1)\nWHO pre-eclampsia and eclampsia recommendations (2011): 1, 25 (5)"
+        },
+        {
+          "Input(s)": "Decision ID"
+        },
+        {
+          "Input(s)": "Business Rule"
+        },
+        {
+          "Input(s)": "Trigger"
+        },
+        {
+          "Action": "Action",
+          "Input(s)": "Inputs",
+          "Output": "Output",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "Provide counselling on gestational diabetes mellitus (GDM) risk",
+          "Input(s)": "\"BMI\" ≥ 30",
+          "Output": "\"Risk of gestational diabetes mellitus\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.4 (2)"
+        },
+        {
+          "Action": "Provide counselling on gestational diabetes mellitus (GDM) risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Gestational diabetes mellitus\"",
+          "Output": "\"Risk of gestational diabetes mellitus\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.5 (2)"
+        },
+        {
+          "Action": "Provide counselling on gestational diabetes mellitus (GDM) risk",
+          "Input(s)": "\"Past pregnancy complications\" = \"Macrosomia\"",
+          "Output": "\"Risk of gestational diabetes mellitus\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.6 (2)"
+        },
+        {
+          "Action": "Provide counselling on gestational diabetes mellitus (GDM) risk",
+          "Input(s)": "\"Urine dipstick result – glucose\" = \"++\"",
+          "Output": "\"Risk of gestational diabetes mellitus\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7 (2)"
+        },
+        {
+          "Action": "Provide counselling on gestational diabetes mellitus (GDM) risk",
+          "Input(s)": "\"Urine dipstick result – glucose\" = \"+++\"",
+          "Output": "\"Risk of gestational diabetes mellitus\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.8 (2)"
+        },
+        {
+          "Action": "Provide counselling on gestational diabetes mellitus (GDM) risk",
+          "Input(s)": "\"Urine dipstick result – glucose\" = \"++++\"",
+          "Output": "\"Risk of gestational diabetes mellitus\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.9 (2)"
+        },
+        {
+          "Action": "Provide counselling on gestational diabetes mellitus (GDM) risk",
+          "Input(s)": "\"Urine dipstick result – glucose\" = \"+\" ON MORE THAN ONE TEST ACROSS PREGNANCY",
+          "Output": "\"Risk of gestational diabetes mellitus\" = TRUE",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.10 (2)"
+        },
+        {
+          "Input(s)": "Decision ID"
+        },
+        {
+          "Input(s)": "Business Rule"
+        },
+        {
+          "Input(s)": "Trigger"
+        },
+        {
+          "Input(s)": "Inputs",
+          "Output": "Action",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Input(s)": "\"HIV status\" = \"HIV negative\"",
+          "Output": "Conduct counselling on HIV risk",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7, C.7 (2)\nPregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C6 (1)"
+        },
+        {
+          "Input(s)": "\"HIV status\" = \"HIV negative\"",
+          "Output": "Conduct counselling on HIV risk",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7, C.7 (2)\nPregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C7 (1)"
+        },
+        {
+          "Input(s)": "\"HIV status\" = \"HIV negative\"",
+          "Output": "Conduct counselling on HIV risk",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7, C.7 (2)\nPregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C8 (1)"
+        },
+        {
+          "Input(s)": "\"HIV status\" = \"HIV negative\"",
+          "Output": "Conduct counselling on HIV risk",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7, C.7 (2)\nPregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C9 (1)"
+        },
+        {
+          "Input(s)": "\"HIV status\" = \"HIV negative\"",
+          "Output": "Conduct counselling on HIV risk",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7, C.7 (2)\nPregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C10 (1)"
+        },
+        {
+          "Input(s)": "\"HIV status\" = \"HIV negative\"",
+          "Output": "Conduct counselling on HIV risk",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7, C.7 (2)\nPregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C11 (1)"
+        },
+        {
+          "Input(s)": "\"Population incidence of HIV in the absence of PrEP\" > 3 per 100 person-years",
+          "Output": "Conduct counselling on pre-exposure prophylaxis (PrEP) for HIV prevention",
+          "Reference(s)": "WHO ANC recommendations (2016): C.7 (2)\nPre-exposure prophylaxis (PrEP) for HIV prevention (2017) (20)"
+        },
+        {
+          "Action": "Recommended partner HIV test",
+          "Input(s)": "\"Partner HIV status (reported)\" = \"Inconclusive\"",
+          "Output": "Conduct counselling on HIV risk",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7 (2)\nConsolidated guidelines on HIV testing services (2015) (6)"
+        },
+        {
+          "Action": "Recommended partner HIV test",
+          "Input(s)": "\"Partner HIV test conducted\" = FALSE",
+          "Output": "Conduct counselling on HIV risk",
+          "Reference(s)": "WHO ANC recommendations (2016): B.1.7 (2)\nConsolidated guidelines on HIV testing services (2015) (6)"
+        },
+        {
+          "Input(s)": "PrEP offering framework – a suggested prioritization framework for offering PrEP to pregnant and breastfeeding women"
+        },
+        {
+          "Input(s)": "Source: PrEP technical brief (2017) (18)."
+        },
+        {
+          "Input(s)": "Decision ID"
+        },
+        {
+          "Input(s)": "Business Rule"
+        },
+        {
+          "Input(s)": "Trigger"
+        },
+        {
+          "Annotations": "Reference(s)",
+          "Input(s)": "Input"
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): C.3. Antenatal anti-D immunoglobulin administration (2)",
+          "Input(s)": "Rh factor\" = \"Rh negative\""
+        },
+        {
+          "Annotations": "WHO ANC recommendations (2016): C.1: Antibiotics for asymptomatic bacteriuria (ASB) (2)",
+          "Input(s)": "Midstream urine culture (recommended)\" = \"Positive – Group B Streptococcus (GBS)\""
+        }
+      ],
+      "sheet": "ANC.DT.27–30 Risk counselling",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Input",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.31",
+        "ANC.DT.32"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.31",
+      "idsFromSheetName": [
+        "ANC.DT.31",
+        "ANC.DT.32"
+      ],
+      "idsFromSheetNote": [
+        "ANC.DT.31",
+        "ANC.DT.32"
+      ],
+      "metadata": {
+        "businessRule": "If the woman has not yet been immunized with the seasonal flu vaccine, she should be immunized",
+        "decisionId": "ANC.DT.31 Flu immunization",
+        "trigger": "ANC.B10.7. Immunizations"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Provide seasonal flu immunization",
+          "Annotations": "Pregnant women should be vaccinated with trivalent inactivated influenza vaccine at any stage of pregnancy",
+          "Input": "\"Flu immunization history\" = \"No doses\"",
+          "Output": "\"Flu immunization history\" = \"No doses\"",
+          "Reference(s)": "Vaccines against influenza WHO position paper (2012) (10)"
+        },
+        {
+          "Action": "Provide seasonal flu immunization",
+          "Input": "\"Flu immunization history\" = \"Unknown\"",
+          "Output": "\"Flu immunization history\" = \"Unknown\"",
+          "Reference(s)": "Vaccines against influenza WHO position paper (2012) (10)"
+        },
+        {
+          "Input": "Decision ID",
+          "Output": "ANC.DT.32 Tetanus toxoid-containing vaccination"
+        },
+        {
+          "Input": "Business Rule",
+          "Output": "If the woman has not yet been fully immunized against tetanus, she should be immunized"
+        },
+        {
+          "Input": "Trigger",
+          "Output": "ANC.B10.7. Immunizations"
+        },
+        {
+          "Annotations": "Output",
+          "Input": "Input(s)",
+          "Reference(s)": "Action"
+        },
+        {
+          "Annotations": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Under-immunized\"",
+          "Input": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Under-immunized\"",
+          "Reference(s)": "Provide tetanus toxoid immunizations – using the \"Tetanus toxoid-containing vaccine (TTCV) immunization – NO PREVIOUS\" schedule (3 dose scheme)"
+        },
+        {
+          "Annotations": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"No doses\"",
+          "Input": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"No doses\"",
+          "Reference(s)": "Provide tetanus toxoid immunizations – using the \"Tetanus toxoid-containing vaccine (TTCV) immunization – NO PREVIOUS\" schedule (3 dose scheme)"
+        },
+        {
+          "Annotations": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Unknown\"",
+          "Input": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Unknown\"",
+          "Reference(s)": "Provide tetanus toxoid immunizations – using the \"Tetanus toxoid-containing vaccine (TTCV) immunization – NO PREVIOUS\" schedule (3 dose scheme)"
+        },
+        {
+          "Action": "\"Tetanus toxoid-containing vaccine (TTCV) 3 immunization provided\" = TRUE",
+          "Annotations": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Under-immunized\"",
+          "Input": "\"Tetanus toxoid-containing vaccine (TTCV) 1 immunization provided\" = TRUE",
+          "Output": "\"Tetanus toxoid-containing vaccine (TTCV) 2 immunization provided\" = TRUE",
+          "Reference(s)": "Provide tetanus toxoid immunizations – using the \"Tetanus toxoid-containing vaccine (TTCV) immunization – WITH PREVIOUS\" schedule (1 dose scheme)"
+        },
+        {
+          "Action": "\"Tetanus toxoid-containing vaccine (TTCV) 3 immunization provided\" = TRUE",
+          "Annotations": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Under-immunized\"",
+          "Input": "\"Tetanus toxoid-containing vaccine (TTCV) 1 immunization provided\" = TRUE",
+          "Output": "\"Tetanus toxoid-containing vaccine (TTCV) 2 immunization provided\" = TRUE",
+          "Reference(s)": "Provide tetanus toxoid immunizations – using the \"Tetanus toxoid-containing vaccine (TTCV) immunization – WITH PREVIOUS\" schedule (1 dose scheme)"
+        },
+        {
+          "Annotations": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Under-immunized\"",
+          "Input": "\"Tetanus toxoid-containing vaccine (TTCV) 1 immunization provided\" = TRUE",
+          "Output": "\"Tetanus toxoid-containing vaccine (TTCV) 2 immunization provided\" = TRUE",
+          "Reference(s)": "Provide tetanus toxoid immunizations – using the \"Tetanus toxoid-containing vaccine (TTCV) immunization – WITH PREVIOUS\" schedule (1 dose scheme)"
+        },
+        {
+          "Annotations": "\"Tetanus toxoid-containing vaccine (TTCV) immunization history\" = \"Under-immunized\"",
+          "Input": "\"Tetanus toxoid-containing vaccine (TTCV) 1 immunization provided\" = TRUE",
+          "Reference(s)": "Provide tetanus toxoid immunizations – using the \"Tetanus toxoid-containing vaccine (TTCV) immunization – WITH PREVIOUS\" schedule (1 dose scheme)"
+        }
+      ],
+      "sheet": "ANC.DT.31–32 Immunizations",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Input",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.33",
+        "ANC.DT.34",
+        "ANC.DT.35"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.33",
+      "idsFromSheetName": [
+        "ANC.DT.33",
+        "ANC.DT.34",
+        "ANC.DT.35"
+      ],
+      "idsFromSheetNote": [
+        "ANC.DT.33",
+        "ANC.DT.34",
+        "ANC.DT.35"
+      ],
+      "metadata": {
+        "businessRule": "General counselling to be provided/reviewed at every contact",
+        "decisionId": "ANC.DT.33 Breastfeeding counselling",
+        "trigger": "ANC.B10. Counselling, in-facility management & treatment"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Provide counselling on breastfeeding",
+          "Annotations": "To enable mothers to establish and sustain exclusive breastfeeding for 6 months, WHO and UNICEF recommend:\n\n– Initiation of breastfeeding within the first hour of life\n– Exclusive breastfeeding – that is, the infant receives only breast milk without any additional food or drink, not even water\n– Breastfeeding on demand – that is, as often as the child wants food, day and night\n– No use of bottles, teats or pacifiers",
+          "Input": "\"Pregnancy confirmed\" = \"TRUE\"",
+          "Output": "Provide counselling on breastfeeding",
+          "Reference(s)": "Managing complications guide (IMPAC) (2017): Sections S-11, S-15 (5)"
+        },
+        {
+          "Input": "Decision ID",
+          "Output": "ANC.DT.34 Birth preparedness counselling"
+        },
+        {
+          "Input": "Business Rule",
+          "Output": "General counselling to be provided/reviewed at every contact"
+        },
+        {
+          "Input": "Trigger",
+          "Output": "ANC.B10. Counselling, in-facility management & treatment"
+        },
+        {
+          "Action": "Action",
+          "Annotations": "Annotations",
+          "Input": "Input",
+          "Output": "Output",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Annotations": "Encourage delivery at a health-care facility.\n\nRisk factors necessitating a facility birth:\n– Age 17 or under\n– Primigravida\n– Parity 6 or higher\n– Prior caesarian section\n– Previous pregnancy complications: heavy bleeding, forceps or vacuum delivery, convulsions, or 3rd or 4th degree tear\n– Vaginal bleeding\n– Multiple fetuses\n– Abnormal fetal presentation\n– HIV positive\n– Wants IUD or tubal ligation following delivery",
+          "Input": "Age\" ≤ 17 years",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Fetal presentation\" = \"Transverse fetal presentation\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Fetal presentation\" = \"Other fetal presentation (specify)\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "Number of caesarian sections\" > 0",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Number of fetuses\" > 1",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Family planning method provided\" = \"Copper-bearing intrauterine device (Cu-IUD)\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Family planning method provided\" = \"Levonorgestrel intrauterine device (LNG-IUD)\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Family planning method provided\" = \"Female sterilization\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Past pregnancy complications\" = \"Convulsions\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Past pregnancy complications\" = \"Heavy bleeding (during or after delivery)\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Past pregnancy complications\" = \"Forceps or vacuum delivery\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Past pregnancy complications\" = \"3rd or 4th degree tear\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Current physiological symptoms\" = \"Vaginal bleeding\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Number of pregnancies (gravida)\" = 1",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"Parity\" > 5",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Input": "\"HIV status\" = \"HIV positive\"",
+          "Output": "Conduct counselling on birth preparedness and complications readiness",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Action": "Conduct counselling on birth preparedness and complications readiness",
+          "Annotations": "Explain why delivery needs to be with a skilled birth attendant, preferably at a facility according to woman's preference",
+          "Input": "\"Planned birth place\" = \"Home\"",
+          "Output": "\"Planned birth place\" = \"Home\"",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015) (1)"
+        },
+        {
+          "Input": "Decision ID",
+          "Output": "ANC.DT.35 Family planning counselling"
+        },
+        {
+          "Input": "Business Rule",
+          "Output": "General counselling to be provided/reviewed at every contact"
+        },
+        {
+          "Input": "Trigger",
+          "Output": "ANC.B10. Counselling, in-facility management & treatment"
+        },
+        {
+          "Action": "Action",
+          "Annotations": "Annotations",
+          "Input": "Input",
+          "Output": "Output",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "Conduct counselling on postpartum family planning",
+          "Annotations": "Possible methods include: Levonorgestrel IUD, copper IUD, implants, LAM, oral contraceptive pills, sterilization, tubal ligation\t\n\nNote: LAM is an effective method for breastfeeding women who are amenorrhoeic and their infant < 6 months of age; \n\nBreastfeeding women < 6 weeks postpartum are generally advised not to use injectables and should not use combined hormonal contraceptive (CHC); \n\nBreastfeeding women ≥ 6 weeks can use injectables without restriction; Breastfeeding women ≥ 6 weeks to < 6 months postpartum (primarily breastfeeding) generally should not use CHCs unless other more appropriate methods are not available or acceptable (16).",
+          "Input": "\"Pregnancy confirmed\" = \"TRUE\"",
+          "Output": "Conduct COUNSELLING ON postpartum family planning",
+          "Reference(s)": "Pregnancy, childbirth, postpartum and newborn care guide (IMPAC) (2015): C16 (1) \n\nMedical eligibility criteria for contraceptive use (2015) (13)"
+        }
+      ],
+      "sheet": "ANC.DT.33–35General counselling",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Input",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.36",
+        "ANC.DT.37"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.36",
+      "idsFromSheetName": [
+        "ANC.DT.36",
+        "ANC.DT.37"
+      ],
+      "idsFromSheetNote": [
+        "ANC.DT.36",
+        "ANC.DT.37"
+      ],
+      "metadata": {
+        "businessRule": "You may suspect that a woman has been subjected to intimiate partner violence if she has any of the following risk factors",
+        "decisionId": "ANC.DT.36 Intimate partner violence (IPV) clinical inquiry",
+        "trigger": "ANC.B10.8. Intimate partner violence counselling"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Conduct clinical enquiry",
+          "Annotations": "Cultures and communities have ways of referring to the problem with other words. It is important to use the words that women themselves use.",
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "Conduct clinical enquiry",
+          "Reference(s)": "WHO ANC recommendations (2016): B1.3 (2) \n\nIPV handbook (2014) (12)"
+        },
+        {
+          "Action": "Conduct clinical enquiry and provide first-line support and care if IPV confirmed",
+          "Annotations": "WHO does not recommend universal screening for violence against women attending health care. WHO does encourage health-care providers to raise the topic with women who have injuries or conditions that they suspect may be related to violence.\n\nNever raise the issue of partner violence unless a woman is alone. Even if she is with another woman, that woman could be the mother or sister of an abuser.\n\nIf you do ask her about violence, do it in an empathic, non-judgemental manner. Use language that is appropriate and relevant to the culture and community you are working in. Some women may not like the words “violence” and “abuse”",
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\"\" = TRUE",
+          "Reference(s)": "IPV handbook (2014) (15)"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE",
+          "Reference(s)": "Responding to IPV (2013) (16)"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE",
+          "Reference(s)": "IPV handbook (2014) (15)"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Minimum requirements for IPV assessment = TRUE",
+          "Output": "\"Woman discloses or is suspected to be subjected to intimate partner violence\" = TRUE"
+        },
+        {
+          "Input": "Decision ID"
+        },
+        {
+          "Input": "Business Rule"
+        },
+        {
+          "Input": "Trigger"
+        },
+        {
+          "Action": "Action",
+          "Annotations": "Annotations",
+          "Input": "Input",
+          "Output": "Output",
+          "Reference(s)": "Reference(s)"
+        },
+        {
+          "Action": "Provide first-line support. Four (4) kinds of needs deserve attention:\n– Immediate emotional/psychological health needs\n– Immediate physical health needs\n– Ongoing safety needs\n– Ongoing support and mental health needs.",
+          "Annotations": "Conduct the following 5 tasks: \n– Listen to the woman closely, with empathy, and without judging\n– Inquire about needs and concerns: assess and respond to her various needs and concerns – emotional, physical, social and practical (e.g. childcare)\n– Validate: show her that you understand and believe her; assure her that she is not to blame\n– Enhance saftey: discuss a plan to protect herself from further harm if violence occurs again\n– Support her by helping her connect to information, services and social support.",
+          "Input": "\"Has the woman  been subjected to intimate partner violence\"=TRUE",
+          "Output": "Conduct first-line support",
+          "Reference(s)": "IPV handbook (2014) (15)"
+        },
+        {
+          "Action": "Ask the following questions:  \n-Has the physical violence happened more often or gotten worse over the past 6 months? \n- Has he ever used a weapon or threatened you with a weapon? \n- Has he ever tried to strangle you? \n- Do you believe he could kill you? \n- Has he ever beaten you when you were pregnant? \n- Is he violently and constantly jealous of you?",
+          "Annotations": "If woman answers \"yes\" to at least 3 of the questions, the woman may be at high risk of violence /danger",
+          "Input": "\"Safety assessement conducted\"=TRUE",
+          "Output": "Assess immediate risk of violence"
+        },
+        {
+          "Action": "If it is not safe for the woman to return home, make appropriate referrals for shelter or safe housing, or work with her to identify a safe place she can go to (such as a friend’s home or church).",
+          "Annotations": "If it is not safe for the woman to return home, make appropriate referrals for shelter or safe housing, or work with her to identify a safe place she can go to (such as a friend’s home or church).",
+          "Input": "\"Has the physical violence happened more often or gotten worse over the past 6 months?\"  = TRUE",
+          "Output": "Woman may be at high risk of immediate risk of violence/danger"
+        },
+        {
+          "Input": "\"Has the physical violence happened more often or gotten worse over the past 6 months?\"  = TRUE"
+        },
+        {
+          "Input": "\"Has the physical violence happened more often or gotten worse over the past 6 months?\"  = TRUE"
+        },
+        {
+          "Input": "\"Has the physical violence happened more often or gotten worse over the past 6 months?\"  = TRUE"
+        },
+        {
+          "Input": "\"Has he ever used a weapon or threatened you with a weapon? \"  = TRUE"
+        },
+        {
+          "Input": "\"Has he ever used a weapon or threatened you with a weapon? \"  = TRUE"
+        },
+        {
+          "Input": "\"Has he ever used a weapon or threatened you with a weapon? \"  = TRUE"
+        },
+        {
+          "Input": "\"Has he ever used a weapon or threatened you with a weapon? \"  = TRUE"
+        },
+        {
+          "Input": "\"Do you believe he could kill you?\"  = TRUE"
+        },
+        {
+          "Input": "\"Do you believe he could kill you?\"  = TRUE"
+        }
+      ],
+      "sheet": "ANC.DT.36-37 IPV ",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    },
+    {
+      "columns": [
+        "Input(s)",
+        "Output",
+        "Action",
+        "Annotations",
+        "Reference(s)"
+      ],
+      "coversIds": [
+        "ANC.DT.38"
+      ],
+      "hitPolicy": null,
+      "id": "ANC.DT.38",
+      "idsFromSheetName": [
+        "ANC.DT.38"
+      ],
+      "idsFromSheetNote": [],
+      "metadata": {
+        "businessRule": "IF the woman is currently in a malaria-endemic setting, or in an area where there is greater than 20% prevalence of infection with any soil-transmitted helminths, THEN she should receive preventative treatment accordingly",
+        "decisionId": "ANC.DT.38 Deworming and malaria prophylaxis",
+        "trigger": "ANC.B10. Counselling, in-facility management and treatment"
+      },
+      "rowEncoding": "keyed",
+      "rows": [
+        {
+          "Action": "Provide malaria prophylaxis",
+          "Annotations": "Sleeping under an insecticide-treated bednet and the importance of seeking care and getting treatment as soon as she has any symptoms",
+          "Input(s)": "Malaria-endemic setting = TRUE",
+          "Output": "\"Conduct counselling on malaria prevention\"",
+          "Reference(s)": "WHO ANC recommendations (2016): C.6. Malaria prevention: intermittent preventive treatment in pregnancy (IPTp) (3)"
+        },
+        {
+          "Action": "Do not give IPTp-SP, because woman is taking co-trimoxazole",
+          "Annotations": "IF the woman is currently taking co-trimoxazole, even in a malaria-endemic setting, she should not receive any dose of IPTp-SP. Women who are taking co-trimoxazole SHOULD NOT receive IPTp-SP. Taking both co-trimoxazole and IPTp-SP together can enhance side-effects, especially haematological side-effects such as anaemia.",
+          "Input(s)": "Malaria-endemic setting = TRUE",
+          "Output": "\"IPTp-SP dose 1 provided\" = FALSE\n\"IPTp-SP dose 2 provided\" = FALSE\n\"IPTp-SP dose 3 provided\" = FALSE",
+          "Reference(s)": "WHO ANC recommendations (2016): C.6. Malaria prevention: intermittent preventive treatment in pregnancy (IPTp) (3)"
+        },
+        {
+          "Action": "Conduct deworming",
+          "Annotations": "In areas with a population prevalence of infection with any soil-transmitted helminths of 20% or higher OR a population anaemia prevalence 40% or higher, preventive anthelminthic treatment is recommended for pregnant women after the first trimester as part of worm infection reduction programmes",
+          "Input(s)": "\"Population prevalence of soil-transmitted helminth infection\" ≥ 20%",
+          "Output": "\"Preventive antihelminthic treatment provided\"",
+          "Reference(s)": "WHO ANC recommendations (2016): C.4. Preventive anthelminthic treatment (3)"
+        },
+        {
+          "Action": "Conduct deworming",
+          "Input(s)": "\"Population prevalence of anaemia\" ≥ 40%",
+          "Output": "\"Preventive antihelminthic treatment provided\"",
+          "Reference(s)": "WHO ANC recommendations (2016): C.4. Preventive anthelminthic treatment (3)"
+        },
+        {
+          "Input(s)": "Malaria prevention counselling"
+        }
+      ],
+      "sheet": "ANC.DT.38 Deworming & malaria",
+      "sourceFile": "WHO-SRH-21.2-eng.xlsx"
+    }
+  ]
+}
