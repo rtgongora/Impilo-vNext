@@ -416,8 +416,13 @@ public class ImamService {
         }
         String overrideReason = str(in.get("discharge_override_reason"), in.get("overrideReason"));
 
+        // Evaluate as of the discharge date the clinician states, not as of the moment the record is
+        // typed. A discharge backfilled on Monday from Friday's register must be judged against the
+        // child as they were on Friday; judging it against today would count the intervening days as
+        // a gap in observation and refuse a cure that was properly earned.
+        OffsetDateTime outcomeAt = timestamp(str(in.get("outcome_at"), in.get("outcomeAt")));
         List<ImamVisitEntity> visits = visits(episodeId);
-        Map<String, Object> assessment = evaluate(episode, visits, LocalDate.now());
+        Map<String, Object> assessment = evaluate(episode, visits, outcomeAt.toLocalDate());
         Boolean criteriaMet = assessment == null ? null : bool(assessment.get("discharge_eligible"));
         String criteriaDetail = assessment == null
                 ? "The clinical knowledge platform could not be reached, so the discharge criteria were not "
@@ -440,7 +445,7 @@ public class ImamService {
 
         episode.setStatus("CLOSED");
         episode.setOutcome(outcome);
-        episode.setOutcomeAt(timestamp(str(in.get("outcome_at"), in.get("outcomeAt"))));
+        episode.setOutcomeAt(outcomeAt);
         episode.setOutcomeBy(firstNonBlank(str(in.get("outcome_by"), in.get("recorded_by")), ctx.actorId()));
         episode.setOutcomeNote(str(in.get("outcome_note"), in.get("note")));
         episode.setDischargeMuacCm(firstNonNull(decimal(in.get("discharge_muac_cm"), in.get("muac_cm")),

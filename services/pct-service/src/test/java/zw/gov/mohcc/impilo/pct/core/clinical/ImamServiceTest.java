@@ -340,6 +340,26 @@ class ImamServiceTest {
     }
 
     @Test
+    void theDischargeIsJudgedAsOfTheStatedDischargeDateNotTheDayItIsTypedIn() {
+        // Caught by deploying. A discharge backfilled on Monday from Friday's register was being
+        // evaluated against today, so the weekend counted as a gap in observation and a properly
+        // earned cure was refused. The clinical date is the one the clinician states.
+        ImamEpisodeEntity episode = episode("OTP");
+        stored(episode);
+        progress(Map.of("discharge_eligible", true, "unmet_criteria", List.of(),
+                "discharge_criteria", List.of()));
+
+        run(() -> imamService.closeOutcome(episode.getImamEpisodeId(), body(b -> {
+            b.put("outcome", "CURED");
+            b.put("outcome_at", "2026-06-15T09:00:00Z");
+        })));
+
+        org.mockito.ArgumentCaptor<Map<String, Object>> sent = org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(knowledge).imamProgress(any(), sent.capture());
+        assertThat(sent.getValue().get("as_of")).isEqualTo("2026-06-15");
+    }
+
+    @Test
     void anUnknownOutcomeIsRejectedRatherThanStored() {
         ImamEpisodeEntity episode = episode("OTP");
         stored(episode);

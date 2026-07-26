@@ -39,13 +39,16 @@ public class ClinicalKnowledgeIntegration {
     private static final Logger log = LoggerFactory.getLogger(ClinicalKnowledgeIntegration.class);
 
     private final RestTemplate restTemplate;
+    private final ServiceTokenProvider tokenProvider;
     private final String baseUrl;
 
     public ClinicalKnowledgeIntegration(
             RestTemplate restTemplate,
+            ServiceTokenProvider tokenProvider,
             @Value("${pct.integration.clinical-knowledge.base-url:${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}}")
             String baseUrl) {
         this.restTemplate = restTemplate;
+        this.tokenProvider = tokenProvider;
         this.baseUrl = baseUrl;
     }
 
@@ -93,6 +96,10 @@ public class ClinicalKnowledgeIntegration {
         h.set("X-Actor-ID", "pct-service");
         h.set("X-Actor-Type", "SERVICE");
         h.set("X-Purpose-Of-Use", "TREATMENT");
+        // The knowledge platform is an OAuth2 resource server and authenticates every caller,
+        // services included. Without this the call is a 401 that surfaces to the clinician as
+        // "the protocol is unavailable" — technically honest, entirely useless.
+        tokenProvider.accessToken().ifPresent(h::setBearerAuth);
         h.setContentType(MediaType.APPLICATION_JSON);
         return h;
     }
