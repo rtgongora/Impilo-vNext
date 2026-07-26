@@ -10,6 +10,7 @@ Use this checklist for every new feature, API, UI flow, or integration.
 - [ ] 6. Which Platform Journey stage applies?
 - [ ] 7. Which plane owns the source of truth?
 - [ ] 8. Which service owns the data?
+- [ ] 8a. Which continuum does this touch — Care (PCT) or Wellness (Simba) — and what resolvable PCT anchor (journey_id / encounter_ref / admission handshake) does each new clinical record carry? (care-continuum-doctrine.md CC-5)
 - [ ] 9. Which transaction state does it create/read/update/close?
 - [ ] 10. Which event is emitted?
 - [ ] 11. Which permission or consent decision applies?

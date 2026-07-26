@@ -19,6 +19,13 @@ Full doctrine: [`docs/doctrine/health-os-doctrine.md`](docs/doctrine/health-os-d
 
 Citizen gateway doctrine: [`docs/doctrine/health-services-gateway-doctrine.md`](docs/doctrine/health-services-gateway-doctrine.md)
 
+> **Care Continuum doctrine line**: One person, two continua — PCT owns the Care Continuum
+> (the cradle-to-grave clinical journey); Simba owns the peer Wellness Continuum; every other
+> care-path service (outpatient, inpatient, theatre, trauma, paediatric, ED…) is a subordinate
+> component of PCT's continuum; in code, "journey" means a facility visit, never the continuum.
+
+Care continuum doctrine: [`docs/doctrine/care-continuum-doctrine.md`](docs/doctrine/care-continuum-doctrine.md)
+
 ## Workflow Rules
 
 ### Small-Commit Workflow
@@ -135,6 +142,7 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - Map each feature to a core transaction type and lifecycle stage.
 - Map each feature to person/provider/platform journey stage(s) where applicable.
 - Reject orphan capabilities that do not attach to a canonical transaction journey.
+- Reject clinical records that carry no resolvable PCT anchor — journey_id, encounter_ref, or the admission handshake (care-continuum-doctrine CC-5).
 - Never create duplicate patient/provider/facility/service/terminology/payment/consent/clinical truth models.
 - Backend changes are incomplete until journey wiring exists in BFF and UI surfaces where applicable.
 - Frontend-only experiences are incomplete unless bound to domain truth or clearly marked as prototype.

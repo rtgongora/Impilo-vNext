@@ -12,7 +12,7 @@ These are not independent systems. They are synchronized views over one stateful
 
 - Every meaningful action maps to transaction state, event, permission, and audit context.
 - Person and provider UX steps are projections of platform state transitions.
-- Experience BFF composes journey views from sovereign services (Vito, Varapi, Tuso, Tshepo, Butano, Zibo, Msika, Msika Flow, MusheX, Costa, Ubomi, Indawo, Fundo).
+- Experience BFF composes journey views from sovereign services (Vito, Varapi, Tuso, Tshepo, Butano, Zibo, Msika, Msika Flow, MusheX, Costa, Ubomi, Indawo, Fundo) and from the two continuum owners — PCT (Care Continuum) and Simba (Wellness Continuum) — which anchor every care-path and wellness-path view (care-continuum-doctrine.md CC-1).
 - Nompilo guidance is contextual and assistive; it does not own domain truth.
 
 ## Journey Intent

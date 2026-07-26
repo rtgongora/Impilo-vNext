@@ -40,6 +40,8 @@ Need/Trigger -> Entry Point -> Identity Resolution -> Trust/Consent/Context -> S
 - **Tuso**: facility/workspace context.
 - **Tshepo/Mvumo**: trust, authorization, consent.
 - **Butano**: longitudinal clinical contribution target.
+- **PCT**: Care Continuum owner — the person's cradle-to-grave clinical journey; visit journeys, encounters, problems, care plans, referrals; every care-path transaction anchors into the continuum here (care-continuum-doctrine.md CC-1/CC-5).
+- **Simba**: Wellness Continuum owner — peer in rank to PCT for the person's wellness and lifestyle journey.
 - **Zibo**: canonical terminology.
 - **Msika + Msika Flow**: service/product selection and workflow execution.
 - **Costa + MusheX**: costing, payment, claims, remittances.

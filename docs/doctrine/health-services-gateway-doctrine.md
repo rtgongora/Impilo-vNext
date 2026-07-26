@@ -63,7 +63,7 @@ number of large starting choices); deeper options reveal after the person choose
 
 | # | Intent pillar | Website layer (discover / understand / begin) | vNext layer (authenticate / transact / complete) | Owning services (internal) |
 |---|---|---|---|---|
-| 1 | **Get care** | Explain services, find care, start a request | Telemedicine, appointments, referrals, follow-up, home-based care | PCT, booking, referral, rtc-gateway, Khuluma |
+| 1 | **Get care** | Explain services, find care, start a request | Telemedicine, appointments, referrals, follow-up, home-based care | PCT (Care Continuum owner); booking, referral, rtc-gateway, Khuluma as continuum components (CC-1/CC-2) |
 | 2 | **My health** | Explain Health ID, records, consent | Records, results, prescriptions, consent, dependants, care tracking | VITO, BUTANO, mvumo, experience-bff citizen surfaces |
 | 3 | **Health information** | Trusted public health knowledge, prevention, outbreak notices, FAQs | Personalised education, reminders, saved content | guidance-service, clinical-knowledge-platform, Fundo |
 | 4 | **Find or verify a service** | Facility/service search, professional and facility licence verification, opening hours, accessibility | Personalised discovery, saved providers | TUSO, VARAPI, Indawo, Ndila, search-service |
@@ -71,7 +71,7 @@ number of large starting choices); deeper options reveal after the person choose
 | 6 | **Applications & licensing** | Requirements, categories, guidance, fee estimates | Applications, documents, payment, tracking, renewal, CPD, adjudication | VARAPI, TUSO (HPA regulatory), credential-verification |
 | 7 | **Feedback & complaints** | Explain routes, anonymous options | Case intake, reference tracking, escalation, resolution | Rito, patient-safety |
 | 8 | **Find health products & suppliers** | Pharmacy/product/supplier discovery and verification | Prescription fulfilment, ordering, delivery, institutional procurement | Msika, msika-flow, Dura, OROS, Nhume |
-| 9 | **Emergency help** | Immediate numbers and guidance, always visible | Request assistance, triage, dispatch, tracking, handover | Daidzai, Nhume, Ndila, PCT, Khuluma |
+| 9 | **Emergency help** | Immediate numbers and guidance, always visible | Request assistance, triage, dispatch, tracking, handover | PCT (Care Continuum owner); Daidzai (delegated trauma correlation, CC-4), Nhume, Ndila, Khuluma |
 
 Doctrinal consequences:
 

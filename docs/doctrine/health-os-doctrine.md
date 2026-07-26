@@ -162,6 +162,11 @@ professional workflows. The experience layer must support broad participation:
 Wellness, lifestyle, fitness, diet, and sleep are **first-class domains** within the Impilo
 experience layer and must not be treated as peripheral or cosmetic extensions.
 
+They are more than an experience domain: together they form the **Wellness Continuum**,
+owned end-to-end by Simba and **peer in rank to the Care Continuum owned by PCT** — the
+only two person-level continua in the platform
+([care-continuum-doctrine](care-continuum-doctrine.md), CC-1).
+
 The wellness domain should explicitly include support for how people **move, eat, sleep,
 rest, recover, and live**. It must be broad enough to cover:
 

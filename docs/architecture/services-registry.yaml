@@ -3440,6 +3440,8 @@ services:
   secondary_planes: []
   secondary_plane_displays: []
   system_of_record_for:
+  - The person Care Continuum — cradle-to-grave clinical journey; every care-path service
+    is a subordinate component (docs/doctrine/care-continuum-doctrine.md CC-1)
   - Pct canonical records
   - telehealth session lifecycle records
   - teleconsult referral lifecycle records
