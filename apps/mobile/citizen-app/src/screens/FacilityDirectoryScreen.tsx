@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, RefreshControl } from "r
 import { Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge } from "@impilo/mobile-design-system";
 import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import { fetchFacilities, type FacilitySummary } from "../services/facilityService";
+import { FacilityUnconfirmedTag } from "../components/FacilityDisclosure";
 import { appStore, useAppStore } from "../stores/appStore";
 
 type Facility = FacilitySummary;
@@ -113,6 +114,9 @@ export function FacilityDirectoryScreen({ onOpenFacility }: { onOpenFacility?: (
                       <Text style={styles.meta}>
                         {`${f.facilityType ?? "Facility"} · ${f.district ?? "—"}, ${f.province ?? "—"}`}
                       </Text>
+                      {/* Distinguishable BEFORE tapping: a citizen scanning the list
+                          must be able to tell confirmed from HPA-listed-only. */}
+                      <FacilityUnconfirmedTag regulatoryStatus={f.regulatoryStatus} />
                     </View>
                     <Button
                       title="View"

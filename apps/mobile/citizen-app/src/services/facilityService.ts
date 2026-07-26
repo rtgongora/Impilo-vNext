@@ -10,6 +10,13 @@ export interface FacilitySummary {
   facilityType?: string;
   district?: string;
   province?: string;
+  /**
+   * tuso regulatory_status. `IMPORTED_PENDING_CONFIGURATION` means the facility
+   * is HPA-registered but NOBODY has confirmed its services, hours or contact
+   * details — it must never be presented as operating. See
+   * components/FacilityDisclosure.tsx.
+   */
+  regulatoryStatus?: string | null;
 }
 
 interface FacilityResource {
@@ -25,6 +32,8 @@ interface FacilityResource {
     ownership?: string | null;
     level?: string | null;
     hasValidCoordinates?: boolean;
+    regulatoryStatus?: string | null;
+    regulatory_status?: string | null;
   };
 }
 
@@ -37,5 +46,6 @@ export async function fetchFacilities(search?: string): Promise<FacilitySummary[
     facilityType: facility.attributes.facilityType ?? facility.attributes.facility_type,
     district: facility.attributes.district,
     province: facility.attributes.province,
+    regulatoryStatus: facility.attributes.regulatoryStatus ?? facility.attributes.regulatory_status ?? null,
   }));
 }

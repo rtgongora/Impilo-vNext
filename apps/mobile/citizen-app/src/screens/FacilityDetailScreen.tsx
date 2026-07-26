@@ -6,6 +6,12 @@ import { View, Text, StyleSheet, ScrollView, RefreshControl } from "react-native
 import { apiClient } from "@impilo/mobile-api-client";
 import { Screen, Header, Card, CardBody, Button, LoadingSpinner, ErrorState, Badge } from "@impilo/mobile-design-system";
 import { appStore, useAppStore } from "../stores/appStore";
+import {
+  FacilityDisclosure,
+  UnconfirmedField,
+  isUnconfirmedFacility,
+  type LocationPrecision,
+} from "../components/FacilityDisclosure";
 
 interface FacilityResource {
   id: string;
@@ -16,6 +22,11 @@ interface FacilityResource {
     province?: string;
     address?: string;
     phone?: string;
+    regulatoryStatus?: string | null;
+    regulatory_status?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    locationPrecision?: LocationPrecision | null;
   };
 }
 
@@ -27,6 +38,18 @@ interface Facility {
   province?: string;
   address?: string;
   phone?: string;
+  regulatoryStatus?: string | null;
+  locationPrecision: LocationPrecision;
+}
+
+/**
+ * Location precision is derived defensively: use the server tier once the
+ * coordinate programme sends one, else infer from whether a coordinate exists.
+ * Defaults to "absent" — never claim a location we cannot substantiate.
+ */
+function resolvePrecision(a: FacilityResource["attributes"]): LocationPrecision {
+  if (a.locationPrecision) return a.locationPrecision;
+  return a.latitude != null && a.longitude != null ? "address-precise" : "absent";
 }
 
 async function fetchFacility(id: string): Promise<Facility> {
@@ -40,6 +63,8 @@ async function fetchFacility(id: string): Promise<Facility> {
     province: f.attributes.province,
     address: f.attributes.address,
     phone: f.attributes.phone,
+    regulatoryStatus: f.attributes.regulatoryStatus ?? f.attributes.regulatory_status ?? null,
+    locationPrecision: resolvePrecision(f.attributes),
   };
 }
 
@@ -77,6 +102,7 @@ export function FacilityDetailScreen({ facilityId, onBack }: { facilityId: strin
   const onRefresh = useCallback(() => void load("refresh"), [load]);
 
   const isSelected = useMemo(() => selectedFacilityId === facilityId, [selectedFacilityId, facilityId]);
+  const unconfirmed = isUnconfirmedFacility(facility?.regulatoryStatus);
 
   if (loading && !facility) {
     return (
@@ -124,10 +150,28 @@ export function FacilityDetailScreen({ facilityId, onBack }: { facilityId: strin
             <Text style={styles.meta}>
               {`${facility.facilityType ?? "Facility"} · ${facility.district ?? "—"}, ${facility.province ?? "—"}`}
             </Text>
-            {facility.address ? <Text style={styles.field}>Address: {facility.address}</Text> : null}
-            {facility.phone ? <Text style={styles.field}>Phone: {facility.phone}</Text> : null}
+            {/* HPA-listed facilities carry no confirmation of services, hours or
+                contact details — never render these as plain verified facts. */}
+            <UnconfirmedField
+              label="Address"
+              value={facility.address}
+              unconfirmed={unconfirmed}
+              testID="facility-address"
+            />
+            <UnconfirmedField
+              label="Phone"
+              value={facility.phone}
+              unconfirmed={unconfirmed}
+              testID="facility-phone"
+            />
           </CardBody>
         </Card>
+
+        <FacilityDisclosure
+          regulatoryStatus={facility.regulatoryStatus}
+          locationPrecision={facility.locationPrecision}
+          hasPhone={!!facility.phone}
+        />
 
         <View style={styles.actions}>
           <Button
