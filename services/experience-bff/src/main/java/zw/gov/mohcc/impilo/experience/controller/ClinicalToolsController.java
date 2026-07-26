@@ -50,8 +50,12 @@ public class ClinicalToolsController {
             Object data = result != null && result.has("data") ? result.get("data") : (result != null ? result : new Object[0]);
             return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId)));
         } catch (Exception e) {
-            log.warn("Document list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Document list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "documents_unavailable",
+                    "message", "Documents could not be retrieved. Do not treat this as an absence of documents."));
         }
     }
 

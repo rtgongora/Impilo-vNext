@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -37,10 +38,13 @@ public class ZiboRegistryProxyController {
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("ZIBO resolve failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId, "warning", e.getMessage())));
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("ZIBO resolve failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "zibo_resolve_unavailable",
+                    "message", "The artifact could not be resolved. Do not treat this as a missing artifact.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
 }

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -37,9 +38,12 @@ public class SupportController {
                     "data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Support ticket list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Support ticket list failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "support_tickets_unavailable",
+                    "message", "Support tickets could not be retrieved. Do not treat this as an absence of tickets.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -58,9 +62,12 @@ public class SupportController {
                     "data", data,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Support ticket get failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of(),
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Support ticket get failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "support_ticket_unavailable",
+                    "message", "The support ticket could not be retrieved. Do not treat this as a missing ticket.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
@@ -129,9 +136,12 @@ public class SupportController {
                     "data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("Support article search failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
+            // An empty 200 here is indistinguishable from a successful read that found
+            // nothing, so a failed call was being reported as an absence.
+            log.error("Support article search failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "support_articles_unavailable",
+                    "message", "Help articles could not be searched. Do not treat this as an absence of matching articles.",
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

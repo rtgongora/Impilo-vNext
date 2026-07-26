@@ -47,6 +47,11 @@ public class CommsApprovalController {
         long startedNs = System.nanoTime();
         List<ApprovalQueueItemDto> templates = new ArrayList<>();
         List<ApprovalQueueItemDto> campaigns = new ArrayList<>();
+        // Category (b): the per-source catches below are deliberately non-fatal. This is a composite
+        // dashboard over several independent sources, and one unreachable source should not blank the
+        // others. It stays honest because every failure is named in sourceHealth (UP/DEGRADED/DOWN),
+        // so an empty section is attributable rather than silent — unlike a bare empty list, the
+        // caller can tell 'this source said nothing' from 'this source could not be asked'.
         Map<String, Object> sourceHealth = new LinkedHashMap<>();
 
         try {
