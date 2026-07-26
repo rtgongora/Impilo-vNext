@@ -444,8 +444,15 @@ public class ButanoEventConsumer {
 
         String effectiveAt = firstNonBlank(text(payload, "effective_at"), text(payload, "effectiveAt"));
         if (effectiveAt != null) {
+            // Normalised through OffsetDateTime rather than handed straight to DateTimeType.
+            // Java renders a zero-second timestamp as "2026-07-26T13:00Z", which FHIR rejects
+            // because it requires seconds — so every observation recorded on the minute was
+            // silently archived with no time at all. An observation without a time cannot be
+            // ordered against the others, so the reader cannot tell whether the temperature was
+            // taken before or after treatment.
             try {
-                obs.setEffective(new DateTimeType(effectiveAt));
+                java.time.OffsetDateTime parsed = java.time.OffsetDateTime.parse(effectiveAt);
+                obs.setEffective(new DateTimeType(java.util.Date.from(parsed.toInstant())));
             } catch (RuntimeException e) {
                 log.warn("BUTANO SHR: observation {} has an unparseable effective_at '{}'; archived "
                                 + "without a time rather than with a guessed one", observationId, effectiveAt);

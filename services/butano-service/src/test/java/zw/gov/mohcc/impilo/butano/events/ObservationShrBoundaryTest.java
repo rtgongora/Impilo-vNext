@@ -193,6 +193,33 @@ class ObservationShrBoundaryTest {
     }
 
     @Test
+    void aTimestampWithZeroSecondsStillCarriesItsTime() {
+        // Caught by proving the hop on the estate: Java renders a zero-second timestamp as
+        // "2026-07-26T13:00Z", FHIR requires seconds, and every observation recorded on the minute
+        // was archived with no time at all. An untimed observation cannot be ordered against the
+        // others, so a reader cannot tell whether the temperature was taken before or after
+        // treatment.
+        Observation obs = build("""
+                {"observation_id":"obs-1","subject_cpid":"C","code":"BODY_TEMPERATURE",
+                 "value_quantity":38.9,"value_unit":"Cel","effective_at":"2026-07-26T13:00Z"}
+                """);
+
+        assertThat(obs.hasEffective()).isTrue();
+        assertThat(obs.getEffectiveDateTimeType().getValue()).isNotNull();
+    }
+
+    @Test
+    void aFullyQualifiedTimestampIsPreservedToTheSecond() {
+        Observation obs = build("""
+                {"observation_id":"obs-1","subject_cpid":"C","code":"BODY_TEMPERATURE",
+                 "value_quantity":38.9,"value_unit":"Cel","effective_at":"2026-07-26T13:04:37Z"}
+                """);
+
+        assertThat(obs.getEffectiveDateTimeType().getValue().toInstant())
+                .isEqualTo(java.time.Instant.parse("2026-07-26T13:04:37Z"));
+    }
+
+    @Test
     void anUnparseableEffectiveTimeIsOmittedRatherThanGuessed() {
         Observation obs = build("""
                 {"observation_id":"obs-1","subject_cpid":"C","code":"BODY_TEMPERATURE",
