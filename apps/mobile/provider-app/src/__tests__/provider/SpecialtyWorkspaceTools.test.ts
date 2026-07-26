@@ -51,6 +51,23 @@ describe("burns workspace tools", () => {
   });
 });
 
+describe("APGAR is wired to its real system of record", () => {
+  it("resolves to the apgar form, not a free-text box", () => {
+    expect(formKindForTool("APGAR Record", 0, "neonatal")).toBe("apgar");
+  });
+
+  it("resolves regardless of the label the BFF menu uses", () => {
+    expect(formKindForTool("APGAR Score", 1, "labour-delivery")).toBe("apgar");
+  });
+
+  it("is not withheld and does not fall back to notes", () => {
+    const kind = formKindForTool("APGAR Record", 0, "neonatal");
+    expect(kind).not.toBe("withheld");
+    expect(kind).not.toBe("notes");
+    expect(kind).not.toBe("soon");
+  });
+});
+
 describe("unrelated specialty tools are unaffected", () => {
   it("keeps the chemotherapy BSA dose calculator", () => {
     expect(formKindForTool("Dose Calculator (BSA)", 1, "chemo")).toBe("bsa");
