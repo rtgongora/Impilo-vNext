@@ -80,7 +80,8 @@ export default function DocumentsPage() {
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
   );
 
-  const { data: documentsData, isLoading } = useClinicalDocuments(patientId);
+  const { data: documentsData, isLoading, isError: documentsUnavailable } =
+    useClinicalDocuments(patientId);
   const uploadDocument = useUploadDocumentFile();
 
   const documents: ClinicalDocumentResource[] = documentsData?.data ?? [];
@@ -295,7 +296,16 @@ export default function DocumentsPage() {
               </form>
             )}
 
-            {documents.length === 0 ? (
+            {documentsUnavailable ? (
+              /* "No documents uploaded yet" is a statement about this patient's record. A failed
+                 read is a statement about us, and the two must not look the same. */
+              <div className="rounded-lg border border-red-200 bg-red-50 p-12 text-center">
+                <FileText className="mx-auto mb-3 h-10 w-10 text-red-500" />
+                <p className="text-sm font-medium text-red-700">
+                  Documents could not be loaded — this is not a record that none exist.
+                </p>
+              </div>
+            ) : documents.length === 0 ? (
               <div className="rounded-lg border border-border bg-card p-12 text-center">
                 <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">No documents uploaded yet</p>

@@ -21,7 +21,7 @@ export interface InterpretedVitalsPanelProps {
 export function InterpretedVitalsPanel({ patientId, vitals, ageYears, sex, encounterId }: InterpretedVitalsPanelProps) {
   const observations = useMemo(() => vitalsToObservationInputs(vitals), [vitals]);
   const interpret = useInterpretClinical();
-  const { mutate, data } = interpret;
+  const { mutate, data, isError } = interpret;
 
   // Re-interpret whenever the (stable) observation set changes and is non-empty.
   const lastKey = useRef<string>("");
@@ -34,6 +34,17 @@ export function InterpretedVitalsPanel({ patientId, vitals, ageYears, sex, encou
     if (sex) context.sex = sex;
     mutate({ patient_id: patientId, encounter_id: encounterId, context, observations });
   }, [key, observations, ageYears, sex, patientId, encounterId, mutate]);
+
+  if (isError && observations.length > 0) {
+    // Rendering nothing would leave the vitals looking reviewed and unremarkable. The panel's
+    // whole job is to flag abnormal observations, so its silence has to be attributable.
+    return (
+      <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+        These observations could not be interpreted. No range check was applied — do not read the
+        absence of flags as a normal result.
+      </p>
+    );
+  }
 
   const result = data?.data;
   if (!result) return null;

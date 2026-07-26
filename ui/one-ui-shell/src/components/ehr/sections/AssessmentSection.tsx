@@ -145,16 +145,32 @@ function TriagePanel({
   triage,
   vitals,
   isLoading,
+  isUnavailable,
 }: {
   triage: TriageRecord | null;
   vitals: EncounterVitalsLike | null;
   isLoading: boolean;
+  isUnavailable: boolean;
 }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         <span className="text-sm">Loading triage data...</span>
+      </div>
+    );
+  }
+
+  if (isUnavailable) {
+    // "No triage data" is an affirmative finding on an assessment screen — it says this patient
+    // has not been triaged, which is what decides who waits. Never assert it from a failed read.
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-red-700">
+        <AlertTriangle className="h-6 w-6 mb-2" />
+        <p className="text-sm font-medium">Triage and vitals could not be loaded</p>
+        <p className="mt-1 max-w-md text-center text-xs">
+          This is not a record that the patient is untriaged. Retry before assessing.
+        </p>
       </div>
     );
   }
@@ -789,8 +805,9 @@ export function AssessmentSection() {
   const [selectedTemplate, setSelectedTemplate] = useState<ClerkingTemplate | null>(null);
 
   // Fetch triage, vitals, and history from BFF
-  const { data: triageData, isLoading: triageLoading } = useTriage(encounterId);
-  const { data: vitalsData, isLoading: vitalsLoading } = useEncounterVitals(encounterId);
+  const { data: triageData, isLoading: triageLoading, isError: triageUnavailable } = useTriage(encounterId);
+  const { data: vitalsData, isLoading: vitalsLoading, isError: vitalsUnavailable } =
+    useEncounterVitals(encounterId);
   const { data: historyData, isLoading: historyLoading } = useEncounterHistory(encounterId);
 
   const triage = triageData?.data ?? null;
@@ -846,7 +863,14 @@ export function AssessmentSection() {
       </div>
 
       {/* Tab content */}
-      {activeTab === "triage" && <TriagePanel triage={triage} vitals={latestVitals} isLoading={triageLoading || vitalsLoading} />}
+      {activeTab === "triage" && (
+        <TriagePanel
+          triage={triage}
+          vitals={latestVitals}
+          isLoading={triageLoading || vitalsLoading}
+          isUnavailable={triageUnavailable || vitalsUnavailable}
+        />
+      )}
       {activeTab === "vitals" && encounterId && <VitalsRecorder encounterId={encounterId} />}
       {activeTab === "clerking" && (
         selectedTemplate

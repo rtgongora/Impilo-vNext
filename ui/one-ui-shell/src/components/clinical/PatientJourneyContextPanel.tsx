@@ -42,7 +42,7 @@ export function PatientJourneyContextPanel({
   const { data: referralsData } = useReferrals(patientId);
   const { data: teleData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
   const { data: admissionsData } = useAdmissions(patientId);
-  const { data: labData } = useLabOrders(patientId);
+  const { data: labData, isError: labsUnavailable } = useLabOrders(patientId);
 
   const queueRows = useMemo(() => {
     const all = queueData?.data ?? [];
@@ -114,6 +114,16 @@ export function PatientJourneyContextPanel({
             Queue {queueWait}
           </span>
         )}
+        {labsUnavailable && (
+          /* nextAction below is derived partly from outstanding labs, so a failed lab read
+             quietly changes what this strip recommends. Say the picture is incomplete. */
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700"
+            title="Lab orders could not be read — this journey view is incomplete."
+          >
+            Labs unavailable
+          </span>
+        )}
         <Link href={nextAction.href} className="ml-auto inline-flex items-center gap-1 font-medium text-primary hover:text-impilo-800">
           {nextAction.label}
           <ArrowRight className="h-3 w-3" />
@@ -143,7 +153,17 @@ export function PatientJourneyContextPanel({
         </div>
       </div>
 
-      {!hasAnySignal ? (
+      {labsUnavailable ? (
+        /*
+         * The empty state below calls itself honest, and it was — as long as every source
+         * actually answered. A failed lab read makes it a claim we cannot support: "no
+         * outstanding lab work" is exactly what an unreviewed result looks like from here.
+         */
+        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700">
+          Lab orders could not be read, so this journey view is incomplete. Do not treat the
+          absence of outstanding lab work as confirmation that there is none.
+        </p>
+      ) : !hasAnySignal ? (
         <p className="mt-4 rounded-lg border border-dashed border-border bg-card/80 px-3 py-3 text-sm text-muted-foreground">
           No active queue row, open encounter, referrals, teleconsults, admission, or outstanding lab work surfaced for this patient in the
           current facility context. This is an honest empty state — not a simulated journey.

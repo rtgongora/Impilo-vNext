@@ -64,7 +64,7 @@ export default function PatientChartPage() {
   const { data: patientData, isLoading: isLoadingPatient } = usePatient(patientId);
   const { data: encountersData } = useEncounters(patientId);
   const { data: referralsData } = useReferrals(patientId);
-  const { data: notesData } = useClinicalNotes(patientId);
+  const { data: notesData, isError: notesUnavailable } = useClinicalNotes(patientId);
   const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
   const { data: admissionsData } = useAdmissions(patientId);
 
@@ -280,8 +280,16 @@ export default function PatientChartPage() {
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Returned guidance</p>
-                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.referralLoopUpdates}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Consultation notes that include referral-loop updates from teleconsult or specialist review.</p>
+                    {/* This count is derived from clinical notes. When the notes read fails it
+                        collapses to 0, which reads as "no specialist guidance has come back". */}
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">
+                      {notesUnavailable ? "—" : coordinationPulse.referralLoopUpdates}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {notesUnavailable
+                        ? "Clinical notes could not be read — not a record that no guidance has returned."
+                        : "Consultation notes that include referral-loop updates from teleconsult or specialist review."}
+                    </p>
                   </div>
                 </div>
               </div>

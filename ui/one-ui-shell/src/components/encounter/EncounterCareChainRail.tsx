@@ -81,8 +81,16 @@ export function EncounterCareChainRail({ encounterId, patientId, patientCpid }: 
               <ScanLine className="h-3.5 w-3.5" />
               OROS orders
             </div>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{encounterOrders.length}</p>
-            <p className="text-xs text-muted-foreground">Lab & imaging orders linked to this encounter.</p>
+            {/* A bare 0 here is a claim that nothing was ordered on this encounter. When OROS
+                could not be read we have no count to show, so show that instead of a number. */}
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {ordersQ.isError ? "—" : encounterOrders.length}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {ordersQ.isError
+                ? "Orders could not be read — not a record that none were placed."
+                : "Lab & imaging orders linked to this encounter."}
+            </p>
           </div>
 
           <div className="rounded-lg border border-emerald-100 bg-success-soft/60 p-3">
