@@ -5,6 +5,8 @@ import { usePatient } from "@/hooks/queries/usePatients";
 import { useGrowth } from "@/hooks/queries/useGrowth";
 import { useImmunizations } from "@/hooks/queries/useImmunizations";
 import { useAllergies } from "@/hooks/queries/useAllergies";
+import { useImamEpisodes } from "@/hooks/queries/useImam";
+import { programmeLabel } from "@/features/paediatrics/imam/imam-presentation";
 import { ageFactsFor, recommendJourney, type AgeFacts, type PresentationContext } from "./paediatric-age";
 import { computeDueToday, sortDueItems, type DueItem } from "./due-today";
 
@@ -44,6 +46,7 @@ export function usePaediatricContext(
   const growth = useGrowth(patientId);
   const immunizations = useImmunizations(patientId);
   const allergies = useAllergies(patientId);
+  const imam = useImamEpisodes(patientId);
 
   return useMemo(() => {
     const attributes = (patient.data?.data as { attributes?: Record<string, unknown> } | undefined)?.attributes;
@@ -78,6 +81,9 @@ export function usePaediatricContext(
     if (growth.isError) unavailable.push("growth measurements");
     if (immunizations.isError) unavailable.push("immunisations");
     if (allergies.isError) unavailable.push("allergies");
+    if (imam.isError) unavailable.push("nutrition treatment");
+
+    const activeImam = (imam.data ?? []).find((episode) => episode.status === "ACTIVE") ?? null;
 
     const dueItems = sortDueItems(
       computeDueToday({
@@ -87,6 +93,12 @@ export function usePaediatricContext(
         hasAnyGrowthMeasurement: ordered.length > 0,
         latestWeightForAgeZ: latestScored?.derived?.weightForAge?.zScore ?? null,
         immunisationCount,
+        imam: {
+          enrolled: !!activeImam,
+          programme: activeImam ? programmeLabel(activeImam.programme) : null,
+          nextReviewDue: activeImam?.nextReviewDue ?? null,
+          unavailable: imam.isError,
+        },
       }),
     );
 
@@ -102,7 +114,11 @@ export function usePaediatricContext(
       journey: recommendJourney(age, presentation),
       unavailable,
       isLoading:
-        patient.isLoading || growth.isLoading || immunizations.isLoading || allergies.isLoading,
+        patient.isLoading ||
+        growth.isLoading ||
+        immunizations.isLoading ||
+        allergies.isLoading ||
+        imam.isLoading,
     };
   }, [
     patientId,
@@ -119,5 +135,8 @@ export function usePaediatricContext(
     allergies.data,
     allergies.isError,
     allergies.isLoading,
+    imam.data,
+    imam.isError,
+    imam.isLoading,
   ]);
 }
