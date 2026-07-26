@@ -88,7 +88,7 @@ class ClinicalDocumentsControllerTest {
     private static final class StubPctClient extends PctServiceClient {
         StubPctClient() { super(new RestTemplate(), endpoints(), mapper); }
 
-        @Override public JsonNode listPatientDocuments(String cpid, String documentType) {
+        @Override public JsonNode getPatientRecords(String cpid, String documentType) {
             ArrayNode arr = mapper.createArrayNode();
             arr.add(mapper.createObjectNode()
                     .put("document_id", "rec-1")
@@ -101,7 +101,7 @@ class ClinicalDocumentsControllerTest {
             return arr;
         }
 
-        @Override public JsonNode createPatientDocument(Map<String, Object> body) {
+        @Override public JsonNode createPatientRecord(Map<String, Object> body) {
             ObjectNode node = mapper.createObjectNode();
             node.put("document_id", "rec-new");
             node.put("title", body.get("title").toString());

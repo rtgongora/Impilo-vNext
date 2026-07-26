@@ -36,7 +36,7 @@ class CitizenRecordsControllerTest {
 
         StubPctClient() { super(new RestTemplate(), endpoints(), mapper); }
 
-        @Override public JsonNode listPatientDocuments(String cpid, String documentType) {
+        @Override public JsonNode getPatientRecords(String cpid, String documentType) {
             lastSubject = cpid;
             lastType = documentType;
             ArrayNode arr = mapper.createArrayNode();
@@ -91,7 +91,7 @@ class CitizenRecordsControllerTest {
     @Test
     void anUnreachablePctIsNotAnEmptyRecordList() {
         PctServiceClient failing = new PctServiceClient(new RestTemplate(), endpoints(), mapper) {
-            @Override public JsonNode listPatientDocuments(String cpid, String documentType) {
+            @Override public JsonNode getPatientRecords(String cpid, String documentType) {
                 throw new IllegalStateException("connection refused");
             }
         };

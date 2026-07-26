@@ -569,7 +569,7 @@ export interface CoreTransactionFacilityContext {
 }
 
 export interface CoreTransactionTrustContext {
-  purposeOfUse: PurposeOfUse | "CARE_COORDINATION";
+  purposeOfUse: PurposeOfUse;
   consentRequired: boolean;
   consentGranted?: boolean;
   consentReference?: string;

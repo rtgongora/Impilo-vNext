@@ -25,6 +25,22 @@ export interface DueItem {
   href?: string;
 }
 
+/**
+ * What the workspace knows about the child's nutrition treatment.
+ *
+ * Only the facts the episode header carries. The attendance banding — traced, defaulting — is a
+ * governed judgement made server-side against the rules the child was admitted under, and is
+ * shown on the treatment screen. Re-deriving it here from a date would let two surfaces disagree
+ * about whether the same child had defaulted.
+ */
+export interface ImamSummary {
+  enrolled: boolean;
+  programme: string | null;
+  nextReviewDue: string | null;
+  /** The episode list could not be read; nothing about enrolment has been established. */
+  unavailable: boolean;
+}
+
 export interface DueTodayInput {
   patientId: string;
   age: AgeFacts;
@@ -32,6 +48,7 @@ export interface DueTodayInput {
   hasAnyGrowthMeasurement: boolean;
   latestWeightForAgeZ?: number | null;
   immunisationCount: number;
+  imam?: ImamSummary;
   now?: Date;
 }
 
@@ -85,14 +102,57 @@ export function computeDueToday(input: DueTodayInput): DueItem[] {
     }
   }
 
-  // Nutrition follow-up on a low score already recorded.
-  if (typeof input.latestWeightForAgeZ === "number" && input.latestWeightForAgeZ < -2) {
+  // Nutrition treatment. An enrolled child's review outranks everything else here, because a
+  // missed one is how a severely malnourished child disappears from view.
+  const imam = input.imam;
+  if (imam?.unavailable) {
+    items.push({
+      id: "nutrition-unknown",
+      label: "Nutrition treatment",
+      detail:
+        "Whether this child is in a nutrition programme could not be read. Do not assume they are not — check before discharging them from this contact.",
+      urgency: "unknown",
+      href: `/ehr/${patientId}/imam`,
+    });
+  } else if (imam?.enrolled) {
+    const due = imam.nextReviewDue ? new Date(`${imam.nextReviewDue}T00:00:00Z`) : null;
+    const daysLate =
+      due && !Number.isNaN(due.getTime())
+        ? Math.floor((now.getTime() - due.getTime()) / 86_400_000)
+        : null;
+    if (daysLate === null) {
+      items.push({
+        id: "nutrition-treatment-unscheduled",
+        label: "Nutrition treatment",
+        detail: `In ${imam.programme ?? "a nutrition programme"} with no next review scheduled. An episode with no schedule is a child nobody is expecting back.`,
+        urgency: "overdue",
+        href: `/ehr/${patientId}/imam`,
+      });
+    } else if (daysLate > 0) {
+      items.push({
+        id: "nutrition-treatment-overdue",
+        label: "Nutrition treatment",
+        detail: `In ${imam.programme ?? "a nutrition programme"}; the review was due ${imam.nextReviewDue} — ${daysLate} day${daysLate === 1 ? "" : "s"} ago. Record it or record the miss; leaving it blank looks the same as not yet due.`,
+        urgency: "overdue",
+        href: `/ehr/${patientId}/imam`,
+      });
+    } else if (daysLate === 0) {
+      items.push({
+        id: "nutrition-treatment-due",
+        label: "Nutrition treatment",
+        detail: `In ${imam.programme ?? "a nutrition programme"}; this review is due today.`,
+        urgency: "due",
+        href: `/ehr/${patientId}/imam`,
+      });
+    }
+  } else if (typeof input.latestWeightForAgeZ === "number" && input.latestWeightForAgeZ < -2) {
+    // Malnourished on the record and in no programme — the gap this whole feature exists to close.
     items.push({
       id: "nutrition-followup",
-      label: "Nutrition review",
-      detail: `Weight-for-age is ${input.latestWeightForAgeZ.toFixed(2)} SD. Assess feeding and check MUAC and oedema.`,
+      label: "Nutrition treatment",
+      detail: `Weight-for-age is ${input.latestWeightForAgeZ.toFixed(2)} SD and this child is in no nutrition programme. Check MUAC and oedema and enrol them.`,
       urgency: "overdue",
-      href: `/ehr/${patientId}/growth-chart`,
+      href: `/ehr/${patientId}/imam`,
     });
   }
 

@@ -275,9 +275,11 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> recordNEWS2Components(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
-        // Inpatient-service owns the early-warning record. This used to try PCT first at
-        // /v1/ews/news2 — a path pct never served — so every request paid a doomed round-trip
-        // and reached inpatient only through the catch block.
+        // The PCT attempt that used to sit here called /v1/ews/news2, which pct-service has never
+        // served. It failed on every request and the "fallback" below did all the work — so the
+        // fallback was the real path, wearing the costume of a contingency. Removed rather than
+        // repaired: inpatient-service owns the early warning score and its EwsCalculatorEngine, and
+        // a second store for NEWS2 in PCT would be a duplicate system of record, not a capability.
         // NEWS2 component scoring: each parameter 0-3 points.
         int rrScore = toInt(body.getOrDefault("respiratoryRateScore", 0));
         int spo2Score = toInt(body.getOrDefault("spo2Score", 0));

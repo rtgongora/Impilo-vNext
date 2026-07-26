@@ -425,46 +425,50 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    // ── Patient documents (the UI calls these "records" / "clinical documents") ──
-    //
-    // This client previously called /v1/records and /v1/patient/{cpid}/records — paths
-    // pct-service has never served, so every clinical-documents list rendered empty and the
-    // citizen's own-record fetch always failed. pct now owns the patient document index at
-    // /v1/patient-documents (pct_patient_documents, V130); the bytes stay in document-service.
-
-    /** Documents for a subject, newest first, optionally narrowed by type. Unpaged from pct. */
-    public JsonNode listPatientDocuments(String cpid, String documentType) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/patient-documents")
-                .queryParam("patient_id", cpid);
-        if (documentType != null && !documentType.isBlank()) {
-            builder.queryParam("document_type", documentType);
-        }
-        log.debug("PCT: Listing patient documents for patient={}...",
+    /**
+     * Clinical records/documents for a patient, newest first. Unpaged: pct serves the whole
+     * index and ignores paging params, so the experience layer pages the composed rows itself
+     * rather than pretending a page/size handshake happened.
+     */
+    public JsonNode getPatientRecords(String cpid, String documentType) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/patient/" + cpid + "/records");
+        if (documentType != null) builder.queryParam("documentType", documentType);
+        log.debug("PCT: Getting records for patient={}...",
                 cpid.substring(0, Math.min(8, cpid.length())));
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
         return extractData(response);
     }
 
     /**
-     * One document by id. When {@code subjectCpid} is supplied pct binds the read to that
-     * subject and answers 404 on a mismatch — the citizen-facing path passes the caller's own
-     * CPID here so a person can only ever fetch their own record.
+     * Get a single clinical record by ID.
      */
-    public JsonNode getPatientDocument(String documentId, String subjectCpid) {
+    public JsonNode getPatientRecord(String recordId) {
+        return getPatientRecord(recordId, null);
+    }
+
+    /**
+     * Get a single clinical record by ID, bound to a subject. When {@code subjectCpid} is
+     * supplied pct answers 404 on a mismatch without disclosing that the id exists — the
+     * citizen-facing path passes the caller's own CPID here so a person can only ever fetch
+     * their own record.
+     */
+    public JsonNode getPatientRecord(String recordId, String subjectCpid) {
         UriComponentsBuilder builder =
-                UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/patient-documents/" + documentId);
+                UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/records/" + recordId);
         if (subjectCpid != null && !subjectCpid.isBlank()) {
             builder.queryParam("subject_cpid", subjectCpid);
         }
-        log.debug("PCT: Getting patient document id={}", documentId);
+        log.debug("PCT: Getting record id={}", recordId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
         return extractData(response);
     }
 
-    /** Create a patient document index entry (metadata; the bytes live in document-service). */
-    public JsonNode createPatientDocument(Map<String, Object> body) {
-        String url = baseUrl + "/v1/patient-documents";
-        log.info("PCT: Creating patient document for patient={}", body.get("patient_id"));
+    /**
+     * Create a clinical record (document metadata) in PCT.
+     */
+    public JsonNode createPatientRecord(Map<String, Object> body) {
+        String url = baseUrl + "/v1/records";
+        log.info("PCT: Creating clinical record for patient={}", body.get("patient_id"));
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
@@ -1015,12 +1019,50 @@ public class PctServiceClient {
         return extractData(response);
     }
 
-    // Discharge clearances live in inpatient-service, not PCT. The four methods that used to sit
-    // here called pct-service at /v1/discharge-clearances/** — a path pct has never served. The
-    // working lane is InpatientServiceClient against /internal/v1/discharge-clearances/**, which
-    // is what ClinicalDepthController and MobileDischargeController use. Deleted rather than
-    // repointed: a second client path to one truth is how the shadow was born.
-    // Found by DownstreamRouteContractTest.
+    // ── IMAM — acute malnutrition treatment episodes ────────────
+
+    public JsonNode listImamEpisodes(String patientCpid) {
+        String url = baseUrl + "/v1/imam/episodes?patient_id=" + patientCpid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getImamEpisode(String episodeId) {
+        String url = baseUrl + "/v1/imam/episodes/" + episodeId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode enrolImamEpisode(Map<String, Object> body) {
+        String url = baseUrl + "/v1/imam/episodes";
+        log.info("PCT: Enrolling IMAM episode for patient={} classification={}",
+                body.get("patient_id"), body.get("source_classification"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordImamVisit(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/imam/episodes/" + episodeId + "/visits";
+        log.info("PCT: Recording IMAM review for episode={} attended={}", episodeId, body.get("attended"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode closeImamEpisode(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/imam/episodes/" + episodeId + "/outcome";
+        log.info("PCT: Closing IMAM episode={} outcome={}", episodeId, body.get("outcome"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode imamTracingQueue(String facilityId) {
+        String url = baseUrl + "/v1/imam/tracing-queue"
+                + (facilityId == null || facilityId.isBlank() ? "" : "?facility_id=" + facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Clinical Depth — Discharge Clearances (strangler migration) ──
 
     // Resuscitation lives in inpatient-service, not PCT. The eight methods that used to sit
     // here called pct-service at /v1/emergency/{activationId}/... — a path pct has never served,
@@ -1102,14 +1144,6 @@ public class PctServiceClient {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
-
-    // Fluid balance, Apgar, early-warning scores and NEWS2 live in inpatient-service, not PCT.
-    // The seven methods that used to sit here called pct-service at /v1/fluid-balance, /v1/apgar,
-    // /v1/ews and /v1/ews/news2 — paths pct has never served, for records inpatient-service owns
-    // (its EWS is computed server-side against versioned thresholds). The working lane is
-    // InpatientServiceClient against /internal/v1/…, which is what every controller uses; the one
-    // residual caller of the NEWS2 shadow reached inpatient only via a catch block that fired on
-    // every request. Deleted rather than repointed. Found by DownstreamRouteContractTest.
 
     public JsonNode recordObservation(Map<String, Object> body) {
         String url = baseUrl + "/v1/observations";
@@ -1229,13 +1263,6 @@ public class PctServiceClient {
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
-
-    // Ward rounds and inter-facility transfers live in inpatient-service, not PCT. The six
-    // methods that used to sit here called pct-service at /v1/ward-rounds and /v1/transfers —
-    // paths pct has never served. They had zero callers; the working lane is
-    // InpatientServiceClient against /internal/v1/…, which is what CareEmergencyInpatientController
-    // and InpatientController use. Deleted rather than repointed. Found by
-    // DownstreamRouteContractTest.
 
     // ── ED / Casualty operations (PCT V012) ─────────────────────────
 

@@ -92,6 +92,153 @@ public class BedManagementService {
                 .toList();
     }
 
+    /**
+     * Provision a ward and materialise its beds in one transaction.
+     *
+     * <p>This closes a live BFF surface over nothing: {@code AdminWardController} has been POSTing
+     * to {@code tuso /v1/wards}, which no service in the estate serves — while ward <em>reads</em>
+     * already resolve here, to {@code inpatient.ward}. Writes now land where the reads come from.
+     * (Tuso's only ward table is {@code zw_admin_ward} — electoral wards — so completing this there
+     * would have split ward truth and risked answering a hospital-ward question with a geography.)</p>
+     *
+     * <h4>Why the safety attributes are not optional</h4>
+     * <p>{@link BedSafetyEvaluator} refuses placements against ward capability: a patient needing
+     * oxygen, isolation, monitoring or ICU is blocked unless the bed or its ward offers it. The V015
+     * schema default for {@code oxygen_available} is TRUE, so a ward created without stating its
+     * capabilities would <em>claim oxygen it may not have</em>, and the evaluator would then admit
+     * an oxygen-dependent patient to a ward with none — a fallback whose failure is invisible until
+     * it reaches a person.</p>
+     *
+     * <p>So capabilities default to the conservative direction here (absent unless declared),
+     * deliberately diverging from the column default. The two errors are not symmetric: a ward
+     * wrongly marked incapable blocks a placement, which is visible and correctable at the ward
+     * record; a ward wrongly marked capable is discovered at the bedside.</p>
+     */
+    @Transactional
+    public Map<String, Object> createWard(UUID tenantId, CreateWardCommand command) {
+        if (command.totalBeds() < 1) {
+            throw new IllegalArgumentException("totalBeds must be at least 1");
+        }
+        boolean duplicate = wardRepository.findByFacilityIdOrderByNameAsc(command.facilityId()).stream()
+                .anyMatch(w -> w.getName().equalsIgnoreCase(command.name().trim()));
+        if (duplicate) {
+            throw new IllegalStateException(
+                    "a ward named '" + command.name().trim() + "' already exists at this facility");
+        }
+
+        WardEntity ward = new WardEntity();
+        ward.setId(UUID.randomUUID());
+        ward.setTenantId(tenantId);
+        ward.setFacilityId(command.facilityId());
+        ward.setName(command.name().trim());
+        ward.setWardType(normaliseVocabulary(command.wardType(), "GENERAL"));
+        ward.setFloorLabel(command.floorLabel());
+        ward.setTotalBeds(command.totalBeds());
+        ward.setStatus("ACTIVE");
+        ward.setGenderDesignation(normaliseVocabulary(command.genderDesignation(), "ANY"));
+        ward.setAgeGroup(normaliseVocabulary(command.ageGroup(), "ADULT"));
+        // Conservative by construction — see the class note above. An undeclared capability is
+        // absent, never assumed, including oxygen.
+        ward.setIsolationCapable(Boolean.TRUE.equals(command.isolationCapable()));
+        ward.setOxygenAvailable(Boolean.TRUE.equals(command.oxygenAvailable()));
+        ward.setMonitoringCapable(Boolean.TRUE.equals(command.monitoringCapable()));
+        ward.setIcuCapable(Boolean.TRUE.equals(command.icuCapable()));
+        wardRepository.save(ward);
+
+        // Beds inherit nothing: the evaluator already falls back to ward capability when a bed
+        // does not override it, so stamping the ward's capabilities onto every bed would create a
+        // second copy of the same claim that could drift from it.
+        List<BedEntity> beds = new ArrayList<>();
+        for (int i = 1; i <= command.totalBeds(); i++) {
+            BedEntity bed = new BedEntity();
+            bed.setId(UUID.randomUUID());
+            bed.setTenantId(tenantId);
+            bed.setFacilityId(command.facilityId());
+            bed.setWardId(ward.getId());
+            bed.setBedNumber(String.format("%s-%02d", bedPrefix(ward.getName()), i));
+            bed.setBedType("STANDARD");
+            bed.setStatus("AVAILABLE");
+            beds.add(bed);
+        }
+        bedRepository.saveAll(beds);
+
+        emitWardProvisioned(ward, beds.size());
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("name", ward.getName());
+        attributes.put("facilityId", ward.getFacilityId().toString());
+        attributes.put("wardType", ward.getWardType());
+        attributes.put("floorLabel", ward.getFloorLabel());
+        attributes.put("totalBeds", beds.size());
+        attributes.put("occupiedBeds", 0);
+        attributes.put("availableBeds", beds.size());
+        attributes.put("maintenanceBeds", 0);
+        attributes.put("status", ward.getStatus());
+        attributes.put("genderDesignation", ward.getGenderDesignation());
+        attributes.put("ageGroup", ward.getAgeGroup());
+        attributes.put("isolationCapable", ward.isIsolationCapable());
+        attributes.put("oxygenAvailable", ward.isOxygenAvailable());
+        attributes.put("monitoringCapable", ward.isMonitoringCapable());
+        attributes.put("icuCapable", ward.isIcuCapable());
+
+        return Map.of("id", ward.getId().toString(), "type", "ward", "attributes", attributes);
+    }
+
+    /** What a caller must state to provision a ward. Capabilities are boxed so "not stated" is distinguishable. */
+    public record CreateWardCommand(
+            UUID facilityId,
+            String name,
+            String wardType,
+            String floorLabel,
+            int totalBeds,
+            String genderDesignation,
+            String ageGroup,
+            Boolean isolationCapable,
+            Boolean oxygenAvailable,
+            Boolean monitoringCapable,
+            Boolean icuCapable) {
+    }
+
+    private static String bedPrefix(String wardName) {
+        String letters = wardName.replaceAll("[^A-Za-z]", "").toUpperCase(Locale.ROOT);
+        return letters.isEmpty() ? "BED" : letters.substring(0, Math.min(3, letters.length()));
+    }
+
+    private static String normaliseVocabulary(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private void emitWardProvisioned(WardEntity ward, int bedCount) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("ward_id", ward.getId().toString());
+            payload.put("facility_id", ward.getFacilityId().toString());
+            payload.put("name", ward.getName());
+            payload.put("ward_type", ward.getWardType());
+            payload.put("total_beds", bedCount);
+            payload.put("gender_designation", ward.getGenderDesignation());
+            payload.put("age_group", ward.getAgeGroup());
+            payload.put("isolation_capable", ward.isIsolationCapable());
+            payload.put("oxygen_available", ward.isOxygenAvailable());
+            payload.put("monitoring_capable", ward.isMonitoringCapable());
+            payload.put("icu_capable", ward.isIcuCapable());
+
+            EventOutboxEntity outbox = new EventOutboxEntity();
+            outbox.setAggregateType("WARD");
+            outbox.setAggregateId(ward.getId().toString());
+            outbox.setTenantId(ward.getTenantId().toString());
+            outbox.setPodId(System.getenv("HOSTNAME") != null ? System.getenv("HOSTNAME") : "local");
+            outbox.setCorrelationId(UUID.randomUUID().toString());
+            outbox.setEventType("inpatient.ward.provisioned");
+            outbox.setSchemaVersion(1);
+            outbox.setOccurredAt(OffsetDateTime.now());
+            outbox.setPayloadJson(objectMapper.writeValueAsString(payload));
+            outboxRepository.save(outbox);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialise ward-provisioned event", e);
+        }
+    }
+
     @Transactional
     public Map<String, Object> updateBedStatus(UUID bedId, String status) {
         BedEntity bed = requireBed(bedId);

@@ -64,7 +64,7 @@ public class ClinicalDocumentsController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
         try {
-            JsonNode data = pctClient.listPatientDocuments(patientId, null);
+            JsonNode data = pctClient.getPatientRecords(patientId, null);
             List<Map<String, Object>> rows = new java.util.ArrayList<>();
             if (data != null && data.isArray()) {
                 data.forEach(doc -> rows.add(documentRow(doc)));
@@ -80,7 +80,7 @@ public class ClinicalDocumentsController {
         } catch (Exception e) {
             // An empty 200 here reads as "this patient has no records on file", which is an
             // affirmative finding and would be a fabricated one. Fail loudly instead.
-            log.error("PCT listPatientDocuments failed for patient={}: {}", patientId, e.getMessage());
+            log.error("PCT getPatientRecords failed for patient={}: {}", patientId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                     "error", "clinical_documents_unavailable",
                     "message", "Clinical documents could not be retrieved. Do not treat this as an "
@@ -150,7 +150,7 @@ public class ClinicalDocumentsController {
         // possible on later reads without guessing at storage keys.
         body.put("document_object_id", request.document_object_id());
 
-        JsonNode created = pctClient.createPatientDocument(body);
+        JsonNode created = pctClient.createPatientRecord(body);
 
         Map<String, Object> meta = new LinkedHashMap<>(Map.of(
                 "request_id", requestId,

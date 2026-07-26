@@ -63,7 +63,7 @@ vi.mock("@impilo/mobile-auth", () => ({
 }));
 
 vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
   Button: (props: { title: string; testID?: string; onPress: () => void }) =>

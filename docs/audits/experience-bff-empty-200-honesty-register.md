@@ -201,13 +201,14 @@ the call site. Two of the twelve turned out to be more severe than "lower severi
   both already name their own degradation in-band (fail-closed to non-personalized; an explicit
   assistant message when the knowledge service is down).
 
-**Left as 200 — category (b), commented at the call site**
+**Activation banner — resolved to the stricter behaviour on merge**
 
-- `components/ProviderActivationBanner.tsx` — on a failed linked-ids read the banner stays hidden.
-  That is an absent invitation, not a fabricated finding: nothing renders, so no reader can
-  mistake it for "you have no Provider ID". The regulatory claim it would otherwise imply is made
-  on `/professional`, which now shows an explicit unavailable state, and activation stays
-  reachable there. A silent fallback here loses a prompt, not a fact.
+- `components/ProviderActivationBanner.tsx` — one session left the banner hidden on a failed
+  linked-ids read (an absent invitation, not a fabricated finding); a parallel session made it
+  say so explicitly, gated on the person plausibly holding a professional identity so citizens
+  do not see an error for the correct answer. The merge keeps the explicit notice: it surfaces
+  the unavailability without manufacturing standing, and `/professional` still shows its own
+  unavailable state.
 
 **Tests.** `ProfessionalProfilePage`, `PatientJourneyContextPanel`, `EncounterCareChainRail`,
 `OfflineClinicalQueueOrchestrationPanel` and `CarePlanOrchestrationRail` now have cases pinning the
@@ -218,6 +219,28 @@ mean mocking the clerking editor, vitals recorder, lab system and timeline for o
 **Not a 502 consumer, found in passing.** The invented licence expiry on `app/professional/page.tsx`
 was fabrication of a different kind — no failed read involved, the date was simply computed from
 `Date.now()`. It was removed with the surrounding fix because it sat inside the same sentence.
+
+### UI test baseline
+
+Full suite: **602/602 files, 2445/2445 tests**. Four files were failing before this work started
+(verified by reproducing them with the changes stashed); all four are now fixed and none were
+related to the empty-200 defect:
+
+- `routes.test.ts` and `hpa-admin-review-golden-thread.test.ts` both asserted the route-registry
+  count. `9eed27590` added `/ehr/[patientId]/paediatrics` without bumping `EXPECTED_ROUTE_COUNT`.
+  The canary was doing its job, so the count was bumped and the delta noted rather than the
+  assertion loosened.
+- `Providers.test.tsx` described the cookie-only hydration path that `a2a2e75de` deliberately
+  removed (it could resurrect a stale identity), and hardcoded an `expires_at` that has since
+  passed — so it had quietly become an assertion that a valid session hydrates while actually
+  exercising the rejection path. Expiry is now relative to now.
+- `WelcomeHero.test.tsx` used a pre-redesign link label and bare `getByRole("search")` /
+  `getByRole("searchbox")` queries that became ambiguous when a second search landmark was added.
+
+None of the four was catching a defect; each described behaviour that had been deliberately
+replaced. Worth noting for anyone reading a green suite as proof: three of them lived outside the
+`src/app/ehr` / `src/components` paths, so a scoped test run reported clean while they were
+failing.
 
 ## What the test suite was proving
 

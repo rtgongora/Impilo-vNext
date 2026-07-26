@@ -52,7 +52,7 @@ public class CitizenRecordsController {
         int limit = Math.max(1, Math.min(size, 100));
         String typeFilter = documentType != null && !documentType.isBlank() ? documentType : type;
         try {
-            JsonNode documents = pctClient.listPatientDocuments(actorId, typeFilter);
+            JsonNode documents = pctClient.getPatientRecords(actorId, typeFilter);
             List<Map<String, Object>> rows = new ArrayList<>();
             if (documents != null && documents.isArray()) {
                 documents.forEach(doc -> rows.add(recordRow(doc, null)));
@@ -74,7 +74,7 @@ public class CitizenRecordsController {
         } catch (Exception e) {
             // "No records found" to a person about their own medical history is an affirmative
             // claim. When the truth is unreachable, say so; the app renders a retryable error.
-            log.error("PCT listPatientDocuments failed for citizen actor={}: {}", actorId, e.getMessage());
+            log.error("PCT getPatientRecords failed for citizen actor={}: {}", actorId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                     "error", "records_unavailable",
                     "message", "Your records could not be retrieved. Do not treat this as an "
@@ -93,7 +93,7 @@ public class CitizenRecordsController {
 
         JsonNode document;
         try {
-            document = pctClient.getPatientDocument(id.toString(), actorId);
+            document = pctClient.getPatientRecord(id.toString(), actorId);
         } catch (HttpClientErrorException.NotFound e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "record not found");
         }

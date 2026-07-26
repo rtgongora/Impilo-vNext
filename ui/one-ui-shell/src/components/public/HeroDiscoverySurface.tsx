@@ -387,6 +387,26 @@ export function HeroDiscoverySurface() {
   const notes = data?.notes ?? [];
 
   /**
+   * Feature the nearest mapped result on arrival, so the map carries an actionable card
+   * rather than waiting for a click. Only ever a result that has a pin — featuring one
+   * without coordinates would put a card on a map that cannot show where it is.
+   */
+  useEffect(() => {
+    if (selectedKey || results.length === 0) return;
+    let bestKey: string | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    results.forEach((r, i) => {
+      if (r.latitude == null || r.longitude == null) return;
+      const d = r.distanceMeters ?? Number.MAX_SAFE_INTEGER;
+      if (d < bestDistance) {
+        bestDistance = d;
+        bestKey = resultKey(r, i);
+      }
+    });
+    if (bestKey) setSelectedKey(bestKey);
+  }, [results, selectedKey]);
+
+  /**
    * Kilometres from the chosen locality to the closest result that actually has a pin.
    * The find-care lane does a registry search and annotates distance afterwards — it does
    * not do a proximity query — so a locality can legitimately have no mapped care anywhere
@@ -411,7 +431,7 @@ export function HeroDiscoverySurface() {
   return (
     <section
       aria-label="Get health services"
-      className="flex h-full min-h-[32rem] flex-col overflow-hidden rounded-[1.6rem] lg:min-h-0 border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
+      className="flex h-full min-h-[32rem] flex-col overflow-hidden rounded-[1.6rem] xl:min-h-0 border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
     >
       {/* Header + Map/List toggle */}
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pt-4 pb-3 sm:px-5">
@@ -582,7 +602,7 @@ export function HeroDiscoverySurface() {
               of it — the map resolved to 28px at 390 and 105px at 768, a strip of
               nothing. The floor makes the surface grow instead of crushing the map.
             */}
-            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200 lg:min-h-[9rem] xl:min-h-[13rem]">
+            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200 lg:min-h-[14rem] xl:min-h-[13rem]">
               <FindCareMap
                 results={[]}
                 geoMarkers={geoMarkers}
@@ -596,61 +616,46 @@ export function HeroDiscoverySurface() {
                     : { latitude: location.lat, longitude: location.lng, zoom: 11 }
                 }
               />
-              {/* Selected-result card, over the map so the map stays the dominant visual. */}
+              {/*
+                Selected result, as a compact bar rather than a panel. The map is ~206px
+                tall at 1366x768, so a full card covered it entirely — and it sat under the
+                map's own zoom column, which punched through the text. Inset past that
+                column and raised above it.
+              */}
               {selectedResult && (
-                <div className="absolute inset-x-2 bottom-2 z-[5]">
-                  <div className="rounded-xl border border-emerald-300 bg-white/95 p-3 shadow-lg backdrop-blur-sm">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                            CATEGORY_BADGE[selectedResult.category] ?? "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {selectedResult.type}
-                        </span>
-                        <p className="mt-1 truncate text-sm font-bold text-slate-900">
-                          {selectedResult.title}
-                        </p>
-                        {selectedResult.subtitle && (
-                          <p className="truncate text-xs text-slate-500">{selectedResult.subtitle}</p>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        aria-label="Close selected result"
-                        onClick={() => setSelectedKey(null)}
-                        className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                      >
-                        <X className="h-4 w-4" aria-hidden />
-                      </button>
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                      {selectedResult.availability && (
-                        <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                          {selectedResult.availability}
-                        </span>
-                      )}
-                      {formatKm(selectedResult.distanceMeters) && (
-                        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
-                          {formatKm(selectedResult.distanceMeters)}
-                          {selectedResult.etaMinutes != null && ` · ~${selectedResult.etaMinutes} min`}
-                        </span>
-                      )}
-                      {selectedResult.meta.map((m) => (
-                        <span key={m} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
-                          {m}
-                        </span>
-                      ))}
+                <div className="absolute inset-x-2 bottom-2 z-30 sm:left-16">
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold leading-tight text-slate-900">
+                        {selectedResult.title}
+                      </p>
+                      <p className="truncate text-[11px] leading-tight text-slate-500">
+                        {[
+                          selectedResult.type,
+                          formatKm(selectedResult.distanceMeters),
+                          selectedResult.availability,
+                          selectedResult.subtitle,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
                     </div>
                     {selectedResult.href && selectedResult.actionLabel && (
                       <Link
                         href={selectedResult.href}
-                        className="mt-2 inline-flex min-h-9 items-center rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+                        className="shrink-0 rounded-lg bg-emerald-700 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
                       >
                         {selectedResult.actionLabel}
                       </Link>
                     )}
+                    <button
+                      type="button"
+                      aria-label="Close selected result"
+                      onClick={() => setSelectedKey(null)}
+                      className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
                   </div>
                 </div>
               )}
@@ -683,10 +688,9 @@ export function HeroDiscoverySurface() {
             */}
             {mappedCareIsFar && !preciseLocation && (
               <p className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">
-                No mapped facility within 30&nbsp;km of {location.label} — the nearest with
-                coordinates is {Math.round(nearestMappedKm as number)}&nbsp;km away, so the map is
-                showing a wider area. Facilities near you may still be listed without a map
-                location.
+                Nearest mapped facility is {Math.round(nearestMappedKm as number)}&nbsp;km from{" "}
+                {location.label}, so the map shows a wider area. Closer facilities may be listed
+                without map coordinates.
               </p>
             )}
 

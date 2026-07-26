@@ -65,10 +65,14 @@ class DownstreamRouteContractTest {
      * Each line is a real defect, not an exemption.
      *
      * <ul>
-     *   <li><b>Tuso shifts / staffing / wards</b> — tuso-service serves shifts at
+     *   <li><b>Tuso shifts / staffing</b> — tuso-service serves shifts at
      *       {@code /v1/internal/facilities/{facilityId}/...}; nothing in the estate serves
-     *       {@code /v1/staffing} or {@code /v1/wards} at all. Shift start/end, the on-call roster,
-     *       swaps and the ward list are dead. Reported to the workforce/facility lane.</li>
+     *       {@code /v1/staffing} at all, so the roster-week read, the on-call roster and swaps are
+     *       dead. Being completed in vashandi, which owns {@code vsh_roster}/{@code vsh_shift}.
+     *       ({@code /v1/wards} was on this list and is fixed — ward create now goes to
+     *       inpatient-service, where ward reads already went.)</li>
+     *   <li><b>Adult Medicine {@code /v1/ehr}</b> — the structured-history vertical, owed a system
+     *       of record by that pack's W2. Its responses already name the owning lane and wave.</li>
      *   <li><b>FHIR gateway</b> — proxied to HAPI rather than declared as Spring routes, so the
      *       scanner cannot see them. Verify before removing this line.</li>
      *   <li><b>Nhume {@code /internal/v1}</b> — a bare prefix from a concatenated path; the
@@ -78,28 +82,25 @@ class DownstreamRouteContractTest {
     private static final Set<String> BASELINE = Set.of(
             // ── Workforce / facility lane ────────────────────────────────────────
             // tuso-service serves shifts at /v1/internal/facilities/{facilityId}/…; nothing in the
-            // estate serves /v1/staffing or /v1/wards at all. Shift start/end, the on-call roster,
-            // swaps and the ward list are dead.
+            // estate serves /v1/staffing at all, so the roster-week read, the on-call roster and
+            // swaps are dead. Being completed in vashandi (vsh_roster/vsh_shift), which owns them.
+            //
+            // /v1/wards is FIXED and gone from this list: hospital wards are inpatient-service's
+            // (inpatient.ward), which is also where the BFF already read them from, so ward create
+            // was repointed there rather than built in tuso. Tuso's `wards` are zw_admin_ward —
+            // electoral wards on the geography API — a different thing wearing the same word.
             "TusoServiceClient -> /v1/shifts",
             "TusoServiceClient -> /v1/staffing",
-            "TusoServiceClient -> /v1/wards",
 
-            // ── Inpatient concepts on the PCT client ─────────────────────────────
-            // The six shadow prefixes that used to sit here (/v1/ews, /v1/ward-rounds, /v1/apgar,
-            // /v1/fluid-balance, /v1/transfers, /v1/discharge-clearances) were zero-caller
-            // duplicates of the live InpatientServiceClient lane and have been deleted; the two
-            // residual references (NEWS2 in ClinicalDepthController, discharge status in
-            // MobileDischargeController) now call inpatient-service directly instead of paying a
-            // doomed pct round-trip and falling through a catch block.
-            //
-            //   The two live-and-broken prefixes that used to sit here are repaired: /v1/vitals
-            //   reads and writes pct's /v1/observations spine via VitalsObservationBridge, and
-            //   /v1/records became the pct patient-document index (/v1/patient-documents, V130).
+            // /v1/vitals was on this list and is FIXED: the vitals surface now reads and writes
+            // pct's observation spine (/v1/observations, LOINC-coded) via VitalsObservationBridge,
+            // and the mobile delete voids (ENTERED_IN_ERROR) instead of calling a path that never
+            // existed. /v1/records was fixed alongside by the clinical-documents completion
+            // (pct ClinicalDocumentController, V102).
 
             // ── Adult Medicine lane (mine) ───────────────────────────────────────
-            // The structured-history vertical: social, family, functional, procedures and advance
-            // directives, calling pct paths that do not exist and falling through to a demo
-            // fixture. W2 builds the system of record; this line goes when it lands.
+            // /v1/ehr — the structured-history vertical. W2 builds the system of record; this line
+            // goes when it lands. Every response already names this lane and wave.
             "PctServiceClient -> /v1/ehr",
 
             // ── Not resolvable by a static scan ──────────────────────────────────

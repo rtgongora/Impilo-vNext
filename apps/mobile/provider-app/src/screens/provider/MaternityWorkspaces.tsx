@@ -1,0 +1,749 @@
+/**
+ * Partograph and CTG — governed maternal-instrument workspaces.
+ *
+ * Replaces the generic notes-box the obstetrics specialty workspace fell back to. That fallback
+ * came from a resolver that picked a tool's form by its POSITION in `specialtyWorkspaces.ts`'s
+ * tool array — "Partograph" was a notes box only because it is first in that array, never because
+ * anyone decided a partograph is notes. That positional resolver is gone: tools now resolve
+ * through `data/specialtyToolRegistry.ts`, where these two are registered as WIRED against the
+ * `PartographWorkspace` and `CtgWorkspace` surfaces below. Both instruments already have a real
+ * backend (pct-service V056) and governed form definitions served from forms-service; this file
+ * adds no persistence of its own.
+ *
+ * See docs/clinical/rmnp/partograph-ctg-mobile-contract.md for the six behaviours this UI must
+ * preserve. The short version: a 200 saying "no session is open" and a 502 saying "could not ask"
+ * are different clinical statements and must never render the same way; INSUFFICIENT_DATA is the
+ * loudest state, not the calmest; and nothing here ever carries a previous value into a new entry.
+ */
+
+import React, { useMemo, useState } from "react";
+import { View, Text, TextInput, ScrollView, Pressable, StyleSheet } from "react-native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiError } from "@impilo/mobile-api-client";
+import { colors } from "@impilo/mobile-design-system";
+import { getFormCatalog } from "../../services/encounterFormsService";
+import {
+  openPartograph,
+  getActivePartograph,
+  getPartograph,
+  addPartographPoint,
+  closePartograph,
+  openCtgSession,
+  getActiveCtgSession,
+  getCtgSession,
+  getCtgChunks,
+  addCtgAnnotation,
+  type PartographProgress,
+  type AddPartographPointResult,
+  type CtgChunk,
+} from "../../services/maternityService";
+
+// --- shared governed-form rendering (mirrors EncounterFormsPanel's approach) ---------------
+
+interface ClinicalField {
+  id: string;
+  label: string;
+  kind: string;
+  unit?: string;
+  options?: { code: string; display: string }[];
+  validation?: { required?: boolean };
+}
+interface ClinicalSection {
+  id: string;
+  title: string;
+  fields: ClinicalField[];
+}
+interface ClinicalDefinition {
+  id: string;
+  title: string;
+  sections: ClinicalSection[];
+}
+
+function useGovernedForm(formKey: string) {
+  const catalog = useQuery({ queryKey: ["mobile-forms-catalog"], queryFn: getFormCatalog });
+  const definition = useMemo(() => {
+    for (const entry of catalog.data ?? []) {
+      if (entry.formKey !== formKey) continue;
+      try {
+        return JSON.parse(entry.definitionJson) as ClinicalDefinition;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, [catalog.data, formKey]);
+  return { isLoading: catalog.isLoading, isError: catalog.isError, definition };
+}
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function requiredFieldsSatisfied(definition: ClinicalDefinition, answers: Record<string, unknown>): boolean {
+  for (const section of definition.sections) {
+    for (const field of section.fields) {
+      if (field.validation?.required) {
+        const v = answers[field.id];
+        if (v === undefined || v === null || v === "") return false;
+      }
+    }
+  }
+  return true;
+}
+
+function GovernedFormFields({
+  definition,
+  answers,
+  setAnswers,
+}: {
+  definition: ClinicalDefinition;
+  answers: Record<string, unknown>;
+  setAnswers: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
+}) {
+  return (
+    <>
+      {definition.sections.map((section) => (
+        <View key={section.id} style={styles.section}>
+          <Text style={styles.sectionTitle}>{section.title}</Text>
+          {section.fields.map((f) => (
+            <GovernedField key={f.id} field={f} answers={answers} setAnswers={setAnswers} />
+          ))}
+        </View>
+      ))}
+    </>
+  );
+}
+
+function GovernedField({
+  field,
+  answers,
+  setAnswers,
+}: {
+  field: ClinicalField;
+  answers: Record<string, unknown>;
+  setAnswers: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
+}) {
+  const set = (v: unknown) => setAnswers((a) => ({ ...a, [field.id]: v }));
+  const label = `${field.label}${field.validation?.required ? " *" : ""}`;
+
+  if (field.kind === "datetime") {
+    const value = (answers[field.id] as string | undefined) ?? "";
+    return (
+      <View style={styles.field}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.datetimeRow}>
+          <TextInput
+            testID={`field-${field.id}`}
+            style={[styles.input, { flex: 1 }]}
+            value={value}
+            onChangeText={(t: string) => set(t)}
+            placeholder="ISO time (e.g. 2026-07-26T14:00:00Z)"
+          />
+          <Pressable style={styles.nowBtn} onPress={() => set(nowIso())} testID={`field-${field.id}-now`}>
+            <Text style={styles.nowBtnText}>Now</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  if (field.kind === "coded_single" && field.options) {
+    return (
+      <View style={styles.field}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.options}>
+          {field.options.map((opt) => (
+            <Pressable
+              key={opt.code}
+              onPress={() => set(opt.code)}
+              style={[styles.option, answers[field.id] === opt.code && styles.optionSelected]}
+              testID={`field-${field.id}-opt-${opt.code}`}
+            >
+              <Text
+                style={[styles.optionText, answers[field.id] === opt.code && styles.optionTextSelected]}
+              >
+                {opt.display}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
+  const keyboard = field.kind === "numeric_with_unit" ? "decimal-pad" : "default";
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>
+        {label}
+        {field.unit ? ` (${field.unit})` : ""}
+      </Text>
+      <TextInput
+        testID={`field-${field.id}`}
+        value={answers[field.id] === undefined || answers[field.id] === null ? "" : String(answers[field.id])}
+        keyboardType={keyboard as "decimal-pad" | "default"}
+        onChangeText={(t: string) => set(field.kind === "numeric_with_unit" && t !== "" ? Number(t) : t)}
+        style={[styles.input, field.kind === "text" && { minHeight: 60 }]}
+        multiline={field.kind === "text"}
+      />
+    </View>
+  );
+}
+
+/** Renders `error.code === "PCT_UNAVAILABLE"` distinctly from any other failure. Never an empty state. */
+function UnavailableBanner({ error, subject }: { error: unknown; subject: string }) {
+  const isPctUnavailable = error instanceof ApiError && error.code === "PCT_UNAVAILABLE";
+  return (
+    <View style={styles.unavailableBanner} accessibilityRole="alert">
+      <Text style={styles.unavailableTitle}>
+        {isPctUnavailable ? `The ${subject} could not be read` : "Something went wrong"}
+      </Text>
+      <Text style={styles.unavailableBody}>
+        {isPctUnavailable
+          ? `This is not the same as "no observations" — the record could not be reached. Do not act as if this patient has no ${subject} data.`
+          : "Please try again."}
+      </Text>
+    </View>
+  );
+}
+
+function PatientIdentifiers({
+  patientId,
+  setPatientId,
+  encounterId,
+  setEncounterId,
+}: {
+  patientId: string;
+  setPatientId: (v: string) => void;
+  encounterId: string;
+  setEncounterId: (v: string) => void;
+}) {
+  return (
+    <View style={styles.identifierRow}>
+      <TextInput
+        style={[styles.input, { flex: 1 }]}
+        placeholder="Patient ID"
+        value={patientId}
+        onChangeText={setPatientId}
+        testID="maternity-patient-id"
+      />
+      <TextInput
+        style={[styles.input, { flex: 1 }]}
+        placeholder="Encounter ID (optional)"
+        value={encounterId}
+        onChangeText={setEncounterId}
+        testID="maternity-encounter-id"
+      />
+    </View>
+  );
+}
+
+// --- Progress display (partograph) ---------------------------------------------------------
+
+const STATUS_LABEL: Record<PartographProgress["status"], string> = {
+  LEFT_OF_ALERT: "On track — at or ahead of the alert line",
+  BETWEEN_ALERT_AND_ACTION: "Alert line crossed — reassess",
+  AT_OR_RIGHT_OF_ACTION: "Action line crossed — act now",
+  SECOND_STAGE: "Second stage — alert/action lines no longer apply",
+  INSUFFICIENT_DATA: "Insufficient data — this labour has not been assessed",
+};
+
+/**
+ * INSUFFICIENT_DATA renders with the loudest styling here, never the calmest — a partograph with
+ * nothing on it is a more urgent finding than one progressing slowly (contract §4.4).
+ */
+function progressStyle(status: PartographProgress["status"]) {
+  if (status === "INSUFFICIENT_DATA" || status === "AT_OR_RIGHT_OF_ACTION") {
+    return { bg: "#FEE2E2", border: "#DC2626", text: "#7F1D1D" };
+  }
+  if (status === "BETWEEN_ALERT_AND_ACTION") {
+    return { bg: "#FEF3C7", border: "#F59E0B", text: "#78350F" };
+  }
+  if (status === "SECOND_STAGE") {
+    return { bg: "#DBEAFE", border: "#2563EB", text: "#1E3A8A" };
+  }
+  return { bg: "#D1FAE5", border: "#22C55E", text: "#14532D" };
+}
+
+function ProgressPanel({ progress }: { progress: PartographProgress }) {
+  const s = progressStyle(progress.status);
+  return (
+    <View style={[styles.progressBox, { backgroundColor: s.bg, borderColor: s.border }]} testID="partograph-progress">
+      <Text style={[styles.progressStatus, { color: s.text }]}>{STATUS_LABEL[progress.status]}</Text>
+      {progress.recommended_action && (
+        <Text style={[styles.progressAction, { color: s.text }]}>{progress.recommended_action}</Text>
+      )}
+      {progress.latest_dilation_cm != null && (
+        <Text style={styles.progressDetail}>
+          Latest dilation: {progress.latest_dilation_cm} cm
+          {progress.expected_dilation_cm != null ? ` (expected ${progress.expected_dilation_cm} cm)` : ""}
+        </Text>
+      )}
+      {/* Outstanding observations are never suppressed, regardless of status. */}
+      {progress.outstanding_observations.length > 0 && (
+        <View style={styles.outstandingBlock} testID="partograph-outstanding">
+          <Text style={styles.outstandingTitle}>Outstanding observations</Text>
+          {progress.outstanding_observations.map((line, i) => (
+            <Text key={i} style={styles.outstandingLine}>
+              • {line}
+            </Text>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// --- Partograph workspace -------------------------------------------------------------------
+
+const PARTOGRAPH_FORM_KEY = "impilo.labour.partograph.observation.v1";
+
+export function PartographWorkspace() {
+  const qc = useQueryClient();
+  const [patientId, setPatientId] = useState("");
+  const [encounterId, setEncounterId] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [justRecorded, setJustRecorded] = useState<AddPartographPointResult | null>(null);
+
+  const form = useGovernedForm(PARTOGRAPH_FORM_KEY);
+
+  const active = useQuery({
+    queryKey: ["maternity-partograph-active", patientId, encounterId],
+    queryFn: () => getActivePartograph(patientId, encounterId || undefined),
+    enabled: patientId.trim().length > 0,
+  });
+
+  const sessionId =
+    active.data?.partographActive === true ? active.data.session.session_id : null;
+
+  const detail = useQuery({
+    queryKey: ["maternity-partograph-detail", sessionId],
+    queryFn: () => getPartograph(sessionId as string),
+    enabled: !!sessionId,
+  });
+
+  const openMutation = useMutation({
+    mutationFn: () => openPartograph({ patientId, encounterId: encounterId || undefined }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["maternity-partograph-active", patientId, encounterId] });
+    },
+  });
+
+  const pointMutation = useMutation({
+    mutationFn: () => addPartographPoint(sessionId as string, answers),
+    onSuccess: (result) => {
+      // The assessment must reach the person who just recorded it immediately — do not wait for
+      // a refetch round-trip (contract §4.3).
+      setJustRecorded(result);
+      // Never carry a value forward into the next entry (contract §4.5).
+      setAnswers({});
+      setRecording(false);
+      void qc.invalidateQueries({ queryKey: ["maternity-partograph-detail", sessionId] });
+      void qc.invalidateQueries({ queryKey: ["maternity-partograph-active", patientId, encounterId] });
+    },
+  });
+
+  const closeMutation = useMutation({
+    mutationFn: () => closePartograph(sessionId as string, {}),
+    onSuccess: () => {
+      setJustRecorded(null);
+      void qc.invalidateQueries({ queryKey: ["maternity-partograph-active", patientId, encounterId] });
+    },
+  });
+
+  const liveProgress = justRecorded?.progress ?? (active.data?.partographActive ? active.data.session.progress : null);
+
+  return (
+    <ScrollView style={styles.workspace} testID="partograph-workspace">
+      <Text style={styles.workspaceTitle}>Partograph</Text>
+      <PatientIdentifiers
+        patientId={patientId}
+        setPatientId={setPatientId}
+        encounterId={encounterId}
+        setEncounterId={setEncounterId}
+      />
+
+      {!patientId.trim() && <Text style={styles.hint}>Enter a patient ID to open or view a labour chart.</Text>}
+
+      {patientId.trim().length > 0 && active.isLoading && (
+        <Text style={styles.hint}>Checking for an open partograph…</Text>
+      )}
+
+      {patientId.trim().length > 0 && active.isError && (
+        <UnavailableBanner error={active.error} subject="partograph" />
+      )}
+
+      {active.data?.partographActive === false && (
+        <View style={styles.noSessionBox} testID="partograph-no-session">
+          <Text style={styles.noSessionText}>No partograph is open for this patient.</Text>
+          <Pressable
+            style={styles.primaryBtn}
+            onPress={() => openMutation.mutate()}
+            disabled={openMutation.isPending}
+            testID="partograph-open"
+          >
+            <Text style={styles.primaryBtnText}>{openMutation.isPending ? "Opening…" : "Open partograph"}</Text>
+          </Pressable>
+          {openMutation.isError && <Text style={styles.errorText}>Could not open a session. Try again.</Text>}
+        </View>
+      )}
+
+      {active.data?.partographActive === true && sessionId && (
+        <View style={styles.sessionBox}>
+          <Text style={styles.sessionMeta}>
+            Session opened {new Date(active.data.session.started_at).toLocaleString()} · {active.data.session.status}
+          </Text>
+
+          {liveProgress && <ProgressPanel progress={liveProgress} />}
+
+          {detail.data && detail.data.points.length > 0 && (
+            <View style={styles.pointsList} testID="partograph-points">
+              <Text style={styles.sectionTitle}>Recorded observations ({detail.data.points.length})</Text>
+              {detail.data.points
+                .slice()
+                .reverse()
+                .slice(0, 5)
+                .map((p) => (
+                  <Text key={p.observation_id} style={styles.pointLine}>
+                    {new Date(p.observed_at).toLocaleString()} — {p.phase}
+                    {p.cervical_dilation_cm != null ? ` · ${p.cervical_dilation_cm} cm` : ""}
+                    {p.fetal_heart_rate_bpm != null ? ` · FHR ${p.fetal_heart_rate_bpm}` : ""}
+                  </Text>
+                ))}
+            </View>
+          )}
+
+          {!recording && (
+            <Pressable
+              style={styles.primaryBtn}
+              onPress={() => {
+                setAnswers({});
+                setRecording(true);
+              }}
+              testID="partograph-record-open"
+            >
+              <Text style={styles.primaryBtnText}>Record observation</Text>
+            </Pressable>
+          )}
+
+          {recording && form.definition && (
+            <View style={styles.form} testID="partograph-form">
+              <GovernedFormFields definition={form.definition} answers={answers} setAnswers={setAnswers} />
+              <Pressable
+                style={[
+                  styles.primaryBtn,
+                  !requiredFieldsSatisfied(form.definition, answers) && styles.primaryBtnDisabled,
+                ]}
+                disabled={!requiredFieldsSatisfied(form.definition, answers) || pointMutation.isPending}
+                onPress={() => pointMutation.mutate()}
+                testID="partograph-submit"
+              >
+                <Text style={styles.primaryBtnText}>
+                  {pointMutation.isPending ? "Recording…" : "Record observation"}
+                </Text>
+              </Pressable>
+              <Pressable style={styles.secondaryBtn} onPress={() => setRecording(false)}>
+                <Text style={styles.secondaryBtnText}>Cancel</Text>
+              </Pressable>
+              {pointMutation.isError && (
+                <Text style={styles.errorText} accessibilityRole="alert">
+                  Could not record this observation. It has not been saved — try again.
+                </Text>
+              )}
+            </View>
+          )}
+          {recording && form.isLoading && <Text style={styles.hint}>Loading the observation form…</Text>}
+          {recording && !form.isLoading && !form.definition && (
+            <Text style={styles.errorText}>The observation form definition is unavailable.</Text>
+          )}
+
+          <Pressable
+            style={styles.secondaryBtn}
+            onPress={() => closeMutation.mutate()}
+            disabled={closeMutation.isPending}
+            testID="partograph-close"
+          >
+            <Text style={styles.secondaryBtnText}>{closeMutation.isPending ? "Closing…" : "Close session"}</Text>
+          </Pressable>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+// --- CTG workspace ---------------------------------------------------------------------------
+
+const CTG_FORM_KEY = "impilo.labour.ctg.annotation.v1";
+
+const SEVERITY_COLOR: Record<string, string> = {
+  NORMAL: "#14532D",
+  NON_REASSURING: "#78350F",
+  ABNORMAL: "#7F1D1D",
+};
+
+/** One chunk on the trace timeline. A gap is drawn as a gap, never joined across (contract §4.6). */
+function ChunkSegment({ chunk }: { chunk: CtgChunk }) {
+  const hasGap = chunk.missing_sample_count > 0;
+  return (
+    <View
+      style={[styles.chunkSegment, hasGap && styles.chunkSegmentGap]}
+      testID={`ctg-chunk-${chunk.chunk_id}`}
+    >
+      <Text style={styles.chunkLabel}>
+        {chunk.channel} · {new Date(chunk.started_at).toLocaleTimeString()} · {chunk.sample_count} samples
+      </Text>
+      {hasGap && (
+        <Text style={styles.chunkGapText} testID={`ctg-chunk-gap-${chunk.chunk_id}`}>
+          Gap — {chunk.missing_sample_count} sample{chunk.missing_sample_count === 1 ? "" : "s"} not captured.
+          Not interpolated: a flat line here would look identical to one that was measured.
+        </Text>
+      )}
+    </View>
+  );
+}
+
+export function CtgWorkspace() {
+  const qc = useQueryClient();
+  const [patientId, setPatientId] = useState("");
+  const [encounterId, setEncounterId] = useState("");
+  const [annotating, setAnnotating] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+
+  const form = useGovernedForm(CTG_FORM_KEY);
+
+  const active = useQuery({
+    queryKey: ["maternity-ctg-active", patientId, encounterId],
+    queryFn: () => getActiveCtgSession(patientId, encounterId || undefined),
+    enabled: patientId.trim().length > 0,
+  });
+
+  const sessionId = active.data?.ctgActive === true ? active.data.session.session_id : null;
+
+  const detail = useQuery({
+    queryKey: ["maternity-ctg-detail", sessionId],
+    queryFn: () => getCtgSession(sessionId as string),
+    enabled: !!sessionId,
+  });
+
+  const chunks = useQuery({
+    queryKey: ["maternity-ctg-chunks", sessionId],
+    queryFn: () => getCtgChunks(sessionId as string),
+    enabled: !!sessionId,
+  });
+
+  const openMutation = useMutation({
+    mutationFn: () => openCtgSession({ patientId, encounterId: encounterId || undefined }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["maternity-ctg-active", patientId, encounterId] });
+    },
+  });
+
+  const annotateMutation = useMutation({
+    mutationFn: () => addCtgAnnotation(sessionId as string, answers),
+    onSuccess: () => {
+      setAnswers({});
+      setAnnotating(false);
+      void qc.invalidateQueries({ queryKey: ["maternity-ctg-detail", sessionId] });
+    },
+  });
+
+  return (
+    <ScrollView style={styles.workspace} testID="ctg-workspace">
+      <Text style={styles.workspaceTitle}>CTG interpretation</Text>
+      <PatientIdentifiers
+        patientId={patientId}
+        setPatientId={setPatientId}
+        encounterId={encounterId}
+        setEncounterId={setEncounterId}
+      />
+
+      {!patientId.trim() && <Text style={styles.hint}>Enter a patient ID to open or view fetal monitoring.</Text>}
+
+      {patientId.trim().length > 0 && active.isLoading && (
+        <Text style={styles.hint}>Checking for an open monitoring session…</Text>
+      )}
+
+      {patientId.trim().length > 0 && active.isError && (
+        <UnavailableBanner error={active.error} subject="CTG trace" />
+      )}
+
+      {active.data?.ctgActive === false && (
+        <View style={styles.noSessionBox} testID="ctg-no-session">
+          <Text style={styles.noSessionText}>No monitoring session is open for this patient.</Text>
+          <Pressable
+            style={styles.primaryBtn}
+            onPress={() => openMutation.mutate()}
+            disabled={openMutation.isPending}
+            testID="ctg-open"
+          >
+            <Text style={styles.primaryBtnText}>{openMutation.isPending ? "Opening…" : "Open monitoring session"}</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {active.data?.ctgActive === true && sessionId && (
+        <View style={styles.sessionBox}>
+          <Text style={styles.sessionMeta}>
+            Session opened {new Date(active.data.session.started_at).toLocaleString()} · {active.data.session.status}
+            {active.data.session.device_id ? ` · device ${active.data.session.device_id}` : ""}
+          </Text>
+
+          <Text style={styles.sectionTitle}>Trace</Text>
+          {chunks.isLoading && <Text style={styles.hint}>Loading trace…</Text>}
+          {chunks.data && chunks.data.length === 0 && (
+            <Text style={styles.hint}>No trace data received from a monitor yet.</Text>
+          )}
+          {chunks.data && chunks.data.length > 0 && (
+            <View testID="ctg-trace">
+              {chunks.data.map((c) => (
+                <ChunkSegment key={c.chunk_id} chunk={c} />
+              ))}
+            </View>
+          )}
+
+          {detail.data && detail.data.annotations.length > 0 && (
+            <View style={styles.pointsList} testID="ctg-annotations">
+              <Text style={styles.sectionTitle}>Clinician findings ({detail.data.annotations.length})</Text>
+              {detail.data.annotations
+                .slice()
+                .reverse()
+                .map((a) => (
+                  <View key={a.annotation_id} style={styles.annotationRow}>
+                    <Text style={styles.pointLine}>
+                      {new Date(a.recorded_at).toLocaleString()} — {a.category}
+                      {a.value ? ` (${a.value})` : ""}
+                    </Text>
+                    {a.severity && (
+                      <Text style={[styles.severityBadge, { color: SEVERITY_COLOR[a.severity] ?? colors.gray[700] }]}>
+                        {a.severity}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+            </View>
+          )}
+
+          {!annotating && (
+            <Pressable
+              style={styles.primaryBtn}
+              onPress={() => {
+                setAnswers({});
+                setAnnotating(true);
+              }}
+              testID="ctg-annotate-open"
+            >
+              <Text style={styles.primaryBtnText}>Record a finding</Text>
+            </Pressable>
+          )}
+
+          {annotating && form.definition && (
+            <View style={styles.form} testID="ctg-form">
+              <GovernedFormFields definition={form.definition} answers={answers} setAnswers={setAnswers} />
+              <Pressable
+                style={[
+                  styles.primaryBtn,
+                  !requiredFieldsSatisfied(form.definition, answers) && styles.primaryBtnDisabled,
+                ]}
+                disabled={!requiredFieldsSatisfied(form.definition, answers) || annotateMutation.isPending}
+                onPress={() => annotateMutation.mutate()}
+                testID="ctg-annotate-submit"
+              >
+                <Text style={styles.primaryBtnText}>
+                  {annotateMutation.isPending ? "Recording…" : "Record finding"}
+                </Text>
+              </Pressable>
+              <Pressable style={styles.secondaryBtn} onPress={() => setAnnotating(false)}>
+                <Text style={styles.secondaryBtnText}>Cancel</Text>
+              </Pressable>
+              {annotateMutation.isError && (
+                <Text style={styles.errorText} accessibilityRole="alert">
+                  Could not record this finding — try again.
+                </Text>
+              )}
+            </View>
+          )}
+          {annotating && form.isLoading && <Text style={styles.hint}>Loading the annotation form…</Text>}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  workspace: { flex: 1 },
+  workspaceTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900], marginBottom: 8 },
+  identifierRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
+  hint: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
+  errorText: { fontSize: 13, color: "#B91C1C", marginTop: 6 },
+  section: { marginBottom: 10 },
+  sectionTitle: { fontSize: 13, fontWeight: "600", color: colors.gray[700], marginBottom: 6, marginTop: 8 },
+  field: { marginBottom: 10 },
+  label: { fontSize: 12, color: colors.gray[700], marginBottom: 3 },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.gray[300],
+    borderRadius: 8,
+    padding: 8,
+    fontSize: 13,
+  },
+  datetimeRow: { flexDirection: "row", gap: 6, alignItems: "center" },
+  nowBtn: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, backgroundColor: colors.gray[200] },
+  nowBtnText: { fontSize: 12, fontWeight: "600", color: colors.gray[700] },
+  options: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  option: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.gray[300],
+  },
+  optionSelected: { backgroundColor: "#DBEAFE", borderColor: "#3B82F6" },
+  optionText: { fontSize: 12, color: colors.gray[700] },
+  optionTextSelected: { color: "#1E3A8A", fontWeight: "600" },
+  unavailableBanner: {
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 8,
+  },
+  unavailableTitle: { fontSize: 14, fontWeight: "700", color: "#7F1D1D" },
+  unavailableBody: { fontSize: 12, color: "#991B1B", marginTop: 4 },
+  noSessionBox: { marginTop: 8, gap: 8 },
+  noSessionText: { fontSize: 13, color: colors.gray[600] },
+  sessionBox: { marginTop: 8, gap: 8 },
+  sessionMeta: { fontSize: 12, color: colors.gray[500] },
+  progressBox: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 6 },
+  progressStatus: { fontSize: 14, fontWeight: "700" },
+  progressAction: { fontSize: 12 },
+  progressDetail: { fontSize: 12, color: colors.gray[700] },
+  outstandingBlock: { marginTop: 4, gap: 2 },
+  outstandingTitle: { fontSize: 12, fontWeight: "700", color: "#7F1D1D" },
+  outstandingLine: { fontSize: 12, color: "#7F1D1D" },
+  pointsList: { gap: 4 },
+  pointLine: { fontSize: 12, color: colors.gray[700] },
+  annotationRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  severityBadge: { fontSize: 11, fontWeight: "700" },
+  chunkSegment: {
+    borderWidth: 1,
+    borderColor: colors.gray[200],
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 6,
+  },
+  chunkSegmentGap: {
+    borderStyle: "dashed",
+    borderColor: "#F59E0B",
+    backgroundColor: "#FFFBEB",
+  },
+  chunkLabel: { fontSize: 12, color: colors.gray[700] },
+  chunkGapText: { fontSize: 11, color: "#92400E", marginTop: 4 },
+  form: { marginTop: 8, gap: 4 },
+  primaryBtn: { backgroundColor: "#2563EB", borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: 4 },
+  primaryBtnDisabled: { opacity: 0.5 },
+  primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  secondaryBtn: { paddingVertical: 10, alignItems: "center" },
+  secondaryBtnText: { color: "#2563EB", fontWeight: "600", fontSize: 13 },
+});

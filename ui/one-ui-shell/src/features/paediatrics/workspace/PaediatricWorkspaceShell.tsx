@@ -104,6 +104,18 @@ export function PaediatricWorkspaceShell({ patientId }: PaediatricWorkspaceShell
           </li>
           <li>
             <Link
+              href={`/ehr/${patientId}/imam`}
+              className="block min-h-[44px] rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+              data-testid="link-imam"
+            >
+              Nutrition treatment
+              <span className="block text-xs text-muted-foreground">
+                Enrolment, weekly review, discharge criteria and defaulter tracing
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link
               href={`/ehr/${patientId}/immunizations`}
               className="block min-h-[44px] rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
               data-testid="link-immunizations"

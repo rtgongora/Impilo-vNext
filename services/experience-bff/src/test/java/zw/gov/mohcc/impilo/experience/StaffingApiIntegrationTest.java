@@ -34,19 +34,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@ExtendWith(DockerOrExternalPostgresCondition.class)
+@ExtendWith(IntegrationEnvironmentCondition.class)
 class StaffingApiIntegrationTest {
-
-    private static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
-
-    @AfterAll
-    static void stopContainer() {
-        REDIS.stop();
-    }
 
     @DynamicPropertySource
     static void configure(DynamicPropertyRegistry registry) {
-        REDIS.configure(registry);
+        ExperienceBffTestRedisSupport.configure(StaffingApiIntegrationTest.class, registry);
         ExperienceBffSovereignWireMockSupport.register(registry);
     }
 

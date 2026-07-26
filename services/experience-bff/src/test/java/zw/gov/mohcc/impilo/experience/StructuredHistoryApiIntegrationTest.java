@@ -1,6 +1,5 @@
 package zw.gov.mohcc.impilo.experience;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,14 +27,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@ExtendWith(DockerOrExternalPostgresCondition.class)
+@ExtendWith(IntegrationEnvironmentCondition.class)
 class StructuredHistoryApiIntegrationTest {
-
-    static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        REDIS.configure(registry);
+        ExperienceBffTestRedisSupport.configure(StructuredHistoryApiIntegrationTest.class, registry);
     }
 
     @Autowired
@@ -45,11 +42,6 @@ class StructuredHistoryApiIntegrationTest {
     private static final String POD = "national";
     /** Tatenda Moyo — V4 golden path */
     private static final String PATIENT_ID = "a1000000-0000-0000-0000-000000000001";
-
-    @AfterAll
-    static void stopDatabase() {
-        REDIS.stop();
-    }
 
     @Test
     @DisplayName("GET structured history reports 502 when PCT is unreachable, not an empty history")

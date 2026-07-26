@@ -64,6 +64,10 @@ public class ClinicalKnowledgePlatformController {
     @org.springframework.beans.factory.annotation.Autowired
     private zw.gov.mohcc.impilo.clinical.growth.GrowthIntelligenceService growthIntelligenceService;
 
+    /** IMAM programme knowledge — admission routing and discharge readiness. Same convention. */
+    @org.springframework.beans.factory.annotation.Autowired
+    private zw.gov.mohcc.impilo.clinical.imam.ImamProgrammeService imamProgrammeService;
+
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
             PrescribingEvaluationService prescribingEvaluationService,
@@ -306,6 +310,61 @@ public class ClinicalKnowledgePlatformController {
         var assessment = growthIntelligenceService.assess(history);
         return ResponseEntity.ok(Map.of("data",
                 zw.gov.mohcc.impilo.clinical.growth.GrowthIntelligenceService.toMap(assessment)));
+    }
+
+    /**
+     * Routes a malnourished child to a treatment programme: inpatient stabilisation, outpatient
+     * therapeutic care, or supplementary feeding.
+     *
+     * <p>Accepts an IMNCI acute-malnutrition classification directly, which is the point of it. The
+     * classification engine already tells the clinician to "enrol in outpatient therapeutic care";
+     * this turns that sentence into a programme, a review interval and a ration, so the instruction
+     * the chart issues is one the system can actually carry out.</p>
+     *
+     * <p>A child with nothing measured is reported as not assessable with the reason, never as not
+     * eligible — acute malnutrition cannot be ruled out on an unmeasured arm.</p>
+     */
+    @PostMapping("/paediatric/imam/eligibility")
+    public ResponseEntity<Map<String, Object>> imamEligibility(@RequestBody Map<String, Object> body) {
+        var eligibility = imamProgrammeService.eligibility(body);
+        return ResponseEntity.ok(Map.of("data",
+                zw.gov.mohcc.impilo.clinical.imam.ImamProgrammeService.toMap(eligibility)));
+    }
+
+    /**
+     * Evaluates an open IMAM episode: discharge readiness, attendance, response to treatment and the
+     * ration due at the next review.
+     *
+     * <p>Stateless like the growth engine — pct-service owns the episode and its reviews and supplies
+     * them. Three answers this endpoint refuses to give: a discharge on one good measurement, an
+     * oedema-free certification from an assessment nobody recorded, and a reassuring status for a
+     * child with no review on file at all.</p>
+     */
+    @PostMapping("/paediatric/imam/progress")
+    public ResponseEntity<Map<String, Object>> imamProgress(@RequestBody Map<String, Object> body) {
+        Object programme = body.get("programme");
+        if (programme == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "programme_required",
+                    "message", "Discharge criteria, review cadence and the defaulter definition differ by "
+                               + "programme; without one there is nothing to evaluate against."));
+        }
+        Object admittedRaw = body.get("admitted_on") != null ? body.get("admitted_on") : body.get("admittedOn");
+        java.time.LocalDate admittedOn = admittedRaw == null ? null
+                : java.time.LocalDate.parse(String.valueOf(admittedRaw).substring(0, 10));
+        Object asOfRaw = body.get("as_of") != null ? body.get("as_of") : body.get("asOf");
+        java.time.LocalDate asOf = asOfRaw == null ? java.time.LocalDate.now()
+                : java.time.LocalDate.parse(String.valueOf(asOfRaw).substring(0, 10));
+        Object oedemaRaw = body.get("admission_oedema") != null
+                ? body.get("admission_oedema") : body.get("admissionOedema");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> visits = body.get("visits") instanceof List<?> l
+                ? (List<Map<String, Object>>) (List<?>) l : List.of();
+
+        var assessment = imamProgrammeService.progress(String.valueOf(programme), admittedOn,
+                oedemaRaw == null ? null : String.valueOf(oedemaRaw), visits, asOf);
+        return ResponseEntity.ok(Map.of("data",
+                zw.gov.mohcc.impilo.clinical.imam.ImamProgrammeService.toMap(assessment)));
     }
 
     @PostMapping("/interpretation/evaluate")
