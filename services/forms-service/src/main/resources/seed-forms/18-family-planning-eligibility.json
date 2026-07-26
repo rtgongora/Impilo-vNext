@@ -1,0 +1,397 @@
+{
+  "formKey": "impilo.fp.eligibility.v1",
+  "name": "Family planning — eligibility and initiation",
+  "description": "The counselling visit at which a method is chosen and started. Captures the history the medical eligibility criteria are resolved against, and the timing the initiation recommendations need to say whether she is protected today.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": ["OUTPATIENT", "COMMUNITY"],
+  "careStages": ["ASSESSMENT", "CONSULTATION"],
+  "specialties": ["MIDWIFERY", "NURSING", "OBSTETRICS", "FAMILY_MEDICINE"],
+  "encounterTypes": ["FAMILY_PLANNING", "CONTRACEPTION", "REPRODUCTIVE_HEALTH", "OUTPATIENT"],
+  "encounterContexts": ["outpatient", "community"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER", "COMMUNITY_HEALTH_WORKER"],
+  "minAgeMonths": 108,
+  "sexApplicability": "FEMALE",
+  "requirePregnant": false,
+  "programmeApplicability": ["FAMILY_PLANNING", "REPRODUCTIVE_HEALTH"],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO Medical Eligibility Criteria for Contraceptive Use; WHO Selected Practice Recommendations for Contraceptive Use",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {
+        "linkId": "lastMensesOnsetDate",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8665-2",
+          "display": "Last menstrual period start date"
+        }
+      },
+      {
+        "linkId": "systolicBp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "mm[Hg]",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8480-6",
+          "display": "Systolic blood pressure"
+        }
+      },
+      {
+        "linkId": "diastolicBp",
+        "resourceType": "OBSERVATION",
+        "routeTarget": "BUTANO",
+        "unit": "mm[Hg]",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8462-4",
+          "display": "Diastolic blood pressure"
+        }
+      }
+    ]
+  },
+  "indicators": {
+    "indicators": [
+      {"programmeIndicatorCode": "FP_NEW_ACCEPTORS"},
+      {"programmeIndicatorCode": "FP_METHOD_MIX"}
+    ]
+  },
+  "definition": {
+    "id": "fp-eligibility-v1",
+    "version": "1.0.0",
+    "title": "Family planning — eligibility and initiation",
+    "description": "Two questions, in order: may she use this method, and is she protected from today.",
+    "dakReference": "WHO Family Planning DAK (data dictionary and vocabulary only — the FP DAK publishes no decision logic, so the eligibility and initiation rules are encoded from the published MEC and SPR)",
+    "healthDomain": "REPRODUCTIVE_HEALTH",
+    "programme": "FAMILY_PLANNING",
+    "encounterTypes": ["FAMILY_PLANNING", "CONTRACEPTION", "REPRODUCTIVE_HEALTH"],
+    "minAgeMonths": 108,
+    "sexApplicability": "FEMALE",
+    "providerRoles": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER", "COMMUNITY_HEALTH_WORKER"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "SENSITIVE"},
+    "sections": [
+      {
+        "id": "pregnancy-certainty",
+        "title": "Could she be pregnant?",
+        "description": "The six criteria below are alternatives — any one of them, together with no signs of pregnancy, is enough. They are not a form to complete in full, and none of them is a condition of being given a method.",
+        "fields": [
+          {
+            "id": "pregnancySignsOrSymptoms",
+            "linkId": "pregnancySignsOrSymptoms",
+            "label": "Does she have any symptoms or signs of pregnancy?",
+            "kind": "coded_single",
+            "description": "Asked first because a positive answer settles the question whatever the dates say. Leave blank rather than guessing — an unasked question is reported as unasked, and a guessed 'no' is not.",
+            "options": [
+              {"code": "ABSENT", "display": "No symptoms or signs"},
+              {"code": "PRESENT", "display": "Symptoms or signs present"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "lastMensesOnsetDate",
+            "linkId": "lastMensesOnsetDate",
+            "label": "First day of her last menstrual period",
+            "kind": "date",
+            "description": "The date the bleeding started, not when it stopped. Everything about which day of the cycle she is on comes from this one field.",
+            "validation": {"required": false}
+          },
+          {
+            "id": "daysSinceMensesOnset",
+            "linkId": "daysSinceMensesOnset",
+            "label": "Days since that first day",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "description": "Elapsed days: the day bleeding started is 0. Computed from the date above when it is given, and enterable directly when she remembers 'about a week ago' but not the date. Left blank, the initiation advice assumes backup is needed rather than assuming it is not.",
+            "validation": {"min": 0, "max": 400, "required": false}
+          },
+          {
+            "id": "intercourseSinceLastMenses",
+            "linkId": "intercourseSinceLastMenses",
+            "label": "Has she had sexual intercourse since her last normal menses?",
+            "kind": "coded_single",
+            "options": [
+              {"code": "NO", "display": "No"},
+              {"code": "YES", "display": "Yes"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "usingReliableMethodConsistently",
+            "linkId": "usingReliableMethodConsistently",
+            "label": "Has she been using a reliable method correctly and consistently?",
+            "kind": "coded_single",
+            "description": "A judgement from the conversation, not from the dispensing record. A valid supply on file is not evidence that it was taken.",
+            "options": [
+              {"code": "YES", "display": "Yes"},
+              {"code": "NO", "display": "No, or not consistently"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "daysPostpartum",
+            "linkId": "daysPostpartum",
+            "label": "Days since she last gave birth",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "description": "Leave blank if she has not given birth, or if this is not a postpartum visit.",
+            "validation": {"min": 0, "max": 400, "required": false}
+          },
+          {
+            "id": "breastfeedingStatus",
+            "linkId": "breastfeedingStatus",
+            "label": "Is she breastfeeding, and how much?",
+            "kind": "coded_single",
+            "description": "The amount matters. Fully or nearly fully breastfeeding is part of a criterion; partial breastfeeding is not, and neither is a returned period.",
+            "options": [
+              {"code": "FULL", "display": "Fully breastfeeding"},
+              {"code": "NEARLY_FULL", "display": "Nearly fully breastfeeding"},
+              {"code": "PARTIAL", "display": "Partially breastfeeding"},
+              {"code": "NONE", "display": "Not breastfeeding"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "amenorrhoeicSinceDelivery",
+            "linkId": "amenorrhoeicSinceDelivery",
+            "label": "Have her periods returned since she gave birth?",
+            "kind": "coded_single",
+            "description": "Recorded as amenorrhoeic yes/no. Lactational amenorrhoea stops being contraception the moment bleeding returns, and this is the field that notices.",
+            "options": [
+              {"code": "YES", "display": "No — still amenorrhoeic"},
+              {"code": "NO", "display": "Yes — periods have returned"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "daysSincePregnancyEnd",
+            "linkId": "daysSincePregnancyEnd",
+            "label": "Days since a pregnancy ended, if one ended recently",
+            "kind": "numeric_with_unit",
+            "unit": "days",
+            "description": "However it ended. Post-abortion contraception is offered on the same terms as any other, and she does not have to say which it was to be given it.",
+            "validation": {"min": 0, "max": 400, "required": false}
+          },
+          {
+            "id": "pregnancyTestResult",
+            "linkId": "pregnancyTestResult",
+            "label": "Pregnancy test result, if one was done",
+            "kind": "coded_single",
+            "description": "Not required. A test that was not available is not a reason to send her away without a method.",
+            "options": [
+              {"code": "NEGATIVE", "display": "Negative"},
+              {"code": "POSITIVE", "display": "Positive"},
+              {"code": "NOT_DONE", "display": "Not done — unavailable or declined"}
+            ],
+            "validation": {"required": false}
+          }
+        ]
+      },
+      {
+        "id": "method",
+        "title": "Method chosen",
+        "fields": [
+          {
+            "id": "methodChosen",
+            "linkId": "methodChosen",
+            "label": "Method she has chosen",
+            "kind": "coded_single",
+            "description": "Her choice. Eligibility is assessed for every method so the alternatives are visible before she chooses, not only for this one.",
+            "options": [
+              {"code": "IMPLANT_LEVONORGESTREL_2ROD", "display": "Implant — levonorgestrel, 2 rods"},
+              {"code": "IMPLANT_ETONOGESTREL_1ROD", "display": "Implant — etonogestrel, 1 rod"},
+              {"code": "IUD_COPPER_T380A", "display": "Copper intrauterine device (TCu380A)"},
+              {"code": "IUS_LEVONORGESTREL", "display": "Levonorgestrel intrauterine system"},
+              {"code": "INJECTABLE_DMPA_IM", "display": "Injectable — DMPA intramuscular"},
+              {"code": "INJECTABLE_DMPA_SC", "display": "Injectable — DMPA subcutaneous"},
+              {"code": "INJECTABLE_NET_EN", "display": "Injectable — NET-EN"},
+              {"code": "COMBINED_ORAL_PILL", "display": "Combined oral contraceptive pill"},
+              {"code": "PROGESTOGEN_ONLY_PILL", "display": "Progestogen-only pill"},
+              {"code": "MALE_CONDOM", "display": "Male condom"},
+              {"code": "FEMALE_CONDOM", "display": "Female condom"},
+              {"code": "DIAPHRAGM", "display": "Diaphragm"},
+              {"code": "EMERGENCY_LEVONORGESTREL", "display": "Emergency contraception — levonorgestrel"},
+              {"code": "EMERGENCY_ULIPRISTAL", "display": "Emergency contraception — ulipristal acetate"},
+              {"code": "EMERGENCY_COPPER_IUD", "display": "Emergency contraception — copper intrauterine device"},
+              {"code": "FEMALE_STERILISATION", "display": "Female sterilisation"},
+              {"code": "VASECTOMY", "display": "Vasectomy (partner)"},
+              {"code": "LACTATIONAL_AMENORRHOEA", "display": "Lactational amenorrhoea method"},
+              {"code": "FERTILITY_AWARENESS", "display": "Fertility awareness method"},
+              {"code": "WITHDRAWAL", "display": "Withdrawal"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "usePhase",
+            "linkId": "usePhase",
+            "label": "Is she starting this method or continuing it?",
+            "kind": "coded_single",
+            "description": "The eligibility category is not the same for both. For several conditions stopping a method already in use is more harmful than continuing it, and answering this wrongly gives the wrong category.",
+            "options": [
+              {"code": "INITIATION", "display": "Starting it"},
+              {"code": "CONTINUATION", "display": "Already using it"}
+            ],
+            "validation": {"required": false}
+          }
+        ]
+      },
+      {
+        "id": "eligibility-history",
+        "title": "History the eligibility criteria are resolved against",
+        "description": "Blank is not 'no'. An unasked question is reported as unasked, and a method is never cleared on the strength of one.",
+        "fields": [
+          {
+            "id": "ageYears",
+            "linkId": "ageYears",
+            "label": "Age in years",
+            "kind": "numeric_with_unit",
+            "unit": "years",
+            "validation": {"min": 9, "max": 60, "required": false}
+          },
+          {
+            "id": "systolicBp",
+            "linkId": "systolicBp",
+            "label": "Systolic blood pressure",
+            "kind": "numeric_with_unit",
+            "unit": "mm[Hg]",
+            "description": "A blood pressure is the one measurement that moves combined hormonal methods on its own. Recorded as a number so a rule can read it.",
+            "validation": {"min": 50, "max": 300, "required": false}
+          },
+          {
+            "id": "diastolicBp",
+            "linkId": "diastolicBp",
+            "label": "Diastolic blood pressure",
+            "kind": "numeric_with_unit",
+            "unit": "mm[Hg]",
+            "validation": {"min": 30, "max": 200, "required": false}
+          },
+          {
+            "id": "smokingStatus",
+            "linkId": "smokingStatus",
+            "label": "Does she smoke?",
+            "kind": "coded_single",
+            "options": [
+              {"code": "NEVER", "display": "Never"},
+              {"code": "FORMER", "display": "Former smoker"},
+              {"code": "CURRENT_LT_15", "display": "Currently, fewer than 15 a day"},
+              {"code": "CURRENT_GTE_15", "display": "Currently, 15 or more a day"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "migraineWithAura",
+            "linkId": "migraineWithAura",
+            "label": "Migraine with aura",
+            "kind": "coded_single",
+            "options": [
+              {"code": "PRESENT", "display": "Yes"},
+              {"code": "ABSENT", "display": "No"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "knownThrombosis",
+            "linkId": "knownThrombosis",
+            "label": "Past or current deep vein thrombosis or pulmonary embolism",
+            "kind": "coded_single",
+            "options": [
+              {"code": "PRESENT", "display": "Yes"},
+              {"code": "ABSENT", "display": "No"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "breastCancerStatus",
+            "linkId": "breastCancerStatus",
+            "label": "Breast cancer",
+            "kind": "coded_single",
+            "options": [
+              {"code": "CURRENT", "display": "Current"},
+              {"code": "PAST_NO_EVIDENCE_5Y", "display": "Past, no evidence of disease for 5 years"},
+              {"code": "NONE", "display": "No history"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "hivStatus",
+            "linkId": "hivStatus",
+            "label": "HIV status",
+            "kind": "coded_single",
+            "description": "Recorded here because it changes eligibility for some methods and interacts with some antiretrovirals. It is not a condition of receiving contraception, and declining to say is a permitted answer.",
+            "options": [
+              {"code": "NEGATIVE", "display": "Negative"},
+              {"code": "POSITIVE_ON_ART", "display": "Positive, on antiretroviral therapy"},
+              {"code": "POSITIVE_NOT_ON_ART", "display": "Positive, not on antiretroviral therapy"},
+              {"code": "UNKNOWN", "display": "Unknown"},
+              {"code": "DECLINED_TO_STATE", "display": "Declined to state"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "onEnzymeInducingArvOrTb",
+            "linkId": "onEnzymeInducingArvOrTb",
+            "label": "Taking rifampicin, rifabutin, or an enzyme-inducing antiretroviral or anticonvulsant",
+            "kind": "coded_single",
+            "options": [
+              {"code": "YES", "display": "Yes"},
+              {"code": "NO", "display": "No"}
+            ],
+            "validation": {"required": false}
+          }
+        ]
+      },
+      {
+        "id": "counselling",
+        "title": "Counselling and what she leaves with",
+        "fields": [
+          {
+            "id": "backupContraceptionSupplied",
+            "linkId": "backupContraceptionSupplied",
+            "label": "Backup contraception supplied",
+            "kind": "coded_single",
+            "description": "Recorded because backup that was advised and not dispensed is the gap the initiation guidance exists to close.",
+            "options": [
+              {"code": "CONDOMS_SUPPLIED", "display": "Condoms supplied"},
+              {"code": "ADVISED_NOT_SUPPLIED", "display": "Advised, none available to supply"},
+              {"code": "NOT_NEEDED", "display": "Not needed"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "returnVisitDate",
+            "linkId": "returnVisitDate",
+            "label": "Return or resupply date",
+            "kind": "date",
+            "validation": {"required": false}
+          },
+          {
+            "id": "deferredInsertionOwed",
+            "linkId": "deferredInsertionOwed",
+            "label": "An intrauterine insertion was deferred and is owed",
+            "kind": "coded_single",
+            "description": "Set when insertion was postponed rather than declined, so the next clinician sees a plan and not a refusal. A deferral nobody recorded is a woman who does not come back.",
+            "options": [
+              {"code": "YES", "display": "Yes — insertion owed at the return visit"},
+              {"code": "NO", "display": "No"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "counsellingNotes",
+            "linkId": "counsellingNotes",
+            "label": "Counselling notes",
+            "kind": "text",
+            "validation": {"required": false}
+          }
+        ]
+      }
+    ]
+  }
+}
