@@ -56,7 +56,7 @@ export default function ConditionsPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data: conditionsData, isLoading } = useConditions(patientId);
+  const { data: conditionsData, isLoading, isError: conditionsUnavailable } = useConditions(patientId);
   const createCondition = useCreateCondition();
   const resolveCondition = useResolveCondition();
 
@@ -295,7 +295,16 @@ export default function ConditionsPage() {
             )}
 
             {/* Conditions table */}
-            {conditions.length === 0 ? (
+            {conditionsUnavailable ? (
+              <div className="bg-card rounded-lg border border-warning/40 p-12 text-center">
+                <HeartPulse className="w-10 h-10 text-warning mx-auto mb-3" />
+                <p className="text-warning text-sm font-medium">Problem list unavailable</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  This is not a record that the patient has no conditions. Try again, and check
+                  another source before treating.
+                </p>
+              </div>
+            ) : conditions.length === 0 ? (
               <div className="bg-card rounded-lg border border-border p-12 text-center">
                 <HeartPulse className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground text-sm">No conditions recorded yet</p>

@@ -53,7 +53,7 @@ export default function ClinicalHistoryPage() {
   const facility = useFacilityStore((state) => state.facility);
 
   const { data: encountersData, isLoading: loadingEnc } = useEncounters(patientId);
-  const { data: conditionsData, isLoading: loadingCond } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: conditionsData, isLoading: loadingCond, isError: conditionsUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["conditions", { patientId }],
     queryFn: () => apiClient.get(`/internal/v1/conditions?patient_id=${patientId}`),
     enabled: !!patientId,
@@ -228,7 +228,11 @@ export default function ClinicalHistoryPage() {
                   <Stethoscope className="w-4 h-4 text-orange-500" />
                   <h3 className="text-sm font-medium text-foreground">Past Medical History ({activeConditions.length})</h3>
                 </div>
-                {activeConditions.length === 0 ? (
+                {conditionsUnavailable ? (
+                  <p className="text-sm text-warning">
+                    Problem list unavailable — this is not a record that there are no conditions.
+                  </p>
+                ) : activeConditions.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No active conditions recorded</p>
                 ) : (
                   <div className="space-y-1.5">
@@ -238,7 +242,7 @@ export default function ClinicalHistoryPage() {
                           <span className="text-sm font-medium text-foreground">
                             {String(c.attributes.condition_name ?? c.attributes.conditionName ?? "")}
                           </span>
-                          {typeof c.attributes.icd_code === "string" && (
+                          {typeof (c.attributes.icd_code ?? c.attributes.icdCode) === "string" && (
                             <span className="text-xs text-muted-foreground ml-2">
                               ({String(c.attributes.icd_code ?? c.attributes.icdCode ?? "")})
                             </span>

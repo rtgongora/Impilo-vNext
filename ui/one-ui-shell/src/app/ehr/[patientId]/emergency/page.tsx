@@ -33,7 +33,9 @@ export default function EmergencyPatientViewPage() {
     queryFn: () => apiClient.get(`/internal/v1/allergies?patient_id=${patientId}`),
     enabled: !!patientId,
   });
-  const { data: conditionsData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: conditionsData, isError: conditionsUnavailable } = useQuery<
+    ApiResponse<GenericResource[]>
+  >({
     queryKey: ["conditions", { patientId }],
     queryFn: () => apiClient.get(`/internal/v1/conditions?patient_id=${patientId}`),
     enabled: !!patientId,
@@ -156,7 +158,16 @@ export default function EmergencyPatientViewPage() {
               <div className="rounded-lg border border-border p-3">
                 <h2 className="text-xs font-bold uppercase text-muted-foreground">Problems (active)</h2>
                 <ul className="mt-2 space-y-1 text-sm text-foreground">
-                  {activeConditions.length === 0 && <li className="text-muted-foreground">None listed.</li>}
+                  {conditionsUnavailable ? (
+                    <li className="text-warning">
+                      Problem list unavailable — not a statement that there are none. Check another
+                      source before treating.
+                    </li>
+                  ) : (
+                    activeConditions.length === 0 && (
+                      <li className="text-muted-foreground">None listed.</li>
+                    )
+                  )}
                   {activeConditions.slice(0, 8).map((c) => (
                     <li key={c.id}>
                       {String(

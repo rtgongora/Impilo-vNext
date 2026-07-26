@@ -154,7 +154,7 @@ export default function ConsultsPage() {
     enabled: !!patientId,
   });
   const patientAllergies = (allergiesData?.data ?? []).map((a) => (a.attributes.allergen as string) ?? "").filter(Boolean);
-  const patientConditions = (conditionsData?.data ?? []).map((c) => (c.attributes.condition_name as string) ?? "").filter(Boolean);
+  const patientConditions = (conditionsData?.data ?? []).map((c) => ((c.attributes.conditionName ?? c.attributes.condition_name) as string) ?? "").filter(Boolean);
   const patientMedications = (medsData?.data ?? []).map((m) => (m.attributes.medication_name as string) ?? "").filter(Boolean);
 
   const patient = patientData?.data;
