@@ -27,7 +27,10 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
  */
 class ShiftControllerTest {
 
-    private static final String TUSO = "http://localhost:8084/v1/shifts";
+    // Built on the closed-loopback test endpoint, not the live dev port: MockRestServiceServer
+    // intercepts before the wire, and testServiceEndpoints() is unreachable by construction.
+    private static final String TUSO =
+            ServiceClientConfig.UNREACHABLE_TEST_ENDPOINT + "/v1/shifts";
 
     // ── TUSO reachable ────────────────────────────────────────────────
 
