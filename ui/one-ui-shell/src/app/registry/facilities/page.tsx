@@ -26,18 +26,42 @@ function statusLabel(status: string) {
   return status.replaceAll("_", " ");
 }
 
+const PAGE_SIZE = 30;
+
+/** The ten provinces of Zimbabwe, as the register spells them. */
+const PROVINCES = [
+  "Bulawayo",
+  "Harare",
+  "Manicaland",
+  "Mashonaland Central",
+  "Mashonaland East",
+  "Mashonaland West",
+  "Masvingo",
+  "Matabeleland North",
+  "Matabeleland South",
+  "Midlands",
+];
+
 export default function FacilityRegistryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [regulatoryStatus, setRegulatoryStatus] = useState<string>("");
+  const [province, setProvince] = useState<string>("");
+  const [page, setPage] = useState(0);
   const { data, isLoading, error } = useFacilityRegistryFacilities({
     search: searchTerm || undefined,
     regulatoryStatus: regulatoryStatus || undefined,
-    page: 0,
-    size: 30,
+    province: province || undefined,
+    page,
+    size: PAGE_SIZE,
   });
   const dashboard = useFacilityDashboardSummary();
 
   const facilities = data?.data.items ?? [];
+  const totalElements = data?.data.totalElements ?? 0;
+  const totalPages = data?.data.totalPages ?? 0;
+  const hasNext = data?.data.hasNext ?? false;
+  const pageStart = totalElements === 0 ? 0 : page * PAGE_SIZE + 1;
+  const pageEnd = page * PAGE_SIZE + facilities.length;
   const metrics = useMemo(
     () => [
       {
@@ -118,22 +142,40 @@ export default function FacilityRegistryPage() {
                 type="text"
                 placeholder="Search by facility name or code"
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={(event) => { setSearchTerm(event.target.value); setPage(0); }}
                 className="w-full rounded-xl border border-border px-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
             <select
               value={regulatoryStatus}
-              onChange={(event) => setRegulatoryStatus(event.target.value)}
+              onChange={(event) => { setRegulatoryStatus(event.target.value); setPage(0); }}
               className="rounded-xl border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">All lifecycle states</option>
+              {/*
+                HAR W6 — without this option the 5,509 HPA-listed facilities were unfilterable:
+                they are the largest population in the register and there was no way to ask for
+                them, so the work they represent was invisible to the people meant to do it.
+              */}
+              <option value="IMPORTED_PENDING_CONFIGURATION">Registered with HPA — awaiting configuration</option>
               <option value="REGISTERED_ACTIVE">Registered active</option>
               <option value="PENDING_INSPECTION">Pending inspection</option>
               <option value="PENDING_RECTIFICATION">Pending rectification</option>
               <option value="PENDING_COMMITTEE_REVIEW">Pending committee review</option>
               <option value="RESTRICTED">Restricted</option>
               <option value="SUSPENDED">Suspended</option>
+            </select>
+            <select
+              value={province}
+              onChange={(event) => { setProvince(event.target.value); setPage(0); }}
+              className="rounded-xl border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">All provinces</option>
+              {PROVINCES.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
             </select>
           </div>
           <Link
@@ -217,6 +259,36 @@ export default function FacilityRegistryPage() {
                 ))}
               </tbody>
             </table>
+            {/*
+              HAR W6 — the list was pinned to the first 30 of 7,285 rows with no way forward, so
+              every facility after the first page was unreachable however you filtered.
+            */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm">
+              <p className="text-muted-foreground">
+                Showing {pageStart}–{pageEnd} of {totalElements.toLocaleString()} facilities
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.max(0, current - 1))}
+                  disabled={page === 0}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  Page {page + 1} of {Math.max(1, totalPages)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => current + 1)}
+                  disabled={!hasNext}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </PageShell>

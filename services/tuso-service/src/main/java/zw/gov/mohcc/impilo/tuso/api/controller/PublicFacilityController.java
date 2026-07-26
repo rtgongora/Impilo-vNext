@@ -14,10 +14,12 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityContactDto;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityListResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterPackMetadata;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityResponse;
 import zw.gov.mohcc.impilo.tuso.core.FacilityService;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityContactEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 
 import java.util.List;
@@ -159,7 +161,7 @@ public class PublicFacilityController {
                 null, // mergedIntoId — redacted
                 null, // version — redacted
                 null, // identifiers — redacted
-                null, // contacts — redacted
+                toPublicContacts(detail.contacts()),
                 null, // geo — redacted
                 capabilities,
                 null, // readiness — redacted
@@ -206,6 +208,41 @@ public class PublicFacilityController {
                 entity.getContinuityClass(),
                 entity.getWorkflowArchetype()
         );
+    }
+
+    /** The contact type the HPA import stamps on a number it ingested but nobody has confirmed. */
+    static final String HPA_LEGACY_UNVERIFIED = "HPA_LEGACY_UNVERIFIED";
+
+    /** The only contact role that may ever reach an anonymous caller. */
+    static final String PUBLIC_CONTACT_ROLE = "FACILITY";
+
+    /**
+     * HAR W6 — publish the facility's own switchboard, and nothing else.
+     *
+     * <p>3,654 contacts were ingested and then rendered {@code null} here, so a citizen looking at a
+     * facility that has no map pin and no confirmed hours also had no way to ask. This emits them —
+     * but the register also holds contacts for people, and a practitioner's personal mobile number
+     * appearing on a public page would be a disclosure incident, not a feature. So the filter is a
+     * strict allow-list on {@code role == FACILITY} rather than a denylist of the roles we happen to
+     * have thought of, and the projection drops {@code name} and {@code role} entirely: a contact
+     * person's name is PII even when the number beside it is the facility's.</p>
+     */
+    static List<FacilityContactDto> toPublicContacts(List<FacilityContactEntity> contacts) {
+        if (contacts == null || contacts.isEmpty()) {
+            return List.of();
+        }
+        return contacts.stream()
+                .filter(c -> PUBLIC_CONTACT_ROLE.equalsIgnoreCase(c.getRole()))
+                .filter(c -> (c.getPhone() != null && !c.getPhone().isBlank())
+                        || (c.getEmail() != null && !c.getEmail().isBlank()))
+                .map(c -> new FacilityContactDto(
+                        c.getContactType(),
+                        null, // name — a contact person is a person; never on the anonymous lane
+                        c.getPhone(),
+                        c.getEmail(),
+                        null, // role — redacted; it was the filter, not disclosure
+                        !HPA_LEGACY_UNVERIFIED.equalsIgnoreCase(c.getContactType())))
+                .toList();
     }
 
     private FacilityListResponse.FacilitySummary toFacilitySummary(FacilityEntity entity) {
