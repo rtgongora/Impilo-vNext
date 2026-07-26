@@ -114,6 +114,17 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!--
+          Growth standards. The BFF used to carry its own copy of the WHO LMS arithmetic and
+          its own 669 KB copy of the tables, which meant a preterm infant was scored twice and
+          the two answers disagreed: PCT used corrected age, the BFF did not. There is one
+          growth engine, and this is where it lives.
+        -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>paediatric-domain</artifactId>
+        </dependency>
+
         <!-- Shared Kernel Java (EventEnvelope) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
