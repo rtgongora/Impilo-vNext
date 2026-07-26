@@ -56,6 +56,19 @@ libraries:
   - id: tech-companion-harness
     maven_module: tech-companion-harness
     path: libs/tech-companion-harness
+  # Clinical domain libraries. Framework-free by deliberate constraint — no Spring, no I/O — so the
+  # same arithmetic runs inside a service, a batch job and an offline package, and builds without a
+  # network or a container. They own arithmetic, never policy: thresholds, tolerances and dosing
+  # bands are injected as content so a ministry can change one without a code release.
+  - id: paediatric-domain
+    maven_module: paediatric-domain
+    path: libs/paediatric-domain
+  - id: reproductive-domain
+    maven_module: reproductive-domain
+    path: libs/reproductive-domain
+  - id: burn-domain
+    maven_module: burn-domain
+    path: libs/burn-domain
   - id: tech-companion-mock
     maven_module: tech-companion-mock
     path: libs/tech-companion-mock

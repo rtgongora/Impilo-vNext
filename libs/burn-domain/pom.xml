@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>zw.gov.mohcc.impilo</groupId>
+    <artifactId>burn-domain</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>Impilo — Burn Domain (Lund-Browder %TBSA + injury-clocked fluid resuscitation)</name>
+    <description>
+        Pure Java 21 burn primitives shared by the emergency and surgical planes: age-banded
+        Lund-Browder body-surface mapping, %TBSA computation that excludes superficial burns,
+        and injury-clocked fluid resuscitation with an explicit first-half deadline.
+
+        Shared rather than emergency-owned on purpose. %TBSA is not only a resuscitation input:
+        it drives excision timing, graft planning, nutrition requirement and mortality prediction
+        for months after the emergency episode closes, so surgery must not depend on an emergency
+        library for the whole course of care.
+
+        No Spring, no I/O, so the same arithmetic runs inside a service, a batch job or an
+        offline package.
+    </description>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>5.10.3</junit.version>
+    </properties>
+
+    <dependencies>
+        <!--
+            Age banding comes from paediatric-domain rather than a private copy. Lund-Browder is
+            age-adjusted, and a second age model would eventually disagree with the first about
+            which band a child is in.
+        -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>paediatric-domain</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>21</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
