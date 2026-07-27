@@ -73,7 +73,12 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
   const getTargetDestination = () => {
     let target = returnTo;
     if (intent === "work" && (!target || target === "/home" || target === "/")) {
-      target = "/home/workplace";
+      // `/home` IS the work destination: app/home/page.tsx is the role-aware dashboard
+      // that carries the workplace hub and adapts on operationalMode. There is no
+      // `/home/workplace` route and there never has been — targeting it here sent every
+      // Work & Practice sign-in to a non-existent page after a successful login, which
+      // read to the user as "login does nothing".
+      target = "/home";
     } else if (intent === "regulatory" && (!target || target === "/home" || target === "/")) {
       target = "/organization-admin";
     }
