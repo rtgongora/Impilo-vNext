@@ -121,6 +121,14 @@ bash scripts/guard/run-change-safety-gates.sh            # before every push
 bash scripts/guard/check-migration-version-collisions.sh # at minimum, if you touched a migration
 ```
 
+**And stop on what it says.** A second lane later ran the scan, watched it print `V432`, and pushed in
+the same command — the push added no new duplicate, but a known one was walked past. So:
+
+> **Running a guard and pushing in the same command is not running the guard.** Stop on ANY hit,
+> including one that is not yours. Route it, then push.
+
+Never `&&` a guard into a push. A control you do not stop for is only a detector with extra steps.
+
 ## 6. Migration numbers
 
 - Reserve **above every committed claim** in every `docs/registry/iatg-*-leases.md` — not above the
