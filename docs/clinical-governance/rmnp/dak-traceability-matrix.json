@@ -1405,21 +1405,52 @@
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "W3 built HIV care from enrolment onward — a person already diagnosed. The testing-services algorithm (screening, confirmatory testing, result delivery) is the front door before enrolment and is a distinct decision surface. Shipping a fragment of it now would let a clinician read a partial algorithm as the whole one.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "HIV_TEST_NONREACTIVE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-testing-rules.json",
+          "row": "initial non-reactive"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "HIV_TEST_DISCREPANT",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-testing-rules.json",
+          "row": "discrepant"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "HIV_TEST_POSITIVE_VERIFIED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-testing-rules.json",
+          "row": "three-test positive"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "HIV_INFANT_VIROLOGICAL_REQUIRED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-testing-rules.json",
+          "row": "infant virological"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W4 ships the HIV testing algorithm as governed content, anchored to a diagnostic order/result in OROS and a problem in pct_problems.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO Consolidated guidelines on HIV testing services, 2019.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "HIV.TESTING",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "HIV testing services algorithm and diagnosis",
       "titleIsSheetLevel": false
     },
@@ -2479,21 +2510,45 @@
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "The diagnostic algorithm (rapid molecular test first, then culture/DST) sits between screening and treatment. W3 records the bacteriology results (TB_SMEAR, TB_XPERT_MTB in the zibo value set) and acts on them in monitoring, but the diagnostic decision logic that gets a person to a confirmed diagnosis is not yet content.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_DX_CONFIRMED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-diagnosis-rules.json",
+          "row": "MTB detected"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_DX_RIF_RESISTANT",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-diagnosis-rules.json",
+          "row": "rif resistance at dx"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_DX_CLINICAL",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-diagnosis-rules.json",
+          "row": "clinically diagnosed"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W4 ships the TB diagnostic algorithm as governed content, driven by the Xpert/culture observation codes seeded in zibo V035.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 3: diagnosis — rapid diagnostics for tuberculosis detection, 2021/2024.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "TB.DIAGNOSIS",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "TB diagnostic algorithm (rapid molecular testing first)",
       "titleIsSheetLevel": false
     },
@@ -2556,21 +2611,38 @@
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "W3 built TB treatment monitoring from enrolment onward. Systematic screening and presumptive-TB identification is the step before a TB diagnosis exists, and belongs with the diagnostic front-door below rather than bolted onto the treatment rules.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_SCREEN_SYMPTOMATIC",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-screening-rules.json",
+          "row": "symptom screen"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_SCREEN_NEGATIVE_PLHIV_TPT_ELIGIBLE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-screening-rules.json",
+          "row": "screen-negative PLHIV"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W4 ships the TB screening algorithm (symptom screen, risk groups) as governed content.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 2: screening, 2021.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "TB.SCREENING",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "Systematic TB screening and presumptive-TB identification",
       "titleIsSheetLevel": false
     },
@@ -2687,10 +2759,10 @@
       "titleIsSheetLevel": false
     }
   ],
-  "shippedCitations": 82,
+  "shippedCitations": 91,
   "statusCounts": {
     "COVERED_ELSEWHERE": 7,
-    "DEFERRED": 127,
-    "SHIPPED": 6
+    "DEFERRED": 124,
+    "SHIPPED": 9
   }
 }
