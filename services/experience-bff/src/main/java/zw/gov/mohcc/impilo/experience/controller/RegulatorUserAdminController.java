@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpStatusCodeException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient;
@@ -169,9 +170,48 @@ public class RegulatorUserAdminController {
             return ok(data == null ? null : data.path("data").isMissingNode() ? data : data.path("data"),
                     okStatus, requestId, correlationId);
         } catch (Exception e) {
+            // A 4xx from org-registry is a decision the operator must see — the succession guard's
+            // 409 LAST_ADMINISTRATOR, an SoD 409, a 400 on a bad role code. Collapsing it to a
+            // generic 502 would hide why the act was refused. Pass the upstream status + message
+            // through; keep 5xx/transport failures as an opaque unavailable.
+            HttpStatusCodeException upstreamError = asUpstreamStatus(e);
+            if (upstreamError != null && upstreamError.getStatusCode().is4xxClientError()) {
+                return passthrough(upstreamError, requestId, correlationId, failMessage);
+            }
             log.warn("regulator user-admin upstream failed: {}", e.getMessage());
             return upstream(requestId, correlationId, failMessage);
         }
+    }
+
+    /** The org-registry client wraps HTTP errors in an IllegalStateException — unwrap the cause. */
+    private HttpStatusCodeException asUpstreamStatus(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof HttpStatusCodeException hse) {
+                return hse;
+            }
+        }
+        return null;
+    }
+
+    private ResponseEntity<Map<String, Object>> passthrough(HttpStatusCodeException e, String requestId,
+                                                            String correlationId, String fallbackMessage) {
+        String code = "UPSTREAM_REJECTED";
+        String message = fallbackMessage;
+        try {
+            JsonNode body = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readTree(e.getResponseBodyAsString());
+            JsonNode error = body.path("error");
+            if (!error.path("code").isMissingNode()) {
+                code = error.path("code").asText(code);
+                message = error.path("message").asText(message);
+            } else if (!body.path("message").isMissingNode()) {
+                message = body.path("message").asText(message);
+            }
+        } catch (Exception ignored) {
+            // No parseable body — the status alone still tells the operator it was a refusal, not an outage.
+        }
+        HttpStatus status = HttpStatus.valueOf(e.getStatusCode().value());
+        return error(status, code, message, requestId, correlationId);
     }
 
     private ResponseEntity<Map<String, Object>> ok(JsonNode data, HttpStatus okStatus,

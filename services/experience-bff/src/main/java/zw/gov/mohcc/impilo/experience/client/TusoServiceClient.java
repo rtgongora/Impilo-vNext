@@ -113,8 +113,8 @@ public class TusoServiceClient {
      */
     public JsonNode getFacilityStatusSummary(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/status-summary";
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
+        return extractData(restTemplate.exchange(url, org.springframework.http.HttpMethod.GET,
+                registryPlaneRequest(), JsonNode.class));
     }
 
     /**
@@ -128,8 +128,29 @@ public class TusoServiceClient {
      */
     public JsonNode getFacilityEmoncReadiness(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/emonc-readiness/" + facilityId;
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
+        return extractData(restTemplate.exchange(url, org.springframework.http.HttpMethod.GET,
+                registryPlaneRequest(), JsonNode.class));
+    }
+
+    /**
+     * A request that declares the REGISTRY plane, for facility-discovery reads.
+     *
+     * <p>{@code tuso.facility} rows live on the registry-plane tenant (facility/provider/geo masters,
+     * pre-episode), not the care plane a clinical caller carries. A birth-destination lookup is a
+     * genuine cross-plane read — a care question answered from registry data — so it must declare the
+     * plane its rows live in rather than inherit the caller's care-plane context, which finds nothing
+     * and 502s. See {@link zw.gov.mohcc.impilo.experience.config.PublicTenants}.
+     *
+     * <p>NOTE: this header only takes effect if the trust-forwarding interceptor forwards
+     * X-Tenant-ID <em>only-if-absent</em> (as it does for Authorization since 2026-07-27). While it
+     * forwards unconditionally, an authenticated caller's care-plane tenant overwrites this — the
+     * interceptor precedence is owned by the BFF trust layer.
+     */
+    private static org.springframework.http.HttpEntity<Void> registryPlaneRequest() {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.TENANT_ID,
+                zw.gov.mohcc.impilo.experience.config.PublicTenants.REGISTRY_PLANE);
+        return new org.springframework.http.HttpEntity<>(headers);
     }
 
     /**
