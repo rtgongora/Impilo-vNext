@@ -5,7 +5,7 @@ FAIL=0
 
 # New service folders on this branch
 BASE="$(resolve_base_ref)"
-ADDED=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- 'services/' 2>/dev/null \
+ADDED=$(git diff --diff-filter=A --name-only "$BASE" HEAD -- 'services/' 2>/dev/null \
   | guard_filter '^services/[^/]+/' | sed 's|/.*||' | sort -u || true)
 
 declare -A CANONICAL=(

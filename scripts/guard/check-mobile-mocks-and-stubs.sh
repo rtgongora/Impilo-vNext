@@ -7,7 +7,7 @@ parity_ensure_full_catalog
 BASE="$(resolve_base_ref)"
 PARITY_BLOCKING=0
 
-NEW_FILES=$(git diff --name-only "$BASE"...HEAD -- 'apps/mobile/' 2>/dev/null \
+NEW_FILES=$(git diff --name-only "$BASE" HEAD -- 'apps/mobile/' 2>/dev/null \
   | guard_filter '\.(tsx|ts)$' || true)
 
 while IFS= read -r f; do

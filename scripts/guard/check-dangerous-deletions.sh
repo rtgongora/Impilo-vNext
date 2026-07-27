@@ -4,7 +4,7 @@ source "$(dirname "$0")/_guard-common.sh"
 BASE="$(resolve_base_ref)"
 FAIL=0
 
-DELETED=$(git diff --diff-filter=D --name-only "$BASE"...HEAD 2>/dev/null || true)
+DELETED=$(git diff --diff-filter=D --name-only "$BASE" HEAD 2>/dev/null || true)
 if [[ -z "$DELETED" ]]; then
   guard_pass "no deleted files vs $BASE"
   exit 0

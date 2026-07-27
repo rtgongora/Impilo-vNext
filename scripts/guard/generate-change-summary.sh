@@ -12,13 +12,13 @@ OUT="${GUARD_SUMMARY_FILE:-/tmp/impilo-change-summary.txt}"
   echo "Branch: $(git branch --show-current)"
   echo ""
   echo "=== Files changed ==="
-  git diff --stat "$BASE"...HEAD 2>/dev/null || true
+  git diff --stat "$BASE" HEAD 2>/dev/null || true
   echo ""
   echo "=== Added ==="
-  git diff --diff-filter=A --name-only "$BASE"...HEAD 2>/dev/null | head -100 || true
+  git diff --diff-filter=A --name-only "$BASE" HEAD 2>/dev/null | head -100 || true
   echo ""
   echo "=== Deleted ==="
-  git diff --diff-filter=D --name-only "$BASE"...HEAD 2>/dev/null | head -100 || true
+  git diff --diff-filter=D --name-only "$BASE" HEAD 2>/dev/null | head -100 || true
 } | tee "$OUT"
 
 echo "Summary written: $OUT"

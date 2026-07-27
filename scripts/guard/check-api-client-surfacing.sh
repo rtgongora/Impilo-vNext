@@ -8,7 +8,7 @@ BASE="$(resolve_base_ref)"
 BLOCKING=0
 ADVISORY=0
 
-NEW_PAGES=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- 'ui/one-ui-shell/src/app/' 2>/dev/null \
+NEW_PAGES=$(git diff --diff-filter=A --name-only "$BASE" HEAD -- 'ui/one-ui-shell/src/app/' 2>/dev/null \
   | guard_filter 'page\.tsx$' || true)
 
 while IFS= read -r page; do
@@ -25,7 +25,7 @@ while IFS= read -r page; do
   fi
 done <<< "$NEW_PAGES"
 
-NEW_HOOKS=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- \
+NEW_HOOKS=$(git diff --diff-filter=A --name-only "$BASE" HEAD -- \
   'ui/one-ui-shell/src/hooks/' 'ui/one-ui-shell/src/lib/' 2>/dev/null \
   | guard_filter '^ui/one-ui-shell/src/(hooks|lib)/.*\.ts$' || true)
 
@@ -41,11 +41,11 @@ while IFS= read -r f; do
   fi
 done <<< "$NEW_HOOKS"
 
-NEW_BFF=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- \
+NEW_BFF=$(git diff --diff-filter=A --name-only "$BASE" HEAD -- \
   'services/experience-bff/src/main/java' 2>/dev/null | guard_filter 'Controller\.java$' || true)
 if [[ -n "$NEW_BFF" ]]; then
   SAME_COMMIT_UI=0
-  if git diff --name-only "$BASE"...HEAD | guard_filter -q 'ui/one-ui-shell/src/|docs/frontend/BACKEND_CAPABILITY|docs/architecture/FRONTEND_BACKEND'; then
+  if git diff --name-only "$BASE" HEAD | guard_filter -q 'ui/one-ui-shell/src/|docs/frontend/BACKEND_CAPABILITY|docs/architecture/FRONTEND_BACKEND'; then
     SAME_COMMIT_UI=1
   fi
   ON_DISK_SURFACED=1

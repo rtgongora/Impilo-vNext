@@ -9,7 +9,7 @@ RETIRED_UI_PATHS=(
   'ui/mushex-ops-console/'
   'ui/mushex-payer-portal/'
 )
-ADDED=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- "${RETIRED_UI_PATHS[@]}" 2>/dev/null || true)
+ADDED=$(git diff --diff-filter=A --name-only "$BASE" HEAD -- "${RETIRED_UI_PATHS[@]}" 2>/dev/null || true)
 if [[ -n "$ADDED" ]]; then
   guard_fail "new files under retired UI sidecar paths:"
   echo "$ADDED"

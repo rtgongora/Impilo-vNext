@@ -129,6 +129,28 @@ the same command — the push added no new duplicate, but a known one was walked
 
 Never `&&` a guard into a push. A control you do not stop for is only a detector with extra steps.
 
+**Which changes the gates consider yours.** The base is the newest ancestor of `HEAD` that is already
+published on a remote branch other than your own branch's — so on a **merge** the commits canonical
+brought in are not charged to you, on a **fast-forward** nothing is, and on a **lane branch** every
+commit you authored is under review, not just the last one. Pushing your *own* branch does not make
+work published for this purpose: it is unreviewed until it reaches canonical.
+
+That rule replaced a plain `HEAD~1` on 2026-07-27, and the old one failed in *both* directions at
+once. On a lane that had deleted a service file and then merged 72 canonical commits, the gates named
+three of canonical's long-shipped files — a growth-engine consolidation, a landing surface, a mobile
+tool registry — and **did not name the lane's own deletion**, which sat in `HEAD~1`. That is how a
+guard gets muted: it fires on work that is not yours while missing the work that is.
+
+```bash
+GUARD_BASE_REF=<sha>       # review exactly this range (escape hatch; CI sets it)
+GUARD_UPSTREAM_REF=<ref>   # name the branch your lane is measured against
+```
+
+`scripts/guard/tests/base-ref-resolution-test.sh` asserts the rule over throwaway repositories and
+runs first inside the gate suite; the rule itself is written out in `scripts/guard/_guard-common.sh`.
+Guards run from a **worktree** now review that worktree — `REPO_PATH` no longer defaults to the main
+checkout — so a lane no longer gates somebody else's tree by accident.
+
 ## 6. Migration numbers
 
 - Reserve **above every committed claim** in every `docs/registry/iatg-*-leases.md` — not above the

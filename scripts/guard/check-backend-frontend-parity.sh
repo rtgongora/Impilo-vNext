@@ -39,7 +39,7 @@ bash scripts/guard/check-frontend-mocks-and-stubs.sh || { FAIL=1; PARITY_BLOCKIN
 bash scripts/guard/check-api-client-surfacing.sh || { FAIL=1; PARITY_BLOCKING=1; }
 
 # Weakened page replacement detection
-for page in $(git diff --diff-filter=M --name-only "$BASE"...HEAD -- 'ui/one-ui-shell/src/app/' 2>/dev/null | guard_filter 'page\.tsx$' || true); do
+for page in $(git diff --diff-filter=M --name-only "$BASE" HEAD -- 'ui/one-ui-shell/src/app/' 2>/dev/null | guard_filter 'page\.tsx$' || true); do
   [[ -f "$page" ]] || continue
   before=$(git show "$BASE:$page" 2>/dev/null | wc -l || echo 0)
   after=$(wc -l <"$page" || echo 0)
