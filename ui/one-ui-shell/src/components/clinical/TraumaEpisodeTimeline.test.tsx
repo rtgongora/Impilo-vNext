@@ -45,4 +45,37 @@ describe("TraumaEpisodeTimeline", () => {
     renderTl();
     await waitFor(() => expect(screen.getByText(/No phases recorded yet/i)).toBeInTheDocument());
   });
+
+  // CC-5 V-3: the continuum-link status, with the three states kept distinct so "not linked yet,
+  // fine" is never shown as "linked" and an unanchored facility-phase episode reads as a gap.
+
+  it("shows LINKED with the journey once the spine resolves to the continuum", async () => {
+    get.mockResolvedValue({
+      traumaEpisodeId: "ep-3", episodeReference: "TEP-3", status: "OPEN", currentPhase: "ED",
+      continuumLinked: true, pctJourneyId: "J-77", continuumLinkedAt: "2026-07-15T06:00:00Z", timeline: [],
+    });
+    renderTl();
+    await waitFor(() => expect(screen.getByTestId("continuum-link-status")).toHaveTextContent(/Linked to the care continuum/i));
+    expect(screen.getByTestId("continuum-link-status")).toHaveTextContent("J-77");
+  });
+
+  it("shows UNANCHORED — not a benign 'not yet' — when a facility-phase episode has no journey", async () => {
+    get.mockResolvedValue({
+      traumaEpisodeId: "ep-4", episodeReference: "TEP-4", status: "OPEN", currentPhase: "RESUS",
+      continuumLinked: false, timeline: [],
+    });
+    renderTl();
+    await waitFor(() => expect(screen.getByTestId("continuum-link-status")).toHaveTextContent(/Not yet linked to a facility journey/i));
+    // It must NOT read as linked.
+    expect(screen.getByTestId("continuum-link-status")).not.toHaveTextContent(/Linked to the care continuum/i);
+  });
+
+  it("shows PREHOSPITAL when a link is not expected yet", async () => {
+    get.mockResolvedValue({
+      traumaEpisodeId: "ep-5", episodeReference: "TEP-5", status: "OPEN", currentPhase: "DISPATCH",
+      continuumLinked: false, timeline: [],
+    });
+    renderTl();
+    await waitFor(() => expect(screen.getByTestId("continuum-link-status")).toHaveTextContent(/Prehospital/i));
+  });
 });

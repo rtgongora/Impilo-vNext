@@ -1,0 +1,55 @@
+{
+  "domain": "medicine",
+  "note": "Conscious non-coverage for the HIV/TB standards baseline at W3. The six DECISION_LOGIC standards this wave implements (viral-load monitoring, treatment failure, advanced disease, TB monitoring, DR-TB, TB outcome) are SHIPPED — governed content in the clinical knowledge platform cites them. The standards below are declared but not yet implemented; each names the wave that will and the condition that brings it back. An entry that survives its planned wave is a signal, not paperwork. W3 built the treatment-and-monitoring core of both programmes; testing, prevention, PMTCT and the diagnostic front-door are the deliberately-deferred remainder.",
+  "exclusions": [
+    {
+      "standardId": "HIV.TESTING",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "W3 built HIV care from enrolment onward — a person already diagnosed. The testing-services algorithm (screening, confirmatory testing, result delivery) is the front door before enrolment and is a distinct decision surface. Shipping a fragment of it now would let a clinician read a partial algorithm as the whole one.",
+      "revisitCondition": "W4 ships the HIV testing algorithm as governed content, anchored to a diagnostic order/result in OROS and a problem in pct_problems."
+    },
+    {
+      "standardId": "HIV.PREP",
+      "decision": "DEFERRED",
+      "plannedWave": "W6",
+      "reason": "PrEP is prevention for HIV-negative people at risk, not part of the care programme for people living with HIV. It belongs with the prevention pillar, which this pack has not opened, and modelling it as an ART regimen would conflate prophylaxis with treatment.",
+      "revisitCondition": "W6 opens the HIV prevention pillar with a PrEP eligibility and follow-up surface distinct from the ART programme."
+    },
+    {
+      "standardId": "HIV.PMTCT",
+      "decision": "DEFERRED",
+      "plannedWave": "W6",
+      "reason": "PMTCT sits across HIV care and the RMNP pregnancy episode; implementing it in the medicine pack alone would either duplicate RMNP's pregnancy episode or fork the HIV programme by pregnancy status. It needs a joint seam between this pack's HIV enrolment and RMNP's pregnancy episode, agreed rather than assumed.",
+      "revisitCondition": "W6, jointly with the RMNP lane: PMTCT links an HIV_CARE enrolment to the pregnancy episode without duplicating either."
+    },
+    {
+      "standardId": "HIV.TB_COINFECTION",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "The advanced-disease rule already prompts TB screening in people with a low CD4, but systematic TB screening and TB preventive therapy for all people living with HIV is a fuller decision surface than one prompt, and pairs with TB.TPT below.",
+      "revisitCondition": "W4 ships TB screening and preventive therapy for people living with HIV as governed content, jointly with TB.TPT."
+    },
+    {
+      "standardId": "TB.SCREENING",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "W3 built TB treatment monitoring from enrolment onward. Systematic screening and presumptive-TB identification is the step before a TB diagnosis exists, and belongs with the diagnostic front-door below rather than bolted onto the treatment rules.",
+      "revisitCondition": "W4 ships the TB screening algorithm (symptom screen, risk groups) as governed content."
+    },
+    {
+      "standardId": "TB.DIAGNOSIS",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "The diagnostic algorithm (rapid molecular test first, then culture/DST) sits between screening and treatment. W3 records the bacteriology results (TB_SMEAR, TB_XPERT_MTB in the zibo value set) and acts on them in monitoring, but the diagnostic decision logic that gets a person to a confirmed diagnosis is not yet content.",
+      "revisitCondition": "W4 ships the TB diagnostic algorithm as governed content, driven by the Xpert/culture observation codes seeded in zibo V035."
+    },
+    {
+      "standardId": "TB.TPT",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "TB preventive treatment regimens (3HP, 6H, 1HP) are seeded in the zibo TB regimen value set (V035), but the eligibility decision logic — who should receive TPT and when — is not yet shipped as CKP content. The value set without the rule is a vocabulary, not a decision.",
+      "revisitCondition": "W4 ships TPT eligibility as governed content citing this standard, using the TPT regimen codes already in zibo V035."
+    }
+  ]
+}

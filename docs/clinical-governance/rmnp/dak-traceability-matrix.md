@@ -11,15 +11,16 @@ or a domain's own `<domain>/coverage-exclusions.json`. `UNCOVERED` means nobody
 has decided yet, and the guard fails on it — a table nobody looked at is the failure this
 matrix exists to make visible.
 
-- Published artefacts: **120**
-- Families: `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `WHO_BLOOD` (1), `WHO_DAK` (80), `WHO_ECO` (6), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
+- Published artefacts: **140**
+- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
 - Published data elements: **4098**
-- Shipped citations: **66**
+- Shipped citations: **82**
 
 | Status | Count |
 |---|---|
 | `COVERED_ELSEWHERE` | 7 |
-| `DEFERRED` | 113 |
+| `DEFERRED` | 127 |
+| `SHIPPED` | 6 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -87,6 +88,20 @@ matrix exists to make visible.
 | `ECO.WHA76-2.REFERRAL_NETWORKS` | WHO_ECO | POLICY_FRAMEWORK | — | Functional referral systems connecting primary, secondary and tertiary care | `DEFERRED` | — | — | Surgical referral exists as a record (referral.surgical_referral, with indication, laterality, site, urgency and target  |
 | `ECO.WHA76-2.SAFETY_CHECKLISTS` | WHO_ECO | POLICY_FRAMEWORK | — | Implement safety checklists and standardised protocols for emergency and operati | `DEFERRED` | — | — | One safety checklist exists — the WHO surgical one — and it is real and gated. The standard asks for checklists across e |
 | `ECO.WHA76-2.SURGICAL_ANAESTHESIA_PERIOP` | WHO_ECO | POLICY_FRAMEWORK | — | Member States strengthen surgical, anaesthesia and perioperative care capability | `DEFERRED` | — | — | Surgical, anaesthesia and perioperative care exist as three separately-wired capabilities rather than one integrated ser |
+| `EMS.BEC.ABCDE` | BEC | CLINICAL_APPROACH | — | Basic Emergency Care: the ABCDE approach to the acutely ill and injured, plus SA | `DEFERRED` | — | — | The undifferentiated-assessment / danger-sign layer is designed (findings as pct_observations, symptom-triggered pathway |
+| `EMS.DSEC.MINIMUM_DATASET` | DSEC | DATASET | — | WHO Data Set for Emergency Care — 47 core + 31 extended elements across registra | `DEFERRED` | — | — | The emergency_episode (pct V200) carries part of the dataset structurally, but the dataset-to-column mapping and the 22  |
+| `EMS.EDLIZ.EMERGENCY_MEDICINES` | EDLIZ | NATIONAL_FORMULARY | — | EDLIZ 2025 emergency medicines, antidotes and level-of-care availability (C/B/A/ | `DEFERRED` | — | — | Emergency medicines, antidotes and blood integration (Dura/Madi) are the W8 medicines-and-blood wave; no governed emerge |
+| `EMS.IITT.ADULT` | IITT | TRIAGE_CHART | — | Interagency Integrated Triage Tool, Age >= 12 — three-tier RED/YELLOW/GREEN tria | `DEFERRED` | — | — | The WhoIittEngine that encodes this chart exists and is tested (libs/emergency-domain), but it is a library on the shelf |
+| `EMS.IITT.HIGH_RISK` | IITT | REFERENCE_CARD | — | IITT high-risk reference card — the definitions the charts' starred criteria res | `DEFERRED` | — | — | The reference-card definitions the charts' starred criteria resolve to are transcribed but not yet expressed as governed |
+| `EMS.IITT.PAEDIATRIC` | IITT | TRIAGE_CHART | — | Interagency Integrated Triage Tool, Age < 12 — a different logical shape from th | `DEFERRED` | — | — | Encoded and tested in the engine (distinct paediatric logic — no numeric HR red criterion, the meningism conjunction, ag |
+| `EMS.SSC26.SCREENING` | SSC26 | CLINICAL_GUIDELINE | — | Sepsis screening by an early warning score (NEWS/NEWS2/MEWS/SIRS) rather than qS | `DEFERRED` | — | — | The seeded ED_SEPSIS pathway still screens on qSOFA (the defect); routing sepsis screening through the existing server-s |
+| `HIV.ADVANCED_DISEASE` | WHO_DAK | DECISION_LOGIC | — | Advanced HIV disease package (CD4 <200 or WHO stage 3/4) | `SHIPPED` | `HIV_ADVANCED_DISEASE` | ADOPTED_VERBATIM |  |
+| `HIV.PMTCT` | WHO_DAK | DECISION_LOGIC | — | Prevention of mother-to-child transmission of HIV | `DEFERRED` | — | — | PMTCT sits across HIV care and the RMNP pregnancy episode; implementing it in the medicine pack alone would either dupli |
+| `HIV.PREP` | WHO_DAK | DECISION_LOGIC | — | Pre-exposure prophylaxis eligibility and follow-up | `DEFERRED` | — | — | PrEP is prevention for HIV-negative people at risk, not part of the care programme for people living with HIV. It belong |
+| `HIV.TB_COINFECTION` | WHO_DAK | DECISION_LOGIC | — | TB screening and preventive therapy in people living with HIV | `DEFERRED` | — | — | The advanced-disease rule already prompts TB screening in people with a low CD4, but systematic TB screening and TB prev |
+| `HIV.TESTING` | WHO_DAK | DECISION_LOGIC | — | HIV testing services algorithm and diagnosis | `DEFERRED` | — | — | W3 built HIV care from enrolment onward — a person already diagnosed. The testing-services algorithm (screening, confirm |
+| `HIV.TREATMENT_FAILURE` | WHO_DAK | DECISION_LOGIC | — | Recognition of treatment failure and the enhanced-adherence-then-switch sequence | `SHIPPED` | `HIV_VL_UNSUPPRESSED`, `HIV_CONFIRMED_FAILURE` | ADOPTED_VERBATIM |  |
+| `HIV.VL.MONITORING` | WHO_DAK | DECISION_LOGIC | — | Routine viral-load monitoring and interpretation (suppressed, low-level viraemia | `SHIPPED` | `HIV_VL_SUPPRESSED`, `HIV_VL_LOW_LEVEL_VIRAEMIA` | ADOPTED_VERBATIM |  |
 | `IPC.CORE.ASEPTIC_TECHNIQUE` | WHO_IPC | GUIDELINE_SECTION | — | Aseptic technique, sterile field and skin preparation for invasive procedures | `DEFERRED` | — | — | Skin preparation, sterile field and aseptic technique are not captured anywhere. Skin preparation is also a WHO surgical |
 | `IPC.CORE.HAND_HYGIENE` | WHO_IPC | GUIDELINE_SECTION | — | Hand hygiene at the WHO Five Moments, as a precondition of any invasive procedur | `DEFERRED` | — | — | Not modelled. The specification is explicit that a generic sterile checkbox is not acceptable where the risk warrants tr |
 | `IPC.CORE.INJECTION_SAFETY` | WHO_IPC | GUIDELINE_SECTION | — | Injection and sharps safety, single-use device discipline, exposure incident han | `DEFERRED` | — | — | Sharps safety, exposure incidents and clinical waste are not modelled. Exposure incident is the notable one: it is a sta |
@@ -140,6 +155,12 @@ matrix exists to make visible.
 | `SSI.2018.INTRAOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Intraoperative measures for the prevention of surgical site infection | `DEFERRED` | — | — | Intraoperative infection-prevention measures are not modelled. Wound classification, which is the entry point for surgic |
 | `SSI.2018.POSTOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Postoperative measures for the prevention of surgical site infection, including  | `DEFERRED` | — | — | Surgical-site infection is one of the twenty complications the surgical pack must manage as a pathway, and complications |
 | `SSI.2018.PREOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Preoperative measures for the prevention of surgical site infection | `DEFERRED` | — | — | No surgical-site-infection prevention logic exists anywhere in the repository. The clinical knowledge platform has the r |
+| `TB.DIAGNOSIS` | WHO_DAK | DECISION_LOGIC | — | TB diagnostic algorithm (rapid molecular testing first) | `DEFERRED` | — | — | The diagnostic algorithm (rapid molecular test first, then culture/DST) sits between screening and treatment. W3 records |
+| `TB.DR_TB` | WHO_DAK | DECISION_LOGIC | — | Rifampicin resistance recognition and drug-resistant TB regimen selection | `SHIPPED` | `TB_RIF_RESISTANCE` | ADOPTED_VERBATIM |  |
+| `TB.OUTCOME` | WHO_DAK | DECISION_LOGIC | — | TB treatment failure and cohort treatment outcomes | `SHIPPED` | `TB_SMEAR_MONTH5_POSITIVE` | ADOPTED_VERBATIM |  |
+| `TB.SCREENING` | WHO_DAK | DECISION_LOGIC | — | Systematic TB screening and presumptive-TB identification | `DEFERRED` | — | — | W3 built TB treatment monitoring from enrolment onward. Systematic screening and presumptive-TB identification is the st |
+| `TB.TPT` | WHO_DAK | DECISION_LOGIC | — | TB preventive treatment eligibility and regimens (3HP, 6H, 1HP) | `DEFERRED` | — | — | TB preventive treatment regimens (3HP, 6H, 1HP) are seeded in the zibo TB regimen value set (V035), but the eligibility  |
+| `TB.TREATMENT_MONITORING` | WHO_DAK | DECISION_LOGIC | — | Drug-susceptible TB treatment: phases and bacteriological monitoring schedule | `SHIPPED` | `TB_PHASE_TRANSITION_DUE`, `TB_SMEAR_MONTH2_POSITIVE` | ADOPTED_VERBATIM |  |
 | `ZW.NSOAS.2022.DISTRICT_ACCESS` | ZW_NSOAS | NATIONAL_STRATEGY | — | Promote access to surgical services from district level — 83% of key tracer surg | `DEFERRED` | — | — | The national strategy's central finding is that 83% of key tracer surgical operations were being performed at central an |
 | `ZW.NSOAS.2022.INFRASTRUCTURE_EQUIPMENT` | ZW_NSOAS | NATIONAL_STRATEGY | — | Address infrastructure and equipment gaps in essential surgical care | `DEFERRED` | — | — | TUSO holds equipment assets and instrument sets, which is the beginning of this, but there is no view of essential-surgi |
 | `ZW.NSOAS.2022.TIMELY_AFFORDABLE_SAFE` | ZW_NSOAS | NATIONAL_STRATEGY | — | Timely, affordable, safe and quality surgical services, aligned to the National  | `DEFERRED` | — | — | The strategy's four qualities map onto four different pieces of missing work: timely needs waiting-time measurement, aff |

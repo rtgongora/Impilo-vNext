@@ -1,0 +1,55 @@
+{
+  "domain": "emergency",
+  "note": "Conscious non-coverage for the emergency standards baseline. Every declared standard is DEFERRED here because no governed CKP content cites it YET — a vendored chart and even a tested engine are not the same as a rule in the clinical knowledge platform that names the standard, which is what 'implemented' means to this register. Each entry names the wave that will implement it (content citing the standardId via dakRef + adaptation) and the condition that brings it back. An entry that survives its planned wave is a signal, not paperwork; delete it when the content lands and the standard flips to SHIPPED.",
+  "exclusions": [
+    {
+      "standardId": "EMS.IITT.ADULT",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "The WhoIittEngine that encodes this chart exists and is tested (libs/emergency-domain), but it is a library on the shelf — not wired into pct and not cited by governed CKP triage content, so nothing yet makes it the acuity of record. A tested engine nobody calls is the same empty promise as a column nothing writes.",
+      "revisitCondition": "W4 wires IITT as the sole acuity authority in EdVisitService (ESI/MTS demoted to advisory) and CKP triage content cites EMS.IITT.ADULT."
+    },
+    {
+      "standardId": "EMS.IITT.PAEDIATRIC",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "Encoded and tested in the engine (distinct paediatric logic — no numeric HR red criterion, the meningism conjunction, age-banded vitals), but not yet wired or cited by content.",
+      "revisitCondition": "W4 wires paediatric IITT (age-routed through libs/paediatric-domain) and CKP content cites EMS.IITT.PAEDIATRIC."
+    },
+    {
+      "standardId": "EMS.IITT.HIGH_RISK",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "The reference-card definitions the charts' starred criteria resolve to are transcribed but not yet expressed as governed content; the burns >15% BSA red criterion in particular pairs with libs/burn-domain TBSA, which is built but not wired.",
+      "revisitCondition": "W4 triage content encodes the high-risk definitions and cites EMS.IITT.HIGH_RISK."
+    },
+    {
+      "standardId": "EMS.BEC.ABCDE",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "The undifferentiated-assessment / danger-sign layer is designed (findings as pct_observations, symptom-triggered pathways) but no governed content exists yet; the eight seeded ED_* pathways are being repaired in the same wave and are the natural home for the ABCDE danger-sign rules.",
+      "revisitCondition": "W4 repairs the ED_* pathways with real steps and citations; the ABCDE danger-sign content cites EMS.BEC.ABCDE."
+    },
+    {
+      "standardId": "EMS.DSEC.MINIMUM_DATASET",
+      "decision": "DEFERRED",
+      "plannedWave": "W17",
+      "reason": "The emergency_episode (pct V200) carries part of the dataset structurally, but the dataset-to-column mapping and the 22 indicators derived from it are the analytics wave; declaring them implemented now would overstate what the reporting layer actually produces.",
+      "revisitCondition": "W17 lands the DSEC->column mapping and the indicator definitions in reporting-service, citing EMS.DSEC.MINIMUM_DATASET; the permitted value lists remain a separate zibo dependency."
+    },
+    {
+      "standardId": "EMS.SSC26.SCREENING",
+      "decision": "DEFERRED",
+      "plannedWave": "W4",
+      "reason": "The seeded ED_SEPSIS pathway still screens on qSOFA (the defect); routing sepsis screening through the existing server-side EWS engine is part of the W4 pathway repair, not yet done.",
+      "revisitCondition": "W4 retires the qSOFA screen and the repaired ED_SEPSIS pathway cites EMS.SSC26.SCREENING, screening via EwsCalculatorEngine."
+    },
+    {
+      "standardId": "EMS.EDLIZ.EMERGENCY_MEDICINES",
+      "decision": "DEFERRED",
+      "plannedWave": "W8",
+      "reason": "Emergency medicines, antidotes and blood integration (Dura/Madi) are the W8 medicines-and-blood wave; no governed emergency dosing content cites EDLIZ yet.",
+      "revisitCondition": "W8 emergency medication content and dose support cite EMS.EDLIZ.EMERGENCY_MEDICINES; traditional-remedy toxicity stays supportive-only until a named authority ratifies it."
+    }
+  ]
+}

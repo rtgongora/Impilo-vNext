@@ -114,7 +114,7 @@ them and will fail once closed):
 |---|---|---|
 | V-1 | `ProcedureEpisodeEntity` (inpatient/theatre): `encounter_id`, `admission_ref`, `trauma_episode_id` all nullable — an elective theatre case can exist with no PCT anchor | DB CHECK requiring at least one anchor + elective-path encounter resolution |
 | V-2 | `oros` orders: `encounter_ref` nullable | Validation + migration for clinical order types, with backfill |
-| V-3 | `dai_trauma_episode`: anchors on `subject_cpid` only, no journey/encounter back-link | Nullable PCT back-link + link-on-facility-arrival flow |
+| V-3 | ~~`dai_trauma_episode`: anchors on `subject_cpid` only, no journey/encounter back-link~~ **CLOSED 2026-07-27** | Nullable PCT back-link + link-on-facility-arrival flow — **delivered**: `dai_trauma_episode.pct_journey_id` (daidzai V200), `TraumaEpisodeService.continuumLink` (`c5ec2e7fe`), and PCT calling it on facility arrival (`03b805ad0`). Enforcement is a sweep (`unanchoredInFacility`), not a CHECK — a CHECK on the live-writer table broke the phase-advance and was withdrawn (V201). |
 
 ## CC-6 — Ghost and alias services
 
@@ -172,7 +172,9 @@ Rank is carried by `continuum_role: owner` alone.
 
 - `scripts/guard/check-care-continuum-doctrine.sh` (wired into the change-safety gates) asserts
   the registry fields, the prose rulings, the doctrine cross-references and the overrides mirror;
-  anchoring violations V-1..V-3 are WARN-only until the closing wave lands, then flip to FAIL.
+  anchoring violations are WARN-only until the closing wave lands, then flip to FAIL. **V-3 is
+  now CLOSED** (2026-07-27) — the guard reports it silent (closed) keyed on the flow being wired
+  (PCT calling continuum-link), not on a method merely existing; V-1 and V-2 remain WARN.
 - `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md` item **8a** requires every
   feature to name its continuum and the PCT anchor each new clinical record carries.
 - `docs/registry/system-of-record-map.md` carries the summary ruling **G-CC1**.

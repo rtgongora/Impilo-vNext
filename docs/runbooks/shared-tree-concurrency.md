@@ -140,6 +140,53 @@ the same command — the push added no new duplicate, but a known one was walked
 
 Never `&&` a guard into a push. A control you do not stop for is only a detector with extra steps.
 
+## 5b. Landing on a fast-moving canonical
+
+Combining §3, §5 and §5a into one procedure, because landing your own branch on this shared branch
+is where they all bite at once. Canonical moved **four times** during one vitals landing on
+2026-07-26 — every time the gates and module tests finished, the tip had advanced, so a naive
+"test then push" never converged and each attempted push was a rejected non-fast-forward.
+
+The loop that does converge:
+
+```bash
+CANON=origin/claude/staging-ux-orchestration-remediation-Yypyl
+git fetch origin claude/staging-ux-orchestration-remediation-Yypyl
+git merge "$CANON" --no-edit                      # re-merge the LATEST tip, not the one you tested
+git merge-base --is-ancestor "$(git rev-parse $CANON)" HEAD || exit 1   # the ancestor LAW
+# scoped gate: diff only YOUR work, so the gate does not blame you for canonical's own commits
+GUARD_BASE_REF="$(git rev-parse $CANON)" bash scripts/guard/run-change-safety-gates.sh || exit 1
+```
+
+Then two rules that make it terminate instead of looping forever:
+
+1. **Re-run only the module the new delta touched.** After each re-merge, diff the incoming commits
+   against your last-tested tip: `git diff --name-only <last-tested> $CANON | grep -E '<your modules>'`.
+   Empty ⇒ your compile surface is unchanged and the green you already have still holds; push. Non-empty
+   ⇒ re-run that module's tests (`cd services && mvn -pl <svc> -am test`, never piped) before pushing.
+   Re-running the whole suite on every tick guarantees the target outstruns you.
+2. **Merge and push in the *same* block, gated on a clean delta**, so nothing moves in the gap:
+
+   ```bash
+   git merge "$CANON" --no-edit
+   DELTA=$(git diff --name-only <last-tested> "$(git rev-parse $CANON)" | grep -E '<your modules>')
+   if [ -z "$DELTA" ] && git merge-base --is-ancestor "$(git rev-parse $CANON)" HEAD; then
+     git push origin HEAD:claude/staging-ux-orchestration-remediation-Yypyl; echo "rc=$?"   # §3: check rc directly
+   fi
+   ```
+
+Why the scoped `GUARD_BASE_REF`: the gate's default base is `HEAD~1`, which on a **merge commit**
+diffs against your pre-merge tip and attributes *all* the merged canonical commits to you — it will
+flag other lanes' already-shipped work (a deleted service file, a new registry) as yours. Scoping the
+base to the canonical tip shows only your actual diff. If the *default* run blocks on files outside
+your diff, that is the base artifact, not your defect — but per §5a you still stop, confirm each hit
+is canonical's own shipped work (`git diff <canon>..HEAD -- <path>` empty), and get it cleared before
+pushing. Do not silently push past a blocked default gate on your own judgement.
+
+**A merge lands source, not a running fix.** If the regression you are closing is user-visible, the
+merge does not close it — the deployed image is still the pre-merge build until someone rebuilds and
+rolls it. Say so explicitly in the landing note so it is not left for "whoever comes next" (§7).
+
 ## 6. Migration numbers
 
 - Reserve **above every committed claim** in every `docs/registry/iatg-*-leases.md` — not above the

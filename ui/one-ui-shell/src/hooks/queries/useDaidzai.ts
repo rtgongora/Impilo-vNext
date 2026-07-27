@@ -200,8 +200,27 @@ export type TraumaEpisode = Record<string, unknown> & {
   currentPhase?: string;
   subjectIdentityMode?: string;
   subjectCpid?: string;
+  // Continuum-link status (CC-5 V-3): whether the prehospital spine has resolved to a PCT journey.
+  episodeClass?: string;
+  continuumLinked?: boolean;
+  pctJourneyId?: string;
+  continuumLinkedAt?: string;
   timeline?: Array<Record<string, unknown>>;
 };
+
+/** The prehospital phases where no PCT anchor is expected yet — the window the spine exists to cover. */
+const PREHOSPITAL_PHASES = new Set(["INCIDENT", "DISPATCH", "PREHOSPITAL"]);
+
+/**
+ * Honest continuum-link state for display. LINKED once the spine resolves to a journey; UNANCHORED
+ * when the patient has reached a facility phase but no journey is stamped (a correlation gap a human
+ * must close — the same state the daidzai unanchored sweep surfaces); PREHOSPITAL when a link is not
+ * expected yet. Never conflates "not linked yet, and that's fine" with "should be linked and isn't".
+ */
+export function continuumLinkState(ep: TraumaEpisode): "LINKED" | "UNANCHORED" | "PREHOSPITAL" {
+  if (ep.continuumLinked || ep.pctJourneyId) return "LINKED";
+  return PREHOSPITAL_PHASES.has(String(ep.currentPhase ?? "").toUpperCase()) ? "PREHOSPITAL" : "UNANCHORED";
+}
 
 export function useTraumaEpisode(episodeId?: string) {
   return useQuery({

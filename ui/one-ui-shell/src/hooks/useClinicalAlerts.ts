@@ -23,11 +23,27 @@ interface PatientData {
   conditions?: Array<{ condition_name?: string; icd_code?: string; clinical_status?: string; severity?: string }>;
   vitals?: { systolic?: number; diastolic?: number; heart_rate?: number; temperature?: number; oxygen_saturation?: number; respiratory_rate?: number };
   medications?: Array<{ medication_name?: string; status?: string }>;
+  /**
+   * Sources whose reads FAILED (not "returned nothing"). A failed vitals read otherwise makes
+   * the engine evaluate a patient with no vitals and emit zero alerts — silence that reads as
+   * normality at exactly the moment the system knows least.
+   */
+  unavailableSources?: string[];
 }
 
 function evaluateRules(data: PatientData): ClinicalAlert[] {
   const alerts: ClinicalAlert[] = [];
-  const { allergies = [], conditions = [], vitals, medications = [] } = data;
+  const { allergies = [], conditions = [], vitals, medications = [], unavailableSources = [] } = data;
+
+  if (unavailableSources.length > 0) {
+    alerts.push({
+      id: "cds-sources-unavailable",
+      severity: "warning",
+      title: "Decision support degraded",
+      message: `Could not load: ${unavailableSources.join(", ")}. Alerts from these sources may be missing — the absence of an alert is not evidence of normality.`,
+      source: "CDS",
+    });
+  }
 
   // ── Vital sign rules ──────────────────────────────────────────
   if (vitals) {

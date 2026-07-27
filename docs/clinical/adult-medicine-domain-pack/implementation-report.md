@@ -1,9 +1,10 @@
 # Adult Medicine and Medical Specialties Clinical Domain Pack — Implementation Report
 
-**Status as of 2026-07-26.** W0 (vertical repair), W1 (canonical clinical spine) and most of W2
-(adult decision-support foundation) are implemented, tested and pushed. W3 onward are designed and
-outstanding. Everything clinical shipped so far is `ENGINEERING_SEED` and requires MoHCC and
-specialist ratification before it is used to drive care.
+**Status as of 2026-07-27.** W0 (vertical repair), W1 (canonical clinical spine), most of W2
+(adult decision-support foundation) and **W3 (HIV and TB as governed DAK-traceable programmes)** are
+implemented, tested and pushed. W4 onward are designed and outstanding. Everything clinical shipped
+so far is `ENGINEERING_SEED` and requires MoHCC and specialist ratification before it is used to
+drive care.
 
 Lease and coordination record: [`docs/registry/iatg-adult-medicine-leases.md`](../../registry/iatg-adult-medicine-leases.md).
 
@@ -77,6 +78,43 @@ section; the EDLIZ 2025 PDF with SHA-256 provenance. None of it was rebuilt.
 | ~~V108~~ | **Withdrawn.** The emergency-episode FK cannot live in this pack's band — see §5a. The constraint now lives in the emergency lane's block above V200. |
 
 ---
+
+### W3 — HIV and TB as governed programmes
+
+HIV and TB were verified green field — no `viral_load`, `art_regimen`, `cd4` or `tb_treatment`
+concept existed anywhere. W3 adds the two genuinely new concepts on the existing spine and extends
+rather than forks everything else.
+
+| Component | What it does |
+|---|---|
+| **V108** `pct_programme_enrolments` | Governed longitudinal membership in `HIV_CARE` or `TB_TREATMENT` (extensible to NCD). Anchors to the diagnosis in `pct_problems` via a hard FK rather than re-recording it — "one disease, one entry" made structural. A partial-unique index refuses a second active enrolment per programme; `EXITED` requires a reason and a date, never a default, so a lost-to-follow-up patient cannot read as a treatment success. |
+| **V109** `pct_treatment_regimens` | The ART line / TB phase a person is on. A change is a new row; the current regimen is the one with no `ended_on`, at most one per enrolment; a stage that does not belong to the programme (an ART line on a TB enrolment) is refused. |
+| zibo **V035** value sets | ART/TB regimens, programme observations (viral load, CD4, WHO stage, TB bacteriology) mapped to LOINC where confident, and WHO cohort treatment outcomes. Extends the V008 confidential map so HIV observation codes classify as HIV content. |
+| CKP `hiv-programme-rules.json` / `tb-programme-rules.json` + `ProgrammeGuidanceService` | Governed DAK decision support: HIV viral-load interpretation and treatment failure, advanced disease; TB phase transition, bacteriological monitoring, resistance and outcome. Mirrors the danger-sign engine — content-driven, three-valued, never edits `PredicateEvaluator`. |
+| DAK traceability (`docs/clinical-governance/medicine/`) | HIV/TB standards declared under the shared `WHO_DAK` family; 6 SHIPPED, 7 DEFERRED with owner-wave. The guard went red→green (rules cited dakIds no baseline declared). |
+| `experience-bff` `ProgrammesController` + `one-ui-shell` programme surface | `/internal/v1/programmes/**` over the real pct APIs and CKP guidance; the EHR page lists enrolments with the confidential-lane badge, current regimen and guidance panels. Holds the failed-read-is-not-a-finding discipline throughout. |
+
+**Viral load, CD4 and TB bacteriology are `pct_observations` (V057), not new tables** — the
+enrolment and the regimen are the only genuinely new objects.
+
+**Confidentiality, and the ENFORCE gap stated plainly.** HIV is specially protected; TB is not (TB
+is notifiable, confidential from nobody — conflating them would obstruct a public-health duty and
+dilute what the protected class means). W3 wires the confidential lane where it belongs: zibo
+classifies the HIV codes (V035), pct derives `confidential` from the programme (one source of truth,
+no second flag to drift) and exposes it, and the BFF/UI present it. **What W3 does not do, and does
+not claim to:** the `SPECIALLY_PROTECTED` enforcement — the PDP filtering HIV content on reads and
+the write-time stamping of records via the zibo classifier — ships in SHADOW and is the
+`SPECIALLY_PROTECTED` seam's own remaining scope. No HIV record is stamped with a protection class
+today, because zibo withholds the stampable class while its map is unratified. A record never
+carries a protection label that does not protect it.
+
+**Proven and pending-live.** The migration truth is proven on a clean Postgres by
+`scripts/runtime-proof/medicine-programmes-journeys.sh`: 78 pct migrations apply in version order (no
+cross-band ordering trap for V108/V109), and all W3 constraints bite with positive and negative
+controls (anchor FK, programme CHECK, both partial-uniques, EXITED-requires-reason), `probe rows
+left: 0`. The BFF ingress proof — a positive trust assertion and a tokenless negative control
+against the deployed estate — is **pending the pct redeploy carrying V108/V109**, coordinated with
+the vitals-vertical session; it is stated as pending, not implied.
 
 ## 3. The safety properties that recur
 
@@ -186,13 +224,17 @@ its owner. pct-service closes with a clean suite.
 instrument — part of the coordinator-assigned Child-Pugh / MELD / APACHE II / SOFA slice, which must
 be **forms-service governed definitions persisted via PCT**, not mobile-local forms.
 
-**W3 — HIV and TB DAKs.** The deepest requirement in the brief and entirely green field. Unblocked:
-`SPECIALLY_PROTECTED` now ships in SHADOW, so build against the confidential-lane convention and
-**state the ENFORCE gap in the deliverable** rather than waiting for the MoHCC/PO governance act.
+**W3 — HIV and TB DAKs. Done** (this session): the treatment-and-monitoring core of both programmes
+end to end — pct data model, zibo value sets, CKP DAK content, traceability, BFF and UI — with the
+confidential lane wired and the ENFORCE gap stated. The deliberately-deferred remainder is declared
+in `docs/clinical-governance/medicine/coverage-exclusions.json` with owner-waves: HIV testing, PrEP,
+PMTCT (jointly with RMNP), and the TB screening/diagnosis/TPT front-door (W4/W6). One live proof
+outstanding: the BFF ingress positive/negative control, pending the pct redeploy carrying V108/V109.
 
-**W4** multimorbidity engine · **W5** inpatient medicine + medical procedures through
-`procedures-service` · **W6+** specialty workspaces (13 in the brief), geriatrics/ICOPE, palliative,
-oncology, analytics, offline, and the ten required demonstrations.
+**W4** multimorbidity engine · the HIV/TB front-door (testing, screening, diagnosis, TPT) · **W5**
+inpatient medicine + medical procedures through `procedures-service` · **W6+** specialty workspaces
+(13 in the brief), geriatrics/ICOPE, palliative, oncology, analytics, offline, and the ten required
+demonstrations.
 
 **Not started, and worth stating plainly:** no specialty workspace exists yet; the demonstrations in
 §23 of the brief are unproven; BUTANO still maps only `Condition` and `CarePlan` of the 25 FHIR
