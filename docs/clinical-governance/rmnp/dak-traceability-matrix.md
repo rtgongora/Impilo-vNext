@@ -14,13 +14,13 @@ matrix exists to make visible.
 - Published artefacts: **140**
 - Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
 - Published data elements: **4098**
-- Shipped citations: **82**
+- Shipped citations: **91**
 
 | Status | Count |
 |---|---|
 | `COVERED_ELSEWHERE` | 7 |
-| `DEFERRED` | 127 |
-| `SHIPPED` | 6 |
+| `DEFERRED` | 124 |
+| `SHIPPED` | 9 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -99,7 +99,7 @@ matrix exists to make visible.
 | `HIV.PMTCT` | WHO_DAK | DECISION_LOGIC | — | Prevention of mother-to-child transmission of HIV | `DEFERRED` | — | — | PMTCT sits across HIV care and the RMNP pregnancy episode; implementing it in the medicine pack alone would either dupli |
 | `HIV.PREP` | WHO_DAK | DECISION_LOGIC | — | Pre-exposure prophylaxis eligibility and follow-up | `DEFERRED` | — | — | PrEP is prevention for HIV-negative people at risk, not part of the care programme for people living with HIV. It belong |
 | `HIV.TB_COINFECTION` | WHO_DAK | DECISION_LOGIC | — | TB screening and preventive therapy in people living with HIV | `DEFERRED` | — | — | The advanced-disease rule already prompts TB screening in people with a low CD4, but systematic TB screening and TB prev |
-| `HIV.TESTING` | WHO_DAK | DECISION_LOGIC | — | HIV testing services algorithm and diagnosis | `DEFERRED` | — | — | W3 built HIV care from enrolment onward — a person already diagnosed. The testing-services algorithm (screening, confirm |
+| `HIV.TESTING` | WHO_DAK | DECISION_LOGIC | — | HIV testing services algorithm and diagnosis | `SHIPPED` | `HIV_TEST_NONREACTIVE`, `HIV_TEST_DISCREPANT`, `HIV_TEST_POSITIVE_VERIFIED`, `HIV_INFANT_VIROLOGICAL_REQUIRED` | ADOPTED_VERBATIM |  |
 | `HIV.TREATMENT_FAILURE` | WHO_DAK | DECISION_LOGIC | — | Recognition of treatment failure and the enhanced-adherence-then-switch sequence | `SHIPPED` | `HIV_VL_UNSUPPRESSED`, `HIV_CONFIRMED_FAILURE` | ADOPTED_VERBATIM |  |
 | `HIV.VL.MONITORING` | WHO_DAK | DECISION_LOGIC | — | Routine viral-load monitoring and interpretation (suppressed, low-level viraemia | `SHIPPED` | `HIV_VL_SUPPRESSED`, `HIV_VL_LOW_LEVEL_VIRAEMIA` | ADOPTED_VERBATIM |  |
 | `IPC.CORE.ASEPTIC_TECHNIQUE` | WHO_IPC | GUIDELINE_SECTION | — | Aseptic technique, sterile field and skin preparation for invasive procedures | `DEFERRED` | — | — | Skin preparation, sterile field and aseptic technique are not captured anywhere. Skin preparation is also a WHO surgical |
@@ -155,10 +155,10 @@ matrix exists to make visible.
 | `SSI.2018.INTRAOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Intraoperative measures for the prevention of surgical site infection | `DEFERRED` | — | — | Intraoperative infection-prevention measures are not modelled. Wound classification, which is the entry point for surgic |
 | `SSI.2018.POSTOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Postoperative measures for the prevention of surgical site infection, including  | `DEFERRED` | — | — | Surgical-site infection is one of the twenty complications the surgical pack must manage as a pathway, and complications |
 | `SSI.2018.PREOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Preoperative measures for the prevention of surgical site infection | `DEFERRED` | — | — | No surgical-site-infection prevention logic exists anywhere in the repository. The clinical knowledge platform has the r |
-| `TB.DIAGNOSIS` | WHO_DAK | DECISION_LOGIC | — | TB diagnostic algorithm (rapid molecular testing first) | `DEFERRED` | — | — | The diagnostic algorithm (rapid molecular test first, then culture/DST) sits between screening and treatment. W3 records |
+| `TB.DIAGNOSIS` | WHO_DAK | DECISION_LOGIC | — | TB diagnostic algorithm (rapid molecular testing first) | `SHIPPED` | `TB_DX_CONFIRMED`, `TB_DX_RIF_RESISTANT`, `TB_DX_CLINICAL` | ADOPTED_VERBATIM |  |
 | `TB.DR_TB` | WHO_DAK | DECISION_LOGIC | — | Rifampicin resistance recognition and drug-resistant TB regimen selection | `SHIPPED` | `TB_RIF_RESISTANCE` | ADOPTED_VERBATIM |  |
 | `TB.OUTCOME` | WHO_DAK | DECISION_LOGIC | — | TB treatment failure and cohort treatment outcomes | `SHIPPED` | `TB_SMEAR_MONTH5_POSITIVE` | ADOPTED_VERBATIM |  |
-| `TB.SCREENING` | WHO_DAK | DECISION_LOGIC | — | Systematic TB screening and presumptive-TB identification | `DEFERRED` | — | — | W3 built TB treatment monitoring from enrolment onward. Systematic screening and presumptive-TB identification is the st |
+| `TB.SCREENING` | WHO_DAK | DECISION_LOGIC | — | Systematic TB screening and presumptive-TB identification | `SHIPPED` | `TB_SCREEN_SYMPTOMATIC`, `TB_SCREEN_NEGATIVE_PLHIV_TPT_ELIGIBLE` | ADOPTED_VERBATIM |  |
 | `TB.TPT` | WHO_DAK | DECISION_LOGIC | — | TB preventive treatment eligibility and regimens (3HP, 6H, 1HP) | `DEFERRED` | — | — | TB preventive treatment regimens (3HP, 6H, 1HP) are seeded in the zibo TB regimen value set (V035), but the eligibility  |
 | `TB.TREATMENT_MONITORING` | WHO_DAK | DECISION_LOGIC | — | Drug-susceptible TB treatment: phases and bacteriological monitoring schedule | `SHIPPED` | `TB_PHASE_TRANSITION_DUE`, `TB_SMEAR_MONTH2_POSITIVE` | ADOPTED_VERBATIM |  |
 | `ZW.NSOAS.2022.DISTRICT_ACCESS` | ZW_NSOAS | NATIONAL_STRATEGY | — | Promote access to surgical services from district level — 83% of key tracer surg | `DEFERRED` | — | — | The national strategy's central finding is that 83% of key tracer surgical operations were being performed at central an |

@@ -32,8 +32,12 @@ class HivTbProgrammeRuleContentTest {
     private final RuleContentLoader loader = new RuleContentLoader(objectMapper);
     private final ProgrammeGuidanceService service = new ProgrammeGuidanceService(loader);
 
-    private static final List<String> PACKS =
-            List.of(ProgrammeGuidanceService.HIV_CONTENT_PATH, ProgrammeGuidanceService.TB_CONTENT_PATH);
+    private static final List<String> PACKS = List.of(
+            ProgrammeGuidanceService.HIV_CONTENT_PATH,
+            ProgrammeGuidanceService.TB_CONTENT_PATH,
+            ProgrammeGuidanceService.HIV_TESTING_PATH,
+            ProgrammeGuidanceService.TB_SCREENING_PATH,
+            ProgrammeGuidanceService.TB_DIAGNOSIS_PATH);
 
     @TestFactory
     List<DynamicTest> everyRulesOwnFixturesBehaveAsDescribed() {
@@ -86,7 +90,10 @@ class HivTbProgrammeRuleContentTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "clinical/hiv-programme-rules.json",
-            "clinical/tb-programme-rules.json"})
+            "clinical/tb-programme-rules.json",
+            "clinical/hiv-testing-rules.json",
+            "clinical/tb-screening-rules.json",
+            "clinical/tb-diagnosis-rules.json"})
     void thePackDeclaresItsPrimaryTextIsNotYetVendored(String pack) throws IOException {
         JsonNode verification = readPack(pack).path("provenance").path("sourceVerification");
         // Not an assertion that it IS vendored — it is not. An assertion that the pack says so where a
@@ -102,7 +109,10 @@ class HivTbProgrammeRuleContentTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "clinical/hiv-programme-rules.json",
-            "clinical/tb-programme-rules.json"})
+            "clinical/tb-programme-rules.json",
+            "clinical/hiv-testing-rules.json",
+            "clinical/tb-screening-rules.json",
+            "clinical/tb-diagnosis-rules.json"})
     void thePackShipsAsEngineeringSeed(String pack) throws IOException {
         // No unratified pack may claim APPROVED — that is the one status that would let it drive care.
         assertThat(readPack(pack).path("approvalStatus").asText()).isEqualTo("ENGINEERING_SEED");
