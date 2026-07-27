@@ -125,6 +125,37 @@ every outbound call:
 3. Only when neither exists (scheduled jobs, Kafka consumers, public-lane composition,
    service-originated calls) is the service token attached as `Bearer <token>`.
 
+> ⚠ **Provenance — this list described intent, not behaviour, until 2026-07-27 (`940e50efd`).**
+> Tier 1 did not exist. `AUTHORIZATION` was forwarded with an unconditional `set()`, and
+> interceptors run *after* the client method has built its headers, so the inbound user token
+> overwrote every deliberately pre-set bearer. Real behaviour was
+> **inbound user token > pre-set > service token**. Tier 3 was always correct (gated on the
+> header being absent) and is untouched. Fixed by forwarding Authorization only-if-absent, as
+> `X-Actor-ID`/`X-Actor-Type` already were.
+>
+> The asymmetry was the security defect, not the ordering: `DaidzaiServiceClient` and
+> `ParticipationServiceClient` set `X-Actor-Type: SYSTEM` beside a service bearer, and only the
+> actor context survived — one outbound request asserting SYSTEM authority while carrying a
+> citizen's token. **When two headers describe the same caller they must share a precedence
+> rule; an asymmetry between them is an escalation primitive.**
+>
+> Recorded rather than silently corrected because a doc that becomes accidentally true still
+> misleads the next reader about what was ever verified. Anything asserting this precedence is
+> only trustworthy against `ServiceClientConfigTest` /
+> `AuthorizationHeaderPrecedenceLoopbackTest`, which prove it over a real socket —
+> `MockRestServiceServer` replaces the request factory and cannot observe transport behaviour.
+
+**Keycloak is not a sovereign service — it rides `idpRestTemplate`.** Classes addressing the
+IdP directly (`KeycloakAdminClient`, `AdminUserController`, `AuthSessionController`,
+`AuthContactOtpController`) take the NON-intercepted `idpRestTemplate` bean: shipping ~30 Impilo
+trust headers to Keycloak is meaningless, and a `client_credentials` call that *mints* a
+credential must never inherit ambient credentials — it was carrying the caller's bearer.
+`IdentityProviderTemplateWiringTest` enforces this as a **discovery rule** (any class binding a
+`KEYCLOAK_URL` `@Value`), not a list; the rule is what found `AuthContactOtpController`, which
+every hand-built register had missed because it pre-sets no Authorization at all. Note for the
+next lane: a second `RestTemplate` bean requires `@Primary` on `serviceRestTemplate`, because
+`WellnessServiceProxyController` injects by type alone and the context otherwise fails to start.
+
 Failure is honest, never silent: a failed mint logs WARN with the grep-able marker
 `SERVICE_TOKEN_MINT_FAILED` and the request proceeds without a token (preview keeps working
 with the secret absent); a mint failure is never cached longer than 30s; the token itself is

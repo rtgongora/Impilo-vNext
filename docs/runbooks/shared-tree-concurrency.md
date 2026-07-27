@@ -209,6 +209,19 @@ rolls it. Say so explicitly in the landing note so it is not left for "whoever c
   source-commit label reveals it.
 - `mvn clean package` after any migration rename, and **list the jar** — stale `target/classes` has
   shipped two copies of one migration version, which Flyway refuses to boot on.
+- **Repairing an applied migration after a rename: move the HISTORY ROW, never drop the table.**
+
+  ```sql
+  UPDATE <schema>.flyway_schema_history SET version = '<new>' WHERE version = '<old>';
+  ```
+
+  The table already has the right shape; only the version label needs to move. The destructive reflex —
+  `DROP TABLE`, delete the history row, redeploy — **silently deletes co-tenant rows**, because `pct`,
+  `inpatient` and friends are written by several lanes at once. One lane's renumber repair on
+  2026-07-26/27 dropped two shared `pct` tables twice and took every lane's rows in them, then read as
+  "an estate repair wiped the fixture". Synthetic preview data re-seeds, but the misattribution costs
+  another lane an investigation into data *they* think they lost.
+
 - A migration is **landed** when `flyway_schema_history` says so **on the target, in the right
   schema** (`<service>.flyway_schema_history`, not `public` — an unqualified query reads exactly like
   a missing table). It is **correct** when a constraint it declared can be shown to bite there.

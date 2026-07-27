@@ -247,8 +247,12 @@ public class ContactOtpService {
      * while notification-service's {@code /internal/v1/notify} is fail-closed
      * JWT-authenticated. Without this bearer the whole R1 lane dies with 503
      * OTP_DELIVERY_UNAVAILABLE (rig-caught in the W1 runtime proof). Mirrors
-     * {@code AuthContactOtpController#serviceAccountHeaders()}; when the caller IS
-     * authenticated, the shared interceptor overwrites these with the inbound values.
+     * {@code AuthContactOtpController#serviceAccountHeaders()}.
+     *
+     * <p>These headers now survive a caller who IS authenticated: the shared interceptor
+     * forwards Authorization only-if-absent, as it already did for actor identity. It used to
+     * overwrite the bearer while leaving X-Actor-Type: SYSTEM in place — SYSTEM authority
+     * asserted with a citizen's token. See {@code ServiceClientConfig}.</p>
      */
     private HttpHeaders serviceOriginHeaders() {
         HttpHeaders headers = new HttpHeaders();

@@ -40,9 +40,18 @@ public class AdminUserController {
     private final RestTemplate restTemplate;
     private final TshepoAuthzServiceClient tshepoAuthzClient;
 
-    public AdminUserController(RestTemplate serviceRestTemplate,
-                               TshepoAuthzServiceClient tshepoAuthzClient) {
-        this.restTemplate = serviceRestTemplate;
+    /**
+     * Every {@code restTemplate} call in this class targets Keycloak ({@code keycloakUrl}) — the
+     * admin users/roles endpoints and the client_credentials token endpoint. Impilo traffic goes
+     * through {@code tshepoAuthzClient}. So this takes the NON-intercepted {@code idpRestTemplate}:
+     * the IdP has no use for the ~30 Impilo trust headers, and the token call that establishes
+     * this controller's authority must not inherit the caller's.
+     */
+    public AdminUserController(
+            @org.springframework.beans.factory.annotation.Qualifier("idpRestTemplate")
+            RestTemplate idpRestTemplate,
+            TshepoAuthzServiceClient tshepoAuthzClient) {
+        this.restTemplate = idpRestTemplate;
         this.tshepoAuthzClient = tshepoAuthzClient;
     }
 
