@@ -209,6 +209,36 @@ Point 3 is the reason this is cheap today and will not be later. Anyone reopenin
 once real preterm volume exists should reopen it as "how do we present a superseded score",
 not as "can we rewrite it" — the answer to the second is no, for reason 1.
 
+### Remediation on a populated estate
+
+The estate this landed on held one term measurement, so nothing was mis-scored here — the
+coordinator confirmed it directly with a single query
+(`corrected_age_applied = 0`, `growth_engine_version = 1.0.0`, no gestational age). That it was
+one `SELECT` rather than an archaeology exercise is the whole payoff of stamping the standard,
+the engine version and `corrected_age_applied` at write: "which rows did the wrong engine
+compute" is a query, not a reconstruction.
+
+But `3.0.0` is now on canonical, so any estate that **has** scored preterm measurements under
+`1.x` or `2.x` holds z-scores computed with the under-correcting anchor. The remediation shape,
+for whoever meets a populated database:
+
+1. **Find them, don't guess at them:**
+   `SELECT ... WHERE corrected_age_applied AND growth_engine_version < '3.0.0'`. Only
+   corrected rows are affected; a term child stamped `1.0.0` was scored correctly and must be
+   left alone.
+2. **Recompute, never delete.** The measurement is real and correctly recorded; only the
+   *derived* score is wrong. Re-run the row through the current engine and write the new
+   z-scores, standard and version.
+3. **Keep the superseded value alongside the new one**, so the correction is auditable — a
+   clinician looking back can see both what they were shown at the time and what the corrected
+   score is. This is the same void-not-delete, preserve-the-evidence posture the Emergency pack
+   used for its phantom completions; a growth score that silently changes underneath a past
+   decision is the same failure as a completion that silently appears.
+
+This is a paragraph now and a data-integrity incident later if it is not written down. It is not
+scheduled work — there is nothing to remediate on any estate this has reached — but the shape is
+recorded so a populated estate is met with a plan rather than a rewrite.
+
 ## Open questions this work raised and did not close
 
 The original question 1 — corrected age targeting 37 weeks — is closed above.
