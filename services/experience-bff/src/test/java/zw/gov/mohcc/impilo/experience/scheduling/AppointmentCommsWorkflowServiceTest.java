@@ -153,8 +153,10 @@ class AppointmentCommsWorkflowServiceTest {
     }
 
     /**
-     * The on-call rota moved from tuso to vashandi (tuso never served /v1/staffing/on-call, so
-     * facility-staff resolution was silently empty). The stub follows the production client.
+     * On-call is rostered in vashandi, not tuso. The scheduling lane repointed the resolver
+     * at VashandiServiceClient but this test kept constructing it with a Tuso stub whose
+     * listOnCall no longer exists, so the test module did not compile. Tuso still serves the
+     * facility name; vashandi serves on-call.
      */
     private VashandiServiceClient stubVashandiClient() {
         VashandiServiceClient client = mock(VashandiServiceClient.class);

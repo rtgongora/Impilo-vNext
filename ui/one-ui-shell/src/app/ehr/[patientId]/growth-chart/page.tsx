@@ -15,7 +15,10 @@ import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { GrowthStandardsChart } from "@/features/paediatrics/growth/GrowthStandardsChart";
+import type { PlottedMeasurement, ReferenceCurve, ReferenceZ } from "@/features/paediatrics/growth/growth-curves";
 import { useGrowth, useRecordGrowth } from "@/hooks/queries/useGrowth";
+import { useGrowthReferenceCurves } from "@/hooks/queries/useGrowthReferenceCurves";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useVitals, type VitalsResource } from "@/hooks/queries/useVitals";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -52,6 +55,10 @@ export default function GrowthChartPage() {
     isError: growthUnavailable,
   } = useGrowth(patientId);
   const recordGrowth = useRecordGrowth();
+  const {
+    data: referenceCurves,
+    isError: referenceCurvesUnavailable,
+  } = useGrowthReferenceCurves(patientId, "weight_for_age");
   const { data: vitalsData, isLoading: vitalsLoading, isError: vitalsUnavailable } =
     useVitals(patientId);
   const [showForm, setShowForm] = useState(false);
@@ -99,6 +106,38 @@ export default function GrowthChartPage() {
   const hasStructuredGrowth = growthRows.length > 0;
   const latestStructured = growthRows[0];
   const latestLegacy = legacyVitalsRows[0];
+
+  // The horizontal axis belongs to the standard, not to the page. A preterm infant is
+  // plotted against completed postmenstrual weeks; everyone else against age in days —
+  // corrected age where it applies, which is the age the score itself was read at.
+  const axis = referenceCurves?.axis ?? "age_days";
+  const plottedWeights = useMemo<PlottedMeasurement[]>(() => {
+    return growthRows
+      .map((row): PlottedMeasurement | null => {
+        const x =
+          axis === "postmenstrual_weeks"
+            ? row.derived.postmenstrualAgeWeeks
+            : row.derived.correctedAgeDays ?? row.derived.ageDays;
+        if (x == null || row.weightKg == null) return null;
+        return {
+          x,
+          value: row.weightKg,
+          zScore: row.derived.weightForAge?.zScore ?? null,
+          measuredAt: row.measuredAt,
+        };
+      })
+      .filter((point): point is PlottedMeasurement => point !== null);
+  }, [growthRows, axis]);
+
+  const chartCurves = useMemo<ReferenceCurve[]>(() => {
+    return (referenceCurves?.curves ?? []).map((curve) => ({
+      z: curve.z as ReferenceZ,
+      points: curve.points,
+    }));
+  }, [referenceCurves]);
+
+  const growthStandardLabel =
+    referenceCurves?.standardLabel ?? latestStructured?.derived.standardLabel ?? null;
 
   function resetForm() {
     setWeightKg("");
@@ -230,13 +269,19 @@ export default function GrowthChartPage() {
                       : "No growth or vitals-backed anthropometrics recorded yet.",
                 },
                 {
-                  label: "WHO standard support",
-                  value: whoSupported ? "Under-5 ready" : "Age not supported",
-                  detail: whoSupported
-                    ? hasStructuredGrowth
-                      ? latestStructured?.derived.standard ?? "Structured rows will compute WHO scores."
-                      : "Record a structured measurement to compute WHO z-scores and percentiles."
-                    : "This slice currently embeds WHO 2006 child growth standards for birth to 5 years only.",
+                  label: "Growth standard",
+                  value: growthStandardLabel ?? (whoSupported ? "Not yet established" : "Age not supported"),
+                  detail: growthStandardLabel
+                    ? latestStructured?.derived.gestationalAgeSource === "NOT_RECORDED"
+                      ? "No gestational age is recorded for this child, so they are read as born at term. Record it if they were not."
+                      : referenceCurves?.axis === "postmenstrual_weeks"
+                        ? "Born preterm, so growth is read against postmenstrual age until this chart's published end."
+                        : latestStructured?.derived.correctedAgeApplied
+                          ? "Read at corrected age for prematurity."
+                          : "Read at age since birth."
+                    : whoSupported
+                      ? "Record a structured measurement to establish which standard applies."
+                      : "Over five years. The WHO 5-19 year reference is not loaded, and the under-five standard must not be extrapolated.",
                 },
                 {
                   label: "Latest BMI-for-age z",
@@ -247,6 +292,50 @@ export default function GrowthChartPage() {
                 },
               ]}
             />
+
+            {hasStructuredGrowth && (
+              <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-sm font-semibold text-foreground">Weight-for-age</h2>
+                  {growthStandardLabel && (
+                    <p className="text-xs text-muted-foreground" data-testid="growth-standard-name">
+                      Plotted against {growthStandardLabel}
+                    </p>
+                  )}
+                </div>
+
+                {referenceCurvesUnavailable ? (
+                  <p className="mt-3 text-sm text-muted-foreground" data-testid="growth-curves-error">
+                    The growth standard for this child could not be loaded, so these measurements are not
+                    plotted. This is not a record that the child is growing normally — retry before
+                    assessing growth.
+                  </p>
+                ) : chartCurves.length === 0 ? (
+                  <p className="mt-3 text-sm text-muted-foreground" data-testid="growth-curves-unavailable">
+                    {referenceCurves?.unavailableReason ??
+                      "Reference curves are not available for this child, so the measurements cannot be plotted against a growth standard."}
+                  </p>
+                ) : (
+                  <GrowthStandardsChart
+                    className="mt-3"
+                    title="Weight-for-age"
+                    unit="kg"
+                    axis={axis}
+                    curves={chartCurves}
+                    measurements={plottedWeights}
+                    standardLabel={referenceCurves?.attribution?.requiredChartLabel ?? growthStandardLabel}
+                    citation={referenceCurves?.attribution?.citation ?? null}
+                  />
+                )}
+
+                {referenceCurves?.attribution?.approvalStatus === "ENGINEERING_SEED" && (
+                  <p className="mt-3 text-xs text-warning-foreground" data-testid="growth-standard-unratified">
+                    This growth reference is an engineering seed pending ratification by the Ministry of
+                    Health and Child Care. Read it alongside clinical judgement, not in place of it.
+                  </p>
+                )}
+              </section>
+            )}
 
             {isClinical && whoSupported && (
               <div id="record-growth" className="rounded-3xl border border-border bg-card p-5 shadow-sm">
