@@ -367,11 +367,50 @@ public class ProcedureEpisodeService {
     }
 
     @Transactional
+
+    /**
+     * Site-and-side gate (Clinical Procedures Pipeline §5, WHO Patient Safety Solution 4).
+     *
+     * <p>Placed before the consent gate deliberately, because unlike consent this one is not
+     * waivable. Emergency surgery may proceed on a recorded consent exception — deferred,
+     * proxy or two-doctor — because life-saving surgery must not be blocked on an absent
+     * signature. Wrong-side surgery is a never event, so nothing waives it: not the emergency
+     * override, not a checklist bypass.</p>
+     *
+     * <p>The verification is deliberately satisfiable by ONE person with no marking step. The
+     * procedures most at risk of wrong-side harm are not elective operations with a consent
+     * form, a marked limb and a scheduled Time Out — they are chest drains, thoracostomies,
+     * central lines, thoracotomies, joint reductions, escharotomies and burr holes, done at
+     * the bedside at speed by a lone clinician. A gate requiring a second checker would simply
+     * be bypassed there, and a bypassed gate protects nobody.</p>
+     *
+     * <p><b>Honest limit.</b> This fires when the episode declares a lateralised side. An
+     * episode that never recorded a side at all cannot be caught here, because the episode does
+     * not yet know its catalogue entry's laterality — that arrives when the request-to-episode
+     * funnel carries {@code catalogue_ref}, in a later wave. Until then the upstream half is
+     * the appropriateness engine, which BLOCKS a request for a lateralised catalogue entry with
+     * no side. Two halves of one guarantee, and this comment exists so nobody reads the gate as
+     * the whole of it.</p>
+     */
+    private void requireSiteAndSideConfirmed(ProcedureEpisodeEntity episode) {
+        String side = episode.getLaterality();
+        boolean lateralised = "LEFT".equals(side) || "RIGHT".equals(side) || "MULTIPLE".equals(side);
+        if (!lateralised) {
+            return;
+        }
+        if (episode.getSiteSideConfirmedAt() == null || episode.getSiteSideConfirmedBy() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Site and side must be confirmed before a lateralised procedure starts. "
+                    + "This cannot be waived by an emergency override.");
+        }
+    }
+
     public Map<String, Object> startProcedure(UUID episodeId, Map<String, Object> body) {
         ProcedureEpisodeEntity episode = requireEpisode(episodeId);
         if (!List.of("READY_FOR_THEATRE", "PREOP", "BOOKED").contains(episode.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Episode not ready for theatre");
         }
+        requireSiteAndSideConfirmed(episode);
         // ── Wave 5b §15: emergency consent exception. Life-saving surgery must NOT be blocked on absent
         // consent. When the emergency-exception basis (deferred / proxy / two-doctor) has been recorded
         // and AUDITED (via TheatreService.recordEmergencyConsentException, which sets consent_status =
