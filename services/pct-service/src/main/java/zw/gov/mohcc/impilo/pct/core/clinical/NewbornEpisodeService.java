@@ -237,6 +237,11 @@ public class NewbornEpisodeService {
     private void emit(String eventType, NewbornBirthRecordEntity record) {
         TrustContext ctx = TrustContextHolder.require();
         Map<String, Object> payload = new LinkedHashMap<>();
+        // The tenant travels IN the payload: the Kafka message is (topic, key, payload) with no
+        // headers, so a cross-service consumer (e.g. VITO recording the mother↔child birth dyad) has
+        // no other way to scope the relationship it establishes. The outbox row carries the tenant
+        // too, but that stays server-side.
+        payload.put("tenantId", ctx.tenantId() != null ? ctx.tenantId().toString() : null);
         payload.put("birthRecordId", record.getBirthRecordId().toString());
         payload.put("subjectCpid", record.getSubjectCpid());
         payload.put("motherCpid", record.getMotherCpid());
