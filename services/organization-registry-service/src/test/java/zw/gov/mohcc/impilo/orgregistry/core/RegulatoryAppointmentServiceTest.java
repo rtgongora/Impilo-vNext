@@ -43,6 +43,7 @@ class RegulatoryAppointmentServiceTest {
     RegulatoryAppointmentService service;
     UUID tenant;
     UUID orgId;
+    RegulatoryAppointmentEntity mostRecentSaved;
 
     @BeforeEach
     void setUp() {
@@ -61,6 +62,7 @@ class RegulatoryAppointmentServiceTest {
             if (a.getId() == null) {
                 a.setId(UUID.randomUUID());
             }
+            mostRecentSaved = a;
             return a;
         });
     }
@@ -299,6 +301,43 @@ class RegulatoryAppointmentServiceTest {
      * schema rather than mocked here: granting access and being accountable for its use must never
      * be the same person.
      */
+    // ── RB-3b: founding activation is atomic and idempotent ─────────────────
+
+    @Test
+    void activateFounding_createsThenVerifiesInOneGo() throws Exception {
+        roleIsAdministrative("FOUNDING_REGULATOR_ADMINISTRATOR", true, true);
+        when(appointmentRepository.existsByTenantIdAndOrganizationIdAndPersonHealthIdAndRoleCodeAndStatus(
+                eq(tenant), eq(orgId), eq("person-1"), eq("FOUNDING_REGULATOR_ADMINISTRATOR"), eq("ACTIVE")))
+                .thenReturn(false);
+        when(appointmentRepository.findByTenantIdAndId(eq(tenant), any(UUID.class)))
+                .thenAnswer(inv -> Optional.of(mostRecentSaved));
+        when(appointmentRepository.countActiveAdministrators(tenant, orgId, null)).thenReturn(0L);
+
+        RegulatoryAppointmentEntity active = service.activateFoundingAppointment(
+                tenant, orgId, "person-1", "FOUNDING_REGULATOR_ADMINISTRATOR", "gazette-77",
+                "PLATFORM_BOOTSTRAP:RBR-1");
+
+        assertThat(active.getStatus()).isEqualTo("ACTIVE");
+    }
+
+    /** Redelivery must be a no-op: an already-ACTIVE founding appointment creates no second one. */
+    @Test
+    void activateFounding_isIdempotentWhenAlreadyActive() throws Exception {
+        RegulatoryAppointmentEntity existing = activeAppointment("FOUNDING_REGULATOR_ADMINISTRATOR");
+        when(appointmentRepository.existsByTenantIdAndOrganizationIdAndPersonHealthIdAndRoleCodeAndStatus(
+                eq(tenant), eq(orgId), eq("person-1"), eq("FOUNDING_REGULATOR_ADMINISTRATOR"), eq("ACTIVE")))
+                .thenReturn(true);
+        when(appointmentRepository.findByTenantIdAndOrganizationId(tenant, orgId))
+                .thenReturn(List.of(existing));
+
+        RegulatoryAppointmentEntity result = service.activateFoundingAppointment(
+                tenant, orgId, "person-1", "FOUNDING_REGULATOR_ADMINISTRATOR", "gazette-77", "x");
+
+        assertThat(result).isSameAs(existing);
+        // No create/verify path taken — no new appointment saved beyond the setUp stub's identity.
+        verify(appointmentRepository, never()).save(any(RegulatoryAppointmentEntity.class));
+    }
+
     @Test
     void theSchemaSeparatesTheSecurityAdministratorFromTheBusinessOwner() throws Exception {
         String migration = java.nio.file.Files.readString(java.nio.file.Path.of(
