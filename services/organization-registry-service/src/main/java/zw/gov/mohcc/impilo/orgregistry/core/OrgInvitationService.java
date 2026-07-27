@@ -85,6 +85,14 @@ public class OrgInvitationService {
         if (roleCode == null && (request.role() == null || request.role().isBlank())) {
             throw new IllegalArgumentException("role or roleCode is required");
         }
+        // Every invitation must name who issued it: a representative (delegated onboarding) or a
+        // Health ID (an appointment-holder administrator, RB-6). The DB CHECK enforces this too;
+        // validating here turns a constraint violation into a clean 4xx.
+        String invitedByHealthId = request.invitedByHealthId() == null || request.invitedByHealthId().isBlank()
+                ? null : request.invitedByHealthId().trim();
+        if (request.invitedByRepId() == null && invitedByHealthId == null) {
+            throw new IllegalArgumentException("invitedByRepId or invitedByHealthId is required");
+        }
         int expiryHours = request.expiresInHours() != null && request.expiresInHours() > 0
                 ? request.expiresInHours() : DEFAULT_EXPIRY_HOURS;
 
@@ -99,6 +107,7 @@ public class OrgInvitationService {
         invitation.setOrganizationId(organizationId);
         invitation.setFacilityUuid(request.facilityUuid());
         invitation.setInvitedByRepId(request.invitedByRepId());
+        invitation.setInvitedByHealthId(invitedByHealthId);
         invitation.setInviteeIdentifier(request.inviteeIdentifier().trim());
         invitation.setInviteeIdentifierType(
                 request.inviteeIdentifierType() == null || request.inviteeIdentifierType().isBlank()

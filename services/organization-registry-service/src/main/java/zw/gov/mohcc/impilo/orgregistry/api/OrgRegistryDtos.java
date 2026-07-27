@@ -98,6 +98,12 @@ public final class OrgRegistryDtos {
      */
     public record CreateInvitationRequest(
             UUID invitedByRepId,
+            /**
+             * Health ID of the inviter when they are a regulatory appointment-holder administrator
+             * (RB-6) rather than an authorized representative. One of {@code invitedByRepId} /
+             * {@code invitedByHealthId} must be present.
+             */
+            String invitedByHealthId,
             String inviteeIdentifier,
             String inviteeIdentifierType,
             String role,

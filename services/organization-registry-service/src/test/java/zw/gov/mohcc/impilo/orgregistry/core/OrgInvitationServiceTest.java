@@ -58,7 +58,7 @@ class OrgInvitationServiceTest {
     /** Legacy free-text-role invite (affiliation path). */
     private OrgRegistryDtos.CreateInvitationRequest legacyReq() {
         return new OrgRegistryDtos.CreateInvitationRequest(
-                UUID.randomUUID(), "admin@example.org", "EMAIL", "FACILITY_ADMIN", null, UUID.randomUUID(), 24);
+                UUID.randomUUID(), null, "admin@example.org", "EMAIL", "FACILITY_ADMIN", null, UUID.randomUUID(), 24);
     }
 
     // ── create: the token is hashed, never stored raw ───────────────────────
@@ -88,10 +88,41 @@ class OrgInvitationServiceTest {
     }
 
     @Test
+    void create_acceptsAnAppointmentHolderInviterByHealthId_withNoRepUuid() throws Exception {
+        // RB-6: a regulator administrator invites a colleague. They hold a regulatory appointment,
+        // not a representative row, so they supply a Health ID and no rep UUID — the rail must accept
+        // it (the whole point of the administrator-invites-colleague seam).
+        when(organizationRepository.existsById(org)).thenReturn(true);
+        when(roleRepository.findById("REGISTRATION_OFFICER"))
+                .thenReturn(Optional.of(new zw.gov.mohcc.impilo.orgregistry.persistence.entity.AppointmentRoleEntity()));
+        when(invitationRepository.save(any())).thenAnswer(OrgInvitationServiceTest::savedAnswer);
+
+        OrgRegistryDtos.CreateInvitationRequest req = new OrgRegistryDtos.CreateInvitationRequest(
+                null, "PERSON-123", "colleague@example.org", "EMAIL", null, "REGISTRATION_OFFICER", null, 24);
+
+        OrgInvitationEntity out = service.create(tenant, org, req);
+
+        assertThat(out.getInvitedByRepId()).as("no representative row is involved").isNull();
+        assertThat(out.getInvitedByHealthId()).isEqualTo("PERSON-123");
+        assertThat(out.getRoleCode()).isEqualTo("REGISTRATION_OFFICER");
+    }
+
+    @Test
+    void create_rejectsWhenNeitherInviterIdentityGiven() {
+        when(organizationRepository.existsById(org)).thenReturn(true);
+        when(roleRepository.findById("REGISTRATION_OFFICER"))
+                .thenReturn(Optional.of(new zw.gov.mohcc.impilo.orgregistry.persistence.entity.AppointmentRoleEntity()));
+        OrgRegistryDtos.CreateInvitationRequest bad = new OrgRegistryDtos.CreateInvitationRequest(
+                null, null, "x@y.z", "EMAIL", null, "REGISTRATION_OFFICER", null, null);
+        assertThatThrownBy(() -> service.create(tenant, org, bad))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void create_rejectsWhenNeitherRoleNorRoleCodeGiven() {
         when(organizationRepository.existsById(org)).thenReturn(true);
         OrgRegistryDtos.CreateInvitationRequest bad = new OrgRegistryDtos.CreateInvitationRequest(
-                UUID.randomUUID(), "admin@example.org", "EMAIL", "  ", null, null, null);
+                UUID.randomUUID(), null, "admin@example.org", "EMAIL", "  ", null, null, null);
         assertThatThrownBy(() -> service.create(tenant, org, bad))
                 .isInstanceOf(IllegalArgumentException.class);
     }
@@ -101,7 +132,7 @@ class OrgInvitationServiceTest {
         when(organizationRepository.existsById(org)).thenReturn(true);
         when(roleRepository.findById("NOT_A_ROLE")).thenReturn(Optional.empty());
         OrgRegistryDtos.CreateInvitationRequest bad = new OrgRegistryDtos.CreateInvitationRequest(
-                UUID.randomUUID(), "x@y.z", "EMAIL", null, "not_a_role", null, null);
+                UUID.randomUUID(), null, "x@y.z", "EMAIL", null, "not_a_role", null, null);
         assertThatThrownBy(() -> service.create(tenant, org, bad))
                 .isInstanceOf(IllegalArgumentException.class);
     }

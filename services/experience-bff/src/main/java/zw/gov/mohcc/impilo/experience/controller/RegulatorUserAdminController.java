@@ -91,8 +91,11 @@ public class RegulatorUserAdminController {
         if (denied != null) {
             return denied;
         }
+        // The inviter here is a regulatory appointment-holder administrator, not an authorized
+        // representative — carry their Health ID (X-Actor-ID) as the inviter identity (RB-6/V011),
+        // never as a rep UUID (which would not even bind to the UUID field).
         Map<String, Object> proxied = new LinkedHashMap<>(body);
-        proxied.putIfAbsent("invitedByRepId", actorId);
+        proxied.putIfAbsent("invitedByHealthId", actorId);
         return relay(() -> orgRegistryClient.createInvitation(organizationId, proxied),
                 HttpStatus.CREATED, requestId, correlationId, "The invitation could not be issued.");
     }

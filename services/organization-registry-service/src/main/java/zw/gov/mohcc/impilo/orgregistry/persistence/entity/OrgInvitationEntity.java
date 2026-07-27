@@ -35,8 +35,15 @@ public class OrgInvitationEntity {
 
     private UUID facilityUuid;
 
-    @Column(nullable = false)
+    /** Set when the inviter is an authorized representative (delegated-onboarding path, V005). */
     private UUID invitedByRepId;
+
+    /**
+     * Set when the inviter is a regulatory appointment-holder administrator (RB-6, V011). One of
+     * {@link #invitedByRepId} / {@code invitedByHealthId} is always present (DB CHECK).
+     */
+    @Column(name = "invited_by_health_id", length = 64)
+    private String invitedByHealthId;
 
     @Column(nullable = false, length = 255)
     private String inviteeIdentifier;
