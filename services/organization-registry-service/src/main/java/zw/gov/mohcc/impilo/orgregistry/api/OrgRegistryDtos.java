@@ -101,6 +101,12 @@ public final class OrgRegistryDtos {
             String inviteeIdentifier,
             String inviteeIdentifierType,
             String role,
+            /**
+             * Optional governed appointment role (V010). When set to a regulatory role, acceptance
+             * mints a PENDING_VERIFICATION regulatory appointment (source=INVITATION) rather than an
+             * affiliation. Null keeps the legacy free-text {@code role} affiliation path.
+             */
+            String roleCode,
             UUID facilityUuid,
             Integer expiresInHours) {
     }

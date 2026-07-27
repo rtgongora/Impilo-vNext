@@ -53,8 +53,19 @@ reasoning cannot.
 ### How to build so you neither read stale jars nor poison peers
 
 ```bash
-mvn -pl services/<svc> -am test        # PREFERRED for verification
+mvn -f services/pom.xml -pl <svc> -am test    # PREFERRED for verification
+# or, equivalently:  cd services && mvn -pl <svc> -am test
 ```
+
+⚠ **There is no aggregator pom at the repo root** — the reactor root is `services/pom.xml`. So
+`mvn -pl services/<svc> …` run from the repo root fails with *"Could not find the selected project in
+the reactor"*. Use one of the forms above. (`mvn -f services/<svc>/pom.xml test` also works but builds
+the module alone, so it reads `~/.m2` jars for its dependencies and loses the point of `-am`.)
+
+⚠⚠ **Never pipe the build and then judge the exit status.** `mvn … | grep … | tail` reports *`tail`'s*
+exit code, so a run that never resolved the module — or never compiled — reads as a pass. Either don't
+pipe, or check `${PIPESTATUS[0]}`. This exact masking hid the reactor error above, and the same bug
+reported a rejected `git push` as successful the same day.
 
 `-am` builds the dependency modules **in the same reactor**, so resolution uses their freshly compiled
 `target/classes` rather than `~/.m2` — you get current code **and** write nothing to the shared repo
@@ -105,6 +116,29 @@ peers hold real staged WIP. Diagnose before escalating; do not stash.
 Merging a peer's in-flight branch into canonical propagates **unfinished work under someone else's
 name**, with no owner watching it. This happened with a pre-fix clinical constant; it superseded
 cleanly only because the owner's HEAD happened to be strictly ahead.
+
+## 5a. Run the guards BEFORE you push, not after
+
+`scripts/guard/run-change-safety-gates.sh` runs in CI — **after** your commit is already on canonical.
+Because every lane pushes straight to the shared branch, a guard that only runs in CI is a *detector*,
+not a *control*: it tells you what already landed.
+
+**Two duplicate `V432` migrations reached canonical on 2026-07-26 while a guard for exactly that defect
+existed and was correctly wired.** Run against the tree afterwards it failed immediately, naming both
+files. Nobody had run it before pushing.
+
+```bash
+bash scripts/guard/run-change-safety-gates.sh            # before every push
+bash scripts/guard/check-migration-version-collisions.sh # at minimum, if you touched a migration
+```
+
+**And stop on what it says.** A second lane later ran the scan, watched it print `V432`, and pushed in
+the same command — the push added no new duplicate, but a known one was walked past. So:
+
+> **Running a guard and pushing in the same command is not running the guard.** Stop on ANY hit,
+> including one that is not yours. Route it, then push.
+
+Never `&&` a guard into a push. A control you do not stop for is only a detector with extra steps.
 
 ## 6. Migration numbers
 

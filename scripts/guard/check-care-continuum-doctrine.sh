@@ -182,12 +182,13 @@ fi
 # OK. Net constraint state cannot be computed from migration text, so this guard does not pretend to.
 if ! grep -rq "pct_journey_id" services/daidzai-service/src/main/resources/db/migration/ 2>/dev/null; then
   echo "WARN: V-3 open — trauma episodes still carry no PCT back-link (CC-5)"
-elif ! grep -rqi "continuumlink\|continuum_link\|pctjourneyid\|resolveanchoronarrival" services/daidzai-service/src/main/java 2>/dev/null; then
-  # Structural half done (the column exists), enforced half not: no link-on-arrival flow in code yet,
-  # so nothing populates the anchor and any enforcing constraint would be unsatisfiable. Reported on
-  # the CODE, not migration text — full closure is when the flow exists, which a class either has or
-  # not, unlike a net constraint state that add-then-drop makes ungreppable.
-  echo "WARN: V-3 partially closed — back-link column exists, but no link-on-arrival flow populates it yet (CC-5)"
+elif ! grep -rqi "continuum-link\|continuumlink" services/pct-service/src/main/java 2>/dev/null; then
+  # Structural half done (the back-link column exists, and daidzai has a continuumLink method), but
+  # the flow is not WIRED: PCT does not yet CALL continuum-link on facility arrival, so nothing
+  # populates the anchor in practice. The closure signal is deliberately the CALLER (pct), not the
+  # daidzai method's existence — a method nobody invokes is the same name-based false signal as a
+  # column nothing writes. V-3 closes when the flow actually runs on arrival, which is pct calling it.
+  echo "WARN: V-3 partially closed — daidzai can link, but PCT does not call continuum-link on arrival yet (CC-5)"
 fi
 
 if [[ "$FAIL" -eq 1 ]]; then

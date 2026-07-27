@@ -117,6 +117,46 @@ class AntenatalClassificationTest {
         }
     }
 
+    private ClassificationEngine.Outcome birthLevel(Map<String, Object> f) {
+        return service.evaluate(f).outcomes().stream()
+                .filter(o -> "BIRTH_CARE_LEVEL".equals(o.axis())).findFirst().orElseThrow();
+    }
+
+    @Test
+    @DisplayName("a previous caesarean requires comprehensive EmONC")
+    void previousCaesareanNeedsCemonc() {
+        assertThat(birthLevel(facts("previousCaesarean", "PRESENT")).classificationCode())
+                .isEqualTo("CEMONC_REQUIRED");
+    }
+
+    @Test
+    @DisplayName("all risk factors excluded is BEmONC-sufficient")
+    void allExcludedIsBasicSufficient() {
+        assertThat(birthLevel(facts(
+                "previousCaesarean", "ABSENT", "currentObstetricComplication", "ABSENT",
+                "malpresentationAtTerm", "ABSENT", "multiplePregnancy", "ABSENT",
+                "significantMedicalComorbidity", "ABSENT")).classificationCode())
+                .isEqualTo("BEMONC_SUFFICIENT");
+    }
+
+    @Test
+    @DisplayName("nothing asked cannot conclude basic-sufficient — the level is INDETERMINATE")
+    void unaskedRiskIsNotBasicSufficient() {
+        var o = birthLevel(facts());
+        // The safety property: "basic is enough" is only issued once every comprehensive-EmONC
+        // indication has been excluded. Asked nothing, the level is indeterminate — never a green
+        // light to give birth somewhere without a caesarean.
+        assertThat(o.status()).isEqualTo(ClassificationEngine.Status.INDETERMINATE);
+        assertThat(o.classificationCode()).isNotEqualTo("BEMONC_SUFFICIENT");
+    }
+
+    @Test
+    @DisplayName("one excluded factor but the rest unasked is still not basic-sufficient")
+    void partialExclusionIsStillIndeterminate() {
+        var o = birthLevel(facts("previousCaesarean", "ABSENT"));
+        assertThat(o.classificationCode()).isNotEqualTo("BEMONC_SUFFICIENT");
+    }
+
     @Test
     @DisplayName("missing content is reported incomplete, never as normal")
     void missingContentIsNeverSilence() {
