@@ -1,0 +1,178 @@
+{
+  "packId": "oncology-early-diagnosis-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Cancer early diagnosis — recognising alarm features and referring fast",
+    "primarySource": "WHO Guide to cancer early diagnosis, 2017",
+    "why": "The single lever WHO's early-diagnosis guide pulls is time: most cancers are curable when found early, and the delay that kills is the interval between a person first noticing an alarm feature and reaching a service that can investigate it. This pack does not diagnose cancer — it recognises the red-flag clusters that must trigger an urgent referral for investigation, so a front-line contact ends in a fast diagnostic pathway rather than a repeat symptomatic prescription. Each rule fires an urgent referral; none of them names a tumour. Speed of referral, not certainty of diagnosis, is the whole point.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO Guide to cancer early diagnosis (2017) is NOT vendored under docs/reference/who-dak/MANIFEST.json. This pack was authored against the published guide's early-diagnosis principle and the commonly enumerated alarm features; the concrete symptom clusters and persistence qualifiers are a national operationalisation and ship ENGINEERING_SEED until the primary text is vendored and the alarm-feature set is ratified. No age, duration or lump-character thresholds here are governed values yet."
+    }
+  },
+  "rules": [
+    {
+      "code": "ONC_UNEXPLAINED_WEIGHT_LOSS_CLUSTER",
+      "name": "Unexplained weight loss with another red flag — refer urgently",
+      "layer": "ONCOLOGY",
+      "ruleType": "URGENT_REFERRAL",
+      "severity": "HIGH",
+      "interruptive": true,
+      "referralRequired": true,
+      "requiredInputs": ["unexplainedWeightLoss", "persistentFatigue", "nightSweats", "unexplainedLymphadenopathy"],
+      "appliesWhen": {"input": "unexplainedWeightLoss", "op": "eq", "value": "YES"},
+      "logic": {"any": [
+        {"input": "persistentFatigue", "op": "eq", "value": "YES"},
+        {"input": "nightSweats", "op": "eq", "value": "YES"},
+        {"input": "unexplainedLymphadenopathy", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Unexplained weight loss with another constitutional red flag — refer urgently for investigation.",
+      "explanation": "Unexplained, unintentional weight loss is one of the most consistent alarm features of undiagnosed malignancy, and when it is accompanied by another constitutional red flag — drenching night sweats, persistent unexplained fatigue, or unexplained lymphadenopathy — the combination should not be managed symptomatically. The purpose is to shorten the interval to diagnosis, not to guess the primary site.",
+      "requiredAction": "Refer urgently to a service that can investigate for underlying malignancy. Do not treat symptomatically and review; document the red flags and the referral.",
+      "sourceRefs": ["WHO Guide to cancer early diagnosis (2017) — recognising alarm features and referring for prompt diagnosis"],
+      "dakRef": {"dak": "WHO CANCER", "dakVersion": "2017", "id": "WHO_CANCER.EARLY_DIAGNOSIS", "row": "unexplained weight loss cluster"},
+      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "Persistent, unexplained symptoms including unintentional weight loss should prompt evaluation for possible cancer.", "nationalStatement": "Unexplained weight loss together with any of night sweats, persistent fatigue, or unexplained lymphadenopathy triggers an urgent referral for investigation.", "rationale": "The guide states the early-diagnosis principle; the specific accompanying-flag cluster is a national operationalisation to make the referral actionable at a front-line contact.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO Guide to cancer early diagnosis (2017)"]},
+      "testCases": [
+        {"name": "weight loss with night sweats fires urgent referral", "facts": {"unexplainedWeightLoss": "YES", "persistentFatigue": "NO", "nightSweats": "YES", "unexplainedLymphadenopathy": "NO"}, "expectFires": true},
+        {"name": "weight loss with no accompanying red flag does not fire", "facts": {"unexplainedWeightLoss": "YES", "persistentFatigue": "NO", "nightSweats": "NO", "unexplainedLymphadenopathy": "NO"}, "expectFires": false},
+        {"name": "no weight loss — rule does not apply", "facts": {"unexplainedWeightLoss": "NO", "nightSweats": "YES"}, "expectFires": false},
+        {"name": "weight-loss fact absent must never fire on other flags", "facts": {"nightSweats": "YES", "unexplainedLymphadenopathy": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ONC_SUSPICIOUS_BREAST_LUMP",
+      "name": "Suspicious breast lump — refer urgently",
+      "layer": "ONCOLOGY",
+      "ruleType": "URGENT_REFERRAL",
+      "severity": "HIGH",
+      "interruptive": true,
+      "referralRequired": true,
+      "requiredInputs": ["breastLump", "lumpNewOrPersistent", "nippleChange", "breastSkinChange"],
+      "appliesWhen": {"input": "breastLump", "op": "eq", "value": "YES"},
+      "logic": {"any": [
+        {"input": "lumpNewOrPersistent", "op": "eq", "value": "YES"},
+        {"input": "nippleChange", "op": "eq", "value": "YES"},
+        {"input": "breastSkinChange", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Suspicious breast lump — refer urgently for triple assessment.",
+      "explanation": "A breast lump that is new or persistent, or that comes with a nipple change (retraction, unexplained discharge) or a skin change (dimpling, peau d'orange), is a recognised alarm feature. It must not be observed over months; the referral exists to get the person into a diagnostic (triple assessment) pathway quickly.",
+      "requiredAction": "Refer urgently for breast diagnostic assessment. Do not schedule a routine symptomatic review in place of referral.",
+      "sourceRefs": ["WHO Guide to cancer early diagnosis (2017) — breast lump as an alarm feature for prompt referral"],
+      "dakRef": {"dak": "WHO CANCER", "dakVersion": "2017", "id": "WHO_CANCER.EARLY_DIAGNOSIS", "row": "suspicious breast lump"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "A breast lump is a common alarm feature that should prompt prompt clinical assessment.", "nationalStatement": "A breast lump that is new or persistent, or accompanied by a nipple or skin change, triggers an urgent referral for triple assessment.", "rationale": "Strengthened beyond the guide's general statement by naming the lump characteristics and associated changes that raise suspicion, so the referral trigger is unambiguous at first contact.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO Guide to cancer early diagnosis (2017)"]},
+      "testCases": [
+        {"name": "new or persistent breast lump fires urgent referral", "facts": {"breastLump": "YES", "lumpNewOrPersistent": "YES", "nippleChange": "NO", "breastSkinChange": "NO"}, "expectFires": true},
+        {"name": "breast lump with no suspicious characteristic does not fire", "facts": {"breastLump": "YES", "lumpNewOrPersistent": "NO", "nippleChange": "NO", "breastSkinChange": "NO"}, "expectFires": false},
+        {"name": "no breast lump — rule does not apply", "facts": {"breastLump": "NO", "nippleChange": "YES"}, "expectFires": false},
+        {"name": "breast-lump fact absent must never fire on associated changes", "facts": {"nippleChange": "YES", "breastSkinChange": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ONC_POSTMENOPAUSAL_BLEEDING",
+      "name": "Postmenopausal bleeding not explained by a benign cause — refer urgently",
+      "layer": "ONCOLOGY",
+      "ruleType": "URGENT_REFERRAL",
+      "severity": "HIGH",
+      "interruptive": true,
+      "referralRequired": true,
+      "requiredInputs": ["postmenopausalBleeding", "bleedingExplainedByBenignCause"],
+      "appliesWhen": {"input": "postmenopausalBleeding", "op": "eq", "value": "YES"},
+      "logic": {"input": "bleedingExplainedByBenignCause", "op": "eq", "value": "NO"},
+      "message": "Postmenopausal bleeding with no benign explanation — refer urgently for gynaecological investigation.",
+      "explanation": "Bleeding after the menopause is abnormal until proven otherwise and is the classic alarm feature for endometrial cancer. Unless a benign cause is already established, it warrants urgent referral for investigation rather than reassurance. The referral is about speed to endometrial assessment.",
+      "requiredAction": "Refer urgently for gynaecological investigation (endometrial assessment). Do not attribute to atrophy without investigation.",
+      "sourceRefs": ["WHO Guide to cancer early diagnosis (2017) — abnormal uterine/postmenopausal bleeding as an alarm feature"],
+      "dakRef": {"dak": "WHO CANCER", "dakVersion": "2017", "id": "WHO_CANCER.EARLY_DIAGNOSIS", "row": "postmenopausal bleeding"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "Abnormal uterine bleeding, including postmenopausal bleeding, is an alarm feature warranting evaluation.", "nationalStatement": "Postmenopausal bleeding not already explained by an established benign cause triggers an urgent referral for endometrial investigation.", "rationale": "Strengthened by making the benign-cause exclusion explicit, so an unexplained postmenopausal bleed cannot be closed as atrophy without investigation.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO Guide to cancer early diagnosis (2017)"]},
+      "testCases": [
+        {"name": "unexplained postmenopausal bleeding fires urgent referral", "facts": {"postmenopausalBleeding": "YES", "bleedingExplainedByBenignCause": "NO"}, "expectFires": true},
+        {"name": "postmenopausal bleeding with an established benign cause does not fire", "facts": {"postmenopausalBleeding": "YES", "bleedingExplainedByBenignCause": "YES"}, "expectFires": false},
+        {"name": "no postmenopausal bleeding — rule does not apply", "facts": {"postmenopausalBleeding": "NO", "bleedingExplainedByBenignCause": "NO"}, "expectFires": false},
+        {"name": "bleeding fact absent must never fire", "facts": {"bleedingExplainedByBenignCause": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ONC_PERSISTENT_UNEXPLAINED_SYMPTOM_CLUSTER",
+      "name": "Persistent unexplained symptom with a bleeding/swallowing red flag — refer urgently",
+      "layer": "ONCOLOGY",
+      "ruleType": "URGENT_REFERRAL",
+      "severity": "HIGH",
+      "interruptive": true,
+      "referralRequired": true,
+      "requiredInputs": ["symptomPersistsBeyondExpected", "haemoptysis", "rectalBleeding", "dysphagia"],
+      "appliesWhen": {"input": "symptomPersistsBeyondExpected", "op": "eq", "value": "YES"},
+      "logic": {"any": [
+        {"input": "haemoptysis", "op": "eq", "value": "YES"},
+        {"input": "rectalBleeding", "op": "eq", "value": "YES"},
+        {"input": "dysphagia", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Persistent unexplained symptom with a red flag (haemoptysis, rectal bleeding, or dysphagia) — refer urgently.",
+      "explanation": "A symptom that persists beyond the interval in which a benign, self-limiting cause would have resolved is itself a warning; when the persisting picture includes coughing up blood, rectal bleeding, or difficulty swallowing, it points to lung, colorectal, or oesophageal disease and needs prompt investigation rather than another course of symptomatic treatment.",
+      "requiredAction": "Refer urgently for investigation of the relevant tract. Do not re-treat symptomatically without a diagnostic pathway.",
+      "sourceRefs": ["WHO Guide to cancer early diagnosis (2017) — persistent unexplained symptoms as alarm features"],
+      "dakRef": {"dak": "WHO CANCER", "dakVersion": "2017", "id": "WHO_CANCER.EARLY_DIAGNOSIS", "row": "persistent symptom cluster"},
+      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "Symptoms that persist without explanation should prompt investigation for possible cancer.", "nationalStatement": "A symptom persisting beyond its expected course, together with haemoptysis, rectal bleeding, or dysphagia, triggers an urgent referral for investigation.", "rationale": "The persistence qualifier and the specific red-flag set are a national operationalisation of the guide's principle so the trigger is concrete at first contact.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO Guide to cancer early diagnosis (2017)"]},
+      "testCases": [
+        {"name": "persistent symptom with haemoptysis fires urgent referral", "facts": {"symptomPersistsBeyondExpected": "YES", "haemoptysis": "YES", "rectalBleeding": "NO", "dysphagia": "NO"}, "expectFires": true},
+        {"name": "persistent symptom with no red flag does not fire", "facts": {"symptomPersistsBeyondExpected": "YES", "haemoptysis": "NO", "rectalBleeding": "NO", "dysphagia": "NO"}, "expectFires": false},
+        {"name": "symptom not persistent — rule does not apply", "facts": {"symptomPersistsBeyondExpected": "NO", "rectalBleeding": "YES"}, "expectFires": false},
+        {"name": "persistence fact absent must never fire on red flags", "facts": {"rectalBleeding": "YES", "dysphagia": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ONC_SUSPICIOUS_VISIBLE_LESION",
+      "name": "Suspicious visible or palpable lesion — refer urgently",
+      "layer": "ONCOLOGY",
+      "ruleType": "URGENT_REFERRAL",
+      "severity": "HIGH",
+      "interruptive": true,
+      "referralRequired": true,
+      "requiredInputs": ["suspiciousLesion", "lesionNonHealing", "moleChanging", "oralPersistentPatch"],
+      "appliesWhen": {"input": "suspiciousLesion", "op": "eq", "value": "YES"},
+      "logic": {"any": [
+        {"input": "lesionNonHealing", "op": "eq", "value": "YES"},
+        {"input": "moleChanging", "op": "eq", "value": "YES"},
+        {"input": "oralPersistentPatch", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Suspicious visible lesion (non-healing ulcer, changing mole, or persistent oral patch) — refer urgently.",
+      "explanation": "Visible and palpable lesions are the alarm features that can be recognised without any test: a sore or ulcer that does not heal, a mole that is changing in size, shape or colour, or a persistent white or red patch in the mouth. These are precisely the cancers early diagnosis reaches first, and the referral is to confirm and treat before the lesion advances.",
+      "requiredAction": "Refer urgently for diagnostic assessment and biopsy of the lesion. Do not treat as a benign skin or oral condition without confirmation.",
+      "sourceRefs": ["WHO Guide to cancer early diagnosis (2017) — visible lesions as alarm features amenable to early diagnosis"],
+      "dakRef": {"dak": "WHO CANCER", "dakVersion": "2017", "id": "WHO_CANCER.EARLY_DIAGNOSIS", "row": "suspicious visible lesion"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "Visible and palpable lesions that do not resolve are alarm features suitable for early diagnosis.", "nationalStatement": "A suspicious lesion that is a non-healing ulcer, a changing mole, or a persistent oral patch triggers an urgent referral for assessment and biopsy.", "rationale": "Strengthened by naming the three lesion patterns most reliably recognisable at first contact, so a suspicious lesion is not managed as a benign condition.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO Guide to cancer early diagnosis (2017)"]},
+      "testCases": [
+        {"name": "suspicious non-healing lesion fires urgent referral", "facts": {"suspiciousLesion": "YES", "lesionNonHealing": "YES", "moleChanging": "NO", "oralPersistentPatch": "NO"}, "expectFires": true},
+        {"name": "suspicious lesion with no worrying feature does not fire", "facts": {"suspiciousLesion": "YES", "lesionNonHealing": "NO", "moleChanging": "NO", "oralPersistentPatch": "NO"}, "expectFires": false},
+        {"name": "no suspicious lesion — rule does not apply", "facts": {"suspiciousLesion": "NO", "moleChanging": "YES"}, "expectFires": false},
+        {"name": "lesion fact absent must never fire on lesion features", "facts": {"lesionNonHealing": "YES", "oralPersistentPatch": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ONC_UNEXPLAINED_ABDOMINAL_PELVIC_MASS",
+      "name": "Unexplained palpable mass — refer urgently",
+      "layer": "ONCOLOGY",
+      "ruleType": "URGENT_REFERRAL",
+      "severity": "HIGH",
+      "interruptive": true,
+      "referralRequired": true,
+      "requiredInputs": ["palpableMass", "massUnexplained"],
+      "appliesWhen": {"input": "palpableMass", "op": "eq", "value": "YES"},
+      "logic": {"input": "massUnexplained", "op": "eq", "value": "YES"},
+      "message": "Unexplained palpable abdominal or pelvic mass — refer urgently for investigation.",
+      "explanation": "A palpable abdominal or pelvic mass with no benign explanation is an alarm feature for several intra-abdominal and gynaecological cancers. Where the mass is not already accounted for, it should go to urgent investigation rather than watchful waiting, because a mass detected on examination is often the earliest opportunity to intervene.",
+      "requiredAction": "Refer urgently for imaging and investigation of the mass. Do not adopt a watch-and-review approach for an unexplained mass.",
+      "sourceRefs": ["WHO Guide to cancer early diagnosis (2017) — an unexplained mass as an alarm feature for prompt referral"],
+      "dakRef": {"dak": "WHO CANCER", "dakVersion": "2017", "id": "WHO_CANCER.EARLY_DIAGNOSIS", "row": "unexplained palpable mass"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "A palpable mass is an alarm feature that should prompt investigation.", "nationalStatement": "A palpable abdominal or pelvic mass with no established benign explanation triggers an urgent referral for imaging and investigation.", "rationale": "Strengthened by making the unexplained qualifier explicit, so an unaccounted-for mass is investigated rather than reviewed.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO Guide to cancer early diagnosis (2017)"]},
+      "testCases": [
+        {"name": "unexplained palpable mass fires urgent referral", "facts": {"palpableMass": "YES", "massUnexplained": "YES"}, "expectFires": true},
+        {"name": "palpable mass with an established explanation does not fire", "facts": {"palpableMass": "YES", "massUnexplained": "NO"}, "expectFires": false},
+        {"name": "no palpable mass — rule does not apply", "facts": {"palpableMass": "NO", "massUnexplained": "YES"}, "expectFires": false},
+        {"name": "mass fact absent must never fire", "facts": {"massUnexplained": "YES"}, "expectFires": false}
+      ]
+    }
+  ]
+}

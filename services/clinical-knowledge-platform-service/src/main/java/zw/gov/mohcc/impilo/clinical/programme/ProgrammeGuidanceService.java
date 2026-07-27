@@ -46,6 +46,13 @@ public class ProgrammeGuidanceService {
     // (egfr/weightKg/hepaticImpairment) plus caller facts. Not programmes; content topics.
     static final String CVD_RISK_PATH = "clinical/cvd-risk-rules.json";
     static final String DEPRESCRIBING_PATH = "clinical/deprescribing-rules.json";
+    // W5 medical-procedure indication + W6 specialty CDS (ICOPE, mhGAP, AMS, palliative, oncology).
+    static final String PROCEDURE_INDICATION_PATH = "clinical/procedure-indication-rules.json";
+    static final String ICOPE_PATH = "clinical/icope-rules.json";
+    static final String MHGAP_PATH = "clinical/mhgap-rules.json";
+    static final String AMS_PATH = "clinical/antimicrobial-stewardship-rules.json";
+    static final String PALLIATIVE_PATH = "clinical/palliative-rules.json";
+    static final String ONCOLOGY_PATH = "clinical/oncology-early-diagnosis-rules.json";
 
     private final RuleContentLoader contentLoader;
 
@@ -58,7 +65,9 @@ public class ProgrammeGuidanceService {
         if (programme == null) {
             return null;
         }
-        return switch (programme.trim().toUpperCase(java.util.Locale.ROOT)) {
+        // Topics arrive kebab-case from the URL (procedure-indication) or snake from callers;
+        // normalise both to the underscore form the cases use.
+        return switch (programme.trim().toUpperCase(java.util.Locale.ROOT).replace('-', '_')) {
             case "HIV_CARE", "HIV" -> HIV_CONTENT_PATH;
             case "TB_TREATMENT", "TB" -> TB_CONTENT_PATH;
             case "HIV_TESTING" -> HIV_TESTING_PATH;
@@ -69,6 +78,12 @@ public class ProgrammeGuidanceService {
             case "PMTCT" -> PMTCT_PATH;
             case "CVD_RISK", "CARDIOVASCULAR_RISK" -> CVD_RISK_PATH;
             case "DEPRESCRIBING", "MEDICATION_REVIEW" -> DEPRESCRIBING_PATH;
+            case "PROCEDURE_INDICATION", "PROCEDURES" -> PROCEDURE_INDICATION_PATH;
+            case "ICOPE", "GERIATRIC", "GERIATRICS" -> ICOPE_PATH;
+            case "MHGAP", "MENTAL_HEALTH" -> MHGAP_PATH;
+            case "ANTIMICROBIAL_STEWARDSHIP", "AMS" -> AMS_PATH;
+            case "PALLIATIVE", "PALLIATIVE_CARE" -> PALLIATIVE_PATH;
+            case "ONCOLOGY", "CANCER" -> ONCOLOGY_PATH;
             default -> null;
         };
     }

@@ -1,0 +1,151 @@
+{
+  "packId": "palliative-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Palliative care — the analgesic ladder, breakthrough pain, and identifying palliative need",
+    "primarySource": "WHO guidelines for the pharmacological and radiotherapeutic management of cancer pain in adults; WHO palliative care guidance",
+    "why": "Pain and other distressing symptoms are the commonest reason a dying or seriously ill person suffers when they need not. WHO answers with a stepwise analgesic ladder — a non-opioid for mild pain, a weak opioid added for moderate pain, and a strong opioid such as morphine for severe pain, titrated to effect — plus rescue dosing for breakthrough pain that pierces a stable background regimen. The rule that must not be softened is that opioid analgesia for severe pain is a right, not a favour to be rationed: WHO treats access to morphine as an essential-medicine and human-rights matter, and the frequent failure mode in the field is under-treatment born of opiophobia, not over-prescription. The pack also flags when advanced life-limiting illness should trigger a palliative-care assessment and advance care planning, so the need is named rather than missed.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO palliative-care and cancer-pain guidance is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against the WHO analgesic-ladder guidance and palliative-care symptom management; ships ENGINEERING_SEED until the primary text is vendored and the national essential-medicines / controlled-substances position on opioid availability is confirmed. Drug choices named here (paracetamol/NSAID, codeine/tramadol, morphine) illustrate the ladder step and are pending confirmation against the national palliative-care guideline and EML."
+    }
+  },
+  "rules": [
+    {
+      "code": "PALL_PAIN_MILD_NONOPIOID",
+      "name": "Mild pain — non-opioid analgesia (ladder step 1)",
+      "layer": "PALLIATIVE",
+      "ruleType": "TREATMENT_GUIDANCE",
+      "severity": "LOW",
+      "requiredInputs": ["painAssessmentDone", "painScore"],
+      "appliesWhen": {"input": "painAssessmentDone", "op": "eq", "value": "YES"},
+      "logic": {"input": "painScore", "op": "between", "min": 1, "max": 3},
+      "message": "Mild pain — start regular non-opioid analgesia (WHO analgesic ladder step 1).",
+      "explanation": "On the WHO analgesic ladder mild pain (roughly 1-3 on a 0-10 scale) is treated with a non-opioid such as paracetamol, with a non-steroidal anti-inflammatory added where appropriate and not contraindicated. Analgesia is given regularly, by the clock, not only on demand, and pain is reassessed so the step can be raised if it is not controlled.",
+      "requiredAction": "Prescribe regular non-opioid analgesia (e.g. paracetamol +/- an NSAID where appropriate), give by the clock, and reassess the pain score to step up if pain is not controlled.",
+      "sourceRefs": ["WHO cancer-pain guidelines — analgesic ladder step 1 (non-opioid)"],
+      "dakRef": {"dak": "WHO PALLIATIVE", "dakVersion": "2018", "id": "WHO_PALLIATIVE.SYMPTOM_CONTROL", "row": "analgesic ladder — mild pain"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Mild pain should be treated with a non-opioid analgesic given regularly, with reassessment to step up if pain persists.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO cancer-pain guidelines — analgesic ladder"]},
+      "testCases": [
+        {"name": "mild pain fires the non-opioid step", "facts": {"painAssessmentDone": "YES", "painScore": 2}, "expectFires": true},
+        {"name": "moderate pain does not take the mild band", "facts": {"painAssessmentDone": "YES", "painScore": 5}, "expectFires": false},
+        {"name": "pain score absent must not fire a pain rule", "facts": {"painAssessmentDone": "YES"}, "expectFires": false},
+        {"name": "no pain assessment done — rule does not apply", "facts": {"painAssessmentDone": "NO", "painScore": 2}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PALL_PAIN_MODERATE_WEAK_OPIOID",
+      "name": "Moderate pain — weak opioid plus non-opioid (ladder step 2)",
+      "layer": "PALLIATIVE",
+      "ruleType": "TREATMENT_GUIDANCE",
+      "severity": "MEDIUM",
+      "requiredInputs": ["painAssessmentDone", "painScore"],
+      "appliesWhen": {"input": "painAssessmentDone", "op": "eq", "value": "YES"},
+      "logic": {"input": "painScore", "op": "between", "min": 4, "max": 6},
+      "message": "Moderate pain — add a weak opioid to the non-opioid analgesia (WHO analgesic ladder step 2).",
+      "explanation": "Moderate pain (roughly 4-6 on a 0-10 scale) that is not controlled by a non-opioid alone is treated by adding a weak opioid such as codeine or tramadol to the non-opioid, still given regularly. If moderate pain remains uncontrolled the correct response is to move up the ladder to a strong opioid, not to persist on an ineffective step.",
+      "requiredAction": "Add a weak opioid (e.g. codeine or tramadol) to the regular non-opioid, reassess, and step up to a strong opioid if pain remains uncontrolled.",
+      "sourceRefs": ["WHO cancer-pain guidelines — analgesic ladder step 2 (weak opioid + non-opioid)"],
+      "dakRef": {"dak": "WHO PALLIATIVE", "dakVersion": "2018", "id": "WHO_PALLIATIVE.SYMPTOM_CONTROL", "row": "analgesic ladder — moderate pain"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Moderate pain uncontrolled by a non-opioid should be treated by adding a weak opioid, with escalation to a strong opioid if pain persists.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO cancer-pain guidelines — analgesic ladder"]},
+      "testCases": [
+        {"name": "moderate pain fires the weak-opioid step", "facts": {"painAssessmentDone": "YES", "painScore": 5}, "expectFires": true},
+        {"name": "mild pain does not take the moderate band", "facts": {"painAssessmentDone": "YES", "painScore": 2}, "expectFires": false},
+        {"name": "severe pain does not take the moderate band", "facts": {"painAssessmentDone": "YES", "painScore": 8}, "expectFires": false},
+        {"name": "pain score absent must not fire a pain rule", "facts": {"painAssessmentDone": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PALL_PAIN_SEVERE_STRONG_OPIOID",
+      "name": "Severe pain — strong opioid, titrated (ladder step 3)",
+      "layer": "PALLIATIVE",
+      "ruleType": "TREATMENT_GUIDANCE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["painAssessmentDone", "painScore"],
+      "appliesWhen": {"input": "painAssessmentDone", "op": "eq", "value": "YES"},
+      "logic": {"input": "painScore", "op": "gte", "value": 7},
+      "message": "Severe pain — start a strong opioid such as morphine and titrate to effect. Opioid pain relief is a right and must not be withheld.",
+      "explanation": "Severe pain (7 or more on a 0-10 scale) is treated with a strong opioid, morphine being the reference oral strong opioid, titrated against the pain with no arbitrary ceiling other than tolerability. WHO treats access to opioid analgesia as an essential-medicine and human-rights matter: the common and serious failure in practice is under-treatment driven by fear of opioids, not over-prescription. Severe pain relief must not be rationed or withheld; give the strong opioid, anticipate and manage constipation and nausea, and monitor for respiratory depression during titration.",
+      "requiredAction": "Prescribe a strong opioid (e.g. oral morphine) and titrate to effect; co-prescribe a laxative and an as-needed antiemetic, and monitor during titration. Do not withhold or ration analgesia for severe pain.",
+      "sourceRefs": ["WHO cancer-pain guidelines — analgesic ladder step 3 (strong opioid); WHO essential medicines / opioid availability guidance"],
+      "dakRef": {"dak": "WHO PALLIATIVE", "dakVersion": "2018", "id": "WHO_PALLIATIVE.SYMPTOM_CONTROL", "row": "analgesic ladder — severe pain"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Severe pain should be treated with a strong opioid titrated to effect; access to opioid analgesia for such pain is an essential-medicine and human-rights matter and must not be withheld.", "nationalStatement": "Adopted as published, pending confirmation of the national controlled-substances and essential-medicines position on opioid availability.", "rationale": "The national statement is not verbatim because it flags that opioid availability at point of care depends on the national controlled-substances arrangements, which must be confirmed before ratification; the clinical direction (do not withhold) is unchanged.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO cancer-pain guidelines — analgesic ladder", "WHO essential medicines list — opioid analgesics"]},
+      "testCases": [
+        {"name": "severe pain fires the strong-opioid step", "facts": {"painAssessmentDone": "YES", "painScore": 8}, "expectFires": true},
+        {"name": "moderate pain does not take the severe band", "facts": {"painAssessmentDone": "YES", "painScore": 6}, "expectFires": false},
+        {"name": "pain score absent must not fire a pain rule", "facts": {"painAssessmentDone": "YES"}, "expectFires": false},
+        {"name": "no pain assessment done — rule does not apply", "facts": {"painAssessmentDone": "NO", "painScore": 9}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PALL_BREAKTHROUGH_PAIN_RESCUE",
+      "name": "Breakthrough pain — provide as-needed rescue dosing",
+      "layer": "PALLIATIVE",
+      "ruleType": "TREATMENT_GUIDANCE",
+      "severity": "MEDIUM",
+      "requiredInputs": ["onBackgroundOpioid", "breakthroughPain"],
+      "appliesWhen": {"input": "onBackgroundOpioid", "op": "eq", "value": "YES"},
+      "logic": {"input": "breakthroughPain", "op": "eq", "value": "YES"},
+      "message": "Breakthrough pain on a stable regimen — provide an as-needed rescue dose of opioid.",
+      "explanation": "Breakthrough pain is a transient flare that pierces an otherwise adequate background analgesic regimen. It is managed with a fast-acting as-needed rescue dose of opioid, conventionally about one sixth of the total daily background opioid dose, repeated as required. Frequent use of rescue doses is the signal to increase the regular background dose. Rescue dosing must be prescribed proactively, not left for the patient to endure the flare unmedicated.",
+      "requiredAction": "Prescribe an as-needed (PRN) rescue opioid dose (typically around one sixth of the total daily background dose) for breakthrough episodes, and review the background regular dose if rescue doses are needed frequently.",
+      "sourceRefs": ["WHO cancer-pain guidelines — breakthrough pain and rescue dosing"],
+      "dakRef": {"dak": "WHO PALLIATIVE", "dakVersion": "2018", "id": "WHO_PALLIATIVE.SYMPTOM_CONTROL", "row": "breakthrough pain — rescue dose"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Breakthrough pain should be managed with an as-needed rescue dose of opioid, with review of the background dose if rescue doses are needed frequently.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO cancer-pain guidelines — breakthrough pain"]},
+      "testCases": [
+        {"name": "breakthrough pain on background opioid fires rescue dosing", "facts": {"onBackgroundOpioid": "YES", "breakthroughPain": "YES"}, "expectFires": true},
+        {"name": "no breakthrough pain does not fire", "facts": {"onBackgroundOpioid": "YES", "breakthroughPain": "NO"}, "expectFires": false},
+        {"name": "breakthrough status absent must not fire the rule", "facts": {"onBackgroundOpioid": "YES"}, "expectFires": false},
+        {"name": "not on a background opioid — rule does not apply", "facts": {"onBackgroundOpioid": "NO", "breakthroughPain": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PALL_IDENTIFY_NEED_ADVANCED_ILLNESS",
+      "name": "Advanced life-limiting illness — offer palliative assessment and advance care planning",
+      "layer": "PALLIATIVE",
+      "ruleType": "CARE_PLANNING",
+      "severity": "MEDIUM",
+      "requiredInputs": ["palliativeNeedScreen", "lifeLimitingIllnessAdvanced"],
+      "appliesWhen": {"input": "palliativeNeedScreen", "op": "eq", "value": "YES"},
+      "logic": {"input": "lifeLimitingIllnessAdvanced", "op": "eq", "value": "YES"},
+      "message": "Advanced life-limiting illness identified — offer a palliative care assessment and advance care planning.",
+      "explanation": "Palliative need is frequently recognised too late. A person with an advanced, progressive, life-limiting illness should be offered a palliative care assessment — addressing physical, psychological, social and spiritual needs — alongside disease-directed care, and should be offered advance care planning to record their goals and preferences while they are able to express them. Palliative care is offered on the basis of need, not prognosis in days, and runs concurrently with any ongoing treatment.",
+      "requiredAction": "Offer a palliative care assessment (physical, psychological, social and spiritual), initiate advance care planning to record goals and preferences, and link to palliative services alongside continuing disease-directed care.",
+      "sourceRefs": ["WHO palliative care guidance — identifying palliative need and advance care planning"],
+      "dakRef": {"dak": "WHO PALLIATIVE", "dakVersion": "2018", "id": "WHO_PALLIATIVE.SYMPTOM_CONTROL", "row": "identify palliative need"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "People with advanced life-limiting illness should be offered palliative care assessment and advance care planning on the basis of need, concurrently with disease-directed care.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO palliative care guidance"]},
+      "testCases": [
+        {"name": "advanced illness on screening fires the palliative offer", "facts": {"palliativeNeedScreen": "YES", "lifeLimitingIllnessAdvanced": "YES"}, "expectFires": true},
+        {"name": "illness not advanced does not fire", "facts": {"palliativeNeedScreen": "YES", "lifeLimitingIllnessAdvanced": "NO"}, "expectFires": false},
+        {"name": "advanced-illness status absent must not fire the rule", "facts": {"palliativeNeedScreen": "YES"}, "expectFires": false},
+        {"name": "no palliative-need screen in progress — rule does not apply", "facts": {"palliativeNeedScreen": "NO", "lifeLimitingIllnessAdvanced": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PALL_BREATHLESSNESS_SYMPTOM_CONTROL",
+      "name": "Distressing breathlessness — active symptom management",
+      "layer": "PALLIATIVE",
+      "ruleType": "SYMPTOM_MANAGEMENT",
+      "severity": "MEDIUM",
+      "requiredInputs": ["palliativeCarePatient", "breathlessnessDistressing"],
+      "appliesWhen": {"input": "palliativeCarePatient", "op": "eq", "value": "YES"},
+      "logic": {"input": "breathlessnessDistressing", "op": "eq", "value": "YES"},
+      "message": "Distressing breathlessness — treat the symptom, including low-dose opioid where appropriate.",
+      "explanation": "Breathlessness is one of the most frightening symptoms at the end of life and is under-treated. After addressing any reversible cause, WHO palliative care supports non-pharmacological measures (positioning, a stream of cool air, reassurance and breathing techniques) together with low-dose opioids to relieve the sensation of breathlessness, and treatment of accompanying anxiety. The symptom is treated for the distress it causes, independent of the underlying disease trajectory.",
+      "requiredAction": "Treat any reversible cause, apply non-pharmacological measures (positioning, cool air, reassurance), consider a low-dose opioid to relieve the sensation of breathlessness, and address accompanying anxiety.",
+      "sourceRefs": ["WHO palliative care guidance — management of breathlessness"],
+      "dakRef": {"dak": "WHO PALLIATIVE", "dakVersion": "2018", "id": "WHO_PALLIATIVE.SYMPTOM_CONTROL", "row": "distressing breathlessness"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Distressing breathlessness in palliative care should be actively managed with non-pharmacological measures and low-dose opioids after treating any reversible cause.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO palliative care guidance"]},
+      "testCases": [
+        {"name": "distressing breathlessness in a palliative patient fires symptom management", "facts": {"palliativeCarePatient": "YES", "breathlessnessDistressing": "YES"}, "expectFires": true},
+        {"name": "no distressing breathlessness does not fire", "facts": {"palliativeCarePatient": "YES", "breathlessnessDistressing": "NO"}, "expectFires": false},
+        {"name": "breathlessness status absent must not fire the rule", "facts": {"palliativeCarePatient": "YES"}, "expectFires": false},
+        {"name": "not a palliative care patient — rule does not apply", "facts": {"palliativeCarePatient": "NO", "breathlessnessDistressing": "YES"}, "expectFires": false}
+      ]
+    }
+  ]
+}

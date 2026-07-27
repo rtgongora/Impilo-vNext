@@ -42,7 +42,13 @@ class HivTbProgrammeRuleContentTest {
             ProgrammeGuidanceService.PREP_PATH,
             ProgrammeGuidanceService.PMTCT_PATH,
             ProgrammeGuidanceService.CVD_RISK_PATH,
-            ProgrammeGuidanceService.DEPRESCRIBING_PATH);
+            ProgrammeGuidanceService.DEPRESCRIBING_PATH,
+            ProgrammeGuidanceService.PROCEDURE_INDICATION_PATH,
+            ProgrammeGuidanceService.ICOPE_PATH,
+            ProgrammeGuidanceService.MHGAP_PATH,
+            ProgrammeGuidanceService.AMS_PATH,
+            ProgrammeGuidanceService.PALLIATIVE_PATH,
+            ProgrammeGuidanceService.ONCOLOGY_PATH);
 
     @TestFactory
     List<DynamicTest> everyRulesOwnFixturesBehaveAsDescribed() {
@@ -103,7 +109,13 @@ class HivTbProgrammeRuleContentTest {
             "clinical/prep-rules.json",
             "clinical/pmtct-rules.json",
             "clinical/cvd-risk-rules.json",
-            "clinical/deprescribing-rules.json"})
+            "clinical/deprescribing-rules.json",
+            "clinical/procedure-indication-rules.json",
+            "clinical/icope-rules.json",
+            "clinical/mhgap-rules.json",
+            "clinical/antimicrobial-stewardship-rules.json",
+            "clinical/palliative-rules.json",
+            "clinical/oncology-early-diagnosis-rules.json"})
     void thePackDeclaresItsPrimaryTextIsNotYetVendored(String pack) throws IOException {
         JsonNode verification = readPack(pack).path("provenance").path("sourceVerification");
         // Not an assertion that it IS vendored — it is not. An assertion that the pack says so where a
@@ -127,7 +139,13 @@ class HivTbProgrammeRuleContentTest {
             "clinical/prep-rules.json",
             "clinical/pmtct-rules.json",
             "clinical/cvd-risk-rules.json",
-            "clinical/deprescribing-rules.json"})
+            "clinical/deprescribing-rules.json",
+            "clinical/procedure-indication-rules.json",
+            "clinical/icope-rules.json",
+            "clinical/mhgap-rules.json",
+            "clinical/antimicrobial-stewardship-rules.json",
+            "clinical/palliative-rules.json",
+            "clinical/oncology-early-diagnosis-rules.json"})
     void thePackShipsAsEngineeringSeed(String pack) throws IOException {
         // No unratified pack may claim APPROVED — that is the one status that would let it drive care.
         assertThat(readPack(pack).path("approvalStatus").asText()).isEqualTo("ENGINEERING_SEED");

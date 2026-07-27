@@ -1,0 +1,208 @@
+{
+  "packId": "procedure-indication-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Adult bedside medical procedures — is this the right procedure for this patient, and what does the result mean",
+    "primarySource": "EDLIZ / Zimbabwe standard treatment guidelines and standard procedural safety practice",
+    "why": "A bedside procedure — a lumbar puncture, a diagnostic tap, a pleural aspiration — is only safe when it is the right procedure for this patient and the timing is right. Two questions decide that, and they are the ones a busy ward most often skips: is there a contraindication that must be cleared first (raised intracranial pressure before an LP, a bleeding risk before any needle), and once the sample is taken, what does it mean. This pack owns the indication and the interpretation; the procedures-service owns actually doing it. Keeping the appropriateness decision as reviewable data rather than tribal knowledge is the point — an LP into raised intracranial pressure can cone the brainstem, and a needle into a coagulopathic patient bleeds, so the order of operations is a safety property, not a preference.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "EDLIZ (2015) and the national procedural safety standards are NOT vendored under docs/reference/who-dak/MANIFEST.json — there is no WHO DAK for adult bedside procedural appropriateness, so these rules are national additions authored against EDLIZ and standard practice. The thresholds and contraindication lists here are engineering placeholders and ship ENGINEERING_SEED until the primary text is vendored and MOHCC ratifies. The ascitic neutrophil threshold for SBP (250 cells/mm3) is the widely used diagnostic cut-off and must be confirmed against the ratified national text."
+    }
+  },
+  "rules": [
+    {
+      "code": "LP_CONTRAINDICATED_UNTIL_CLEARED",
+      "name": "Lumbar puncture — contraindication present, do not proceed until cleared",
+      "layer": "PROCEDURE_INDICATION",
+      "ruleType": "CONTRAINDICATION",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["lumbarPunctureConsidered", "raisedIcpSigns", "coagulopathy"],
+      "appliesWhen": {"input": "lumbarPunctureConsidered", "op": "eq", "value": "YES"},
+      "logic": {"any": [
+        {"input": "raisedIcpSigns", "op": "eq", "value": "YES"},
+        {"input": "coagulopathy", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Do not perform lumbar puncture — a contraindication is present (raised intracranial pressure signs or coagulopathy). Correct or image first.",
+      "explanation": "An LP in the presence of raised intracranial pressure can precipitate cerebral herniation, and an LP in a coagulopathic or anticoagulated patient risks a spinal haematoma. Both are avoidable by acting on them before the needle, not after — imaging where raised ICP is suspected, and correcting coagulation before proceeding.",
+      "requiredAction": "Do not proceed. Where raised intracranial pressure is suspected, obtain neuroimaging (CT head) before LP; where a bleeding risk is present, correct coagulopathy or withhold anticoagulation and reassess. Re-evaluate the indication once the contraindication is cleared.",
+      "sourceRefs": ["EDLIZ — lumbar puncture: exclude raised intracranial pressure and correct bleeding risk before the procedure", "Standard procedural safety practice for lumbar puncture"],
+      "dakRef": {"dak": "EDLIZ", "dakVersion": "2015", "id": "MEDICINE.PROCEDURE_APPROPRIATENESS", "row": "lumbar puncture contraindications"},
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "No WHO DAK covers adult bedside procedural appropriateness; there is no source statement to adopt.",
+        "nationalStatement": "Lumbar puncture must not be performed while signs of raised intracranial pressure or a coagulopathy are present; image and/or correct first.",
+        "rationale": "The contraindication and its ordering are the safety property of the procedure — an LP into raised ICP can cone the brainstem and an LP into a bleeding diathesis causes spinal haematoma. Encoding it as an interruptive gate keeps the pre-procedure check from being skipped on a busy ward.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["EDLIZ — lumbar puncture safety", "Standard neurology procedural practice — LP contraindications"]
+      },
+      "testCases": [
+        {"name": "raised ICP signs contraindicate LP", "facts": {"lumbarPunctureConsidered": "YES", "raisedIcpSigns": "YES", "coagulopathy": "NO"}, "expectFires": true},
+        {"name": "coagulopathy contraindicates LP", "facts": {"lumbarPunctureConsidered": "YES", "raisedIcpSigns": "NO", "coagulopathy": "YES"}, "expectFires": true},
+        {"name": "neither contraindication present — no gate", "facts": {"lumbarPunctureConsidered": "YES", "raisedIcpSigns": "NO", "coagulopathy": "NO"}, "expectFires": false},
+        {"name": "raised ICP fact absent — cannot assert a contraindication", "facts": {"lumbarPunctureConsidered": "YES", "coagulopathy": "NO"}, "expectFires": false},
+        {"name": "LP not being considered — rule does not apply", "facts": {"lumbarPunctureConsidered": "NO", "raisedIcpSigns": "YES", "coagulopathy": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "LP_INDICATED_SUSPECTED_MENINGITIS",
+      "name": "Lumbar puncture — suspected CNS infection and no contraindication, LP indicated",
+      "layer": "PROCEDURE_INDICATION",
+      "ruleType": "INDICATION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["lumbarPunctureConsidered", "suspectedCnsInfection", "raisedIcpSigns", "coagulopathy"],
+      "appliesWhen": {"input": "lumbarPunctureConsidered", "op": "eq", "value": "YES"},
+      "logic": {"all": [
+        {"input": "suspectedCnsInfection", "op": "eq", "value": "YES"},
+        {"input": "raisedIcpSigns", "op": "eq", "value": "NO"},
+        {"input": "coagulopathy", "op": "eq", "value": "NO"}
+      ]},
+      "message": "Lumbar puncture is indicated — suspected CNS infection with no contraindication present.",
+      "explanation": "In suspected meningitis or encephalitis, cerebrospinal fluid analysis is the diagnostic test that changes management. When neither raised intracranial pressure nor a bleeding risk is present, the LP should proceed promptly, because a delay to diagnosis delays targeted therapy.",
+      "requiredAction": "Proceed with diagnostic lumbar puncture and send CSF for cell count, protein, glucose, Gram stain, culture and the indicated molecular/antigen tests. Do not delay empirical antimicrobials for the procedure where meningitis is likely.",
+      "sourceRefs": ["EDLIZ — meningitis: CSF examination to confirm the diagnosis", "Standard procedural practice — diagnostic LP for suspected CNS infection"],
+      "dakRef": {"dak": "EDLIZ", "dakVersion": "2015", "id": "MEDICINE.PROCEDURE_APPROPRIATENESS", "row": "lumbar puncture indication"},
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "No WHO DAK covers adult bedside procedural appropriateness; there is no source statement to adopt.",
+        "nationalStatement": "Where CNS infection is suspected and no contraindication is present, diagnostic lumbar puncture is indicated and should not be delayed.",
+        "rationale": "The indication is expressed as the contraindication-cleared complement of the LP safety gate, so the pack states both when to hold and when to proceed rather than only the prohibition.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["EDLIZ — meningitis diagnosis", "Standard neurology procedural practice — diagnostic LP"]
+      },
+      "testCases": [
+        {"name": "suspected CNS infection, no contraindication — LP indicated", "facts": {"lumbarPunctureConsidered": "YES", "suspectedCnsInfection": "YES", "raisedIcpSigns": "NO", "coagulopathy": "NO"}, "expectFires": true},
+        {"name": "suspected infection but raised ICP present — not a clear indication", "facts": {"lumbarPunctureConsidered": "YES", "suspectedCnsInfection": "YES", "raisedIcpSigns": "YES", "coagulopathy": "NO"}, "expectFires": false},
+        {"name": "no CNS infection suspected", "facts": {"lumbarPunctureConsidered": "YES", "suspectedCnsInfection": "NO", "raisedIcpSigns": "NO", "coagulopathy": "NO"}, "expectFires": false},
+        {"name": "suspicion fact absent — cannot assert an indication", "facts": {"lumbarPunctureConsidered": "YES", "raisedIcpSigns": "NO", "coagulopathy": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PARACENTESIS_DIAGNOSTIC_NEW_ASCITES",
+      "name": "Diagnostic paracentesis — new or worsening ascites, tap to exclude SBP",
+      "layer": "PROCEDURE_INDICATION",
+      "ruleType": "INDICATION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["paracentesisConsidered", "newAscites"],
+      "appliesWhen": {"input": "paracentesisConsidered", "op": "eq", "value": "YES"},
+      "logic": {"input": "newAscites", "op": "eq", "value": "YES"},
+      "message": "Diagnostic paracentesis is indicated — new or worsening ascites should be tapped to exclude spontaneous bacterial peritonitis.",
+      "explanation": "Any patient presenting with new-onset ascites, or with a clinical deterioration on a background of known ascites, should have a diagnostic tap. Spontaneous bacterial peritonitis is common, frequently silent, and a treatable cause of decompensation — it is diagnosed on ascitic fluid, not on clinical signs.",
+      "requiredAction": "Perform a diagnostic ascitic tap and send fluid for cell count and differential, culture, albumin and protein. Do not defer the tap for an asymptomatic-appearing patient — SBP is frequently occult.",
+      "sourceRefs": ["EDLIZ — ascites and its complications: diagnostic tap for new or worsening ascites", "Standard hepatology practice — diagnostic paracentesis to exclude SBP"],
+      "dakRef": {"dak": "EDLIZ", "dakVersion": "2015", "id": "MEDICINE.PROCEDURE_APPROPRIATENESS", "row": "diagnostic paracentesis indication"},
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "No WHO DAK covers adult bedside procedural appropriateness; there is no source statement to adopt.",
+        "nationalStatement": "New or worsening ascites is an indication for a diagnostic tap to exclude spontaneous bacterial peritonitis.",
+        "rationale": "The rule captures the low threshold to tap that EDLIZ and hepatology practice require, because SBP is common and occult and the diagnosis is made only on fluid analysis.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["EDLIZ — ascites management", "Standard hepatology practice — SBP screening"]
+      },
+      "testCases": [
+        {"name": "new or worsening ascites — diagnostic tap indicated", "facts": {"paracentesisConsidered": "YES", "newAscites": "YES"}, "expectFires": true},
+        {"name": "no new or worsening ascites", "facts": {"paracentesisConsidered": "YES", "newAscites": "NO"}, "expectFires": false},
+        {"name": "ascites-change fact absent — cannot assert an indication", "facts": {"paracentesisConsidered": "YES"}, "expectFires": false},
+        {"name": "paracentesis not being considered — rule does not apply", "facts": {"paracentesisConsidered": "NO", "newAscites": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PLEURAL_ASPIRATION_SYMPTOMATIC_EFFUSION",
+      "name": "Pleural aspiration — symptomatic effusion, aspirate",
+      "layer": "PROCEDURE_INDICATION",
+      "ruleType": "INDICATION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["pleuralAspirationConsidered", "symptomaticEffusion"],
+      "appliesWhen": {"input": "pleuralAspirationConsidered", "op": "eq", "value": "YES"},
+      "logic": {"input": "symptomaticEffusion", "op": "eq", "value": "YES"},
+      "message": "Pleural aspiration is indicated — a symptomatic effusion should be aspirated for diagnosis and relief.",
+      "explanation": "A pleural effusion causing breathlessness or other symptoms should be aspirated both to relieve the patient and to characterise the fluid, which is what separates a transudate from an exudate and directs the rest of the work-up. An asymptomatic small effusion may be observed, so symptoms are what tip the balance to a procedure.",
+      "requiredAction": "Perform pleural aspiration under the usual safeguards (image guidance where available) and send fluid for protein, LDH, cell count, Gram stain, culture and cytology as indicated. Assess symptomatic relief and re-image after the procedure.",
+      "sourceRefs": ["EDLIZ — pleural effusion: aspiration for diagnosis and symptom relief", "Standard respiratory procedural practice — pleural aspiration"],
+      "dakRef": {"dak": "EDLIZ", "dakVersion": "2015", "id": "MEDICINE.PROCEDURE_APPROPRIATENESS", "row": "pleural aspiration indication"},
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "No WHO DAK covers adult bedside procedural appropriateness; there is no source statement to adopt.",
+        "nationalStatement": "A symptomatic pleural effusion is an indication for aspiration for both diagnosis and symptom relief.",
+        "rationale": "Symptom presence is the discriminator between observing a small effusion and taking the diagnostic-and-therapeutic step of aspiration, so it is the fact the rule reads.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["EDLIZ — pleural effusion", "Standard respiratory practice — pleural aspiration"]
+      },
+      "testCases": [
+        {"name": "symptomatic effusion — aspirate", "facts": {"pleuralAspirationConsidered": "YES", "symptomaticEffusion": "YES"}, "expectFires": true},
+        {"name": "asymptomatic effusion — no automatic indication", "facts": {"pleuralAspirationConsidered": "YES", "symptomaticEffusion": "NO"}, "expectFires": false},
+        {"name": "symptom fact absent — cannot assert an indication", "facts": {"pleuralAspirationConsidered": "YES"}, "expectFires": false},
+        {"name": "pleural aspiration not being considered — rule does not apply", "facts": {"pleuralAspirationConsidered": "NO", "symptomaticEffusion": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "BEDSIDE_PROCEDURE_ANTICOAG_REVIEW",
+      "name": "Any bedside procedure — anticoagulated or coagulopathic patient needs bleeding-risk review",
+      "layer": "PROCEDURE_INDICATION",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["bedsideProcedureConsidered", "anticoagulated", "coagulopathy"],
+      "appliesWhen": {"input": "bedsideProcedureConsidered", "op": "eq", "value": "YES"},
+      "logic": {"any": [
+        {"input": "anticoagulated", "op": "eq", "value": "YES"},
+        {"input": "coagulopathy", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Bleeding-risk review required before this bedside procedure — the patient is anticoagulated or coagulopathic.",
+      "explanation": "Lumbar puncture, paracentesis and pleural aspiration all breach a compartment where bleeding is hard to see and hard to control. In a patient who is anticoagulated or has a coagulopathy, the procedure needs an explicit bleeding-risk review — withhold or reverse anticoagulation, correct coagulation, or weigh the urgency against the risk — before it goes ahead.",
+      "requiredAction": "Hold and review the bleeding risk: check the coagulation profile and platelet count, decide on withholding or reversing anticoagulation, and document the decision to proceed, defer or correct first. This gate does not itself forbid the procedure — it requires the risk be assessed and recorded.",
+      "sourceRefs": ["EDLIZ — anticoagulation and procedures: assess bleeding risk before invasive procedures", "Standard procedural safety practice — bleeding-risk review before bedside procedures"],
+      "dakRef": {"dak": "EDLIZ", "dakVersion": "2015", "id": "MEDICINE.PROCEDURE_APPROPRIATENESS", "row": "bleeding-risk review before bedside procedures"},
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "No WHO DAK covers adult bedside procedural appropriateness; there is no source statement to adopt.",
+        "nationalStatement": "Any bedside procedure on an anticoagulated or coagulopathic patient requires a documented bleeding-risk review before it proceeds.",
+        "rationale": "This is a cross-procedure safety gate — the bleeding risk is the common hazard of every needle-based bedside procedure, so it is asserted once over all of them rather than repeated per procedure, and it requires review rather than an outright refusal because urgency can still justify proceeding after correction.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["EDLIZ — anticoagulation and invasive procedures", "Standard procedural safety practice — periprocedural bleeding risk"]
+      },
+      "testCases": [
+        {"name": "anticoagulated patient — review required", "facts": {"bedsideProcedureConsidered": "YES", "anticoagulated": "YES", "coagulopathy": "NO"}, "expectFires": true},
+        {"name": "coagulopathic patient — review required", "facts": {"bedsideProcedureConsidered": "YES", "anticoagulated": "NO", "coagulopathy": "YES"}, "expectFires": true},
+        {"name": "no bleeding risk present — no gate", "facts": {"bedsideProcedureConsidered": "YES", "anticoagulated": "NO", "coagulopathy": "NO"}, "expectFires": false},
+        {"name": "anticoagulation fact absent — cannot assert a bleeding risk", "facts": {"bedsideProcedureConsidered": "YES", "coagulopathy": "NO"}, "expectFires": false},
+        {"name": "no bedside procedure considered — rule does not apply", "facts": {"bedsideProcedureConsidered": "NO", "anticoagulated": "YES", "coagulopathy": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PARACENTESIS_SBP_INTERPRETATION",
+      "name": "Ascitic tap interpretation — neutrophils at or above 250/mm3 means SBP",
+      "layer": "PROCEDURE_INDICATION",
+      "ruleType": "INTERPRETATION",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["paracentesisPerformed", "asciticPmnPerMm3"],
+      "appliesWhen": {"input": "paracentesisPerformed", "op": "eq", "value": "YES"},
+      "logic": {"input": "asciticPmnPerMm3", "op": "gte", "value": 250},
+      "message": "Ascitic neutrophil count is at or above 250/mm3 — treat as spontaneous bacterial peritonitis.",
+      "explanation": "Spontaneous bacterial peritonitis is diagnosed on the ascitic polymorphonuclear (neutrophil) count, not on culture, which is often negative and always slower. A count of 250 cells/mm3 or more is the threshold at which empirical treatment must start, regardless of how well the patient appears — the interpretation of the fluid is what triggers therapy.",
+      "requiredAction": "Start empirical antibiotics for SBP immediately (per the national regimen) and consider albumin where indicated. Do not wait for culture before treating a neutrophil count at or above the threshold.",
+      "sourceRefs": ["EDLIZ — spontaneous bacterial peritonitis: ascitic neutrophil count 250/mm3 threshold for treatment", "Standard hepatology practice — SBP diagnosis on ascitic PMN count"],
+      "dakRef": {"dak": "EDLIZ", "dakVersion": "2015", "id": "MEDICINE.PROCEDURE_APPROPRIATENESS", "row": "ascitic tap SBP interpretation"},
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "No WHO DAK covers adult bedside procedural appropriateness; there is no source statement to adopt.",
+        "nationalStatement": "An ascitic polymorphonuclear count at or above 250 cells/mm3 diagnoses spontaneous bacterial peritonitis and mandates empirical treatment, independent of culture.",
+        "rationale": "This pack owns interpretation as well as indication — the tap the paracentesis rule triggers is only useful if the result is read correctly, so the SBP threshold is encoded as a numeric interpretation rule. The exact cut-off is flagged in sourceVerification for confirmation against the ratified text.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["EDLIZ — spontaneous bacterial peritonitis", "Standard hepatology practice — SBP neutrophil threshold"]
+      },
+      "testCases": [
+        {"name": "neutrophils 400/mm3 — SBP, treat", "facts": {"paracentesisPerformed": "YES", "asciticPmnPerMm3": 400}, "expectFires": true},
+        {"name": "neutrophils 250/mm3 — at the threshold, SBP", "facts": {"paracentesisPerformed": "YES", "asciticPmnPerMm3": 250}, "expectFires": true},
+        {"name": "neutrophils 100/mm3 — below threshold, not SBP on count", "facts": {"paracentesisPerformed": "YES", "asciticPmnPerMm3": 100}, "expectFires": false},
+        {"name": "neutrophil count not available — cannot interpret", "facts": {"paracentesisPerformed": "YES"}, "expectFires": false},
+        {"name": "no tap performed — nothing to interpret", "facts": {"paracentesisPerformed": "NO", "asciticPmnPerMm3": 400}, "expectFires": false}
+      ]
+    }
+  ]
+}
