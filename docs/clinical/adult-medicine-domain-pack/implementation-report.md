@@ -241,10 +241,16 @@ Confidential lane wired (HIV care and PrEP confidential; TB and TB-prevention FU
 gap stated. Runtime-proven: 79 pct migrations apply in version order on a clean boot (V108/V109/V110),
 10/10 constraint bites; 135 CKP content fixtures across eight packs green.
 
-**One integration seam is tracked outside the DAK register (not a standards gap):** the soft data
-link from an HIV_CARE enrolment to the RMNP pregnancy episode, and ownership of the exposed-infant
-record. It crosses into the RMNP lane and is pending their confirmation of the reference — proposed,
-not assumed. The PMTCT decision logic is shipped and does not depend on it.
+**The PMTCT cross-lane data link is built and proven** (V111, `pct_programme_enrolments.pregnancy_episode_id`).
+The RMNP lane accepted the seam in detail: a nullable, read-only soft FK from the HIV_CARE enrolment
+to `pct.pct_pregnancy_episodes(pregnancy_episode_id)` — the pointer lives on the HIV side only, never
+a back-reference on the maternal spine, never written back, and one-directional so the maternity
+summary cannot infer HIV status from the link's existence. V059 (< V111) creates the target, so the
+FK is safe in this pack's band; runtime-proven — 81 migrations apply in clean-boot order, the FK
+refuses a dangling episode and is convalidated. The infant side is this pack's: an HIV_CARE enrolment
+on the infant CPID, triggered by RMNP's birth-time `pct_newborn_birth_records.hiv_exposure` flag,
+owning prophylaxis + EID (no new maternal/newborn record). At RMNP's request the migration is shared
+for their review before it goes to canonical.
 
 **One live proof outstanding, unchanged:** the BFF ingress tokenless negative control is unprovable
 on preview (auth disabled estate-wide, `allow-anonymous=true`); positive ingress is green.

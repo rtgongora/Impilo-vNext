@@ -121,6 +121,8 @@ public class ProgrammeEnrolmentController {
         m.put("exit_reason", e.getExitReason());
         m.put("anchor_problem_id", e.getAnchorProblemId().toString());
         m.put("episode_id", e.getEpisodeId() == null ? null : e.getEpisodeId().toString());
+        m.put("pregnancy_episode_id",
+                e.getPregnancyEpisodeId() == null ? null : e.getPregnancyEpisodeId().toString());
         m.put("programme_number", e.getProgrammeNumber());
         m.put("enrolled_on", e.getEnrolledOn() != null ? e.getEnrolledOn().toString() : null);
         m.put("exit_on", e.getExitOn() != null ? e.getExitOn().toString() : null);

@@ -50,6 +50,14 @@ public class ProgrammeEnrolmentEntity {
     @Column(name = "episode_id")
     private UUID episodeId;
 
+    /**
+     * PMTCT seam (V111): read-only soft link to the RMNP pregnancy episode this HIV_CARE enrolment
+     * relates to. Set on the HIV side only; never written back to the episode. HIV sensitivity
+     * travels with this enrolment, not with the pregnancy episode.
+     */
+    @Column(name = "pregnancy_episode_id")
+    private UUID pregnancyEpisodeId;
+
     @Column(name = "programme_number")
     private String programmeNumber;
 
@@ -116,6 +124,9 @@ public class ProgrammeEnrolmentEntity {
 
     public UUID getEpisodeId() { return episodeId; }
     public void setEpisodeId(UUID episodeId) { this.episodeId = episodeId; }
+
+    public UUID getPregnancyEpisodeId() { return pregnancyEpisodeId; }
+    public void setPregnancyEpisodeId(UUID pregnancyEpisodeId) { this.pregnancyEpisodeId = pregnancyEpisodeId; }
 
     public String getProgrammeNumber() { return programmeNumber; }
     public void setProgrammeNumber(String programmeNumber) { this.programmeNumber = programmeNumber; }

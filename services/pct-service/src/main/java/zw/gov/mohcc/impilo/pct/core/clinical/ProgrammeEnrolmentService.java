@@ -159,6 +159,13 @@ public class ProgrammeEnrolmentService {
             e.setEpisodeId(UUID.fromString(episodeId));
         }
 
+        // PMTCT seam: a read-only soft link to the RMNP pregnancy episode this enrolment relates to.
+        // We store the id only — this pack never writes back to the pregnancy episode.
+        String pregnancyEpisodeId = str(body.get("pregnancy_episode_id"), body.get("pregnancyEpisodeId"));
+        if (pregnancyEpisodeId != null) {
+            e.setPregnancyEpisodeId(UUID.fromString(pregnancyEpisodeId));
+        }
+
         String enrolledOn = str(body.get("enrolled_on"), body.get("enrolledOn"));
         e.setEnrolledOn(enrolledOn == null ? LocalDate.now() : LocalDate.parse(enrolledOn));
 
