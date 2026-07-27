@@ -16,12 +16,16 @@ if [[ -n "$DELETED_ROUTES" ]]; then
   fi
 fi
 
+# --check reports drift without writing. Regenerating in place would dirty the
+# tracked docs in every peer session sharing this checkout, and the old form
+# then warned about the date-only diff it had just created itself.
 gate_regen() {
-  node scripts/frontend/generate-parity-docs.mjs >/dev/null 2>&1 || true
-  if git diff --quiet -- docs/frontend/FRONTEND_IMPLEMENTATION_STATUS.md 2>/dev/null; then
+  local out
+  if out="$(node scripts/frontend/generate-parity-docs.mjs --check 2>&1)"; then
     guard_pass "frontend parity docs in sync"
   else
     guard_warn "frontend parity docs drift — run node scripts/frontend/generate-parity-docs.mjs"
+    echo "$out" | head -12
   fi
 }
 gate_regen
