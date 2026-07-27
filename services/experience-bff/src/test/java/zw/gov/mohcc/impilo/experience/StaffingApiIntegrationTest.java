@@ -92,7 +92,7 @@ class StaffingApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(greaterThanOrEqualTo(1)))
-                .andExpect(jsonPath("$.data[0].type").value("OnCallAssignment"));
+                .andExpect(jsonPath("$.data[0].type").value("on-call-assignment"));
     }
 
     @Test
@@ -117,12 +117,12 @@ class StaffingApiIntegrationTest {
         MvcResult created = mockMvc.perform(post("/internal/v1/staffing/on-call/swaps")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
-                                "facility_id", FACILITY_ID,
-                                "requestor_name", "Dr. A",
-                                "requestee_name", "Dr. B",
-                                "original_date", "2026-05-01",
-                                "swap_date", "2026-05-02",
-                                "specialty", "Test Specialty"
+                                // Swaps are keyed on the rostered shift and the colleague asked to
+                                // cover it, not on typed names — two staff share a name, and a swap
+                                // changes who is clinically accountable for a window.
+                                "requesting_shift_id", "a1b2c3d4-0001-4000-8000-0000000000a1",
+                                "requested_profile_id", "a1b2c3d4-0001-4000-8000-0000000000b2",
+                                "reason", "Test cover"
                         )))
                         .header("X-Tenant-ID", TENANT)
                         .header("X-Pod-ID", POD)

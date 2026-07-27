@@ -2,18 +2,19 @@
 
 import React from "react";
 import {
-  ageTickLabel,
-  ageTicks,
+  axisTickLabel,
+  axisTicks,
   buildScale,
   detectDownwardCrossing,
   polylinePoints,
   valueTicks,
+  type GrowthAxis,
   type PlottedMeasurement,
   type ReferenceCurve,
 } from "./growth-curves";
 
 /**
- * The WHO growth chart, plotted.
+ * The growth chart, plotted against whichever standard the child is read on.
  *
  * The growth page has shown z-scores in a table since the measurements existed, and a
  * table is the wrong shape for the question a growth chart answers. A clinician needs to
@@ -46,6 +47,16 @@ export interface GrowthStandardsChartProps {
   unit: string;
   curves: ReferenceCurve[];
   measurements: PlottedMeasurement[];
+  /** What the horizontal axis measures. Defaults to age in days. */
+  axis?: GrowthAxis;
+  /**
+   * The name of the standard being plotted. Shown on the chart itself, not merely nearby:
+   * a reader must be able to tell from the drawing which chart these curves are, and the
+   * Fenton licence requires its label to appear conspicuously wherever its data is drawn.
+   */
+  standardLabel?: string | null;
+  /** Citation the standard's licence obliges the surface to carry. */
+  citation?: string | null;
   className?: string;
   "data-testid"?: string;
 }
@@ -55,11 +66,14 @@ export function GrowthStandardsChart({
   unit,
   curves,
   measurements,
+  axis = "age_days",
+  standardLabel,
+  citation,
   className = "",
   "data-testid": testId = "growth-standards-chart",
 }: GrowthStandardsChartProps) {
   const ordered = React.useMemo(
-    () => [...measurements].sort((a, b) => a.ageDays - b.ageDays),
+    () => [...measurements].sort((a, b) => a.x - b.x),
     [measurements],
   );
 
@@ -90,6 +104,11 @@ export function GrowthStandardsChart({
     <figure className={className} data-testid={testId}>
       <svg viewBox={`0 0 ${VB_W} ${VB_H}`} role="img" aria-label={`${title} growth chart`} className="w-full">
         <title>{title}</title>
+        {standardLabel && (
+          <text x={ML} y={MT - 8} className="fill-muted-foreground" fontSize={10} data-testid="growth-standard-label">
+            {standardLabel}
+          </text>
+        )}
 
         {/* Axes */}
         <line x1={ML} y1={MT} x2={ML} y2={VB_H - MB} className="stroke-border" strokeWidth={1} />
@@ -118,16 +137,16 @@ export function GrowthStandardsChart({
           </g>
         ))}
 
-        {ageTicks(scale).map((ageDays) => (
+        {axisTicks(scale).map((position) => (
           <text
-            key={`x-${ageDays}`}
-            x={scale.xForAgeDays(ageDays)}
+            key={`x-${position}`}
+            x={scale.xFor(position)}
             y={VB_H - MB + 14}
             textAnchor="middle"
             className="fill-muted-foreground"
             fontSize={10}
           >
-            {ageTickLabel(ageDays)}
+            {axisTickLabel(position, axis)}
           </text>
         ))}
 
@@ -171,15 +190,15 @@ export function GrowthStandardsChart({
         )}
         {ordered.map((point, index) => (
           <circle
-            key={`point-${point.ageDays}-${index}`}
-            cx={scale.xForAgeDays(point.ageDays)}
+            key={`point-${point.x}-${index}`}
+            cx={scale.xFor(point.x)}
             cy={scale.yForValue(point.value)}
             r={3.5}
             className="fill-foreground"
             data-testid={`growth-point-${index}`}
           >
             <title>
-              {`${point.value} ${unit} at ${ageTickLabel(point.ageDays)}`}
+              {`${point.value} ${unit} at ${axisTickLabel(point.x, axis)}`}
               {typeof point.zScore === "number" ? ` (${point.zScore.toFixed(2)} SD)` : ""}
             </title>
           </circle>
@@ -189,8 +208,13 @@ export function GrowthStandardsChart({
       <figcaption className="mt-2 space-y-1 text-xs">
         {latest && (
           <p className="text-muted-foreground" data-testid="growth-latest-summary">
-            Latest: {latest.value} {unit} at {ageTickLabel(latest.ageDays)}
+            Latest: {latest.value} {unit} at {axisTickLabel(latest.x, axis)}
             {typeof latest.zScore === "number" ? ` — ${latest.zScore.toFixed(2)} SD` : " — not scored"}
+          </p>
+        )}
+        {citation && (
+          <p className="text-muted-foreground" data-testid="growth-standard-citation">
+            {citation}
           </p>
         )}
         {faltering.crossed && (

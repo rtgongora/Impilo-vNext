@@ -1,5 +1,5 @@
 /**
- * Reference-curve geometry for the WHO growth chart.
+ * Reference-curve geometry for a growth chart.
  *
  * The z-scores themselves are computed server-side and stored with the measurement, so
  * they carry the standard and engine version that produced them and cannot drift. What
@@ -8,17 +8,27 @@
  * whether the trajectory is falling away or tracking steadily, which is the question a
  * growth chart exists to answer.
  *
+ * The horizontal axis is not always age. A child born preterm is read against the Fenton
+ * 2013 chart, whose axis is completed postmenstrual weeks, so the geometry here is written
+ * in terms of a neutral axis position and the axis kind travels with the data. Labelling
+ * a postmenstrual week as though it were a day of age would misplace every point on the
+ * chart by the length of a pregnancy.
+ *
  * These helpers are pure and exported so the scale arithmetic can be unit-tested without
  * rendering, following the pattern set by the partograph plot.
  */
 
-/** The z-score curves a WHO chart conventionally shows. */
+/** The z-score curves a growth chart conventionally shows. */
 export const REFERENCE_Z_SCORES = [-3, -2, 0, 2, 3] as const;
 
 export type ReferenceZ = (typeof REFERENCE_Z_SCORES)[number];
 
+/** What the horizontal axis measures, as declared by the standard being plotted. */
+export type GrowthAxis = "age_days" | "postmenstrual_weeks";
+
 export interface CurvePoint {
-  ageDays: number;
+  /** Position on the standard's own axis: days of age, or completed postmenstrual weeks. */
+  x: number;
   value: number;
 }
 
@@ -28,17 +38,17 @@ export interface ReferenceCurve {
 }
 
 export interface PlottedMeasurement {
-  ageDays: number;
+  x: number;
   value: number;
   zScore?: number | null;
   measuredAt?: string;
 }
 
 export interface ChartScale {
-  xForAgeDays: (ageDays: number) => number;
+  xFor: (x: number) => number;
   yForValue: (value: number) => number;
-  minAgeDays: number;
-  maxAgeDays: number;
+  minX: number;
+  maxX: number;
   minValue: number;
   maxValue: number;
 }
@@ -55,22 +65,22 @@ export function buildScale(
   measurements: PlottedMeasurement[],
   box: { left: number; right: number; top: number; bottom: number; width: number; height: number },
 ): ChartScale {
-  const ages: number[] = [];
+  const positions: number[] = [];
   const values: number[] = [];
 
   curves.forEach((curve) =>
     curve.points.forEach((point) => {
-      ages.push(point.ageDays);
+      positions.push(point.x);
       values.push(point.value);
     }),
   );
   measurements.forEach((m) => {
-    ages.push(m.ageDays);
+    positions.push(m.x);
     values.push(m.value);
   });
 
-  const minAgeDays = ages.length ? Math.min(...ages) : 0;
-  const maxAgeDays = ages.length ? Math.max(...ages) : 1;
+  const minX = positions.length ? Math.min(...positions) : 0;
+  const maxX = positions.length ? Math.max(...positions) : 1;
   const rawMin = values.length ? Math.min(...values) : 0;
   const rawMax = values.length ? Math.max(...values) : 1;
 
@@ -80,48 +90,50 @@ export function buildScale(
   const minValue = rawMin - pad;
   const maxValue = rawMax + pad;
 
-  const ageSpan = maxAgeDays - minAgeDays || 1;
+  const xSpan = maxX - minX || 1;
   const valueSpan = maxValue - minValue || 1;
   const plotWidth = box.width - box.left - box.right;
   const plotHeight = box.height - box.top - box.bottom;
 
   return {
-    minAgeDays,
-    maxAgeDays,
+    minX,
+    maxX,
     minValue,
     maxValue,
-    xForAgeDays: (ageDays) => box.left + ((ageDays - minAgeDays) / ageSpan) * plotWidth,
+    xFor: (x) => box.left + ((x - minX) / xSpan) * plotWidth,
     // SVG y grows downward; a larger measurement must sit higher on the chart.
     yForValue: (value) => box.top + plotHeight - ((value - minValue) / valueSpan) * plotHeight,
   };
 }
 
-export function polylinePoints(
-  points: { ageDays: number; value: number }[],
-  scale: ChartScale,
-): string {
+export function polylinePoints(points: { x: number; value: number }[], scale: ChartScale): string {
   return points
-    .map((point) => `${scale.xForAgeDays(point.ageDays).toFixed(1)},${scale.yForValue(point.value).toFixed(1)}`)
+    .map((point) => `${scale.xFor(point.x).toFixed(1)},${scale.yForValue(point.value).toFixed(1)}`)
     .join(" ");
 }
 
-/** Age tick labels in the unit a clinician thinks in at that age. */
-export function ageTickLabel(ageDays: number): string {
-  if (ageDays < 60) {
-    return `${Math.round(ageDays)}d`;
+/** Axis tick labels in the unit a clinician thinks in at that point on the chart. */
+export function axisTickLabel(x: number, axis: GrowthAxis = "age_days"): string {
+  if (axis === "postmenstrual_weeks") {
+    // Preterm care counts in weeks since the last menstrual period, and says so, because
+    // "30 weeks" means something entirely different from "30 weeks old".
+    return `${Math.round(x)}w PMA`;
   }
-  if (ageDays < 730) {
-    return `${Math.round(ageDays / 30.4375)}m`;
+  if (x < 60) {
+    return `${Math.round(x)}d`;
+  }
+  if (x < 730) {
+    return `${Math.round(x / 30.4375)}m`;
   }
   // Round to one decimal, then drop a trailing ".0": a two-year-old is "2y", not "2.0y".
-  const years = Math.round((ageDays / 365.25) * 10) / 10;
+  const years = Math.round((x / 365.25) * 10) / 10;
   return Number.isInteger(years) ? `${years}y` : `${years.toFixed(1)}y`;
 }
 
-export function ageTicks(scale: ChartScale, count = 6): number[] {
-  const span = scale.maxAgeDays - scale.minAgeDays;
-  if (span <= 0) return [scale.minAgeDays];
-  return Array.from({ length: count }, (_, i) => scale.minAgeDays + (span * i) / (count - 1));
+export function axisTicks(scale: ChartScale, count = 6): number[] {
+  const span = scale.maxX - scale.minX;
+  if (span <= 0) return [scale.minX];
+  return Array.from({ length: count }, (_, i) => scale.minX + (span * i) / (count - 1));
 }
 
 export function valueTicks(scale: ChartScale, count = 5): number[] {
@@ -144,7 +156,7 @@ export function detectDownwardCrossing(measurements: PlottedMeasurement[]): {
 } {
   const scored = measurements
     .filter((m) => typeof m.zScore === "number")
-    .sort((a, b) => a.ageDays - b.ageDays);
+    .sort((a, b) => a.x - b.x);
   if (scored.length < 2) {
     return { crossed: false };
   }

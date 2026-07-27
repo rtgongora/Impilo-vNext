@@ -97,6 +97,15 @@ public class GrowthMeasurementEntity {
     @Column(name = "gestational_age_weeks")
     private Integer gestationalAgeWeeks;
 
+    @Column(name = "gestational_age_source")
+    private String gestationalAgeSource;
+
+    @Column(name = "postmenstrual_age_weeks")
+    private Integer postmenstrualAgeWeeks;
+
+    @Column(name = "scoring_gaps", columnDefinition = "jsonb")
+    private String scoringGaps;
+
     @Column(name = "weight_for_age_z")
     private BigDecimal weightForAgeZ;
 
@@ -328,6 +337,30 @@ public class GrowthMeasurementEntity {
 
     public void setGestationalAgeWeeks(Integer gestationalAgeWeeks) {
         this.gestationalAgeWeeks = gestationalAgeWeeks;
+    }
+
+    public String getGestationalAgeSource() {
+        return gestationalAgeSource;
+    }
+
+    public void setGestationalAgeSource(String gestationalAgeSource) {
+        this.gestationalAgeSource = gestationalAgeSource;
+    }
+
+    public Integer getPostmenstrualAgeWeeks() {
+        return postmenstrualAgeWeeks;
+    }
+
+    public void setPostmenstrualAgeWeeks(Integer postmenstrualAgeWeeks) {
+        this.postmenstrualAgeWeeks = postmenstrualAgeWeeks;
+    }
+
+    public String getScoringGaps() {
+        return scoringGaps;
+    }
+
+    public void setScoringGaps(String scoringGaps) {
+        this.scoringGaps = scoringGaps;
     }
 
     public BigDecimal getWeightForAgeZ() {
