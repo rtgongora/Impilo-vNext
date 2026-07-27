@@ -23,6 +23,12 @@
   "roles": {
     "realm": [
       {
+        "name": "NDILA_VIEWER",
+        "description": "Read-only geospatial access to ndila-service (geocode, search, routes, distance-matrix, ETA). Scoped service grant held by service-account-impilo-backend so the BFF can compose the public find-care lane; not a person role and deliberately not a member of any composite.",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "REGULATOR",
         "description": "Regulator / council reviewer (read regulated categories where statute permits; statutory investigation)",
         "composite": false,
@@ -1158,6 +1164,21 @@
             "jsonType.label": "String",
             "usermodel.clientRoleMapping.clientId": ""
           }
+        },
+        {
+          "_comment": "Without this the realm roles granted above never reach the token: this realm has no built-in 'roles' client scope, so nothing emits realm_access.roles. Services that authorize on realm roles (ndila's SecurityConfig reads realm_access.roles) would see an empty authority set and deny every service-originated call — a grant that looks applied but is inert. Mirrors the 'client roles' mapper above, which was added for the identical reason (resource_access was empty).",
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "false",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
         }
       ]
     }
@@ -1167,6 +1188,9 @@
       "username": "service-account-impilo-backend",
       "enabled": true,
       "serviceAccountClientId": "impilo-backend",
+      "realmRoles": [
+        "NDILA_VIEWER"
+      ],
       "clientRoles": {
         "realm-management": [
           "manage-users",
