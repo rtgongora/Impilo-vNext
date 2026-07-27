@@ -54,9 +54,9 @@
     {
       "standardId": "PS.CAPACITY_ASSENT_GUARDIAN",
       "decision": "DEFERRED",
-      "plannedWave": "P5",
-      "reason": "Guardian consent exists in the paediatric context but capacity assessment, child assent as distinct from guardian consent, lawful substitute decision-making, refusal and withdrawal are absent. Adolescent confidentiality is blocked by a platform defect rather than by effort: TSHEPO's SPECIALLY_PROTECTED sensitivity class is decorative — a single production reference in ResourceSensitivityClassifier collapses it into FULL_IDENTIFIED_CLINICAL, so it shares a visibility tier with ordinary clinical data. Collecting adolescent-confidential procedure consent into a record that only looks protected is worse than not collecting it.",
-      "revisitCondition": "P5 ships capacity, assent, refusal and withdrawal; the adolescent-confidentiality portion additionally requires SPECIALLY_PROTECTED to produce a distinct visibility tier, and P5 ships an explicit PARTIAL saying so if it does not."
+      "plannedWave": "P5 (partial) — closure owned by the TSHEPO trust lane",
+      "reason": "P5 SHIPPED the substance of this standard: capacity assessment with a three-valued outcome (not-assessed is not has-capacity), guardian consent requiring a recorded basis, child assent as an act distinct from guardian consent so a child's refusal is representable, substitute decision-making, refusal and withdrawal as an actor-and-time pair. What remains PARTIAL is adolescent confidentiality alone, and for a platform reason rather than effort: SPECIALLY_PROTECTED now has a real classifier and a protected-lane marker check, but still resolves to the same DataVisibilityTier as ordinary clinical data (ResourceSensitivityClassifier line 93). A separate lane ending in a shared tier is a label, not a boundary — so an adolescent told their consent is confidential would be told something the system does not keep.",
+      "revisitCondition": "SPECIALLY_PROTECTED resolves to a distinct DataVisibilityTier, caregiver context is a first-class PDP input, and both access and refusal are audited. Trust-plane work, not this programme's to complete."
     },
     {
       "standardId": "MED.DEVICE.UDI_TRACEABILITY",
