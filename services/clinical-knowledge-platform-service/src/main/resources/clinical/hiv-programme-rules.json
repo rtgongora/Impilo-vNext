@@ -1,0 +1,168 @@
+{
+  "packId": "hiv-programme-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "HIV care — viral-load monitoring, treatment-failure recognition and advanced disease",
+    "primarySource": "WHO Consolidated guidelines on HIV prevention, testing, treatment, service delivery and monitoring (2021), and the WHO SMART guidelines / DAK for HIV",
+    "why": "A person on ART is well only for as long as the virus stays suppressed, and treatment failure is silent — a rising viral load produces no symptom until immune collapse is well advanced. The programme's job is to catch it on a schedule and act on it in a defined sequence: repeat with enhanced adherence support, then switch line if it persists. Getting that sequence wrong either switches a patient off a working regimen on one high reading, or leaves them failing on a dead one.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO HIV DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json — the repository vendors ANC, PNC, family planning and SMBP only. These rules were authored against the published 2021 consolidated guidelines rather than extracted from a pinned machine-readable artefact, which is the departure from the repository's own rule that DAK content is ingested, not paraphrased. Every rule names the recommendation it encodes so the eventual check against the vendored primary text is a comparison, not a rewrite. The 1000 copies/mL failure threshold and the 50 copies/mL suppression target are WHO's; both are reproduced here and must be confirmed against the ratified national ART guideline, because Zimbabwe has at times set a tighter operational threshold."
+    }
+  },
+  "rules": [
+    {
+      "code": "HIV_VL_SUPPRESSED",
+      "name": "Viral load suppressed",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "VIRAL_LOAD_INTERPRETATION",
+      "severity": "LOW",
+      "requiredInputs": ["viralLoadCopies"],
+      "logic": {"input": "viralLoadCopies", "op": "lt", "value": 50},
+      "message": "Virally suppressed. The regimen is working.",
+      "explanation": "A plasma viral load below 50 copies/mL is the target of ART and indicates full suppression.",
+      "requiredAction": "Continue the current regimen and reinforce adherence. Repeat viral load in 12 months.",
+      "monitoringInstruction": "Next routine viral load in 12 months.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — routine viral-load monitoring"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.VL.MONITORING", "row": "suppressed <50"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "A viral load below 50 copies/mL indicates viral suppression; repeat routine monitoring at 12 months.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]
+      },
+      "testCases": [
+        {"name": "undetectable is suppressed", "facts": {"viralLoadCopies": 0}, "expectFires": true},
+        {"name": "40 copies is suppressed", "facts": {"viralLoadCopies": 40}, "expectFires": true},
+        {"name": "200 copies is not suppressed", "facts": {"viralLoadCopies": 200}, "expectFires": false},
+        {"name": "no result never reads as suppressed", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "HIV_VL_LOW_LEVEL_VIRAEMIA",
+      "name": "Low-level viraemia",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "VIRAL_LOAD_INTERPRETATION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["viralLoadCopies"],
+      "logic": {"all": [
+        {"input": "viralLoadCopies", "op": "gte", "value": 50},
+        {"input": "viralLoadCopies", "op": "lt", "value": 1000}
+      ]},
+      "message": "Low-level viraemia (50–999 copies/mL).",
+      "explanation": "Detectable virus below the 1000 copies/mL failure threshold. Often reflects adherence lapses and predicts failure if unaddressed.",
+      "requiredAction": "Assess and support adherence, look for drug interactions, and repeat viral load in 3 months rather than switching regimen now.",
+      "monitoringInstruction": "Repeat viral load in 3 months.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — low-level viraemia"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.VL.MONITORING", "row": "low-level 50-999"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Viral load 50–999 copies/mL is low-level viraemia; assess adherence and repeat, do not switch on this alone.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]
+      },
+      "testCases": [
+        {"name": "50 is low-level", "facts": {"viralLoadCopies": 50}, "expectFires": true},
+        {"name": "800 is low-level", "facts": {"viralLoadCopies": 800}, "expectFires": true},
+        {"name": "49 is suppressed not low-level", "facts": {"viralLoadCopies": 49}, "expectFires": false},
+        {"name": "1000 is failure not low-level", "facts": {"viralLoadCopies": 1000}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "HIV_VL_UNSUPPRESSED",
+      "name": "Suspected treatment failure — viral load at or above 1000",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "TREATMENT_FAILURE",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "interruptive": true,
+      "requiredInputs": ["viralLoadCopies"],
+      "logic": {"input": "viralLoadCopies", "op": "gte", "value": 1000},
+      "message": "Viral load ≥1000 copies/mL — suspected treatment failure.",
+      "explanation": "A single viral load at or above 1000 copies/mL is suspected, not confirmed, treatment failure. Switching a regimen on one reading risks abandoning a working regimen for an adherence problem; leaving it risks resistance accumulating on a failing one.",
+      "requiredAction": "Start enhanced adherence counselling now and repeat the viral load in 3 months. Do not switch the regimen on this single result.",
+      "monitoringInstruction": "Enhanced adherence counselling, repeat viral load in 3 months.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — treatment failure and switching"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.TREATMENT_FAILURE", "row": "VL>=1000 suspected"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Viral load ≥1000 copies/mL requires enhanced adherence counselling and a repeat viral load before a switch is considered.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]
+      },
+      "testCases": [
+        {"name": "1000 is suspected failure", "facts": {"viralLoadCopies": 1000}, "expectFires": true},
+        {"name": "50000 is suspected failure", "facts": {"viralLoadCopies": 50000}, "expectFires": true},
+        {"name": "999 is not failure", "facts": {"viralLoadCopies": 999}, "expectFires": false},
+        {"name": "no result never reads as failure", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "HIV_CONFIRMED_FAILURE",
+      "name": "Confirmed treatment failure — switch regimen line",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "TREATMENT_FAILURE",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "interruptive": true,
+      "requiredInputs": ["repeatViralLoadCopies", "enhancedAdherenceCompleted"],
+      "appliesWhen": {"input": "enhancedAdherenceCompleted", "op": "eq", "value": "TRUE"},
+      "logic": {"input": "repeatViralLoadCopies", "op": "gte", "value": 1000},
+      "message": "Confirmed treatment failure after enhanced adherence — switch regimen line.",
+      "explanation": "A repeat viral load still ≥1000 copies/mL after a completed course of enhanced adherence counselling confirms treatment failure. Adherence has been addressed; the regimen is the problem.",
+      "requiredAction": "Switch to the next ART line per national guidance and refer for resistance assessment where available.",
+      "monitoringInstruction": "Viral load 6 months after the switch.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — confirmed failure and switching"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.TREATMENT_FAILURE", "row": "confirmed switch"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "A repeat viral load ≥1000 copies/mL after enhanced adherence support confirms failure; switch regimen.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]
+      },
+      "testCases": [
+        {"name": "still high after adherence is confirmed failure", "facts": {"enhancedAdherenceCompleted": "TRUE", "repeatViralLoadCopies": 3000}, "expectFires": true},
+        {"name": "resuppressed after adherence is not failure", "facts": {"enhancedAdherenceCompleted": "TRUE", "repeatViralLoadCopies": 20}, "expectFires": false},
+        {"name": "adherence not yet done — rule does not apply", "facts": {"enhancedAdherenceCompleted": "FALSE", "repeatViralLoadCopies": 3000}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "HIV_ADVANCED_DISEASE",
+      "name": "Advanced HIV disease",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "ADVANCED_DISEASE",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "requiredInputs": ["cd4Absolute", "whoClinicalStage"],
+      "logic": {"any": [
+        {"input": "cd4Absolute", "op": "lt", "value": 200},
+        {"input": "whoClinicalStage", "op": "gte", "value": 3}
+      ]},
+      "message": "Advanced HIV disease (CD4 <200 or WHO stage 3/4).",
+      "explanation": "A CD4 below 200 cells/µL or WHO clinical stage 3 or 4 marks advanced disease and a high risk of opportunistic infection and death, which changes management immediately.",
+      "requiredAction": "Provide the advanced-disease package: screen for TB (including urine LF-LAM) and cryptococcal antigen, start cotrimoxazole prophylaxis, and ensure prompt ART.",
+      "monitoringInstruction": "Repeat CD4 at 6 months to confirm immune recovery.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — advanced HIV disease package"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.ADVANCED_DISEASE", "row": "AHD package"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "CD4 <200 or WHO stage 3/4 defines advanced HIV disease and triggers the AHD package.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]
+      },
+      "testCases": [
+        {"name": "CD4 150 is advanced disease", "facts": {"cd4Absolute": 150, "whoClinicalStage": 1}, "expectFires": true},
+        {"name": "stage 4 is advanced disease", "facts": {"cd4Absolute": 500, "whoClinicalStage": 4}, "expectFires": true},
+        {"name": "CD4 500 stage 1 is not", "facts": {"cd4Absolute": 500, "whoClinicalStage": 1}, "expectFires": false}
+      ]
+    }
+  ]
+}
