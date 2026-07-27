@@ -511,6 +511,60 @@ class PolicyEngineTest {
         assertEquals("POLICY_DENY", response.errorCode());
     }
 
+    // ════════════════════════════════════════════════════════════════════
+    // Unknown condition key — the "differently active" root fix.
+    // A key evaluateConditions does not implement is a NON-MATCH, not the old silent fall-through
+    // to `return true`. Both tests discriminate old from new: on the old engine the unknown key was
+    // ignored, so the ALLOW granted and the DENY fired; the fix flips both to a non-match.
+    // ════════════════════════════════════════════════════════════════════
+
+    @Test
+    @DisplayName("unknown condition key on an ALLOW grants nothing (fail-closed, not silently ignored)")
+    void evaluate_unknownConditionKey_onAllow_isNotGranted() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        // 'deny_operational_lanes' is not a key the engine implements. The coarse tuple (PROVIDER /
+        // CLINICIAN / POST / TREATMENT / decision) matches the request, so the ONLY thing that can
+        // stop the grant is the unknown key. The old engine ignored it and granted; the fix denies.
+        PolicyRuleEntity rule = buildAllowRuleWithConditions(
+                "decision", "CLINICIAN", "POST", "{\"deny_operational_lanes\": true}");
+        when(policyCacheService.getActiveRulesForResource(TENANT_ID, "decision"))
+                .thenReturn(List.of(rule));
+
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/v1/cadre/decision", "decision", "POST:/v1/cadre/decision", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "An ALLOW carrying an unimplemented condition key must not grant — a rule the engine "
+                + "cannot honour is a non-match, not a silent pass");
+        assertEquals("NO_ALLOW_RULE", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("unknown condition key on a DENY denies nothing (fail-narrow — cannot swallow the ALLOWs beside it)")
+    void evaluate_unknownConditionKey_onDeny_doesNotDeny() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        // rom-hpa-no-operational-access's original shape: a DENY reading "deny the operational lanes"
+        // that, with the key unimplemented, the old engine evaluated as "deny everything" — and
+        // DENY-wins swallowed the ALLOW seeded beside it. The fix makes the unknown-key DENY a
+        // non-match, so the ALLOW for the role stands.
+        PolicyRuleEntity denyRule = buildDenyRule(null, null, "CLINICIAN", null, null);
+        denyRule.setConditions("{\"deny_operational_lanes\": true}");
+        PolicyRuleEntity allowRule = buildAllowRule(null, null, "CLINICIAN", null, null);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(denyRule, allowRule));
+
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/v1/wellness/feed", "feed", "GET:/v1/wellness/feed", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "A DENY carrying an unimplemented condition key must not fire — otherwise it denies "
+                + "more than it reads and DENY-wins swallows the ALLOWs seeded beside it");
+    }
+
     // ── First-class WORK_CONTEXT dimensions (Phase D) ──────────────────────
     private static AuthzInternalRequest dimRequest(String path, String resourceType, String action,
             List<String> roles, String departmentId, String providerId, String workflowState,
