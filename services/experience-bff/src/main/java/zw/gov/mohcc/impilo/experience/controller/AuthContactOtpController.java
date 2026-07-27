@@ -386,7 +386,12 @@ public class AuthContactOtpController {
     /**
      * Synthesized service identity for the pre-auth registration hop to identity-assurance
      * (the inbound request has no Authorization/actor yet — service-to-service v1.1 header
-     * convention). The interceptor overrides these with inbound values when present.
+     * convention).
+     *
+     * <p>The interceptor forwards Authorization only-if-absent, so this bearer survives even when
+     * the caller happens to be signed in. It used to be overwritten while X-Actor-Type: SYSTEM
+     * survived — SYSTEM authority asserted with a citizen's token. See
+     * {@code ServiceClientConfig}.</p>
      */
     private HttpHeaders serviceAccountHeaders() {
         HttpHeaders headers = new HttpHeaders();
