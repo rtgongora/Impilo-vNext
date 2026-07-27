@@ -106,6 +106,29 @@ Merging a peer's in-flight branch into canonical propagates **unfinished work un
 name**, with no owner watching it. This happened with a pre-fix clinical constant; it superseded
 cleanly only because the owner's HEAD happened to be strictly ahead.
 
+## 5a. Run the guards BEFORE you push, not after
+
+`scripts/guard/run-change-safety-gates.sh` runs in CI — **after** your commit is already on canonical.
+Because every lane pushes straight to the shared branch, a guard that only runs in CI is a *detector*,
+not a *control*: it tells you what already landed.
+
+**Two duplicate `V432` migrations reached canonical on 2026-07-26 while a guard for exactly that defect
+existed and was correctly wired.** Run against the tree afterwards it failed immediately, naming both
+files. Nobody had run it before pushing.
+
+```bash
+bash scripts/guard/run-change-safety-gates.sh            # before every push
+bash scripts/guard/check-migration-version-collisions.sh # at minimum, if you touched a migration
+```
+
+**And stop on what it says.** A second lane later ran the scan, watched it print `V432`, and pushed in
+the same command — the push added no new duplicate, but a known one was walked past. So:
+
+> **Running a guard and pushing in the same command is not running the guard.** Stop on ANY hit,
+> including one that is not yours. Route it, then push.
+
+Never `&&` a guard into a push. A control you do not stop for is only a detector with extra steps.
+
 ## 6. Migration numbers
 
 - Reserve **above every committed claim** in every `docs/registry/iatg-*-leases.md` — not above the
