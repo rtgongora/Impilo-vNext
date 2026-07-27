@@ -1,0 +1,164 @@
+{
+  "packId": "rmnp-anc-routine-actions",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Routine antenatal actions — supplementation, immunisation, prophylaxis",
+    "primarySource": "WHO recommendations on antenatal care for a positive pregnancy experience (2016)",
+    "why": "The routine offers of antenatal care — iron and folic acid, tetanus, malaria prophylaxis, calcium and aspirin where indicated — are where the population-level benefit of ANC actually lives. They are easy to leave undone precisely because none of them is an emergency on the day, and a woman who never received IPTp or aspirin looks the same at the contact as one who did.",
+    "sourceVerification": {
+      "primaryTextVendored": true,
+      "vendoredArtefact": "docs/reference/who-dak/smart-anc — routine-intervention data elements; the eligibility conditions are from the 2016 ANC recommendations",
+      "blocksRatification": true,
+      "note": "These are recommendations, not danger signs — every rule is LOW severity and non-interruptive, surfaced as a due-action checklist rather than an alarm. Two of the conditions (malaria-endemic area, low-calcium-intake population) are national-policy parameters injected as configuration rather than asked of the woman; the per-woman inputs (tetanus protection, IPTp doses, pre-eclampsia risk) are captured on the first-contact form. Thresholds and the aspirin start window are an engineering seed; blocksRatification stays true."
+    }
+  },
+  "rules": [
+    {
+      "code": "ANC_RA_IFA",
+      "name": "Daily iron and folic acid",
+      "layer": "ROUTINE_ACTION",
+      "ruleType": "SUPPLEMENTATION",
+      "severity": "LOW",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["gestationalAgeWeeks"],
+      "logic": {"input": "gestationalAgeWeeks", "op": "gte", "value": 0},
+      "message": "Daily iron and folic acid — offer at every contact.",
+      "explanation": "Daily oral iron (30–60 mg elemental) with folic acid (400 µg) is recommended for all pregnant women to prevent maternal anaemia, puerperal sepsis, low birth weight and preterm birth. It is universal, which is exactly why it is easy to assume was done.",
+      "requiredAction": "Confirm she has iron and folic acid and is taking it; resupply if not. Counsel on taking it with food if nausea is a problem.",
+      "sourceRefs": ["WHO recommendations on antenatal care (2016) — daily iron and folic acid"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Daily oral iron and folic acid supplementation is recommended for pregnant women to prevent maternal anaemia and adverse pregnancy outcomes.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — daily iron and folic acid"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "offered at any gestation", "facts": {"gestationalAgeWeeks": 8}, "expectFires": true},
+        {"name": "not applied without a gestation", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_RA_ASPIRIN",
+      "name": "Low-dose aspirin for pre-eclampsia prevention",
+      "layer": "ROUTINE_ACTION",
+      "ruleType": "PROPHYLAXIS",
+      "severity": "LOW",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["gestationalAgeWeeks", "preeclampsiaHighRisk"],
+      "appliesWhen": {"input": "gestationalAgeWeeks", "op": "between", "min": 12, "max": 20},
+      "logic": {"input": "preeclampsiaHighRisk", "op": "eq", "value": "YES"},
+      "message": "Start low-dose aspirin — she is at high risk of pre-eclampsia.",
+      "explanation": "Low-dose aspirin (75–162 mg daily) started before 20 weeks reduces pre-eclampsia in women at high risk — previous pre-eclampsia, chronic hypertension, diabetes, renal or autoimmune disease, or a multiple pregnancy. The window matters: begun after 20 weeks the benefit is largely lost, so a high-risk woman first seen late has missed it and that should be recorded, not quietly skipped.",
+      "requiredAction": "Start low-dose aspirin daily, to continue until delivery. If she is already past 20 weeks, record that the window was missed rather than starting it as if on time.",
+      "sourceRefs": ["WHO recommendations on antenatal care (2016) — aspirin for pre-eclampsia prevention"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Low-dose acetylsalicylic acid is recommended for the prevention of pre-eclampsia in women at high risk, initiated before 20 weeks of gestation.",
+        "nationalStatement": "Adopted as published, with the missed-window case named in the action so a late presenter is recorded rather than silently skipped.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — aspirin for pre-eclampsia prevention"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "high risk at 14 weeks fires", "facts": {"gestationalAgeWeeks": 14, "preeclampsiaHighRisk": "YES"}, "expectFires": true},
+        {"name": "high risk but past the window does not fire (recorded as missed elsewhere)", "facts": {"gestationalAgeWeeks": 28, "preeclampsiaHighRisk": "YES"}, "expectFires": false},
+        {"name": "not high risk does not fire", "facts": {"gestationalAgeWeeks": 14, "preeclampsiaHighRisk": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_RA_CALCIUM",
+      "name": "Calcium supplementation in low-calcium populations",
+      "layer": "ROUTINE_ACTION",
+      "ruleType": "SUPPLEMENTATION",
+      "severity": "LOW",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["lowCalciumIntakePopulation"],
+      "logic": {"input": "lowCalciumIntakePopulation", "op": "eq", "value": true},
+      "message": "Offer calcium supplementation — a low-calcium-intake population.",
+      "explanation": "In populations with low dietary calcium, daily calcium (1.5–2 g elemental) reduces the risk of pre-eclampsia. Whether the population qualifies is a national determination, not a per-woman judgement, so this fires from a policy parameter rather than from anything asked at the contact.",
+      "requiredAction": "Offer daily calcium supplementation, taken separately from iron to avoid impairing iron absorption.",
+      "sourceRefs": ["WHO recommendations on antenatal care (2016) — calcium supplementation"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "In populations with low dietary calcium intake, daily calcium supplementation is recommended for the prevention of pre-eclampsia.",
+        "nationalStatement": "Adopted as published; population eligibility is set as a national policy parameter.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — calcium supplementation"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "low-calcium population fires", "facts": {"lowCalciumIntakePopulation": true}, "expectFires": true},
+        {"name": "not a low-calcium population does not", "facts": {"lowCalciumIntakePopulation": false}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_RA_IPTP",
+      "name": "Intermittent preventive treatment in pregnancy for malaria (IPTp-SP)",
+      "layer": "ROUTINE_ACTION",
+      "ruleType": "PROPHYLAXIS",
+      "severity": "LOW",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["gestationalAgeWeeks", "malariaEndemicArea", "iptpDosesReceived"],
+      "appliesWhen": {
+        "all": [
+          {"input": "malariaEndemicArea", "op": "eq", "value": true},
+          {"input": "gestationalAgeWeeks", "op": "gte", "value": 13}
+        ]
+      },
+      "logic": {"input": "iptpDosesReceived", "op": "lt", "value": 3},
+      "message": "IPTp-SP dose due — she has had fewer than three.",
+      "explanation": "In malaria-endemic areas, sulfadoxine-pyrimethamine is given from the second trimester at each scheduled contact at least a month apart, to a minimum of three doses. Fewer than three with contacts remaining means a dose is owed. The gestation gate keeps it out of the first trimester, where SP is not given.",
+      "requiredAction": "Give the next IPTp-SP dose under observation now, at least one month since the last. Record the dose count.",
+      "sourceRefs": ["WHO recommendations on antenatal care (2016) — IPTp-SP for malaria prevention"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "In malaria-endemic areas, IPTp-SP is recommended for all pregnant women from the second trimester, given at each scheduled contact at least one month apart, to a minimum of three doses.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — IPTp-SP for malaria prevention"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "endemic, second trimester, one dose so far fires", "facts": {"malariaEndemicArea": true, "gestationalAgeWeeks": 22, "iptpDosesReceived": 1}, "expectFires": true},
+        {"name": "three doses already does not fire", "facts": {"malariaEndemicArea": true, "gestationalAgeWeeks": 34, "iptpDosesReceived": 3}, "expectFires": false},
+        {"name": "first trimester does not apply", "facts": {"malariaEndemicArea": true, "gestationalAgeWeeks": 10, "iptpDosesReceived": 0}, "expectFires": false},
+        {"name": "non-endemic area does not apply", "facts": {"malariaEndemicArea": false, "gestationalAgeWeeks": 22, "iptpDosesReceived": 0}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_RA_TETANUS",
+      "name": "Tetanus toxoid-containing vaccine",
+      "layer": "ROUTINE_ACTION",
+      "ruleType": "IMMUNISATION",
+      "severity": "LOW",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["tetanusProtectionComplete"],
+      "logic": {"input": "tetanusProtectionComplete", "op": "eq", "value": "NO"},
+      "message": "Tetanus vaccination due — protection is not yet complete.",
+      "explanation": "Maternal and neonatal tetanus is prevented by tetanus toxoid-containing vaccine given according to the woman's prior immunisation, so a dose is due until the schedule is complete. Neonatal tetanus is almost entirely preventable and almost always fatal, which is the asymmetry that makes an omitted dose matter.",
+      "requiredAction": "Give the next tetanus toxoid-containing dose per the national schedule and record it.",
+      "sourceRefs": ["WHO recommendations on antenatal care (2016) — tetanus toxoid vaccination"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Tetanus toxoid vaccination is recommended for all pregnant women, depending on previous exposure, to prevent neonatal mortality from tetanus.",
+        "nationalStatement": "Adopted as published; the number and timing of doses follow the national immunisation schedule.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — tetanus toxoid vaccination"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "incomplete protection fires", "facts": {"tetanusProtectionComplete": "NO"}, "expectFires": true},
+        {"name": "complete protection does not", "facts": {"tetanusProtectionComplete": "YES"}, "expectFires": false}
+      ]
+    }
+  ]
+}
