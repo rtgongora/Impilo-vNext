@@ -151,9 +151,7 @@ public class FacilityClaimService {
         // submission gate — every well-formed claim lands PENDING and the
         // STEWARD sees the verdict in the review queue. A probing claimant
         // learns nothing about the facility's status from submitting.
-        List<String> legitimacyContext = new ArrayList<>();
-        boolean allowedOnPlatform = platformAccessAllowed(facility.getFacilityUuid(), legitimacyContext);
-        if (!allowedOnPlatform) {
+        if (!platformAccessAllowed(facility.getFacilityUuid())) {
             log.info("Facility {} claim submitted while platform access is not allowed — routed to steward review",
                     facility.getFacilityUuid());
         }
@@ -267,23 +265,14 @@ public class FacilityClaimService {
     // ── Helpers ─────────────────────────────────────────────────────────────────
 
     /**
-     * platformAccessAllowed = no source verdict denies AND at least one allows. Mirrors
-     * {@code FacilitySourceLegitimacyService.getComposite} so the two never diverge.
+     * The platform-access verdict, from the one implementation that owns the rule. This used to be
+     * a private copy carrying a comment hoping it would not diverge from the original; it is now a
+     * delegation, so it cannot.
      */
-    private boolean platformAccessAllowed(UUID facilityUuid, List<String> reasons) {
-        List<FacilitySourceLegitimacyEntity> rows =
-                legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid);
-        if (rows.isEmpty()) {
-            reasons.add("No source legitimacy recorded for this facility; platform access is not granted by default");
-            return false;
-        }
-        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
-        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
-        for (FacilitySourceLegitimacyEntity r : rows) {
-            reasons.add(r.getSource() + ": " + r.getStatus()
-                    + (r.isAllowedOnPlatform() ? " (allows platform operation)" : " (denies platform operation)"));
-        }
-        return !anyDenies && anyAllows;
+    private boolean platformAccessAllowed(UUID facilityUuid) {
+        return FacilitySourceLegitimacyService.verdictOf(
+                legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))
+                == FacilitySourceLegitimacyService.PlatformAccessVerdict.ALLOW;
     }
 
     private FacilityEntity requireFacility(UUID facilityUuid, UUID tenantId) {

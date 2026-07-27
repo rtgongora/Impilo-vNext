@@ -188,6 +188,32 @@ public class FacilitySourceLegitimacyService {
      */
     @Transactional(readOnly = true)
     public boolean platformAccessAllowed(UUID facilityUuid, List<String> reasons) {
+        return platformAccessVerdict(facilityUuid, reasons) == PlatformAccessVerdict.ALLOW;
+    }
+
+    /**
+     * The platform-access rule as a tri-state.
+     *
+     * <p>For <em>gating</em>, {@code NO_VERDICT} and {@code DENY} are the same answer — silence
+     * never grants — which is why {@link #platformAccessAllowed} collapses them and every gate may
+     * keep using the boolean. But they are not the same <em>fact</em>: "no authority has recorded a
+     * verdict" is not "an authority denied". Trust reporting must not tell an operator their
+     * facility failed a check nobody has run, so {@code FacilityTrustDimensionService} distinguishes
+     * them. Keeping one implementation with three outcomes is what lets both readings stay correct
+     * — the rule was previously written out four times, and the fourth copy disagreed on exactly
+     * this point.</p>
+     */
+    public enum PlatformAccessVerdict {
+        /** No source has recorded a verdict. Gates deny; reporting says "unknown", not "failed". */
+        NO_VERDICT,
+        /** At least one authority allows and none denies. */
+        ALLOW,
+        /** At least one authority denies — one deny outranks any number of allows. */
+        DENY
+    }
+
+    @Transactional(readOnly = true)
+    public PlatformAccessVerdict platformAccessVerdict(UUID facilityUuid, List<String> reasons) {
         List<FacilitySourceLegitimacyEntity> rows =
                 legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid);
         if (rows.isEmpty()) {
@@ -195,17 +221,28 @@ public class FacilitySourceLegitimacyService {
                 reasons.add("No source legitimacy recorded for this facility; "
                         + "platform access is not granted by default");
             }
-            return false;
+            return PlatformAccessVerdict.NO_VERDICT;
         }
-        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
-        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
         if (reasons != null) {
             for (FacilitySourceLegitimacyEntity r : rows) {
                 reasons.add(r.getSource() + ": " + r.getStatus()
                         + (r.isAllowedOnPlatform() ? " (allows platform operation)" : " (denies platform operation)"));
             }
         }
-        return !anyDenies && anyAllows;
+        return verdictOf(rows);
+    }
+
+    /**
+     * The rule itself, over rows already loaded. The one place {@code !anyDenies && anyAllows} is
+     * written; every caller and every reason-format variant derives from here.
+     */
+    static PlatformAccessVerdict verdictOf(List<FacilitySourceLegitimacyEntity> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return PlatformAccessVerdict.NO_VERDICT;
+        }
+        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
+        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
+        return !anyDenies && anyAllows ? PlatformAccessVerdict.ALLOW : PlatformAccessVerdict.DENY;
     }
 
     @Transactional(readOnly = true)
@@ -219,9 +256,7 @@ public class FacilitySourceLegitimacyService {
                 certificateRepository.findByFacilityIdOrderByIssueDateDesc(facility.getId())
                         .stream().map(FacilitySourceLegitimacyService::toCertificateSummary).toList();
 
-        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
-        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
-        boolean platformAccessAllowed = !anyDenies && anyAllows;
+        boolean platformAccessAllowed = verdictOf(rows) == PlatformAccessVerdict.ALLOW;
 
         List<String> reasons = new ArrayList<>();
         if (rows.isEmpty()) {

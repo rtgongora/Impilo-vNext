@@ -161,17 +161,18 @@ public class FacilityTrustDimensionService {
     private Verdict legalIdentity(FacilityEntity facility) {
         List<FacilitySourceLegitimacyEntity> rows =
                 legitimacyRepository.findByFacilityIdOrderBySourceAsc(facility.getFacilityUuid());
-        if (rows.isEmpty()) {
-            return new Verdict(FacilityTrustDimensionEntity.STATUS_UNKNOWN, null, "source-legitimacy");
-        }
-        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
-        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
-        if (!anyDenies && anyAllows) {
-            return new Verdict(FacilityTrustDimensionEntity.STATUS_CONFIRMED,
+        // Shares the single platform-access rule, but reads its tri-state rather than the boolean:
+        // for a GATE, "nobody has recorded a verdict" and "an authority denied" are both refusals,
+        // but for TRUST REPORTING they are different facts. Telling an operator their facility
+        // FAILED a legal-identity check that nobody has run would be false — and these verdicts are
+        // persisted, so the lie would stick.
+        return switch (FacilitySourceLegitimacyService.verdictOf(rows)) {
+            case NO_VERDICT -> new Verdict(FacilityTrustDimensionEntity.STATUS_UNKNOWN, null, "source-legitimacy");
+            case ALLOW -> new Verdict(FacilityTrustDimensionEntity.STATUS_CONFIRMED,
                     "source-legitimacy:composite-allow", "source-legitimacy");
-        }
-        return new Verdict(FacilityTrustDimensionEntity.STATUS_FAILED,
-                "source-legitimacy:composite-deny", "source-legitimacy");
+            case DENY -> new Verdict(FacilityTrustDimensionEntity.STATUS_FAILED,
+                    "source-legitimacy:composite-deny", "source-legitimacy");
+        };
     }
 
     private Verdict regulatory(FacilityEntity facility) {
