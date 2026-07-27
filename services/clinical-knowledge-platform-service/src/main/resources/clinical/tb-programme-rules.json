@@ -1,0 +1,133 @@
+{
+  "packId": "tb-programme-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "TB treatment — phase transition, bacteriological monitoring, resistance and outcome",
+    "primarySource": "WHO consolidated guidelines on tuberculosis (Module 4: treatment, 2022) and the WHO TB SMART guidelines / DAK",
+    "why": "DS-TB treatment is a fixed course with checkpoints: the intensive phase ends at 2 months, sputum is re-examined at defined months, and a smear still positive at month 5 is treatment failure, not a bad month. Rifampicin resistance changes the entire regimen. Missing the month-5 checkpoint lets a failing patient run to the end of a regimen that was never going to cure them, and missing resistance treats DR-TB with drugs it laughs at.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO TB DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json. These rules were authored against the published WHO TB treatment guidelines rather than extracted from a pinned artefact, so this pack ships ENGINEERING_SEED and must not be ratified until the primary text is vendored and each checkpoint and month boundary is checked against it line by line. Every rule names the recommendation it encodes."
+    }
+  },
+  "rules": [
+    {
+      "code": "TB_RIF_RESISTANCE",
+      "name": "Rifampicin resistance detected",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "DRUG_RESISTANCE",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "interruptive": true,
+      "requiredInputs": ["xpertRifResistance"],
+      "logic": {"input": "xpertRifResistance", "op": "eq", "value": "DETECTED"},
+      "message": "Rifampicin resistance detected — this is drug-resistant TB.",
+      "explanation": "Rifampicin resistance on Xpert MTB/RIF means a first-line regimen will fail. The patient needs a drug-resistant TB regimen, not the standard course.",
+      "requiredAction": "Refer immediately for drug-resistant TB assessment and a bedaquiline-containing regimen (e.g. BPaLM). Do not continue or start a standard first-line regimen.",
+      "monitoringInstruction": "Enrol in DR-TB care with monthly culture monitoring.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 4 — DR-TB"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2022-module4", "id": "TB.DR_TB", "row": "rifampicin resistance"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Rifampicin resistance requires a WHO-recommended drug-resistant TB regimen.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO consolidated TB guidelines Module 4"]
+      },
+      "testCases": [
+        {"name": "detected is DR-TB", "facts": {"xpertRifResistance": "DETECTED"}, "expectFires": true},
+        {"name": "not detected is not DR-TB", "facts": {"xpertRifResistance": "NOT_DETECTED"}, "expectFires": false},
+        {"name": "no result never reads as sensitive", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "TB_PHASE_TRANSITION_DUE",
+      "name": "Intensive phase complete — transition to continuation",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "PHASE_TRANSITION",
+      "severity": "LOW",
+      "requiredInputs": ["treatmentMonth", "treatmentPhase"],
+      "appliesWhen": {"input": "treatmentPhase", "op": "eq", "value": "INTENSIVE_PHASE"},
+      "logic": {"input": "treatmentMonth", "op": "gte", "value": 2},
+      "message": "Intensive phase complete — move to the continuation phase.",
+      "explanation": "The standard 2HRZE/4HR regimen has a 2-month intensive phase. At month 2 the patient transitions to the 4-month continuation phase (HR).",
+      "requiredAction": "Confirm the month-2 sputum result, then switch to the continuation-phase regimen and record the phase transition.",
+      "monitoringInstruction": "Continuation phase; next sputum at month 5.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 4 — DS-TB regimen"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2022-module4", "id": "TB.TREATMENT_MONITORING", "row": "phase transition"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The DS-TB intensive phase is 2 months, followed by a 4-month continuation phase.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO consolidated TB guidelines Module 4"]
+      },
+      "testCases": [
+        {"name": "month 2 on intensive transitions", "facts": {"treatmentPhase": "INTENSIVE_PHASE", "treatmentMonth": 2}, "expectFires": true},
+        {"name": "month 1 does not transition", "facts": {"treatmentPhase": "INTENSIVE_PHASE", "treatmentMonth": 1}, "expectFires": false},
+        {"name": "already on continuation — rule does not apply", "facts": {"treatmentPhase": "CONTINUATION_PHASE", "treatmentMonth": 3}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "TB_SMEAR_MONTH2_POSITIVE",
+      "name": "Sputum still positive at month 2 — delayed conversion",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "TREATMENT_MONITORING",
+      "severity": "MEDIUM",
+      "requiredInputs": ["treatmentMonth", "smearResult"],
+      "appliesWhen": {"input": "treatmentMonth", "op": "between", "min": 2, "max": 4},
+      "logic": {"input": "smearResult", "op": "eq", "value": "POSITIVE"},
+      "message": "Sputum smear still positive at month 2 — delayed sputum conversion.",
+      "explanation": "A positive smear at the end of the intensive phase is not yet failure, but it predicts it. It warrants an adherence review and a check for resistance rather than a wait-and-see.",
+      "requiredAction": "Assess adherence, send a specimen for Xpert/DST if not already done, and continue treatment with a repeat smear at month 3.",
+      "monitoringInstruction": "Repeat sputum at month 3; DST if not done.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 4 — treatment monitoring"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2022-module4", "id": "TB.TREATMENT_MONITORING", "row": "month-2 positive"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "A positive smear at month 2 prompts adherence review and resistance testing.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO consolidated TB guidelines Module 4"]
+      },
+      "testCases": [
+        {"name": "positive at month 2 fires", "facts": {"treatmentMonth": 2, "smearResult": "POSITIVE"}, "expectFires": true},
+        {"name": "negative at month 2 does not fire", "facts": {"treatmentMonth": 2, "smearResult": "NEGATIVE"}, "expectFires": false},
+        {"name": "positive at month 5 is failure not this rule", "facts": {"treatmentMonth": 5, "smearResult": "POSITIVE"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "TB_SMEAR_MONTH5_POSITIVE",
+      "name": "Sputum positive at month 5 or later — treatment failure",
+      "layer": "PROGRAMME_MONITORING",
+      "ruleType": "TREATMENT_FAILURE",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "interruptive": true,
+      "requiredInputs": ["treatmentMonth", "smearResult"],
+      "appliesWhen": {"input": "treatmentMonth", "op": "gte", "value": 5},
+      "logic": {"input": "smearResult", "op": "eq", "value": "POSITIVE"},
+      "message": "Sputum positive at month 5 or later — treatment failure.",
+      "explanation": "A positive smear at month 5 or beyond is the WHO definition of treatment failure for a first-line regimen. Continuing it is futile and breeds resistance.",
+      "requiredAction": "Register as treatment failure, send for Xpert/DST, and refer for a drug-resistant TB regimen assessment.",
+      "monitoringInstruction": "DR-TB assessment; do not simply extend the current regimen.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 4 — treatment failure"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2022-module4", "id": "TB.OUTCOME", "row": "failure month-5"},
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "A positive smear or culture at month 5 or later defines treatment failure.",
+        "nationalStatement": "Adopted as published.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["WHO consolidated TB guidelines Module 4"]
+      },
+      "testCases": [
+        {"name": "positive at month 5 is failure", "facts": {"treatmentMonth": 5, "smearResult": "POSITIVE"}, "expectFires": true},
+        {"name": "positive at month 6 is failure", "facts": {"treatmentMonth": 6, "smearResult": "POSITIVE"}, "expectFires": true},
+        {"name": "negative at month 5 is not failure", "facts": {"treatmentMonth": 5, "smearResult": "NEGATIVE"}, "expectFires": false}
+      ]
+    }
+  ]
+}
