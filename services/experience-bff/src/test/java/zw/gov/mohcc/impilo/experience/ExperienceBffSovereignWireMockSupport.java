@@ -5,6 +5,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.patch;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -25,7 +26,7 @@ public final class ExperienceBffSovereignWireMockSupport {
             if (!started) {
                 SERVER.start();
                 stubPharmacy();
-                stubTusoStaffing();
+                stubVashandiStaffing();
                 stubMarketplace();
                 stubSupport();
                 stubPct();
@@ -38,6 +39,10 @@ public final class ExperienceBffSovereignWireMockSupport {
         registry.add("impilo.services.msika-flow-base-url", () -> base);
         registry.add("impilo.services.support-base-url", () -> base);
         registry.add("impilo.services.pct-base-url", () -> base);
+        // Staffing repointed off tuso to vashandi (V009): the BFF now calls
+        // /v1/internal/vashandi/staffing/*, so vashandi must resolve to this WireMock server or the
+        // calls escape to a real host and 500/empty.
+        registry.add("impilo.services.vashandi-base-url", () -> base);
     }
 
     private static void stubPharmacy() {
@@ -48,47 +53,59 @@ public final class ExperienceBffSovereignWireMockSupport {
                         .withBody("{\"data\":[]}")));
     }
 
-    private static void stubTusoStaffing() {
-        SERVER.stubFor(get(urlPathMatching("/v1/staffing/roster-week.*"))
+    /**
+     * Vashandi staffing stubs (V009). The BFF was repointed off tuso {@code /v1/staffing/*} — which
+     * nothing served — to vashandi {@code /v1/internal/vashandi/staffing/*}, and the swap contract
+     * moved from typed names to shift/profile ids. These stubs return vashandi's real response
+     * shapes ({@code shift}, {@code on-call-assignment}, {@code shift-swap-request}) so the test
+     * asserts the contract the estate actually speaks, not the retired tuso one.
+     */
+    private static void stubVashandiStaffing() {
+        SERVER.stubFor(get(urlPathMatching("/v1/internal/vashandi/staffing/roster-week.*"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"data\":[]}")));
 
-        SERVER.stubFor(get(urlPathMatching("/v1/staffing/on-call/swaps.*"))
+        SERVER.stubFor(get(urlPathMatching("/v1/internal/vashandi/staffing/on-call/swaps.*"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                {"data":[{"type":"OnCallSwap","id":"swap-seed-1",\
+                                {"data":[{"type":"shift-swap-request","id":"swap-seed-1",\
                                 "attributes":{"status":"PENDING"}}]}\
                                 """)));
 
-        SERVER.stubFor(post(urlPathMatching("/v1/staffing/on-call/swaps.*"))
+        // The swap decision is a PATCH downstream (vashandi @PatchMapping), where the retired tuso
+        // path used POST — matching POST here would leave the decision unstubbed.
+        SERVER.stubFor(patch(urlPathMatching("/v1/internal/vashandi/staffing/on-call/swaps/[^/]+"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {"data":{"type":"shift-swap-request",\
+                                "id":"a1b2c3d4-0001-4000-8000-000000000099",\
+                                "attributes":{"status":"APPROVED"}}}\
+                                """)));
+
+        SERVER.stubFor(post(urlPathMatching("/v1/internal/vashandi/staffing/on-call/swaps.*"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                {"data":{"type":"OnCallSwap","id":"a1b2c3d4-0001-4000-8000-000000000099",\
+                                {"data":{"type":"shift-swap-request",\
+                                "id":"a1b2c3d4-0001-4000-8000-000000000099",\
                                 "attributes":{"status":"PENDING"}}}\
                                 """)));
 
-        SERVER.stubFor(post(urlPathMatching("/v1/staffing/on-call/swaps/[^/]+"))
+        SERVER.stubFor(get(urlPathMatching("/v1/internal/vashandi/staffing/on-call"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                {"data":{"type":"OnCallSwap","id":"a1b2c3d4-0001-4000-8000-000000000099",\
-                                "attributes":{"status":"APPROVED"}}}\
-                                """)));
-
-        SERVER.stubFor(get(urlPathMatching("/v1/staffing/on-call"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {"data":[{"type":"OnCallAssignment","id":"oncall-1",\
-                                "attributes":{"specialty":"General"}}]}\
+                                {"data":[{"type":"on-call-assignment","id":"2026-04-06|General",\
+                                "attributes":{"assignment_date":"2026-04-06","specialty":"General",\
+                                "primary_staff_reference":"PW-004821","backup_staff_reference":null}}]}\
                                 """)));
     }
 

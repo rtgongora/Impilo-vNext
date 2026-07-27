@@ -143,9 +143,33 @@ if not rmnp_packs:
     print("  checked on the commit that lands it, not on some later cleanup pass.")
     raise SystemExit(0)
 
+# Packs that capture nothing a clinician types, and so pair with no form — declared here with the
+# reason, NOT left to fall through the "unpaired" branch. The distinction the guard defends is
+# between "captures nothing because it was checked against nothing" (a vacuous pass, forbidden) and
+# "captures nothing because it genuinely reads no clinician-entered fact" (legitimate, and stated).
+# A schedule is driven by gestational age, which is derived, and by the record of which contacts
+# happened, which is a record of care rather than a form field. Adding a form to satisfy the guard
+# would invent a capture surface that does not and should not exist.
+NO_CAPTURE_PACKS = {
+    "rmnp-anc-schedule.json": "a contact schedule — driven by gestational age (derived) and the "
+                              "record of completed contacts, neither of which is a form field",
+}
+
 failed = False
 for pack_path in rmnp_packs:
     pack = load(pack_path)
+    if pack_path.name in NO_CAPTURE_PACKS:
+        # Still not a free pass: prove it reads no capturable fact, so a schedule that later grows a
+        # clinician-entered input cannot hide behind this exemption.
+        needed = {f for f in rule_inputs(pack) if not is_derived(f)}
+        if needed:
+            print(f"FAIL: {pack_path.name} is exempted as capturing nothing, but it reads "
+                  f"{len(needed)} non-derived fact(s): {sorted(needed)}. Remove the exemption and "
+                  f"pair it with a form.")
+            failed = True
+        else:
+            print(f"  OK  {pack_path.name}: no-capture pack ({NO_CAPTURE_PACKS[pack_path.name]})")
+        continue
     forms = PAIRINGS.get(pack_path.name)
     if forms is None:
         print(f"FAIL: {pack_path.name} is not paired with any form in this guard.")

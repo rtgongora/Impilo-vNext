@@ -410,8 +410,18 @@ public class ServiceClientConfig {
 
     @Bean
     public RestTemplate serviceRestTemplate(ClientHttpRequestInterceptor trustHeaderForwardingInterceptor) {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofSeconds(3));
+        // JDK HttpClient, NOT SimpleClientHttpRequestFactory. The latter is backed by
+        // HttpURLConnection, which cannot send PATCH — it throws ProtocolException, the client
+        // catches it, and the BFF returns 502. Seven downstream clients PATCH through this bean
+        // (Msika, PatientSafety, Costa, Pacs, Dispatch, and the vashandi swap-decide), so every one
+        // of them silently 502'd on any PATCH. Unit tests mock the client and never exercise a real
+        // PATCH, so the estate-wide break was invisible until a WireMock loopback test caught it —
+        // pin PATCH over a real loopback; mocks hide it.
+        java.net.http.HttpClient httpClient = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
+        org.springframework.http.client.JdkClientHttpRequestFactory factory =
+                new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(Duration.ofSeconds(5));
         RestTemplate restTemplate = new RestTemplate(factory);
         restTemplate.setInterceptors(List.of(trustHeaderForwardingInterceptor));
