@@ -36,6 +36,11 @@ public class ProgrammeGuidanceService {
 
     static final String HIV_CONTENT_PATH = "clinical/hiv-programme-rules.json";
     static final String TB_CONTENT_PATH = "clinical/tb-programme-rules.json";
+    static final String HIV_TESTING_PATH = "clinical/hiv-testing-rules.json";
+    static final String TB_SCREENING_PATH = "clinical/tb-screening-rules.json";
+    static final String TB_DIAGNOSIS_PATH = "clinical/tb-diagnosis-rules.json";
+    static final String TPT_PATH = "clinical/tpt-rules.json";
+    static final String PREP_PATH = "clinical/prep-rules.json";
 
     private final RuleContentLoader contentLoader;
 
@@ -51,6 +56,11 @@ public class ProgrammeGuidanceService {
         return switch (programme.trim().toUpperCase(java.util.Locale.ROOT)) {
             case "HIV_CARE", "HIV" -> HIV_CONTENT_PATH;
             case "TB_TREATMENT", "TB" -> TB_CONTENT_PATH;
+            case "HIV_TESTING" -> HIV_TESTING_PATH;
+            case "TB_SCREENING" -> TB_SCREENING_PATH;
+            case "TB_DIAGNOSIS" -> TB_DIAGNOSIS_PATH;
+            case "TB_PREVENTION", "TPT" -> TPT_PATH;
+            case "HIV_PREVENTION", "PREP" -> PREP_PATH;
             default -> null;
         };
     }
