@@ -1,0 +1,118 @@
+{
+  "formKey": "impilo.pnc.newborn.contact.v1",
+  "name": "Postnatal contact — newborn",
+  "description": "A postnatal check of the newborn. The PNC-specific local signs (cord, eyes, jaundice, skin) are captured here; the systemic serious-bacterial-infection signs are the young-infant assessment (form 12), delegated to the single PSBI definition rather than duplicated.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": ["OUTPATIENT", "COMMUNITY", "HOME"],
+  "careStages": ["ASSESSMENT", "CONSULTATION"],
+  "specialties": ["MIDWIFERY", "NURSING", "PAEDIATRICS"],
+  "encounterTypes": ["POSTNATAL", "PNC", "NEWBORN"],
+  "encounterContexts": ["outpatient", "community", "home"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER", "COMMUNITY_HEALTH_WORKER"],
+  "minAgeMonths": 0,
+  "sexApplicability": "ANY",
+  "requirePregnant": false,
+  "programmeApplicability": ["PNC", "NEWBORN"],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO recommendations on postnatal care of the mother and newborn",
+  "publish": true,
+  "resourceMappings": {"mappings": []},
+  "indicators": {"indicators": [{"programmeIndicatorCode": "PNC_NEWBORN_CONTACTS"}]},
+  "definition": {
+    "id": "pnc-newborn-contact-v1",
+    "version": "1.0.0",
+    "title": "Postnatal contact — newborn",
+    "description": "The local signs a sick-child visit is not built around. Systemic PSBI signs are on the young-infant assessment, evaluated by the one platform definition.",
+    "dakReference": "WHO PNC DAK v1.0.0",
+    "healthDomain": "NEWBORN_HEALTH",
+    "programme": "PNC",
+    "encounterTypes": ["POSTNATAL", "PNC", "NEWBORN"],
+    "minAgeMonths": 0,
+    "sexApplicability": "ANY",
+    "providerRoles": ["MIDWIFE", "NURSE", "COMMUNITY_HEALTH_WORKER"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "SENSITIVE"},
+    "sections": [
+      {
+        "id": "local-signs",
+        "title": "Newborn local signs",
+        "description": "A blank is 'not asked', not 'absent'. The systemic danger signs (feeding, breathing, convulsions, temperature) are the young-infant assessment and are evaluated there.",
+        "fields": [
+          {
+            "id": "cordRednessOrDischarge",
+            "linkId": "cordRednessOrDischarge",
+            "label": "Umbilical cord — redness or discharge",
+            "kind": "coded_single",
+            "options": [
+              {"code": "NORMAL", "display": "Clean, drying"},
+              {"code": "REDNESS_TO_SKIN", "display": "Redness spreading to the skin"},
+              {"code": "PUS_OR_SMELL", "display": "Pus or foul smell"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "eyeDischargeOrSwelling",
+            "linkId": "eyeDischargeOrSwelling",
+            "label": "Eye discharge or lid swelling",
+            "kind": "coded_single",
+            "description": "Purulent discharge or swelling threatens sight and is urgent — not conjunctivitis to watch.",
+            "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}],
+            "validation": {"required": false}
+          },
+          {
+            "id": "jaundiceOnset",
+            "linkId": "jaundiceOnset",
+            "label": "When did any jaundice appear?",
+            "kind": "coded_single",
+            "description": "Jaundice in the first 24 hours is never physiological — record onset even when the jaundice looks mild.",
+            "options": [
+              {"code": "NONE", "display": "No jaundice"},
+              {"code": "FIRST_24_HOURS", "display": "In the first 24 hours"},
+              {"code": "AFTER_24_HOURS", "display": "After the first day"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "jaundiceExtent",
+            "linkId": "jaundiceExtent",
+            "label": "How far does the jaundice extend?",
+            "kind": "coded_single",
+            "description": "Jaundice reaching the palms and soles suggests a level that can injure the brain.",
+            "options": [
+              {"code": "NONE", "display": "None"},
+              {"code": "FACE", "display": "Face only"},
+              {"code": "TRUNK", "display": "Face and trunk"},
+              {"code": "PALMS_OR_SOLES", "display": "Palms or soles"}
+            ],
+            "validation": {"required": false}
+          },
+          {
+            "id": "skinPustules",
+            "linkId": "skinPustules",
+            "label": "Skin pustules",
+            "kind": "coded_single",
+            "options": [
+              {"code": "NONE", "display": "None"},
+              {"code": "FEW", "display": "A few localised"},
+              {"code": "MANY_OR_SEVERE", "display": "Many or severe"}
+            ],
+            "validation": {"required": false}
+          }
+        ]
+      },
+      {
+        "id": "completion",
+        "title": "Completing the contact",
+        "fields": [
+          {"id": "screeningComplete", "linkId": "screeningComplete", "label": "The newborn check was completed, including the young-infant systemic signs", "kind": "coded_single", "options": [{"code": "YES", "display": "Yes"}, {"code": "NO", "display": "No — partial"}], "validation": {"required": false}},
+          {"id": "newbornNotes", "linkId": "newbornNotes", "label": "Notes", "kind": "text", "validation": {"required": false}}
+        ]
+      }
+    ]
+  }
+}

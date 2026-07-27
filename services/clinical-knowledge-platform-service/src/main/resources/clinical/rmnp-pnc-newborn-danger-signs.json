@@ -1,0 +1,108 @@
+{
+  "packId": "rmnp-pnc-newborn-danger-signs",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Postnatal newborn danger signs — the PNC-specific signs, PSBI delegated",
+    "primarySource": "WHO PNC DAK v1.0.0; WHO/IMNCI young-infant assessment",
+    "why": "The postnatal newborn check must find the local infections and early problems that a sick-child visit is not built around — the cord, the eyes, jaundice, the skin. The systemic signs of serious bacterial infection are NOT restated here.",
+    "delegation": "PSBI (possible serious bacterial infection) has exactly ONE definition on this platform: PSBI_YOUNG_INFANT in paediatric-danger-signs.json. This pack deliberately does NOT contain the PSBI systemic signs — not feeding, convulsions, movement only when stimulated, fever/hypothermia, fast breathing, severe chest indrawing. PostnatalNewbornService delegates those to the paediatric pack, so a mother is never told her baby is fine on one screen and referred on another. This pack adds only the PNC-specific local signs.",
+    "sourceVerification": {
+      "primaryTextVendored": true,
+      "vendoredArtefact": "docs/reference/who-dak/dak-pnc-v1.0.0",
+      "blocksRatification": true,
+      "note": "PNC-specific newborn danger signs (omphalitis, ophthalmia neonatorum, jaundice, local skin infection). PSBI is delegated, not restated. blocksRatification stays true."
+    }
+  },
+  "rules": [
+    {
+      "code": "PNC_NB_OMPHALITIS",
+      "name": "Umbilical cord infection (omphalitis)",
+      "layer": "NEWBORN_DANGER_SIGN",
+      "ruleType": "PNC_NEWBORN_INFECTION",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["cordRednessOrDischarge"],
+      "logic": {"input": "cordRednessOrDischarge", "op": "in", "values": ["REDNESS_TO_SKIN", "PUS_OR_SMELL"]},
+      "message": "Umbilical infection — treat and watch for spread to serious bacterial infection.",
+      "explanation": "Redness spreading to the skin around the cord, or pus or a foul smell, is omphalitis. It can progress rapidly to sepsis in a newborn, so it is treated and the baby is assessed for systemic signs (which the PSBI check covers).",
+      "requiredAction": "Give antibiotics per protocol, teach cord care, and refer if redness extends to the abdominal wall or any systemic sign is present.",
+      "sourceRefs": ["WHO PNC — cord care and infection"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Umbilical redness extending to the skin, or discharge, indicates local infection requiring treatment and assessment for systemic infection.", "nationalStatement": "Adopted as published.", "evidenceRefs": ["WHO PNC — cord care"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "pus or smell fires", "facts": {"cordRednessOrDischarge": "PUS_OR_SMELL"}, "expectFires": true},
+        {"name": "a clean drying cord does not", "facts": {"cordRednessOrDischarge": "NORMAL"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PNC_NB_OPHTHALMIA",
+      "name": "Ophthalmia neonatorum (eye discharge)",
+      "layer": "NEWBORN_DANGER_SIGN",
+      "ruleType": "PNC_NEWBORN_INFECTION",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["eyeDischargeOrSwelling"],
+      "logic": {"finding": "eyeDischargeOrSwelling", "present": true},
+      "message": "Eye discharge or swelling in a newborn — treat urgently, it threatens sight.",
+      "explanation": "Purulent eye discharge or lid swelling in the first weeks is ophthalmia neonatorum, often gonococcal or chlamydial. Gonococcal infection can perforate the cornea within days, so it is a sight-threatening emergency, not conjunctivitis to watch.",
+      "requiredAction": "Treat urgently per protocol, treat the mother and partner for the likely sexually transmitted cause, and refer if the cornea is involved.",
+      "sourceRefs": ["WHO PNC — newborn eye infection"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Purulent eye discharge or swelling in the newborn requires urgent treatment for ophthalmia neonatorum and treatment of the parents.", "nationalStatement": "Adopted as published.", "evidenceRefs": ["WHO PNC — newborn eye infection"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "eye discharge fires", "facts": {"eyeDischargeOrSwelling": "PRESENT"}, "expectFires": true},
+        {"name": "clear eyes do not", "facts": {"eyeDischargeOrSwelling": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PNC_NB_JAUNDICE",
+      "name": "Significant neonatal jaundice",
+      "layer": "NEWBORN_DANGER_SIGN",
+      "ruleType": "PNC_NEWBORN_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["jaundiceOnset", "jaundiceExtent"],
+      "logic": {"any": [
+        {"input": "jaundiceOnset", "op": "eq", "value": "FIRST_24_HOURS"},
+        {"input": "jaundiceExtent", "op": "in", "values": ["PALMS_OR_SOLES"]}
+      ]},
+      "message": "Significant jaundice — jaundice in the first day, or reaching the palms or soles, needs urgent assessment.",
+      "explanation": "Jaundice appearing in the first 24 hours, or extending to the palms and soles, may reach levels that cause permanent brain injury (kernicterus). Unlike common physiological jaundice, this needs measurement and often phototherapy urgently.",
+      "requiredAction": "Refer for bilirubin measurement and phototherapy urgently. Do not reassure jaundice in the first day of life as physiological.",
+      "sourceRefs": ["WHO PNC — neonatal jaundice"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Jaundice within 24 hours of birth, or involving the palms and soles, requires urgent assessment and treatment.", "nationalStatement": "Adopted as published.", "evidenceRefs": ["WHO PNC — neonatal jaundice"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "day-1 jaundice fires", "facts": {"jaundiceOnset": "FIRST_24_HOURS", "jaundiceExtent": "FACE"}, "expectFires": true},
+        {"name": "jaundice to soles fires", "facts": {"jaundiceOnset": "AFTER_24_HOURS", "jaundiceExtent": "PALMS_OR_SOLES"}, "expectFires": true},
+        {"name": "mild face-only jaundice after day 1 does not", "facts": {"jaundiceOnset": "AFTER_24_HOURS", "jaundiceExtent": "FACE"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PNC_NB_SKIN_INFECTION",
+      "name": "Skin pustules or infection",
+      "layer": "NEWBORN_DANGER_SIGN",
+      "ruleType": "PNC_NEWBORN_INFECTION",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["skinPustules"],
+      "logic": {"input": "skinPustules", "op": "in", "values": ["MANY_OR_SEVERE", "FEW"]},
+      "message": "Skin pustules — treat, and escalate many or severe pustules.",
+      "explanation": "A few skin pustules are treated locally; many or severe pustules are a sign of significant bacterial infection and, with any systemic sign, are serious — which the PSBI check evaluates.",
+      "requiredAction": "Treat local pustules; for many or severe pustules give antibiotics and assess for systemic infection.",
+      "sourceRefs": ["WHO/IMNCI young infant — skin infection"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Skin pustules in the young infant are classified by number and severity, with systemic assessment for many or severe lesions.", "nationalStatement": "Adopted as published.", "evidenceRefs": ["WHO/IMNCI young infant"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "many pustules fire", "facts": {"skinPustules": "MANY_OR_SEVERE"}, "expectFires": true},
+        {"name": "clear skin does not", "facts": {"skinPustules": "NONE"}, "expectFires": false}
+      ]
+    }
+  ]
+}
