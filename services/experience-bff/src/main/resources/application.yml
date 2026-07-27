@@ -45,6 +45,15 @@ management:
       show-details: when-authorized
 
 impilo:
+  # Server-authoritative tenant (TenantContextFilter). OFF | SHADOW | ENFORCE.
+  # SHADOW = resolve + audit divergence, forward the caller's header unchanged. It stays SHADOW
+  # until the divergence rate is measured AND a real tenant claim exists: without the claim,
+  # ENFORCE asserts "authenticated => the platform's tenant", which removes the caller's ability
+  # to choose but is NOT per-tenant isolation. Flipping it is a PO decision, not a config tidy-up.
+  tenancy:
+    mode: ${IMPILO_TENANCY_MODE:SHADOW}
+    claim: ${IMPILO_TENANCY_CLAIM:tenant_id}
+    authenticated-default: ${IMPILO_TENANCY_AUTHENTICATED_DEFAULT:00000000-0000-4000-8000-000000000001}
   features:
     # EC-number employment matching (WS-D). Downstream workforce-governance
     # /internal/v1/workforce-governance/employment/match is live, so this lane is on.
