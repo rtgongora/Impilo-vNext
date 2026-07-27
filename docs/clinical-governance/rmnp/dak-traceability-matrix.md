@@ -11,15 +11,15 @@ or a domain's own `<domain>/coverage-exclusions.json`. `UNCOVERED` means nobody
 has decided yet, and the guard fails on it — a table nobody looked at is the failure this
 matrix exists to make visible.
 
-- Published artefacts: **133**
-- Families: `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
+- Published artefacts: **140**
+- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
 - Published data elements: **4098**
 - Shipped citations: **82**
 
 | Status | Count |
 |---|---|
 | `COVERED_ELSEWHERE` | 7 |
-| `DEFERRED` | 120 |
+| `DEFERRED` | 127 |
 | `SHIPPED` | 6 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
@@ -88,6 +88,13 @@ matrix exists to make visible.
 | `ECO.WHA76-2.REFERRAL_NETWORKS` | WHO_ECO | POLICY_FRAMEWORK | — | Functional referral systems connecting primary, secondary and tertiary care | `DEFERRED` | — | — | Surgical referral exists as a record (referral.surgical_referral, with indication, laterality, site, urgency and target  |
 | `ECO.WHA76-2.SAFETY_CHECKLISTS` | WHO_ECO | POLICY_FRAMEWORK | — | Implement safety checklists and standardised protocols for emergency and operati | `DEFERRED` | — | — | One safety checklist exists — the WHO surgical one — and it is real and gated. The standard asks for checklists across e |
 | `ECO.WHA76-2.SURGICAL_ANAESTHESIA_PERIOP` | WHO_ECO | POLICY_FRAMEWORK | — | Member States strengthen surgical, anaesthesia and perioperative care capability | `DEFERRED` | — | — | Surgical, anaesthesia and perioperative care exist as three separately-wired capabilities rather than one integrated ser |
+| `EMS.BEC.ABCDE` | BEC | CLINICAL_APPROACH | — | Basic Emergency Care: the ABCDE approach to the acutely ill and injured, plus SA | `DEFERRED` | — | — | The undifferentiated-assessment / danger-sign layer is designed (findings as pct_observations, symptom-triggered pathway |
+| `EMS.DSEC.MINIMUM_DATASET` | DSEC | DATASET | — | WHO Data Set for Emergency Care — 47 core + 31 extended elements across registra | `DEFERRED` | — | — | The emergency_episode (pct V200) carries part of the dataset structurally, but the dataset-to-column mapping and the 22  |
+| `EMS.EDLIZ.EMERGENCY_MEDICINES` | EDLIZ | NATIONAL_FORMULARY | — | EDLIZ 2025 emergency medicines, antidotes and level-of-care availability (C/B/A/ | `DEFERRED` | — | — | Emergency medicines, antidotes and blood integration (Dura/Madi) are the W8 medicines-and-blood wave; no governed emerge |
+| `EMS.IITT.ADULT` | IITT | TRIAGE_CHART | — | Interagency Integrated Triage Tool, Age >= 12 — three-tier RED/YELLOW/GREEN tria | `DEFERRED` | — | — | The WhoIittEngine that encodes this chart exists and is tested (libs/emergency-domain), but it is a library on the shelf |
+| `EMS.IITT.HIGH_RISK` | IITT | REFERENCE_CARD | — | IITT high-risk reference card — the definitions the charts' starred criteria res | `DEFERRED` | — | — | The reference-card definitions the charts' starred criteria resolve to are transcribed but not yet expressed as governed |
+| `EMS.IITT.PAEDIATRIC` | IITT | TRIAGE_CHART | — | Interagency Integrated Triage Tool, Age < 12 — a different logical shape from th | `DEFERRED` | — | — | Encoded and tested in the engine (distinct paediatric logic — no numeric HR red criterion, the meningism conjunction, ag |
+| `EMS.SSC26.SCREENING` | SSC26 | CLINICAL_GUIDELINE | — | Sepsis screening by an early warning score (NEWS/NEWS2/MEWS/SIRS) rather than qS | `DEFERRED` | — | — | The seeded ED_SEPSIS pathway still screens on qSOFA (the defect); routing sepsis screening through the existing server-s |
 | `HIV.ADVANCED_DISEASE` | WHO_DAK | DECISION_LOGIC | — | Advanced HIV disease package (CD4 <200 or WHO stage 3/4) | `SHIPPED` | `HIV_ADVANCED_DISEASE` | ADOPTED_VERBATIM |  |
 | `HIV.PMTCT` | WHO_DAK | DECISION_LOGIC | — | Prevention of mother-to-child transmission of HIV | `DEFERRED` | — | — | PMTCT sits across HIV care and the RMNP pregnancy episode; implementing it in the medicine pack alone would either dupli |
 | `HIV.PREP` | WHO_DAK | DECISION_LOGIC | — | Pre-exposure prophylaxis eligibility and follow-up | `DEFERRED` | — | — | PrEP is prevention for HIV-negative people at risk, not part of the care programme for people living with HIV. It belong |

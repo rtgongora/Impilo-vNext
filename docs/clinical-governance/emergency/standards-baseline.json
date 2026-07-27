@@ -1,0 +1,55 @@
+{
+  "domain": "emergency",
+  "note": "Standards baseline for the Integrated Emergency, Resuscitation and Acute Care pack. There is no WHO SMART DAK for the broad emergency domain, so this applies the DAK *structure* to a baseline assembled from other authorities, declared by hand with a citation each. Only the framework-level standards the pack is built on are declared here; the ~140 per-syndrome clinical rules become citations on governed CKP content as content tranches land (W4+), not entries in this file. Every standard is DEFERRED in coverage-exclusions.json until content in the clinical knowledge platform cites it, because a declared engine or a vendored chart is not the same as a governed rule that cites the standard. IITT charts, the reference card and EDLIZ are vendored and hashed (docs/reference/who-emergency-care-toolkit/SHA256SUMS and docs/reference/edliz-2025); the hash IS the version, because none of the IITT charts carries a version or date. HONEST GAP: no Zimbabwe national emergency-care, referral, ambulance/EMS, resuscitation or MCI policy could be located to cite, so none is declared here rather than assert one that cannot be sourced; every Zimbabwe time target, zone map and destination rule in this pack is therefore ENGINEERING_SEED pending MoHCC ratification, and that gap is itself the finding.",
+  "standards": [
+    {
+      "standardId": "EMS.IITT.ADULT",
+      "family": "IITT",
+      "kind": "TRIAGE_CHART",
+      "title": "Interagency Integrated Triage Tool, Age >= 12 — three-tier RED/YELLOW/GREEN triage with a distinct step-3 high-risk vital-sign band; the sole triage authority for this estate by product-owner ruling",
+      "sourceCitation": "WHO / ICRC / MSF, Interagency Integrated Triage Tool: Age >= 12. Vendored at docs/reference/who-emergency-care-toolkit/iitt-adult-age-12-and-over.pdf, SHA-256 9597ab1f4f28687d9d2e1e28bfac6a84191889c6800198571b6af6a160e5711d (unversioned chart; the hash is the version). https://www.who.int/tools/triage"
+    },
+    {
+      "standardId": "EMS.IITT.PAEDIATRIC",
+      "family": "IITT",
+      "kind": "TRIAGE_CHART",
+      "title": "Interagency Integrated Triage Tool, Age < 12 — a different logical shape from the adult chart: no numeric HR red criterion, an altered-mental-status conjunction rather than the adult any-two-of, and age-banded high-risk vitals",
+      "sourceCitation": "WHO / ICRC / MSF, Interagency Integrated Triage Tool: Age < 12. Vendored at docs/reference/who-emergency-care-toolkit/iitt-paediatric-age-under-12.pdf, SHA-256 c1fd4004447c6511a999a96177d887ba3ddfbe7a00e4ff38ba5794dabff515c4 (unversioned chart; the hash is the version). https://www.who.int/tools/triage"
+    },
+    {
+      "standardId": "EMS.IITT.HIGH_RISK",
+      "family": "IITT",
+      "kind": "REFERENCE_CARD",
+      "title": "IITT high-risk reference card — the definitions the charts' starred criteria resolve to: high-risk trauma, major burns (>15% BSA is a red criterion), threatened limb, respiratory distress, ingestion/exposure",
+      "sourceCitation": "WHO / ICRC / MSF, Interagency Integrated Triage: Reference card. Vendored at docs/reference/who-emergency-care-toolkit/iitt-high-risk-reference-card.pdf, SHA-256 d69bbe391901cbbe14966df93af1f9024d5b9881705589f47dcb4df02a3ca7d1 (CC BY-NC-SA 3.0 IGO). https://www.who.int/tools/triage"
+    },
+    {
+      "standardId": "EMS.BEC.ABCDE",
+      "family": "BEC",
+      "kind": "CLINICAL_APPROACH",
+      "title": "Basic Emergency Care: the ABCDE approach to the acutely ill and injured, plus SAMPLE history — the danger-sign recognition and immediate-action layer beneath triage",
+      "sourceCitation": "WHO, ICRC, with IFEM. Basic emergency care: approach to the acutely ill and injured — Participant Workbook, 2018. ISBN 9789241513081. https://www.who.int/publications/i/item/9789241513081"
+    },
+    {
+      "standardId": "EMS.DSEC.MINIMUM_DATASET",
+      "family": "DSEC",
+      "kind": "DATASET",
+      "title": "WHO Data Set for Emergency Care — 47 core + 31 extended elements across registration, prehospital, prior facility care, initial clinical condition, injury event, emergency-unit and inpatient details; the target schema for the emergency episode and indicators",
+      "sourceCitation": "WHO, Data Set for Emergency Care (DSEC), published 1 January 2026. Element names and definitions confirmed online; the permitted value lists per element remain UNVERIFIED and any derived value set is an ENGINEERING_SEED. https://www.who.int/tools/emergency-care-toolkit"
+    },
+    {
+      "standardId": "EMS.SSC26.SCREENING",
+      "family": "SSC26",
+      "kind": "CLINICAL_GUIDELINE",
+      "title": "Sepsis screening by an early warning score (NEWS/NEWS2/MEWS/SIRS) rather than qSOFA — the basis for retiring the seeded ED_SEPSIS qSOFA screen and routing through the existing server-side EWS engine",
+      "sourceCitation": "Surviving Sepsis Campaign 2026 guidelines: recommends NEWS/NEWS2/MEWS/SIRS over qSOFA as single screening tools on sensitivity grounds (evidence through June 2025). Adopted by reference; MoHCC ratification pending."
+    },
+    {
+      "standardId": "EMS.EDLIZ.EMERGENCY_MEDICINES",
+      "family": "EDLIZ",
+      "kind": "NATIONAL_FORMULARY",
+      "title": "EDLIZ 2025 emergency medicines, antidotes and level-of-care availability (C/B/A/S, VEN) — the one verifiable Zimbabwe national source for emergency dosing and drug availability",
+      "sourceCitation": "EDLIZ 2025 (Essential Drugs List and Standard Treatment Guidelines for Zimbabwe). In-repo at docs/reference/edliz-2025/EDLIZ-2025-final-for-circulation.pdf with SHA-256 recorded in that folder's README; linked to clinical.source_documents by pct/ckp reference bundle."
+    }
+  ]
+}
