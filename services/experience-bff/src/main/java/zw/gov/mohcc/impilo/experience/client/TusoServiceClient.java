@@ -58,6 +58,20 @@ public class TusoServiceClient {
                 com.fasterxml.jackson.databind.JsonNode.class).getBody();
     }
 
+    // ── Ministry legitimacy decisions (FCV-W1) ──────────────────────────────────────────────
+
+    /** Issue a Ministry legitimacy verdict. Authority is enforced in tuso against the appointment. */
+    public JsonNode issueLegitimacyDecision(String facilityUuid, Object body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityUuid + "/legitimacy-decisions";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    /** Every decision ever made for a facility, newest first. */
+    public JsonNode legitimacyDecisionHistory(String facilityUuid) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityUuid + "/legitimacy-decisions";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode createBooking(UUID resourceId, String subjectRef, String purpose,
                                   OffsetDateTime startTime, OffsetDateTime endTime, String notes) {
         String url = baseUrl + "/v1/internal/resources/" + resourceId + "/bookings";
