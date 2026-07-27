@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { EdTriageDiscriminatorPanel } from "@/components/clinical/EdTriageDiscriminatorPanel";
+import { TriageOfRecordPanel, type TriageAssessment } from "@/components/clinical/TriageOfRecordPanel";
 import { Icd11SearchField, type Icd11Hit } from "@/components/clinical/Icd11SearchField";
 import { ResuscitationWorkspace } from "@/components/clinical/ResuscitationWorkspace";
 import { TraumaTeamPanel } from "@/components/clinical/TraumaTeamPanel";
@@ -48,6 +49,22 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
     () => (visit?.protocol_suggestions as Array<Record<string, unknown>>) ?? [],
     [visit?.protocol_suggestions],
   );
+
+  // The triage of record is the newest assessment; pct returns triage_assessments newest-first.
+  const latestTriage = useMemo(
+    () => ((visit?.triage_assessments as TriageAssessment[] | undefined) ?? [])[0] ?? null,
+    [visit?.triage_assessments],
+  );
+
+  // A 422 from triage means NOT_TRIAGEABLE / incomplete — surface the message, do not treat it as
+  // a generic failure or an outage (the BFF now passes the pct 422 through instead of a 502).
+  const triageError = actions.triage.error as { status?: number; error?: { message?: string } } | null;
+  const triageErrorMessage =
+    triageError?.status === 422
+      ? triageError.error?.message ?? "Assessment incomplete — this is not triageable yet. Complete the assessment and repeat."
+      : triageError
+        ? "Triage could not be recorded. Try again or check connectivity."
+        : null;
 
   if (isLoading || !visit) {
     return (
@@ -99,9 +116,15 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
           </section>
         )}
 
+        {step === 1 && latestTriage && <TriageOfRecordPanel triage={latestTriage} />}
+
         {step === 1 && status === "REGISTERED" && (
           <section className="rounded-xl border p-4 space-y-4">
             <h2 className="font-semibold">Structured triage</h2>
+            <p className="text-xs text-muted-foreground">
+              WHO IITT is the triage authority. ESI/MTS are advisory and never set the acuity of record;
+              an acuity entered here is recorded as a manual entry.
+            </p>
             <textarea
               value={complaint}
               onChange={(e) => setComplaint(e.target.value)}
@@ -160,10 +183,19 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
             >
               Complete triage
             </button>
+            {triageErrorMessage && (
+              <p
+                className="rounded-lg border border-amber-500 bg-amber-50 p-3 text-sm text-amber-900"
+                role="alert"
+                data-testid="triage-error"
+              >
+                {triageErrorMessage}
+              </p>
+            )}
           </section>
         )}
 
-        {step === 1 && status !== "REGISTERED" && (
+        {step === 1 && status !== "REGISTERED" && !latestTriage && (
           <section className="rounded-xl border p-4 text-sm text-muted-foreground">
             Triage is captured at registration. This visit is <strong>{status || "—"}</strong>; open the Treatment or Trauma steps to continue care.
           </section>

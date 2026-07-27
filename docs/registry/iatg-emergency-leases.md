@@ -702,9 +702,18 @@ rewritten to call it and persist the new columns, `triageRow` surfaces them. **C
 old `autoAcuity`/`scoreBoth`→acuity path is retired — a request with neither runnable IITT (signs/vitals
 + age) nor an explicit clinician acuity now returns 422 instead of acuity 3; an explicit acuity still
 stands as a manual entry (and, when IITT can also run, becomes a flagged override with IITT retained as
-the tier of record), so legacy explicit-acuity callers keep working. **Still W4:** pathway repair (the 8
-`ED_*` shells + retire qSOFA), zibo value sets, and the BFF/UI triage capture surface — live proving of
-all of W4 waits for the pct redeploy + experience-bff rebuild. · W5 alerts ·
+the tier of record), so legacy explicit-acuity callers keep working. ·
+**W4b pathway repair (done, `38c1cca80`)** — ckp V201: 8 stepless `ED_*` pathways given real 2-3 step
+content, 4 miscited repointed (ectopic/obstetric→UTI, status→Fever, resp→asthma → correct
+ENGINEERING_SEED sections), qSOFA sepsis screen retired for an EWS (SSC26), ED_ECTOPIC gated on
+reproductive-age-until-pregnancy-excluded; proven by `scripts/runtime-proof/emergency-pathway-integrity.sh`
+(5/5, both-ways). ·
+**W4c zibo value sets (done, `e5024acae`)** — zibo V200: 5 CodeSystem+ValueSet pairs backing the real
+pct enums (priority/tool/entry-route/class/state), real-DB verified, state codes drift-checked identical
+to pct chk_ee_state, EmergencyValueSetValidationTest 2/2. ·
+**Still W4d:** BFF/UI triage capture surface (surface iitt_priority + requires_clinician_review; map the
+pct 422 instead of swallowing it to 502) — live proving waits for the pct redeploy + experience-bff
+rebuild. · W5 alerts ·
 W6 resus hardening · W7 diagnostics + order sets · W8 medicines + blood · W9 observation +
 disposition + acceptance handshake · W10 command view + capacity · W11 MCI · W12 identity proof ·
 W13 `mental-health-service` · W14 content tranches 4–12 · W15 experience · W16a TeaVM spike / W16b
