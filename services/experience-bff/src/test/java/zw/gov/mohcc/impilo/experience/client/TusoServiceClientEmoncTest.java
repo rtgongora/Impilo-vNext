@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -27,6 +28,8 @@ class TusoServiceClientEmoncTest {
         MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
         server.expect(requestTo(BASE + "/v1/internal/facilities/emonc-readiness/42"))
                 .andExpect(method(HttpMethod.GET))
+                // Facility rows live on the REGISTRY plane; the discovery read must declare it.
+                .andExpect(header("X-Tenant-ID", "00000000-0000-0000-0000-000000000001"))
                 .andRespond(withSuccess("{\"data\":{\"verdict\":\"INSUFFICIENT_EVIDENCE\"}}",
                         MediaType.APPLICATION_JSON));
 
@@ -34,6 +37,22 @@ class TusoServiceClientEmoncTest {
         JsonNode data = client.getFacilityEmoncReadiness(42L);
 
         assertEquals("INSUFFICIENT_EVIDENCE", data.get("verdict").asText());
+        server.verify();
+    }
+
+    @Test
+    void statusSummaryDeclaresTheRegistryPlane() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/v1/internal/facilities/7/status-summary"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Tenant-ID", "00000000-0000-0000-0000-000000000001"))
+                .andRespond(withSuccess("{\"data\":{\"operational\":true}}", MediaType.APPLICATION_JSON));
+
+        TusoServiceClient client = new TusoServiceClient(rt, ServiceClientConfig.testServiceEndpoints());
+        JsonNode data = client.getFacilityStatusSummary(7L);
+
+        assertEquals(true, data.get("operational").asBoolean());
         server.verify();
     }
 }
