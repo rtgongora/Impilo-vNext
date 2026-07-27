@@ -56,13 +56,9 @@ public class MedicationReconciliationEntity {
     @Column(name = "notes")
     private String notes;
 
-    @Column(name = "created_at")
-    private OffsetDateTime createdAt;
-
     @PrePersist
     protected void onCreate() {
         if (reconciliationId == null) reconciliationId = UUID.randomUUID();
-        if (createdAt == null) createdAt = OffsetDateTime.now();
         if (startedAt == null) startedAt = OffsetDateTime.now();
     }
 
@@ -96,6 +92,4 @@ public class MedicationReconciliationEntity {
     public void setStartedAt(OffsetDateTime v) { this.startedAt = v; }
     public String getNotes() { return notes; }
     public void setNotes(String v) { this.notes = v; }
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime v) { this.createdAt = v; }
 }

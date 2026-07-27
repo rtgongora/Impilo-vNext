@@ -240,6 +240,61 @@ public class ObservationService {
     }
 
     /**
+     * Voids an observation — the record-honest form of deletion. The row is never removed:
+     * {@code ENTERED_IN_ERROR} states that the fact was asserted and withdrawn, which is itself
+     * clinical information (a danger-sign engine that consumed the value needs to know it was
+     * wrong, not to have never seen it). Idempotent: re-voiding a voided row is a no-op.
+     */
+    @Transactional
+    public ObservationEntity voidObservation(String observationId, String reason) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID id;
+        try {
+            id = UUID.fromString(observationId == null ? "" : observationId.trim());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "observation id must be a UUID");
+        }
+        ObservationEntity row = observationRepository.findByTenantIdAndObservationId(ctx.tenantId(), id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "observation not found"));
+        if ("ENTERED_IN_ERROR".equals(row.getStatus())) {
+            return row;
+        }
+        // Same discipline as the write path: withdrawing a clinical assertion is a clinical write.
+        accessGuard.requireCareRelationship(ctx, row.getSubjectCpid(),
+                row.getJourneyId(), row.getEncounterId());
+
+        row.setStatus("ENTERED_IN_ERROR");
+        if (reason != null && !reason.isBlank()) {
+            String existing = row.getNotes();
+            row.setNotes((existing == null || existing.isBlank() ? "" : existing + " | ")
+                    + "voided: " + reason.trim());
+        }
+        ObservationEntity saved = observationRepository.save(row);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("observation_id", saved.getObservationId().toString());
+        payload.put("subject_cpid", saved.getSubjectCpid());
+        payload.put("tenant_id", saved.getTenantId() != null ? saved.getTenantId().toString() : null);
+        payload.put("code", saved.getCode());
+        payload.put("status", saved.getStatus());
+        payload.put("reason", reason);
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType("OBSERVATION");
+        outbox.setAggregateId(saved.getObservationId().toString());
+        outbox.setEventType("pct.observation.voided");
+        outbox.setPayload(toJson(payload));
+        outbox.setTenantId(ctx.tenantId());
+        outboxRepository.save(outbox);
+
+        log.info("pct.observation.voided id={} subject={} code={} by={} correlationId={}",
+                saved.getObservationId(), saved.getSubjectCpid(), saved.getCode(),
+                ctx.actorId(), ctx.correlationId());
+        return saved;
+    }
+
+    /**
      * The event the shared health record consumes. CPID-only by doctrine: the clinical fact and
      * the person's pseudonymous identifier, never anything that identifies the person.
      */

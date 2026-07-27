@@ -100,6 +100,9 @@ public class EdVisitService {
         if (traumaEpisodeId != null) {
             daidzaiEpisodes.registerPhase(ctx.tenantId(), traumaEpisodeId, "ED", visit.getVisitId().toString(),
                     "ARRIVED", "pct.ed.visit_opened");
+            // V-3 closing: the patient has reached a facility and the ED visit carries a journey, so
+            // the prehospital spine can now resolve to that journey. Best-effort, after the phase.
+            daidzaiEpisodes.continuumLink(ctx.tenantId(), traumaEpisodeId, visit.getJourneyId(), null);
         }
         return visitDetail(visit.getVisitId());
     }
@@ -201,6 +204,9 @@ public class EdVisitService {
         if (visit.getTraumaEpisodeId() != null) {
             daidzaiEpisodes.registerPhase(ctx.tenantId(), visit.getTraumaEpisodeId(), "ED",
                     visit.getVisitId().toString(), "ARRIVED", "pct.ed.ems_arrival");
+            // V-3 closing: the pre-alerted ambulance patient has physically arrived onto a journey,
+            // which is exactly the moment the prehospital spine becomes resolvable to the continuum.
+            daidzaiEpisodes.continuumLink(ctx.tenantId(), visit.getTraumaEpisodeId(), visit.getJourneyId(), null);
         }
         return visitDetail(visit.getVisitId());
     }

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -92,6 +93,21 @@ public class ObservationController {
                 .stream().map(ObservationService::toMap).collect(Collectors.toList());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(out, correlationId()));
+    }
+
+    /**
+     * Withdraw an observation ({@code ENTERED_IN_ERROR}). Deliberately a status transition rather
+     * than a DELETE: the SHR and every engine that consumed the value must learn it was wrong, not
+     * have never seen it. Idempotent.
+     */
+    @PostMapping("/{observationId}/void")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> voidObservation(
+            @PathVariable String observationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Object reason = body == null ? null : body.get("reason");
+        ObservationEntity row = observationService.voidObservation(
+                observationId, reason == null ? null : reason.toString());
+        return ResponseEntity.ok(ApiResponse.ok(ObservationService.toMap(row), correlationId()));
     }
 
     private static String firstNonBlank(String... values) {

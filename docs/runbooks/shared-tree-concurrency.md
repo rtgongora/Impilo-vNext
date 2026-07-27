@@ -53,8 +53,19 @@ reasoning cannot.
 ### How to build so you neither read stale jars nor poison peers
 
 ```bash
-mvn -pl services/<svc> -am test        # PREFERRED for verification
+mvn -f services/pom.xml -pl <svc> -am test    # PREFERRED for verification
+# or, equivalently:  cd services && mvn -pl <svc> -am test
 ```
+
+⚠ **There is no aggregator pom at the repo root** — the reactor root is `services/pom.xml`. So
+`mvn -pl services/<svc> …` run from the repo root fails with *"Could not find the selected project in
+the reactor"*. Use one of the forms above. (`mvn -f services/<svc>/pom.xml test` also works but builds
+the module alone, so it reads `~/.m2` jars for its dependencies and loses the point of `-am`.)
+
+⚠⚠ **Never pipe the build and then judge the exit status.** `mvn … | grep … | tail` reports *`tail`'s*
+exit code, so a run that never resolved the module — or never compiled — reads as a pass. Either don't
+pipe, or check `${PIPESTATUS[0]}`. This exact masking hid the reactor error above, and the same bug
+reported a rejected `git push` as successful the same day.
 
 `-am` builds the dependency modules **in the same reactor**, so resolution uses their freshly compiled
 `target/classes` rather than `~/.m2` — you get current code **and** write nothing to the shared repo
@@ -150,6 +161,52 @@ GUARD_UPSTREAM_REF=<ref>   # name the branch your lane is measured against
 runs first inside the gate suite; the rule itself is written out in `scripts/guard/_guard-common.sh`.
 Guards run from a **worktree** now review that worktree — `REPO_PATH` no longer defaults to the main
 checkout — so a lane no longer gates somebody else's tree by accident.
+
+## 5b. Landing on a fast-moving canonical
+
+Combining §3, §5 and §5a into one procedure, because landing your own branch on this shared branch
+is where they all bite at once. Canonical moved **four times** during one vitals landing on
+2026-07-26 — every time the gates and module tests finished, the tip had advanced, so a naive
+"test then push" never converged and each attempted push was a rejected non-fast-forward.
+
+The loop that does converge:
+
+```bash
+CANON=origin/claude/staging-ux-orchestration-remediation-Yypyl
+git fetch origin claude/staging-ux-orchestration-remediation-Yypyl
+git merge "$CANON" --no-edit                      # re-merge the LATEST tip, not the one you tested
+git merge-base --is-ancestor "$(git rev-parse $CANON)" HEAD || exit 1   # the ancestor LAW
+bash scripts/guard/run-change-safety-gates.sh || exit 1     # already scoped to your work — see §5a
+```
+
+Then two rules that make it terminate instead of looping forever:
+
+1. **Re-run only the module the new delta touched.** After each re-merge, diff the incoming commits
+   against your last-tested tip: `git diff --name-only <last-tested> $CANON | grep -E '<your modules>'`.
+   Empty ⇒ your compile surface is unchanged and the green you already have still holds; push. Non-empty
+   ⇒ re-run that module's tests (`cd services && mvn -pl <svc> -am test`, never piped) before pushing.
+   Re-running the whole suite on every tick guarantees the target outstruns you.
+2. **Merge and push in the *same* block, gated on a clean delta**, so nothing moves in the gap:
+
+   ```bash
+   git merge "$CANON" --no-edit
+   DELTA=$(git diff --name-only <last-tested> "$(git rev-parse $CANON)" | grep -E '<your modules>')
+   if [ -z "$DELTA" ] && git merge-base --is-ancestor "$(git rev-parse $CANON)" HEAD; then
+     git push origin HEAD:claude/staging-ux-orchestration-remediation-Yypyl; echo "rc=$?"   # §3: check rc directly
+   fi
+   ```
+
+**The `GUARD_BASE_REF="$(git rev-parse $CANON)"` this step used to carry is no longer needed.** It
+existed because the gate's default base was `HEAD~1`, which on a merge commit attributed every merged
+canonical commit to you; §5a is now the default and computes the same scope by itself. Setting it by
+hand is harmless but redundant — and it is still the escape hatch if you ever need to pin a range.
+If a run blocks on a file outside your diff, treat that as a real hit, not a base artifact: confirm
+(`git diff "$CANON"..HEAD -- <path>` empty) and get it cleared before pushing. Do not silently push
+past a blocked gate on your own judgement.
+
+**A merge lands source, not a running fix.** If the regression you are closing is user-visible, the
+merge does not close it — the deployed image is still the pre-merge build until someone rebuilds and
+rolls it. Say so explicitly in the landing note so it is not left for "whoever comes next" (§7).
 
 ## 6. Migration numbers
 

@@ -683,8 +683,12 @@ All three were verified in code, not inferred, and are pushed.
 
 ## 8. Wave index
 
-W0 truth + guardrails (**done**) · W1 `libs/emergency-domain` + standards baseline · W2 episode spine ·
-W3 daidzai generalisation (**closes CC-5 violation V-3**) · W4 triage + pathway repair · W5 alerts ·
+W0 truth + guardrails (**done**) · W1 `libs/emergency-domain` (**done**) + standards baseline (TODO) ·
+W2 episode spine (**done**: pct V200/V201, FSM, service, events, identity hook) ·
+W3 daidzai generalisation + **CC-5 V-3 CLOSED backend-to-UI** (**done**: continuum-link + adopt +
+unanchored sweep, pct wiring on arrival, and the timeline UI showing linked/unanchored/prehospital;
+enforcement is a sweep not a CHECK — V200's CHECK broke the live phase-advance and was withdrawn in
+V201) · W4 triage demotion + pathway repair (**not started** — the live-surface wave) · W5 alerts ·
 W6 resus hardening · W7 diagnostics + order sets · W8 medicines + blood · W9 observation +
 disposition + acceptance handshake · W10 command view + capacity · W11 MCI · W12 identity proof ·
 W13 `mental-health-service` · W14 content tranches 4–12 · W15 experience · W16a TeaVM spike / W16b

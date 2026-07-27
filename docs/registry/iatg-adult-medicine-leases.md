@@ -63,10 +63,10 @@ leases as committed rather than as first drafted.
 
 | Service | Head today | Existing claims (as committed) | **Adult Medicine block** | Sub-ranges |
 |---|---|---|---|---|
-| `pct-service` | V100 | trauma V035–V069 · RMNP V058/V059/V061–V069 · **this pack V060 + V100** · emergency V200–V239 · **paediatric/IMAM V104–V105 (carve-out, see note)** | **V100–V129 excl. V104–V105 (retired)** | problem model V100–V103 (landed: V100 problems · V101 medical episode · V102 clinical documents · V103 problem links) · clerking + structured history V106–V109 · medication reconciliation V110–V112 · programme enrolment (HIV/TB/NCD) V113–V116 · chronic registers V117–V120 · reserve V121–V129 |
+| `pct-service` | V100 | trauma V035–V069 · RMNP V058/V059/V061–V069 · **this pack V060 + V100** · emergency V200–V239 · **paediatric/IMAM V104–V105 (carve-out, see note)** | **V100–V129 excl. V104–V105 (retired)** | **landed: V100 problems · V101 medical episode · V102 clinical documents · V103 problem links · V106 structured history · V107 medication reconciliation · V108 programme enrolment (HIV/TB) · V109 treatment regimen** · chronic registers V110–V120 · reserve V121–V129 |
 | `clinical-knowledge-platform-service` | V006 | surgery V007–V020 · RMNP V007–V009 · emergency V200–V229 | **V051–V080** | rule-governance + source provenance V051 · adult content tranches V052–V070 · reserve V071–V080 |
 | `inpatient-service` | V066 | trauma V035–V064 (**dead space**) · surgery V067–V080 · emergency V200–V229 | **V111–V130** | medical ward workspace V111–V114 · reserve V115–V130 |
-| `zibo-service` | V007 | surgery V008–V014 · emergency V200–V219 | **V035–V049** | adult medical value sets V035–V040 · DAK artifact registry V041–V044 |
+| `zibo-service` | V007 | surgery V008–V014 · emergency V200–V219 · **confidential map V008** | **V035–V049** | **HIV/TB programme value sets V035 (landed)** · further adult value sets V036–V040 · DAK artifact registry V041–V044 |
 | `oros-service` | V017 | trauma V015–V024 · surgery V018–V024 · emergency V200–V219 | **V050–V069** | result acknowledgement + action tracking V050–V052 |
 | `butano-service` | V002 | none | **V010–V029** | FHIR resource coverage for the medical record |
 | `telemonitoring-service` | V005 | none | **V010–V029** | adult chronic monitoring programmes |
@@ -82,8 +82,12 @@ available.
 > **V104 and V105 are retired and must never be used by any lane**: they were applied on at least one
 > estate database under the IMAM names before the rename, and a third lane reusing them is the exact
 > situation that forces the next live flyway-history repair. They are scar tissue; leave the gap.
-> This pack's block reads **V100–V129 excl. V104–V105 (retired)**; landed through V106
-> (`V106__structured_history.sql`); next free is **V107**.
+> This pack's block reads **V100–V129 excl. V104–V105 (retired)**; landed through **V109**
+> (V106 structured history · V107 medication reconciliation · **V108 programme enrolment** ·
+> **V109 treatment regimen**); next free is **V110**. The W3 programme migrations took V108/V109
+> rather than the originally-planned V113–V116 slot: V106/V107 had already consumed the
+> clerking/reconciliation numbers, and the programme spine was the next work, so it took the next
+> free numbers. Sub-ranges in the table below are a plan, not a contract.
 > Process notes for every lane: (1) a renumber must target numbers above ALL committed lease claims, or
 > obtain a carve-out written into the affected lease; (2) **a carve-out is valid only while the state it
 > accommodates holds** — write the condition into the note (this note's first revision went stale within
@@ -124,6 +128,10 @@ records how each binds here.
    `WHO_DAK` is RMNP's family and is **shared, not forked** — this pack's HIV and TB DAK artefacts
    register under it, because a second DAK family would split one traceability surface in two.
    `EDLIZ` and `ZW_POLICY` are shared and already exist.
+   **Landed (W3):** `docs/clinical-governance/medicine/standards-baseline.json` declares 13 HIV/TB
+   standards under `WHO_DAK` (6 SHIPPED, cited by the CKP programme content; 7 DEFERRED in the
+   companion `coverage-exclusions.json` with owner-waves). The shared matrix and
+   `check-dak-traceability.sh` run over them unchanged — no rival machinery.
 
 ## 4a. The emergency → medicine handover, frozen
 

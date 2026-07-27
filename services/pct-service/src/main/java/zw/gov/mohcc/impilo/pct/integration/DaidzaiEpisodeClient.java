@@ -76,6 +76,35 @@ public class DaidzaiEpisodeClient {
         return null;
     }
 
+    /**
+     * Resolve the trauma episode to its PCT anchor on facility arrival — the call that closes CC-5
+     * violation V-3. Best-effort: it stamps the episode with the journey the patient is now on so
+     * the daidzai spine resolves to the continuum instead of floating on {@code subject_cpid} alone.
+     *
+     * <p>Never throws — a clinical write must not roll back because DAIDZAI is unreachable. A 409
+     * (the episode already anchored to a different journey) is a real correlation anomaly, so it is
+     * logged loudly rather than swallowed silently; the unanchored-facility sweep and, later, an
+     * alert are what surface a link that never landed. A missing episode id is a no-op.
+     */
+    public void continuumLink(UUID tenantId, UUID episodeId, String pctJourneyId, UUID pctEmergencyEpisodeId) {
+        if (episodeId == null || pctJourneyId == null || pctJourneyId.isBlank()) return;
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("pctJourneyId", pctJourneyId);
+        if (pctEmergencyEpisodeId != null) body.put("pctEmergencyEpisodeId", pctEmergencyEpisodeId.toString());
+        try {
+            restTemplate.exchange(
+                    baseUrl + "/internal/v1/daidzai/trauma-episodes/" + episodeId + "/continuum-link",
+                    HttpMethod.POST, new HttpEntity<>(body, headers(tenantId)), Void.class);
+        } catch (org.springframework.web.client.HttpClientErrorException.Conflict conflict) {
+            log.warn("DAIDZAI continuum-link CONFLICT for episode {} → journey {}: {} — episode is "
+                    + "anchored elsewhere, a correlation anomaly for the unanchored sweep to surface; "
+                    + "ED write proceeds", episodeId, pctJourneyId, conflict.getMessage());
+        } catch (RestClientException e) {
+            log.warn("DAIDZAI continuum-link for episode {} → journey {} failed: {} — the back-link "
+                    + "will show unanchored until a retry; ED write proceeds", episodeId, pctJourneyId, e.getMessage());
+        }
+    }
+
     /** Best-effort timeline registration; never throws (a clinical write must not roll back on this). */
     public void registerPhase(UUID tenantId, UUID episodeId, String phase, String ownerRef,
                               String status, String eventType) {
