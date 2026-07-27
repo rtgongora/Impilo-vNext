@@ -1,0 +1,113 @@
+{
+  "formKey": "impilo.anc.contact.followup.v1",
+  "name": "ANC follow-up contact",
+  "description": "A routine antenatal contact after the first. Danger-sign screening happens here at every contact, which is why the blood pressure, proteinuria and the symptom questions are the spine of the form rather than an afterthought.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": ["OUTPATIENT", "COMMUNITY"],
+  "careStages": ["ASSESSMENT", "CONSULTATION"],
+  "specialties": ["MIDWIFERY", "OBSTETRICS", "NURSING"],
+  "encounterTypes": ["ANTENATAL", "ANC", "MATERNITY", "OBSTETRICS"],
+  "encounterContexts": ["outpatient", "community"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER"],
+  "minAgeMonths": 108,
+  "sexApplicability": "FEMALE",
+  "requirePregnant": true,
+  "programmeApplicability": ["ANC", "MATERNAL"],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO recommendations on antenatal care for a positive pregnancy experience (2016)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "systolicBp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "mm[Hg]", "code": {"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}},
+      {"linkId": "diastolicBp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "mm[Hg]", "code": {"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}},
+      {"linkId": "temperature", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "Cel", "code": {"system": "http://loinc.org", "code": "8310-5", "display": "Body temperature"}},
+      {"linkId": "proteinuria", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "5804-0", "display": "Protein [Mass/volume] in Urine by Test strip"}},
+      {"linkId": "fundalHeight", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "cm", "code": {"system": "http://loinc.org", "code": "11881-0", "display": "Fundal height"}}
+    ]
+  },
+  "indicators": {
+    "indicators": [
+      {"programmeIndicatorCode": "ANC_CONTACTS_TOTAL"},
+      {"programmeIndicatorCode": "PREECLAMPSIA_DETECTED"}
+    ]
+  },
+  "definition": {
+    "id": "anc-contact-followup-v1",
+    "version": "1.0.0",
+    "title": "ANC follow-up contact",
+    "description": "Blood pressure and proteinuria every contact; the danger-sign questions asked, not assumed.",
+    "dakReference": "WHO ANC DAK — routine contact",
+    "healthDomain": "MATERNAL_HEALTH",
+    "programme": "ANC",
+    "encounterTypes": ["ANTENATAL", "ANC", "MATERNITY"],
+    "minAgeMonths": 108,
+    "sexApplicability": "FEMALE",
+    "providerRoles": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "SENSITIVE"},
+    "sections": [
+      {
+        "id": "observations",
+        "title": "Observations",
+        "description": "Blood pressure and proteinuria at every contact — together they are the whole hypertensive ladder, and one without the other cannot place a woman on it.",
+        "fields": [
+          {"id": "systolicBp", "linkId": "systolicBp", "label": "Systolic blood pressure", "kind": "numeric_with_unit", "unit": "mm[Hg]", "validation": {"min": 50, "max": 300, "required": true}},
+          {"id": "diastolicBp", "linkId": "diastolicBp", "label": "Diastolic blood pressure", "kind": "numeric_with_unit", "unit": "mm[Hg]", "validation": {"min": 30, "max": 200, "required": true}},
+          {
+            "id": "proteinuria",
+            "linkId": "proteinuria",
+            "label": "Urine protein (dipstick)",
+            "kind": "coded_single",
+            "description": "The finding that separates gestational hypertension from pre-eclampsia. Recorded even when normal, because 'not done' and 'negative' place a woman on different rungs.",
+            "options": [
+              {"code": "NEGATIVE", "display": "Negative"},
+              {"code": "TRACE", "display": "Trace"},
+              {"code": "ONE_PLUS", "display": "1+"},
+              {"code": "TWO_PLUS", "display": "2+"},
+              {"code": "THREE_PLUS", "display": "3+"}
+            ],
+            "validation": {"required": false}
+          },
+          {"id": "temperature", "linkId": "temperature", "label": "Temperature", "kind": "numeric_with_unit", "unit": "Cel", "validation": {"min": 30, "max": 45, "required": false}},
+          {"id": "fundalHeight", "linkId": "fundalHeight", "label": "Symphysis-fundal height", "kind": "numeric_with_unit", "unit": "cm", "validation": {"min": 5, "max": 50, "required": false}}
+        ]
+      },
+      {
+        "id": "danger-signs",
+        "title": "Danger signs — ask every one",
+        "description": "These are asked at every contact. A blank is 'not asked', not 'absent': the screeningComplete flag is what lets the assessment read as clear, never an empty set of answers.",
+        "fields": [
+          {"id": "convulsions", "linkId": "convulsions", "label": "Convulsions or fits", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "severeHeadache", "linkId": "severeHeadache", "label": "Severe or persistent headache", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "visualDisturbance", "linkId": "visualDisturbance", "label": "Blurred vision or seeing spots", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "epigastricPain", "linkId": "epigastricPain", "label": "Upper abdominal (epigastric) pain", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "vaginalBleeding", "linkId": "vaginalBleeding", "label": "Vaginal bleeding", "kind": "coded_single", "options": [{"code": "ABSENT", "display": "None"}, {"code": "LIGHT", "display": "Light"}, {"code": "MODERATE", "display": "Moderate"}, {"code": "HEAVY", "display": "Heavy"}], "validation": {"required": false}},
+          {"id": "fluidLeaking", "linkId": "fluidLeaking", "label": "Leaking fluid from the vagina", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "reducedFetalMovements", "linkId": "reducedFetalMovements", "label": "Reduced or absent fetal movements", "kind": "coded_single", "description": "Her perception. Ask directly — she notices before any measurement does.", "options": [{"code": "PRESENT", "display": "Yes — reduced or absent"}, {"code": "ABSENT", "display": "No — normal movements"}], "validation": {"required": false}}
+        ]
+      },
+      {
+        "id": "completion",
+        "title": "Completing the contact",
+        "fields": [
+          {
+            "id": "screeningComplete",
+            "linkId": "screeningComplete",
+            "label": "All danger-sign questions were asked",
+            "kind": "coded_single",
+            "description": "The only field that lets the assessment say 'no danger signs'. Without it, an empty set of answers means nothing was found in what was asked — a different and more dangerous statement.",
+            "options": [{"code": "YES", "display": "Yes — screening complete"}, {"code": "NO", "display": "No — interrupted or partial"}],
+            "validation": {"required": false}
+          },
+          {"id": "nextContactPlan", "linkId": "nextContactPlan", "label": "Next contact / plan", "kind": "text", "validation": {"required": false}},
+          {"id": "contactNotes", "linkId": "contactNotes", "label": "Notes", "kind": "text", "validation": {"required": false}}
+        ]
+      }
+    ]
+  }
+}

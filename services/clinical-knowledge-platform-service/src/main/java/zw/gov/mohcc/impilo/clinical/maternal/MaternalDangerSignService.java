@@ -61,7 +61,9 @@ public class MaternalDangerSignService {
             String monitoringInstruction,
             List<String> triggeringFindings,
             List<String> sourceRefs,
-            Map<String, Object> provenance) {
+            Map<String, Object> provenance,
+            String signalFamily,
+            int signalRank) {
     }
 
     /**
@@ -74,6 +76,7 @@ public class MaternalDangerSignService {
      */
     public record Assessment(
             List<Alert> alerts,
+            List<Alert> supersededAlerts,
             String topLineAction,
             List<String> notAssessed,
             List<String> contentProblems,
@@ -93,7 +96,7 @@ public class MaternalDangerSignService {
         }
 
         static Assessment unavailable(String why) {
-            return new Assessment(List.of(), null, List.of(), List.of(why), true, false,
+            return new Assessment(List.of(), List.of(), null, List.of(), List.of(why), true, false,
                     null, null, why);
         }
     }
@@ -154,18 +157,44 @@ public class MaternalDangerSignService {
             }
         }
 
-        alerts.sort(Comparator.comparingInt(a -> severityRank(a.severity())));
+        // One signal per family. Within a ladder — gestational hypertension, pre-eclampsia, severe
+        // features, eclampsia — only the most severe firing rung is an active alert; the milder
+        // rungs are superseded. They are NOT discarded: a superseded alert stays visible in its own
+        // list, because "we also saw the earlier stage" is real clinical information and hiding it
+        // entirely would be its own kind of lie. What suppression buys is that the eclampsia is not
+        // buried under three quieter alarms for the same disease.
+        List<Alert> active = new ArrayList<>();
+        List<Alert> superseded = new ArrayList<>();
+        for (Alert alert : alerts) {
+            if (alert.signalFamily() == null) {
+                active.add(alert);
+                continue;
+            }
+            Alert strongerSameFamily = alerts.stream()
+                    .filter(other -> alert.signalFamily().equals(other.signalFamily()))
+                    .filter(other -> other.signalRank() > alert.signalRank())
+                    .findAny().orElse(null);
+            if (strongerSameFamily == null) {
+                active.add(alert);
+            } else {
+                superseded.add(alert);
+            }
+        }
+
+        active.sort(Comparator.comparingInt(a -> severityRank(a.severity())));
+        superseded.sort(Comparator.comparingInt(a -> severityRank(a.severity())));
 
         return new Assessment(
-                List.copyOf(alerts),
-                alerts.isEmpty() ? null : alerts.get(0).requiredAction(),
+                List.copyOf(active),
+                List.copyOf(superseded),
+                active.isEmpty() ? null : active.get(0).requiredAction(),
                 List.copyOf(notAssessed),
                 List.copyOf(contentProblems),
                 incomplete,
                 screeningComplete,
                 rules.get(0).contentVersion(),
                 rules.get(0).approvalStatus(),
-                note(alerts, notAssessed, incomplete, screeningComplete));
+                note(active, notAssessed, incomplete, screeningComplete));
     }
 
     private enum Applicability { APPLIES, NOT_APPLICABLE, UNDECIDABLE }
@@ -195,7 +224,9 @@ public class MaternalDangerSignService {
                 rule.monitoringInstruction(),
                 List.copyOf(result.usedInputs()),
                 rule.sourceRefs(),
-                rule.provenance() == null ? Map.of() : rule.provenance().toMap());
+                rule.provenance() == null ? Map.of() : rule.provenance().toMap(),
+                rule.signalFamily(),
+                rule.signalRank());
     }
 
     private static int severityRank(String severity) {

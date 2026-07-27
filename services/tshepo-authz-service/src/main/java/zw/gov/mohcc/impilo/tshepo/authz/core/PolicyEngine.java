@@ -71,6 +71,49 @@ public class PolicyEngine {
             "DELETE", "EXPORT", "BULK", "MERGE", "RECOVERY"
     );
 
+    /**
+     * Every condition key {@code evaluateConditions} acts on, plus {@code visibility}. A key outside
+     * this set is a NON-MATCH, not a silent pass — see the unknown-key guard at the top of
+     * {@code evaluateConditions}.
+     *
+     * <p><strong>Why this exists.</strong> {@code evaluateConditions} used to test the keys it knew
+     * and fall through to {@code return true}, so a rule carrying an unimplemented key did not sit
+     * inert — it evaluated on whatever remained and fired MORE broadly than it read. On a DENY that
+     * is worse than useless, because DENY wins: a rule pinned {@code {"path_contains": "/regulatory/",
+     * "deny_operational_lanes": true}} read as "deny the operational lanes" but evaluated as "deny
+     * everything under /regulatory/", swallowing the ALLOWs beside it. Treating an unknown key as a
+     * non-match makes that impossible: an ALLOW with an unknown key grants nothing (fail-closed), a
+     * DENY with an unknown key denies nothing (fail-narrow).</p>
+     *
+     * <p>{@code visibility} is listed although it is not a MATCH condition: it drives an obligation
+     * (read by {@code parseConditions().get("visibility")} here and by
+     * {@code VisibilityObligationComposer}) and a rule may legitimately carry it beside match
+     * conditions, so it must not read as unknown.</p>
+     *
+     * <p>This is the single source of truth for the runtime check.
+     * {@code PolicyEngineConditionKeyVocabularyTest} fails the build if a key handled in the source
+     * is missing here (the engine would wrongly reject it) or listed here without a handler (the set
+     * would drift into fiction). Keep it in lockstep with the checks below.</p>
+     */
+    static final Set<String> RECOGNISED_CONDITION_KEYS = Set.of(
+            "min_loa",
+            "allowed_facilities",
+            "allowed_actor_types",
+            "max_risk_score",
+            "allowed_scope_refs",
+            "path_contains",
+            "account_assurance_required",
+            "verification_grace_expiry_epoch_ms",
+            "allowed_workflow_states",
+            "blocked_workflow_states",
+            "allowed_departments",
+            "allowed_wards",
+            "allowed_organisations",
+            "allowed_jurisdictions",
+            "requires_provider_id",
+            "visibility"
+    );
+
     private final DeviceRiskScoreEvaluator riskScoring;
     private final PolicyCacheService policyCacheService;
     private final ProviderPrivilegeRevocationStore privilegeRevocationStore;
@@ -469,6 +512,9 @@ public class PolicyEngine {
      *       path denies.</li>
      * </ul>
      * </p>
+     *
+     * <p>A key outside {@link #RECOGNISED_CONDITION_KEYS} is a NON-MATCH with a WARN, not a silent
+     * pass — see the unknown-key guard below and the constant's javadoc for why.</p>
      */
     @SuppressWarnings("unchecked")
     private boolean evaluateConditions(String conditionsJson, AuthzInternalRequest request) {
@@ -479,6 +525,26 @@ public class PolicyEngine {
         try {
             Map<String, Object> conditions = objectMapper.readValue(conditionsJson,
                     new TypeReference<>() {});
+
+            // Unknown-key guard — the root fix for "differently active". A key the engine does not
+            // implement is a NON-MATCH, never the old silent fall-through to `return true`. Failing
+            // the whole condition (rather than ignoring the stray key) is what keeps a rule from
+            // firing more broadly than it reads: an ALLOW with an unknown key grants nothing
+            // (fail-closed), a DENY with an unknown key denies nothing (fail-narrow, so it cannot
+            // swallow the ALLOWs beside it). Loud, because PolicyConditionKeyContractTest means an
+            // ACTIVE rule should never reach here with an unknown key; if one does, a migration
+            // shipped past the guard and an operator needs to see it.
+            List<String> unknownKeys = conditions.keySet().stream()
+                    .filter(k -> !RECOGNISED_CONDITION_KEYS.contains(k))
+                    .sorted()
+                    .toList();
+            if (!unknownKeys.isEmpty()) {
+                log.warn("Policy rule carries unrecognised condition key(s) {} — the rule is treated "
+                        + "as a NON-MATCH (fail-closed for ALLOW, fail-narrow for DENY), not silently "
+                        + "ignored. Implement the key in evaluateConditions or repair the seed. "
+                        + "conditions={}", unknownKeys, conditionsJson);
+                return false;
+            }
 
             // min_loa check — keyed on the EFFECTIVE LoA (the stronger of the session's
             // ACR-derived login level and the actor's current identity-assurance level
