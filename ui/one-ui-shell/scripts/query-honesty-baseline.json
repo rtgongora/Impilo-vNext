@@ -1,5 +1,5 @@
 {
-  "total": 371,
+  "total": 365,
   "files": {
     "src/app/access/page.tsx": 3,
     "src/app/admin/audit/page.tsx": 1,
@@ -32,7 +32,7 @@
     "src/app/ehr/[patientId]/discharge/page.tsx": 1,
     "src/app/ehr/[patientId]/documents/page.tsx": 1,
     "src/app/ehr/[patientId]/emergency/page.tsx": 3,
-    "src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx": 8,
+    "src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx": 4,
     "src/app/ehr/[patientId]/encounter/page.tsx": 1,
     "src/app/ehr/[patientId]/encounters/page.tsx": 4,
     "src/app/ehr/[patientId]/family-history/page.tsx": 1,
@@ -51,9 +51,9 @@
     "src/app/ehr/[patientId]/procedures/page.tsx": 1,
     "src/app/ehr/[patientId]/results/page.tsx": 1,
     "src/app/ehr/[patientId]/social-history/page.tsx": 1,
-    "src/app/ehr/[patientId]/summary/page.tsx": 8,
+    "src/app/ehr/[patientId]/summary/page.tsx": 7,
     "src/app/ehr/[patientId]/timeline/page.tsx": 3,
-    "src/app/ehr/[patientId]/vitals/page.tsx": 2,
+    "src/app/ehr/[patientId]/vitals/page.tsx": 1,
     "src/app/erp/gl/page.tsx": 1,
     "src/app/facility/[id]/configuration/page.tsx": 5,
     "src/app/facility/[id]/page.tsx": 1,
