@@ -166,6 +166,15 @@ public class FacilityClaimService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "You already hold this role at this facility.");
         }
+        // Re-submitting the same claim would otherwise stack duplicates in the steward's queue, and
+        // approving the second after the first would trip the ACTIVE unique index as a raw
+        // constraint violation instead of a decision (V045 enforces this at the DB too).
+        if (appointmentRepository.existsByFacilityUuidAndPersonHealthIdAndRoleAndApprovalState(
+                facility.getFacilityUuid(), request.personHealthId(), role,
+                FacilityAdminAppointmentEntity.STATE_PENDING)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "You already have a claim for this role awaiting review at this facility.");
+        }
 
         FacilityAdminAppointmentEntity appointment = new FacilityAdminAppointmentEntity();
         appointment.setFacilityUuid(facility.getFacilityUuid());
