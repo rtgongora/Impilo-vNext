@@ -348,20 +348,36 @@ public class EdVisitService {
             scoringPayload.put("news2_score", EdPayloadMapper.integer(body, "news2Score", "news2_score"));
         }
 
-        Map<String, Object> enrichedDiscriminators = new LinkedHashMap<>(discriminators);
-        Integer acuity = EdPayloadMapper.integer(body, "acuity");
-        boolean autoAcuity = Boolean.TRUE.equals(EdPayloadMapper.bool(body, "autoAcuity", "auto_acuity"));
-        if (shouldApplyDiscriminatorEngine(triageSystem, body)) {
-            Map<String, Object> both = EdTriageDiscriminatorEngine.scoreBoth(scoringPayload, vitals);
-            enrichedDiscriminators.put("engine", both);
-            if (acuity == null || autoAcuity) {
-                acuity = (Integer) both.get("recommended_acuity");
-                triageSystem = String.valueOf(both.get("recommended_system"));
-            }
+        // WHO IITT is the acuity authority of record (PO ruling R7). ESI/MTS are computed only as
+        // advisory scores that never set the acuity and never overwrite the tool of record — the
+        // Math.min reconciliation and the `acuity = 3` default are both gone. The whole decision is
+        // a pure function of the request (EmergencyTriageDecider) so it is unit-testable without a
+        // running service; this method only persists its result.
+        Integer explicitAcuity = EdPayloadMapper.integer(body, "acuity");
+        boolean wantAdvisory = shouldApplyDiscriminatorEngine(triageSystem, body) || !discriminators.isEmpty();
+        Map<String, Object> advisory = wantAdvisory
+                ? EdTriageDiscriminatorEngine.scoreBoth(scoringPayload, vitals)
+                : null;
+
+        TriageDecision decision = EmergencyTriageDecider.decide(body, advisory, triageSystem, explicitAcuity);
+        if (!decision.triageable()) {
+            // An unassessed patient is a refusal returned to the caller, never a stored acuity 3.
+            String reason = decision.refusalCode() + ": " + decision.refusalMessage()
+                    + (decision.unassessedInputs().isEmpty()
+                            ? ""
+                            : " Unassessed inputs: " + decision.unassessedInputs());
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, reason);
         }
-        if (acuity == null) acuity = 3;
+        int acuity = decision.acuity();
         if (acuity < 1 || acuity > 5) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "acuity must be 1-5");
+        }
+        // Keep the legacy triage_system column in step with the authoritative tool so it stops lying.
+        triageSystem = decision.triageTool();
+
+        Map<String, Object> enrichedDiscriminators = new LinkedHashMap<>(discriminators);
+        if (advisory != null) {
+            enrichedDiscriminators.put("advisory", advisory);
         }
         boolean fastTrack = Boolean.TRUE.equals(EdPayloadMapper.bool(body, "fastTrack", "fast_track"));
 
@@ -370,6 +386,16 @@ public class EdVisitService {
         assessment.setTenantId(ctx.tenantId());
         assessment.setAcuity(acuity);
         assessment.setTriageSystem(triageSystem);
+        assessment.setTriageTool(decision.triageTool());
+        assessment.setIittPriority(decision.iittPriority());
+        assessment.setRequiresClinicianReview(decision.requiresClinicianReview());
+        assessment.setReviewReason(decision.reviewReason());
+        if (decision.emergencySigns() != null && !decision.emergencySigns().isEmpty()) {
+            assessment.setEmergencySignsJson(jsonField(decision.emergencySigns(), "{}"));
+        }
+        if (advisory != null) {
+            assessment.setAdvisoryScoresJson(jsonField(advisory, "{}"));
+        }
         assessment.setChiefComplaint(EdPayloadMapper.str(body, "chiefComplaint", "chief_complaint"));
         assessment.setPresentingProblemCode(EdPayloadMapper.str(body, "presentingProblemCode", "presenting_problem_code"));
         assessment.setPainScore(EdPayloadMapper.integer(body, "painScore", "pain_score"));
@@ -752,16 +778,27 @@ public class EdVisitService {
     }
 
     private Map<String, Object> triageRow(EdTriageAssessmentEntity t) {
-        return Map.of(
-                "id", t.getId(),
-                "acuity", t.getAcuity(),
-                "triage_system", t.getTriageSystem(),
-                "chief_complaint", Objects.requireNonNullElse(t.getChiefComplaint(), ""),
-                "pain_score", t.getPainScore() != null ? t.getPainScore() : 0,
-                "news2_score", t.getNews2Score() != null ? t.getNews2Score() : 0,
-                "fast_track", t.isFastTrack(),
-                "triaged_by", t.getTriagedBy(),
-                "created_at", t.getCreatedAt().toString());
+        // Null-tolerant (LinkedHashMap, not Map.of): iitt_priority and review_reason are null on a
+        // manual row, and the IITT decision fields are what W4d surfaces — the priority as the tier
+        // of record, the review flag as the interruptive prompt, the advisory scores as clearly
+        // secondary. The legacy triage_system is retained but now equals the authoritative tool.
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", t.getId());
+        m.put("acuity", t.getAcuity());
+        m.put("triage_system", t.getTriageSystem());
+        m.put("triage_tool", t.getTriageTool());
+        m.put("iitt_priority", t.getIittPriority());
+        m.put("requires_clinician_review", t.isRequiresClinicianReview());
+        m.put("review_reason", t.getReviewReason());
+        m.put("emergency_signs", t.getEmergencySignsJson());
+        m.put("advisory_scores", t.getAdvisoryScoresJson());
+        m.put("chief_complaint", Objects.requireNonNullElse(t.getChiefComplaint(), ""));
+        m.put("pain_score", t.getPainScore() != null ? t.getPainScore() : 0);
+        m.put("news2_score", t.getNews2Score() != null ? t.getNews2Score() : 0);
+        m.put("fast_track", t.isFastTrack());
+        m.put("triaged_by", t.getTriagedBy());
+        m.put("created_at", t.getCreatedAt().toString());
+        return m;
     }
 
     private Map<String, Object> traumaRow(EdTraumaActivationEntity t) {

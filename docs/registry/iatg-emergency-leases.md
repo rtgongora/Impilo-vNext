@@ -683,12 +683,28 @@ All three were verified in code, not inferred, and are pushed.
 
 ## 8. Wave index
 
-W0 truth + guardrails (**done**) · W1 `libs/emergency-domain` (**done**) + standards baseline (TODO) ·
-W2 episode spine (**done**: pct V200/V201, FSM, service, events, identity hook) ·
-W3 daidzai generalisation + **CC-5 V-3 CLOSED backend-to-UI** (**done**: continuum-link + adopt +
-unanchored sweep, pct wiring on arrival, and the timeline UI showing linked/unanchored/prehospital;
-enforcement is a sweep not a CHECK — V200's CHECK broke the live phase-advance and was withdrawn in
-V201) · W4 triage demotion + pathway repair (**not started** — the live-surface wave) · W5 alerts ·
+W0 truth + guardrails (**done**) · W1 `libs/emergency-domain` (**done**) + standards baseline (**done**:
+`docs/clinical-governance/emergency/standards-baseline.json`, 7 EMS standards, guard green, all
+DEFERRED with revisit conditions) · W2 episode spine (**done**: pct V200/V201, FSM, service, events,
+identity hook) · W3 daidzai generalisation + **CC-5 V-3 CLOSED backend-to-UI** (**done**:
+continuum-link + adopt + unanchored sweep, pct wiring on arrival, and the timeline UI showing
+linked/unanchored/prehospital; enforcement is a sweep not a CHECK — V200's CHECK broke the live
+phase-advance and was withdrawn in V201) ·
+**W4a triage demotion (backend done; live rig deploy-gated)** — pct **V202** adds `triage_tool`,
+`iitt_priority`, `emergency_signs_json`, `requires_clinician_review`, `review_reason`,
+`advisory_scores_json` to `ed_triage_assessment` (additive/nullable, brownfield-safe: the one CHECK
+only bites a `triage_tool='WHO_IITT'` row, verified on real Postgres over a pre-seeded legacy row);
+`EmergencyTriageDecider` (pure, 13 unit tests) makes WHO IITT the acuity of record — RED→1/YELLOW→3/
+GREEN→5, ESI/MTS demoted to advisory that can never set acuity or overwrite the tool, the `Math.min`
+reconciliation and the `acuity=3` default both removed, `NOT_TRIAGEABLE`→422 refusal, cross-system
+discrepancy raises `requires_clinician_review` not a silent up-triage; `EdVisitService.recordStructuredTriage`
+rewritten to call it and persist the new columns, `triageRow` surfaces them. **Contract change:** the
+old `autoAcuity`/`scoreBoth`→acuity path is retired — a request with neither runnable IITT (signs/vitals
++ age) nor an explicit clinician acuity now returns 422 instead of acuity 3; an explicit acuity still
+stands as a manual entry (and, when IITT can also run, becomes a flagged override with IITT retained as
+the tier of record), so legacy explicit-acuity callers keep working. **Still W4:** pathway repair (the 8
+`ED_*` shells + retire qSOFA), zibo value sets, and the BFF/UI triage capture surface — live proving of
+all of W4 waits for the pct redeploy + experience-bff rebuild. · W5 alerts ·
 W6 resus hardening · W7 diagnostics + order sets · W8 medicines + blood · W9 observation +
 disposition + acceptance handshake · W10 command view + capacity · W11 MCI · W12 identity proof ·
 W13 `mental-health-service` · W14 content tranches 4–12 · W15 experience · W16a TeaVM spike / W16b
