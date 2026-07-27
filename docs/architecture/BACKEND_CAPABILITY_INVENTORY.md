@@ -1,6 +1,6 @@
 # Backend capability inventory
 
-> Generated: 2026-06-19. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-07-27. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md)
 

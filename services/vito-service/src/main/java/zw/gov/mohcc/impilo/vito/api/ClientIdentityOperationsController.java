@@ -129,6 +129,14 @@ public class ClientIdentityOperationsController {
         return ResponseEntity.status(201).body(ApiResponse.ok(service.addRelationship(healthId, request), correlationId(ctx)));
     }
 
+    /** The relationship timeline for a client — the read that completes the write-only endpoint above. */
+    @GetMapping("/clients/{healthId}/relationships")
+    public ResponseEntity<ApiResponse<java.util.List<ClientRegistryDtos.RelationshipView>>> listRelationships(
+            @PathVariable UUID healthId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(service.listRelationships(healthId), correlationId(ctx)));
+    }
+
     @PostMapping("/clients/{healthId}/authorization-links")
     public ResponseEntity<ApiResponse<ClientRegistryDtos.AuthorizationLinkView>> addAuthorizationLink(
             @PathVariable UUID healthId,

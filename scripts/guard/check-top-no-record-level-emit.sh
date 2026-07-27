@@ -26,10 +26,15 @@ TOP_TOKENS='pct_top_procedures|pct_top_authorisations|TopProcedure|TopAuthorisat
 EMIT_FILES=$(git ls-files -- 'services/pct-service/**/*.java' \
   | xargs -r grep -lE 'Outbox|KafkaTemplate|event_outbox|EventPublisher|\.send\(|publishEvent' 2>/dev/null || true)
 
+# Strip Java comments (line //, and javadoc/block lines beginning with * or /*) before matching, so a
+# comment that DESCRIBES the prohibition — "this must never emit a TopProcedure" — is not itself read
+# as a violation. The guard is about code that emits, not prose about not emitting.
+java_code_only() { grep -vE '^[[:space:]]*(\*|//|/\*)' "$1" 2>/dev/null || true; }
+
 FAIL=0
 OFFENDERS=""
 for f in $EMIT_FILES; do
-    if grep -nE "$TOP_TOKENS" "$f" >/dev/null 2>&1; then
+    if java_code_only "$f" | grep -nE "$TOP_TOKENS" >/dev/null 2>&1; then
         OFFENDERS="$OFFENDERS $f"
         FAIL=1
     fi
@@ -39,7 +44,7 @@ if [[ "$FAIL" -ne 0 ]]; then
     echo "FAIL: a termination-of-pregnancy record appears on an event/outbox/publishing path:"
     for f in $OFFENDERS; do
         echo "  $f"
-        grep -nE "$TOP_TOKENS" "$f" | sed 's/^/      /'
+        java_code_only "$f" | grep -nE "$TOP_TOKENS" | sed 's/^/      /'
     done
     echo ""
     echo "      TOP is aggregate-only by PO ruling. No record-level event may carry a TOP identifier"
@@ -49,10 +54,19 @@ if [[ "$FAIL" -ne 0 ]]; then
     exit 1
 fi
 
-# Also assert the tables themselves declare no outbox/event column, so the schema cannot grow one.
-SCHEMA_OFFEND=$(git ls-files -- 'services/pct-service/**/V435__*.sql' \
-  | xargs -r grep -niE 'event_type|outbox|event_id|emit' 2>/dev/null || true)
-if [[ -n "$SCHEMA_OFFEND" ]]; then
+# Also assert the tables themselves declare no outbox/event COLUMN, so the schema cannot grow one.
+# The migration's own header and COMMENT ON statements legitimately describe the absence ("NO
+# event/outbox path exists"); those are prose, not columns, so strip -- line comments and COMMENT ON
+# statements before matching. A real column declaration (`event_type ...`) survives the strip.
+SCHEMA_OFFEND=""
+for f in $(git ls-files -- 'services/pct-service/**/V435__*.sql'); do
+    hit=$(sed -E 's/--.*$//' "$f" | sed -E '/COMMENT[[:space:]]+ON/,/;/d' \
+          | grep -niE 'event_type|outbox|event_id|emit' 2>/dev/null || true)
+    if [[ -n "$hit" ]]; then
+        SCHEMA_OFFEND="$SCHEMA_OFFEND"$'\n'"$f:"$'\n'"$hit"
+    fi
+done
+if [[ -n "${SCHEMA_OFFEND// }" ]]; then
     echo "FAIL: the TOP migration declares an event/outbox column:"
     echo "$SCHEMA_OFFEND" | sed 's/^/  /'
     echo "TOP no-record-level-emit guard: FAILED"

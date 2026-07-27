@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.vito.api.dto.ClientRegistryDtos;
 import zw.gov.mohcc.impilo.vito.api.dto.ClientIdentitySummary;
 import zw.gov.mohcc.impilo.vito.config.VitoProperties;
 import zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine;
+import zw.gov.mohcc.impilo.vito.core.ClientRelationshipType;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientAliasEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientAuditEventEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
@@ -492,6 +493,57 @@ class ClientIdentityOperationsServiceTest {
         assertTrue(stewardshipActions.stream().anyMatch(action -> action.getActionType() == ClientStewardshipActionType.REVIEW_DUPLICATE));
         verify(dedupCaseRepository, atLeastOnce()).save(any(DedupCaseEntity.class));
         verify(outboxRepository, atLeastOnce()).save(any(EventOutboxEntity.class));
+    }
+
+    @Test
+    void recordBirthDyad_writesTheEdgeWhenBothPartiesAreKnownAndNotYetLinked() {
+        UUID mother = UUID.randomUUID();
+        UUID child = UUID.randomUUID();
+        when(clientRepository.findByTenantIdAndHealthId(tenantId, mother)).thenReturn(Optional.of(new ClientEntity()));
+        when(clientRepository.findByTenantIdAndHealthId(tenantId, child)).thenReturn(Optional.of(new ClientEntity()));
+        when(relationshipRepository
+                .findFirstByTenantIdAndClientHealthIdAndRelatedClientHealthIdAndRelationshipTypeAndStatus(
+                        tenantId, mother, child, ClientRelationshipType.BIRTH_MOTHER_OF, "ACTIVE"))
+                .thenReturn(Optional.empty());
+
+        assertTrue(service.recordBirthDyad(tenantId, mother, child));
+        verify(relationshipRepository).save(any(zw.gov.mohcc.impilo.vito.persistence.entity.ClientRelationshipEntity.class));
+    }
+
+    @Test
+    void recordBirthDyad_isIdempotentWhenAnActiveEdgeAlreadyExists() {
+        UUID mother = UUID.randomUUID();
+        UUID child = UUID.randomUUID();
+        when(clientRepository.findByTenantIdAndHealthId(tenantId, mother)).thenReturn(Optional.of(new ClientEntity()));
+        when(clientRepository.findByTenantIdAndHealthId(tenantId, child)).thenReturn(Optional.of(new ClientEntity()));
+        when(relationshipRepository
+                .findFirstByTenantIdAndClientHealthIdAndRelatedClientHealthIdAndRelationshipTypeAndStatus(
+                        tenantId, mother, child, ClientRelationshipType.BIRTH_MOTHER_OF, "ACTIVE"))
+                .thenReturn(Optional.of(new zw.gov.mohcc.impilo.vito.persistence.entity.ClientRelationshipEntity()));
+
+        assertFalse(service.recordBirthDyad(tenantId, mother, child));
+        verify(relationshipRepository, org.mockito.Mockito.never())
+                .save(any(zw.gov.mohcc.impilo.vito.persistence.entity.ClientRelationshipEntity.class));
+    }
+
+    @Test
+    void recordBirthDyad_recordsNothingWhenAPartyIsNotYetAKnownClient() {
+        UUID mother = UUID.randomUUID();
+        UUID child = UUID.randomUUID();
+        when(clientRepository.findByTenantIdAndHealthId(tenantId, mother)).thenReturn(Optional.of(new ClientEntity()));
+        when(clientRepository.findByTenantIdAndHealthId(tenantId, child)).thenReturn(Optional.empty());
+
+        assertFalse(service.recordBirthDyad(tenantId, mother, child));
+        verify(relationshipRepository, org.mockito.Mockito.never())
+                .save(any(zw.gov.mohcc.impilo.vito.persistence.entity.ClientRelationshipEntity.class));
+    }
+
+    @Test
+    void recordBirthDyad_rejectsAPersonAsTheirOwnMother() {
+        UUID self = UUID.randomUUID();
+        assertFalse(service.recordBirthDyad(tenantId, self, self));
+        verify(relationshipRepository, org.mockito.Mockito.never())
+                .save(any(zw.gov.mohcc.impilo.vito.persistence.entity.ClientRelationshipEntity.class));
     }
 
     private ClientEntity baseClient() {
