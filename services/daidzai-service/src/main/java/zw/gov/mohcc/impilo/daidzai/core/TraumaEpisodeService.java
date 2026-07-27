@@ -156,6 +156,131 @@ public class TraumaEpisodeService {
     }
 
     /** Close the episode (disposition — fleshed out in W6). Idempotent. */
+    /**
+     * Resolve the episode to its PCT anchor when the patient reaches a facility — the flow that
+     * closes CC-5 violation V-3.
+     *
+     * <p>The spine exists to cover the prehospital window in which no PCT anchor yet exists; this is
+     * where that window ends. PCT calls it on facility arrival (ED-visit record / EMS arrival),
+     * passing the journey the patient is now on and, when known, the emergency episode. From here
+     * the trauma spine resolves to the continuum rather than floating beside it on {@code
+     * subject_cpid} alone.
+     *
+     * <p><b>First anchor wins.</b> Re-linking to the same journey is a no-op (PCT retries, redelivered
+     * events). A link to a <em>different</em> journey is refused rather than silently overwritten: a
+     * single facility visit is one journey (CC-0), and an episode that appears to change journeys is
+     * a correlation error a human must see, not a value to clobber. The exception path is where an
+     * {@link #adopt} belongs instead.
+     *
+     * <p>Idempotent and safe to call best-effort: it never enforces via a schema CHECK (V200 tried
+     * that and broke the live phase-advance — see V201), so a phase can advance before the link
+     * arrives; the unanchored-facility-phase sweep is what surfaces a link that never came.
+     */
+    @Transactional
+    public TraumaEpisodeEntity continuumLink(UUID tenantId, UUID episodeId,
+                                             String pctJourneyId, UUID pctEmergencyEpisodeId) {
+        if (pctJourneyId == null || pctJourneyId.isBlank()) {
+            throw new IllegalArgumentException("pctJourneyId is required to anchor the episode");
+        }
+        TraumaEpisodeEntity ep = getEpisode(tenantId, episodeId);
+
+        if (ep.getPctJourneyId() != null) {
+            if (ep.getPctJourneyId().equals(pctJourneyId)) {
+                // Already anchored to this journey — a retry or a redelivery. No-op, no second event.
+                if (pctEmergencyEpisodeId != null && ep.getPctEmergencyEpisodeId() == null) {
+                    ep.setPctEmergencyEpisodeId(pctEmergencyEpisodeId);
+                    ep = episodeRepo.save(ep);
+                }
+                return ep;
+            }
+            throw new IllegalStateException(
+                    "trauma episode " + episodeId + " is already anchored to journey "
+                            + ep.getPctJourneyId() + " and cannot be re-anchored to " + pctJourneyId
+                            + " — one facility visit is one journey; this is a correlation error, not a "
+                            + "re-link. If two episodes describe one patient, adopt one into the other.");
+        }
+
+        ep.setPctJourneyId(pctJourneyId);
+        ep.setPctEmergencyEpisodeId(pctEmergencyEpisodeId);
+        ep.setContinuumLinkedAt(OffsetDateTime.now());
+        ep = episodeRepo.save(ep);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("pctJourneyId", pctJourneyId);
+        payload.put("pctEmergencyEpisodeId", pctEmergencyEpisodeId == null ? null : pctEmergencyEpisodeId.toString());
+        payload.put("currentPhase", ep.getCurrentPhase());
+        emitter.emit("TRAUMA_EPISODE", ep.getId().toString(), "daidzai.trauma_episode.continuum_linked",
+                "TRAUMA_EPISODE", ep.getId().toString(), payload, tenantId);
+        return ep;
+    }
+
+    /**
+     * Absorb one episode into another when both describe the same patient — the two-entry-path
+     * duplicate the {@code (tenant, origin_key)} mint guard cannot prevent. Someone who phones the
+     * SOS line (daidzai mints on the incident) and also walks in (PCT mints on the ed_visit) has two
+     * episodes for one patient; this collapses them.
+     *
+     * <p>The absorbed episode is <b>never deleted</b> — a correlation already stamped with its id
+     * must still resolve, and its timeline is evidence. It is marked {@code MERGED} with
+     * {@code merged_into_id} pointing at the survivor. {@code status} is a free column with no CHECK,
+     * so MERGED needs no schema change; the timeline sweep and the mint guard both read it.
+     *
+     * @param survivingId the episode that continues
+     * @param absorbedId  the episode folded into it
+     */
+    @Transactional
+    public TraumaEpisodeEntity adopt(UUID tenantId, UUID survivingId, UUID absorbedId, String reason) {
+        if (survivingId == null || absorbedId == null) {
+            throw new IllegalArgumentException("both surviving and absorbed episode ids are required");
+        }
+        if (survivingId.equals(absorbedId)) {
+            throw new IllegalArgumentException("an episode cannot be adopted into itself");
+        }
+        TraumaEpisodeEntity surviving = getEpisode(tenantId, survivingId);
+        TraumaEpisodeEntity absorbed = getEpisode(tenantId, absorbedId);
+
+        if ("MERGED".equals(absorbed.getStatus())) {
+            if (survivingId.equals(absorbed.getMergedIntoId())) {
+                return absorbed; // already adopted into this survivor — idempotent replay
+            }
+            throw new IllegalStateException(
+                    "episode " + absorbedId + " is already merged into " + absorbed.getMergedIntoId()
+                            + "; it cannot be re-adopted into a different survivor");
+        }
+
+        absorbed.setStatus("MERGED");
+        absorbed.setMergedIntoId(survivingId);
+        absorbed.setMergedAt(OffsetDateTime.now());
+        absorbed.setMergeReason(reason);
+        // If the absorbed episode carried an anchor the survivor lacks, carry it across so the
+        // surviving spine stays resolvable to the continuum.
+        if (surviving.getPctJourneyId() == null && absorbed.getPctJourneyId() != null) {
+            surviving.setPctJourneyId(absorbed.getPctJourneyId());
+            surviving.setPctEmergencyEpisodeId(absorbed.getPctEmergencyEpisodeId());
+            surviving.setContinuumLinkedAt(OffsetDateTime.now());
+            episodeRepo.save(surviving);
+        }
+        absorbed = episodeRepo.save(absorbed);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("survivingEpisodeId", survivingId.toString());
+        payload.put("reason", reason == null ? "" : reason);
+        emitter.emit("TRAUMA_EPISODE", absorbed.getId().toString(), "daidzai.trauma_episode.merged",
+                "TRAUMA_EPISODE", absorbed.getId().toString(), payload, tenantId);
+        return absorbed;
+    }
+
+    /**
+     * Episodes that reached a facility phase and never acquired a PCT anchor — the sweep that
+     * enforces V-3 without a schema CHECK. This is the honest replacement for the constraint that
+     * broke the live phase-advance: a phase may advance before the link arrives, but an OPEN episode
+     * sitting in a facility phase with no journey is a correlation gap a human must close.
+     */
+    @Transactional(readOnly = true)
+    public List<TraumaEpisodeEntity> unanchoredInFacility(UUID tenantId) {
+        return episodeRepo.findUnanchoredFacilityPhase(tenantId);
+    }
+
     @Transactional
     public TraumaEpisodeEntity close(UUID tenantId, UUID episodeId, String reason) {
         TraumaEpisodeEntity ep = getEpisode(tenantId, episodeId);
@@ -205,6 +330,16 @@ public class TraumaEpisodeService {
         view.put("subjectIdentityMode", ep.getSubjectIdentityMode());
         view.put("subjectCpid", ep.getSubjectCpid());
         view.put("incidentId", ep.getIncidentId() != null ? ep.getIncidentId().toString() : null);
+        // Continuum-link status — so a reader can tell an episode resolved to the continuum from one
+        // still floating on subject_cpid alone. This is the visible face of V-3 closing.
+        view.put("episodeClass", ep.getEpisodeClass());
+        view.put("pctJourneyId", ep.getPctJourneyId());
+        view.put("pctEmergencyEpisodeId",
+                ep.getPctEmergencyEpisodeId() != null ? ep.getPctEmergencyEpisodeId().toString() : null);
+        view.put("continuumLinkedAt",
+                ep.getContinuumLinkedAt() != null ? ep.getContinuumLinkedAt().toString() : null);
+        view.put("continuumLinked", ep.getPctJourneyId() != null);
+        view.put("mergedIntoId", ep.getMergedIntoId() != null ? ep.getMergedIntoId().toString() : null);
         List<Map<String, Object>> timeline = phases.stream().map(p -> {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("phase", p.getPhase());

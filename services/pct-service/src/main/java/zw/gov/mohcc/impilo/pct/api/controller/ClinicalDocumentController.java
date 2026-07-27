@@ -41,8 +41,11 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/v1/records/{documentId}")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> get(@PathVariable UUID documentId) {
-        return ResponseEntity.ok(ApiResponse.ok(toMap(documentService.get(documentId)), correlationId()));
+    public ResponseEntity<ApiResponse<Map<String, Object>>> get(
+            @PathVariable UUID documentId,
+            @RequestParam(name = "subject_cpid", required = false) String subjectCpid) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                toMap(documentService.get(documentId, subjectCpid)), correlationId()));
     }
 
     @PostMapping("/v1/records")

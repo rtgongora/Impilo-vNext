@@ -63,6 +63,12 @@ DERIVED = {
     # "reasonably certain" as a field. The six criteria that produce it are NOT derived and are
     # checked against the form like everything else.
     "pregnancyCertainty",
+    # National-policy parameters, injected as configuration rather than asked of the woman: whether
+    # her area is malaria-endemic and whether the population has low dietary calcium are ministry
+    # determinations, not per-contact fields. Deliberately NARROW — the per-woman routine-action
+    # inputs (tetanus protection, IPTp dose count, pre-eclampsia risk) are NOT here and must be
+    # captured on a form, because "the policy knows it" is not true of them.
+    "malariaEndemicArea", "lowCalciumIntakePopulation",
 }
 DERIVED_PREFIXES = ("minutesSinceLastObservationOf.", "smbp.")
 

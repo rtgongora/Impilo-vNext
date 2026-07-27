@@ -84,7 +84,7 @@ export default function PatientSummaryPage() {
     enabled: !!patientId,
   });
 
-  const { data: vitalsData } = useQuery<ApiResponse<GenericResource[]>>({
+  const { data: vitalsData, isError: vitalsUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["vitals", { patientId }],
     queryFn: () => apiClient.get(`/internal/v1/vitals?patient_id=${patientId}`),
     enabled: !!patientId,
@@ -448,7 +448,21 @@ export default function PatientSummaryPage() {
               </div>
             </div>
 
-            {/* Latest Vitals */}
+            {/* Latest Vitals. When the read failed, the card must say so — silently omitting it
+                makes the clinical summary read as if the patient has no observations. */}
+            {vitalsUnavailable && (
+              <div className="bg-card rounded-lg border border-red-200 p-4">
+                <div className="flex items-center gap-2">
+                  <HeartPulse className="w-4 h-4 text-red-500" />
+                  <h3 className="text-sm font-medium text-foreground">Latest Vitals</h3>
+                  <span className="text-xs text-red-600 ml-auto">unavailable</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Vital signs could not be retrieved. Do not treat this as an absence of
+                  observations.
+                </p>
+              </div>
+            )}
             {latestVitals && (
               <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">

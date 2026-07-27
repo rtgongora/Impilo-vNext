@@ -31,4 +31,6 @@ public interface ObservationRepository extends JpaRepository<ObservationEntity, 
      */
     Optional<ObservationEntity> findByTenantIdAndDerivedFromTypeAndDerivedFromIdAndCode(
             UUID tenantId, String derivedFromType, String derivedFromId, String code);
+
+    Optional<ObservationEntity> findByTenantIdAndObservationId(UUID tenantId, UUID observationId);
 }

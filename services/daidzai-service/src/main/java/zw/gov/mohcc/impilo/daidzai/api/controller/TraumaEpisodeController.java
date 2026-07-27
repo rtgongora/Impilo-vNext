@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.daidzai.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.daidzai.core.TraumaEpisodeService;
 import zw.gov.mohcc.impilo.daidzai.persistence.entity.TraumaEpisodeEntity;
@@ -65,6 +66,54 @@ public class TraumaEpisodeController {
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @PathVariable UUID episodeId) {
         return service.episodeView(tenantId, episodeId);
+    }
+
+    /**
+     * Resolve the episode to its PCT anchor on facility arrival — the flow that closes CC-5 V-3.
+     * Body: {@code {pctJourneyId, pctEmergencyEpisodeId?}}. Idempotent (same journey = no-op); a
+     * different journey is a 409 (one facility visit is one journey), not a silent overwrite.
+     */
+    @PostMapping("/{episodeId}/continuum-link")
+    public ResponseEntity<Map<String, Object>> continuumLink(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID episodeId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            service.continuumLink(tenantId, episodeId, str(body, "pctJourneyId"), uuid(body, "pctEmergencyEpisodeId"));
+            return ResponseEntity.ok(service.episodeView(tenantId, episodeId));
+        } catch (IllegalStateException conflict) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, conflict.getMessage());
+        }
+    }
+
+    /**
+     * Absorb one episode into another (the two-entry-path duplicate). Body:
+     * {@code {absorbedEpisodeId, reason?}} — the path id is the survivor. Idempotent on re-adopting
+     * the same pair; re-adopting an already-merged episode into a different survivor is a 409.
+     */
+    @PostMapping("/{episodeId}/adopt")
+    public ResponseEntity<Map<String, Object>> adopt(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID episodeId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            service.adopt(tenantId, episodeId, uuid(body, "absorbedEpisodeId"), str(body, "reason"));
+            return ResponseEntity.ok(service.episodeView(tenantId, episodeId));
+        } catch (IllegalStateException conflict) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, conflict.getMessage());
+        }
+    }
+
+    /**
+     * The V-3 enforcement sweep: OPEN episodes that reached a facility phase without a PCT anchor.
+     * The monitoring that replaced the schema CHECK V201 withdrew.
+     */
+    @GetMapping("/unanchored")
+    public java.util.List<Map<String, Object>> unanchored(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId) {
+        return service.unanchoredInFacility(tenantId).stream()
+                .map(e -> service.episodeView(tenantId, e.getId()))
+                .toList();
     }
 
     @PostMapping("/{episodeId}/close")

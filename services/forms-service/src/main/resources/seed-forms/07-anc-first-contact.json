@@ -326,6 +326,173 @@
             ]
           }
         ]
+      },
+      {
+        "id": "routine-actions",
+        "title": "Routine actions — risk, immunisation, prophylaxis",
+        "description": "Captured so the routine offers of ANC can be tracked as done or owed. Blank is not \"no\" — leave unanswered rather than guessing, and the action list treats an unanswered item as still outstanding.",
+        "fields": [
+          {
+            "id": "preeclampsiaHighRisk",
+            "linkId": "preeclampsiaHighRisk",
+            "label": "High risk of pre-eclampsia",
+            "kind": "coded_single",
+            "description": "Any of: previous pre-eclampsia, chronic hypertension, diabetes, renal or autoimmune disease, or a multiple pregnancy. High risk before 20 weeks means low-dose aspirin is indicated — after 20 weeks the window has largely passed.",
+            "options": [
+              {
+                "code": "YES",
+                "display": "Yes — one or more high-risk factors"
+              },
+              {
+                "code": "NO",
+                "display": "No high-risk factors"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "tetanusProtectionComplete",
+            "linkId": "tetanusProtectionComplete",
+            "label": "Tetanus protection complete for this pregnancy",
+            "kind": "coded_single",
+            "description": "Per her prior immunisation and the national schedule. NO means a dose is due; neonatal tetanus is almost always fatal and almost entirely preventable.",
+            "options": [
+              {
+                "code": "YES",
+                "display": "Yes — protected"
+              },
+              {
+                "code": "NO",
+                "display": "No — a dose is due"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "iptpDosesReceived",
+            "linkId": "iptpDosesReceived",
+            "label": "IPTp-SP doses received so far this pregnancy",
+            "kind": "numeric_with_unit",
+            "unit": "doses",
+            "description": "Malaria prophylaxis dose count. In an endemic area, fewer than three from the second trimester means a dose is owed. Record 0 if none — leaving it blank is not the same as none received.",
+            "validation": {
+              "min": 0,
+              "max": 10,
+              "required": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "birth-risk",
+        "title": "Risk factors that decide where she should give birth",
+        "description": "These decide whether she needs a comprehensive-EmONC facility (caesarean-capable) or a basic one. A blank is not \"no\" — the required level stays indeterminate until each is asked, and \"basic is enough\" is only issued once they are all excluded.",
+        "fields": [
+          {
+            "id": "previousCaesarean",
+            "linkId": "previousCaesarean",
+            "label": "Previous caesarean section",
+            "kind": "coded_single",
+            "description": "Any prior caesarean makes a caesarean-capable facility the safe default for this birth.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "currentObstetricComplication",
+            "linkId": "currentObstetricComplication",
+            "label": "A current obstetric complication",
+            "kind": "coded_single",
+            "description": "Pre-eclampsia, antepartum haemorrhage, or any active complication needing higher-level care.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "malpresentationAtTerm",
+            "linkId": "malpresentationAtTerm",
+            "label": "Malpresentation at or near term",
+            "kind": "coded_single",
+            "description": "Breech or transverse lie approaching term — needs a facility that can manage or convert it.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "multiplePregnancy",
+            "linkId": "multiplePregnancy",
+            "label": "Multiple pregnancy",
+            "kind": "coded_single",
+            "description": "Twins or more — plan for comprehensive EmONC.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "significantMedicalComorbidity",
+            "linkId": "significantMedicalComorbidity",
+            "label": "Significant medical comorbidity",
+            "kind": "coded_single",
+            "description": "Cardiac disease, sickle cell, poorly controlled diabetes and the like — birth where the comorbidity can be managed.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          }
+        ]
       }
     ]
   }

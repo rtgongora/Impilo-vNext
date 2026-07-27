@@ -1,0 +1,88 @@
+{
+  "formKey": "impilo.smbp.home.readings.v1",
+  "name": "Self-monitored blood pressure — home readings",
+  "description": "A woman recording her own blood pressure at home, or a health worker entering the series she brings in. Each reading is a systolic/diastolic pair with the first-of-session flag the averaging protocol needs, plus the danger-sign question that routes straight to urgent care.",
+  "formType": "SELF_REPORT",
+  "careSettings": ["HOME", "COMMUNITY", "OUTPATIENT"],
+  "careStages": ["MONITORING"],
+  "specialties": ["MIDWIFERY", "OBSTETRICS", "NURSING"],
+  "encounterTypes": ["SELF_MONITORING", "ANTENATAL", "REMOTE_MONITORING"],
+  "encounterContexts": ["home", "community", "outpatient"],
+  "requiredWorkflow": "MONITOR",
+  "obligationDefault": "OPTIONAL",
+  "permittedCadres": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER", "COMMUNITY_HEALTH_WORKER", "PATIENT"],
+  "minAgeMonths": 108,
+  "sexApplicability": "FEMALE",
+  "requirePregnant": true,
+  "programmeApplicability": ["ANC", "MATERNAL"],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO SMART SMBP DAK v1.0.0; WHO recommendations on antenatal care (2016)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "readingSystolic", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "mm[Hg]", "code": {"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}},
+      {"linkId": "readingDiastolic", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "mm[Hg]", "code": {"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}}
+    ]
+  },
+  "indicators": {
+    "indicators": [
+      {"programmeIndicatorCode": "SMBP_SERIES_SUBMITTED"},
+      {"programmeIndicatorCode": "SMBP_ESCALATIONS"}
+    ]
+  },
+  "definition": {
+    "id": "smbp-home-readings-v1",
+    "version": "1.0.0",
+    "title": "Self-monitored blood pressure — home readings",
+    "description": "Readings plus the danger-sign question. Each reading routes to the SHR; the series is reduced to an escalation by the clinical-knowledge platform, not stored as a verdict on this form.",
+    "dakReference": "WHO SMART SMBP DAK v1.0.0",
+    "healthDomain": "MATERNAL_HEALTH",
+    "programme": "ANC",
+    "encounterTypes": ["SELF_MONITORING", "ANTENATAL"],
+    "minAgeMonths": 108,
+    "sexApplicability": "FEMALE",
+    "providerRoles": ["MIDWIFE", "NURSE", "COMMUNITY_HEALTH_WORKER", "PATIENT"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "SENSITIVE"},
+    "sections": [
+      {
+        "id": "reading",
+        "title": "A blood-pressure reading",
+        "description": "One pair per reading. Where readings come from a connected home device they are held by the monitoring service and need not be re-entered here; this form is the manual path.",
+        "fields": [
+          {"id": "readingSystolic", "linkId": "readingSystolic", "label": "Systolic", "kind": "numeric_with_unit", "unit": "mm[Hg]", "validation": {"min": 50, "max": 300, "required": false}},
+          {"id": "readingDiastolic", "linkId": "readingDiastolic", "label": "Diastolic", "kind": "numeric_with_unit", "unit": "mm[Hg]", "validation": {"min": 30, "max": 200, "required": false}},
+          {"id": "readingTakenAt", "linkId": "readingTakenAt", "label": "Date and time taken", "kind": "datetime", "validation": {"required": false}},
+          {
+            "id": "firstOfSession",
+            "linkId": "firstOfSession",
+            "label": "First reading of this sitting",
+            "kind": "coded_single",
+            "description": "The first reading of a sitting is discarded from the average as a rest artefact — but never from the severe check. Marking it lets the average be computed the way the protocol intends.",
+            "options": [{"code": "YES", "display": "Yes — first of the sitting"}, {"code": "NO", "display": "No — a repeat in the same sitting"}],
+            "validation": {"required": false}
+          }
+        ]
+      },
+      {
+        "id": "danger-signs",
+        "title": "Any danger signs today?",
+        "description": "Asked with every submission. A danger sign routes straight to urgent care whatever the readings say.",
+        "fields": [
+          {
+            "id": "dangerSignReported",
+            "linkId": "dangerSignReported",
+            "label": "Any of: severe headache, blurred vision, severe upper-abdominal pain, breathing difficulty, vaginal bleeding, convulsions, fever, severe vomiting",
+            "kind": "coded_single",
+            "description": "The SMBP danger-sign list. Present routes to 'go right away' independent of the blood pressure. Blank is not 'no' — leave it unanswered rather than guessing.",
+            "options": [{"code": "PRESENT", "display": "Yes — one or more present"}, {"code": "ABSENT", "display": "No — none"}],
+            "validation": {"required": false}
+          }
+        ]
+      }
+    ]
+  }
+}

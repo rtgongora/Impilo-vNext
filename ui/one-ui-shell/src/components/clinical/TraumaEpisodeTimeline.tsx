@@ -9,7 +9,7 @@
  */
 
 import { Loader2, Waypoints } from "lucide-react";
-import { useTraumaEpisode, type TraumaEpisode } from "@/hooks/queries/useDaidzai";
+import { useTraumaEpisode, continuumLinkState, type TraumaEpisode } from "@/hooks/queries/useDaidzai";
 
 function str(v: unknown): string {
   return v == null ? "" : String(v);
@@ -71,6 +71,35 @@ export function TraumaEpisodeTimeline({
           Subject: {str(episode.subjectIdentityMode) || "—"}{episode.subjectCpid ? ` · ${str(episode.subjectCpid)}` : ""}
         </span>
       </div>
+
+      {(() => {
+        // Continuum-link status (CC-5 V-3): does the prehospital spine resolve to a PCT journey, or
+        // is it still floating on the subject alone? The three states are kept distinct so a
+        // clinician is never told "linked" on the strength of an absent value, and an unanchored
+        // facility-phase episode reads as the correlation gap it is, not as a benign "not yet".
+        const state = continuumLinkState(episode);
+        if (state === "LINKED") {
+          return (
+            <p className="mt-1 text-xs text-green-700" data-testid="continuum-link-status">
+              Linked to the care continuum — journey {str(episode.pctJourneyId)}
+              {episode.continuumLinkedAt ? ` at ${str(episode.continuumLinkedAt)}` : ""}
+            </p>
+          );
+        }
+        if (state === "UNANCHORED") {
+          return (
+            <p className="mt-1 text-xs font-medium text-amber-700" data-testid="continuum-link-status">
+              Not yet linked to a facility journey — this episode has reached a facility phase without
+              a continuum anchor. Confirm the patient&apos;s ED registration; it is not a completed link.
+            </p>
+          );
+        }
+        return (
+          <p className="mt-1 text-xs text-muted-foreground" data-testid="continuum-link-status">
+            Prehospital — no facility journey expected yet.
+          </p>
+        );
+      })()}
 
       {timeline.length === 0 ? (
         <p className="mt-3 rounded-lg border border-dashed border-border bg-background px-3 py-4 text-center text-xs text-muted-foreground">

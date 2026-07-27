@@ -42,6 +42,53 @@ public class WorkforceGovernanceClient {
         return response.getBody().path("data");
     }
 
+    // ── Regulator bootstrap (RB-3b) — the founding-administrator four-eyes rail ───────────
+    // The BFF gates these on person assurance (LOA3) before proxying; wgv owns the request,
+    // the two-person approval and the activation event.
+
+    private static final String BOOTSTRAP_BASE =
+            "/internal/v1/workforce-governance/regulator-bootstrap";
+
+    public JsonNode submitBootstrapRequest(Object body) {
+        return unwrap(restTemplate.postForEntity(
+                trimSlash(baseUrl) + BOOTSTRAP_BASE + "/requests", body, JsonNode.class));
+    }
+
+    public JsonNode approveBootstrap(String accessRequestId, Object body) {
+        return unwrap(restTemplate.postForEntity(
+                trimSlash(baseUrl) + BOOTSTRAP_BASE + "/actions/" + accessRequestId + "/approve",
+                body, JsonNode.class));
+    }
+
+    public JsonNode activateBootstrap(String accessRequestId) {
+        return unwrap(restTemplate.postForEntity(
+                trimSlash(baseUrl) + BOOTSTRAP_BASE + "/actions/" + accessRequestId + "/activate",
+                null, JsonNode.class));
+    }
+
+    public JsonNode listBootstrapRequests(String organisationId, String status) {
+        StringBuilder url = new StringBuilder(trimSlash(baseUrl) + BOOTSTRAP_BASE + "/requests");
+        java.util.List<String> q = new java.util.ArrayList<>();
+        if (organisationId != null && !organisationId.isBlank()) {
+            q.add("organisationId=" + organisationId);
+        }
+        if (status != null && !status.isBlank()) {
+            q.add("status=" + status);
+        }
+        if (!q.isEmpty()) {
+            url.append("?").append(String.join("&", q));
+        }
+        return unwrap(restTemplate.getForEntity(url.toString(), JsonNode.class));
+    }
+
+    private JsonNode unwrap(ResponseEntity<JsonNode> response) {
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            log.warn("Governance bootstrap call failed: {}", response.getStatusCode());
+            return null;
+        }
+        return response.getBody().path("data");
+    }
+
     public JsonNode organisationSummary(String organisationId) {
         String url = trimSlash(baseUrl) + "/v1/internal/governance/summaries/organisation/" + organisationId;
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
