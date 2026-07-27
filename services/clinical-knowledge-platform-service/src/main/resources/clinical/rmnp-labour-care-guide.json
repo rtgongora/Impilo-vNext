@@ -1,0 +1,220 @@
+{
+  "packId": "rmnp-labour-care-guide",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "monitoringStandard": "WHO_LABOUR_CARE_GUIDE",
+  "provenance": {
+    "title": "WHO Labour Care Guide — intrapartum parameter monitoring",
+    "primarySource": "WHO Labour Care Guide (2020)",
+    "why": "The Labour Care Guide replaced the classic partograph because the fixed 1 cm/hour alert line labelled many normal labours as obstructed and drove avoidable caesareans. This pack is the LCG monitoring layer: each observed parameter is assessed against its own reference threshold, and the guide's central teaching — that slow cervical progress alone is not an indication for caesarean section — is preserved rather than re-imported through a rate line.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "There is no WHO SMART DAK for the Labour Care Guide, so this is authored from the published 2020 guide, not extracted from a pinned artefact — the same ENGINEERING_SEED status as the MEC and SPR packs. The parameter alert thresholds below (fetal heart rate, maternal pulse, temperature, blood pressure, contractions, liquor, moulding) are well-established intrapartum values and are transcribed here; they still require line-by-line ratification against the primary text. blocksRatification stays true.",
+      "deferred": "The LCG cervical-dilation REFERENCE THRESHOLD (progress of labour over time) and the 'slow progress alone is not a caesarean indication' decision rule are DELIBERATELY NOT in this pack yet. They are the guide's genuinely novel element — the permissive replacement for the 1 cm/hour line — and encoding an approximate progress curve under a WHO citation would be exactly the fabrication this repository forbids. They land with the freeze-and-demote of PartographProgressEngine, where the classic constants are migrated to governed content and the reinterpretation can be cross-checked against the primary text. This pack asserts the monitoring standard and the parameter alerts; it does not yet decide progress."
+    }
+  },
+  "rules": [
+    {
+      "code": "LCG_FHR_ABNORMAL",
+      "name": "Fetal heart rate outside the reference range",
+      "layer": "LABOUR_MONITORING",
+      "ruleType": "LCG_PARAMETER_ALERT",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["fetalHeartRateBpm"],
+      "logic": {"any": [
+        {"input": "fetalHeartRateBpm", "op": "lt", "value": 110},
+        {"input": "fetalHeartRateBpm", "op": "gt", "value": 160}
+      ]},
+      "message": "Fetal heart rate outside 110–160 — assess the fetus.",
+      "explanation": "A baseline fetal heart rate below 110 or above 160 bpm is outside the LCG reference range and needs assessment of fetal wellbeing and its cause — maternal position, hydration, fever, hypotension, cord or placental compromise.",
+      "requiredAction": "Reposition the mother, check for reversible causes (fever, hypotension, dehydration), listen through and after a contraction, and escalate if it does not recover.",
+      "monitoringInstruction": "Continue close fetal monitoring.",
+      "sourceRefs": ["WHO Labour Care Guide (2020) — fetal heart rate"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The Labour Care Guide flags a fetal heart rate below 110 or above 160 bpm as requiring attention.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO Labour Care Guide (2020) — fetal heart rate"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "FHR 100 fires", "facts": {"fetalHeartRateBpm": 100}, "expectFires": true},
+        {"name": "FHR 170 fires", "facts": {"fetalHeartRateBpm": 170}, "expectFires": true},
+        {"name": "FHR 140 does not", "facts": {"fetalHeartRateBpm": 140}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "LCG_LIQUOR_MECONIUM",
+      "name": "Meconium-stained or blood-stained liquor",
+      "layer": "LABOUR_MONITORING",
+      "ruleType": "LCG_PARAMETER_ALERT",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["liquor"],
+      "logic": {"input": "liquor", "op": "in", "values": ["MECONIUM", "MECONIUM_THICK", "BLOOD_STAINED"]},
+      "message": "Liquor is meconium- or blood-stained — increase fetal surveillance.",
+      "explanation": "Meconium — especially thick — and blood-stained liquor are LCG alert findings associated with fetal compromise and abruption respectively, and they change the surveillance and the birth plan.",
+      "requiredAction": "Increase fetal monitoring, look for a cause, and prepare for the possibility of neonatal resuscitation and a more urgent birth.",
+      "sourceRefs": ["WHO Labour Care Guide (2020) — amniotic fluid"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The Labour Care Guide flags meconium-stained and blood-stained amniotic fluid as findings requiring attention.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO Labour Care Guide (2020) — amniotic fluid"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "thick meconium fires", "facts": {"liquor": "MECONIUM_THICK"}, "expectFires": true},
+        {"name": "clear liquor does not", "facts": {"liquor": "CLEAR"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "LCG_MOULDING_SEVERE",
+      "name": "Severe fetal skull moulding",
+      "layer": "LABOUR_MONITORING",
+      "ruleType": "LCG_PARAMETER_ALERT",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["moulding"],
+      "logic": {"input": "moulding", "op": "in", "values": ["PLUS_3"]},
+      "message": "Severe moulding (+3) — a sign of possible obstruction.",
+      "explanation": "Moulding of +3 (bones overlapping and not reducible) suggests cephalopelvic disproportion and possible obstructed labour, and it is read together with progress and descent, not alone.",
+      "requiredAction": "Assess for obstructed labour — descent, progress, the cause — and escalate for a decision about mode of birth. Do not read moulding in isolation.",
+      "sourceRefs": ["WHO Labour Care Guide (2020) — moulding"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The Labour Care Guide flags moulding of +3 as a finding requiring attention.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO Labour Care Guide (2020) — moulding"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "moulding +3 fires", "facts": {"moulding": "PLUS_3"}, "expectFires": true},
+        {"name": "moulding +1 does not", "facts": {"moulding": "PLUS_1"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "LCG_CONTRACTIONS_TACHYSYSTOLE",
+      "name": "Tachysystole — too many contractions",
+      "layer": "LABOUR_MONITORING",
+      "ruleType": "LCG_PARAMETER_ALERT",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["contractionFrequency10Min"],
+      "logic": {"input": "contractionFrequency10Min", "op": "gt", "value": 5},
+      "message": "More than five contractions in ten minutes — reduce uterine activity.",
+      "explanation": "More than five contractions in ten minutes is tachysystole, which reduces placental perfusion between contractions and threatens the fetus. It is most often oxytocin-driven and reversible.",
+      "requiredAction": "If oxytocin is running, reduce or stop it; reposition the mother; reassess the fetal heart. Tachysystole with an abnormal fetal heart rate is an emergency.",
+      "sourceRefs": ["WHO Labour Care Guide (2020) — contractions"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The Labour Care Guide flags more than five contractions per ten minutes as requiring attention.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO Labour Care Guide (2020) — contractions"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "6 in 10 fires", "facts": {"contractionFrequency10Min": 6}, "expectFires": true},
+        {"name": "4 in 10 does not", "facts": {"contractionFrequency10Min": 4}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "LCG_MATERNAL_PULSE_HIGH",
+      "name": "Maternal tachycardia",
+      "layer": "LABOUR_MONITORING",
+      "ruleType": "LCG_PARAMETER_ALERT",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["maternalPulseBpm"],
+      "logic": {"input": "maternalPulseBpm", "op": "gt", "value": 120},
+      "message": "Maternal pulse above 120 — find the cause.",
+      "explanation": "A maternal pulse above 120 in labour is an LCG alert and points to pain, dehydration, fever, bleeding or sepsis — a rising pulse is often the first sign of concealed haemorrhage or infection.",
+      "requiredAction": "Look for a cause — bleeding, fever, dehydration, pain — measure blood pressure and temperature, and treat what you find.",
+      "sourceRefs": ["WHO Labour Care Guide (2020) — maternal pulse"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The Labour Care Guide flags a maternal pulse above 120 beats per minute as requiring attention.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO Labour Care Guide (2020) — maternal pulse"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "pulse 124 fires", "facts": {"maternalPulseBpm": 124}, "expectFires": true},
+        {"name": "pulse 88 does not", "facts": {"maternalPulseBpm": 88}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "LCG_MATERNAL_BP_HIGH",
+      "name": "Raised maternal blood pressure in labour",
+      "layer": "LABOUR_MONITORING",
+      "ruleType": "LCG_PARAMETER_ALERT",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["systolicBp", "diastolicBp"],
+      "logic": {"any": [
+        {"input": "systolicBp", "op": "gte", "value": 140},
+        {"input": "diastolicBp", "op": "gte", "value": 90}
+      ]},
+      "message": "Blood pressure raised in labour — assess for pre-eclampsia.",
+      "explanation": "A blood pressure of 140/90 or above in labour is an LCG alert; intrapartum hypertension can be the first presentation of pre-eclampsia and needs the same assessment.",
+      "requiredAction": "Check proteinuria and symptoms of severe pre-eclampsia, and manage per the hypertensive-disorders pathway. A severe reading (160/110) is an emergency.",
+      "sourceRefs": ["WHO Labour Care Guide (2020) — blood pressure"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The Labour Care Guide flags a blood pressure of 140/90 mmHg or above as requiring attention.",
+        "nationalStatement": "Adopted as published; management follows the national hypertensive-disorders pathway.",
+        "evidenceRefs": ["WHO Labour Care Guide (2020) — blood pressure"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "144/92 fires", "facts": {"systolicBp": 144, "diastolicBp": 92}, "expectFires": true},
+        {"name": "118/74 does not", "facts": {"systolicBp": 118, "diastolicBp": 74}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "LCG_MATERNAL_TEMPERATURE",
+      "name": "Maternal temperature outside the reference range",
+      "layer": "LABOUR_MONITORING",
+      "ruleType": "LCG_PARAMETER_ALERT",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["temperatureC"],
+      "logic": {"any": [
+        {"input": "temperatureC", "op": "lt", "value": 35.5},
+        {"input": "temperatureC", "op": "gte", "value": 37.5}
+      ]},
+      "message": "Maternal temperature outside 35.5–37.5 — find the cause.",
+      "explanation": "A temperature of 37.5 or above in labour is an LCG alert for intrapartum infection (including chorioamnionitis), and a low temperature can accompany sepsis or exposure.",
+      "requiredAction": "Assess for infection — prolonged rupture of membranes, offensive liquor, fetal tachycardia — and treat. Fever in labour is a fetal concern as well as a maternal one.",
+      "sourceRefs": ["WHO Labour Care Guide (2020) — temperature"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "The Labour Care Guide flags a temperature of 37.5 °C or above as requiring attention.",
+        "nationalStatement": "Adopted as published, with a low-temperature bound added for completeness.",
+        "evidenceRefs": ["WHO Labour Care Guide (2020) — temperature"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "38.0 fires", "facts": {"temperatureC": 38.0}, "expectFires": true},
+        {"name": "36.8 does not", "facts": {"temperatureC": 36.8}, "expectFires": false}
+      ]
+    }
+  ]
+}
