@@ -11,16 +11,16 @@ or a domain's own `<domain>/coverage-exclusions.json`. `UNCOVERED` means nobody
 has decided yet, and the guard fails on it — a table nobody looked at is the failure this
 matrix exists to make visible.
 
-- Published artefacts: **142**
-- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_HEARTS` (1), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_PEN` (1), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
+- Published artefacts: **148**
+- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_AMS` (1), `WHO_BLOOD` (1), `WHO_CANCER` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_HEARTS` (1), `WHO_ICOPE` (1), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_MHGAP` (1), `WHO_PALLIATIVE` (1), `WHO_PATIENT_SAFETY` (5), `WHO_PEN` (1), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3), `ZW_POLICY` (1)
 - Published data elements: **4098**
-- Shipped citations: **123**
+- Shipped citations: **158**
 
 | Status | Count |
 |---|---|
 | `COVERED_ELSEWHERE` | 7 |
 | `DEFERRED` | 120 |
-| `SHIPPED` | 15 |
+| `SHIPPED` | 21 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -116,6 +116,7 @@ matrix exists to make visible.
 | `LCOGS.IND.5.IMPOVERISHING_EXPENDITURE` | LCOGS | INDICATOR | — | Protection against impoverishing expenditure from surgical care | `DEFERRED` | — | — | Financial protection is not measured. Coverage and COSTA hold entitlement and cost, so the inputs have owners, but no ho |
 | `LCOGS.IND.6.CATASTROPHIC_EXPENDITURE` | LCOGS | INDICATOR | — | Protection against catastrophic expenditure from surgical care | `DEFERRED` | — | — | As with indicator 5, the inputs have owners and the measure does not exist. Deferred together because they share a denom |
 | `MED.DEVICE.UDI_TRACEABILITY` | WHO_MEDICAL_DEVICES | STANDARD | — | Implantable and reusable device traceability — product, manufacturer, model, lot | `COVERED_ELSEWHERE` | — | — | Genuinely implemented, and more completely than the first pass of the audit credited. inventory-service holds a national |
+| `MEDICINE.PROCEDURE_APPROPRIATENESS` | ZW_POLICY | DECISION_LOGIC | — | Indication, contraindication and appropriateness for adult medical bedside proce | `SHIPPED` | `LP_CONTRAINDICATED_UNTIL_CLEARED`, `LP_INDICATED_SUSPECTED_MENINGITIS`, `PARACENTESIS_DIAGNOSTIC_NEW_ASCITES`, `PLEURAL_ASPIRATION_SYMPTOMATIC_EFFUSION`, `BEDSIDE_PROCEDURE_ANTICOAG_REVIEW`, `PARACENTESIS_SBP_INTERPRETATION` | ADDED_NATIONAL |  |
 | `PNC.A2.DT.1` | WHO_DAK | DECISION_TABLE | Rule Order | Before each contact the health worker should check whether the woman has any of  | `DEFERRED` | — | — | Maternal danger-sign check before each postnatal contact. Ships with the postnatal wave. |
 | `PNC.A2.DT.12` | WHO_DAK | DECISION_TABLE | Rule Order | Before each contact, the health worker should check whether the newborn/infant h | `DEFERRED` | — | — | Newborn danger-sign check before each postnatal contact. Must delegate to the existing paediatric danger-sign rules rath |
 | `PNC.A4.DT.2` | WHO_DAK | DECISION_TABLE | Rule Order | If the client is an adolescent, conduct a Home, Education/Employment, Eating, Ac | `DEFERRED` | — | — | Adolescent psychosocial screening in the postnatal period. Same reasoning as ANC.DT.02 — held until confidentiality is r |
@@ -161,7 +162,12 @@ matrix exists to make visible.
 | `TB.SCREENING` | WHO_DAK | DECISION_LOGIC | — | Systematic TB screening and presumptive-TB identification | `SHIPPED` | `TB_SCREEN_SYMPTOMATIC`, `TB_SCREEN_NEGATIVE_PLHIV_TPT_ELIGIBLE` | ADOPTED_VERBATIM |  |
 | `TB.TPT` | WHO_DAK | DECISION_LOGIC | — | TB preventive treatment eligibility and regimens (3HP, 6H, 1HP) | `SHIPPED` | `TPT_EXCLUDE_ACTIVE_TB_FIRST`, `TPT_ELIGIBLE_CHILD_CONTACT` | ADOPTED_VERBATIM |  |
 | `TB.TREATMENT_MONITORING` | WHO_DAK | DECISION_LOGIC | — | Drug-susceptible TB treatment: phases and bacteriological monitoring schedule | `SHIPPED` | `TB_PHASE_TRANSITION_DUE`, `TB_SMEAR_MONTH2_POSITIVE` | ADOPTED_VERBATIM |  |
+| `WHO_AMS.STEWARDSHIP` | WHO_AMS | DECISION_LOGIC | — | Antimicrobial stewardship — IV-to-oral switch, duration review, culture-directed | `SHIPPED` | `AMS_IV_TO_ORAL_SWITCH`, `AMS_REVIEW_PROLONGED_COURSE`, `AMS_DEESCALATE_CULTURE_DIRECTED`, `AMS_RESERVE_REQUIRES_APPROVAL`, `AMS_DOCUMENT_INDICATION_REVIEW`, `AMS_WATCH_ANTIBIOTIC_REVIEW` | ADOPTED_VERBATIM, STRENGTHENED |  |
+| `WHO_CANCER.EARLY_DIAGNOSIS` | WHO_CANCER | DECISION_LOGIC | — | Cancer early diagnosis — alarm-feature recognition and urgent referral for inves | `SHIPPED` | `ONC_UNEXPLAINED_WEIGHT_LOSS_CLUSTER`, `ONC_SUSPICIOUS_BREAST_LUMP`, `ONC_POSTMENOPAUSAL_BLEEDING`, `ONC_PERSISTENT_UNEXPLAINED_SYMPTOM_CLUSTER`, `ONC_SUSPICIOUS_VISIBLE_LESION`, `ONC_UNEXPLAINED_ABDOMINAL_PELVIC_MASS` | ADDED_NATIONAL, STRENGTHENED |  |
 | `WHO_HEARTS.CVD_RISK` | WHO_HEARTS | DECISION_LOGIC | — | Cardiovascular risk assessment and management thresholds (BP treatment, statin i | `SHIPPED` | `CVD_HIGH_TOTAL_RISK`, `CVD_BP_START_ANTIHYPERTENSIVE`, `CVD_BP_DIABETES_TIGHTER_TARGET`, `CVD_STATIN_INDICATED`, `CVD_BP_SEVERE_SAME_DAY_REVIEW` | ADOPTED_VERBATIM, STRENGTHENED |  |
+| `WHO_ICOPE.INTRINSIC_CAPACITY` | WHO_ICOPE | DECISION_LOGIC | — | Integrated care for older people — intrinsic-capacity screening across cognition | `SHIPPED` | `ICOPE_COGNITION_DECLINE_ASSESS`, `ICOPE_MOBILITY_LIMITED_ASSESS`, `ICOPE_MALNUTRITION_RISK_ASSESS`, `ICOPE_VISION_IMPAIRED_ASSESS`, `ICOPE_HEARING_LOSS_ASSESS`, `ICOPE_DEPRESSIVE_SYMPTOMS_ASSESS` | ADOPTED_VERBATIM |  |
+| `WHO_MHGAP.PRIORITY_CONDITIONS` | WHO_MHGAP | DECISION_LOGIC | — | mhGAP priority mental-health conditions — assessment and escalation (self-harm r | `SHIPPED` | `MHGAP_SELF_HARM_IMMINENT_RISK`, `MHGAP_DEPRESSION_MODERATE_SEVERE`, `MHGAP_PSYCHOSIS_FEATURES`, `MHGAP_SUBSTANCE_USE_HARMFUL`, `MHGAP_EPILEPSY_SEIZURE` | ADOPTED_VERBATIM, STRENGTHENED |  |
+| `WHO_PALLIATIVE.SYMPTOM_CONTROL` | WHO_PALLIATIVE | DECISION_LOGIC | — | Palliative care — analgesic ladder, breakthrough pain, symptom control and ident | `SHIPPED` | `PALL_PAIN_MILD_NONOPIOID`, `PALL_PAIN_MODERATE_WEAK_OPIOID`, `PALL_PAIN_SEVERE_STRONG_OPIOID`, `PALL_BREAKTHROUGH_PAIN_RESCUE`, `PALL_IDENTIFY_NEED_ADVANCED_ILLNESS`, `PALL_BREATHLESSNESS_SYMPTOM_CONTROL` | ADOPTED_VERBATIM |  |
 | `WHO_PEN.DEPRESCRIBING` | WHO_PEN | DECISION_LOGIC | — | Renal-safety medication review and deprescribing (eGFR-gated cautions, duplicate | `SHIPPED` | `DEPRX_METFORMIN_STOP_EGFR_LT_30`, `DEPRX_NSAID_AVOID_EGFR_LT_30`, `DEPRX_NEPHROTOXIN_REVIEW_EGFR_LT_30`, `DEPRX_RENAL_DOSE_REVIEW_EGFR_LT_60`, `DEPRX_DUPLICATE_THERAPY_REVIEW`, `DEPRX_HEPATIC_SEVERE_CAUTION` | ADDED_NATIONAL, ADOPTED_VERBATIM, STRENGTHENED |  |
 | `ZW.NSOAS.2022.DISTRICT_ACCESS` | ZW_NSOAS | NATIONAL_STRATEGY | — | Promote access to surgical services from district level — 83% of key tracer surg | `DEFERRED` | — | — | The national strategy's central finding is that 83% of key tracer surgical operations were being performed at central an |
 | `ZW.NSOAS.2022.INFRASTRUCTURE_EQUIPMENT` | ZW_NSOAS | NATIONAL_STRATEGY | — | Address infrastructure and equipment gaps in essential surgical care | `DEFERRED` | — | — | TUSO holds equipment assets and instrument sets, which is the beginning of this, but there is no view of essential-surgi |

@@ -7,24 +7,30 @@
     "INTERNATIONAL_SPECIALTY": 2,
     "LCOGS": 9,
     "SSC26": 1,
+    "WHO_AMS": 1,
     "WHO_BLOOD": 1,
+    "WHO_CANCER": 1,
     "WHO_DAK": 93,
     "WHO_ECO": 6,
     "WHO_HEARTS": 1,
+    "WHO_ICOPE": 1,
     "WHO_IPC": 4,
     "WHO_LABORATORY": 1,
     "WHO_MEDICAL_DEVICES": 1,
+    "WHO_MHGAP": 1,
+    "WHO_PALLIATIVE": 1,
     "WHO_PATIENT_SAFETY": 5,
     "WHO_PEN": 1,
     "WHO_SSC": 4,
     "WHO_SSI": 4,
-    "ZW_NSOAS": 3
+    "ZW_NSOAS": 3,
+    "ZW_POLICY": 1
   },
   "generatedFrom": [
     "docs/reference/who-dak/*/extracted",
     "docs/clinical-governance/*/standards-baseline.json"
   ],
-  "publishedArtefacts": 142,
+  "publishedArtefacts": 148,
   "publishedDataElements": 4098,
   "rows": [
     {
@@ -1867,6 +1873,70 @@
       "titleIsSheetLevel": false
     },
     {
+      "adaptationTypes": [
+        "ADDED_NATIONAL"
+      ],
+      "dakId": null,
+      "exclusionReason": null,
+      "family": "ZW_POLICY",
+      "hitPolicy": null,
+      "implementations": [
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "LP_CONTRAINDICATED_UNTIL_CLEARED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/procedure-indication-rules.json",
+          "row": "lumbar puncture contraindications"
+        },
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "LP_INDICATED_SUSPECTED_MENINGITIS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/procedure-indication-rules.json",
+          "row": "lumbar puncture indication"
+        },
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PARACENTESIS_DIAGNOSTIC_NEW_ASCITES",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/procedure-indication-rules.json",
+          "row": "diagnostic paracentesis indication"
+        },
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PLEURAL_ASPIRATION_SYMPTOMATIC_EFFUSION",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/procedure-indication-rules.json",
+          "row": "pleural aspiration indication"
+        },
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "BEDSIDE_PROCEDURE_ANTICOAG_REVIEW",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/procedure-indication-rules.json",
+          "row": "bleeding-risk review before bedside procedures"
+        },
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PARACENTESIS_SBP_INTERPRETATION",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/procedure-indication-rules.json",
+          "row": "ascitic tap SBP interpretation"
+        }
+      ],
+      "kind": "DECISION_LOGIC",
+      "pack": "medicine",
+      "publishedRows": null,
+      "revisitCondition": null,
+      "sheet": null,
+      "sourceCitation": "EDLIZ — Zimbabwe Essential Medicines List and Standard Treatment Guidelines (2015), and standard procedural-safety practice. This pack owns indication/interpretation; procedures-service (8395) executes.",
+      "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
+      "standardId": "MEDICINE.PROCEDURE_APPROPRIATENESS",
+      "status": "SHIPPED",
+      "title": "Indication, contraindication and appropriateness for adult medical bedside procedures (LP, paracentesis, pleural aspiration)",
+      "titleIsSheetLevel": false
+    },
+    {
       "adaptationTypes": [],
       "dakId": "PNC.A2.DT.1",
       "exclusionReason": "Maternal danger-sign check before each postnatal contact. Ships with the postnatal wave.",
@@ -2799,6 +2869,136 @@
       ],
       "dakId": null,
       "exclusionReason": null,
+      "family": "WHO_AMS",
+      "hitPolicy": null,
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "AMS_IV_TO_ORAL_SWITCH",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/antimicrobial-stewardship-rules.json",
+          "row": "iv-to-oral switch"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "AMS_REVIEW_PROLONGED_COURSE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/antimicrobial-stewardship-rules.json",
+          "row": "review prolonged course"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "AMS_DEESCALATE_CULTURE_DIRECTED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/antimicrobial-stewardship-rules.json",
+          "row": "de-escalate culture-directed"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "AMS_RESERVE_REQUIRES_APPROVAL",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/antimicrobial-stewardship-rules.json",
+          "row": "reserve requires approval"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "AMS_DOCUMENT_INDICATION_REVIEW",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/antimicrobial-stewardship-rules.json",
+          "row": "document indication and review date"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "AMS_WATCH_ANTIBIOTIC_REVIEW",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/antimicrobial-stewardship-rules.json",
+          "row": "watch antibiotic review"
+        }
+      ],
+      "kind": "DECISION_LOGIC",
+      "pack": "medicine",
+      "publishedRows": null,
+      "revisitCondition": null,
+      "sheet": null,
+      "sourceCitation": "WHO AWaRe antibiotic classification; Antimicrobial stewardship programmes in health-care facilities in low- and middle-income countries: a WHO practical toolkit, 2019. https://www.who.int/publications/i/item/9789241515481",
+      "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
+      "standardId": "WHO_AMS.STEWARDSHIP",
+      "status": "SHIPPED",
+      "title": "Antimicrobial stewardship — IV-to-oral switch, duration review, culture-directed de-escalation, AWaRe reserve-antibiotic control",
+      "titleIsSheetLevel": false
+    },
+    {
+      "adaptationTypes": [
+        "ADDED_NATIONAL",
+        "STRENGTHENED"
+      ],
+      "dakId": null,
+      "exclusionReason": null,
+      "family": "WHO_CANCER",
+      "hitPolicy": null,
+      "implementations": [
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ONC_UNEXPLAINED_WEIGHT_LOSS_CLUSTER",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/oncology-early-diagnosis-rules.json",
+          "row": "unexplained weight loss cluster"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ONC_SUSPICIOUS_BREAST_LUMP",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/oncology-early-diagnosis-rules.json",
+          "row": "suspicious breast lump"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ONC_POSTMENOPAUSAL_BLEEDING",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/oncology-early-diagnosis-rules.json",
+          "row": "postmenopausal bleeding"
+        },
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ONC_PERSISTENT_UNEXPLAINED_SYMPTOM_CLUSTER",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/oncology-early-diagnosis-rules.json",
+          "row": "persistent symptom cluster"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ONC_SUSPICIOUS_VISIBLE_LESION",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/oncology-early-diagnosis-rules.json",
+          "row": "suspicious visible lesion"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ONC_UNEXPLAINED_ABDOMINAL_PELVIC_MASS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/oncology-early-diagnosis-rules.json",
+          "row": "unexplained palpable mass"
+        }
+      ],
+      "kind": "DECISION_LOGIC",
+      "pack": "medicine",
+      "publishedRows": null,
+      "revisitCondition": null,
+      "sheet": null,
+      "sourceCitation": "WHO Guide to cancer early diagnosis, 2017. https://www.who.int/publications/i/item/9789241511940",
+      "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
+      "standardId": "WHO_CANCER.EARLY_DIAGNOSIS",
+      "status": "SHIPPED",
+      "title": "Cancer early diagnosis — alarm-feature recognition and urgent referral for investigation",
+      "titleIsSheetLevel": false
+    },
+    {
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM",
+        "STRENGTHENED"
+      ],
+      "dakId": null,
+      "exclusionReason": null,
       "family": "WHO_HEARTS",
       "hitPolicy": null,
       "implementations": [
@@ -2848,6 +3048,192 @@
       "standardId": "WHO_HEARTS.CVD_RISK",
       "status": "SHIPPED",
       "title": "Cardiovascular risk assessment and management thresholds (BP treatment, statin indication, total CVD risk)",
+      "titleIsSheetLevel": false
+    },
+    {
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
+      "dakId": null,
+      "exclusionReason": null,
+      "family": "WHO_ICOPE",
+      "hitPolicy": null,
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ICOPE_COGNITION_DECLINE_ASSESS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/icope-rules.json",
+          "row": "cognitive decline"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ICOPE_MOBILITY_LIMITED_ASSESS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/icope-rules.json",
+          "row": "limited mobility"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ICOPE_MALNUTRITION_RISK_ASSESS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/icope-rules.json",
+          "row": "malnutrition"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ICOPE_VISION_IMPAIRED_ASSESS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/icope-rules.json",
+          "row": "visual impairment"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ICOPE_HEARING_LOSS_ASSESS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/icope-rules.json",
+          "row": "hearing loss"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "ICOPE_DEPRESSIVE_SYMPTOMS_ASSESS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/icope-rules.json",
+          "row": "depressive symptoms"
+        }
+      ],
+      "kind": "DECISION_LOGIC",
+      "pack": "medicine",
+      "publishedRows": null,
+      "revisitCondition": null,
+      "sheet": null,
+      "sourceCitation": "WHO Integrated Care for Older People (ICOPE): guidelines on community-level interventions to manage declines in intrinsic capacity, 2019. https://www.who.int/publications/i/item/9789241550109",
+      "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
+      "standardId": "WHO_ICOPE.INTRINSIC_CAPACITY",
+      "status": "SHIPPED",
+      "title": "Integrated care for older people — intrinsic-capacity screening across cognition, mobility, nutrition, vision, hearing and mood",
+      "titleIsSheetLevel": false
+    },
+    {
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM",
+        "STRENGTHENED"
+      ],
+      "dakId": null,
+      "exclusionReason": null,
+      "family": "WHO_MHGAP",
+      "hitPolicy": null,
+      "implementations": [
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "MHGAP_SELF_HARM_IMMINENT_RISK",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/mhgap-rules.json",
+          "row": "SUI — imminent self-harm / suicide risk"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "MHGAP_DEPRESSION_MODERATE_SEVERE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/mhgap-rules.json",
+          "row": "DEP — moderate to severe depression"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "MHGAP_PSYCHOSIS_FEATURES",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/mhgap-rules.json",
+          "row": "PSY — features of psychosis"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "MHGAP_SUBSTANCE_USE_HARMFUL",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/mhgap-rules.json",
+          "row": "SUB — harmful substance use"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "MHGAP_EPILEPSY_SEIZURE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/mhgap-rules.json",
+          "row": "EPI — convulsive seizure / epilepsy"
+        }
+      ],
+      "kind": "DECISION_LOGIC",
+      "pack": "medicine",
+      "publishedRows": null,
+      "revisitCondition": null,
+      "sheet": null,
+      "sourceCitation": "WHO mhGAP Intervention Guide for mental, neurological and substance use disorders in non-specialized health settings, version 2.0, 2016. https://www.who.int/publications/i/item/9789241549790",
+      "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
+      "standardId": "WHO_MHGAP.PRIORITY_CONDITIONS",
+      "status": "SHIPPED",
+      "title": "mhGAP priority mental-health conditions — assessment and escalation (self-harm risk, depression, psychosis, substance use)",
+      "titleIsSheetLevel": false
+    },
+    {
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
+      "dakId": null,
+      "exclusionReason": null,
+      "family": "WHO_PALLIATIVE",
+      "hitPolicy": null,
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PALL_PAIN_MILD_NONOPIOID",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/palliative-rules.json",
+          "row": "analgesic ladder — mild pain"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PALL_PAIN_MODERATE_WEAK_OPIOID",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/palliative-rules.json",
+          "row": "analgesic ladder — moderate pain"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PALL_PAIN_SEVERE_STRONG_OPIOID",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/palliative-rules.json",
+          "row": "analgesic ladder — severe pain"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PALL_BREAKTHROUGH_PAIN_RESCUE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/palliative-rules.json",
+          "row": "breakthrough pain — rescue dose"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PALL_IDENTIFY_NEED_ADVANCED_ILLNESS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/palliative-rules.json",
+          "row": "identify palliative need"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PALL_BREATHLESSNESS_SYMPTOM_CONTROL",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/palliative-rules.json",
+          "row": "distressing breathlessness"
+        }
+      ],
+      "kind": "DECISION_LOGIC",
+      "pack": "medicine",
+      "publishedRows": null,
+      "revisitCondition": null,
+      "sheet": null,
+      "sourceCitation": "WHO guidelines for the pharmacological and radiotherapeutic management of cancer pain in adults and adolescents, 2018; WHO palliative care guidance. https://www.who.int/publications/i/item/9789241550390",
+      "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
+      "standardId": "WHO_PALLIATIVE.SYMPTOM_CONTROL",
+      "status": "SHIPPED",
+      "title": "Palliative care — analgesic ladder, breakthrough pain, symptom control and identification of palliative need",
       "titleIsSheetLevel": false
     },
     {
@@ -2974,10 +3360,10 @@
       "titleIsSheetLevel": false
     }
   ],
-  "shippedCitations": 123,
+  "shippedCitations": 158,
   "statusCounts": {
     "COVERED_ELSEWHERE": 7,
     "DEFERRED": 120,
-    "SHIPPED": 15
+    "SHIPPED": 21
   }
 }
