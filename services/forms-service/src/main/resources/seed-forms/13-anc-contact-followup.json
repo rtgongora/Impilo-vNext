@@ -27,7 +27,8 @@
       {"linkId": "diastolicBp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "mm[Hg]", "code": {"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}},
       {"linkId": "temperature", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "Cel", "code": {"system": "http://loinc.org", "code": "8310-5", "display": "Body temperature"}},
       {"linkId": "proteinuria", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "5804-0", "display": "Protein [Mass/volume] in Urine by Test strip"}},
-      {"linkId": "fundalHeight", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "cm", "code": {"system": "http://loinc.org", "code": "11881-0", "display": "Fundal height"}}
+      {"linkId": "fundalHeight", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "cm", "code": {"system": "http://loinc.org", "code": "11881-0", "display": "Fundal height"}},
+      {"linkId": "haemoglobin", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "g/dL", "code": {"system": "http://loinc.org", "code": "718-7", "display": "Hemoglobin [Mass/volume] in Blood"}}
     ]
   },
   "indicators": {
@@ -74,7 +75,16 @@
             "validation": {"required": false}
           },
           {"id": "temperature", "linkId": "temperature", "label": "Temperature", "kind": "numeric_with_unit", "unit": "Cel", "validation": {"min": 30, "max": 45, "required": false}},
-          {"id": "fundalHeight", "linkId": "fundalHeight", "label": "Symphysis-fundal height", "kind": "numeric_with_unit", "unit": "cm", "validation": {"min": 5, "max": 50, "required": false}}
+          {"id": "fundalHeight", "linkId": "fundalHeight", "label": "Symphysis-fundal height", "kind": "numeric_with_unit", "unit": "cm", "validation": {"min": 5, "max": 50, "required": false}},
+          {
+            "id": "haemoglobin",
+            "linkId": "haemoglobin",
+            "label": "Haemoglobin",
+            "kind": "numeric_with_unit",
+            "unit": "g/dL",
+            "description": "The anaemia grade is read against the trimester: below 11.0 g/dL in the first and third trimesters, below 10.5 in the second. A number, so the grade can be computed rather than eyeballed.",
+            "validation": {"min": 2, "max": 25, "required": false}
+          }
         ]
       },
       {
