@@ -42,6 +42,10 @@ public class ProgrammeGuidanceService {
     static final String TPT_PATH = "clinical/tpt-rules.json";
     static final String PREP_PATH = "clinical/prep-rules.json";
     static final String PMTCT_PATH = "clinical/pmtct-rules.json";
+    // W4 chronic-disease CDS — the same tabular engine, evaluated against PatientFacts
+    // (egfr/weightKg/hepaticImpairment) plus caller facts. Not programmes; content topics.
+    static final String CVD_RISK_PATH = "clinical/cvd-risk-rules.json";
+    static final String DEPRESCRIBING_PATH = "clinical/deprescribing-rules.json";
 
     private final RuleContentLoader contentLoader;
 
@@ -63,6 +67,8 @@ public class ProgrammeGuidanceService {
             case "TB_PREVENTION", "TPT" -> TPT_PATH;
             case "HIV_PREVENTION", "PREP" -> PREP_PATH;
             case "PMTCT" -> PMTCT_PATH;
+            case "CVD_RISK", "CARDIOVASCULAR_RISK" -> CVD_RISK_PATH;
+            case "DEPRESCRIBING", "MEDICATION_REVIEW" -> DEPRESCRIBING_PATH;
             default -> null;
         };
     }

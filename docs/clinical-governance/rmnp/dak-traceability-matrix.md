@@ -11,16 +11,16 @@ or a domain's own `<domain>/coverage-exclusions.json`. `UNCOVERED` means nobody
 has decided yet, and the guard fails on it — a table nobody looked at is the failure this
 matrix exists to make visible.
 
-- Published artefacts: **140**
-- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
+- Published artefacts: **142**
+- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_HEARTS` (1), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_PEN` (1), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
 - Published data elements: **4098**
-- Shipped citations: **112**
+- Shipped citations: **123**
 
 | Status | Count |
 |---|---|
 | `COVERED_ELSEWHERE` | 7 |
 | `DEFERRED` | 120 |
-| `SHIPPED` | 13 |
+| `SHIPPED` | 15 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -161,6 +161,8 @@ matrix exists to make visible.
 | `TB.SCREENING` | WHO_DAK | DECISION_LOGIC | — | Systematic TB screening and presumptive-TB identification | `SHIPPED` | `TB_SCREEN_SYMPTOMATIC`, `TB_SCREEN_NEGATIVE_PLHIV_TPT_ELIGIBLE` | ADOPTED_VERBATIM |  |
 | `TB.TPT` | WHO_DAK | DECISION_LOGIC | — | TB preventive treatment eligibility and regimens (3HP, 6H, 1HP) | `SHIPPED` | `TPT_EXCLUDE_ACTIVE_TB_FIRST`, `TPT_ELIGIBLE_CHILD_CONTACT` | ADOPTED_VERBATIM |  |
 | `TB.TREATMENT_MONITORING` | WHO_DAK | DECISION_LOGIC | — | Drug-susceptible TB treatment: phases and bacteriological monitoring schedule | `SHIPPED` | `TB_PHASE_TRANSITION_DUE`, `TB_SMEAR_MONTH2_POSITIVE` | ADOPTED_VERBATIM |  |
+| `WHO_HEARTS.CVD_RISK` | WHO_HEARTS | DECISION_LOGIC | — | Cardiovascular risk assessment and management thresholds (BP treatment, statin i | `SHIPPED` | `CVD_HIGH_TOTAL_RISK`, `CVD_BP_START_ANTIHYPERTENSIVE`, `CVD_BP_DIABETES_TIGHTER_TARGET`, `CVD_STATIN_INDICATED`, `CVD_BP_SEVERE_SAME_DAY_REVIEW` | ADOPTED_VERBATIM, STRENGTHENED |  |
+| `WHO_PEN.DEPRESCRIBING` | WHO_PEN | DECISION_LOGIC | — | Renal-safety medication review and deprescribing (eGFR-gated cautions, duplicate | `SHIPPED` | `DEPRX_METFORMIN_STOP_EGFR_LT_30`, `DEPRX_NSAID_AVOID_EGFR_LT_30`, `DEPRX_NEPHROTOXIN_REVIEW_EGFR_LT_30`, `DEPRX_RENAL_DOSE_REVIEW_EGFR_LT_60`, `DEPRX_DUPLICATE_THERAPY_REVIEW`, `DEPRX_HEPATIC_SEVERE_CAUTION` | ADDED_NATIONAL, ADOPTED_VERBATIM, STRENGTHENED |  |
 | `ZW.NSOAS.2022.DISTRICT_ACCESS` | ZW_NSOAS | NATIONAL_STRATEGY | — | Promote access to surgical services from district level — 83% of key tracer surg | `DEFERRED` | — | — | The national strategy's central finding is that 83% of key tracer surgical operations were being performed at central an |
 | `ZW.NSOAS.2022.INFRASTRUCTURE_EQUIPMENT` | ZW_NSOAS | NATIONAL_STRATEGY | — | Address infrastructure and equipment gaps in essential surgical care | `DEFERRED` | — | — | TUSO holds equipment assets and instrument sets, which is the beginning of this, but there is no view of essential-surgi |
 | `ZW.NSOAS.2022.TIMELY_AFFORDABLE_SAFE` | ZW_NSOAS | NATIONAL_STRATEGY | — | Timely, affordable, safe and quality surgical services, aligned to the National  | `DEFERRED` | — | — | The strategy's four qualities map onto four different pieces of missing work: timely needs waiting-time measurement, aff |

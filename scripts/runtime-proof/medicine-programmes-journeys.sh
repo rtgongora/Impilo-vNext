@@ -159,6 +159,19 @@ chk "the anchor FK is validated in pg_constraint (convalidated), not NOT VALID" 
     "$(q "SELECT convalidated FROM pg_constraint WHERE conname LIKE '%programme_enrolments%anchor%' OR (contype='f' AND conrelid='pct.pct_programme_enrolments'::regclass) LIMIT 1;")" \
     "t"
 
+# ── V111 PMTCT seam: the pregnancy_episode_id soft-link FK bites ─────────────────
+# Negative control: an enrolment pointing at a pregnancy episode that does not exist is refused.
+# Uses TB_TREATMENT so it does not trip the one-active-HIV partial-unique from the row above.
+chk "pregnancy_episode_id FK refuses a dangling episode (V111 negative control)" \
+    "$(q "INSERT INTO pct.pct_programme_enrolments
+          (enrolment_id, tenant_id, subject_cpid, programme, status, anchor_problem_id, enrolled_on, created_by, pregnancy_episode_id)
+          VALUES (gen_random_uuid(),'$TENANT','cpid-1','TB_TREATMENT','SCREENING','$PROB', now(), 'clin-1',
+                  '88888888-8888-4888-8888-888888888888');")" \
+    "violates foreign key"
+chk "the pregnancy-episode FK is validated in pg_constraint (convalidated)" \
+    "$(q "SELECT convalidated FROM pg_constraint WHERE conname='pct_programme_enrolments_pregnancy_episode_fk';")" \
+    "t"
+
 # Leave the probe table as we found it (nothing else references these rows).
 q "DELETE FROM pct.pct_treatment_regimens WHERE enrolment_id='$ENR';
    DELETE FROM pct.pct_programme_enrolments WHERE enrolment_id='$ENR';

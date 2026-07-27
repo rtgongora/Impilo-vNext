@@ -10,10 +10,12 @@
     "WHO_BLOOD": 1,
     "WHO_DAK": 93,
     "WHO_ECO": 6,
+    "WHO_HEARTS": 1,
     "WHO_IPC": 4,
     "WHO_LABORATORY": 1,
     "WHO_MEDICAL_DEVICES": 1,
     "WHO_PATIENT_SAFETY": 5,
+    "WHO_PEN": 1,
     "WHO_SSC": 4,
     "WHO_SSI": 4,
     "ZW_NSOAS": 3
@@ -22,7 +24,7 @@
     "docs/reference/who-dak/*/extracted",
     "docs/clinical-governance/*/standards-baseline.json"
   ],
-  "publishedArtefacts": 140,
+  "publishedArtefacts": 142,
   "publishedDataElements": 4098,
   "rows": [
     {
@@ -2791,6 +2793,130 @@
       "titleIsSheetLevel": false
     },
     {
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM",
+        "STRENGTHENED"
+      ],
+      "dakId": null,
+      "exclusionReason": null,
+      "family": "WHO_HEARTS",
+      "hitPolicy": null,
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "CVD_HIGH_TOTAL_RISK",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/cvd-risk-rules.json",
+          "row": "high total risk >= 20%"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "CVD_BP_START_ANTIHYPERTENSIVE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/cvd-risk-rules.json",
+          "row": "start antihypertensive at systolic >= 140"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "CVD_BP_DIABETES_TIGHTER_TARGET",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/cvd-risk-rules.json",
+          "row": "tighter BP target in diabetes"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "CVD_STATIN_INDICATED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/cvd-risk-rules.json",
+          "row": "statin indication"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "CVD_BP_SEVERE_SAME_DAY_REVIEW",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/cvd-risk-rules.json",
+          "row": "severe hypertension >= 180 same-day review"
+        }
+      ],
+      "kind": "DECISION_LOGIC",
+      "pack": "medicine",
+      "publishedRows": null,
+      "revisitCondition": null,
+      "sheet": null,
+      "sourceCitation": "WHO HEARTS technical package for cardiovascular disease management in primary health care (2020); WHO CVD risk charts. https://www.who.int/publications/i/item/9789240001367",
+      "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
+      "standardId": "WHO_HEARTS.CVD_RISK",
+      "status": "SHIPPED",
+      "title": "Cardiovascular risk assessment and management thresholds (BP treatment, statin indication, total CVD risk)",
+      "titleIsSheetLevel": false
+    },
+    {
+      "adaptationTypes": [
+        "ADDED_NATIONAL",
+        "ADOPTED_VERBATIM",
+        "STRENGTHENED"
+      ],
+      "dakId": null,
+      "exclusionReason": null,
+      "family": "WHO_PEN",
+      "hitPolicy": null,
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "DEPRX_METFORMIN_STOP_EGFR_LT_30",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/deprescribing-rules.json",
+          "row": "metformin stop eGFR<30"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "DEPRX_NSAID_AVOID_EGFR_LT_30",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/deprescribing-rules.json",
+          "row": "NSAID avoid eGFR<30"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "DEPRX_NEPHROTOXIN_REVIEW_EGFR_LT_30",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/deprescribing-rules.json",
+          "row": "nephrotoxin review eGFR<30"
+        },
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "DEPRX_RENAL_DOSE_REVIEW_EGFR_LT_60",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/deprescribing-rules.json",
+          "row": "renal dose review eGFR<60"
+        },
+        {
+          "adaptationType": "ADDED_NATIONAL",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "DEPRX_DUPLICATE_THERAPY_REVIEW",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/deprescribing-rules.json",
+          "row": "duplicate therapy review"
+        },
+        {
+          "adaptationType": "STRENGTHENED",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "DEPRX_HEPATIC_SEVERE_CAUTION",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/deprescribing-rules.json",
+          "row": "hepatic severe review"
+        }
+      ],
+      "kind": "DECISION_LOGIC",
+      "pack": "medicine",
+      "publishedRows": null,
+      "revisitCondition": null,
+      "sheet": null,
+      "sourceCitation": "WHO package of essential noncommunicable disease interventions for primary health care (WHO PEN), 2020; renal-dosing safety principles. https://www.who.int/publications/i/item/9789240009226",
+      "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
+      "standardId": "WHO_PEN.DEPRESCRIBING",
+      "status": "SHIPPED",
+      "title": "Renal-safety medication review and deprescribing (eGFR-gated cautions, duplicate therapy)",
+      "titleIsSheetLevel": false
+    },
+    {
       "adaptationTypes": [],
       "dakId": null,
       "exclusionReason": "The national strategy's central finding is that 83% of key tracer surgical operations were being performed at central and provincial hospitals, and its aim is to push surgical services down to district level. This platform cannot currently measure that at all: procedures are not tagged by facility level in any surgical projection, and tracer operations are not defined as a set.",
@@ -2848,10 +2974,10 @@
       "titleIsSheetLevel": false
     }
   ],
-  "shippedCitations": 112,
+  "shippedCitations": 123,
   "statusCounts": {
     "COVERED_ELSEWHERE": 7,
     "DEFERRED": 120,
-    "SHIPPED": 13
+    "SHIPPED": 15
   }
 }
