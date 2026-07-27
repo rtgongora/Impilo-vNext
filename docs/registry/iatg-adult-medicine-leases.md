@@ -63,7 +63,7 @@ leases as committed rather than as first drafted.
 
 | Service | Head today | Existing claims (as committed) | **Adult Medicine block** | Sub-ranges |
 |---|---|---|---|---|
-| `pct-service` | V100 | trauma V035–V069 · RMNP V058/V059/V061–V069 · **this pack V060 + V100** · emergency V200–V239 · **paediatric/IMAM V104–V105 (carve-out, see note)** | **V100–V129 excl. V104–V105 (retired)** | **landed: V100 problems · V101 medical episode · V102 clinical documents · V103 problem links · V106 structured history · V107 medication reconciliation · V108 programme enrolment (HIV/TB) · V109 treatment regimen** · chronic registers V110–V120 · reserve V121–V129 |
+| `pct-service` | V100 | trauma V035–V069 · RMNP V058/V059/V061–V069 · **this pack V060 + V100** · emergency V200–V239 · **paediatric/IMAM V104–V105 (carve-out, see note)** | **V100–V129 excl. V104–V105 (retired)** | **landed: V100 problems · V101 medical episode · V102 clinical documents · V103 problem links · V106 structured history · V107 medication reconciliation · V108 programme enrolment (HIV/TB) · V109 treatment regimen · V110 prevention programmes (PrEP/TPT)** · chronic registers V111–V120 · reserve V121–V129 |
 | `clinical-knowledge-platform-service` | V006 | surgery V007–V020 · RMNP V007–V009 · emergency V200–V229 | **V051–V080** | rule-governance + source provenance V051 · adult content tranches V052–V070 · reserve V071–V080 |
 | `inpatient-service` | V066 | trauma V035–V064 (**dead space**) · surgery V067–V080 · emergency V200–V229 | **V111–V130** | medical ward workspace V111–V114 · reserve V115–V130 |
 | `zibo-service` | V007 | surgery V008–V014 · emergency V200–V219 · **confidential map V008** | **V035–V049** | **HIV/TB programme value sets V035 (landed)** · further adult value sets V036–V040 · DAK artifact registry V041–V044 |
@@ -82,12 +82,19 @@ available.
 > **V104 and V105 are retired and must never be used by any lane**: they were applied on at least one
 > estate database under the IMAM names before the rename, and a third lane reusing them is the exact
 > situation that forces the next live flyway-history repair. They are scar tissue; leave the gap.
-> This pack's block reads **V100–V129 excl. V104–V105 (retired)**; landed through **V109**
+> This pack's block reads **V100–V129 excl. V104–V105 (retired)**; landed through **V110**
 > (V106 structured history · V107 medication reconciliation · **V108 programme enrolment** ·
-> **V109 treatment regimen**); next free is **V110**. The W3 programme migrations took V108/V109
-> rather than the originally-planned V113–V116 slot: V106/V107 had already consumed the
-> clerking/reconciliation numbers, and the programme spine was the next work, so it took the next
-> free numbers. Sub-ranges in the table below are a plan, not a contract.
+> **V109 treatment regimen** · **V110 prevention programmes** — widens the programme + regimen-stage
+> CHECKs to admit HIV_PREVENTION/TB_PREVENTION and the PREVENTIVE stage); next free is **V111**.
+> The W3 programme migrations took V108–V110 rather than the originally-planned V113–V116 slot:
+> V106/V107 had already consumed the clerking/reconciliation numbers, and the programme spine was
+> the next work. Sub-ranges in the table below are a plan, not a contract.
+>
+> **W3 (HIV/TB DAK programmes) is COMPLETE.** All 13 HIV/TB standards in
+> `docs/clinical-governance/medicine/standards-baseline.json` are SHIPPED (treatment-and-monitoring,
+> the diagnostic front door, prevention programmes PrEP/TPT, TB/HIV co-infection, and PMTCT); the
+> coverage-exclusions register is empty. One integration seam is tracked outside the DAK register:
+> the soft HIV_CARE-enrolment → RMNP-pregnancy-episode link (PMTCT), pending the RMNP lane.
 > Process notes for every lane: (1) a renumber must target numbers above ALL committed lease claims, or
 > obtain a carve-out written into the affected lease; (2) **a carve-out is valid only while the state it
 > accommodates holds** — write the condition into the note (this note's first revision went stale within
