@@ -22,8 +22,10 @@ interface VitalConfig {
 
 const VITAL_CONFIGS: VitalConfig[] = [
   { id: "HEART_RATE", label: "Heart Rate", unit: "bpm", normalMin: 60, normalMax: 100, criticalMin: 40, criticalMax: 150, color: colors.ui.error.main, icon: "❤️" },
-  { id: "BLOOD_PRESSURE_SYS", label: "Systolic BP", unit: "mmHg", normalMin: 90, normalMax: 140, criticalMin: 70, criticalMax: 200, color: "#F97316", icon: "🩸" },
-  { id: "BLOOD_PRESSURE_DIA", label: "Diastolic BP", unit: "mmHg", normalMin: 60, normalMax: 90, criticalMin: 40, criticalMax: 120, color: colors.ui.warning.main, icon: "🩸" },
+  // Ids match the vital_type vocabulary the BFF emits (SYSTOLIC/DIASTOLIC, from the LOINC-coded
+  // observation spine) — the old BLOOD_PRESSURE_SYS/DIA ids matched nothing any writer produced.
+  { id: "SYSTOLIC", label: "Systolic BP", unit: "mmHg", normalMin: 90, normalMax: 140, criticalMin: 70, criticalMax: 200, color: "#F97316", icon: "🩸" },
+  { id: "DIASTOLIC", label: "Diastolic BP", unit: "mmHg", normalMin: 60, normalMax: 90, criticalMin: 40, criticalMax: 120, color: colors.ui.warning.main, icon: "🩸" },
   { id: "TEMPERATURE", label: "Temperature", unit: "°C", normalMin: 36.1, normalMax: 38.0, criticalMin: 35.0, criticalMax: 40.0, color: "#EAB308", icon: "🌡️" },
   { id: "RESPIRATORY_RATE", label: "Resp. Rate", unit: "/min", normalMin: 12, normalMax: 20, criticalMin: 8, criticalMax: 30, color: "#8B5CF6", icon: "💨" },
   { id: "OXYGEN_SATURATION", label: "SpO₂", unit: "%", normalMin: 95, normalMax: 100, criticalMin: 88, criticalMax: 100, color: "#3B82F6", icon: "🫁" },
@@ -54,7 +56,7 @@ export function VitalsMonitorScreen() {
   const pid = activeEncounter?.patientId ?? "";
   const [compact, setCompact] = useState(false);
 
-  const { data: vitals = [], isLoading } = useQuery({
+  const { data: vitals = [], isLoading, isError } = useQuery({
     queryKey: ["vitals-monitor", pid],
     queryFn: async () => {
       const r = await apiClient.get<{ data: Array<Record<string, unknown>> }>(
@@ -84,6 +86,22 @@ export function VitalsMonitorScreen() {
   };
 
   if (isLoading) return <Screen><Header title="Vitals Monitor" /><LoadingSpinner /></Screen>;
+
+  // A failed poll must never render seven "—" cards with green NORMAL borders — that is an
+  // outage displayed as a physiologically normal patient, auto-refreshed every 15 seconds.
+  if (isError) {
+    return (
+      <Screen><Header title="Vitals Monitor" />
+        <View style={st.errorBox} testID="vitals-monitor-error">
+          <Text style={st.errorTitle}>Vitals unavailable</Text>
+          <Text style={st.errorText}>
+            Live vitals could not be retrieved. Do not treat this as normal observations — the
+            monitor will keep retrying automatically.
+          </Text>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen><Header title="Vitals Monitor" />
@@ -228,6 +246,9 @@ function VitalCard({ config, value, lastUpdated, status, trend, sparklineValues,
 const st = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 12, gap: 8, paddingBottom: 32 },
+  errorBox: { margin: 16, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.ui.error.main, backgroundColor: "#FEF2F2" },
+  errorTitle: { fontSize: 15, fontWeight: "700", color: colors.ui.error.main, marginBottom: 6 },
+  errorText: { fontSize: 13, color: colors.gray[700], lineHeight: 18 },
   toolbar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray[200] },
   hint: { fontSize: 11, color: colors.gray[400] },
   toggleBtn: { backgroundColor: colors.gray[100], paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 },

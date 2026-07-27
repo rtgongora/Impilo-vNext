@@ -92,12 +92,11 @@ class DownstreamRouteContractTest {
             //     virtual-pool duty read.
             "TusoServiceClient -> /v1/shifts",
 
-            // ── LIVE AND BROKEN — needs completion, not deletion ─────────────────
-            // /v1/vitals has real callers (VitalsController and the patient surfaces) and pct
-            // serves it nowhere. Under the product-owner rule this is a broken feature to be
-            // completed; deleting it would hide exactly the incompleteness the rule surfaces.
-            // Routed to the coordinator for an owner — vitals is as core as a clinical read gets.
-            "PctServiceClient -> /v1/vitals",
+            // /v1/vitals was on this list and is FIXED: the vitals surface now reads and writes
+            // pct's observation spine (/v1/observations, LOINC-coded) via VitalsObservationBridge,
+            // and the mobile delete voids (ENTERED_IN_ERROR) instead of calling a path that never
+            // existed. /v1/records was fixed alongside by the clinical-documents completion
+            // (pct ClinicalDocumentController, V102).
 
 
             // ── Not resolvable by a static scan ──────────────────────────────────

@@ -59,7 +59,7 @@ export default function VitalsPage() {
     (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
   );
   const encounterId = activeEncounter?.id ?? "";
-  const { data: vitalsData, isLoading } = useVitals(patientId);
+  const { data: vitalsData, isLoading, isError: vitalsUnavailable } = useVitals(patientId);
   const recordVitals = useRecordVitals();
   const {
     data: ewsData,
@@ -1625,8 +1625,18 @@ export default function VitalsPage() {
               </div>
             )}
 
-            {/* Vitals table */}
-            {vitals.length === 0 ? (
+            {/* Vitals table. A failed read is not an empty history: "No vitals recorded yet"
+                on error would assert an absence of observations the system cannot vouch for. */}
+            {vitalsUnavailable ? (
+              <div className="bg-card rounded-lg border border-red-200 p-12 text-center">
+                <Activity className="w-10 h-10 text-red-500 mx-auto mb-3" />
+                <p className="text-red-600 text-sm font-medium">Vitals unavailable</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Vital signs could not be retrieved. Do not treat this as an absence of
+                  observations.
+                </p>
+              </div>
+            ) : vitals.length === 0 ? (
               <div className="bg-card rounded-lg border border-border p-12 text-center">
                 <Activity className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground text-sm">No vitals recorded yet</p>

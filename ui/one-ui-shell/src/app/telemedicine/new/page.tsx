@@ -456,6 +456,12 @@ export default function NewTeleconsultPage() {
                     <p className="text-xs">No encounter in context.</p>
                   ) : vitalsQ.isLoading ? (
                     <p className="flex items-center gap-2 text-xs"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading vitals…</p>
+                  ) : vitalsQ.isError ? (
+                    // A failed read must not render the affirmative "no vitals recorded" on a
+                    // teleconsult referral — the receiving specialist would read it as a finding.
+                    <p className="text-xs text-red-600">
+                      Vitals could not be retrieved — not an absence of observations.
+                    </p>
                   ) : latestVitals ? (
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                       {latestVitals.systolic != null && latestVitals.diastolic != null && <span><strong>BP</strong> {latestVitals.systolic}/{latestVitals.diastolic}</span>}

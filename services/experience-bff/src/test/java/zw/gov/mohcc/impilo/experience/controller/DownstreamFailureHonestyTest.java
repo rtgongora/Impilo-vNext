@@ -98,7 +98,8 @@ class DownstreamFailureHonestyTest {
     @DisplayName("an unreachable PCT must not render as 'no observations recorded'")
     void vitals() {
         ResponseEntity<Map<String, Object>> response =
-                new VitalsController(failingPct())
+                new VitalsController(failingPct(),
+                        new zw.gov.mohcc.impilo.experience.clinical.VitalsObservationBridge())
                         .listVitals("t", "req-4", "corr-4", 0, 20, "p-1", null);
         assertHonestFailure(response, "vitals_unavailable");
         assertHasMeta(response, "req-4");
@@ -198,7 +199,7 @@ class DownstreamFailureHonestyTest {
             @Override public JsonNode listAllergies(String cpid) { throw DOWN; }
             @Override public JsonNode listProblems(String cpid) { throw DOWN; }
             @Override public JsonNode listImmunizations(String cpid, int page, int size) { throw DOWN; }
-            @Override public JsonNode listVitals(String cpid, int page, int size) { throw DOWN; }
+            @Override public JsonNode listObservationsForSubject(String cpid, String encounterId) { throw DOWN; }
             @Override public JsonNode getPatientTimeline(String cpid) { throw DOWN; }
         };
     }

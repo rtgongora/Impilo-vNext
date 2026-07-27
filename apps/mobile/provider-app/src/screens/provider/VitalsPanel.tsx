@@ -32,14 +32,20 @@ export function VitalsPanel({ encounterId, patientId }: VitalsPanelProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [vitals, setVitals] = useState<VitalReading[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     getVitalsForEncounter(encounterId)
       .then((v) => {
+        setLoadError(null);
         setVitals(v);
         v.forEach((vital) => encounterStore.getState().addVital(vital));
       })
-      .catch(() => {});
+      .catch(() => {
+        // An empty grid with no message reads as "no vitals recorded this encounter" — an
+        // affirmative clinical claim the app cannot make when the read failed.
+        setLoadError("Vitals could not be loaded — not an absence of observations.");
+      });
   }, [encounterId]);
 
   const handleRecord = useCallback(async () => {
@@ -97,6 +103,7 @@ export function VitalsPanel({ encounterId, patientId }: VitalsPanelProps) {
       </Card>
 
       {/* Recorded vitals */}
+      {loadError ? <ErrorState title="Vitals unavailable" message={loadError} /> : null}
       <View style={styles.vitalsGrid}>
         {vitals.map((v) => (
           <VitalCard
