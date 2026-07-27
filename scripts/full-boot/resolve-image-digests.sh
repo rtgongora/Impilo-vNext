@@ -60,7 +60,16 @@ classifications = yaml.safe_load(
 runtime_services = [
     e["id"] for e in classifications if e.get("deployment_lane") == "runtime_k8s_microservice"
 ]
-for dedicated in ("experience-bff", "one-ui-shell"):
+# Services that must be digest-pinned but are not in the classification file.
+# experience-bff / one-ui-shell have dedicated chart templates. abis-service is
+# hand-registered in values-full-preview.yaml (see the comments on
+# postgres.extraInitDatabases and fullBootServices.abis-service): it is deliberately
+# absent from config/full-boot-service-classification.yml so the generated runtime
+# overlay does not collide with that hand registration. Pinning it here — rather than
+# adding it to the classification — keeps that arrangement intact while stopping Helm
+# from rendering a mutable `impilo/abis-service:preview` tag over a digest-pinned pod.
+# Caught 2026-07-27: it was the ONE image in the whole estate helm could not describe.
+for dedicated in ("experience-bff", "one-ui-shell", "abis-service"):
     if dedicated not in runtime_services:
         runtime_services.append(dedicated)
 runtime_services = sorted(set(runtime_services))
