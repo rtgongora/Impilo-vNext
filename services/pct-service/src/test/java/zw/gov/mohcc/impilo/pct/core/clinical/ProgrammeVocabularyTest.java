@@ -24,11 +24,15 @@ class ProgrammeVocabularyTest {
             Path.of("src/main/resources/db/migration/V108__programme_enrolment.sql");
     private static final Path REGIMEN_MIGRATION =
             Path.of("src/main/resources/db/migration/V109__treatment_regimen.sql");
+    // V110 widened the programme and regimen-stage CHECKs to admit the prevention programmes and the
+    // PREVENTIVE stage, so it — not V108/V109 — is the authoritative source for those two vocabularies.
+    private static final Path PREVENTION_MIGRATION =
+            Path.of("src/main/resources/db/migration/V110__prevention_programmes.sql");
 
     @Test
     void programmesMatchTheDatabaseCheckConstraint() throws IOException {
         assertThat(ProgrammeVocabulary.PROGRAMMES).containsExactlyInAnyOrderElementsOf(
-                checkValues(ENROLMENT_MIGRATION, "pct_programme_enrolments_programme_check"));
+                checkValues(PREVENTION_MIGRATION, "pct_programme_enrolments_programme_check"));
     }
 
     @Test
@@ -46,7 +50,7 @@ class ProgrammeVocabularyTest {
     @Test
     void regimenStagesMatchTheDatabaseCheckConstraint() throws IOException {
         assertThat(ProgrammeVocabulary.REGIMEN_STAGES).containsExactlyInAnyOrderElementsOf(
-                checkValues(REGIMEN_MIGRATION, "pct_treatment_regimens_stage_check"));
+                checkValues(PREVENTION_MIGRATION, "pct_treatment_regimens_stage_check"));
     }
 
     @Test
@@ -78,13 +82,18 @@ class ProgrammeVocabularyTest {
     }
 
     @Test
-    void artAndTbStagesPartitionTheRegimenStages() {
+    void artTbAndPreventionStagesPartitionTheRegimenStages() {
         assertThat(ProgrammeVocabulary.REGIMEN_STAGES)
                 .containsAll(ProgrammeVocabulary.ART_STAGES)
-                .containsAll(ProgrammeVocabulary.TB_STAGES);
+                .containsAll(ProgrammeVocabulary.TB_STAGES)
+                .containsAll(ProgrammeVocabulary.PREVENTION_STAGES);
         assertThat(ProgrammeVocabulary.ART_STAGES)
                 .doesNotContainAnyElementsOf(ProgrammeVocabulary.TB_STAGES);
-        assertThat(ProgrammeVocabulary.ART_STAGES.size() + ProgrammeVocabulary.TB_STAGES.size())
+        // The three stage families partition the vocabulary exactly — a stage in none, or in two,
+        // would escape the programme-scoping check.
+        assertThat(ProgrammeVocabulary.ART_STAGES.size()
+                   + ProgrammeVocabulary.TB_STAGES.size()
+                   + ProgrammeVocabulary.PREVENTION_STAGES.size())
                 .isEqualTo(ProgrammeVocabulary.REGIMEN_STAGES.size());
     }
 
@@ -98,16 +107,25 @@ class ProgrammeVocabularyTest {
         assertThatThrownBy(() ->
                 ProgrammeVocabulary.requireStageForProgramme(ProgrammeVocabulary.HIV_CARE, "INTENSIVE_PHASE"))
                 .isInstanceOf(IllegalArgumentException.class);
+        // A prevention course uses PREVENTIVE, and only PREVENTIVE — an ART line on PrEP is refused.
+        assertThatThrownBy(() ->
+                ProgrammeVocabulary.requireStageForProgramme(ProgrammeVocabulary.HIV_PREVENTION, "FIRST_LINE"))
+                .isInstanceOf(IllegalArgumentException.class);
         // The valid pairings do not throw.
         ProgrammeVocabulary.requireStageForProgramme(ProgrammeVocabulary.HIV_CARE, "FIRST_LINE");
         ProgrammeVocabulary.requireStageForProgramme(ProgrammeVocabulary.TB_TREATMENT, "CONTINUATION_PHASE");
+        ProgrammeVocabulary.requireStageForProgramme(ProgrammeVocabulary.HIV_PREVENTION, "PREVENTIVE");
+        ProgrammeVocabulary.requireStageForProgramme(ProgrammeVocabulary.TB_PREVENTION, "PREVENTIVE");
     }
 
     @Test
-    void onlyHivIsConfidential() {
+    void theHivProgrammesAreConfidentialTheTbProgrammesAreNot() {
         // TB is a notifiable disease, confidential from nobody; conflating the two would be wrong.
+        // PrEP is HIV/SRH content about an HIV-negative person's risk, so it is confidential too.
         assertThat(ProgrammeVocabulary.isConfidential(ProgrammeVocabulary.HIV_CARE)).isTrue();
+        assertThat(ProgrammeVocabulary.isConfidential(ProgrammeVocabulary.HIV_PREVENTION)).isTrue();
         assertThat(ProgrammeVocabulary.isConfidential(ProgrammeVocabulary.TB_TREATMENT)).isFalse();
+        assertThat(ProgrammeVocabulary.isConfidential(ProgrammeVocabulary.TB_PREVENTION)).isFalse();
     }
 
     private static Set<String> checkValues(Path migration, String constraintName) throws IOException {

@@ -21,8 +21,11 @@ public final class ProgrammeVocabulary {
 
     public static final String HIV_CARE = "HIV_CARE";
     public static final String TB_TREATMENT = "TB_TREATMENT";
+    public static final String HIV_PREVENTION = "HIV_PREVENTION"; // PrEP
+    public static final String TB_PREVENTION = "TB_PREVENTION";   // TPT
 
-    public static final Set<String> PROGRAMMES = Set.of(HIV_CARE, TB_TREATMENT);
+    public static final Set<String> PROGRAMMES =
+            Set.of(HIV_CARE, TB_TREATMENT, HIV_PREVENTION, TB_PREVENTION);
 
     public static final Set<String> ENROLMENT_STATUSES = Set.of(
             "SCREENING",
@@ -51,9 +54,11 @@ public final class ProgrammeVocabulary {
 
     public static final Set<String> ART_STAGES = Set.of("FIRST_LINE", "SECOND_LINE", "THIRD_LINE");
     public static final Set<String> TB_STAGES = Set.of("INTENSIVE_PHASE", "CONTINUATION_PHASE");
+    /** A prevention course (PrEP, TPT) has no ART line or TB phase — its stage is PREVENTIVE. */
+    public static final Set<String> PREVENTION_STAGES = Set.of("PREVENTIVE");
 
     /** The union the {@code regimen_stage} column accepts. */
-    public static final Set<String> REGIMEN_STAGES = union(ART_STAGES, TB_STAGES);
+    public static final Set<String> REGIMEN_STAGES = union(union(ART_STAGES, TB_STAGES), PREVENTION_STAGES);
 
     public static final Set<String> CHANGE_REASONS = Set.of(
             "NEW_START",
@@ -73,7 +78,9 @@ public final class ProgrammeVocabulary {
      */
     public static final Map<String, Set<String>> STAGES_BY_PROGRAMME = Map.of(
             HIV_CARE, ART_STAGES,
-            TB_TREATMENT, TB_STAGES);
+            TB_TREATMENT, TB_STAGES,
+            HIV_PREVENTION, PREVENTION_STAGES,
+            TB_PREVENTION, PREVENTION_STAGES);
 
     /**
      * Validates that the stage belongs to the programme, throwing with both named when it does not.
@@ -88,9 +95,13 @@ public final class ProgrammeVocabulary {
         }
     }
 
-    /** Whether this programme is on the confidential lane (specially protected). HIV is; TB is not. */
+    /**
+     * Whether this programme is on the confidential lane (specially protected). The HIV programmes
+     * are (care and PrEP — PrEP is HIV/SRH content about an HIV-negative person's risk); the TB
+     * programmes are not (TB is notifiable, confidential from nobody).
+     */
     public static boolean isConfidential(String programme) {
-        return HIV_CARE.equals(programme);
+        return HIV_CARE.equals(programme) || HIV_PREVENTION.equals(programme);
     }
 
     private static Set<String> union(Set<String> a, Set<String> b) {

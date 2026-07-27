@@ -37,7 +37,9 @@ class HivTbProgrammeRuleContentTest {
             ProgrammeGuidanceService.TB_CONTENT_PATH,
             ProgrammeGuidanceService.HIV_TESTING_PATH,
             ProgrammeGuidanceService.TB_SCREENING_PATH,
-            ProgrammeGuidanceService.TB_DIAGNOSIS_PATH);
+            ProgrammeGuidanceService.TB_DIAGNOSIS_PATH,
+            ProgrammeGuidanceService.TPT_PATH,
+            ProgrammeGuidanceService.PREP_PATH);
 
     @TestFactory
     List<DynamicTest> everyRulesOwnFixturesBehaveAsDescribed() {
@@ -93,7 +95,9 @@ class HivTbProgrammeRuleContentTest {
             "clinical/tb-programme-rules.json",
             "clinical/hiv-testing-rules.json",
             "clinical/tb-screening-rules.json",
-            "clinical/tb-diagnosis-rules.json"})
+            "clinical/tb-diagnosis-rules.json",
+            "clinical/tpt-rules.json",
+            "clinical/prep-rules.json"})
     void thePackDeclaresItsPrimaryTextIsNotYetVendored(String pack) throws IOException {
         JsonNode verification = readPack(pack).path("provenance").path("sourceVerification");
         // Not an assertion that it IS vendored — it is not. An assertion that the pack says so where a
@@ -112,7 +116,9 @@ class HivTbProgrammeRuleContentTest {
             "clinical/tb-programme-rules.json",
             "clinical/hiv-testing-rules.json",
             "clinical/tb-screening-rules.json",
-            "clinical/tb-diagnosis-rules.json"})
+            "clinical/tb-diagnosis-rules.json",
+            "clinical/tpt-rules.json",
+            "clinical/prep-rules.json"})
     void thePackShipsAsEngineeringSeed(String pack) throws IOException {
         // No unratified pack may claim APPROVED — that is the one status that would let it drive care.
         assertThat(readPack(pack).path("approvalStatus").asText()).isEqualTo("ENGINEERING_SEED");
