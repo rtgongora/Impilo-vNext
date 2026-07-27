@@ -6,6 +6,15 @@ type RawScore = {
   percentile: number;
 } | null;
 
+type RawAttribution = {
+  label: string | null;
+  required_chart_label: string | null;
+  citation: string | null;
+  licence: string | null;
+  approval_status: string | null;
+  content_version: string | null;
+} | null;
+
 type RawGrowthMeasurement = {
   id: string;
   type: string;
@@ -25,10 +34,19 @@ type RawGrowthMeasurement = {
     created_at: string;
     derived: {
       age_days: number | null;
+      corrected_age_days: number | null;
+      corrected_age_applied: boolean;
+      gestational_age_weeks: number | null;
+      gestational_age_source: string | null;
+      postmenstrual_age_weeks: number | null;
       standard: string | null;
+      standard_label: string | null;
+      standard_attribution: RawAttribution;
+      engine_version: string | null;
+      scoring_note: string | null;
+      scoring_gaps: string | null;
       normalized_stature_cm: number | null;
       normalized_stature_mode: string | null;
-      stature_adjustment_cm: number | null;
       body_mass_index: number | null;
       weight_for_age: RawScore;
       length_height_for_age: RawScore;
@@ -40,6 +58,15 @@ type RawGrowthMeasurement = {
 
 type RawGrowthResponse = ApiResponse<RawGrowthMeasurement[]>;
 type RawGrowthItemResponse = ApiResponse<RawGrowthMeasurement>;
+
+export type GrowthAttribution = {
+  label: string | null;
+  requiredChartLabel: string | null;
+  citation: string | null;
+  licence: string | null;
+  approvalStatus: string | null;
+  contentVersion: string | null;
+} | null;
 
 export type GrowthScore = {
   zScore: number;
@@ -60,10 +87,22 @@ export type GrowthMeasurement = {
   notes: string | null;
   derived: {
     ageDays: number | null;
+    correctedAgeDays: number | null;
+    correctedAgeApplied: boolean;
+    gestationalAgeWeeks: number | null;
+    /** SUPPLIED | NEWBORN_BIRTH_RECORD | NOT_RECORDED — which standard applies turns on this. */
+    gestationalAgeSource: string | null;
+    postmenstrualAgeWeeks: number | null;
     standard: string | null;
+    standardLabel: string | null;
+    standardAttribution: GrowthAttribution;
+    engineVersion: string | null;
+    /** Why nothing could be scored. A missing z-score that explains itself is a gap. */
+    scoringNote: string | null;
+    /** Per-indicator reasons, as stored JSON, for measurements that could not be scored. */
+    scoringGaps: string | null;
     normalizedStatureCm: number | null;
     normalizedStatureMode: string | null;
-    statureAdjustmentCm: number | null;
     bodyMassIndex: number | null;
     weightForAge: GrowthScore;
     lengthHeightForAge: GrowthScore;
@@ -94,6 +133,18 @@ function mapScore(score: RawScore): GrowthScore {
   };
 }
 
+function mapAttribution(attribution: RawAttribution): GrowthAttribution {
+  if (!attribution) return null;
+  return {
+    label: attribution.label,
+    requiredChartLabel: attribution.required_chart_label,
+    citation: attribution.citation,
+    licence: attribution.licence,
+    approvalStatus: attribution.approval_status,
+    contentVersion: attribution.content_version,
+  };
+}
+
 function mapMeasurement(resource: RawGrowthMeasurement): GrowthMeasurement {
   const a = resource.attributes;
   return {
@@ -110,10 +161,19 @@ function mapMeasurement(resource: RawGrowthMeasurement): GrowthMeasurement {
     notes: a.notes,
     derived: {
       ageDays: a.derived.age_days,
+      correctedAgeDays: a.derived.corrected_age_days,
+      correctedAgeApplied: a.derived.corrected_age_applied,
+      gestationalAgeWeeks: a.derived.gestational_age_weeks,
+      gestationalAgeSource: a.derived.gestational_age_source,
+      postmenstrualAgeWeeks: a.derived.postmenstrual_age_weeks,
       standard: a.derived.standard,
+      standardLabel: a.derived.standard_label,
+      standardAttribution: mapAttribution(a.derived.standard_attribution),
+      engineVersion: a.derived.engine_version,
+      scoringNote: a.derived.scoring_note,
+      scoringGaps: a.derived.scoring_gaps,
       normalizedStatureCm: a.derived.normalized_stature_cm,
       normalizedStatureMode: a.derived.normalized_stature_mode,
-      statureAdjustmentCm: a.derived.stature_adjustment_cm,
       bodyMassIndex: a.derived.body_mass_index,
       weightForAge: mapScore(a.derived.weight_for_age),
       lengthHeightForAge: mapScore(a.derived.length_height_for_age),

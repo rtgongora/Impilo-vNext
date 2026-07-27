@@ -25,6 +25,19 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    # This service's migration numbers are leased in per-lane bands (see
+    # docs/registry/iatg-*-leases.md), so a lane routinely merges a migration
+    # numerically BELOW one another lane has already applied. Flyway's default
+    # refuses exactly those, and silently: the service boots green with the table
+    # missing. Live-proven on pct 2026-07-26 — V106 was in the jar, the service was
+    # healthy, zero errors, and six tables had never been created.
+    #
+    # What this does NOT license: a migration in one band may never DEPEND ON an
+    # object owned by a higher band. Out-of-order only relaxes ordering on a database
+    # where the higher number has ALREADY applied; a fresh database still applies
+    # strictly ascending, so a cross-band dependency boots fine here and fails on
+    # every new environment. Lease law forbids it for that reason.
+    out-of-order: true
 
   data:
     redis:

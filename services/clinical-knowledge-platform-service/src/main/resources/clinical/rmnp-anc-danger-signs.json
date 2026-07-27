@@ -1,0 +1,300 @@
+{
+  "packId": "rmnp-anc-danger-signs",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Antenatal danger signs, including the hypertensive-disorders ladder",
+    "primarySource": "WHO ANC DAK ANC.DT tables; WHO Managing Complications in Pregnancy and Childbirth; WHO recommendations on antenatal care (2016)",
+    "why": "The danger signs that turn a routine antenatal contact into an emergency. The hypertensive disorders are the reason for the schedule's blood-pressure-every-contact rhythm, and they are the family where getting the signal wrong is most lethal.",
+    "sourceVerification": {
+      "primaryTextVendored": true,
+      "vendoredArtefact": "docs/reference/who-dak/smart-anc — ANC.DT.01 (danger signs) informs the sign list; the pre-eclampsia thresholds are from WHO guidance, not the DAK decision outputs",
+      "blocksRatification": true,
+      "note": "ANC.DT.01's own output for a convulsing woman is 'clinician's discretion / proceed with ANC contact OR referral' — a defensible global hedge and an unacceptable national rule, since a convulsing pregnant woman is eclampsia until proven otherwise. This pack does NOT adopt that output; it strengthens it, and says so in ANC_HTN_ECLAMPSIA's adaptation. The sign vocabulary is DAK-derived; the actions are national."
+    }
+  },
+  "rules": [
+    {
+      "code": "ANC_HTN_ECLAMPSIA",
+      "name": "Eclampsia — convulsions in pregnancy",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "HYPERTENSIVE_EMERGENCY",
+      "signalFamily": "HYPERTENSIVE_DISORDERS",
+      "signalRank": 40,
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["convulsions"],
+      "logic": {"finding": "convulsions", "present": true},
+      "message": "Eclampsia. Give magnesium sulfate now and control the blood pressure.",
+      "explanation": "A convulsion in pregnancy is eclampsia until proven otherwise. It is the top of the hypertensive ladder, and the reason the milder hypertensive alerts are suppressed when it fires — three quieter alarms for the same disease would bury this one.",
+      "requiredAction": "Give magnesium sulfate per protocol, control severe hypertension, protect the airway, and deliver — the definitive treatment is delivery. Do not wait on proteinuria or a second blood pressure.",
+      "monitoringInstruction": "Magnesium toxicity watch: respiratory rate, reflexes and urine output before and during. Continuous observation.",
+      "sourceRefs": [
+        "WHO Managing Complications in Pregnancy and Childbirth — eclampsia",
+        "WHO ANC DAK ANC.DT.01 — danger signs (convulsing)"
+      ],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "ANC.DT.01 outputs, for a convulsing woman, 'clinician's discretion' and 'proceed with ANC contact OR referral'.",
+        "nationalStatement": "A convulsion in pregnancy is treated as eclampsia: magnesium sulfate and blood-pressure control immediately, delivery as definitive treatment, non-overridable.",
+        "rationale": "The DAK output is a global hedge appropriate to a decision-support tool that must not overstep. As a national rule it is unacceptable — the discretion it defers to is exactly what fails under pressure, and eclampsia untreated for minutes kills. Auto-generating from the DAK row would have shipped the hedge.",
+        "evidenceRefs": [
+          "WHO Managing Complications in Pregnancy and Childbirth — eclampsia"
+        ],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "applicablePopulation": "Any pregnant or recently pregnant woman"
+      },
+      "testCases": [
+        {"name": "a convulsion fires eclampsia", "facts": {"convulsions": "PRESENT"}, "expectFires": true},
+        {"name": "no convulsion does not", "facts": {"convulsions": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_HTN_SEVERE_PREECLAMPSIA",
+      "name": "Pre-eclampsia with severe features",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "HYPERTENSIVE_EMERGENCY",
+      "signalFamily": "HYPERTENSIVE_DISORDERS",
+      "signalRank": 30,
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["systolicBp", "diastolicBp", "severeHeadache", "visualDisturbance", "epigastricPain", "proteinuria"],
+      "logic": {
+        "any": [
+          {"input": "systolicBp", "op": "gte", "value": 160},
+          {"input": "diastolicBp", "op": "gte", "value": 110},
+          {"finding": "severeHeadache", "present": true},
+          {"finding": "visualDisturbance", "present": true},
+          {"finding": "epigastricPain", "present": true}
+        ]
+      },
+      "message": "Severe pre-eclampsia. Give magnesium sulfate and plan delivery — do not send her home.",
+      "explanation": "A blood pressure of 160/110 or above, or the severe symptoms — headache, visual disturbance, epigastric pain — mark pre-eclampsia with severe features. Magnesium sulfate prevents the progression to eclampsia. Severe features alone are enough; proteinuria is not required to act.",
+      "requiredAction": "Give magnesium sulfate, treat severe hypertension, admit, and plan delivery. A severe blood pressure at an outpatient contact is an admission, not a follow-up appointment.",
+      "monitoringInstruction": "Magnesium toxicity watch. Repeat blood pressure and reassess symptoms.",
+      "sourceRefs": [
+        "WHO Managing Complications in Pregnancy and Childbirth — severe pre-eclampsia",
+        "WHO recommendations on antenatal care (2016) — pre-eclampsia prevention and management"
+      ],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Blood pressure ≥160/110, or pre-eclampsia with severe symptoms, requires magnesium sulfate and management for severe pre-eclampsia; severe features do not require proteinuria.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": [
+          "WHO Managing Complications in Pregnancy and Childbirth — severe pre-eclampsia"
+        ],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "BP 165/95 fires on the systolic alone", "facts": {"systolicBp": 165, "diastolicBp": 95}, "expectFires": true},
+        {"name": "visual disturbance with a normal BP fires", "facts": {"systolicBp": 128, "diastolicBp": 82, "visualDisturbance": "PRESENT"}, "expectFires": true},
+        {"name": "a normal BP with no severe features does not", "facts": {"systolicBp": 128, "diastolicBp": 82, "severeHeadache": "ABSENT", "visualDisturbance": "ABSENT", "epigastricPain": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_HTN_PREECLAMPSIA",
+      "name": "Pre-eclampsia",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "HYPERTENSIVE_RISK",
+      "signalFamily": "HYPERTENSIVE_DISORDERS",
+      "signalRank": 20,
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["systolicBp", "diastolicBp", "proteinuria", "gestationalAgeWeeks"],
+      "appliesWhen": {"input": "gestationalAgeWeeks", "op": "gte", "value": 20},
+      "logic": {
+        "all": [
+          {"any": [
+            {"input": "systolicBp", "op": "gte", "value": 140},
+            {"input": "diastolicBp", "op": "gte", "value": 90}
+          ]},
+          {"input": "proteinuria", "op": "in", "values": ["ONE_PLUS", "TWO_PLUS", "THREE_PLUS"]}
+        ]
+      },
+      "message": "Pre-eclampsia — new hypertension with proteinuria after 20 weeks.",
+      "explanation": "Blood pressure 140/90 or above with proteinuria after 20 weeks is pre-eclampsia. It can progress to severe pre-eclampsia and eclampsia, sometimes quickly, so it changes the schedule — more frequent contacts, and a plan for where she will deliver.",
+      "requiredAction": "Refer for assessment. Increase the frequency of contacts, monitor blood pressure and proteinuria, and counsel her on the danger signs that mean she must come immediately.",
+      "monitoringInstruction": "Blood pressure and proteinuria at each contact; bloods for platelets, liver and renal function per protocol.",
+      "sourceRefs": [
+        "WHO recommendations on antenatal care (2016) — pre-eclampsia",
+        "WHO ANC DAK ANC.DT — blood pressure and proteinuria"
+      ],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "New-onset hypertension (≥140/90) with proteinuria after 20 weeks of gestation is pre-eclampsia.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — pre-eclampsia"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "142/92 with proteinuria after 20 weeks fires", "facts": {"gestationalAgeWeeks": 28, "systolicBp": 142, "diastolicBp": 92, "proteinuria": "TWO_PLUS"}, "expectFires": true},
+        {"name": "raised BP with no proteinuria is not pre-eclampsia", "facts": {"gestationalAgeWeeks": 28, "systolicBp": 142, "diastolicBp": 92, "proteinuria": "NEGATIVE"}, "expectFires": false},
+        {"name": "before 20 weeks the rule does not apply", "facts": {"gestationalAgeWeeks": 14, "systolicBp": 142, "diastolicBp": 92, "proteinuria": "TWO_PLUS"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_HTN_GESTATIONAL",
+      "name": "Gestational hypertension",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "HYPERTENSIVE_RISK",
+      "signalFamily": "HYPERTENSIVE_DISORDERS",
+      "signalRank": 10,
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["systolicBp", "diastolicBp", "proteinuria", "gestationalAgeWeeks"],
+      "appliesWhen": {"input": "gestationalAgeWeeks", "op": "gte", "value": 20},
+      "logic": {
+        "all": [
+          {"any": [
+            {"input": "systolicBp", "op": "gte", "value": 140},
+            {"input": "diastolicBp", "op": "gte", "value": 90}
+          ]},
+          {"input": "proteinuria", "op": "in", "values": ["NEGATIVE", "TRACE"]}
+        ]
+      },
+      "message": "Gestational hypertension — raised blood pressure without proteinuria after 20 weeks.",
+      "explanation": "New hypertension after 20 weeks without proteinuria. It needs watching because a quarter of these women go on to develop pre-eclampsia, but it is the mildest rung of the ladder — and it is suppressed the moment proteinuria, severe features or a convulsion move her up it.",
+      "requiredAction": "Monitor more closely: repeat the blood pressure, check proteinuria at every contact, and counsel her on pre-eclampsia danger signs. Refer if it rises or proteinuria appears.",
+      "monitoringInstruction": "Blood pressure and proteinuria at each contact.",
+      "sourceRefs": ["WHO recommendations on antenatal care (2016) — gestational hypertension"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "New-onset hypertension after 20 weeks without proteinuria is gestational hypertension.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — gestational hypertension"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "raised BP without proteinuria after 20 weeks fires", "facts": {"gestationalAgeWeeks": 30, "systolicBp": 146, "diastolicBp": 94, "proteinuria": "NEGATIVE"}, "expectFires": true},
+        {"name": "raised BP WITH proteinuria is pre-eclampsia, not this", "facts": {"gestationalAgeWeeks": 30, "systolicBp": 146, "diastolicBp": 94, "proteinuria": "TWO_PLUS"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_ANTEPARTUM_HAEMORRHAGE",
+      "name": "Antepartum haemorrhage",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "OBSTETRIC_EMERGENCY",
+      "signalFamily": "ANTEPARTUM_BLEEDING",
+      "signalRank": 20,
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["vaginalBleeding", "gestationalAgeWeeks"],
+      "appliesWhen": {"input": "gestationalAgeWeeks", "op": "gte", "value": 24},
+      "logic": {"input": "vaginalBleeding", "op": "in", "values": ["MODERATE", "HEAVY"]},
+      "message": "Antepartum haemorrhage. Resuscitate and refer — do NOT do a vaginal examination.",
+      "explanation": "Bleeding after 24 weeks may be placenta praevia or abruption. A digital vaginal examination in praevia can provoke catastrophic haemorrhage, so it is contraindicated until praevia has been excluded by ultrasound.",
+      "requiredAction": "Resuscitate, get intravenous access and cross-match, and refer urgently to a facility that can perform a caesarean. Do not perform a vaginal examination until placenta praevia is excluded.",
+      "monitoringInstruction": "Continuous maternal observations and fetal heart. A soft estimate of visible loss underestimates a concealed abruption.",
+      "sourceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — bleeding in later pregnancy"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Vaginal bleeding after 24 weeks requires resuscitation and urgent referral; vaginal examination is contraindicated until placenta praevia is excluded.",
+        "nationalStatement": "Adopted as published, with the no-vaginal-examination instruction in the required action rather than a footnote.",
+        "evidenceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — bleeding in later pregnancy"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "moderate bleeding after 24 weeks fires", "facts": {"gestationalAgeWeeks": 32, "vaginalBleeding": "MODERATE"}, "expectFires": true},
+        {"name": "no bleeding does not", "facts": {"gestationalAgeWeeks": 32, "vaginalBleeding": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_REDUCED_FETAL_MOVEMENTS",
+      "name": "Reduced fetal movements",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "FETAL_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["reducedFetalMovements", "gestationalAgeWeeks"],
+      "appliesWhen": {"input": "gestationalAgeWeeks", "op": "gte", "value": 28},
+      "logic": {"finding": "reducedFetalMovements", "present": true},
+      "message": "Reduced fetal movements — assess fetal wellbeing today, not at the next contact.",
+      "explanation": "A woman's perception that her baby is moving less is associated with stillbirth and must not be reassured away. It is the one thing she notices before anyone measures anything.",
+      "requiredAction": "Assess the fetal heart and arrange further assessment (cardiotocography or ultrasound) the same day. Do not defer to the next scheduled contact.",
+      "monitoringInstruction": "If wellbeing cannot be confirmed, refer.",
+      "sourceRefs": ["WHO recommendations on antenatal care (2016) — fetal movement counting"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "WHO does not recommend routine formal fetal-movement counting, citing insufficient evidence of benefit and a risk of harm from intervention.",
+        "nationalStatement": "Routine counting is not mandated, but a woman's spontaneous report of reduced movements triggers same-day assessment.",
+        "rationale": "The WHO position is about routine counting programmes, not about ignoring a woman who says her baby has gone quiet. Those are different things, and conflating them would turn a not-recommended screening programme into a reason to dismiss a presenting symptom associated with stillbirth.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — fetal movement counting"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "reduced movements after 28 weeks fires", "facts": {"gestationalAgeWeeks": 34, "reducedFetalMovements": "PRESENT"}, "expectFires": true},
+        {"name": "normal movements do not", "facts": {"gestationalAgeWeeks": 34, "reducedFetalMovements": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_PROM",
+      "name": "Prelabour rupture of membranes",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "OBSTETRIC_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["fluidLeaking", "gestationalAgeWeeks"],
+      "appliesWhen": {"input": "gestationalAgeWeeks", "op": "gte", "value": 20},
+      "logic": {"finding": "fluidLeaking", "present": true},
+      "message": "Ruptured membranes before labour — assess for infection and gestation-appropriate management.",
+      "explanation": "Leaking fluid before labour raises the risk of ascending infection for mother and baby, and the management differs sharply by gestation — a preterm rupture is not a term one.",
+      "requiredAction": "Confirm rupture, assess for chorioamnionitis (maternal fever, tenderness, offensive liquor, fetal tachycardia), and manage by gestation per protocol. A sterile speculum examination is appropriate; a digital examination increases infection risk and is avoided unless she is in labour.",
+      "monitoringInstruction": "Temperature and fetal heart; watch for signs of infection.",
+      "sourceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — prelabour rupture of membranes"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Prelabour rupture of membranes requires assessment for infection and gestation-dependent management.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — prelabour rupture of membranes"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "leaking fluid fires", "facts": {"gestationalAgeWeeks": 30, "fluidLeaking": "PRESENT"}, "expectFires": true},
+        {"name": "no leaking does not", "facts": {"gestationalAgeWeeks": 30, "fluidLeaking": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ANC_MATERNAL_FEVER",
+      "name": "Fever in pregnancy",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "INFECTION_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["temperature"],
+      "logic": {"input": "temperature", "op": "gte", "value": 38.0},
+      "message": "Fever in pregnancy — find the source; consider malaria, and do not miss sepsis.",
+      "explanation": "Fever in pregnancy is never just a fever. In this setting malaria must be actively excluded, urinary and genital infection are common, and sepsis is the diagnosis that is missed because the woman compensates until she does not.",
+      "requiredAction": "Test for malaria, examine for a source (urine, chest, uterus, breast), and assess for sepsis. Treat empirically where sepsis is suspected rather than waiting for a culture.",
+      "monitoringInstruction": "Repeat observations; a rising pulse with a falling blood pressure is sepsis until proven otherwise.",
+      "sourceRefs": ["WHO recommendations on antenatal care (2016) — infection in pregnancy"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "Fever in pregnancy requires identification and treatment of the source, including malaria where endemic.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO recommendations on antenatal care (2016) — infection in pregnancy"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "38.5 fires", "facts": {"temperature": 38.5}, "expectFires": true},
+        {"name": "37.2 does not", "facts": {"temperature": 37.2}, "expectFires": false}
+      ]
+    }
+  ]
+}

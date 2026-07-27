@@ -159,8 +159,35 @@ if grep -Eq "encounter_ref\s+VARCHAR" services/oros-service/src/main/resources/d
    && ! grep -rEq "encounter_ref\s+VARCHAR[^,]*NOT NULL|ALTER COLUMN encounter_ref SET NOT NULL" services/oros-service/src/main/resources/db/migration/ 2>/dev/null; then
   echo "WARN: V-2 open — oros orders still accept a null encounter_ref (CC-5)"
 fi
-if ! grep -rq "pct_journey_id\|encounter_ref" services/daidzai-service/src/main/java/*/trauma* 2>/dev/null; then
+# V-3 detector, repaired 2026-07-26. The previous form globbed
+#   services/daidzai-service/src/main/java/*/trauma*
+# which cannot match: the only child of .../java is zw/, so the pattern expanded to zw/trauma* and
+# matched nothing. grep therefore always found nothing and this WARN fired unconditionally — it
+# would have kept firing after V-3 was closed, and would never have fired for the right reason.
+# A detector that cannot detect is worse than no detector: it produces a warning everyone learns to
+# ignore, and it silently withholds the signal it exists to give.
+#
+# Detect on the SCHEMA rather than on Java source, because the column is what closes V-3 and a
+# migration cannot be refactored out of existence the way a class can.
+#
+# V-3 closes in TWO parts and this guard reports which part is done, because conflating them is how
+# the closure got overstated once already:
+#   (a) the structural half — the pct_journey_id back-link column exists; and
+#   (b) the enforced half — a constraint requires it once the episode reaches a facility phase, AND
+#       a link-on-arrival flow exists to populate it so that constraint is satisfiable.
+#
+# This guard deliberately does NOT try to prove (b) by grepping for a constraint name. An earlier
+# version did, and it was unsound: a CHECK added in one migration and dropped in a later one still
+# matches the grep, so the guard reported the anchor enforced when V201 had withdrawn it — a false
+# OK. Net constraint state cannot be computed from migration text, so this guard does not pretend to.
+if ! grep -rq "pct_journey_id" services/daidzai-service/src/main/resources/db/migration/ 2>/dev/null; then
   echo "WARN: V-3 open — trauma episodes still carry no PCT back-link (CC-5)"
+elif ! grep -rqi "continuumlink\|continuum_link\|pctjourneyid\|resolveanchoronarrival" services/daidzai-service/src/main/java 2>/dev/null; then
+  # Structural half done (the column exists), enforced half not: no link-on-arrival flow in code yet,
+  # so nothing populates the anchor and any enforcing constraint would be unsatisfiable. Reported on
+  # the CODE, not migration text — full closure is when the flow exists, which a class either has or
+  # not, unlike a net constraint state that add-then-drop makes ungreppable.
+  echo "WARN: V-3 partially closed — back-link column exists, but no link-on-arrival flow populates it yet (CC-5)"
 fi
 
 if [[ "$FAIL" -eq 1 ]]; then

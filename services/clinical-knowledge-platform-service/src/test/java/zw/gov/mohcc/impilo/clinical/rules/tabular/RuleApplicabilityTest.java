@@ -34,7 +34,7 @@ class RuleApplicabilityTest {
                 true, false, true, ageMinDays, ageMaxDays, appliesWhen,
                 List.of("someInput"), MAPPER.createObjectNode(), "message", "explanation",
                 "do something", null, List.of("source"), "ENGINEERING_SEED",
-                "PENDING_MOHCC_RATIFICATION", "test-1.0.0", null, List.of());
+                "PENDING_MOHCC_RATIFICATION", "test-1.0.0", null, List.of(), null, 0);
     }
 
     @Test
