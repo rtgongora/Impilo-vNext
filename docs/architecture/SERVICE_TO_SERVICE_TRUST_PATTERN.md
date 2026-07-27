@@ -98,3 +98,47 @@ These are emitted to `audit_events` (via `audit-ledger-service`) by either the g
 - Outbound S2S call helper (Java): use `tech-companion`'s `OutboundCallContext.builder()` (planned) or set headers explicitly
 - Outbound S2S call helper (TS / BFF): `experience-bff`'s `ServiceClient` (existing helpers under `experience-bff` proxy controllers)
 - Web/mobile callers DO NOT need to set S2S headers — the BFF originates the S2S call
+
+## 9. Service workload credentials — preview==prod auth wave (stage 2)
+
+**Why this exists.** Trust headers are context, NOT authentication. On 2026-07-22 a
+confused deputy was demonstrated live: calling fhir-gateway from a pct-service pod with a
+forged `X-Actor-ID` was accepted. NetworkPolicies were then empirically proven to enforce
+**nothing** on the preview k3s (a default-deny let traffic through), so network segmentation
+is not an available compensating control. Meanwhile services that already enforce OAuth in
+preview (clinical-knowledge-platform-service `anyRequest().authenticated()`; ndila-service on
+`/internal/v1/ndila/**` and `POST /api/v1/ndila/distance-matrix`) 401 every unauthenticated
+S2S call and the caller degrades **silently** — the BFF's distance-matrix call fell back to
+haversine/null-ETA forever, and the IMAM→CKP path 503'd on the estate while 28 mocked tests
+stayed green.
+
+**Stage 2 slice 1 (landed): experience-bff mints its own credential.**
+`services/experience-bff/.../auth/ServiceTokenProvider.java` obtains a `client_credentials`
+token from Keycloak (client `KEYCLOAK_BACKEND_CLIENT_ID`, default `impilo-backend`; secret
+`KEYCLOAK_BACKEND_SECRET` from k8s secret `impilo-app-secrets` / key `keycloak-backend-secret`
+via `experienceBff.secretEnv` in `deploy/helm/impilo-vnext/values-full-preview.yaml`). The
+shared `trustHeaderForwardingInterceptor` (`ServiceClientConfig`) applies this precedence on
+every outbound call:
+
+1. An `Authorization` header pre-set by the client method wins outright.
+2. Otherwise the inbound user token is forwarded unchanged (JWT propagation, unchanged).
+3. Only when neither exists (scheduled jobs, Kafka consumers, public-lane composition,
+   service-originated calls) is the service token attached as `Bearer <token>`.
+
+Failure is honest, never silent: a failed mint logs WARN with the grep-able marker
+`SERVICE_TOKEN_MINT_FAILED` and the request proceeds without a token (preview keeps working
+with the secret absent); a mint failure is never cached longer than 30s; the token itself is
+cached until ~30s before expiry. Sibling implementations of the same shape:
+`mvumo-service` `ClientCredentialsTokenProvider` (TSHEPO) and `pct-service`
+`ServiceTokenProvider` (CKP lane).
+
+**Remaining stages (deliberately NOT in this slice):**
+
+- Per-service token providers for every other service with background/S2S callers
+  (outbox publishers, Kafka consumers, scheduled jobs) — other lanes.
+- Real UI auth end-to-end so preview stops depending on `IMPILO_SECURITY_ALLOW_ANONYMOUS`.
+- The flag flip itself (`IMPILO_SECURITY_ALLOW_ANONYMOUS` / `IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS`
+  off everywhere) once callers all carry credentials — the final preview==prod convergence.
+- Verification law for every slice: assert the PRESENCE of authenticated content (a real ETA,
+  a 200 with payload) plus a negative control (the same endpoint 401s without a token) —
+  never merely the absence of errors.

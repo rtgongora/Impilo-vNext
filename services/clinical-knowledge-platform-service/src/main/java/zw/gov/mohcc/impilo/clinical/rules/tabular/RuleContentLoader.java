@@ -122,7 +122,9 @@ public class RuleContentLoader {
                 node.path("adaptationAuthority").asText(authority),
                 contentVersion,
                 DakProvenance.from(node.get("dakRef"), node.get("adaptation")),
-                testCases(node.path("testCases")));
+                testCases(node.path("testCases")),
+                text(node, "signalFamily"),
+                node.path("signalRank").asInt(0));
     }
 
     private List<TabularRule.TestCase> testCases(JsonNode node) {

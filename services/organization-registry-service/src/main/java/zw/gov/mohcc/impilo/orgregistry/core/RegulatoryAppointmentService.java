@@ -122,6 +122,50 @@ public class RegulatoryAppointmentService {
     }
 
     /**
+     * Activate a founding appointment from an already-four-eyes-approved bootstrap (RB-3b).
+     *
+     * <p>The workforce-governance bootstrap rail runs the founding-administrator appointment through
+     * {@code TwoPersonApprovalService}, then emits {@code regulator_bootstrap.activated}. This is the
+     * org-registry side of that handshake: it materialises the appointment and promotes it to ACTIVE
+     * in <b>one transaction</b>, so a failure at the verify step (for example, the bootstrap-only
+     * guard finding an administrator already exists) can never leave an orphan PENDING behind.</p>
+     *
+     * <p>The four-eyes decision was made upstream and is not re-litigated here — {@code activatedBy}
+     * records the platform-approval provenance. But the domain invariants still apply: {@link #verify}
+     * runs the RB-2 bootstrap-only check, so a founding role activated when the seat is no longer
+     * empty is refused, and this method surfaces that rather than forcing it.</p>
+     *
+     * <p>Idempotent: Kafka is at-least-once, so a redelivered activation must be a no-op. If an ACTIVE
+     * appointment already exists for this (person, org, role) the existing one is returned and no
+     * second appointment is created.</p>
+     */
+    @Transactional
+    public RegulatoryAppointmentEntity activateFoundingAppointment(
+            UUID tenantId, UUID organizationId, String personHealthId, String roleCode,
+            String evidenceRef, String activatedBy) throws Exception {
+        String normalisedRole = roleCode == null ? null : roleCode.trim().toUpperCase();
+        if (normalisedRole != null && appointmentRepository
+                .existsByTenantIdAndOrganizationIdAndPersonHealthIdAndRoleCodeAndStatus(
+                        tenantId, organizationId, personHealthId, normalisedRole, GRANT_STATUS_ACTIVE)) {
+            log.info("Founding appointment already ACTIVE for org={} person={} role={} — activation is a no-op",
+                    organizationId, personHealthId, normalisedRole);
+            return appointmentRepository
+                    .findByTenantIdAndOrganizationId(tenantId, organizationId).stream()
+                    .filter(a -> GRANT_STATUS_ACTIVE.equals(a.getStatus())
+                            && personHealthId.equals(a.getPersonHealthId())
+                            && normalisedRole.equals(a.getRoleCode()))
+                    .findFirst().orElse(null);
+        }
+
+        CreateAppointmentRequest request = new CreateAppointmentRequest(
+                personHealthId, roleCode, null, "PLATFORM_BOOTSTRAP", evidenceRef, activatedBy, null, null);
+        RegulatoryAppointmentEntity pending = create(tenantId, organizationId, request, activatedBy);
+        // Same transaction (self-invocation runs in the outer @Transactional): the promotion to
+        // ACTIVE and the appointment's existence commit together or not at all.
+        return verify(tenantId, pending.getId(), activatedBy);
+    }
+
+    /**
      * End or revoke an appointment.
      *
      * <p><b>Succession guard (RB-2).</b> Ending the last ACTIVE administrator is refused: a

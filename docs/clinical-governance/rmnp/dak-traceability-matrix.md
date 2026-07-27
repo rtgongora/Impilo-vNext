@@ -14,7 +14,7 @@ matrix exists to make visible.
 - Published artefacts: **133**
 - Families: `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
 - Published data elements: **4098**
-- Shipped citations: **53**
+- Shipped citations: **65**
 
 | Status | Count |
 |---|---|

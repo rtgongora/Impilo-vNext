@@ -1,0 +1,221 @@
+{
+  "packId": "rmnp-anc-classification-tables",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Antenatal classification tables — anaemia in pregnancy",
+    "primarySource": "WHO recommendations on antenatal care (2016); WHO haemoglobin thresholds to diagnose anaemia (2011/2024)",
+    "why": "Anaemia in pregnancy is graded, not binary, and the grade changes what happens: mild is oral iron and review, moderate is investigation and treatment, severe near term is a transfusion decision and a delivery-place decision. A single 'anaemic yes/no' flag loses exactly the distinction that matters.",
+    "sourceVerification": {
+      "primaryTextVendored": true,
+      "vendoredArtefact": "docs/reference/who-dak/smart-anc — haemoglobin data element; the grade cut-offs are WHO published thresholds",
+      "blocksRatification": true,
+      "note": "The severe/moderate/mild cut-offs are WHO published haemoglobin thresholds. The trimester adjustment (the diagnostic threshold is 11.0 g/dL in the first and third trimesters and 10.5 in the second) is applied by scoring the reassuring row against a trimester-selected band. Cut-offs pending ministry ratification; blocksRatification stays true."
+    }
+  },
+  "tables": [
+    {
+      "tableId": "ANC_ANAEMIA",
+      "name": "Anaemia in pregnancy",
+      "axis": "ANAEMIA",
+      "requiredInputs": [
+        "haemoglobin",
+        "gestationalAgeWeeks"
+      ],
+      "sourceRefs": [
+        "WHO recommendations on antenatal care (2016) — anaemia",
+        "WHO haemoglobin thresholds to diagnose anaemia"
+      ],
+      "tiers": [
+        {
+          "code": "SEVERE_ANAEMIA",
+          "name": "Severe anaemia",
+          "colour": "PINK",
+          "requiredInputs": [
+            "haemoglobin"
+          ],
+          "logic": {
+            "input": "haemoglobin",
+            "op": "lt",
+            "value": 7.0
+          },
+          "action": "Haemoglobin below 7 g/dL. Assess for decompensation, investigate the cause, and make a transfusion decision. Near term, this also decides where she should deliver — she needs a facility that can transfuse.",
+          "treatments": [
+            "Urgent haematinic and cause-directed treatment",
+            "Transfusion decision per protocol",
+            "Plan delivery at a facility that can transfuse"
+          ],
+          "referralRequired": true,
+          "urgentReferral": true,
+          "sourceRefs": [
+            "WHO — severe anaemia in pregnancy"
+          ],
+          "adaptation": {
+            "type": "ADOPTED_VERBATIM",
+            "whoStatement": "Haemoglobin below 7 g/dL in pregnancy is severe anaemia requiring urgent assessment and a transfusion decision.",
+            "nationalStatement": "Adopted as published.",
+            "evidenceRefs": [
+              "WHO — severe anaemia in pregnancy"
+            ],
+            "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+          }
+        },
+        {
+          "code": "MODERATE_ANAEMIA",
+          "name": "Moderate anaemia",
+          "colour": "YELLOW",
+          "requiredInputs": [
+            "haemoglobin"
+          ],
+          "logic": {
+            "input": "haemoglobin",
+            "op": "between",
+            "min": 7.0,
+            "max": 9.9
+          },
+          "action": "Haemoglobin 7.0–9.9 g/dL. Investigate the cause — iron deficiency is common but not the only one — and treat. Recheck the response.",
+          "treatments": [
+            "Therapeutic-dose iron",
+            "Investigate cause (iron studies, malaria, other)",
+            "Recheck haemoglobin in 4 weeks"
+          ],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": [
+            "WHO — moderate anaemia in pregnancy"
+          ],
+          "adaptation": {
+            "type": "ADOPTED_VERBATIM",
+            "whoStatement": "Haemoglobin 70–99 g/L is moderate anaemia requiring treatment and investigation of cause.",
+            "nationalStatement": "Adopted as published.",
+            "evidenceRefs": [
+              "WHO — moderate anaemia in pregnancy"
+            ],
+            "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+          }
+        },
+        {
+          "code": "MILD_ANAEMIA",
+          "name": "Mild anaemia",
+          "colour": "YELLOW",
+          "requiredInputs": [
+            "haemoglobin",
+            "gestationalAgeWeeks"
+          ],
+          "logic": {
+            "input": "haemoglobin",
+            "bandKey": "gestationalAgeWeeks",
+            "bands": [
+              {
+                "bandMax": 12,
+                "lt": 11.0
+              },
+              {
+                "bandMin": 13,
+                "bandMax": 27,
+                "lt": 10.5
+              },
+              {
+                "bandMin": 28,
+                "lt": 11.0
+              }
+            ]
+          },
+          "action": "Mild anaemia for this trimester (below 11.0 g/dL in the first or third trimester, below 10.5 in the second, and at or above 10). Start or continue oral iron and folic acid and recheck.",
+          "treatments": [
+            "Oral iron and folic acid",
+            "Dietary counselling",
+            "Recheck haemoglobin at the next contact"
+          ],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": [
+            "WHO — anaemia thresholds by trimester"
+          ],
+          "adaptation": {
+            "type": "ADOPTED_VERBATIM",
+            "whoStatement": "The haemoglobin threshold for anaemia in pregnancy is 11.0 g/dL in the first and third trimesters and 10.5 g/dL in the second.",
+            "nationalStatement": "Adopted as published, with the trimester threshold applied by a gestational-age band so the reassuring cut-off is not a single number applied to the whole pregnancy.",
+            "evidenceRefs": [
+              "WHO — anaemia thresholds by trimester"
+            ],
+            "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+          }
+        },
+        {
+          "code": "NO_ANAEMIA",
+          "name": "No anaemia for this trimester",
+          "colour": "GREEN",
+          "action": "Haemoglobin at or above the threshold for this trimester. Continue routine iron and folic acid supplementation.",
+          "treatments": [
+            "Routine iron and folic acid supplementation"
+          ],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": [
+            "WHO recommendations on antenatal care (2016) — iron supplementation"
+          ],
+          "adaptation": {
+            "type": "ADOPTED_VERBATIM",
+            "whoStatement": "Daily oral iron and folic acid supplementation is recommended for pregnant women.",
+            "nationalStatement": "Adopted as published.",
+            "evidenceRefs": [
+              "WHO recommendations on antenatal care (2016) — iron supplementation"
+            ],
+            "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+          }
+        }
+      ],
+      "testCases": [
+        {
+          "name": "Hb 6.2 is severe",
+          "facts": {
+            "haemoglobin": 6.2,
+            "gestationalAgeWeeks": 30
+          },
+          "expectClassification": "SEVERE_ANAEMIA"
+        },
+        {
+          "name": "Hb 8.5 is moderate",
+          "facts": {
+            "haemoglobin": 8.5,
+            "gestationalAgeWeeks": 20
+          },
+          "expectClassification": "MODERATE_ANAEMIA"
+        },
+        {
+          "name": "Hb 10.6 in the third trimester is mild (below 11.0)",
+          "facts": {
+            "haemoglobin": 10.6,
+            "gestationalAgeWeeks": 30
+          },
+          "expectClassification": "MILD_ANAEMIA"
+        },
+        {
+          "name": "Hb 10.6 in the second trimester is NOT anaemia (threshold 10.5)",
+          "facts": {
+            "haemoglobin": 10.6,
+            "gestationalAgeWeeks": 20
+          },
+          "expectClassification": "NO_ANAEMIA"
+        },
+        {
+          "name": "Hb 12.0 is not anaemia",
+          "facts": {
+            "haemoglobin": 12.0,
+            "gestationalAgeWeeks": 30
+          },
+          "expectClassification": "NO_ANAEMIA"
+        },
+        {
+          "name": "no haemoglobin cannot classify",
+          "facts": {
+            "gestationalAgeWeeks": 30
+          },
+          "expectClassification": null
+        }
+      ]
+    }
+  ]
+}
