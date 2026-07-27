@@ -2,9 +2,14 @@
 /**
  * Regenerates parity sweep documentation from embedded capability registry.
  * Run from Impilo-vNext root: node scripts/frontend/generate-parity-docs.mjs
+ *
+ * `--check` reports drift without writing anything. Guards and CI must use it:
+ * writing is a side effect on a tracked file, and up to ten sessions share the
+ * main checkout (docs/runbooks/shared-tree-concurrency.md §5a), so a mutating
+ * check dirties every peer's working tree.
  */
 
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -634,7 +639,7 @@ function mdTable(rows, columns) {
   return `${header}\n${sep}\n${body}`;
 }
 
-function writeMatrix() {
+function matrixContent() {
   const cols = [
     "plane",
     "domain",
@@ -684,10 +689,10 @@ Injected by \`ui/one-ui-shell/src/lib/api-client.ts\` and \`apps/mobile/packages
 | Ndila mobile | \`/api/v1/ndila/*\` | Geospatial SDK |
 | ZIBO admin | \`/v1/*\` via zibo-web | Sovereign terminology console |
 `;
-  writeFileSync(join(OUT, "BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md"), content);
+  return content;
 }
 
-function writeImplementationStatus() {
+function implementationStatusContent() {
   const content = `# Frontend Implementation Status
 
 > Updated: ${new Date().toISOString().slice(0, 10)}
@@ -752,7 +757,67 @@ cd ui/one-ui-shell && npm run test && npm run build
 cd apps/mobile && pnpm test
 \`\`\`
 `;
-  writeFileSync(join(OUT, "FRONTEND_IMPLEMENTATION_STATUS.md"), content);
+  return content;
+}
+
+const DOCS = [
+  ["BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md", matrixContent],
+  ["FRONTEND_IMPLEMENTATION_STATUS.md", implementationStatusContent],
+];
+
+/**
+ * The generated header stamps the run date, so the same registry renders
+ * differently tomorrow. Blank that date on the header lines only — every other
+ * byte is still compared, so real content drift is still caught.
+ */
+function normalizeGeneratedDate(text) {
+  return text.replace(/^> (?:Generated|Updated):.*$/gm, (line) =>
+    line.replace(/\d{4}-\d{2}-\d{2}/g, "<date>"),
+  );
+}
+
+function diffLines(tracked, expected, max = 10) {
+  const a = tracked.split("\n");
+  const b = expected.split("\n");
+  const out = [];
+  for (let i = 0; i < Math.max(a.length, b.length) && out.length < max; i += 1) {
+    if (a[i] === b[i]) continue;
+    if (a[i] !== undefined) out.push(`  - tracked:${i + 1}: ${a[i]}`);
+    if (b[i] !== undefined) out.push(`  + expected:${i + 1}: ${b[i]}`);
+  }
+  return out;
+}
+
+/** Returns 1 when a tracked doc no longer matches the registry, else 0. Writes nothing. */
+function checkDocs() {
+  let drift = 0;
+  for (const [name, build] of DOCS) {
+    let tracked;
+    try {
+      tracked = readFileSync(join(OUT, name), "utf8");
+    } catch {
+      console.error(`DRIFT docs/frontend/${name}: not on disk`);
+      drift = 1;
+      continue;
+    }
+    const expected = normalizeGeneratedDate(build());
+    if (normalizeGeneratedDate(tracked) === expected) continue;
+    drift = 1;
+    console.error(`DRIFT docs/frontend/${name}`);
+    for (const line of diffLines(normalizeGeneratedDate(tracked), expected)) console.error(line);
+  }
+  if (drift) {
+    console.error("Parity docs out of sync — run: node scripts/frontend/generate-parity-docs.mjs");
+  } else {
+    console.log("Parity docs in sync");
+  }
+  return drift;
+}
+
+function writeDocs() {
+  mkdirSync(OUT, { recursive: true });
+  for (const [name, build] of DOCS) writeFileSync(join(OUT, name), build());
+  console.log("Wrote docs/frontend matrix and implementation status");
 }
 
 export { CAPABILITIES };
@@ -763,8 +828,9 @@ function isMain() {
 }
 
 if (isMain()) {
-  mkdirSync(OUT, { recursive: true });
-  writeMatrix();
-  writeImplementationStatus();
-  console.log("Wrote docs/frontend matrix and implementation status");
+  if (process.argv.includes("--check")) {
+    process.exitCode = checkDocs();
+  } else {
+    writeDocs();
+  }
 }
