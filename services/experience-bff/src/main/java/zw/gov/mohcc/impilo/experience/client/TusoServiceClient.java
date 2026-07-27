@@ -118,6 +118,21 @@ public class TusoServiceClient {
     }
 
     /**
+     * Emergency obstetric and newborn care readiness for a facility: the CEMONC/BEMONC/NEITHER/
+     * INSUFFICIENT_EVIDENCE verdict and the per-signal-function statuses. Read by birth-destination
+     * routing to decide whether a facility can actually provide the level of care a woman needs.
+     *
+     * <p>The verdict distinguishes {@code INSUFFICIENT_EVIDENCE} ("nobody has assessed this") from
+     * {@code NEITHER} ("assessed, and it cannot"), and a caller must preserve that distinction — the
+     * whole point of the tuso surface is that "we don't know" is not "no".
+     */
+    public JsonNode getFacilityEmoncReadiness(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/emonc-readiness/" + facilityId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Composite per-source facility legitimacy (WS-E): regulatory status + certificates +
      * every per-source verdict + the derived platform-access verdict. {@code facilityUuid} is the
      * canonical facility UUID (never the numeric surrogate id / facility code).
