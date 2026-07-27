@@ -1348,21 +1348,52 @@
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "The last standard of the wave, and the only one that crosses into another lane. PMTCT sits across HIV care and the RMNP pregnancy episode; building it in the medicine pack alone would either duplicate RMNP's pregnancy episode or fork the HIV programme by pregnancy status. The coordinated seam has been proposed to the RMNP lane (soft-reference from the HIV_CARE enrolment to the pregnancy episode; ownership of the exposed-infant record agreed rather than assumed). It is being built this pass and is blocked only on RMNP's answer to that seam, not punted to a later wave.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PMTCT_MATERNAL_ART",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/pmtct-rules.json",
+          "row": "maternal ART"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PMTCT_MATERNAL_VL_IN_PREGNANCY",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/pmtct-rules.json",
+          "row": "maternal VL"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PMTCT_INFANT_PROPHYLAXIS",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/pmtct-rules.json",
+          "row": "infant prophylaxis"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PMTCT_INFANT_EID_DUE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/pmtct-rules.json",
+          "row": "early infant diagnosis"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "RMNP confirms the pregnancy-episode reference and exposed-infant ownership; PMTCT content + the enrolment↔episode link then land, and this entry is removed.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO 2021 consolidated HIV guidelines — PMTCT and infant prophylaxis.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "HIV.PMTCT",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "Prevention of mother-to-child transmission of HIV",
       "titleIsSheetLevel": false
     },
@@ -2817,10 +2848,10 @@
       "titleIsSheetLevel": false
     }
   ],
-  "shippedCitations": 98,
+  "shippedCitations": 102,
   "statusCounts": {
     "COVERED_ELSEWHERE": 7,
-    "DEFERRED": 121,
-    "SHIPPED": 12
+    "DEFERRED": 120,
+    "SHIPPED": 13
   }
 }

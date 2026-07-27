@@ -22,7 +22,9 @@ import {
 
 const PROGRAMME_LABEL: Record<string, string> = {
   HIV_CARE: "HIV care",
-  TB_TREATMENT: "TB treatment" };
+  TB_TREATMENT: "TB treatment",
+  HIV_PREVENTION: "HIV prevention (PrEP)",
+  TB_PREVENTION: "TB preventive therapy" };
 
 const STATUS_BADGE: Record<string, string> = {
   SCREENING: "bg-yellow-100 text-yellow-700",

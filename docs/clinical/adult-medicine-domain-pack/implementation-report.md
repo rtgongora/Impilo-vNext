@@ -224,12 +224,30 @@ its owner. pct-service closes with a clean suite.
 instrument — part of the coordinator-assigned Child-Pugh / MELD / APACHE II / SOFA slice, which must
 be **forms-service governed definitions persisted via PCT**, not mobile-local forms.
 
-**W3 — HIV and TB DAKs. Done** (this session): the treatment-and-monitoring core of both programmes
-end to end — pct data model, zibo value sets, CKP DAK content, traceability, BFF and UI — with the
-confidential lane wired and the ENFORCE gap stated. The deliberately-deferred remainder is declared
-in `docs/clinical-governance/medicine/coverage-exclusions.json` with owner-waves: HIV testing, PrEP,
-PMTCT (jointly with RMNP), and the TB screening/diagnosis/TPT front-door (W4/W6). One live proof
-outstanding: the BFF ingress positive/negative control, pending the pct redeploy carrying V108/V109.
+**W3 — HIV and TB DAKs. COMPLETE** (this session), in full — nothing deferred out of the wave. The
+medicine coverage-exclusions register is empty; all thirteen HIV/TB standards are SHIPPED, cited by
+governed content:
+- Treatment-and-monitoring core (V108/V109 data model, zibo V035, CKP content): viral-load
+  monitoring, treatment failure, advanced disease, TB monitoring, DR-TB, TB outcome.
+- Diagnostic front door (CKP content): HIV testing algorithm (HIV.TESTING), TB symptom screening
+  (TB.SCREENING), TB diagnostic algorithm (TB.DIAGNOSIS).
+- Prevention programmes (V110 widens the programme + regimen-stage vocabularies to admit
+  HIV_PREVENTION and TB_PREVENTION with a PREVENTIVE stage; CKP content): HIV PrEP (HIV.PREP) and TB
+  preventive therapy (TB.TPT), plus TB/HIV co-infection (HIV.TB_COINFECTION).
+- PMTCT (CKP content): maternal ART, maternal viral load in pregnancy, infant prophylaxis, early
+  infant diagnosis (HIV.PMTCT).
+
+Confidential lane wired (HIV care and PrEP confidential; TB and TB-prevention FULL_CLINICAL), ENFORCE
+gap stated. Runtime-proven: 79 pct migrations apply in version order on a clean boot (V108/V109/V110),
+10/10 constraint bites; 135 CKP content fixtures across eight packs green.
+
+**One integration seam is tracked outside the DAK register (not a standards gap):** the soft data
+link from an HIV_CARE enrolment to the RMNP pregnancy episode, and ownership of the exposed-infant
+record. It crosses into the RMNP lane and is pending their confirmation of the reference — proposed,
+not assumed. The PMTCT decision logic is shipped and does not depend on it.
+
+**One live proof outstanding, unchanged:** the BFF ingress tokenless negative control is unprovable
+on preview (auth disabled estate-wide, `allow-anonymous=true`); positive ingress is green.
 
 **W4** multimorbidity engine · the HIV/TB front-door (testing, screening, diagnosis, TPT) · **W5**
 inpatient medicine + medical procedures through `procedures-service` · **W6+** specialty workspaces

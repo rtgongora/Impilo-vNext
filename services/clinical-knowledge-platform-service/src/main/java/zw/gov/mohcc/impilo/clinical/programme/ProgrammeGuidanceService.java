@@ -41,6 +41,7 @@ public class ProgrammeGuidanceService {
     static final String TB_DIAGNOSIS_PATH = "clinical/tb-diagnosis-rules.json";
     static final String TPT_PATH = "clinical/tpt-rules.json";
     static final String PREP_PATH = "clinical/prep-rules.json";
+    static final String PMTCT_PATH = "clinical/pmtct-rules.json";
 
     private final RuleContentLoader contentLoader;
 
@@ -61,6 +62,7 @@ public class ProgrammeGuidanceService {
             case "TB_DIAGNOSIS" -> TB_DIAGNOSIS_PATH;
             case "TB_PREVENTION", "TPT" -> TPT_PATH;
             case "HIV_PREVENTION", "PREP" -> PREP_PATH;
+            case "PMTCT" -> PMTCT_PATH;
             default -> null;
         };
     }
