@@ -29,6 +29,8 @@ public class EmergencyBundleService {
     private static final Logger log = LoggerFactory.getLogger(EmergencyBundleService.class);
 
     public static final String PPH_BUNDLE = "clinical/rmnp-pph-bundle.json";
+    public static final String ECLAMPSIA_BUNDLE = "clinical/rmnp-eclampsia-bundle.json";
+    public static final String SEPSIS_BUNDLE = "clinical/rmnp-maternal-sepsis-bundle.json";
 
     private final ObjectMapper objectMapper;
     private final ConcurrentMap<String, EmergencyBundleEngine.Bundle> cache = new ConcurrentHashMap<>();
@@ -44,6 +46,19 @@ public class EmergencyBundleService {
                                                       boolean clinicianConfirmedClose) {
         return EmergencyBundleEngine.assess(bundle(PPH_BUNDLE), completedSteps, minutesSinceTrigger,
                 minutesSinceLastObservation, bleedingControlledConfirmed, clinicianConfirmedClose);
+    }
+
+    /**
+     * Assess any loaded bundle by its resource path — eclampsia and sepsis run on the same engine
+     * and the same closure rules as PPH; only the step content and windows differ.
+     */
+    public EmergencyBundleEngine.Assessment assess(String resourcePath, Set<String> completedSteps,
+                                                   long minutesSinceTrigger,
+                                                   long minutesSinceLastObservation,
+                                                   Boolean controlConfirmedTrue,
+                                                   boolean clinicianConfirmedClose) {
+        return EmergencyBundleEngine.assess(bundle(resourcePath), completedSteps, minutesSinceTrigger,
+                minutesSinceLastObservation, controlConfirmedTrue, clinicianConfirmedClose);
     }
 
     public EmergencyBundleEngine.Bundle bundle(String resourcePath) {

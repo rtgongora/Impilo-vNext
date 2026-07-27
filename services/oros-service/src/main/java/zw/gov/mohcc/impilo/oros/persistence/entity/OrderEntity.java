@@ -110,6 +110,14 @@ public class OrderEntity {
     @Column(name = "workflow_state", length = 48)
     private String workflowState;
 
+    /** Why a request stopped progressing. Mandatory for non-progressing states (pipeline §4). */
+    @Column(name = "workflow_state_reason")
+    private String workflowStateReason;
+
+    /** What happens next. The half of §4 that stops a request disappearing. */
+    @Column(name = "workflow_next_action")
+    private String workflowNextAction;
+
     // ── Linked PACS/DICOM study (V008) ───────────────────────────────────
     @Column(name = "study_uid", length = 128)
     private String studyUid;
@@ -232,6 +240,10 @@ public class OrderEntity {
 
     public String getWorkflowState() { return workflowState; }
     public void setWorkflowState(String workflowState) { this.workflowState = workflowState; }
+    public String getWorkflowStateReason() { return workflowStateReason; }
+    public void setWorkflowStateReason(String v) { this.workflowStateReason = v; }
+    public String getWorkflowNextAction() { return workflowNextAction; }
+    public void setWorkflowNextAction(String v) { this.workflowNextAction = v; }
 
     public String getStudyUid() { return studyUid; }
     public void setStudyUid(String studyUid) { this.studyUid = studyUid; }

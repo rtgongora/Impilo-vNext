@@ -1,0 +1,32 @@
+{
+  "bundleId": "rmnp-eclampsia-bundle",
+  "name": "Eclampsia / severe pre-eclampsia first-response bundle",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "lapseWindowMinutes": 20,
+  "provenance": {
+    "title": "Eclampsia and severe pre-eclampsia — the first-response bundle",
+    "primarySource": "WHO recommendations for the prevention and treatment of pre-eclampsia and eclampsia; WHO Managing Complications in Pregnancy and Childbirth",
+    "why": "Magnesium sulfate is the single intervention that most reduces eclampsia mortality, and the two deaths to prevent are the seizure that was never treated with magnesium and the magnesium toxicity that was never monitored for. The bundle keeps both in view: give it, and watch for it.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "No WHO SMART DAK; transcribed from the pre-eclampsia/eclampsia recommendations. Magnesium regimen and monitoring intervals are an engineering seed pending ratification. blocksRatification stays true."
+    }
+  },
+  "steps": [
+    {"code": "ECL_MAGNESIUM_LOADING", "name": "Magnesium sulfate loading dose", "dueWithinMinutes": 0, "mandatory": true,
+     "action": "Give the magnesium sulfate loading dose now — it is the intervention that most reduces death and recurrent seizures. Do not wait on the blood pressure result."},
+    {"code": "ECL_AIRWAY_POSITION", "name": "Protect the airway", "dueWithinMinutes": 0, "mandatory": true,
+     "action": "Left lateral position, protect the airway, give oxygen, and protect her from injury during a seizure."},
+    {"code": "ECL_BP_CONTROL", "name": "Control severe hypertension", "dueWithinMinutes": 15, "mandatory": true,
+     "action": "Treat a systolic ≥160 or diastolic ≥110 with a rapid-acting antihypertensive to prevent stroke — separate from the magnesium, which prevents seizures, not the pressure."},
+    {"code": "ECL_MAG_MONITORING", "name": "Magnesium toxicity monitoring", "dueWithinMinutes": 15, "mandatory": true,
+     "action": "Before and during magnesium: respiratory rate, patellar reflexes and urine output. Have calcium gluconate ready. Toxicity is the harm the treatment itself can cause."},
+    {"code": "ECL_DELIVERY_PLAN", "name": "Plan delivery", "dueWithinMinutes": 30, "mandatory": true,
+     "action": "Delivery is the definitive treatment. Plan it once she is stable; escalate and, at a site without capability, arrange transfer now."},
+    {"code": "ECL_FLUID_BALANCE", "name": "Strict fluid balance", "dueWithinMinutes": 30, "mandatory": false,
+     "action": "Strict fluid balance with an indwelling catheter — pulmonary oedema from over-transfusion is a real cause of death in severe pre-eclampsia."}
+  ]
+}

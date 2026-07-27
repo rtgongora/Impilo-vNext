@@ -35,7 +35,7 @@ public class FulfilmentWorkflowController {
         this.orderQueryService = orderQueryService;
     }
 
-    public record TransitionRequest(@NotBlank String target, String reason) {}
+    public record TransitionRequest(@NotBlank String target, String reason, String nextAction) {}
 
     public record ScheduleRequest(OffsetDateTime scheduledAt, String note) {}
 
@@ -45,7 +45,8 @@ public class FulfilmentWorkflowController {
             @PathVariable String orderId,
             @RequestBody TransitionRequest request) {
         String cid = correlationId();
-        OrderEntity order = fulfilmentWorkflowService.transition(orderId, request.target(), request.reason());
+        OrderEntity order = fulfilmentWorkflowService.transition(
+                orderId, request.target(), request.reason(), request.nextAction());
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), cid));
     }
 

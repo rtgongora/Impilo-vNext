@@ -23,12 +23,26 @@ public class ProcedureWorkflow extends EnumFulfilmentWorkflow<ProcedureWorkflowS
             EnumSet.of(CANCELLED, REJECTED, RETURNED_FOR_CLARIFICATION, DEFERRED, REASSIGNED);
 
     private static final Map<ProcedureWorkflowState, Set<ProcedureWorkflowState>> TRANSITIONS = Map.ofEntries(
+            // A proposal is not an order. It may become one, be declined, or lapse — and it is
+            // visible while it waits, which is the point: a recommendation nobody actioned is
+            // exactly the kind of request that disappears today.
+            Map.entry(PROPOSED, EnumSet.of(RECEIVED, REJECTED, CANCELLED)),
             Map.entry(RECEIVED, EnumSet.of(ACCEPTED, REJECTED, RETURNED_FOR_CLARIFICATION, CANCELLED, REASSIGNED)),
             Map.entry(ACCEPTED, plus(EnumSet.of(SCHEDULED, ARRIVED, IN_PROGRESS), OPEN_EXCEPTIONS)),
             Map.entry(SCHEDULED, plus(EnumSet.of(ARRIVED, IN_PROGRESS, NO_SHOW), OPEN_EXCEPTIONS)),
             Map.entry(ARRIVED, plus(EnumSet.of(IN_PROGRESS), OPEN_EXCEPTIONS)),
-            Map.entry(IN_PROGRESS, EnumSet.of(PERFORMED, DEFERRED, CANCELLED)),
+            // A procedure in progress can end four ways, not one. Collapsing aborted, failed
+            // and partial into PERFORMED is how a service reports a completion rate it has not
+            // earned, and it is why §26 asks for these separately.
+            Map.entry(IN_PROGRESS, EnumSet.of(PERFORMED, ABORTED, FAILED, PARTIALLY_COMPLETED,
+                    DEFERRED, CANCELLED)),
             Map.entry(PERFORMED, EnumSet.of(REPORT_PENDING, PRELIMINARY_REPORT, FINAL_REPORT)),
+            // An aborted, failed or partial procedure still produces findings worth reporting,
+            // and may be repeated. It is never simply dropped.
+            Map.entry(ABORTED, EnumSet.of(REPORT_PENDING, PRELIMINARY_REPORT, FINAL_REPORT, REPEATED, CANCELLED)),
+            Map.entry(FAILED, EnumSet.of(REPORT_PENDING, PRELIMINARY_REPORT, FINAL_REPORT, REPEATED, CANCELLED)),
+            Map.entry(PARTIALLY_COMPLETED, EnumSet.of(REPORT_PENDING, PRELIMINARY_REPORT, FINAL_REPORT, REPEATED)),
+            Map.entry(REPEATED, EnumSet.of(SCHEDULED, ARRIVED, IN_PROGRESS, CANCELLED)),
             Map.entry(REPORT_PENDING, EnumSet.of(PRELIMINARY_REPORT, FINAL_REPORT)),
             Map.entry(PRELIMINARY_REPORT, EnumSet.of(FINAL_REPORT, AMENDED)),
             Map.entry(FINAL_REPORT, EnumSet.of(RELEASED, AMENDED)),
@@ -53,6 +67,17 @@ public class ProcedureWorkflow extends EnumFulfilmentWorkflow<ProcedureWorkflowS
     @Override
     public OrderType orderType() {
         return OrderType.PROCEDURE;
+    }
+
+    /**
+     * The procedure category adopts §4's reason-and-next-action rule. Mirrors the CHECK
+     * constraint added in V300, so the rule holds whether a write arrives through this service
+     * or around it — a service-only guard is advisory to anything with a database connection.
+     */
+    @Override
+    public Set<String> nonProgressingStates() {
+        return Set.of(REJECTED.name(), CANCELLED.name(), DEFERRED.name(), ABORTED.name(),
+                FAILED.name(), NO_SHOW.name(), RETURNED_FOR_CLARIFICATION.name());
     }
 
     @Override

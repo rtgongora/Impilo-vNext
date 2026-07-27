@@ -1,0 +1,32 @@
+{
+  "bundleId": "rmnp-maternal-sepsis-bundle",
+  "name": "Maternal sepsis first-response bundle",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "lapseWindowMinutes": 20,
+  "provenance": {
+    "title": "Maternal sepsis — the first-response bundle",
+    "primarySource": "WHO Statement on maternal sepsis; Surviving Sepsis / hour-1 bundle adapted for the obstetric patient",
+    "why": "A septic pregnant or postpartum woman compensates until she does not, and the death is the one where treatment waited for a culture or a confirmed source. The bundle is time-critical and deliberately does not wait on either.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "No WHO SMART DAK; transcribed from the WHO maternal-sepsis statement and the hour-1 sepsis bundle adapted for obstetrics. Time windows are an engineering seed pending ratification. blocksRatification stays true."
+    }
+  },
+  "steps": [
+    {"code": "SEP_CULTURES", "name": "Blood cultures before antibiotics", "dueWithinMinutes": 0, "mandatory": true,
+     "action": "Take blood cultures — but do not let this delay antibiotics; if cultures cannot be taken at once, give antibiotics anyway."},
+    {"code": "SEP_ANTIBIOTICS", "name": "Broad-spectrum antibiotics", "dueWithinMinutes": 0, "mandatory": true,
+     "action": "Give broad-spectrum antibiotics within the first hour, empirically. Waiting for the source or the culture is the delay that kills."},
+    {"code": "SEP_FLUIDS", "name": "IV fluid resuscitation", "dueWithinMinutes": 0, "mandatory": true,
+     "action": "Two large-bore cannulae and a balanced-crystalloid fluid challenge, reassessing response."},
+    {"code": "SEP_LACTATE", "name": "Measure lactate", "dueWithinMinutes": 15, "mandatory": true,
+     "action": "Measure lactate as a marker of tissue hypoperfusion and to track response; a rising lactate is deterioration."},
+    {"code": "SEP_SOURCE", "name": "Identify and control the source", "dueWithinMinutes": 30, "mandatory": true,
+     "action": "Find the source — uterus (retained products, endometritis), chest, urinary tract, wound, breast — and control it; a septic abortion or retained products needs evacuation, not antibiotics alone."},
+    {"code": "SEP_ESCALATE", "name": "Escalate and monitor", "dueWithinMinutes": 15, "mandatory": true,
+     "action": "Call for senior help, monitor urine output and observations continuously, and arrange higher-level care or transfer early."}
+  ]
+}

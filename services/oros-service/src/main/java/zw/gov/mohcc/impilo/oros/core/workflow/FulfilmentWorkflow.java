@@ -35,6 +35,23 @@ public interface FulfilmentWorkflow {
     /** Legal next states from {@code from} ({@link #entryState()} when {@code from} is null). */
     Set<String> allowedFrom(String from);
 
+    /**
+     * States in which a request has stopped progressing without being fulfilled — rejected,
+     * cancelled, deferred, aborted, failed, no-show, returned for clarification.
+     *
+     * <p>A transition into one of these must carry a reason and a next action. The reason
+     * explains; the next action is what stops the request disappearing, which is the whole
+     * point of the Clinical Procedures Pipeline §4 requirement. "Cancelled" with nothing after
+     * it is how a patient falls out of a system without anyone deciding that they should.</p>
+     *
+     * <p>Empty by default, so categories that have not adopted the rule are unaffected. This
+     * is deliberately opt-in per category rather than imposed: imaging and lab cancel without
+     * a reason today, and changing that is their owners' decision.</p>
+     */
+    default Set<String> nonProgressingStates() {
+        return Set.of();
+    }
+
     /** Validates and returns {@code to}, throwing on an illegal transition. */
     default String require(String from, String to) {
         if (!canTransition(from, to)) {
