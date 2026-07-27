@@ -20,6 +20,7 @@ CHECKS=(
   check-imnci-capture-coverage.sh
   check-dak-traceability.sh
   check-rmnp-capture-coverage.sh
+  check-top-no-record-level-emit.sh
   check-source-text-integrity.sh
   check-migration-version-collisions.sh
   check-butano-data-durability.sh

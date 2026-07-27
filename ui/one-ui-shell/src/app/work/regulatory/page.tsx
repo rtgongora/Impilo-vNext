@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Building2, Loader2, ScrollText, ShieldCheck } from "lucide-react";
 import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
@@ -83,8 +84,21 @@ export default function RegulatoryWorkspacePickerPage() {
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>
           ) : appointments.length === 0 ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              You have no regulatory appointments. Appointments are issued by a council registrar or
-              HPA and verified before they grant workspace access.
+              <p>
+                You have no regulatory appointments. Appointments are issued by a council registrar
+                or HPA and verified before they grant workspace access — usually by an administrator
+                inviting you into a role.
+              </p>
+              <p className="mt-2">
+                If a regulator has no administrator yet, you can request to found its administration.
+                The request is verified against authoritative records and approved under four-eyes.
+              </p>
+              <Link
+                href="/work/regulatory/request"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-amber-700"
+              >
+                Request regulatory access
+              </Link>
             </div>
           ) : (
             <>
