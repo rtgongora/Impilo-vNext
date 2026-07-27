@@ -1,7 +1,7 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: bash scripts/full-boot/resolve-image-digests.sh
 # Chart-native digest pinning: Helm renders registry/repo@sha256 for each runtime service.
-generated_at: '2026-07-27T05:15:43.698624+00:00'
+generated_at: '2026-07-27T05:43:11.588075+00:00'
 source_tag: preview
 registry: 127.0.0.1:5000
 digest_pin_count: 100
@@ -304,4 +304,4 @@ images:
   experienceBff:
     digest: sha256:db0a4e2b268b33456b41c720ae648d88ce2817408ad7a06c1a5a7cb831e1d7b1
   oneUiShell:
-    digest: sha256:6c115550b7bcde832f6ec098d22a392fa469259dbcfb0fc769b01227554f2fb9
+    digest: sha256:29b92ebaa1c40e7f1498ff6d94938252ad4eb59b9ddea3a4bb963f054c42635a
