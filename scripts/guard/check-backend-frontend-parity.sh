@@ -19,14 +19,17 @@ for f in "$MATRIX" docs/architecture/BACKEND_CAPABILITY_INVENTORY.md docs/archit
   [[ -f "$f" ]] || node scripts/architecture/generate-parity-inventories.mjs 2>/dev/null || true
 done
 
-node scripts/frontend/generate-parity-docs.mjs >/dev/null 2>&1 || {
-  guard_fail "generate-parity-docs.mjs failed"
+# --check compares the registry against the tracked docs without writing them.
+# Regenerating in place dirtied the working tree of every peer session sharing
+# this checkout (docs/runbooks/shared-tree-concurrency.md §5a).
+PARITY_DOC_RC=0
+CONTENT_DRIFT="$(node scripts/frontend/generate-parity-docs.mjs --check 2>&1)" || PARITY_DOC_RC=$?
+if [[ $PARITY_DOC_RC -ne 0 ]] && ! grep -q '^DRIFT ' <<<"$CONTENT_DRIFT"; then
+  echo "$CONTENT_DRIFT" | head -20
+  guard_fail "generate-parity-docs.mjs --check failed"
   exit 1
-}
-
-CONTENT_DRIFT=$(git diff -U0 -- "$MATRIX" docs/frontend/FRONTEND_IMPLEMENTATION_STATUS.md 2>/dev/null \
-  | grep -E '^[+-]' | grep -v '^[+-][+-][+-]' | grep -v 'Generated:' | grep -v 'Updated:' || true)
-if [[ -n "$CONTENT_DRIFT" ]]; then
+fi
+if [[ $PARITY_DOC_RC -ne 0 ]]; then
   guard_fail "parity docs out of sync — run: node scripts/frontend/generate-parity-docs.mjs"
   echo "$CONTENT_DRIFT" | head -20
   FAIL=1

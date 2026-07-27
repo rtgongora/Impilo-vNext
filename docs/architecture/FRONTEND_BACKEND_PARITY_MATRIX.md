@@ -1,6 +1,6 @@
 # Frontend ↔ backend parity matrix
 
-> Generated: 2026-06-19. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-07-27. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 | capability | endpoint | webRoute | webClient | realData | mockRisk | parity | priority | remediation | gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

@@ -36,6 +36,13 @@ spring:
     default-schema: clinical
     locations: classpath:db/migration
     baseline-on-migrate: true
+    # Dollar-quoted JSON bodies (e.g. $j${ ... }) put a '$' adjacent to '{',
+    # which Flyway's placeholder engine reads as '${' → "No value provided for
+    # placeholder". No CKP migration uses real Flyway placeholders, so disable.
+    # Live-caught 2026-07-27: V201__repair_ed_emergency_pathways.sql:104 made this
+    # service unbootable from canonical — it was only invisible because the estate
+    # was still running a stale pre-V201 image. Same defect, same fix, as zibo.
+    placeholder-replacement: false
     # This service's migration numbers are leased in per-lane bands (see
     # docs/registry/iatg-*-leases.md), so a lane routinely merges a migration
     # numerically BELOW one another lane has already applied. Flyway's default
