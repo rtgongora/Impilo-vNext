@@ -250,6 +250,55 @@ class ServiceClientConfigTest {
         }
     }
 
+    /**
+     * The {@code serviceRestTemplate} bean must be able to issue a PATCH over the wire.
+     *
+     * <p>This is the one test that could catch the defect that shipped: the bean used
+     * {@code SimpleClientHttpRequestFactory} (HttpURLConnection), which throws
+     * {@code ProtocolException} on PATCH, so every BFF→downstream PATCH 502'd — 25 call sites
+     * across 15 clients, including the clinical write path. It stayed invisible because a mocked
+     * client or {@code MockRestServiceServer} never exercises the real transport. Only a real PATCH
+     * over a real loopback proves the factory can send it, so that is what this does. If the factory
+     * ever regresses to one that cannot PATCH, this fails; a mock would not.</p>
+     */
+    @Test
+    void serviceRestTemplateCanIssuePatchOverRealHttp() throws Exception {
+        com.sun.net.httpserver.HttpServer server = com.sun.net.httpserver.HttpServer.create(
+                new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/patch", exchange -> {
+            byte[] body = ("{\"method\":\"" + exchange.getRequestMethod() + "\"}")
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            try (java.io.OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        });
+        server.start();
+        try {
+            ServiceClientConfig config = new ServiceClientConfig();
+            // A request context so the trust interceptor can run without NPE; its header logic is
+            // not what is under test here — the transport is. requestWithHeaders() carries an inbound
+            // Authorization, so the service-token provider is never consulted (and asserts as much).
+            RequestContextHolder.setRequestAttributes(
+                    new ServletRequestAttributes((MockHttpServletRequest) requestWithHeaders()));
+            org.springframework.web.client.RestTemplate template =
+                    config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(providerNeverConsulted()));
+
+            String url = "http://127.0.0.1:" + server.getAddress().getPort() + "/patch";
+            org.springframework.http.ResponseEntity<String> response = template.exchange(
+                    url, HttpMethod.PATCH,
+                    new org.springframework.http.HttpEntity<>("{\"x\":1}"), String.class);
+
+            assertEquals(200, response.getStatusCode().value(),
+                    "the service RestTemplate must be able to PATCH over real HTTP");
+            assertEquals("{\"method\":\"PATCH\"}", response.getBody(),
+                    "the downstream must have received a genuine PATCH, not a swallowed error");
+        } finally {
+            server.stop(0);
+        }
+    }
+
     private HttpServletRequest requestWithHeaders() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(CompanionHeaders.TENANT_ID, "tenant-1");
