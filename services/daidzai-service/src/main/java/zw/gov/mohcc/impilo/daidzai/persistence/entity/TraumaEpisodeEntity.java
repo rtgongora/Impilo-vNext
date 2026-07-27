@@ -34,6 +34,18 @@ public class TraumaEpisodeEntity {
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt;
 
+    // ── V200 acute-episode generalisation: the columns the migration added but the entity never
+    //    mapped, which is why V-3 was only structurally closed — the back-link existed in the
+    //    schema and no Java field could set it. episodeClass defaults to TRAUMA so existing
+    //    create paths (which do not set it) keep their meaning under ddl-auto and Flyway alike.
+    @Column(name = "episode_class", nullable = false, length = 24) private String episodeClass = "TRAUMA";
+    @Column(name = "pct_journey_id", length = 26) private String pctJourneyId;
+    @Column(name = "pct_emergency_episode_id") private UUID pctEmergencyEpisodeId;
+    @Column(name = "continuum_linked_at") private OffsetDateTime continuumLinkedAt;
+    @Column(name = "merged_into_id") private UUID mergedIntoId;
+    @Column(name = "merged_at") private OffsetDateTime mergedAt;
+    @Column(name = "merge_reason", length = 255) private String mergeReason;
+
     @PrePersist void onCreate() {
         if (id == null) id = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
@@ -75,4 +87,19 @@ public class TraumaEpisodeEntity {
     public void setCloseReason(String v) { this.closeReason = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
+
+    public String getEpisodeClass() { return episodeClass; }
+    public void setEpisodeClass(String v) { this.episodeClass = v; }
+    public String getPctJourneyId() { return pctJourneyId; }
+    public void setPctJourneyId(String v) { this.pctJourneyId = v; }
+    public UUID getPctEmergencyEpisodeId() { return pctEmergencyEpisodeId; }
+    public void setPctEmergencyEpisodeId(UUID v) { this.pctEmergencyEpisodeId = v; }
+    public OffsetDateTime getContinuumLinkedAt() { return continuumLinkedAt; }
+    public void setContinuumLinkedAt(OffsetDateTime v) { this.continuumLinkedAt = v; }
+    public UUID getMergedIntoId() { return mergedIntoId; }
+    public void setMergedIntoId(UUID v) { this.mergedIntoId = v; }
+    public OffsetDateTime getMergedAt() { return mergedAt; }
+    public void setMergedAt(OffsetDateTime v) { this.mergedAt = v; }
+    public String getMergeReason() { return mergeReason; }
+    public void setMergeReason(String v) { this.mergeReason = v; }
 }
