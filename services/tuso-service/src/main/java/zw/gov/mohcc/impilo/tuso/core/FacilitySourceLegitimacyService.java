@@ -129,6 +129,19 @@ public class FacilitySourceLegitimacyService {
             FacilitySourceLegitimacyEntity row = legitimacyRepository
                     .findByFacilityIdAndSource(facility.getFacilityUuid(), source)
                     .orElseGet(FacilitySourceLegitimacyEntity::new);
+
+            // A row projected from a governed Ministry decision is not the import's to rewrite
+            // (FCV-W0a). Without this guard an ordinary re-import would silently re-stamp
+            // PENDING_VERIFICATION/false over a Ministry verdict and take the facility dark — no
+            // error, no audit, because this method swallows exceptions by design. The decision
+            // table is the system of record; only its projector may move this row.
+            if (row.getDecisionId() != null) {
+                log.info("Skipping {} legitimacy stamp for facility {} — the row is bound to Ministry "
+                                + "decision {} and only the decision projector may change it",
+                        source, facility.getFacilityUuid(), row.getDecisionId());
+                return;
+            }
+
             Map<String, Object> previous = row.getId() == null ? null : snapshot(row);
             row.setFacilityId(facility.getFacilityUuid());
             row.setSource(source);

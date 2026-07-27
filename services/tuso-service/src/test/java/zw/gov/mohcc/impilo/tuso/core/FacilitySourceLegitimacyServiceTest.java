@@ -295,4 +295,52 @@ class FacilitySourceLegitimacyServiceTest {
                 .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
                         .isEqualTo(HttpStatus.NOT_FOUND));
     }
+
+    // ── FCV-W0a: an import may not silently revoke a governed Ministry decision ──────────────
+
+    @Test
+    void stampFromImport_refusesToOverwriteADecisionBackedRow() {
+        // A re-import would otherwise re-stamp PENDING_VERIFICATION/false over a Ministry verdict
+        // and take the facility dark with no error — stampFromImport swallows exceptions by design,
+        // so nothing would surface it.
+        FacilitySourceLegitimacyEntity decisionBacked = new FacilitySourceLegitimacyEntity();
+        decisionBacked.setId(7L);
+        decisionBacked.setFacilityId(facilityUuid);
+        decisionBacked.setSource(FacilityLegitimacySource.PLATFORM_OPERATIONAL);
+        decisionBacked.setStatus(FacilityLegitimacyStatus.REGISTERED_CURRENT);
+        decisionBacked.setAllowedOnPlatform(true);
+        decisionBacked.setDecisionId(UUID.randomUUID());
+        when(legitimacyRepository.findByFacilityIdAndSource(
+                facilityUuid, FacilityLegitimacySource.PLATFORM_OPERATIONAL))
+                .thenReturn(Optional.of(decisionBacked));
+
+        service.stampFromImport(facility, FacilityLegitimacySource.PLATFORM_OPERATIONAL,
+                FacilityLegitimacyStatus.PENDING_VERIFICATION, false,
+                "MASTER_PACK", "re-import", "importer", tenantId, "corr-1");
+
+        verify(legitimacyRepository, never()).save(any());
+        verify(outboxRepository, never()).save(any());
+        assertThat(decisionBacked.isAllowedOnPlatform())
+                .as("the Ministry verdict must survive an import touching the same facility")
+                .isTrue();
+    }
+
+    @Test
+    void stampFromImport_stillWritesAnUnboundRow() {
+        FacilitySourceLegitimacyEntity unbound = new FacilitySourceLegitimacyEntity();
+        unbound.setId(8L);
+        unbound.setFacilityId(facilityUuid);
+        unbound.setSource(FacilityLegitimacySource.PLATFORM_OPERATIONAL);
+        unbound.setAllowedOnPlatform(false);
+        when(legitimacyRepository.findByFacilityIdAndSource(
+                facilityUuid, FacilityLegitimacySource.PLATFORM_OPERATIONAL))
+                .thenReturn(Optional.of(unbound));
+        when(legitimacyRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.stampFromImport(facility, FacilityLegitimacySource.PLATFORM_OPERATIONAL,
+                FacilityLegitimacyStatus.PENDING_VERIFICATION, false,
+                "MASTER_PACK", "import", "importer", tenantId, "corr-2");
+
+        verify(legitimacyRepository).save(any());
+    }
 }

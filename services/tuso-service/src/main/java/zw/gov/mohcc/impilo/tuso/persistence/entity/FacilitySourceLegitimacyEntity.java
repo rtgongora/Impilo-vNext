@@ -52,6 +52,14 @@ public class FacilitySourceLegitimacyEntity {
     @Column(name = "recorded_by", length = 255)
     private String recordedBy;
 
+    /**
+     * Set when this row was projected from a governed Ministry legitimacy decision. Import paths
+     * must never overwrite a row carrying one — the decision is the system of record and this row
+     * is only its derived projection (FCV-W0a).
+     */
+    @Column(name = "decision_id")
+    private UUID decisionId;
+
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
@@ -95,6 +103,9 @@ public class FacilitySourceLegitimacyEntity {
 
     public String getRecordedBy() { return recordedBy; }
     public void setRecordedBy(String recordedBy) { this.recordedBy = recordedBy; }
+
+    public UUID getDecisionId() { return decisionId; }
+    public void setDecisionId(UUID decisionId) { this.decisionId = decisionId; }
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
