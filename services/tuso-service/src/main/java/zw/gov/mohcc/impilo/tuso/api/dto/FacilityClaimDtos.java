@@ -64,6 +64,13 @@ public final class FacilityClaimDtos {
     public record ApproveAppointmentRequest(String approvedBy) {
     }
 
+    /**
+     * The steward's reason for refusing or withdrawing an appointment. Required — a claimant who is
+     * turned down is entitled to know why, and the steward's judgement is the record.
+     */
+    public record DecisionReasonRequest(String reason) {
+    }
+
     /** A facility administrator appointment as returned to the service plane. */
     public record AppointmentView(
             Long id,

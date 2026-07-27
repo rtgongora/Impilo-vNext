@@ -50,7 +50,7 @@ public class FacilityDataGapController {
     @GetMapping("/completeness")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> completeness(@PathVariable String facilityUuid) {
         TrustContext ctx = TrustContextHolder.require();
-        Long facilityId = resolveFacilityId(facilityUuid);
+        Long facilityId = resolveFacilityId(facilityUuid, ctx.tenantId());
         if (facilityId == null) {
             return ResponseEntity.ok(ApiResponse.ok(List.of(), ctx.correlationId().toString()));
         }
@@ -65,7 +65,7 @@ public class FacilityDataGapController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> tasks(@PathVariable String facilityUuid) {
         TrustContext ctx = TrustContextHolder.require();
-        Long facilityId = resolveFacilityId(facilityUuid);
+        Long facilityId = resolveFacilityId(facilityUuid, ctx.tenantId());
         if (facilityId == null) {
             return ResponseEntity.ok(ApiResponse.ok(List.of(), ctx.correlationId().toString()));
         }
@@ -83,7 +83,7 @@ public class FacilityDataGapController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> resolve(
             @PathVariable String facilityUuid, @PathVariable long taskId, @RequestBody ResolveRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        Long facilityId = resolveFacilityId(facilityUuid);
+        Long facilityId = resolveFacilityId(facilityUuid, ctx.tenantId());
         if (facilityId == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(
                     "FACILITY_NOT_FOUND", "Facility not found", 404, ctx.correlationId().toString()));
@@ -110,10 +110,22 @@ public class FacilityDataGapController {
                 ctx.correlationId().toString()));
     }
 
-    private Long resolveFacilityId(String facilityUuid) {
+    /**
+     * Resolve the numeric facility id <b>within the caller's tenant</b>.
+     *
+     * <p>This lookup previously had no tenant predicate, so a caller holding a facility UUID from
+     * another tenant resolved it successfully and could then read or mutate that facility's
+     * data-gap tasks — the per-task {@code WHERE ... AND facility_id=?} guard is not a tenant
+     * boundary, only a facility one. Every other facility service in TUSO passes tenant through a
+     * {@code requireFacility(uuid, tenantId)} guard; this one is now consistent with them. An
+     * out-of-tenant UUID resolves to null and the caller receives the same 404 as a UUID that does
+     * not exist, so nothing is disclosed either way.</p>
+     */
+    private Long resolveFacilityId(String facilityUuid, UUID tenantId) {
         try {
-            return jdbc.queryForObject("SELECT id FROM tuso.facility WHERE facility_uuid=?::uuid",
-                    Long.class, facilityUuid);
+            return jdbc.queryForObject(
+                    "SELECT id FROM tuso.facility WHERE facility_uuid=?::uuid AND tenant_id=?",
+                    Long.class, facilityUuid, tenantId);
         } catch (Exception e) {
             return null;
         }

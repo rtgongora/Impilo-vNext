@@ -47,6 +47,8 @@ public class FacilityClaimService {
 
     public static final String EVENT_SUBMITTED = "tuso.facility.admin_appointment.submitted";
     public static final String EVENT_APPROVED = "tuso.facility.admin_appointment.approved";
+    public static final String EVENT_REJECTED = "tuso.facility.admin_appointment.rejected";
+    public static final String EVENT_REVOKED = "tuso.facility.admin_appointment.revoked";
 
     private static final Logger log = LoggerFactory.getLogger(FacilityClaimService.class);
 
@@ -222,6 +224,83 @@ public class FacilityClaimService {
         log.info("Facility {} admin appointment {} approved -> ACTIVE by {}",
                 facility.getFacilityUuid(), appointment.getId(), ctx.actorId());
         return toView(appointment);
+    }
+
+    /**
+     * Refuse a pending claim. {@code REJECTED} was a legal value on the appointment from V017 that
+     * no code path could ever write — a steward could approve a claim or leave it pending forever,
+     * which is not a review queue. A reason is mandatory: a claimant who is turned down is entitled
+     * to know why, and the steward's judgement is the record.
+     */
+    @Transactional
+    public FacilityClaimDtos.AppointmentView reject(Long appointmentId, String reason) {
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityAdminAppointmentEntity appointment = requireAppointment(appointmentId);
+        FacilityEntity facility = requireFacility(appointment.getFacilityUuid(), ctx.tenantId());
+
+        if (FacilityAdminAppointmentEntity.STATE_REJECTED.equals(appointment.getApprovalState())) {
+            return toView(appointment); // idempotent
+        }
+        if (!FacilityAdminAppointmentEntity.STATE_PENDING.equals(appointment.getApprovalState())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only a PENDING appointment can be rejected; current state is "
+                            + appointment.getApprovalState());
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A reason is required when rejecting a facility claim.");
+        }
+
+        appointment.setApprovalState(FacilityAdminAppointmentEntity.STATE_REJECTED);
+        appointment.setNotes(reason.trim());
+        appointment.setUpdatedBy(ctx.actorId());
+        appointment = appointmentRepository.save(appointment);
+
+        publish(EVENT_REJECTED, facility, appointment, ctx);
+        log.info("Facility {} admin appointment {} REJECTED by {}",
+                facility.getFacilityUuid(), appointment.getId(), ctx.actorId());
+        return toView(appointment);
+    }
+
+    /**
+     * Withdraw an appointment that is already active. {@code REVOKED} was likewise unreachable, so
+     * an administrator's access could be ended only by waiting for {@code valid_to} to lapse — there
+     * was no way to act on a person who should stop administering a facility today.
+     */
+    @Transactional
+    public FacilityClaimDtos.AppointmentView revoke(Long appointmentId, String reason) {
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityAdminAppointmentEntity appointment = requireAppointment(appointmentId);
+        FacilityEntity facility = requireFacility(appointment.getFacilityUuid(), ctx.tenantId());
+
+        if (FacilityAdminAppointmentEntity.STATE_REVOKED.equals(appointment.getApprovalState())) {
+            return toView(appointment); // idempotent
+        }
+        if (!FacilityAdminAppointmentEntity.STATE_ACTIVE.equals(appointment.getApprovalState())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only an ACTIVE appointment can be revoked; current state is "
+                            + appointment.getApprovalState());
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A reason is required when revoking a facility appointment.");
+        }
+
+        appointment.setApprovalState(FacilityAdminAppointmentEntity.STATE_REVOKED);
+        appointment.setNotes(reason.trim());
+        appointment.setUpdatedBy(ctx.actorId());
+        appointment = appointmentRepository.save(appointment);
+
+        publish(EVENT_REVOKED, facility, appointment, ctx);
+        log.info("Facility {} admin appointment {} REVOKED by {}",
+                facility.getFacilityUuid(), appointment.getId(), ctx.actorId());
+        return toView(appointment);
+    }
+
+    private FacilityAdminAppointmentEntity requireAppointment(Long appointmentId) {
+        return appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Appointment not found: " + appointmentId));
     }
 
     /** All appointments for a facility (canonical UUID), tenant-guarded. */

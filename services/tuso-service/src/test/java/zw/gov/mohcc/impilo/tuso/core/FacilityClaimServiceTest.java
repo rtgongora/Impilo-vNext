@@ -218,6 +218,62 @@ class FacilityClaimServiceTest {
 
     // ── Approve → ACTIVE ─────────────────────────────────────────────────────────
 
+    // ── FCV-W0d: REJECTED and REVOKED were legal values no code path could write ─────────────
+
+    private FacilityAdminAppointmentEntity appointmentIn(String state) {
+        FacilityAdminAppointmentEntity a = new FacilityAdminAppointmentEntity();
+        a.setId(9L);
+        a.setFacilityUuid(facilityUuid);
+        a.setPersonHealthId("HID-200");
+        a.setRole(FacilityAdminAppointmentEntity.ROLE_FACILITY_ADMINISTRATOR);
+        a.setApprovalState(state);
+        return a;
+    }
+
+    @Test
+    void reject_turnsDownAPendingClaimWithAReason() {
+        FacilityAdminAppointmentEntity pending = appointmentIn(FacilityAdminAppointmentEntity.STATE_PENDING);
+        when(appointmentRepository.findById(9L)).thenReturn(Optional.of(pending));
+        stubFacility();
+        when(appointmentRepository.save(any(FacilityAdminAppointmentEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        FacilityClaimDtos.AppointmentView view = service.reject(9L, "Appointment letter did not match the facility");
+
+        assertThat(view.approvalState()).isEqualTo("REJECTED");
+        ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository).save(captor.capture());
+        assertThat(captor.getValue().getEventType()).isEqualTo(FacilityClaimService.EVENT_REJECTED);
+    }
+
+    @Test
+    void reject_requiresAReason() {
+        when(appointmentRepository.findById(9L))
+                .thenReturn(Optional.of(appointmentIn(FacilityAdminAppointmentEntity.STATE_PENDING)));
+        stubFacility();
+
+        assertThatThrownBy(() -> service.reject(9L, "  "))
+                .isInstanceOf(ResponseStatusException.class);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void revoke_withdrawsAnActiveAppointment_butNotAPendingOne() {
+        when(appointmentRepository.findById(9L))
+                .thenReturn(Optional.of(appointmentIn(FacilityAdminAppointmentEntity.STATE_ACTIVE)));
+        stubFacility();
+        when(appointmentRepository.save(any(FacilityAdminAppointmentEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        assertThat(service.revoke(9L, "Left the facility").approvalState()).isEqualTo("REVOKED");
+
+        // A pending claim is rejected, never revoked — the two decisions are not interchangeable.
+        when(appointmentRepository.findById(9L))
+                .thenReturn(Optional.of(appointmentIn(FacilityAdminAppointmentEntity.STATE_PENDING)));
+        assertThatThrownBy(() -> service.revoke(9L, "Left the facility"))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
     @Test
     void approve_flipsPendingToActive_andEmitsApprovedEvent() {
         FacilityAdminAppointmentEntity pending = new FacilityAdminAppointmentEntity();
