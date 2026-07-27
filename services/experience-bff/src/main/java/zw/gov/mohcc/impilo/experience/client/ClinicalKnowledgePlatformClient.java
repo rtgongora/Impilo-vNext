@@ -55,6 +55,18 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /**
+     * Governed adult-medicine CDS (W4-W6): cvd-risk, deprescribing, procedure-indication, icope,
+     * mhgap, antimicrobial-stewardship, palliative, oncology. Advisory; evaluates the supplied facts
+     * against the versioned DAK content for the topic.
+     */
+    public JsonNode medicineCdsEvaluate(String topic, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/cds/" + topic + "/evaluate";
+        log.debug("Clinical platform: medicine CDS {}", topic);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";
