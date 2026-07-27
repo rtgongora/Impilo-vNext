@@ -57,6 +57,30 @@ public class EdTriageAssessmentEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    // --- V202: WHO IITT authority of record (ESI/MTS demoted to advisory). ---
+
+    /** WHO_IITT when IITT set the acuity of record; ESI/MTS/IMPILO_5 for a manually-entered acuity. */
+    @Column(name = "triage_tool")
+    private String triageTool;
+
+    /** RED/YELLOW/GREEN — the IITT tier. Null on a manual row. NOT_TRIAGEABLE is never stored (it is a 422). */
+    @Column(name = "iitt_priority")
+    private String iittPriority;
+
+    @Column(name = "emergency_signs_json", columnDefinition = "jsonb")
+    private String emergencySignsJson;
+
+    /** IITT clinical-concern up-triage flag, or a raised cross-system discrepancy — a human decides, not a silent up-triage. */
+    @Column(name = "requires_clinician_review", nullable = false)
+    private boolean requiresClinicianReview;
+
+    @Column(name = "review_reason", columnDefinition = "TEXT")
+    private String reviewReason;
+
+    /** ESI/MTS advisory scores, retained but never the acuity of record. */
+    @Column(name = "advisory_scores_json", columnDefinition = "jsonb")
+    private String advisoryScoresJson;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
@@ -92,4 +116,16 @@ public class EdTriageAssessmentEntity {
     public String getTriagedBy() { return triagedBy; }
     public void setTriagedBy(String triagedBy) { this.triagedBy = triagedBy; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
+    public String getTriageTool() { return triageTool; }
+    public void setTriageTool(String triageTool) { this.triageTool = triageTool; }
+    public String getIittPriority() { return iittPriority; }
+    public void setIittPriority(String iittPriority) { this.iittPriority = iittPriority; }
+    public String getEmergencySignsJson() { return emergencySignsJson; }
+    public void setEmergencySignsJson(String emergencySignsJson) { this.emergencySignsJson = emergencySignsJson; }
+    public boolean isRequiresClinicianReview() { return requiresClinicianReview; }
+    public void setRequiresClinicianReview(boolean requiresClinicianReview) { this.requiresClinicianReview = requiresClinicianReview; }
+    public String getReviewReason() { return reviewReason; }
+    public void setReviewReason(String reviewReason) { this.reviewReason = reviewReason; }
+    public String getAdvisoryScoresJson() { return advisoryScoresJson; }
+    public void setAdvisoryScoresJson(String advisoryScoresJson) { this.advisoryScoresJson = advisoryScoresJson; }
 }

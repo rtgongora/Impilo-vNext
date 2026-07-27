@@ -196,6 +196,10 @@ public class MaternityController {
         m.put("recommended_action", a.recommendedAction());
         m.put("content_version", a.contentVersion());
         m.put("content_source", a.contentSource());
+        // The demotion stamp: this is the classic partograph, not the current Labour Care Guide
+        // standard. A consumer must be able to see that without inspecting the content version.
+        m.put("monitoring_standard", a.monitoringStandard());
+        m.put("degraded", a.degraded());
         return m;
     }
 

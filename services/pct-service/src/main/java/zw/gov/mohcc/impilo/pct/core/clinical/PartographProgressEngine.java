@@ -9,7 +9,19 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * The WHO partograph, evaluated rather than merely drawn.
+ * The classic WHO partograph, evaluated rather than merely drawn.
+ *
+ * <p><b>FROZEN AND DEMOTED (2026-07-27).</b> The WHO Labour Care Guide (2020) replaced the classic
+ * partograph because the fixed 1 cm/hour alert line labelled many normal labours as obstructed and
+ * drove avoidable caesareans. The current monitoring standard is the Labour Care Guide
+ * ({@code LabourCareGuideProgressEngine} in the clinical-knowledge platform). This engine remains as
+ * a fallback only — for a record created under the classic standard, or a site not yet on the LCG —
+ * and its logic is frozen: no threshold here is to be changed, because the reason to change any of it
+ * is the reason it was demoted. Every assessment it emits is stamped {@code degraded = true} with
+ * {@code monitoringStandard = WHO_PARTOGRAPH_CLASSIC}, so a consumer can never mistake a classic
+ * verdict — especially an "action line crossed, decide now" driven by the 1 cm/hour line — for the
+ * current standard's reading of the same labour. Exactly one monitoring standard governs any one
+ * labour; this engine and the LCG engine must never both be presented as live for the same session.</p>
  *
  * <p>A partograph is a decision instrument, not a chart. Its whole purpose is the alert line and
  * the action line: cervical dilation in established labour is expected to advance at about one
@@ -55,6 +67,9 @@ public final class PartographProgressEngine {
     public static final String CONTENT_VERSION = "who-partograph-classic-1.0.0";
     public static final String CONTENT_SOURCE = "WHO partograph (classic), alert line 1 cm/hour, action line +4 hours";
 
+    /** The demoted standard this engine speaks. Stamped on every assessment so it is never read as current. */
+    public static final String MONITORING_STANDARD = "WHO_PARTOGRAPH_CLASSIC";
+
     private PartographProgressEngine() {
     }
 
@@ -93,7 +108,9 @@ public final class PartographProgressEngine {
             List<String> observations,
             String recommendedAction,
             String contentVersion,
-            String contentSource) {
+            String contentSource,
+            String monitoringStandard,
+            boolean degraded) {
     }
 
     /**
@@ -121,7 +138,7 @@ public final class PartographProgressEngine {
             return new Assessment(ProgressStatus.INSUFFICIENT_DATA, null, null, null, null, null, null,
                     outstanding, notes,
                     "Assess and record cervical dilation to establish progress.",
-                    CONTENT_VERSION, CONTENT_SOURCE);
+                    CONTENT_VERSION, CONTENT_SOURCE, MONITORING_STANDARD, true);
         }
 
         Observation latest = dilations.get(dilations.size() - 1);
@@ -132,7 +149,7 @@ public final class PartographProgressEngine {
             return new Assessment(ProgressStatus.SECOND_STAGE, latest.cervicalDilationCm(),
                     latest.observedAt(), null, null, null, null, outstanding, notes,
                     "Second stage: monitor the fetal heart every five minutes.",
-                    CONTENT_VERSION, CONTENT_SOURCE);
+                    CONTENT_VERSION, CONTENT_SOURCE, MONITORING_STANDARD, true);
         }
 
         // The alert line starts where active labour was first recognised.
@@ -149,7 +166,7 @@ public final class PartographProgressEngine {
             return new Assessment(ProgressStatus.INSUFFICIENT_DATA, latest.cervicalDilationCm(),
                     latest.observedAt(), null, null, null, null, outstanding, notes,
                     "Latent phase: continue observation; do not plot against the alert line yet.",
-                    CONTENT_VERSION, CONTENT_SOURCE);
+                    CONTENT_VERSION, CONTENT_SOURCE, MONITORING_STANDARD, true);
         }
 
         BigDecimal hoursSinceReference = hoursBetween(reference.observedAt(), latest.observedAt());
@@ -199,7 +216,7 @@ public final class PartographProgressEngine {
 
         return new Assessment(status, latest.cervicalDilationCm(), latest.observedAt(), expected,
                 hoursBehind, reference.observedAt(), reference.cervicalDilationCm(),
-                outstanding, notes, action, CONTENT_VERSION, CONTENT_SOURCE);
+                outstanding, notes, action, CONTENT_VERSION, CONTENT_SOURCE, MONITORING_STANDARD, true);
     }
 
     /**

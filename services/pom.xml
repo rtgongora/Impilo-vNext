@@ -380,6 +380,13 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- Emergency domain: WHO Interagency Integrated Triage Tool -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>emergency-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Reproductive domain: gestational dating, parity, contraceptive coverage -->
             <dependency>
                 <groupId>zw.gov.mohcc.impilo</groupId>
