@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.vashandi.persistence.entity.ShiftEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.ShiftSwapRequestEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.ShiftRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.ShiftSwapRequestRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -38,6 +39,7 @@ class StaffingReadServiceTest {
 
     @Mock private ShiftRepository shiftRepository;
     @Mock private ShiftSwapRequestRepository swapRepository;
+    @Mock private WorkforceProfileRepository profileRepository;
     @Mock private VashandiOutboxWriter outboxWriter;
 
     private StaffingReadService service;
@@ -48,7 +50,7 @@ class StaffingReadServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new StaffingReadService(shiftRepository, swapRepository, outboxWriter);
+        service = new StaffingReadService(shiftRepository, swapRepository, profileRepository, outboxWriter);
     }
 
     private ShiftEntity shift(String role, String specialty, UUID profileId, int dayOffset) {
