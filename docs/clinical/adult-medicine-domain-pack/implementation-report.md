@@ -2,7 +2,11 @@
 
 **Status as of 2026-07-27.** W0 (vertical repair), W1 (canonical clinical spine), most of W2
 (adult decision-support foundation) and **W3 (HIV and TB as governed DAK-traceable programmes)** are
-implemented, tested and pushed. W4 onward are designed and outstanding. Everything clinical shipped
+implemented, tested and pushed. **W4 (chronic-disease CDS), W5 (medical-procedure indication) and W6
+(specialty decision support — geriatrics/ICOPE, mental health, antimicrobial stewardship, palliative,
+oncology) are also implemented and on canonical** as governed content; what remains is experience-shell
+surface (specialty UI workspaces, inpatient ward, analytics, offline) and the §23 demonstrations.
+Everything clinical shipped
 so far is `ENGINEERING_SEED` and requires MoHCC and specialist ratification before it is used to
 drive care.
 
@@ -255,15 +259,31 @@ for their review before it goes to canonical.
 **One live proof outstanding, unchanged:** the BFF ingress tokenless negative control is unprovable
 on preview (auth disabled estate-wide, `allow-anonymous=true`); positive ingress is green.
 
-**W4** multimorbidity engine · the HIV/TB front-door (testing, screening, diagnosis, TPT) · **W5**
-inpatient medicine + medical procedures through `procedures-service` · **W6+** specialty workspaces
-(13 in the brief), geriatrics/ICOPE, palliative, oncology, analytics, offline, and the ten required
-demonstrations.
+**W4 — chronic-disease CDS. DONE.** Cardiovascular risk (WHO HEARTS) and deprescribing / renal-
+medication safety (WHO PEN), as governed content on the shared tabular engine evaluated against the
+`PatientFacts` extended in W2. Closes the W2-remaining CV-risk item.
 
-**Not started, and worth stating plainly:** no specialty workspace exists yet; the demonstrations in
-§23 of the brief are unproven; BUTANO still maps only `Condition` and `CarePlan` of the 25 FHIR
-resources in §19; and no DAK artefact registry exists in Zibo — the only DAK mapping in the
-repository remains a single UI file.
+**W5 — medical-procedure indication/interpretation. DONE** (the governed decision surface).
+`procedure-indication-rules.json` (EDLIZ) owns indication, contraindication and interpretation for
+LP, paracentesis (incl. SBP interpretation) and pleural aspiration; `procedures-service` remains the
+execution authority. The inpatient medical-ward *workspace* (inpatient-service V111–V114 band) is UI/
+service surface, not yet built.
+
+**W6 — specialty decision support. DONE** for the governed-content core, grounded in the WHO families
+the lease reserved: geriatrics/ICOPE (WHO_ICOPE), mental health (WHO_MHGAP), antimicrobial stewardship
+(WHO_AMS), palliative care (WHO_PALLIATIVE), and oncology early diagnosis (WHO_CANCER). All eight
+medicine-CDS topics are reachable through the CKP evaluator and the BFF passthrough.
+
+Every W4–W6 pack is `ENGINEERING_SEED` (primaryTextVendored=false); all standards are SHIPPED in the
+traceability matrix and the DAK guard is green. 383 content fixtures across twelve packs run through
+the real engine.
+
+**Honestly remaining (frontend/ops horizon, not governed-content gaps):** the per-specialty UI
+*workspaces* (the content behind them exists and is API-reachable, but dedicated screens are not
+built); the inpatient medical-ward workspace; analytics and offline surfaces; the ten §23
+demonstrations (unproven); and BUTANO still maps only `Condition` and `CarePlan` of the FHIR
+resources in §19. The clinical decision-support backbone of the pack is complete; what remains is
+experience-shell surface, interoperability breadth, and the demonstration proofs.
 
 ---
 

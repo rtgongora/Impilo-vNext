@@ -135,10 +135,13 @@ records how each binds here.
    `WHO_DAK` is RMNP's family and is **shared, not forked** — this pack's HIV and TB DAK artefacts
    register under it, because a second DAK family would split one traceability surface in two.
    `EDLIZ` and `ZW_POLICY` are shared and already exist.
-   **Landed (W3):** `docs/clinical-governance/medicine/standards-baseline.json` declares 13 HIV/TB
-   standards under `WHO_DAK` (6 SHIPPED, cited by the CKP programme content; 7 DEFERRED in the
-   companion `coverage-exclusions.json` with owner-waves). The shared matrix and
-   `check-dak-traceability.sh` run over them unchanged — no rival machinery.
+   **Landed (W3–W6):** `docs/clinical-governance/medicine/standards-baseline.json` declares 21
+   standards, ALL SHIPPED and cited by governed CKP content, coverage-exclusions register empty:
+   13 HIV/TB under `WHO_DAK` (W3); `WHO_HEARTS` + `WHO_PEN` (W4 CV-risk + deprescribing);
+   `MEDICINE.PROCEDURE_APPROPRIATENESS`/EDLIZ (W5 procedures); and `WHO_ICOPE`, `WHO_MHGAP`,
+   `WHO_AMS`, `WHO_PALLIATIVE`, `WHO_CANCER` (W6 specialty CDS). The shared matrix and
+   `check-dak-traceability.sh` run over them unchanged — no rival machinery. All content is
+   `ENGINEERING_SEED` (primaryTextVendored=false) pending MoHCC ratification.
 
 ## 4a. The emergency → medicine handover, frozen
 
