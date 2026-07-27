@@ -78,16 +78,26 @@ public class AuthContactOtpController {
     private final ObjectProvider<JwtDecoder> jwtDecoderProvider;
     private final RestTemplate restTemplate;
 
+    /**
+     * The {@code RestTemplate} here serves exactly one call — the Keycloak ROPC exchange in
+     * {@link #ropcLogin} — so it takes the NON-intercepted {@code idpRestTemplate}. Found by the
+     * discovery rule in {@code IdentityProviderTemplateWiringTest}, not by the hand-built register
+     * of pre-set-Authorization sites: this class pre-sets nothing, it simply addressed the IdP on
+     * the intercepted template, so a password-grant token request carried the caller's bearer and
+     * ~30 Impilo trust headers. The identity-assurance hop in {@code serviceAccountHeaders()} is a
+     * different, typed client and correctly stays on the intercepted path.
+     */
     public AuthContactOtpController(ContactOtpService contactOtpService,
                                     KeycloakAdminClient keycloakAdminClient,
                                     IdentityAssuranceServiceClient identityAssuranceClient,
                                     ObjectProvider<JwtDecoder> jwtDecoderProvider,
-                                    RestTemplate serviceRestTemplate) {
+                                    @org.springframework.beans.factory.annotation.Qualifier("idpRestTemplate")
+                                    RestTemplate idpRestTemplate) {
         this.contactOtpService = contactOtpService;
         this.keycloakAdminClient = keycloakAdminClient;
         this.identityAssuranceClient = identityAssuranceClient;
         this.jwtDecoderProvider = jwtDecoderProvider;
-        this.restTemplate = serviceRestTemplate;
+        this.restTemplate = idpRestTemplate;
     }
 
     /**
