@@ -1,0 +1,141 @@
+{
+  "packId": "rmnp-robson-classification",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Robson Ten-Group Classification of caesarean birth",
+    "primarySource": "WHO Robson Classification: Implementation Manual",
+    "why": "The Robson classification is the WHO standard for monitoring and comparing caesarean rates. It classifies every birth into one of ten mutually exclusive, totally inclusive groups from six characteristics already recorded, so a facility can see WHICH group is driving its caesarean rate rather than only that the rate is high. It is surveillance, not a point-of-care decision — computed from the delivery record after the birth, never entered on a form.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "Transcribed from the WHO Robson implementation manual. The ten group definitions are standardised and stable; this ships ENGINEERING_SEED pending ratification of the field derivations. The inputs are computed from the delivery record and pregnancy episode and injected under the robson.* prefix — there is no Robson form, because Robson never asks a clinician anything it does not already have."
+    }
+  },
+  "tables": [
+    {
+      "tableId": "ROBSON_GROUP",
+      "name": "Robson Ten-Group Classification",
+      "axis": "ROBSON_GROUP",
+      "requiredInputs": ["robson.multiplePregnancy", "robson.presentation", "robson.parity",
+                         "robson.previousCaesarean", "robson.gestationCategory", "robson.labourOnset"],
+      "sourceRefs": ["WHO Robson Classification Implementation Manual"],
+      "tiers": [
+        {
+          "code": "ROBSON_8", "name": "Group 8 — multiple pregnancy", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.multiplePregnancy"],
+          "logic": {"input": "robson.multiplePregnancy", "op": "eq", "value": true},
+          "action": "Group 8: all multiple pregnancies (including previous caesarean). Checked first, so a breech or preterm twin is group 8, not a breech or preterm group.",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 8"]
+        },
+        {
+          "code": "ROBSON_9", "name": "Group 9 — abnormal lie", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.presentation"],
+          "logic": {"input": "robson.presentation", "op": "eq", "value": "TRANSVERSE_OBLIQUE"},
+          "action": "Group 9: all abnormal lies (transverse or oblique, including previous caesarean).",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 9"]
+        },
+        {
+          "code": "ROBSON_6", "name": "Group 6 — nulliparous breech", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.presentation", "robson.parity"],
+          "logic": {"all": [
+            {"input": "robson.presentation", "op": "eq", "value": "BREECH"},
+            {"input": "robson.parity", "op": "eq", "value": "NULLIPAROUS"}
+          ]},
+          "action": "Group 6: all nulliparous breech.",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 6"]
+        },
+        {
+          "code": "ROBSON_7", "name": "Group 7 — multiparous breech", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.presentation", "robson.parity"],
+          "logic": {"all": [
+            {"input": "robson.presentation", "op": "eq", "value": "BREECH"},
+            {"input": "robson.parity", "op": "eq", "value": "MULTIPAROUS"}
+          ]},
+          "action": "Group 7: all multiparous breech (including previous caesarean).",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 7"]
+        },
+        {
+          "code": "ROBSON_10", "name": "Group 10 — single cephalic, preterm", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.presentation", "robson.gestationCategory"],
+          "logic": {"all": [
+            {"input": "robson.presentation", "op": "eq", "value": "CEPHALIC"},
+            {"input": "robson.gestationCategory", "op": "eq", "value": "PRETERM"}
+          ]},
+          "action": "Group 10: all single cephalic preterm (≤36 weeks, including previous caesarean).",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 10"]
+        },
+        {
+          "code": "ROBSON_5", "name": "Group 5 — previous caesarean, single cephalic, term", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.previousCaesarean", "robson.presentation", "robson.gestationCategory"],
+          "logic": {"all": [
+            {"input": "robson.previousCaesarean", "op": "eq", "value": "YES"},
+            {"input": "robson.presentation", "op": "eq", "value": "CEPHALIC"},
+            {"input": "robson.gestationCategory", "op": "eq", "value": "TERM"}
+          ]},
+          "action": "Group 5: previous caesarean, single cephalic, ≥37 weeks. Usually the largest single contributor to a facility's caesarean rate.",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 5"]
+        },
+        {
+          "code": "ROBSON_1", "name": "Group 1 — nulliparous, spontaneous", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.parity", "robson.labourOnset"],
+          "logic": {"all": [
+            {"input": "robson.parity", "op": "eq", "value": "NULLIPAROUS"},
+            {"input": "robson.labourOnset", "op": "eq", "value": "SPONTANEOUS"}
+          ]},
+          "action": "Group 1: nulliparous, single cephalic, ≥37 weeks, spontaneous labour.",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 1"]
+        },
+        {
+          "code": "ROBSON_2", "name": "Group 2 — nulliparous, induced or pre-labour CS", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.parity", "robson.labourOnset"],
+          "logic": {"all": [
+            {"input": "robson.parity", "op": "eq", "value": "NULLIPAROUS"},
+            {"input": "robson.labourOnset", "op": "in", "values": ["INDUCED", "PRELABOUR_CS"]}
+          ]},
+          "action": "Group 2: nulliparous, single cephalic, ≥37 weeks, induced or caesarean before labour.",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 2"]
+        },
+        {
+          "code": "ROBSON_3", "name": "Group 3 — multiparous, spontaneous", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.parity", "robson.labourOnset"],
+          "logic": {"all": [
+            {"input": "robson.parity", "op": "eq", "value": "MULTIPAROUS"},
+            {"input": "robson.labourOnset", "op": "eq", "value": "SPONTANEOUS"}
+          ]},
+          "action": "Group 3: multiparous (no previous caesarean), single cephalic, ≥37 weeks, spontaneous labour.",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 3"]
+        },
+        {
+          "code": "ROBSON_4", "name": "Group 4 — multiparous, induced or pre-labour CS", "colour": "NEUTRAL",
+          "requiredInputs": ["robson.parity", "robson.labourOnset"],
+          "logic": {"all": [
+            {"input": "robson.parity", "op": "eq", "value": "MULTIPAROUS"},
+            {"input": "robson.labourOnset", "op": "in", "values": ["INDUCED", "PRELABOUR_CS"]}
+          ]},
+          "action": "Group 4: multiparous (no previous caesarean), single cephalic, ≥37 weeks, induced or caesarean before labour.",
+          "treatments": [], "referralRequired": false, "urgentReferral": false,
+          "sourceRefs": ["WHO Robson — group 4"]
+        }
+      ],
+      "testCases": [
+        {"name": "nulliparous spontaneous term cephalic is group 1", "facts": {"robson.multiplePregnancy": false, "robson.presentation": "CEPHALIC", "robson.parity": "NULLIPAROUS", "robson.previousCaesarean": "NO", "robson.gestationCategory": "TERM", "robson.labourOnset": "SPONTANEOUS"}, "expectClassification": "ROBSON_1"},
+        {"name": "previous caesarean term cephalic is group 5", "facts": {"robson.multiplePregnancy": false, "robson.presentation": "CEPHALIC", "robson.parity": "MULTIPAROUS", "robson.previousCaesarean": "YES", "robson.gestationCategory": "TERM", "robson.labourOnset": "SPONTANEOUS"}, "expectClassification": "ROBSON_5"},
+        {"name": "a breech twin is group 8 (multiple overrides breech)", "facts": {"robson.multiplePregnancy": true, "robson.presentation": "BREECH", "robson.parity": "NULLIPAROUS", "robson.previousCaesarean": "NO", "robson.gestationCategory": "TERM", "robson.labourOnset": "SPONTANEOUS"}, "expectClassification": "ROBSON_8"},
+        {"name": "nulliparous term breech (singleton) is group 6", "facts": {"robson.multiplePregnancy": false, "robson.presentation": "BREECH", "robson.parity": "NULLIPAROUS", "robson.previousCaesarean": "NO", "robson.gestationCategory": "TERM", "robson.labourOnset": "SPONTANEOUS"}, "expectClassification": "ROBSON_6"},
+        {"name": "preterm single cephalic is group 10 even with previous caesarean", "facts": {"robson.multiplePregnancy": false, "robson.presentation": "CEPHALIC", "robson.parity": "MULTIPAROUS", "robson.previousCaesarean": "YES", "robson.gestationCategory": "PRETERM", "robson.labourOnset": "SPONTANEOUS"}, "expectClassification": "ROBSON_10"},
+        {"name": "missing a defining feature cannot be classified", "facts": {"robson.presentation": "CEPHALIC", "robson.parity": "NULLIPAROUS"}, "expectClassification": null}
+      ]
+    }
+  ]
+}
