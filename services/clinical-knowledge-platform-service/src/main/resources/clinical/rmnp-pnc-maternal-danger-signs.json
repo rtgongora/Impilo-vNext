@@ -1,0 +1,166 @@
+{
+  "packId": "rmnp-pnc-maternal-danger-signs",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Postnatal maternal danger signs",
+    "primarySource": "WHO PNC DAK v1.0.0 (PNC danger-sign decision tables); WHO recommendations on postnatal care of the mother and newborn",
+    "why": "Most maternal deaths happen after birth, not during it, and the postnatal danger signs are the ones a woman and her family must be told to come back for. Secondary haemorrhage, puerperal sepsis, postpartum pre-eclampsia and venous thromboembolism all present in the days and weeks after discharge, when she is at home and no longer being watched.",
+    "sourceVerification": {
+      "primaryTextVendored": true,
+      "vendoredArtefact": "docs/reference/who-dak/dak-pnc-v1.0.0 — PNC danger-sign decision tables inform the sign list",
+      "blocksRatification": true,
+      "note": "The danger-sign vocabulary is PNC-DAK-derived; the thresholds and the actions are national. A postpartum hypertensive presentation is treated the same as the antenatal one via the shared hypertensive-disorders family. blocksRatification stays true pending ratification of the actions.",
+      "safetyInvariant": "A CRITICAL maternal signal here is non-overridable and must never be suppressed by any bereavement or sensitivity filter downstream. A woman after a stillbirth or loss is at HIGHER risk of haemorrhage, sepsis and thromboembolism, not lower — suppressing her danger signs out of a misplaced gentleness would kill her. Thoughts of self-harm are CRITICAL for the same reason."
+    }
+  },
+  "rules": [
+    {
+      "code": "PNC_SECONDARY_PPH",
+      "name": "Secondary postpartum haemorrhage",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "PNC_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["vaginalBleeding"],
+      "logic": {"input": "vaginalBleeding", "op": "in", "values": ["HEAVY", "INCREASING"]},
+      "message": "Heavy or increasing bleeding after birth — treat as postpartum haemorrhage now.",
+      "explanation": "Bleeding that is heavy, or increasing rather than settling, in the days after birth is secondary PPH — often retained products or endometritis. It is an emergency wherever it happens, including at home.",
+      "requiredAction": "Resuscitate, give a uterotonic, and refer urgently. Examine for retained products and infection; secondary PPH is frequently both bleeding and sepsis.",
+      "sourceRefs": ["WHO PNC — postpartum haemorrhage", "WHO Managing Complications — secondary PPH"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Heavy or increasing postnatal bleeding requires urgent assessment for secondary postpartum haemorrhage.", "nationalStatement": "Adopted as published.", "evidenceRefs": ["WHO PNC — postpartum haemorrhage"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "heavy bleeding fires", "facts": {"vaginalBleeding": "HEAVY"}, "expectFires": true},
+        {"name": "normal lochia does not", "facts": {"vaginalBleeding": "NORMAL_LOCHIA"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PNC_PUERPERAL_SEPSIS",
+      "name": "Puerperal sepsis",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "PNC_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["temperature", "offensiveLochia", "lowerAbdominalPain"],
+      "logic": {"all": [
+        {"any": [
+          {"input": "temperature", "op": "gte", "value": 38.0},
+          {"finding": "offensiveLochia", "present": true}
+        ]},
+        {"any": [
+          {"finding": "offensiveLochia", "present": true},
+          {"finding": "lowerAbdominalPain", "present": true}
+        ]}
+      ]},
+      "message": "Puerperal sepsis — start antibiotics and refer.",
+      "explanation": "Fever with offensive lochia or lower abdominal pain after birth is puerperal sepsis until proven otherwise, and she compensates until she does not. Do not wait for a culture.",
+      "requiredAction": "Give broad-spectrum antibiotics empirically, resuscitate, and refer. Assess for retained products needing evacuation.",
+      "sourceRefs": ["WHO PNC — maternal infection", "WHO Statement on maternal sepsis"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Fever with offensive lochia or uterine tenderness postnatally indicates puerperal sepsis requiring immediate antibiotics.", "nationalStatement": "Adopted as published.", "evidenceRefs": ["WHO PNC — maternal infection"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "fever with offensive lochia fires", "facts": {"temperature": 38.4, "offensiveLochia": "PRESENT"}, "expectFires": true},
+        {"name": "fever alone with no local sign does not", "facts": {"temperature": 38.4, "offensiveLochia": "ABSENT", "lowerAbdominalPain": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PNC_POSTPARTUM_ECLAMPSIA",
+      "name": "Postpartum eclampsia / severe pre-eclampsia",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "PNC_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "signalFamily": "HYPERTENSIVE_DISORDERS",
+      "signalRank": 40,
+      "requiredInputs": ["convulsions", "severeHeadache", "visualDisturbance", "systolicBp", "diastolicBp"],
+      "logic": {"any": [
+        {"finding": "convulsions", "present": true},
+        {"input": "systolicBp", "op": "gte", "value": 160},
+        {"input": "diastolicBp", "op": "gte", "value": 110},
+        {"all": [{"finding": "severeHeadache", "present": true}, {"finding": "visualDisturbance", "present": true}]}
+      ]},
+      "message": "Postpartum eclampsia or severe pre-eclampsia — magnesium sulfate and control the blood pressure.",
+      "explanation": "Pre-eclampsia and eclampsia do not end at delivery — a substantial share of eclampsia is postpartum, sometimes days after discharge. A convulsion, a severe blood pressure, or headache with visual disturbance after birth is this until proven otherwise.",
+      "requiredAction": "Give magnesium sulfate, treat severe hypertension, and refer. The same pathway as antenatal severe pre-eclampsia.",
+      "sourceRefs": ["WHO PNC — postnatal hypertension", "WHO — pre-eclampsia and eclampsia"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Hypertension, headache with visual disturbance, or convulsions in the postnatal period require management for pre-eclampsia/eclampsia.", "nationalStatement": "Adopted as published; managed on the shared hypertensive-disorders pathway.", "evidenceRefs": ["WHO PNC — postnatal hypertension"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "a postpartum convulsion fires", "facts": {"convulsions": "PRESENT"}, "expectFires": true},
+        {"name": "severe BP fires", "facts": {"systolicBp": 168, "diastolicBp": 112}, "expectFires": true},
+        {"name": "mild headache alone does not", "facts": {"convulsions": "ABSENT", "systolicBp": 124, "diastolicBp": 78, "severeHeadache": "PRESENT", "visualDisturbance": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PNC_VTE",
+      "name": "Venous thromboembolism",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "PNC_EMERGENCY",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["calfPainOrSwelling", "chestPainOrBreathlessness"],
+      "logic": {"any": [
+        {"finding": "chestPainOrBreathlessness", "present": true},
+        {"finding": "calfPainOrSwelling", "present": true}
+      ]},
+      "message": "Possible deep vein thrombosis or pulmonary embolism — assess and refer urgently.",
+      "explanation": "The postpartum period is the highest-risk time in a woman's life for venous thromboembolism. Unilateral calf pain or swelling is a possible DVT; chest pain or breathlessness is a possible pulmonary embolism and can be rapidly fatal.",
+      "requiredAction": "Assess and refer urgently. Chest pain or breathlessness is a medical emergency — do not attribute breathlessness to normal postpartum recovery without excluding PE.",
+      "sourceRefs": ["WHO PNC — thromboembolism"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Calf pain or swelling, chest pain or breathlessness in the postnatal period requires urgent assessment for venous thromboembolism.", "nationalStatement": "Adopted as published.", "evidenceRefs": ["WHO PNC — thromboembolism"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "breathlessness fires", "facts": {"chestPainOrBreathlessness": "PRESENT"}, "expectFires": true},
+        {"name": "neither does not", "facts": {"calfPainOrSwelling": "ABSENT", "chestPainOrBreathlessness": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PNC_SELF_HARM_RISK",
+      "name": "Thoughts of self-harm or harming the baby",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "PNC_MENTAL_HEALTH",
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["thoughtsOfSelfHarmOrHarmingBaby"],
+      "logic": {"finding": "thoughtsOfSelfHarmOrHarmingBaby", "present": true},
+      "message": "Thoughts of self-harm or of harming the baby — this is an emergency, not a mood.",
+      "explanation": "Postpartum psychosis and severe postnatal depression can present with thoughts of self-harm or of harming the infant, and both carry a real and immediate risk to mother and baby. This is never to be filed as low mood, and never suppressed by any bereavement or sensitivity filter.",
+      "requiredAction": "Ensure immediate safety of mother and baby, do not leave her alone with the infant unsupervised, and refer for urgent mental-health assessment the same day.",
+      "sourceRefs": ["WHO PNC — maternal mental health"],
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "Postnatal care includes assessment of maternal emotional wellbeing and referral where a mental-health condition is suspected.", "nationalStatement": "Thoughts of self-harm or of harming the baby are a CRITICAL, non-overridable danger sign requiring same-day assessment.", "rationale": "The general recommendation to 'assess wellbeing and refer' is too soft for the specific, immediately dangerous presentation. Making it CRITICAL and non-overridable stops it being softened away, particularly after a loss, where the risk is higher and the instinct to be gentle is strongest.", "evidenceRefs": ["WHO PNC — maternal mental health"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "thoughts of self-harm fire", "facts": {"thoughtsOfSelfHarmOrHarmingBaby": "PRESENT"}, "expectFires": true},
+        {"name": "absent does not", "facts": {"thoughtsOfSelfHarmOrHarmingBaby": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PNC_BREAST_INFECTION",
+      "name": "Mastitis or breast abscess",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "PNC_RISK",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["breastPainRednessOrLump"],
+      "logic": {"finding": "breastPainRednessOrLump", "present": true},
+      "message": "Breast pain, redness or a lump — assess for mastitis or abscess.",
+      "explanation": "A red, painful, swollen area of breast with fever is mastitis; a fluctuant lump is an abscess needing drainage. Continued breastfeeding or expression from the affected breast is part of the treatment, not a risk.",
+      "requiredAction": "Assess, support continued effective milk removal, give antibiotics for mastitis, and refer a suspected abscess for drainage.",
+      "sourceRefs": ["WHO PNC — breastfeeding and breast conditions"],
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Breast pain and signs of infection postnatally require assessment and management for mastitis or abscess, with continued breastfeeding support.", "nationalStatement": "Adopted as published.", "evidenceRefs": ["WHO PNC — breast conditions"], "approvingAuthority": "PENDING_MOHCC_RATIFICATION"},
+      "testCases": [
+        {"name": "breast pain/redness fires", "facts": {"breastPainRednessOrLump": "PRESENT"}, "expectFires": true},
+        {"name": "absent does not", "facts": {"breastPainRednessOrLump": "ABSENT"}, "expectFires": false}
+      ]
+    }
+  ]
+}

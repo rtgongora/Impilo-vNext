@@ -51,6 +51,35 @@ public class OrganizationRegistryServiceClient {
                 + java.net.URLEncoder.encode(personHealthId, java.nio.charset.StandardCharsets.UTF_8));
     }
 
+    // ── Regulator user administration (RB-6): the appointment roster + lifecycle for one regulator.
+
+    /** The appointment roster for one regulator organisation — the users-admin read model. */
+    public JsonNode listAppointmentsForOrganization(String organizationId) {
+        return getForJson(trimSlash(baseUrl) + "/v1/regulatory/organizations/" + organizationId + "/appointments");
+    }
+
+    /** The closed appointment-role vocabulary, so the invite form offers governed roles only. */
+    public JsonNode listAppointmentRoles() {
+        return getForJson(trimSlash(baseUrl) + "/v1/regulatory/appointment-roles");
+    }
+
+    public JsonNode createAppointment(String organizationId, Object body) {
+        return postForJson(trimSlash(baseUrl) + "/v1/regulatory/organizations/" + organizationId + "/appointments", body);
+    }
+
+    public JsonNode verifyAppointment(String appointmentId, Object body) {
+        return postForJson(trimSlash(baseUrl) + "/v1/regulatory/appointments/" + appointmentId + "/verify", body);
+    }
+
+    public JsonNode endAppointment(String appointmentId, Object body) {
+        return postForJson(trimSlash(baseUrl) + "/v1/regulatory/appointments/" + appointmentId + "/end", body);
+    }
+
+    /** Invite a colleague into a governed role (RB-4 hashed, single-use invitation rail). */
+    public JsonNode createInvitation(String organizationId, Object body) {
+        return postForJson(trimSlash(baseUrl) + "/v1/organizations/" + organizationId + "/invitations", body);
+    }
+
     public JsonNode createOrganization(Object body) {
         return postForJson(trimSlash(baseUrl) + "/v1/organizations", body);
     }

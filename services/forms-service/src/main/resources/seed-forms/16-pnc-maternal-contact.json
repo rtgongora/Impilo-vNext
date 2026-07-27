@@ -1,0 +1,91 @@
+{
+  "formKey": "impilo.pnc.maternal.contact.v1",
+  "name": "Postnatal contact — mother",
+  "description": "A postnatal check of the mother, at the facility or in the community. The danger-sign questions are the spine: most maternal deaths are postnatal, and these are the signs she must be told to return for.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": ["OUTPATIENT", "COMMUNITY", "HOME"],
+  "careStages": ["ASSESSMENT", "CONSULTATION"],
+  "specialties": ["MIDWIFERY", "NURSING", "OBSTETRICS"],
+  "encounterTypes": ["POSTNATAL", "PNC", "MATERNITY"],
+  "encounterContexts": ["outpatient", "community", "home"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER", "COMMUNITY_HEALTH_WORKER"],
+  "minAgeMonths": 108,
+  "sexApplicability": "FEMALE",
+  "requirePregnant": false,
+  "programmeApplicability": ["PNC", "MATERNAL"],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO recommendations on postnatal care of the mother and newborn",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "systolicBp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "mm[Hg]", "code": {"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}},
+      {"linkId": "diastolicBp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "mm[Hg]", "code": {"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}},
+      {"linkId": "temperature", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "unit": "Cel", "code": {"system": "http://loinc.org", "code": "8310-5", "display": "Body temperature"}}
+    ]
+  },
+  "indicators": {"indicators": [{"programmeIndicatorCode": "PNC_MATERNAL_CONTACTS"}]},
+  "definition": {
+    "id": "pnc-maternal-contact-v1",
+    "version": "1.0.0",
+    "title": "Postnatal contact — mother",
+    "description": "Vitals plus the postnatal danger-sign questions, each asked rather than assumed.",
+    "dakReference": "WHO PNC DAK v1.0.0",
+    "healthDomain": "MATERNAL_HEALTH",
+    "programme": "PNC",
+    "encounterTypes": ["POSTNATAL", "PNC"],
+    "minAgeMonths": 108,
+    "sexApplicability": "FEMALE",
+    "providerRoles": ["MIDWIFE", "NURSE", "COMMUNITY_HEALTH_WORKER"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "SENSITIVE"},
+    "sections": [
+      {
+        "id": "observations",
+        "title": "Observations",
+        "fields": [
+          {"id": "systolicBp", "linkId": "systolicBp", "label": "Systolic blood pressure", "kind": "numeric_with_unit", "unit": "mm[Hg]", "description": "Pre-eclampsia does not end at delivery — measure it at every postnatal contact.", "validation": {"min": 50, "max": 300, "required": false}},
+          {"id": "diastolicBp", "linkId": "diastolicBp", "label": "Diastolic blood pressure", "kind": "numeric_with_unit", "unit": "mm[Hg]", "validation": {"min": 30, "max": 200, "required": false}},
+          {"id": "temperature", "linkId": "temperature", "label": "Temperature", "kind": "numeric_with_unit", "unit": "Cel", "validation": {"min": 30, "max": 45, "required": false}}
+        ]
+      },
+      {
+        "id": "danger-signs",
+        "title": "Danger signs — ask every one",
+        "description": "A blank is 'not asked', not 'absent'. These are asked at every postnatal contact, and she is told to return for any of them.",
+        "fields": [
+          {"id": "vaginalBleeding", "linkId": "vaginalBleeding", "label": "Vaginal bleeding", "kind": "coded_single", "description": "Judge against the expected trajectory: lochia should lessen. Heavy or increasing is the danger.", "options": [{"code": "NORMAL_LOCHIA", "display": "Normal lochia, lessening"}, {"code": "HEAVY", "display": "Heavy"}, {"code": "INCREASING", "display": "Increasing rather than settling"}], "validation": {"required": false}},
+          {"id": "offensiveLochia", "linkId": "offensiveLochia", "label": "Offensive-smelling lochia", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "lowerAbdominalPain", "linkId": "lowerAbdominalPain", "label": "Lower abdominal or uterine pain/tenderness", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "convulsions", "linkId": "convulsions", "label": "Convulsions or fits", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "severeHeadache", "linkId": "severeHeadache", "label": "Severe headache", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "visualDisturbance", "linkId": "visualDisturbance", "label": "Blurred vision or seeing spots", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "calfPainOrSwelling", "linkId": "calfPainOrSwelling", "label": "Calf pain or swelling (usually one leg)", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "chestPainOrBreathlessness", "linkId": "chestPainOrBreathlessness", "label": "Chest pain or breathlessness", "kind": "coded_single", "description": "Do not attribute breathlessness to normal recovery without considering pulmonary embolism — this is the postpartum period's most dangerous miss.", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "breastPainRednessOrLump", "linkId": "breastPainRednessOrLump", "label": "Breast pain, redness or a lump", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}}
+        ]
+      },
+      {
+        "id": "mental-health",
+        "title": "How she is feeling",
+        "description": "Asked with care and asked directly. Emotional wellbeing is part of the postnatal check, and the one question below that is never softened is the last.",
+        "fields": [
+          {"id": "moodLow", "linkId": "moodLow", "label": "Persistent low mood, tearfulness or loss of interest", "kind": "coded_single", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}},
+          {"id": "thoughtsOfSelfHarmOrHarmingBaby", "linkId": "thoughtsOfSelfHarmOrHarmingBaby", "label": "Any thoughts of harming herself or the baby", "kind": "coded_single", "description": "Asked of every mother. A yes is a same-day emergency, never a mood to review later, and is never suppressed — including, and especially, after a loss.", "options": [{"code": "PRESENT", "display": "Yes"}, {"code": "ABSENT", "display": "No"}], "validation": {"required": false}}
+        ]
+      },
+      {
+        "id": "completion",
+        "title": "Completing the contact",
+        "fields": [
+          {"id": "screeningComplete", "linkId": "screeningComplete", "label": "All danger-sign questions were asked", "kind": "coded_single", "options": [{"code": "YES", "display": "Yes"}, {"code": "NO", "display": "No — interrupted or partial"}], "validation": {"required": false}},
+          {"id": "pncNotes", "linkId": "pncNotes", "label": "Notes", "kind": "text", "validation": {"required": false}}
+        ]
+      }
+    ]
+  }
+}
