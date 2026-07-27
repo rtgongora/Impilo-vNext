@@ -128,9 +128,21 @@ existed and was correctly wired.** Run against the tree afterwards it failed imm
 files. Nobody had run it before pushing.
 
 ```bash
-bash scripts/guard/run-change-safety-gates.sh            # before every push
-bash scripts/guard/check-migration-version-collisions.sh # at minimum, if you touched a migration
+REPO_PATH=$PWD bash scripts/guard/run-change-safety-gates.sh            # before every push
+REPO_PATH=$PWD bash scripts/guard/check-migration-version-collisions.sh # if you touched a migration
 ```
+
+🚨 **`REPO_PATH=$PWD` is MANDATORY from a worktree, and its absence produces a FALSE GREEN.**
+`run-change-safety-gates.sh` line 3 is `REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"`
+followed by `cd "$REPO_PATH"` — so run from a worktree **it gates the main checkout**, which is sitting
+on canonical, i.e. it gates canonical against itself and passes. A lane hit exactly this: `CHANGE-SAFETY:
+PASSED` with **`Files changed` EMPTY** and `Branch: …-Yypyl` — their merge was never gated at all. With
+`REPO_PATH=$PWD` the same run reported their own branch, their own nine files, and passed for real.
+
+**The tell is an empty (or foreign) file list.** Always read the `Head:`/`Branch:`/`Files changed` lines
+the gate prints and confirm they are *yours*. A guard that reports on someone else's tree is the
+[[build-script-ignores-worktrees]] hazard recurring inside a *guard* rather than a build — and it is the
+same self-checking-reach problem as a discovery rule that silently matches nothing.
 
 **And stop on what it says.** A second lane later ran the scan, watched it print `V432`, and pushed in
 the same command — the push added no new duplicate, but a known one was walked past. So:
@@ -231,3 +243,22 @@ rolls it. Say so explicitly in the landing note so it is not left for "whoever c
 Related memory-level laws: mutate the probe as well as the code; a guard must be proved in both
 directions; a repoint is not done until the response shape is checked; enumerating a removed symbol's
 callers must include `src/test`.
+
+## 8. Proving an auth fix on preview — the edge cannot discriminate
+
+`experience-bff` runs with `IMPILO_SECURITY_ALLOW_ANONYMOUS=true` on preview (startup logs
+*"JWT validation DISABLED … All endpoints are open."*). So the obvious negative control —
+*call the BFF without a token, expect 401* — **returns 200 and proves nothing**. It tests the estate's
+posture, not your fix, and yields a false green.
+
+**Aim the negative control at something that actually refuses:**
+
+| Target | Refuses an ordinary user token? | Use it for |
+|---|---|---|
+| BFF ingress | ❌ no (anonymous allowed on preview) | nothing — it cannot discriminate |
+| Keycloak Admin API | ✅ 403 | proving admin-authority fixes |
+| An enforcing downstream (e.g. ndila in-cluster) | ✅ 401 | proving a service token is really required |
+
+**Assert the negative FIRST.** Without it the positive is vacuous — a 2xx that would have happened
+anyway proves nothing. And prefer a positive that cannot be faked by a hollow 2xx: create an account,
+then *log in as it independently*.
