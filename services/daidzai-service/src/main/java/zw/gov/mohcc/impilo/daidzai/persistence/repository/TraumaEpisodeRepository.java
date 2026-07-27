@@ -17,6 +17,16 @@ public interface TraumaEpisodeRepository extends JpaRepository<TraumaEpisodeEnti
     Optional<TraumaEpisodeEntity> findByTenantIdAndOriginKey(UUID tenantId, String originKey);
     Optional<TraumaEpisodeEntity> findByTenantIdAndIncidentId(UUID tenantId, UUID incidentId);
 
+    /**
+     * The V-3 enforcement sweep: OPEN episodes that reached a facility phase without a PCT anchor.
+     * Backs {@code idx_dai_trauma_episode_unanchored}. This is the monitoring that replaced the
+     * schema CHECK V201 withdrew — it surfaces a missing link rather than blocking the phase write.
+     */
+    @Query("select e from TraumaEpisodeEntity e where e.tenantId = :tenantId "
+            + "and e.status = 'OPEN' and e.pctJourneyId is null "
+            + "and e.currentPhase not in ('INCIDENT','DISPATCH','PREHOSPITAL')")
+    java.util.List<TraumaEpisodeEntity> findUnanchoredFacilityPhase(@Param("tenantId") UUID tenantId);
+
     /** VITO merge repoint: move the subject anchor from the tombstoned to the surviving CPID. */
     @Modifying
     @Query("update TraumaEpisodeEntity e set e.subjectCpid = :survivor "

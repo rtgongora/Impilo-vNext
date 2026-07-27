@@ -10,9 +10,11 @@
 -- case. With retained_fragment = TRUE and removal_completeness = NULL, `NULL IN ('PARTIAL','FAILED')`
 -- evaluates to NULL, `NULL AND (detail IS NOT NULL)` is NULL, and `FALSE OR NULL` is NULL. A CHECK
 -- rejects only FALSE, so a NULL verdict is ACCEPTED — a retained device fragment recorded against no
--- removal outcome at all is let through. Proven against the applied schema on the estate, not read:
--- the row inserted with retained_fragment TRUE, completeness NULL, a detail string and type INSERTION
--- was accepted.
+-- removal outcome at all is let through. That state is reachable, not hypothetical: a retained
+-- fragment on an INSERTION row carries no removal_completeness, and the removal-states-outcome
+-- constraint only requires completeness on REMOVAL/REPLACEMENT rows, so nothing else catches it.
+-- Proven against the applied schema on the estate, not read: the row inserted with retained_fragment
+-- TRUE, completeness NULL, a detail string and type INSERTION was accepted.
 --
 -- The eleven mutation probes that cleared V430 missed it because a hand-written malicious row carries
 -- a WRONG value, and this hole is a MISSING one. The fleet law now: a CHECK-constraint mutation test

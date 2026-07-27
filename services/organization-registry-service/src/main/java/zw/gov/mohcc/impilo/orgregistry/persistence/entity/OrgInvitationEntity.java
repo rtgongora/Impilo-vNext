@@ -48,8 +48,24 @@ public class OrgInvitationEntity {
     @Column(nullable = false, length = 128)
     private String role;
 
-    @Column(nullable = false, length = 128)
-    private String token;
+    /**
+     * Governed appointment role (V010). When set to a regulatory role, acceptance mints a
+     * PENDING_VERIFICATION regulatory appointment (source=INVITATION) rather than an affiliation.
+     * Null keeps the legacy free-text {@link #role} affiliation path.
+     */
+    @Column(name = "role_code", length = 48)
+    private String roleCode;
+
+    /** SHA-256 hex of the single-use token — only the hash is ever persisted (V010). */
+    @Column(name = "token_hash", nullable = false, length = 64)
+    private String tokenHash;
+
+    /**
+     * The raw token, held only in memory on the object returned by {@code create} so the issuer can
+     * build the one-time link. Never persisted — there is no column for it.
+     */
+    @jakarta.persistence.Transient
+    private String rawToken;
 
     /** PENDING | ACCEPTED | REVOKED | EXPIRED */
     @Column(nullable = false, length = 32)
