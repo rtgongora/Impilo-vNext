@@ -1,0 +1,114 @@
+{
+  "packId": "rmnp-smbp-escalation",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Self-monitored blood pressure — escalation from a home reading series",
+    "primarySource": "WHO SMART SMBP DAK v1.0.0 (SMBP.B7.DT); WHO recommendations on antenatal care (2016)",
+    "why": "A woman monitoring her own blood pressure at home needs the series turned into one of a few clear actions — keep monitoring, come in soon, come in now — and the danger of self-monitoring is that a reassuring average hides a severe reading or that too little data reads as good news.",
+    "sourceVerification": {
+      "primaryTextVendored": true,
+      "vendoredArtefact": "docs/reference/who-dak/dak-smbp-v1.0.0 — SMBP.B7.DT health actions and the danger-sign vocabulary",
+      "blocksRatification": true,
+      "note": "The escalation outputs map to SMBP.B7.DT's three action bands (continue / go to a facility soon / go right away) and its danger-sign list. The DAK expresses the input combinations as coded rows (1..12) whose value-set definitions live in its CQL, not in the decision table, so the thresholds that place a woman in each band are encoded here from WHO home-BP guidance rather than extracted from a machine-readable cell. Home thresholds (135/85 elevated, 160/110 severe) are an engineering seed; blocksRatification stays true."
+    }
+  },
+  "rules": [
+    {
+      "code": "SMBP_DANGER_SIGN",
+      "name": "A pregnancy danger sign reported alongside home monitoring",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "SMBP_ESCALATION",
+      "signalFamily": "SMBP_ESCALATION",
+      "signalRank": 30,
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["dangerSignReported"],
+      "logic": {"finding": "dangerSignReported", "present": true},
+      "message": "Go to a health facility right away — a danger sign was reported.",
+      "explanation": "SMBP.B7.DT routes any pregnancy danger sign — breathing difficulty, vaginal bleeding, convulsing, severe headache, visual disturbance, severe abdominal pain, fever, severe vomiting — straight to 'go right away', independent of the blood-pressure numbers. A danger sign does not wait for the average.",
+      "requiredAction": "Advise her to go to a health facility immediately. Do not tell her to keep monitoring at home.",
+      "sourceRefs": ["WHO SMART SMBP DAK SMBP.B7.DT (danger signs)"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "SMBP.B7.DT: where a danger sign of pregnancy is present, the guidance to the client is to go to a health facility right away.",
+        "nationalStatement": "Adopted as published.",
+        "evidenceRefs": ["WHO SMART SMBP DAK SMBP.B7.DT (danger signs)"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "a danger sign fires regardless of BP", "facts": {"dangerSignReported": "PRESENT"}, "expectFires": true},
+        {"name": "no danger sign does not fire this rule", "facts": {"dangerSignReported": "ABSENT"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SMBP_SEVERE_READING",
+      "name": "A single severe home reading",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "SMBP_ESCALATION",
+      "signalFamily": "SMBP_ESCALATION",
+      "signalRank": 20,
+      "severity": "CRITICAL",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["smbp.anySevere"],
+      "logic": {"input": "smbp.anySevere", "op": "eq", "value": true},
+      "message": "Go to a health facility right away — a home reading was in the severe range.",
+      "explanation": "Any home reading at or above 160/110 is treated as severe and routed to immediate care, even if the week's average is normal. This is the reading the average would otherwise hide, which is why the reducer flags a severe reading before it is averaged and never discards it as a rest artefact.",
+      "requiredAction": "Advise her to go to a health facility immediately for assessment of severe hypertension.",
+      "sourceRefs": ["WHO SMART SMBP DAK SMBP.B7.DT", "WHO Managing Complications in Pregnancy and Childbirth — severe hypertension"],
+      "adaptation": {
+        "type": "STRENGTHENED",
+        "whoStatement": "SMBP.B7.DT routes uncontrolled blood pressure to facility care; the DAK interprets the series through the personal-health application.",
+        "nationalStatement": "Any single reading at or above 160/110 routes to immediate care independent of the average.",
+        "rationale": "Home BP is interpreted on the mean precisely to remove single-reading artefact, and that same averaging can bury a genuinely severe reading in an otherwise calm week. Checking severity per reading before averaging is what stops the mean from hiding the emergency it was meant to smooth out.",
+        "evidenceRefs": ["WHO Managing Complications in Pregnancy and Childbirth — severe hypertension"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "a severe reading fires", "facts": {"smbp.anySevere": true}, "expectFires": true},
+        {"name": "no severe reading does not", "facts": {"smbp.anySevere": false}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "SMBP_SUSTAINED_ELEVATED",
+      "name": "Sustained elevated home blood pressure over enough readings",
+      "layer": "MATERNAL_DANGER_SIGN",
+      "ruleType": "SMBP_ESCALATION",
+      "signalFamily": "SMBP_ESCALATION",
+      "signalRank": 10,
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["smbp.elevatedMean", "smbp.sufficient"],
+      "logic": {
+        "all": [
+          {"input": "smbp.elevatedMean", "op": "eq", "value": true},
+          {"input": "smbp.sufficient", "op": "eq", "value": true}
+        ]
+      },
+      "message": "Come in for assessment — the home average is elevated over enough readings to be real.",
+      "explanation": "A mean at or above 135/85 across a sufficient number of readings is sustained hypertension, not a one-off. The 'sufficient' condition matters: an elevated mean over two readings is not the same finding and must not trigger this, which is why it is gated on having enough data rather than on the mean alone.",
+      "requiredAction": "Arrange a facility assessment for hypertension in pregnancy — blood pressure, proteinuria and pre-eclampsia review. Not an emergency today unless a danger sign or severe reading is also present.",
+      "monitoringInstruction": "Continue home monitoring until seen.",
+      "sourceRefs": ["WHO SMART SMBP DAK SMBP.B7.DT", "WHO recommendations on antenatal care (2016) — hypertension"],
+      "adaptation": {
+        "type": "ADOPTED_VERBATIM",
+        "whoStatement": "SMBP.B7.DT: a raised but not severe home blood-pressure result routes the client to contact a health worker or attend a facility.",
+        "nationalStatement": "Adopted as published, gated on a sufficient number of readings so a short series does not read as sustained hypertension.",
+        "evidenceRefs": ["WHO SMART SMBP DAK SMBP.B7.DT"],
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+      },
+      "testCases": [
+        {"name": "elevated mean over sufficient readings fires", "facts": {"smbp.elevatedMean": true, "smbp.sufficient": true}, "expectFires": true},
+        {"name": "elevated mean over too few readings does not", "facts": {"smbp.elevatedMean": true, "smbp.sufficient": false}, "expectFires": false},
+        {"name": "a normal mean does not", "facts": {"smbp.elevatedMean": false, "smbp.sufficient": true}, "expectFires": false}
+      ]
+    }
+  ]
+}
