@@ -43,6 +43,8 @@ class FacilityClaimServiceTest {
     @Mock private FacilitySourceLegitimacyRepository legitimacyRepository;
     @Mock private FacilityAdminAppointmentRepository appointmentRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRelationshipTypeRepository relationshipTypeRepository;
+    @Mock private zw.gov.mohcc.impilo.tuso.integration.VarapiClient varapiClient;
 
     private FacilityClaimService service;
 
@@ -54,7 +56,7 @@ class FacilityClaimServiceTest {
     @BeforeEach
     void setUp() {
         service = new FacilityClaimService(
-                facilityRepository, legitimacyRepository, appointmentRepository, outboxRepository);
+                facilityRepository, legitimacyRepository, appointmentRepository, outboxRepository, relationshipTypeRepository, varapiClient);
         TrustContextHolder.set(new TrustContext(
                 tenantId, actor, "ADMIN", "FACILITY_ADMINISTRATION",
                 null, UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
@@ -134,7 +136,7 @@ class FacilityClaimServiceTest {
                 });
 
         FacilityClaimDtos.AppointmentView view = service.submitClaim(facilityUuid,
-                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, "doc://evidence/1", null, null, null, null));
+                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, "doc://evidence/1", null, null, null, null, null, null, null, null, null));
 
         ArgumentCaptor<FacilityAdminAppointmentEntity> captor =
                 ArgumentCaptor.forClass(FacilityAdminAppointmentEntity.class);
@@ -167,7 +169,7 @@ class FacilityClaimServiceTest {
                 });
 
         FacilityClaimDtos.AppointmentView view = service.submitClaim(facilityUuid,
-                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, "doc://evidence/1", null, null, null, null));
+                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, "doc://evidence/1", null, null, null, null, null, null, null, null, null));
 
         assertThat(view.approvalState()).isEqualTo("PENDING");
         verify(outboxRepository).save(any());
@@ -178,7 +180,7 @@ class FacilityClaimServiceTest {
         stubFacility();
 
         assertThatThrownBy(() -> service.submitClaim(facilityUuid,
-                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, null, null, null, null, null)))
+                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, null, null, null, null, null, null, null, null, null, null)))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
                         .isEqualTo(HttpStatus.BAD_REQUEST));
@@ -190,7 +192,7 @@ class FacilityClaimServiceTest {
         stubFacility();
 
         assertThatThrownBy(() -> service.submitClaim(facilityUuid,
-                new FacilityClaimDtos.SubmitClaimRequest("HID-100", "SUPREME_LEADER", "doc://e/1", null, null, null, null)))
+                new FacilityClaimDtos.SubmitClaimRequest("HID-100", "SUPREME_LEADER", "doc://e/1", null, null, null, null, null, null, null, null, null)))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
                         .isEqualTo(HttpStatus.BAD_REQUEST));
@@ -206,7 +208,7 @@ class FacilityClaimServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
 
         service.submitClaim(facilityUuid, new FacilityClaimDtos.SubmitClaimRequest(
-                "HID-100", "DATA_STEWARD", "doc://evidence/2", "RECOVERY", null, null, null));
+                "HID-100", "DATA_STEWARD", "doc://evidence/2", "RECOVERY", null, null, null, null, null, null, null, null));
 
         ArgumentCaptor<FacilityAdminAppointmentEntity> captor =
                 ArgumentCaptor.forClass(FacilityAdminAppointmentEntity.class);
@@ -217,6 +219,108 @@ class FacilityClaimServiceTest {
     }
 
     // ── Approve → ACTIVE ─────────────────────────────────────────────────────────
+
+    // ── FCV-W4: Provider ID only where the relationship is about regulated standing ──────────
+
+    private zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRelationshipTypeEntity relType(
+            String code, boolean regulated, boolean needsJustification) {
+        var t = new zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRelationshipTypeEntity();
+        t.setCode(code);
+        t.setLabel(code);
+        t.setRequiresProviderId(regulated);
+        t.setRequiresJustification(needsJustification);
+        t.setActive(true);
+        return t;
+    }
+
+    private FacilityClaimDtos.SubmitClaimRequest claimAs(String relationship, String idKind, String idValue) {
+        return new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, "doc://evidence/1", null,
+                null, null, null, relationship, idKind, idValue, null, null);
+    }
+
+    private void stubClaimable() {
+        stubFacility();
+        when(legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))
+                .thenReturn(List.of(legitimacy(true)));
+        when(appointmentRepository.save(any(FacilityAdminAppointmentEntity.class)))
+                .thenAnswer(inv -> { var a = (FacilityAdminAppointmentEntity) inv.getArgument(0); a.setId(9L); return a; });
+    }
+
+    @Test
+    void anAdministrativeClaimDoesNotRequireAProviderId() {
+        // Requiring one everywhere would look like rigour and function as exclusion — records
+        // officers, ICT focal persons and district data officers are not clinicians.
+        stubClaimable();
+        when(relationshipTypeRepository.findById("RECORDS_OFFICER"))
+                .thenReturn(Optional.of(relType("RECORDS_OFFICER", false, false)));
+
+        service.submitClaim(facilityUuid, claimAs("RECORDS_OFFICER", null, null));
+
+        ArgumentCaptor<FacilityAdminAppointmentEntity> captor =
+                ArgumentCaptor.forClass(FacilityAdminAppointmentEntity.class);
+        verify(appointmentRepository).save(captor.capture());
+        assertThat(captor.getValue().getRelationshipType()).isEqualTo("RECORDS_OFFICER");
+        assertThat(captor.getValue().getProviderPublicId()).isNull();
+        verify(varapiClient, never()).resolveProfessionalIdentifier(any(), any(), any(), any());
+    }
+
+    @Test
+    void aRegulatedClaimRequiresAnIdentifierThatResolves() {
+        stubClaimable();
+        when(relationshipTypeRepository.findById("PRACTITIONER_IN_CHARGE"))
+                .thenReturn(Optional.of(relType("PRACTITIONER_IN_CHARGE", true, false)));
+        when(varapiClient.resolveProfessionalIdentifier(tenantId, "COUNCIL_REG", "MDPCZ-123", null))
+                .thenReturn("PRV-0001");
+
+        service.submitClaim(facilityUuid, claimAs("PRACTITIONER_IN_CHARGE", "COUNCIL_REG", "MDPCZ-123"));
+
+        ArgumentCaptor<FacilityAdminAppointmentEntity> captor =
+                ArgumentCaptor.forClass(FacilityAdminAppointmentEntity.class);
+        verify(appointmentRepository).save(captor.capture());
+        assertThat(captor.getValue().getProviderPublicId()).isEqualTo("PRV-0001");
+    }
+
+    @Test
+    void aRegulatedClaimWithNoIdentifierIsRefused() {
+        stubFacility();
+        when(relationshipTypeRepository.findById("PHARMACY_LEAD"))
+                .thenReturn(Optional.of(relType("PHARMACY_LEAD", true, false)));
+
+        assertThatThrownBy(() -> service.submitClaim(facilityUuid, claimAs("PHARMACY_LEAD", null, null)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void anIdentifierThatResolvesToNobodyIsRefusedIndistinguishablyFromAnOutage() {
+        // Same message either way: this endpoint must not become a way to test which registration
+        // numbers are real.
+        stubFacility();
+        when(relationshipTypeRepository.findById("NURSING_LEAD"))
+                .thenReturn(Optional.of(relType("NURSING_LEAD", true, false)));
+        when(varapiClient.resolveProfessionalIdentifier(any(), any(), any(), any())).thenReturn(null);
+
+        assertThatThrownBy(() -> service.submitClaim(facilityUuid, claimAs("NURSING_LEAD", "PROVIDER_ID", "PRV-NOPE")))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
+                        .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY));
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void anUnknownRelationshipIsRefused_andOtherMustBeExplained() {
+        stubFacility();
+        when(relationshipTypeRepository.findById("KING_OF_THE_CLINIC")).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.submitClaim(facilityUuid, claimAs("KING_OF_THE_CLINIC", null, null)))
+                .isInstanceOf(ResponseStatusException.class);
+
+        when(relationshipTypeRepository.findById("OTHER"))
+                .thenReturn(Optional.of(relType("OTHER", false, true)));
+        assertThatThrownBy(() -> service.submitClaim(facilityUuid, claimAs("OTHER", null, null)))
+                .isInstanceOf(ResponseStatusException.class);
+    }
 
     // ── FCV-W0d: REJECTED and REVOKED were legal values no code path could write ─────────────
 

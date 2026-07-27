@@ -12,9 +12,11 @@ import zw.gov.mohcc.impilo.tuso.api.dto.FacilityClaimDtos;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityAdminAppointmentEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRelationshipTypeEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilitySourceLegitimacyEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityAdminAppointmentRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRelationshipTypeRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilitySourceLegitimacyRepository;
 
@@ -56,15 +58,21 @@ public class FacilityClaimService {
     private final FacilitySourceLegitimacyRepository legitimacyRepository;
     private final FacilityAdminAppointmentRepository appointmentRepository;
     private final EventOutboxRepository outboxRepository;
+    private final FacilityRelationshipTypeRepository relationshipTypeRepository;
+    private final zw.gov.mohcc.impilo.tuso.integration.VarapiClient varapiClient;
 
     public FacilityClaimService(FacilityRepository facilityRepository,
                                 FacilitySourceLegitimacyRepository legitimacyRepository,
                                 FacilityAdminAppointmentRepository appointmentRepository,
-                                EventOutboxRepository outboxRepository) {
+                                EventOutboxRepository outboxRepository,
+                                FacilityRelationshipTypeRepository relationshipTypeRepository,
+                                zw.gov.mohcc.impilo.tuso.integration.VarapiClient varapiClient) {
         this.facilityRepository = facilityRepository;
         this.legitimacyRepository = legitimacyRepository;
         this.appointmentRepository = appointmentRepository;
         this.outboxRepository = outboxRepository;
+        this.relationshipTypeRepository = relationshipTypeRepository;
+        this.varapiClient = varapiClient;
     }
 
     // ── Eligibility ─────────────────────────────────────────────────────────────
@@ -176,7 +184,13 @@ public class FacilityClaimService {
                     "You already have a claim for this role awaiting review at this facility.");
         }
 
+        // What the claimant says they ARE to this facility, and what that demands of them (FCV-W4).
+        RelationshipRequirement relationship = resolveRelationship(request, facility);
+
         FacilityAdminAppointmentEntity appointment = new FacilityAdminAppointmentEntity();
+        appointment.setRelationshipType(relationship.code());
+        appointment.setProviderPublicId(relationship.providerPublicId());
+        appointment.setJustification(relationship.justification());
         appointment.setFacilityUuid(facility.getFacilityUuid());
         appointment.setPersonHealthId(request.personHealthId());
         appointment.setRole(role);
@@ -357,6 +371,70 @@ public class FacilityClaimService {
      * a private copy carrying a comment hoping it would not diverge from the original; it is now a
      * delegation, so it cannot.
      */
+    /** A validated relationship claim: the code, and whatever it required the claimant to prove. */
+    private record RelationshipRequirement(String code, String providerPublicId, String justification) {}
+
+    /**
+     * Validate what the claimant says they are, and demand proof only where the relationship is
+     * about regulated professional standing (FCV-W4).
+     *
+     * <p>The distinction cuts both ways. Claiming to be the responsible pharmacist is a claim about
+     * a licence, so a professional identifier must resolve in VARAPI before the claim can even be
+     * filed. But demanding one from a records officer, an ICT focal person or a district data
+     * officer would lock out exactly the administrative staff who keep a facility's record — people
+     * who are not clinicians and never will be. Requiring a Provider ID everywhere would look like
+     * rigour and function as exclusion.</p>
+     *
+     * <p>Relationship is optional for now: the existing claim surface does not send one yet, and
+     * failing those callers would break a working rail to enforce a field nobody fills. A claim
+     * without a relationship is simply an unregulated claim, exactly as it is today.</p>
+     */
+    private RelationshipRequirement resolveRelationship(
+            FacilityClaimDtos.SubmitClaimRequest request, FacilityEntity facility) {
+        String code = request.relationshipType() == null || request.relationshipType().isBlank()
+                ? null : request.relationshipType().trim().toUpperCase();
+        if (code == null) {
+            return new RelationshipRequirement(null, null, null);
+        }
+
+        FacilityRelationshipTypeEntity type = relationshipTypeRepository.findById(code)
+                .filter(FacilityRelationshipTypeEntity::isActive)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Unknown relationship to this facility: " + code));
+
+        String justification = request.justification() == null ? null : request.justification().trim();
+        if (type.isRequiresJustification() && (justification == null || justification.isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Describe your relationship to this facility so a steward can assess it.");
+        }
+
+        if (!type.isRequiresProviderId()) {
+            return new RelationshipRequirement(code, null, justification);
+        }
+
+        // Regulated: the identifier must resolve to a real provider. VARAPI answers with a uniform
+        // hit/miss behind a timing floor and never a candidate list, so this proves the claimant's
+        // identifier exists without telling a prober anything about who is registered.
+        String kind = request.professionalIdKind() == null || request.professionalIdKind().isBlank()
+                ? "PROVIDER_ID" : request.professionalIdKind().trim().toUpperCase();
+        String value = request.professionalIdValue();
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A professional registration or Provider ID is required to claim this role, "
+                            + "because it is a regulated clinical responsibility.");
+        }
+        String providerPublicId = varapiClient.resolveProfessionalIdentifier(
+                facility.getTenantId(), kind, value, request.councilCode());
+        if (providerPublicId == null) {
+            // Same message whether the identifier is wrong or VARAPI is unreachable — a claimant
+            // must not be able to use this endpoint to test which registration numbers are real.
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "That professional registration could not be confirmed. Check the details, or "
+                            + "claim an administrative role if you do not hold this clinical responsibility.");
+        }
+        return new RelationshipRequirement(code, providerPublicId, justification);
+    }
+
     private boolean platformAccessAllowed(UUID facilityUuid) {
         return FacilitySourceLegitimacyService.verdictOf(
                 legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))

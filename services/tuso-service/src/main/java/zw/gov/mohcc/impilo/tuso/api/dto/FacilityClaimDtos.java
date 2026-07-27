@@ -57,7 +57,19 @@ public final class FacilityClaimDtos {
             String claimType,
             LocalDate validFrom,
             LocalDate validTo,
-            String notes) {
+            String notes,
+            /**
+             * What the claimant says they are to this facility (FCV-W4). Regulated relationships —
+             * practitioner in charge, responsible pharmacist and the like — additionally require a
+             * professional identifier that resolves; administrative ones must not.
+             */
+            String relationshipType,
+            /** Professional identifier for a regulated relationship: PROVIDER_ID or COUNCIL_REG. */
+            String professionalIdKind,
+            String professionalIdValue,
+            String councilCode,
+            /** Required when the relationship is "other" — say what it is. */
+            String justification) {
     }
 
     /** Administrator approval body (who approves; provenance only). */
