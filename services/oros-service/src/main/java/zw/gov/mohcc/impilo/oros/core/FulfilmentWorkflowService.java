@@ -79,11 +79,36 @@ public class FulfilmentWorkflowService {
      */
     @Transactional
     public OrderEntity transition(String orderId, String targetState, String reason) {
+        return transition(orderId, targetState, reason, null);
+    }
+
+    /**
+     * Transition with an explicit next action.
+     *
+     * <p>A move into a non-progressing state — rejected, cancelled, deferred, aborted, failed,
+     * no-show, returned for clarification — requires both a reason and a next action, for any
+     * category that has adopted the rule (see {@link FulfilmentWorkflow#nonProgressingStates()}).
+     * The reason explains and the next action is what stops the request disappearing.
+     * "Cancelled" with nothing after it is how a patient falls out of a system without anyone
+     * deciding that they should.</p>
+     */
+    @Transactional
+    public OrderEntity transition(String orderId, String targetState, String reason, String nextAction) {
         OrderEntity order = orderRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
         FulfilmentWorkflow guard = guards.require(order.getOrderType());
         String from = order.getWorkflowState();
         guard.require(from, targetState);
+
+        if (guard.nonProgressingStates().contains(targetState)) {
+            if (isBlank(reason) || isBlank(nextAction)) {
+                throw new IllegalArgumentException(
+                        "Transition to " + targetState + " requires both a reason and a next action. "
+                        + "A request that stops progressing without either is one that disappears.");
+            }
+            order.setWorkflowStateReason(reason.trim());
+            order.setWorkflowNextAction(nextAction.trim());
+        }
 
         applyState(order, targetState);
         order = orderRepository.save(order);
@@ -113,6 +138,10 @@ public class FulfilmentWorkflowService {
         log.info("Fulfilment order scheduled: orderId={}, type={}, at={}",
                 order.getOrderId(), order.getOrderType(), scheduledAt);
         return order;
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 
     /** Legal next states from the order's current workflow state. */

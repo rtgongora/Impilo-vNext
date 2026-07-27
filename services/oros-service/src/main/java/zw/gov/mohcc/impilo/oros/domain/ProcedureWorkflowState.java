@@ -11,6 +11,13 @@ package zw.gov.mohcc.impilo.oros.domain;
  * guard.</p>
  */
 public enum ProcedureWorkflowState {
+    /**
+     * Recommended but not yet ordered. The pipeline's §4 entry point: a clinician or a
+     * decision-support rule proposes a procedure, and it is visible and actionable before
+     * anyone commits to it. Distinct from RECEIVED, which means somebody has ordered it.
+     */
+    PROPOSED,
+
     // ── Happy path ───────────────────────────────────────────────────────
     RECEIVED,
     ACCEPTED,
@@ -18,6 +25,18 @@ public enum ProcedureWorkflowState {
     ARRIVED,
     IN_PROGRESS,
     PERFORMED,
+    /**
+     * Started and stopped before completion — the patient deteriorated, the view was
+     * inadequate, the equipment failed. Distinct from FAILED: the procedure was abandoned
+     * deliberately rather than attempted and unsuccessful.
+     */
+    ABORTED,
+    /** Attempted and unsuccessful. The distinction from ABORTED matters for §26 analytics. */
+    FAILED,
+    /** Some of the intended procedure was done. Neither PERFORMED nor FAILED is honest here. */
+    PARTIALLY_COMPLETED,
+    /** Done again after an inadequate or failed attempt, linked to the original request. */
+    REPEATED,
     REPORT_PENDING,
     PRELIMINARY_REPORT,
     FINAL_REPORT,
