@@ -262,3 +262,28 @@ posture, not your fix, and yields a false green.
 **Assert the negative FIRST.** Without it the positive is vacuous — a 2xx that would have happened
 anyway proves nothing. And prefer a positive that cannot be faked by a hollow 2xx: create an account,
 then *log in as it independently*.
+
+## 9. The gate does not compile the shell — so TypeScript errors live on canonical forever
+
+`run-change-safety-gates.sh` does not run `next build` (or `tsc --noEmit`) over `ui/one-ui-shell`.
+Combined with the fact that **nobody builds the shell unless they are deploying it**, a type error can
+sit on canonical indefinitely.
+
+Found 2026-07-27: canonical `one-ui-shell` would not build — a prop-type mismatch on
+`ehr/[patientId]/programmes/page.tsx` had been on canonical for ~10 hours, blocking **every** lane's
+ability to produce a shell image. It surfaced only because a lane tried to deploy one.
+
+This is the same failure the estate met three times the same day, at three different layers:
+- a test suite that did not compile reported **zero failures**
+- a guard that never matched anything reported **green**
+- a bundle nobody built reported **nothing at all**
+
+**Before pushing anything under `ui/`:**
+```bash
+cd ui/one-ui-shell && npx tsc --noEmit     # fast; catches this class
+# or the real thing, if you are about to deploy:
+npm --prefix ui/one-ui-shell run build
+```
+
+**And add it to the gate.** Until then, treat "the shell builds" as an untested claim: a green
+change-safety run says nothing about whether the estate can produce a shell image at all.

@@ -130,6 +130,18 @@ public class ProcedureDefinitionEntity {
     @Column(name = "source_citation")
     private String sourceCitation;
 
+    /** Null means no window declared — reported as UNKNOWN, never treated as zero. */
+    @Column(name = "duplicate_lookback_days")
+    private Integer duplicateLookbackDays;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "conflicts_with")
+    private List<String> conflictsWith = new ArrayList<>();
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "prerequisite_codes")
+    private List<String> prerequisiteCodes = new ArrayList<>();
+
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "definition_id")
     @OrderBy("displayOrder ASC")
@@ -169,5 +181,8 @@ public class ProcedureDefinitionEntity {
     public String getApprovingAuthority() { return approvingAuthority; }
     public OffsetDateTime getApprovedAt() { return approvedAt; }
     public String getSourceCitation() { return sourceCitation; }
+    public Integer getDuplicateLookbackDays() { return duplicateLookbackDays; }
+    public List<String> getConflictsWith() { return conflictsWith; }
+    public List<String> getPrerequisiteCodes() { return prerequisiteCodes; }
     public List<ProcedureRequirementEntity> getRequirements() { return requirements; }
 }

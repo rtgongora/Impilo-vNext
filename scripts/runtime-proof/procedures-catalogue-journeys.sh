@@ -47,7 +47,7 @@ done; echo
 docker exec "$PG_NAME" psql -U impilo -d procedures -tAc "select 1" >/dev/null 2>&1 \
   || { echo "FAIL: postgres never reachable"; exit 1; }
 
-for f in V001__init V002__procedure_catalogue V003__procedure_catalogue_seed; do
+for f in V001__init V002__procedure_catalogue V003__procedure_catalogue_seed V004__appropriateness_rules; do
   out=$(docker exec -i "$PG_NAME" psql -U impilo -d procedures -v ON_ERROR_STOP=1 < "$MIG/$f.sql" 2>&1)
   echo "$out" > "$EVIDENCE/$f.txt"
   chk "J-P1-0 $f applies" "$(echo "$out" | grep -ci error || true)" "^0$"
@@ -151,6 +151,31 @@ chk "J-P1-16 engine-not-store — still no readiness or checklist table in this 
   "$(q "SELECT coalesce(string_agg(tablename,','),'none') FROM pg_tables
         WHERE schemaname='procedures' AND (tablename LIKE '%readiness%' OR tablename LIKE '%checklist%')")" \
   "^none$"
+
+# ── P3 appropriateness inputs (§5). Content, not engine: a duplication window that changes
+# because a committee decided so must be a content release, not a deployment.
+chk "J-P3-1 repeat windows declared only where a repeat is a real harm or waste" \
+  "$(q "SELECT CASE WHEN count(*) BETWEEN 8 AND 30 THEN 'SOME' ELSE 'SUSPICIOUS' END
+        FROM procedures.procedure_definition WHERE duplicate_lookback_days IS NOT NULL")" "SOME"
+
+# A defaulted window would manufacture duplicate warnings on every procedure, and a warning
+# nobody believes is worse than no warning. Undeclared must stay undeclared.
+chk "J-P3-2 most procedures have NO declared window and are honestly undeclared" \
+  "$(q "SELECT CASE WHEN count(*) > 30 THEN 'UNDECLARED' ELSE 'OVER_DEFAULTED' END
+        FROM procedures.procedure_definition WHERE duplicate_lookback_days IS NULL")" "UNDECLARED"
+
+chk "J-P3-3 conflicts are symmetric where declared" \
+  "$(q "SELECT count(*) FROM procedures.procedure_definition a
+        WHERE jsonb_array_length(a.conflicts_with) > 0
+          AND EXISTS (SELECT 1 FROM jsonb_array_elements_text(a.conflicts_with) c
+                      WHERE NOT EXISTS (SELECT 1 FROM procedures.procedure_definition b
+                                        WHERE b.definition_code = c
+                                          AND b.conflicts_with ? a.definition_code))")" "^0$"
+
+chk "J-P3-4 every declared prerequisite names a procedure that exists" \
+  "$(q "SELECT count(*) FROM procedures.procedure_definition d,
+             jsonb_array_elements_text(d.prerequisite_codes) p
+        WHERE NOT EXISTS (SELECT 1 FROM procedures.procedure_definition x WHERE x.definition_code = p)")" "^0$"
 
 { echo "procedures-service P1 catalogue proof"; echo "generated: $(date -Is)"; echo "PASS=$PASS FAIL=$FAIL"; } > "$EVIDENCE/summary.txt"
 echo
