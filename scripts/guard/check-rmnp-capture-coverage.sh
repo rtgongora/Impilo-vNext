@@ -159,6 +159,9 @@ if not rmnp_packs:
 NO_CAPTURE_PACKS = {
     "rmnp-anc-schedule.json": "a contact schedule — driven by gestational age (derived) and the "
                               "record of completed contacts, neither of which is a form field",
+    "rmnp-pph-bundle.json": "an emergency treatment bundle — its inputs are recorded step "
+                            "completions (an act log, not a form) and injected temporal facts, so "
+                            "there is no clinician-entered finding for a form to capture",
 }
 
 failed = False

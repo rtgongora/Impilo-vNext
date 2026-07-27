@@ -1,0 +1,34 @@
+{
+  "bundleId": "rmnp-pph-bundle",
+  "name": "Postpartum haemorrhage first-response bundle",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "lapseWindowMinutes": 15,
+  "provenance": {
+    "title": "Postpartum haemorrhage — the first-response bundle",
+    "primarySource": "WHO consolidated guidance on postpartum haemorrhage; WHO/E-MOTIVE first-response bundle",
+    "why": "PPH is the leading cause of maternal death, and the deaths are overwhelmingly of women in whom the response was too slow or incomplete rather than wrong. The bundle exists because the elements work best delivered together and at once; a checklist that could read as complete before anything was done would be the exact failure it is meant to prevent.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "No WHO SMART DAK covers the PPH bundle; the elements are transcribed from the consolidated PPH guidance and the E-MOTIVE first-response bundle. The time windows are an engineering seed — the guidance is 'all at once, immediately', which is encoded as due-within-0 for the simultaneous elements — pending ratification. blocksRatification stays true."
+    }
+  },
+  "steps": [
+    {"code": "PPH_MASSAGE", "name": "Uterine massage", "dueWithinMinutes": 0, "mandatory": true,
+     "action": "Massage the uterus immediately to stimulate a contraction and expel clots."},
+    {"code": "PPH_UTEROTONIC", "name": "Uterotonic", "dueWithinMinutes": 0, "mandatory": true,
+     "action": "Give oxytocin (or the available uterotonic) at once. This is the single most effective element."},
+    {"code": "PPH_TXA", "name": "Tranexamic acid", "dueWithinMinutes": 10, "mandatory": true,
+     "action": "Give tranexamic acid as early as possible; its benefit falls sharply with delay."},
+    {"code": "PPH_IV_FLUIDS", "name": "IV access and fluids", "dueWithinMinutes": 0, "mandatory": true,
+     "action": "Two large-bore cannulae, warmed isotonic fluids, and bloods including group and cross-match."},
+    {"code": "PPH_EXAMINE_CAUSE", "name": "Examine for the cause (the four Ts)", "dueWithinMinutes": 5, "mandatory": true,
+     "action": "Examine for tone, trauma, tissue and thrombin — the treatment differs by cause and a well-contracted uterus that is still bleeding is trauma or retained tissue until proven otherwise."},
+    {"code": "PPH_ESCALATE", "name": "Call for help and escalate", "dueWithinMinutes": 5, "mandatory": true,
+     "action": "Call for senior help now, and at a site without surgical and transfusion capability begin arranging transfer immediately rather than after the first-response measures fail."},
+    {"code": "PPH_MONITOR", "name": "Continuous monitoring", "dueWithinMinutes": 5, "mandatory": false,
+     "action": "Continuous pulse, blood pressure and ongoing blood-loss measurement — a transient response to fluids is a warning, not control."}
+  ]
+}
