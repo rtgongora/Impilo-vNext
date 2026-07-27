@@ -69,6 +69,35 @@ class MinistryAuthorityServiceTest {
     }
 
     @Test
+    void aFacilityWithNoDistrictIsOutsideEveryDistrictJurisdiction() {
+        // 5,510 of the estate's facilities (the regulator-listed set) carry a province but no
+        // district. Treating "unknown district" as "my district" would let one officer decide for
+        // three quarters of the country, so absence must refuse — while the province-scoped and
+        // national verifiers above still reach them.
+        FacilityEntity noDistrict = facility("Manicaland", null);
+        assertThat(MinistryAuthorityService.covers("DISTRICT:BUHERA", noDistrict)).isFalse();
+        assertThat(MinistryAuthorityService.covers("DISTRICT:", noDistrict)).isFalse();
+        assertThat(MinistryAuthorityService.covers("PROVINCE:MANICALAND", noDistrict)).isTrue();
+        assertThat(MinistryAuthorityService.covers("NATIONAL", noDistrict)).isTrue();
+
+        FacilityEntity blankDistrict = facility("Manicaland", "   ");
+        assertThat(MinistryAuthorityService.covers("DISTRICT:BUHERA", blankDistrict)).isFalse();
+    }
+
+    @Test
+    void placeNamesCompareRobustlyWithoutACatalogue() {
+        // The live estate's only variance is case ("Chipinge" vs "chipinge"), but these columns are
+        // free text with no catalogue, so the comparison must not break the first time someone types
+        // a suffix or a double space.
+        assertThat(MinistryAuthorityService.covers("DISTRICT:CHIPINGE", facility("Manicaland", "chipinge"))).isTrue();
+        assertThat(MinistryAuthorityService.covers("DISTRICT:GOKWE SOUTH", facility("Midlands", "Gokwe  south"))).isTrue();
+        assertThat(MinistryAuthorityService.covers("DISTRICT:BUHERA", facility("Manicaland", "Buhera District"))).isTrue();
+        assertThat(MinistryAuthorityService.covers("PROVINCE:MIDLANDS", facility("Midlands Province", "Gweru"))).isTrue();
+        // Still not a fuzzy match — a different place is a different place.
+        assertThat(MinistryAuthorityService.covers("DISTRICT:BUHERA", facility("Manicaland", "Buherra"))).isFalse();
+    }
+
+    @Test
     void anUnrecognisedJurisdictionGrantsNothing() {
         // Not a licence to act everywhere — an unparseable code is a refusal, not a wildcard.
         assertThat(MinistryAuthorityService.covers("REGION:EAST", facility("Manicaland", "Buhera"))).isFalse();

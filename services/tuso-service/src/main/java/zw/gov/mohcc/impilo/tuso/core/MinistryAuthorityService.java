@@ -106,13 +106,42 @@ public class MinistryAuthorityService {
             return true;
         }
         if (j.startsWith(PROVINCE_PREFIX)) {
-            return normalise(facility.getProvince()).equals(j.substring(PROVINCE_PREFIX.length()).trim());
+            return matches(facility.getProvince(), j.substring(PROVINCE_PREFIX.length()));
         }
         if (j.startsWith(DISTRICT_PREFIX)) {
-            return normalise(facility.getDistrict()).equals(j.substring(DISTRICT_PREFIX.length()).trim());
+            return matches(facility.getDistrict(), j.substring(DISTRICT_PREFIX.length()));
         }
         // An unrecognised grammar is not a licence to act everywhere.
         return false;
+    }
+
+    /**
+     * Compare a facility's free-text place name against a jurisdiction's.
+     *
+     * <p>An <b>absent</b> place never matches a scoped jurisdiction. That matters more than it
+     * looks: 5,510 of the estate's facilities (the regulator-listed set) carry a province but no
+     * district, so a district-scoped verifier simply has no authority over them — provincial and
+     * national verifiers do. Refusing is the correct answer; silently treating "unknown district"
+     * as "my district" would let one officer decide for three quarters of the country.</p>
+     *
+     * <p>Normalisation is case-insensitive, collapses internal whitespace, and tolerates a trailing
+     * "DISTRICT"/"PROVINCE" word. Measured against the live estate today none of that is needed —
+     * the only variance present is case, and there are no suffixed or double-spaced values — but
+     * these columns are free text with no catalogue behind them, so the comparison should not become
+     * wrong the first time someone types "Buhera District".</p>
+     */
+    private static boolean matches(String facilityPlace, String jurisdictionPlace) {
+        String place = canonicalPlace(facilityPlace);
+        return !place.isEmpty() && place.equals(canonicalPlace(jurisdictionPlace));
+    }
+
+    static String canonicalPlace(String s) {
+        if (s == null) {
+            return "";
+        }
+        String v = s.trim().toUpperCase(Locale.ROOT).replaceAll("\\s+", " ");
+        v = v.replaceAll("\\s+(DISTRICT|PROVINCE)$", "");
+        return v.trim();
     }
 
     private static String normalise(String s) {
