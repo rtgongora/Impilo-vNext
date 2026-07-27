@@ -216,6 +216,136 @@
           "expectClassification": null
         }
       ]
+    },
+    {
+      "tableId": "ANC_BIRTH_CARE_LEVEL",
+      "name": "Required level of care for birth",
+      "axis": "BIRTH_CARE_LEVEL",
+      "requiredInputs": [
+        "previousCaesarean",
+        "currentObstetricComplication",
+        "malpresentationAtTerm",
+        "multiplePregnancy",
+        "significantMedicalComorbidity"
+      ],
+      "sourceRefs": [
+        "WHO recommendations on antenatal care (2016) — birth preparedness and complication readiness",
+        "WHO/UNFPA/UNICEF Emergency Obstetric and Newborn Care signal functions"
+      ],
+      "tiers": [
+        {
+          "code": "CEMONC_REQUIRED",
+          "name": "Comprehensive EmONC required — she needs a facility that can perform a caesarean",
+          "colour": "PINK",
+          "requiredInputs": [
+            "previousCaesarean",
+            "currentObstetricComplication",
+            "malpresentationAtTerm",
+            "multiplePregnancy",
+            "significantMedicalComorbidity"
+          ],
+          "logic": {
+            "any": [
+              {
+                "finding": "previousCaesarean",
+                "present": true
+              },
+              {
+                "finding": "currentObstetricComplication",
+                "present": true
+              },
+              {
+                "finding": "malpresentationAtTerm",
+                "present": true
+              },
+              {
+                "finding": "multiplePregnancy",
+                "present": true
+              },
+              {
+                "finding": "significantMedicalComorbidity",
+                "present": true
+              }
+            ]
+          },
+          "action": "She should plan to give birth where a caesarean and blood transfusion are available (comprehensive EmONC). Match her to a facility whose capability is council-verified, not one whose registry tag merely claims it.",
+          "treatments": [
+            "Plan birth at a CEmONC facility",
+            "Confirm the facility can perform caesarean and transfuse",
+            "Arrange transport and a backup facility"
+          ],
+          "referralRequired": true,
+          "urgentReferral": false,
+          "sourceRefs": [
+            "WHO EmONC signal functions — comprehensive"
+          ],
+          "adaptation": {
+            "type": "ADOPTED_VERBATIM",
+            "whoStatement": "Women with risk factors including previous caesarean, malpresentation, multiple pregnancy, current obstetric complications or significant comorbidity should give birth where comprehensive emergency obstetric care is available.",
+            "nationalStatement": "Adopted as published; the matched facility must be council-verified for the capability, not surfaced from an unvalidated registry tag.",
+            "evidenceRefs": [
+              "WHO EmONC signal functions — comprehensive"
+            ],
+            "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+          }
+        },
+        {
+          "code": "BEMONC_SUFFICIENT",
+          "name": "Basic EmONC sufficient on current assessment",
+          "colour": "GREEN",
+          "action": "No indication found so far that requires comprehensive EmONC. A basic EmONC facility is sufficient on current information — reassess at every contact, because the indication can appear late (malpresentation, a new complication).",
+          "treatments": [
+            "Plan birth at a facility with basic EmONC",
+            "Reassess required level at each contact"
+          ],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": [
+            "WHO recommendations on antenatal care (2016) — birth preparedness"
+          ],
+          "adaptation": {
+            "type": "ADOPTED_VERBATIM",
+            "whoStatement": "All births should be attended by a skilled birth attendant at a facility able to provide basic emergency obstetric and newborn care.",
+            "nationalStatement": "Adopted as published. Reached only when every comprehensive-EmONC indication has been definitively excluded — an unasked question leaves the level indeterminate, never \"basic is enough\".",
+            "evidenceRefs": [
+              "WHO recommendations on antenatal care (2016) — birth preparedness"
+            ],
+            "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+          }
+        }
+      ],
+      "testCases": [
+        {
+          "name": "previous caesarean requires CEmONC",
+          "facts": {
+            "previousCaesarean": "PRESENT"
+          },
+          "expectClassification": "CEMONC_REQUIRED"
+        },
+        {
+          "name": "multiple pregnancy requires CEmONC",
+          "facts": {
+            "multiplePregnancy": "PRESENT"
+          },
+          "expectClassification": "CEMONC_REQUIRED"
+        },
+        {
+          "name": "all risk factors excluded is basic-sufficient",
+          "facts": {
+            "previousCaesarean": "ABSENT",
+            "currentObstetricComplication": "ABSENT",
+            "malpresentationAtTerm": "ABSENT",
+            "multiplePregnancy": "ABSENT",
+            "significantMedicalComorbidity": "ABSENT"
+          },
+          "expectClassification": "BEMONC_SUFFICIENT"
+        },
+        {
+          "name": "nothing asked cannot conclude basic-sufficient",
+          "facts": {},
+          "expectClassification": null
+        }
+      ]
     }
   ]
 }

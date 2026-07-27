@@ -1510,6 +1510,51 @@ public class PctServiceClient {
                 baseUrl + "/v1/encounters/" + encounterId + "/form-extractions", JsonNode.class));
     }
 
+    // ── HIV/TB programme enrolment (W3) ─────────────────────────
+    //
+    // pct-service serves these at /v1/programme-enrolments. HIV enrolments are confidential
+    // (derived from the programme); the response carries a `confidential` flag the surfaces read.
+
+    public JsonNode listProgrammeEnrolments(String subjectCpid, boolean openOnly) {
+        String url = baseUrl + "/v1/programme-enrolments?subject_cpid=" + subjectCpid
+                + "&open_only=" + openOnly;
+        log.debug("PCT: listing programme enrolments for subject={}", subjectCpid);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getProgrammeEnrolment(String enrolmentId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/programme-enrolments/" + enrolmentId, JsonNode.class));
+    }
+
+    public JsonNode enrolProgramme(Map<String, Object> body) {
+        log.info("PCT: enrolling programme={} for subject={}", body.get("programme"), body.get("subject_cpid"));
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/programme-enrolments", body, JsonNode.class));
+    }
+
+    public JsonNode updateProgrammeStatus(String enrolmentId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/programme-enrolments/" + enrolmentId + "/status", body, JsonNode.class));
+    }
+
+    public JsonNode exitProgramme(String enrolmentId, Map<String, Object> body) {
+        log.info("PCT: exiting programme enrolment={} reason={}", enrolmentId, body.get("exit_reason"));
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/programme-enrolments/" + enrolmentId + "/exit", body, JsonNode.class));
+    }
+
+    public JsonNode listProgrammeRegimens(String enrolmentId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/programme-enrolments/" + enrolmentId + "/regimens", JsonNode.class));
+    }
+
+    public JsonNode startProgrammeRegimen(String enrolmentId, Map<String, Object> body) {
+        log.info("PCT: starting regimen on enrolment={} code={}", enrolmentId, body.get("regimen_code"));
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/programme-enrolments/" + enrolmentId + "/regimens", body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

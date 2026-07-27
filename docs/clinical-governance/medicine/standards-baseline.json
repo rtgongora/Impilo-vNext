@@ -1,0 +1,98 @@
+{
+  "domain": "medicine",
+  "note": "Standards baseline for the HIV and TB programmes of the Adult Medicine and Medical Specialties pack. WHO publishes SMART DAKs for HIV and TB, but they are NOT vendored under docs/reference/who-dak/ (the repository vendors ANC, PNC, family planning and SMBP only), so these standards are declared by hand under the shared WHO_DAK family rather than extracted — one traceability surface, not a forked second one. Every entry cites a checkable source. The content that implements these (services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-programme-rules.json and tb-programme-rules.json) is ENGINEERING_SEED with primaryTextVendored=false: it was authored against published WHO text, not ingested from a pinned artefact, and must not be ratified until the primary text is vendored. Standards this pack has NOT yet implemented are declared here too and carried as DEFERRED in coverage-exclusions.json with the wave that will implement them, so the coverage gap is visible rather than implied by absence.",
+  "standards": [
+    {
+      "standardId": "HIV.VL.MONITORING",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "Routine viral-load monitoring and interpretation (suppressed, low-level viraemia, unsuppressed)",
+      "sourceCitation": "WHO Consolidated guidelines on HIV prevention, testing, treatment, service delivery and monitoring, 2021 — routine viral-load monitoring. https://www.who.int/publications/i/item/9789240031593"
+    },
+    {
+      "standardId": "HIV.TREATMENT_FAILURE",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "Recognition of treatment failure and the enhanced-adherence-then-switch sequence",
+      "sourceCitation": "WHO Consolidated HIV guidelines, 2021 — treatment failure and switching ART regimens."
+    },
+    {
+      "standardId": "HIV.ADVANCED_DISEASE",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "Advanced HIV disease package (CD4 <200 or WHO stage 3/4)",
+      "sourceCitation": "WHO Guidelines for managing advanced HIV disease and rapid initiation of ART, 2017, carried into the 2021 consolidated guidelines."
+    },
+    {
+      "standardId": "TB.TREATMENT_MONITORING",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "Drug-susceptible TB treatment: phases and bacteriological monitoring schedule",
+      "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 4: treatment — drug-susceptible TB treatment, 2022. https://www.who.int/publications/i/item/9789240048126"
+    },
+    {
+      "standardId": "TB.DR_TB",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "Rifampicin resistance recognition and drug-resistant TB regimen selection",
+      "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 4: treatment — drug-resistant TB treatment, 2022."
+    },
+    {
+      "standardId": "TB.OUTCOME",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "TB treatment failure and cohort treatment outcomes",
+      "sourceCitation": "WHO definitions and reporting framework for tuberculosis, 2013 revision (updated 2020). https://apps.who.int/iris/handle/10665/79199"
+    },
+
+    {
+      "standardId": "HIV.TESTING",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "HIV testing services algorithm and diagnosis",
+      "sourceCitation": "WHO Consolidated guidelines on HIV testing services, 2019."
+    },
+    {
+      "standardId": "HIV.PREP",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "Pre-exposure prophylaxis eligibility and follow-up",
+      "sourceCitation": "WHO guidelines on PrEP, carried into the 2021 consolidated HIV guidelines."
+    },
+    {
+      "standardId": "HIV.PMTCT",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "Prevention of mother-to-child transmission of HIV",
+      "sourceCitation": "WHO 2021 consolidated HIV guidelines — PMTCT and infant prophylaxis."
+    },
+    {
+      "standardId": "HIV.TB_COINFECTION",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "TB screening and preventive therapy in people living with HIV",
+      "sourceCitation": "WHO policy on collaborative TB/HIV activities, 2012, carried into the consolidated guidelines."
+    },
+    {
+      "standardId": "TB.SCREENING",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "Systematic TB screening and presumptive-TB identification",
+      "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 2: screening, 2021."
+    },
+    {
+      "standardId": "TB.DIAGNOSIS",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "TB diagnostic algorithm (rapid molecular testing first)",
+      "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 3: diagnosis — rapid diagnostics for tuberculosis detection, 2021/2024."
+    },
+    {
+      "standardId": "TB.TPT",
+      "family": "WHO_DAK",
+      "kind": "DECISION_LOGIC",
+      "title": "TB preventive treatment eligibility and regimens (3HP, 6H, 1HP)",
+      "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 1: prevention — tuberculosis preventive treatment, 2020."
+    }
+  ]
+}

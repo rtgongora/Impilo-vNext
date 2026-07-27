@@ -44,6 +44,17 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /**
+     * Governed HIV/TB programme decision support (W3). Advisory: interprets the supplied programme
+     * facts (viral load, CD4, WHO stage, treatment month, sputum) against the versioned DAK content.
+     */
+    public JsonNode programmeGuidance(String programme, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/programme/" + programme + "/evaluate";
+        log.debug("Clinical platform: programme guidance {}", programme);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";

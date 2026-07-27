@@ -53,8 +53,19 @@ reasoning cannot.
 ### How to build so you neither read stale jars nor poison peers
 
 ```bash
-mvn -pl services/<svc> -am test        # PREFERRED for verification
+mvn -f services/pom.xml -pl <svc> -am test    # PREFERRED for verification
+# or, equivalently:  cd services && mvn -pl <svc> -am test
 ```
+
+⚠ **There is no aggregator pom at the repo root** — the reactor root is `services/pom.xml`. So
+`mvn -pl services/<svc> …` run from the repo root fails with *"Could not find the selected project in
+the reactor"*. Use one of the forms above. (`mvn -f services/<svc>/pom.xml test` also works but builds
+the module alone, so it reads `~/.m2` jars for its dependencies and loses the point of `-am`.)
+
+⚠⚠ **Never pipe the build and then judge the exit status.** `mvn … | grep … | tail` reports *`tail`'s*
+exit code, so a run that never resolved the module — or never compiled — reads as a pass. Either don't
+pipe, or check `${PIPESTATUS[0]}`. This exact masking hid the reactor error above, and the same bug
+reported a rejected `git push` as successful the same day.
 
 `-am` builds the dependency modules **in the same reactor**, so resolution uses their freshly compiled
 `target/classes` rather than `~/.m2` — you get current code **and** write nothing to the shared repo

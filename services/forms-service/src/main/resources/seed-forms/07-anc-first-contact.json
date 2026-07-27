@@ -386,6 +386,113 @@
             }
           }
         ]
+      },
+      {
+        "id": "birth-risk",
+        "title": "Risk factors that decide where she should give birth",
+        "description": "These decide whether she needs a comprehensive-EmONC facility (caesarean-capable) or a basic one. A blank is not \"no\" — the required level stays indeterminate until each is asked, and \"basic is enough\" is only issued once they are all excluded.",
+        "fields": [
+          {
+            "id": "previousCaesarean",
+            "linkId": "previousCaesarean",
+            "label": "Previous caesarean section",
+            "kind": "coded_single",
+            "description": "Any prior caesarean makes a caesarean-capable facility the safe default for this birth.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "currentObstetricComplication",
+            "linkId": "currentObstetricComplication",
+            "label": "A current obstetric complication",
+            "kind": "coded_single",
+            "description": "Pre-eclampsia, antepartum haemorrhage, or any active complication needing higher-level care.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "malpresentationAtTerm",
+            "linkId": "malpresentationAtTerm",
+            "label": "Malpresentation at or near term",
+            "kind": "coded_single",
+            "description": "Breech or transverse lie approaching term — needs a facility that can manage or convert it.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "multiplePregnancy",
+            "linkId": "multiplePregnancy",
+            "label": "Multiple pregnancy",
+            "kind": "coded_single",
+            "description": "Twins or more — plan for comprehensive EmONC.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "significantMedicalComorbidity",
+            "linkId": "significantMedicalComorbidity",
+            "label": "Significant medical comorbidity",
+            "kind": "coded_single",
+            "description": "Cardiac disease, sickle cell, poorly controlled diabetes and the like — birth where the comorbidity can be managed.",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          }
+        ]
       }
     ]
   }
