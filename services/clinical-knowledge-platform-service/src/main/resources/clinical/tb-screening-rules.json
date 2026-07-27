@@ -1,0 +1,70 @@
+{
+  "packId": "tb-screening-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Systematic TB screening — who is presumptive TB, and who is eligible for preventive therapy",
+    "primarySource": "WHO consolidated guidelines on tuberculosis, Module 2: screening (2021), and the WHO TB SMART guidelines / DAK",
+    "why": "Screening is the step that decides whether to investigate for TB at all. A symptom screen missed sends an infectious patient home; the same screen, when negative in a person living with HIV, is precisely the gate that makes them eligible for preventive therapy. The one screen therefore has two exits — presumptive TB to diagnosis, and screen-negative to TPT — and both matter.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO TB DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against the published Module 2 (2021); ships ENGINEERING_SEED until the primary text is vendored and each screen is checked against it."
+    }
+  },
+  "rules": [
+    {
+      "code": "TB_SCREEN_SYMPTOMATIC",
+      "name": "Symptom screen positive — presumptive TB",
+      "layer": "TB_SCREENING",
+      "ruleType": "SCREEN",
+      "severity": "MEDIUM",
+      "referralRequired": true,
+      "requiredInputs": ["cough", "fever", "nightSweats", "weightLoss"],
+      "logic": {"any": [
+        {"input": "cough", "op": "eq", "value": "YES"},
+        {"input": "fever", "op": "eq", "value": "YES"},
+        {"input": "nightSweats", "op": "eq", "value": "YES"},
+        {"input": "weightLoss", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Presumptive TB — at least one screening symptom is present.",
+      "explanation": "Any of current cough, fever, night sweats or weight loss makes a person presumptive TB and triggers a diagnostic test. The four-symptom screen is the WHO screen for the general population and for people living with HIV.",
+      "requiredAction": "Send a rapid molecular diagnostic test (Xpert MTB/RIF) on sputum; consider urine LF-LAM in a person living with HIV who is seriously ill or has a low CD4.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 2 — symptom screening"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2021-module2", "id": "TB.SCREENING", "row": "symptom screen"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Any of cough, fever, night sweats or weight loss defines presumptive TB and triggers diagnostic testing.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO consolidated TB guidelines Module 2"]},
+      "testCases": [
+        {"name": "cough alone is presumptive", "facts": {"cough": "YES", "fever": "NO", "nightSweats": "NO", "weightLoss": "NO"}, "expectFires": true},
+        {"name": "weight loss alone is presumptive", "facts": {"cough": "NO", "fever": "NO", "nightSweats": "NO", "weightLoss": "YES"}, "expectFires": true},
+        {"name": "all four absent is a negative screen", "facts": {"cough": "NO", "fever": "NO", "nightSweats": "NO", "weightLoss": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "TB_SCREEN_NEGATIVE_PLHIV_TPT_ELIGIBLE",
+      "name": "Screen-negative person living with HIV — assess for TB preventive therapy",
+      "layer": "TB_SCREENING",
+      "ruleType": "SCREEN",
+      "severity": "LOW",
+      "requiredInputs": ["cough", "fever", "nightSweats", "weightLoss", "hivPositive"],
+      "appliesWhen": {"input": "hivPositive", "op": "eq", "value": "YES"},
+      "logic": {"all": [
+        {"input": "cough", "op": "eq", "value": "NO"},
+        {"input": "fever", "op": "eq", "value": "NO"},
+        {"input": "nightSweats", "op": "eq", "value": "NO"},
+        {"input": "weightLoss", "op": "eq", "value": "NO"}
+      ]},
+      "message": "Negative TB symptom screen in a person living with HIV — assess for TB preventive therapy.",
+      "explanation": "A negative four-symptom screen in a person living with HIV makes active TB unlikely and is the gate to TB preventive therapy. Ruling out active TB before TPT is essential — giving TPT to someone with active TB risks resistance.",
+      "requiredAction": "Having excluded active TB, assess eligibility for TB preventive therapy (see the TPT content) and offer it.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 2 — screening as the gate to TPT"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2021-module2", "id": "TB.SCREENING", "row": "screen-negative PLHIV"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "A negative symptom screen in PLHIV excludes active TB for TPT purposes and triggers TPT assessment.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO consolidated TB guidelines Module 2"]},
+      "testCases": [
+        {"name": "PLHIV negative screen is TPT-eligible", "facts": {"hivPositive": "YES", "cough": "NO", "fever": "NO", "nightSweats": "NO", "weightLoss": "NO"}, "expectFires": true},
+        {"name": "PLHIV with a symptom is not (investigate active TB)", "facts": {"hivPositive": "YES", "cough": "YES", "fever": "NO", "nightSweats": "NO", "weightLoss": "NO"}, "expectFires": false},
+        {"name": "HIV-negative does not take this rule", "facts": {"hivPositive": "NO", "cough": "NO", "fever": "NO", "nightSweats": "NO", "weightLoss": "NO"}, "expectFires": false}
+      ]
+    }
+  ]
+}

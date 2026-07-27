@@ -117,11 +117,21 @@ public class AuthSessionController {
     private final VitoServiceClient vitoClient;
     private final RulesServiceClient rulesClient;
 
-    public AuthSessionController(RestTemplate serviceRestTemplate,
+    /**
+     * All nine {@code restTemplate} calls in this class target Keycloak ({@code keycloakUrl}) —
+     * the ROPC/refresh token endpoint and the admin users/roles endpoints. Impilo traffic goes
+     * through the injected typed clients (Varapi, Vito, Rules, Tshepo). So this takes the
+     * NON-intercepted {@code idpRestTemplate}: the IdP has no use for the ~30 Impilo trust
+     * headers, and neither the login exchange nor the admin token call should carry whatever
+     * bearer the caller happened to arrive with.
+     */
+    public AuthSessionController(
+                                 @org.springframework.beans.factory.annotation.Qualifier("idpRestTemplate")
+                                 RestTemplate idpRestTemplate,
                                  VarapiServiceClient varapiClient,
                                  VitoServiceClient vitoClient,
                                  RulesServiceClient rulesClient) {
-        this.restTemplate = serviceRestTemplate;
+        this.restTemplate = idpRestTemplate;
         this.varapiClient = varapiClient;
         this.vitoClient = vitoClient;
         this.rulesClient = rulesClient;

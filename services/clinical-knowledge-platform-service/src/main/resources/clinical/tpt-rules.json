@@ -1,0 +1,85 @@
+{
+  "packId": "tpt-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "TB preventive therapy — who is eligible, and the exclusion that must come first",
+    "primarySource": "WHO consolidated guidelines on tuberculosis, Module 1: prevention — tuberculosis preventive treatment (2020), and the collaborative TB/HIV activities policy (2012)",
+    "why": "TPT stops latent TB becoming disease in the people most likely to progress — people living with HIV, and young household contacts of a TB case. The one rule that cannot be skipped is the order: active TB must be excluded first, because giving a preventive monotherapy to someone with active disease breeds resistance. So eligibility is a gate behind a gate — exclude active TB, then offer TPT to the right groups.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO TB DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against Module 1 (2020) and the TB/HIV policy; ships ENGINEERING_SEED until the primary text is vendored. The regimen codes (3HP/6H/1HP) are the governed zibo TB value set (V035); the age/weight thresholds here are placeholders pending the national TPT guideline."
+    }
+  },
+  "rules": [
+    {
+      "code": "TPT_EXCLUDE_ACTIVE_TB_FIRST",
+      "name": "Active TB not excluded — do not start TPT",
+      "layer": "TB_PREVENTION",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["tptCandidate", "activeTbExcluded"],
+      "appliesWhen": {"input": "tptCandidate", "op": "eq", "value": "YES"},
+      "logic": {"input": "activeTbExcluded", "op": "eq", "value": "NO"},
+      "message": "Do not start TB preventive therapy — active TB has not been excluded.",
+      "explanation": "TPT is a preventive monotherapy (or a two-drug regimen). Given to someone with undiagnosed active TB it treats disease with too few drugs and breeds resistance. Active TB must be excluded — by symptom screen and, where indicated, a diagnostic test — before TPT.",
+      "requiredAction": "Investigate and exclude active TB first (symptom screen, and a rapid molecular test if the screen is positive). Only start TPT once active disease is excluded.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 1 — exclude active TB before TPT"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2020-module1", "id": "TB.TPT", "row": "exclude active TB"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Active TB must be excluded before TB preventive treatment is started.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO consolidated TB guidelines Module 1"]},
+      "testCases": [
+        {"name": "candidate with active TB not excluded is blocked", "facts": {"tptCandidate": "YES", "activeTbExcluded": "NO"}, "expectFires": true},
+        {"name": "candidate with active TB excluded is not blocked", "facts": {"tptCandidate": "YES", "activeTbExcluded": "YES"}, "expectFires": false},
+        {"name": "not a candidate — rule does not apply", "facts": {"tptCandidate": "NO", "activeTbExcluded": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "TPT_ELIGIBLE_PLHIV",
+      "name": "Person living with HIV, active TB excluded — offer TPT",
+      "layer": "TB_PREVENTION",
+      "ruleType": "ELIGIBILITY",
+      "severity": "MEDIUM",
+      "requiredInputs": ["hivPositive", "activeTbExcluded"],
+      "appliesWhen": {"input": "hivPositive", "op": "eq", "value": "YES"},
+      "logic": {"input": "activeTbExcluded", "op": "eq", "value": "YES"},
+      "message": "Eligible for TB preventive therapy — person living with HIV, active TB excluded.",
+      "explanation": "All people living with HIV in whom active TB has been excluded should be offered TPT, regardless of ART status or degree of immunosuppression. This is the largest single TPT-eligible group and the core of the TB/HIV collaborative package.",
+      "requiredAction": "Offer TPT (a rifamycin-based regimen such as 3HP where age-appropriate, or 6H) and enrol in a TB_PREVENTION programme to record the course.",
+      "sourceRefs": ["WHO TB/HIV collaborative activities policy; WHO consolidated TB guidelines Module 1"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2020-module1", "id": "HIV.TB_COINFECTION", "row": "TPT for PLHIV"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "All people living with HIV without active TB should receive TPT.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO TB/HIV collaborative policy"]},
+      "testCases": [
+        {"name": "PLHIV with active TB excluded is eligible", "facts": {"hivPositive": "YES", "activeTbExcluded": "YES"}, "expectFires": true},
+        {"name": "PLHIV with active TB not yet excluded is not eligible yet", "facts": {"hivPositive": "YES", "activeTbExcluded": "NO"}, "expectFires": false},
+        {"name": "HIV-negative does not take this rule", "facts": {"hivPositive": "NO", "activeTbExcluded": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "TPT_ELIGIBLE_CHILD_CONTACT",
+      "name": "Young household contact of a TB case, active TB excluded — offer TPT",
+      "layer": "TB_PREVENTION",
+      "ruleType": "ELIGIBILITY",
+      "severity": "MEDIUM",
+      "requiredInputs": ["householdTbContact", "ageMonths", "activeTbExcluded"],
+      "appliesWhen": {"all": [
+        {"input": "householdTbContact", "op": "eq", "value": "YES"},
+        {"input": "ageMonths", "op": "lt", "value": 60}
+      ]},
+      "logic": {"input": "activeTbExcluded", "op": "eq", "value": "YES"},
+      "message": "Eligible for TB preventive therapy — child under 5 in household contact with a TB case.",
+      "explanation": "Children under 5 who are household contacts of a person with TB are at high risk of progression and should receive TPT once active TB is excluded, regardless of tuberculin/IGRA testing where testing is not feasible.",
+      "requiredAction": "Offer TPT and enrol in a TB_PREVENTION programme. Choose a child-appropriate regimen.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 1 — household contacts under 5"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2020-module1", "id": "TB.TPT", "row": "child contact"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Children under 5 in household contact with a TB case should receive TPT once active TB is excluded.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO consolidated TB guidelines Module 1"]},
+      "testCases": [
+        {"name": "under-5 contact with active TB excluded is eligible", "facts": {"householdTbContact": "YES", "ageMonths": 36, "activeTbExcluded": "YES"}, "expectFires": true},
+        {"name": "under-5 contact not yet cleared of active TB is not eligible", "facts": {"householdTbContact": "YES", "ageMonths": 36, "activeTbExcluded": "NO"}, "expectFires": false},
+        {"name": "older child contact does not take this rule", "facts": {"householdTbContact": "YES", "ageMonths": 96, "activeTbExcluded": "YES"}, "expectFires": false}
+      ]
+    }
+  ]
+}

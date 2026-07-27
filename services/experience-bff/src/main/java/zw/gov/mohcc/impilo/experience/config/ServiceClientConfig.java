@@ -257,7 +257,16 @@ public class ServiceClientConfig {
      * {@code MockRestServiceServer} or WireMock, not by hoping the port is free.</p>
      */
     public static ServiceEndpoints testServiceEndpoints() {
-        String u = UNREACHABLE_TEST_ENDPOINT;
+        return testServiceEndpoints(UNREACHABLE_TEST_ENDPOINT);
+    }
+
+    /**
+     * Every endpoint pointed at one base URL. For loopback tests that need a real downstream to
+     * answer a real client — the record has no wither, and hand-writing the 79-slot constructor
+     * per test is how the arity drifts.
+     */
+    public static ServiceEndpoints testServiceEndpoints(String baseUrl) {
+        String u = baseUrl;
         return new ServiceEndpoints(
                 u, u, u, u, u, u, u, u, u, u,
                 u, u, u, u, u, u, u, u, u, u,
@@ -317,7 +326,38 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.POD_ID);
                 forwardHeader(inbound, request, CompanionHeaders.REQUEST_ID);
                 forwardHeader(inbound, request, CompanionHeaders.CORRELATION_ID);
-                forwardHeader(inbound, request, CompanionHeaders.AUTHORIZATION);
+                // Authorization is forwarded only-if-absent, exactly like the actor identity
+                // below — and for the same reason. A client method that deliberately pre-set a
+                // bearer (a Keycloak admin token; the BFF's own service-account token on a
+                // pre-auth or public lane) must win over blind inbound forwarding.
+                //
+                // This was a plain set() until 2026-07-27. Interceptors run AFTER the client
+                // method has built its headers, so the pre-set tier documented above never
+                // actually existed: an inbound user token replaced every deliberate token. Two
+                // consequences, both live. (1) Admin flows — KeycloakAdminClient, AdminUserController,
+                // AuthSessionController#register — sent the caller's token to the Keycloak admin
+                // API, so they failed, or succeeded with the wrong authority and the wrong audit
+                // attribution. (2) A CONFUSED DEPUTY: DaidzaiServiceClient and
+                // ParticipationServiceClient set X-Actor-Type: SYSTEM alongside a service bearer,
+                // and only the actor context survived — one outbound request asserting SYSTEM
+                // authority while carrying a citizen's token. The public lanes were safe only by
+                // accident (an anonymous caller has no token to forward); nothing stops a
+                // signed-in user hitting a public endpoint, and the shell attaches Authorization
+                // to every call it makes.
+                //
+                // Blast radius is exactly the deliberate-override set: where nothing pre-set the
+                // header, only-if-absent is identical to forward.
+                //
+                // Note on the enclosing `attrs != null`: a caller with no request context — a
+                // @Scheduled sweep, a Kafka consumer — skips this whole block, so its pre-set
+                // token would have survived even under the old set(). That is NOT why the nine
+                // pre-set sites behaved as they did: every one of them is reached only from a
+                // servlet request today (verified 2026-07-27 — the single @Scheduled bean uses
+                // BookingServiceClient, and no Kafka consumer touches them). Written down
+                // because a future non-request caller would otherwise be safe here for a reason
+                // nobody recorded, and the next person to change this line needs to know the
+                // guard is incidental rather than protective.
+                forwardHeaderIfAbsent(inbound, request, CompanionHeaders.AUTHORIZATION);
                 // Actor identity is forwarded only-if-absent: a BFF client method that has
                 // deliberately pre-set an actor context (e.g. the dependant-registration flow
                 // asserting SYSTEM authority to create a guardianship delegation the guardian is
@@ -408,7 +448,18 @@ public class ServiceClientConfig {
         };
     }
 
+    /**
+     * The template for calls to sovereign Impilo services: trust-header forwarding interceptor
+     * attached.
+     *
+     * <p>{@code @Primary} because {@link #idpRestTemplate()} is a second {@code RestTemplate}
+     * bean and at least one injection point resolves by type alone
+     * ({@code WellnessServiceProxyController}). Primary keeps by-type resolution pointing here,
+     * exactly as it did when this was the only such bean; the IdP template is opt-in by
+     * qualifier.</p>
+     */
     @Bean
+    @org.springframework.context.annotation.Primary
     public RestTemplate serviceRestTemplate(ClientHttpRequestInterceptor trustHeaderForwardingInterceptor) {
         // JDK HttpClient, NOT SimpleClientHttpRequestFactory. The latter is backed by
         // HttpURLConnection, which cannot send PATCH — it throws ProtocolException, the client
@@ -426,6 +477,30 @@ public class ServiceClientConfig {
         RestTemplate restTemplate = new RestTemplate(factory);
         restTemplate.setInterceptors(List.of(trustHeaderForwardingInterceptor));
         return restTemplate;
+    }
+
+    /**
+     * Template for calls to the identity provider (Keycloak) — deliberately NOT intercepted.
+     *
+     * <p>Keycloak is not a sovereign Impilo service. It has no notion of X-Tenant-ID, X-Actor-Type,
+     * X-Ward-ID or the other ~30 trust headers the forwarding interceptor attaches, so shipping
+     * them to the IdP is noise on every admin call. It also has no business receiving the BFF's
+     * minted service token or a caller's user token on top of the admin bearer the client already
+     * carries — {@link zw.gov.mohcc.impilo.experience.client.KeycloakAdminClient} authenticates
+     * itself, per call, with a token it fetched for that purpose.</p>
+     *
+     * <p>Same JDK-HttpClient factory as {@link #serviceRestTemplate}: {@code HttpURLConnection}
+     * cannot send PATCH, and a second template is a second chance to reintroduce that.</p>
+     */
+    @Bean
+    public RestTemplate idpRestTemplate() {
+        java.net.http.HttpClient httpClient = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
+        org.springframework.http.client.JdkClientHttpRequestFactory factory =
+                new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(Duration.ofSeconds(5));
+        return new RestTemplate(factory);
     }
 
     private static void forwardHeader(HttpServletRequest inbound,

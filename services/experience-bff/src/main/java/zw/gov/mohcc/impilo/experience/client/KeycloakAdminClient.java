@@ -33,8 +33,17 @@ public class KeycloakAdminClient {
 
     private final RestTemplate restTemplate;
 
-    public KeycloakAdminClient(RestTemplate serviceRestTemplate) {
-        this.restTemplate = serviceRestTemplate;
+    /**
+     * Uses the NON-intercepted {@code idpRestTemplate}. Keycloak is not a sovereign Impilo
+     * service: the ~30 trust headers the forwarding interceptor attaches mean nothing to it, and
+     * this client already authenticates every call with an admin bearer it fetched itself. Riding
+     * the intercepted template also put the caller's user token on the token endpoint used to mint
+     * that very bearer.
+     */
+    public KeycloakAdminClient(
+            @org.springframework.beans.factory.annotation.Qualifier("idpRestTemplate")
+            RestTemplate idpRestTemplate) {
+        this.restTemplate = idpRestTemplate;
     }
 
     public boolean isReady() {

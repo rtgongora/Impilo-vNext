@@ -1,0 +1,83 @@
+{
+  "packId": "tb-diagnosis-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "TB diagnostic algorithm — rapid molecular test first, and what a negative test does not mean",
+    "primarySource": "WHO consolidated guidelines on tuberculosis, Module 3: diagnosis — rapid diagnostics for tuberculosis detection (2021, updated 2024)",
+    "why": "WHO puts a rapid molecular test (Xpert MTB/RIF) first because it detects TB and rifampicin resistance in one run, and resistance changes the whole regimen. The trap is the negative molecular test: it does not exclude TB in a symptomatic patient, and treating a clinically-diagnosed case is correct rather than waiting for a culture that takes weeks. The algorithm therefore has three exits — confirmed, rifampicin-resistant, and negative-but-clinical — not two.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO TB DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against the published Module 3; ships ENGINEERING_SEED until the primary text is vendored and each branch is checked against it."
+    }
+  },
+  "rules": [
+    {
+      "code": "TB_DX_CONFIRMED",
+      "name": "MTB detected — bacteriologically confirmed TB",
+      "layer": "TB_DIAGNOSIS",
+      "ruleType": "DIAGNOSIS",
+      "severity": "HIGH",
+      "requiredInputs": ["xpertMtb"],
+      "logic": {"input": "xpertMtb", "op": "eq", "value": "DETECTED"},
+      "message": "Bacteriologically confirmed TB — MTB detected on rapid molecular test.",
+      "explanation": "Xpert MTB/RIF detecting M. tuberculosis confirms TB. Read the rifampicin-resistance result in the same run before choosing a regimen — resistance means a drug-resistant regimen, not the first-line course.",
+      "requiredAction": "Record confirmed TB on the problem list, enrol in TB treatment, and choose the regimen by the rifampicin-resistance result (first-line if susceptible; DR-TB pathway if resistant).",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 3 — Xpert MTB/RIF as the initial test"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2021-module3", "id": "TB.DIAGNOSIS", "row": "MTB detected"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "MTB detected on a WHO-recommended rapid molecular test confirms TB.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO consolidated TB guidelines Module 3"]},
+      "testCases": [
+        {"name": "MTB detected confirms", "facts": {"xpertMtb": "DETECTED"}, "expectFires": true},
+        {"name": "not detected does not confirm", "facts": {"xpertMtb": "NOT_DETECTED"}, "expectFires": false},
+        {"name": "no result never confirms", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "TB_DX_RIF_RESISTANT",
+      "name": "Rifampicin resistance at diagnosis — drug-resistant TB pathway",
+      "layer": "TB_DIAGNOSIS",
+      "ruleType": "DRUG_RESISTANCE",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "interruptive": true,
+      "requiredInputs": ["xpertMtb", "xpertRifResistance"],
+      "appliesWhen": {"input": "xpertMtb", "op": "eq", "value": "DETECTED"},
+      "logic": {"input": "xpertRifResistance", "op": "eq", "value": "DETECTED"},
+      "message": "Rifampicin resistance detected at diagnosis — this is drug-resistant TB.",
+      "explanation": "Rifampicin resistance in the diagnostic run means a first-line regimen will fail. The patient enters the DR-TB pathway from the outset rather than after a failed course.",
+      "requiredAction": "Refer for drug-resistant TB assessment and a WHO-recommended DR-TB regimen (e.g. BPaLM). Do not start a standard first-line regimen.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 3 — rifampicin resistance on Xpert"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2021-module3", "id": "TB.DIAGNOSIS", "row": "rif resistance at dx"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Rifampicin resistance detected at diagnosis routes the patient to a DR-TB regimen.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO consolidated TB guidelines Module 3"]},
+      "testCases": [
+        {"name": "resistance at diagnosis fires", "facts": {"xpertMtb": "DETECTED", "xpertRifResistance": "DETECTED"}, "expectFires": true},
+        {"name": "susceptible does not", "facts": {"xpertMtb": "DETECTED", "xpertRifResistance": "NOT_DETECTED"}, "expectFires": false},
+        {"name": "no MTB — rule does not apply", "facts": {"xpertMtb": "NOT_DETECTED", "xpertRifResistance": "NOT_DETECTED"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "TB_DX_CLINICAL",
+      "name": "Molecular test negative but clinically suspicious — clinically diagnosed TB",
+      "layer": "TB_DIAGNOSIS",
+      "ruleType": "DIAGNOSIS",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "requiredInputs": ["xpertMtb", "clinicalSuspicionHigh"],
+      "appliesWhen": {"input": "xpertMtb", "op": "eq", "value": "NOT_DETECTED"},
+      "logic": {"input": "clinicalSuspicionHigh", "op": "eq", "value": "YES"},
+      "message": "Molecular test negative but clinical suspicion remains — consider clinically diagnosed TB.",
+      "explanation": "A negative rapid molecular test does not exclude TB, especially in children, extrapulmonary disease and people living with HIV. With strong clinical and radiological evidence, TB is diagnosed clinically and treated rather than deferred to a slow culture.",
+      "requiredAction": "Escalate for clinical diagnosis (chest X-ray, clinical review, culture where available). If TB is clinically diagnosed, start treatment and record it as clinically (not bacteriologically) confirmed.",
+      "sourceRefs": ["WHO consolidated TB guidelines Module 3 — a negative rapid test does not exclude TB"],
+      "dakRef": {"dak": "WHO TB", "dakVersion": "2021-module3", "id": "TB.DIAGNOSIS", "row": "clinically diagnosed"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "A negative molecular test does not exclude TB; clinical diagnosis and treatment are appropriate with strong evidence.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO consolidated TB guidelines Module 3"]},
+      "testCases": [
+        {"name": "negative test + high suspicion is clinical TB", "facts": {"xpertMtb": "NOT_DETECTED", "clinicalSuspicionHigh": "YES"}, "expectFires": true},
+        {"name": "negative test + low suspicion is not", "facts": {"xpertMtb": "NOT_DETECTED", "clinicalSuspicionHigh": "NO"}, "expectFires": false},
+        {"name": "MTB detected — this rule does not apply (already confirmed)", "facts": {"xpertMtb": "DETECTED", "clinicalSuspicionHigh": "YES"}, "expectFires": false}
+      ]
+    }
+  ]
+}

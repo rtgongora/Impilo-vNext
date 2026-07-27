@@ -1350,14 +1350,14 @@
     {
       "adaptationTypes": [],
       "dakId": null,
-      "exclusionReason": "PMTCT sits across HIV care and the RMNP pregnancy episode; implementing it in the medicine pack alone would either duplicate RMNP's pregnancy episode or fork the HIV programme by pregnancy status. It needs a joint seam between this pack's HIV enrolment and RMNP's pregnancy episode, agreed rather than assumed.",
+      "exclusionReason": "The last standard of the wave, and the only one that crosses into another lane. PMTCT sits across HIV care and the RMNP pregnancy episode; building it in the medicine pack alone would either duplicate RMNP's pregnancy episode or fork the HIV programme by pregnancy status. The coordinated seam has been proposed to the RMNP lane (soft-reference from the HIV_CARE enrolment to the pregnancy episode; ownership of the exposed-infant record agreed rather than assumed). It is being built this pass and is blocked only on RMNP's answer to that seam, not punted to a later wave.",
       "family": "WHO_DAK",
       "hitPolicy": null,
       "implementations": [],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W6, jointly with the RMNP lane: PMTCT links an HIV_CARE enrolment to the pregnancy episode without duplicating either.",
+      "revisitCondition": "RMNP confirms the pregnancy-episode reference and exposed-infant ownership; PMTCT content + the enrolment↔episode link then land, and this entry is removed.",
       "sheet": null,
       "sourceCitation": "WHO 2021 consolidated HIV guidelines — PMTCT and infant prophylaxis.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
@@ -1367,59 +1367,131 @@
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "PrEP is prevention for HIV-negative people at risk, not part of the care programme for people living with HIV. It belongs with the prevention pillar, which this pack has not opened, and modelling it as an ART regimen would conflate prophylaxis with treatment.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PREP_NOT_FOR_HIV_POSITIVE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/prep-rules.json",
+          "row": "not for HIV-positive"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PREP_EXCLUDE_ACUTE_HIV",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/prep-rules.json",
+          "row": "exclude acute HIV"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PREP_ELIGIBLE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/prep-rules.json",
+          "row": "eligibility"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "PREP_RETEST_DUE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/prep-rules.json",
+          "row": "retest on PrEP"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W6 opens the HIV prevention pillar with a PrEP eligibility and follow-up surface distinct from the ART programme.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO guidelines on PrEP, carried into the 2021 consolidated HIV guidelines.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "HIV.PREP",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "Pre-exposure prophylaxis eligibility and follow-up",
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "The advanced-disease rule already prompts TB screening in people with a low CD4, but systematic TB screening and TB preventive therapy for all people living with HIV is a fuller decision surface than one prompt, and pairs with TB.TPT below.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TPT_ELIGIBLE_PLHIV",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tpt-rules.json",
+          "row": "TPT for PLHIV"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W4 ships TB screening and preventive therapy for people living with HIV as governed content, jointly with TB.TPT.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO policy on collaborative TB/HIV activities, 2012, carried into the consolidated guidelines.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "HIV.TB_COINFECTION",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "TB screening and preventive therapy in people living with HIV",
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "W3 built HIV care from enrolment onward — a person already diagnosed. The testing-services algorithm (screening, confirmatory testing, result delivery) is the front door before enrolment and is a distinct decision surface. Shipping a fragment of it now would let a clinician read a partial algorithm as the whole one.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "HIV_TEST_NONREACTIVE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-testing-rules.json",
+          "row": "initial non-reactive"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "HIV_TEST_DISCREPANT",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-testing-rules.json",
+          "row": "discrepant"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "HIV_TEST_POSITIVE_VERIFIED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-testing-rules.json",
+          "row": "three-test positive"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "HIV_INFANT_VIROLOGICAL_REQUIRED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/hiv-testing-rules.json",
+          "row": "infant virological"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W4 ships the HIV testing algorithm as governed content, anchored to a diagnostic order/result in OROS and a problem in pct_problems.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO Consolidated guidelines on HIV testing services, 2019.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "HIV.TESTING",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "HIV testing services algorithm and diagnosis",
       "titleIsSheetLevel": false
     },
@@ -2479,21 +2551,45 @@
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "The diagnostic algorithm (rapid molecular test first, then culture/DST) sits between screening and treatment. W3 records the bacteriology results (TB_SMEAR, TB_XPERT_MTB in the zibo value set) and acts on them in monitoring, but the diagnostic decision logic that gets a person to a confirmed diagnosis is not yet content.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_DX_CONFIRMED",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-diagnosis-rules.json",
+          "row": "MTB detected"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_DX_RIF_RESISTANT",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-diagnosis-rules.json",
+          "row": "rif resistance at dx"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_DX_CLINICAL",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-diagnosis-rules.json",
+          "row": "clinically diagnosed"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W4 ships the TB diagnostic algorithm as governed content, driven by the Xpert/culture observation codes seeded in zibo V035.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 3: diagnosis — rapid diagnostics for tuberculosis detection, 2021/2024.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "TB.DIAGNOSIS",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "TB diagnostic algorithm (rapid molecular testing first)",
       "titleIsSheetLevel": false
     },
@@ -2556,40 +2652,74 @@
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "W3 built TB treatment monitoring from enrolment onward. Systematic screening and presumptive-TB identification is the step before a TB diagnosis exists, and belongs with the diagnostic front-door below rather than bolted onto the treatment rules.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_SCREEN_SYMPTOMATIC",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-screening-rules.json",
+          "row": "symptom screen"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TB_SCREEN_NEGATIVE_PLHIV_TPT_ELIGIBLE",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tb-screening-rules.json",
+          "row": "screen-negative PLHIV"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W4 ships the TB screening algorithm (symptom screen, risk groups) as governed content.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 2: screening, 2021.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "TB.SCREENING",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "Systematic TB screening and presumptive-TB identification",
       "titleIsSheetLevel": false
     },
     {
-      "adaptationTypes": [],
+      "adaptationTypes": [
+        "ADOPTED_VERBATIM"
+      ],
       "dakId": null,
-      "exclusionReason": "TB preventive treatment regimens (3HP, 6H, 1HP) are seeded in the zibo TB regimen value set (V035), but the eligibility decision logic — who should receive TPT and when — is not yet shipped as CKP content. The value set without the rule is a vocabulary, not a decision.",
+      "exclusionReason": null,
       "family": "WHO_DAK",
       "hitPolicy": null,
-      "implementations": [],
+      "implementations": [
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TPT_EXCLUDE_ACTIVE_TB_FIRST",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tpt-rules.json",
+          "row": "exclude active TB"
+        },
+        {
+          "adaptationType": "ADOPTED_VERBATIM",
+          "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+          "code": "TPT_ELIGIBLE_CHILD_CONTACT",
+          "file": "services/clinical-knowledge-platform-service/src/main/resources/clinical/tpt-rules.json",
+          "row": "child contact"
+        }
+      ],
       "kind": "DECISION_LOGIC",
       "pack": "medicine",
       "publishedRows": null,
-      "revisitCondition": "W4 ships TPT eligibility as governed content citing this standard, using the TPT regimen codes already in zibo V035.",
+      "revisitCondition": null,
       "sheet": null,
       "sourceCitation": "WHO consolidated guidelines on tuberculosis, Module 1: prevention — tuberculosis preventive treatment, 2020.",
       "sourceFile": "docs/clinical-governance/medicine/standards-baseline.json",
       "standardId": "TB.TPT",
-      "status": "DEFERRED",
+      "status": "SHIPPED",
       "title": "TB preventive treatment eligibility and regimens (3HP, 6H, 1HP)",
       "titleIsSheetLevel": false
     },
@@ -2687,10 +2817,10 @@
       "titleIsSheetLevel": false
     }
   ],
-  "shippedCitations": 82,
+  "shippedCitations": 98,
   "statusCounts": {
     "COVERED_ELSEWHERE": 7,
-    "DEFERRED": 127,
-    "SHIPPED": 6
+    "DEFERRED": 121,
+    "SHIPPED": 12
   }
 }

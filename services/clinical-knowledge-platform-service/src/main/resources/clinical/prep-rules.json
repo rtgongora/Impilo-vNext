@@ -1,0 +1,105 @@
+{
+  "packId": "prep-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "HIV pre-exposure prophylaxis — eligibility, the acute-infection exclusion, and follow-up retesting",
+    "primarySource": "WHO Consolidated guidelines on HIV prevention (PrEP), carried into the 2021 consolidated HIV guidelines",
+    "why": "PrEP prevents HIV in a person who is HIV-negative and at substantial ongoing risk. Two things make it unsafe if skipped: starting PrEP in someone with undiagnosed acute HIV exposes a single-class regimen to replicating virus and breeds resistance, so acute infection must be excluded first; and a person on PrEP must be retested regularly, because seroconversion on PrEP that is not caught continues a resistance-selecting regimen. So PrEP is prophylaxis wrapped in two safety checks, not a prescription.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO HIV DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against the published PrEP guidance; ships ENGINEERING_SEED until the primary text is vendored. The definition of 'substantial risk' and the exact retest interval are national-guideline decisions; the structure here (negative status required, exclude acute infection, retest on a schedule) is WHO-invariant."
+    }
+  },
+  "rules": [
+    {
+      "code": "PREP_NOT_FOR_HIV_POSITIVE",
+      "name": "HIV-positive — PrEP is not indicated, this is treatment",
+      "layer": "HIV_PREVENTION",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["hivStatus"],
+      "logic": {"input": "hivStatus", "op": "eq", "value": "POSITIVE"},
+      "message": "PrEP is not indicated — the person is HIV-positive and needs treatment, not prophylaxis.",
+      "explanation": "PrEP is a two-drug prophylaxis for HIV-negative people. Given to an HIV-positive person it is functional monotherapy against replicating virus and selects resistance. An HIV-positive result means HIV care and ART, not PrEP.",
+      "requiredAction": "Do not start or continue PrEP. Enrol in HIV care and start ART.",
+      "sourceRefs": ["WHO PrEP guidance — PrEP is for HIV-negative people only"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.PREP", "row": "not for HIV-positive"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "PrEP is contraindicated in HIV-positive individuals, who require ART.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PrEP guidance"]},
+      "testCases": [
+        {"name": "HIV-positive blocks PrEP", "facts": {"hivStatus": "POSITIVE"}, "expectFires": true},
+        {"name": "HIV-negative does not", "facts": {"hivStatus": "NEGATIVE"}, "expectFires": false},
+        {"name": "unknown status never reads as safe-to-PrEP here", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PREP_EXCLUDE_ACUTE_HIV",
+      "name": "Symptoms of acute HIV — exclude acute infection before starting PrEP",
+      "layer": "HIV_PREVENTION",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "requiredInputs": ["hivStatus", "acuteHivSymptoms"],
+      "appliesWhen": {"input": "hivStatus", "op": "eq", "value": "NEGATIVE"},
+      "logic": {"input": "acuteHivSymptoms", "op": "eq", "value": "YES"},
+      "message": "Exclude acute HIV before starting PrEP — recent exposure with acute symptoms.",
+      "explanation": "A negative antibody test does not exclude very recent (acute) HIV, when the person is antibody-negative but viraemic. Starting PrEP then exposes a two-drug regimen to replicating virus. Recent high-risk exposure with acute symptoms warrants excluding acute infection (e.g. viral load / repeat testing) before PrEP.",
+      "requiredAction": "Delay PrEP initiation, exclude acute HIV (viral load or repeat testing per the window period), then start PrEP if still negative.",
+      "sourceRefs": ["WHO PrEP guidance — exclude acute HIV before initiation"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.PREP", "row": "exclude acute HIV"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Acute HIV should be excluded before PrEP where recent exposure and symptoms are present.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PrEP guidance"]},
+      "testCases": [
+        {"name": "negative but acute symptoms — exclude first", "facts": {"hivStatus": "NEGATIVE", "acuteHivSymptoms": "YES"}, "expectFires": true},
+        {"name": "negative without acute symptoms proceeds", "facts": {"hivStatus": "NEGATIVE", "acuteHivSymptoms": "NO"}, "expectFires": false},
+        {"name": "positive is handled by the other gate, not this one", "facts": {"hivStatus": "POSITIVE", "acuteHivSymptoms": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PREP_ELIGIBLE",
+      "name": "HIV-negative at substantial ongoing risk — offer PrEP",
+      "layer": "HIV_PREVENTION",
+      "ruleType": "ELIGIBILITY",
+      "severity": "LOW",
+      "requiredInputs": ["hivStatus", "substantialRisk", "acuteHivSymptoms"],
+      "appliesWhen": {"all": [
+        {"input": "hivStatus", "op": "eq", "value": "NEGATIVE"},
+        {"input": "acuteHivSymptoms", "op": "eq", "value": "NO"}
+      ]},
+      "logic": {"input": "substantialRisk", "op": "eq", "value": "YES"},
+      "message": "Eligible for PrEP — HIV-negative, no acute infection, substantial ongoing risk.",
+      "explanation": "PrEP is offered to HIV-negative people at substantial ongoing risk of HIV once acute infection is excluded. Substantial risk is defined nationally; this rule fires only when the caller asserts it.",
+      "requiredAction": "Offer PrEP, enrol in an HIV_PREVENTION programme to record the course, and schedule the first follow-up HIV test.",
+      "sourceRefs": ["WHO PrEP guidance — offer to those at substantial risk"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.PREP", "row": "eligibility"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "PrEP should be offered to HIV-negative people at substantial risk of HIV infection.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PrEP guidance"]},
+      "testCases": [
+        {"name": "negative, no acute, substantial risk is eligible", "facts": {"hivStatus": "NEGATIVE", "acuteHivSymptoms": "NO", "substantialRisk": "YES"}, "expectFires": true},
+        {"name": "negative, no acute, low risk is not offered", "facts": {"hivStatus": "NEGATIVE", "acuteHivSymptoms": "NO", "substantialRisk": "NO"}, "expectFires": false},
+        {"name": "acute symptoms — eligibility does not apply until excluded", "facts": {"hivStatus": "NEGATIVE", "acuteHivSymptoms": "YES", "substantialRisk": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PREP_RETEST_DUE",
+      "name": "On PrEP — HIV retest due",
+      "layer": "HIV_PREVENTION",
+      "ruleType": "MONITORING",
+      "severity": "MEDIUM",
+      "requiredInputs": ["onPrep", "monthsSinceHivTest"],
+      "appliesWhen": {"input": "onPrep", "op": "eq", "value": "YES"},
+      "logic": {"input": "monthsSinceHivTest", "op": "gte", "value": 3},
+      "message": "HIV retest due — a person on PrEP should be retested at least every 3 months.",
+      "explanation": "Seroconversion on PrEP that goes undetected continues a two-drug regimen against replicating virus and selects resistance. Regular retesting (at least 3-monthly) catches it and switches the person to full treatment.",
+      "requiredAction": "Perform an HIV test now. If positive, stop PrEP and start ART; if negative, continue PrEP and schedule the next test.",
+      "sourceRefs": ["WHO PrEP guidance — quarterly HIV testing on PrEP"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.PREP", "row": "retest on PrEP"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "People on PrEP should be retested for HIV at least every 3 months.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PrEP guidance"]},
+      "testCases": [
+        {"name": "3 months on PrEP is due", "facts": {"onPrep": "YES", "monthsSinceHivTest": 3}, "expectFires": true},
+        {"name": "1 month is not yet due", "facts": {"onPrep": "YES", "monthsSinceHivTest": 1}, "expectFires": false},
+        {"name": "not on PrEP — rule does not apply", "facts": {"onPrep": "NO", "monthsSinceHivTest": 6}, "expectFires": false}
+      ]
+    }
+  ]
+}

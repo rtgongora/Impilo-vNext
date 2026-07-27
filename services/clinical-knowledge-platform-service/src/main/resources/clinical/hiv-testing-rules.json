@@ -1,0 +1,106 @@
+{
+  "packId": "hiv-testing-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "HIV testing services — the diagnostic algorithm and when a reactive result is a diagnosis",
+    "primarySource": "WHO Consolidated guidelines on HIV testing services, 2019, and the WHO SMART guidelines / DAK for HIV",
+    "why": "A single reactive HIV test is not a diagnosis, and treating it as one starts lifelong therapy in someone who may be negative — the harm WHO's verification and retesting rules exist to prevent. The algorithm is a sequence: an initial assay, then confirmatory assays on a reactive, a tie-breaker on a discrepancy, verification before ART, and a different modality entirely for infants under 18 months whose maternal antibodies make antibody tests unreadable. Getting the sequence wrong misdiagnoses in both directions.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO HIV DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json. These rules were authored against the published 2019 HTS consolidated guidelines rather than extracted from a pinned artefact, so this pack ships ENGINEERING_SEED and must not be ratified until the primary text is vendored and each step of the algorithm is checked against it. The exact national testing algorithm (which assays, in which order) is a MoHCC decision; the structure here (reactive is not a diagnosis, verify before ART, infants need virological testing) is WHO-invariant and the assay specifics are placeholders."
+    }
+  },
+  "rules": [
+    {
+      "code": "HIV_TEST_NONREACTIVE",
+      "name": "Initial test non-reactive — HIV-negative",
+      "layer": "HIV_TESTING",
+      "ruleType": "TEST_INTERPRETATION",
+      "severity": "LOW",
+      "requiredInputs": ["test1Result"],
+      "logic": {"input": "test1Result", "op": "eq", "value": "NON_REACTIVE"},
+      "message": "HIV-negative on this testing occasion.",
+      "explanation": "A non-reactive result on the initial assay is reported as HIV-negative. No further testing is required for diagnosis today, but a recent exposure needs a repeat test after the window period.",
+      "requiredAction": "Report HIV-negative. If there was a possible exposure in the last 6 weeks, repeat testing after the window period, and offer prevention (including PrEP where eligible).",
+      "sourceRefs": ["WHO 2019 HTS guidelines — reporting a negative result"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2019-HTS", "id": "HIV.TESTING", "row": "initial non-reactive"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "A non-reactive initial assay is reported HIV-negative; retest after the window period if recently exposed.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO 2019 HTS guidelines"]},
+      "testCases": [
+        {"name": "non-reactive is negative", "facts": {"test1Result": "NON_REACTIVE"}, "expectFires": true},
+        {"name": "reactive is not this rule", "facts": {"test1Result": "REACTIVE"}, "expectFires": false},
+        {"name": "no result never reads as negative", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "HIV_TEST_DISCREPANT",
+      "name": "Discrepant results — inconclusive, never report positive",
+      "layer": "HIV_TESTING",
+      "ruleType": "TEST_INTERPRETATION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["test1Result", "test2Result"],
+      "logic": {"all": [
+        {"input": "test1Result", "op": "eq", "value": "REACTIVE"},
+        {"input": "test2Result", "op": "eq", "value": "NON_REACTIVE"}
+      ]},
+      "message": "Discrepant results (reactive then non-reactive) — status inconclusive.",
+      "explanation": "A reactive followed by a non-reactive assay does not confirm HIV. Reporting positive here would misdiagnose. The status is inconclusive and requires a repeat testing algorithm, typically after 14 days.",
+      "requiredAction": "Do NOT report HIV-positive. Repeat the full testing algorithm (commonly after 14 days) and report inconclusive in the interim.",
+      "sourceRefs": ["WHO 2019 HTS guidelines — discordant results and retesting"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2019-HTS", "id": "HIV.TESTING", "row": "discrepant"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Discordant assays give an inconclusive status requiring a repeat algorithm, not a positive report.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO 2019 HTS guidelines"]},
+      "testCases": [
+        {"name": "reactive then non-reactive is discrepant", "facts": {"test1Result": "REACTIVE", "test2Result": "NON_REACTIVE"}, "expectFires": true},
+        {"name": "both reactive is not discrepant", "facts": {"test1Result": "REACTIVE", "test2Result": "REACTIVE"}, "expectFires": false},
+        {"name": "second result unknown does not read as discrepant", "facts": {"test1Result": "REACTIVE"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "HIV_TEST_POSITIVE_VERIFIED",
+      "name": "Positive on the confirmatory algorithm — HIV diagnosis",
+      "layer": "HIV_TESTING",
+      "ruleType": "TEST_INTERPRETATION",
+      "severity": "HIGH",
+      "requiredInputs": ["test1Result", "test2Result", "test3Result"],
+      "logic": {"all": [
+        {"input": "test1Result", "op": "eq", "value": "REACTIVE"},
+        {"input": "test2Result", "op": "eq", "value": "REACTIVE"},
+        {"input": "test3Result", "op": "eq", "value": "REACTIVE"}
+      ]},
+      "message": "HIV-positive — three-assay algorithm reactive throughout.",
+      "explanation": "Three consecutive reactive assays confirm an HIV diagnosis under the WHO three-test strategy. This is the point at which HIV care and ART are offered; a single reactive result is not.",
+      "requiredAction": "Report HIV-positive, record the diagnosis on the problem list, and enrol in HIV care with same-day ART where appropriate. Verify the diagnosis is documented before ART is started.",
+      "sourceRefs": ["WHO 2019 HTS guidelines — three-test diagnostic strategy; verification before ART"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2019-HTS", "id": "HIV.TESTING", "row": "three-test positive"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Three reactive assays confirm HIV; a diagnosis is verified before ART initiation.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO 2019 HTS guidelines"]},
+      "testCases": [
+        {"name": "three reactive confirms", "facts": {"test1Result": "REACTIVE", "test2Result": "REACTIVE", "test3Result": "REACTIVE"}, "expectFires": true},
+        {"name": "two reactive is not yet confirmed", "facts": {"test1Result": "REACTIVE", "test2Result": "REACTIVE"}, "expectFires": false},
+        {"name": "third non-reactive does not confirm", "facts": {"test1Result": "REACTIVE", "test2Result": "REACTIVE", "test3Result": "NON_REACTIVE"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "HIV_INFANT_VIROLOGICAL_REQUIRED",
+      "name": "Infant under 18 months — antibody testing cannot diagnose",
+      "layer": "HIV_TESTING",
+      "ruleType": "MODALITY_GATE",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "requiredInputs": ["ageMonths"],
+      "logic": {"input": "ageMonths", "op": "lt", "value": 18},
+      "message": "Under 18 months — a virological (NAT/PCR) test is required, not antibody testing.",
+      "explanation": "Maternal HIV antibodies cross the placenta and persist up to 18 months, so an antibody test in an infant reflects the mother's status, not the child's. Diagnosis needs a virological test (early infant diagnosis).",
+      "requiredAction": "Do not diagnose an infant under 18 months on an antibody test. Send a virological test (EID) and manage as HIV-exposed until a virological result is available.",
+      "sourceRefs": ["WHO 2019 HTS guidelines — infant diagnosis (EID)"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2019-HTS", "id": "HIV.TESTING", "row": "infant virological"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Children under 18 months require virological testing; antibody tests cannot establish their status.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO 2019 HTS guidelines"]},
+      "testCases": [
+        {"name": "6-week-old needs virological", "facts": {"ageMonths": 1}, "expectFires": true},
+        {"name": "12-month-old needs virological", "facts": {"ageMonths": 12}, "expectFires": true},
+        {"name": "adult does not take this rule", "facts": {"ageMonths": 240}, "expectFires": false}
+      ]
+    }
+  ]
+}
