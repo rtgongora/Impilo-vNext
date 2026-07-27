@@ -41,6 +41,12 @@ class PartographProgressEngineTest {
         assertThat(a.status()).isNotEqualTo(ProgressStatus.LEFT_OF_ALERT);
         assertThat(a.observations()).anyMatch(s -> s.contains("No labour observations"));
 
+        // The demotion stamp: this engine is the classic partograph, frozen and demoted behind the
+        // Labour Care Guide. Every verdict it emits must carry that, so a 1 cm/hour "action line
+        // crossed" is never read as the current standard's view of the labour.
+        assertThat(a.degraded()).isTrue();
+        assertThat(a.monitoringStandard()).isEqualTo("WHO_PARTOGRAPH_CLASSIC");
+
         // Caught on the estate, not here: an empty session first reported "0 outstanding
         // observations", which put a reassuring line beside the most alarming verdict. Every
         // observation is outstanding when none has been taken.
