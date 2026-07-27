@@ -139,12 +139,14 @@ class FacilitySourceLegitimacyServiceTest {
     void firstUpsertForSourceCreatesRowWithNoPreviousValues() {
         stubFacility();
         stubSaveEcho();
-        when(legitimacyRepository.findByFacilityIdAndSource(facilityUuid, FacilityLegitimacySource.MINISTRY_OPERATIONAL))
+        // (Source is incidental here — this asserts the outbox shape on a first write. It uses
+        // HPA_LEGAL because that is the one source this endpoint may write directly, FCV-W0c.)
+        when(legitimacyRepository.findByFacilityIdAndSource(facilityUuid, FacilityLegitimacySource.HPA_LEGAL))
                 .thenReturn(Optional.empty());
 
-        service.upsert(facilityUuid, FacilityLegitimacySource.MINISTRY_OPERATIONAL,
+        service.upsert(facilityUuid, FacilityLegitimacySource.HPA_LEGAL,
                 new FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest(
-                        FacilityLegitimacyStatus.REGISTERED_CURRENT, null, "NATIONAL_FACILITY_CODE:ZW010125",
+                        FacilityLegitimacyStatus.REGISTERED_CURRENT, null, "HPA_REGISTRATION_NUMBER:123",
                         true, null));
 
         ArgumentCaptor<EventOutboxEntity> outboxCaptor = ArgumentCaptor.forClass(EventOutboxEntity.class);
@@ -294,6 +296,42 @@ class FacilitySourceLegitimacyServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
                         .isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    // ── FCV-W0c: a facility cannot be made operational through the generic endpoint ──────────
+
+    @Test
+    void upsert_refusesToWriteThePlatformOperationalVerdictDirectly() {
+        // The whole doctrine in one test: this endpoint had no authority gate and no policy rule,
+        // so anyone on the internal plane could write PLATFORM_OPERATIONAL/allowed=true and make a
+        // facility operational without any verification.
+        assertThatThrownBy(() -> service.upsert(facilityUuid, FacilityLegitimacySource.PLATFORM_OPERATIONAL,
+                new FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest(
+                        FacilityLegitimacyStatus.GOVERNMENT_OPERATIONAL_EXCEPTION, null, null, true, "because")))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
+                        .isEqualTo(HttpStatus.FORBIDDEN));
+
+        assertThatThrownBy(() -> service.upsert(facilityUuid, FacilityLegitimacySource.MINISTRY_OPERATIONAL,
+                new FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest(
+                        FacilityLegitimacyStatus.REGISTERED_CURRENT, null, null, true, "because")))
+                .isInstanceOf(ResponseStatusException.class);
+
+        verify(legitimacyRepository, never()).save(any());
+    }
+
+    @Test
+    void upsert_stillAcceptsTheRegulatorsOwnVerdict() {
+        stubFacility();
+        when(legitimacyRepository.findByFacilityIdAndSource(facilityUuid, FacilityLegitimacySource.HPA_LEGAL))
+                .thenReturn(Optional.empty());
+        when(legitimacyRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.upsert(facilityUuid, FacilityLegitimacySource.HPA_LEGAL,
+                new FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest(
+                        FacilityLegitimacyStatus.REGISTERED_CURRENT, null, "HPA:123", true, null));
+
+        verify(legitimacyRepository).save(any());
     }
 
     // ── FCV-W0b: the rule is tri-state, so gates and reporting can both be right ─────────────

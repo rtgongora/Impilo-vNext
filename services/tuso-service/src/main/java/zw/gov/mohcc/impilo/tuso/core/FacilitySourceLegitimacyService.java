@@ -74,6 +74,9 @@ public class FacilitySourceLegitimacyService {
             UUID facilityUuid,
             FacilityLegitimacySource source,
             FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest request) {
+        // Before the facility is even looked up: refusing on the source alone means a caller
+        // probing this endpoint learns nothing about which facilities exist.
+        assertDirectlyWritable(source);
         TrustContext ctx = TrustContextHolder.require();
         FacilityEntity facility = requireFacility(facilityUuid, ctx.tenantId());
         validate(request);
@@ -81,6 +84,14 @@ public class FacilitySourceLegitimacyService {
         FacilitySourceLegitimacyEntity row = legitimacyRepository
                 .findByFacilityIdAndSource(facility.getFacilityUuid(), source)
                 .orElseGet(FacilitySourceLegitimacyEntity::new);
+
+        // Even on the ingestion source, a row bound to a governed decision is not this endpoint's
+        // to rewrite (FCV-W0a).
+        if (row.getDecisionId() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This verdict is bound to a Ministry legitimacy decision and may only be changed "
+                            + "by issuing a new decision.");
+        }
 
         Map<String, Object> previous = row.getId() == null ? null : snapshot(row);
 
@@ -230,6 +241,31 @@ public class FacilitySourceLegitimacyService {
             }
         }
         return verdictOf(rows);
+    }
+
+    /**
+     * Which sources this generic endpoint may write directly (FCV-W0c).
+     *
+     * <p>This endpoint had no authority gate at all — only a trust context — and no policy rule
+     * covered its path, so any caller reaching the internal plane could write
+     * {@code PLATFORM_OPERATIONAL / allowed=true} and make a facility operational. That is the
+     * direct contradiction of the rule that a facility cannot confer legitimacy on itself, and it
+     * mattered more than any case-decision gate because this row IS the operational verdict.</p>
+     *
+     * <p>{@code HPA_LEGAL} stays writable here because that is this endpoint's honest purpose:
+     * ingesting the regulator's own verdict about a facility. {@code MINISTRY_OPERATIONAL} and
+     * {@code PLATFORM_OPERATIONAL} are the platform's and the Ministry's own verdicts about
+     * operation — they may only be written by the governed decision rail (which records who
+     * decided, under what authority, in which jurisdiction, on what evidence, with what conditions
+     * and expiry) and by the import paths that stamp the initial not-yet-verified state.</p>
+     */
+    private static void assertDirectlyWritable(FacilityLegitimacySource source) {
+        if (source != FacilityLegitimacySource.HPA_LEGAL) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only HPA_LEGAL may be recorded directly. " + source + " expresses whether this "
+                            + "facility may operate on the platform and is issued through the Ministry "
+                            + "legitimacy decision rail, never written directly.");
+        }
     }
 
     /**
