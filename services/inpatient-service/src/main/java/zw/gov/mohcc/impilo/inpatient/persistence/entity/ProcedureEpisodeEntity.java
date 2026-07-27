@@ -62,6 +62,34 @@ public class ProcedureEpisodeEntity {
     @Column(name = "version", nullable = false)
     private long version;
 
+    // ── Surgery + Procedures Pipeline P4: structured site and side, and the setting
+    //    discriminator that lets a non-theatre procedure execute on this engine. Additive:
+    //    `status` is untouched and every existing consumer is unaffected.
+    @Column(name = "anatomical_site", length = 128)
+    private String anatomicalSite;
+
+    /** Closed vocabulary. A wrong-side check that compares free text fails open. */
+    @Column(name = "laterality", length = 24)
+    private String laterality;
+
+    @Column(name = "site_side_confirmed_by", length = 128)
+    private String siteSideConfirmedBy;
+
+    @Column(name = "site_side_confirmed_at")
+    private java.time.OffsetDateTime siteSideConfirmedAt;
+
+    @Column(name = "setting", length = 48)
+    private String setting;
+
+    @Column(name = "catalogue_ref")
+    private java.util.UUID catalogueRef;
+
+    @Column(name = "request_ref", length = 64)
+    private String requestRef;
+
+    @Column(name = "lifecycle_state", length = 32)
+    private String lifecycleState;
+
     @Column(name = "consent_verified", nullable = false)
     private boolean consentVerified;
 
@@ -196,4 +224,21 @@ public class ProcedureEpisodeEntity {
     public void setEmergencyOverrideReason(String emergencyOverrideReason) { this.emergencyOverrideReason = emergencyOverrideReason; }
     public String getDeathCaseRef() { return deathCaseRef; }
     public void setDeathCaseRef(String deathCaseRef) { this.deathCaseRef = deathCaseRef; }
+
+    public String getAnatomicalSite() { return anatomicalSite; }
+    public void setAnatomicalSite(String v) { this.anatomicalSite = v; }
+    public String getLaterality() { return laterality; }
+    public void setLaterality(String v) { this.laterality = v; }
+    public String getSiteSideConfirmedBy() { return siteSideConfirmedBy; }
+    public void setSiteSideConfirmedBy(String v) { this.siteSideConfirmedBy = v; }
+    public java.time.OffsetDateTime getSiteSideConfirmedAt() { return siteSideConfirmedAt; }
+    public void setSiteSideConfirmedAt(java.time.OffsetDateTime v) { this.siteSideConfirmedAt = v; }
+    public String getSetting() { return setting; }
+    public void setSetting(String v) { this.setting = v; }
+    public java.util.UUID getCatalogueRef() { return catalogueRef; }
+    public void setCatalogueRef(java.util.UUID v) { this.catalogueRef = v; }
+    public String getRequestRef() { return requestRef; }
+    public void setRequestRef(String v) { this.requestRef = v; }
+    public String getLifecycleState() { return lifecycleState; }
+    public void setLifecycleState(String v) { this.lifecycleState = v; }
 }

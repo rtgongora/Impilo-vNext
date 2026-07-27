@@ -49,6 +49,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 class AuthorizationHeaderPrecedenceLoopbackTest {
 
+    /** The care-plane tenant an authenticated clinical caller carries. */
+    private static final String CARE_TENANT = PublicTenants.CARE_PLANE;
+
     private HttpServer server;
     private String baseUrl;
     /** Headers as the downstream really received them, keyed by request path. */
@@ -220,7 +223,62 @@ class AuthorizationHeaderPrecedenceLoopbackTest {
         assertEquals("Bearer bff-service-token", header(path, CompanionHeaders.AUTHORIZATION));
     }
 
+    // ── tenant plane declaration (two-plane model) ───────────────────────────────────────
+
+    /**
+     * A client declaring the REGISTRY plane keeps it under an authenticated CARE-plane caller.
+     *
+     * <p>Facility/provider/geo masters live on the registry plane. A care-plane clinician asking a
+     * facility question is a genuine cross-plane read, so {@code TusoServiceClient} declares
+     * REGISTRY — and before tenant was forwarded only-if-absent, the interceptor overwrote that
+     * with the caller's care-plane tenant, tuso's {@code tenant_id} filter matched nothing, and
+     * birth-destination returned 502 UNAVAILABLE.</p>
+     *
+     * <p>This is safe because tenant is already client-supplied and unvalidated
+     * (sessionStorage → header → TrustContextFilter, no claim check); this narrows the override to
+     * BFF code and the PublicTenants constants. See ServiceClientConfig for the full argument.</p>
+     */
+    @Test
+    void clientDeclaredRegistryPlaneSurvivesAnAuthenticatedCarePlaneCaller() {
+        carePlaneClinicianRequestIsInFlight();
+        var tuso = new zw.gov.mohcc.impilo.experience.client.TusoServiceClient(
+                interceptedTemplate(), ServiceClientConfig.testServiceEndpoints(baseUrl));
+
+        tuso.getFacilityStatusSummary(1L);
+
+        String path = "/v1/internal/facilities/1/status-summary";
+        assertEquals(PublicTenants.REGISTRY_PLANE, header(path, CompanionHeaders.TENANT_ID),
+                "a client's deliberate plane declaration must reach the downstream; the caller's "
+                        + "care-plane tenant finds no facility rows and surfaces as a 502");
+    }
+
+    /**
+     * The other direction, and the one that bounds the blast radius: a client that declares nothing
+     * still sends the caller's own tenant, unchanged. Every ordinary BFF call is this case, so if
+     * this ever fails, tenant scoping has been broken estate-wide.
+     */
+    @Test
+    void callerTenantIsStillForwardedWhenNoPlaneIsDeclared() {
+        carePlaneClinicianRequestIsInFlight();
+
+        interceptedTemplate().getForEntity(baseUrl + "/ordinary-tenant", String.class);
+
+        assertEquals(CARE_TENANT, header("/ordinary-tenant", CompanionHeaders.TENANT_ID),
+                "with no declared plane the caller's tenant must be forwarded unchanged — "
+                        + "only-if-absent must be indistinguishable from forward here");
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────────────────
+
+    /** An authenticated CARE-plane clinician's request — the case that overwrote a plane declaration. */
+    private void carePlaneClinicianRequestIsInFlight() {
+        MockHttpServletRequest inbound = new MockHttpServletRequest();
+        inbound.addHeader(CompanionHeaders.TENANT_ID, CARE_TENANT);
+        inbound.addHeader(CompanionHeaders.POD_ID, "pod-1");
+        inbound.addHeader(CompanionHeaders.AUTHORIZATION, "Bearer clinician-token");
+        inbound.addHeader(CompanionHeaders.ACTOR_TYPE, "PROVIDER");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
+    }
 
     /** A signed-in citizen's request is on the stack — the condition under which the defect bit. */
     private void signedInCitizenRequestIsInFlight() {

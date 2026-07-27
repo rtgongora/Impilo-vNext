@@ -18,10 +18,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Resurrected from {@code ProcedureEpisodeIT}, which had never executed once.
+ *
+ * <p>{@code maven-failsafe-plugin} is configured nowhere in this repository and Surefire's
+ * default includes exclude {@code *IT.java}, so all 118 {@code *IT.java} files under
+ * {@code services/} are decoration rather than coverage. This one tests the exact aggregate the
+ * Surgery + Procedures programme generalises, so it becomes a regression guard instead. The
+ * rename is scoped to this file; the remaining 117 belong to whoever owns that debt.</p>
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class ProcedureEpisodeIT {
+class ProcedureEpisodeTest {
 
     private static final String CPID = "CPID-ZW-00001";
     private static final ObjectMapper MAPPER = new ObjectMapper();
