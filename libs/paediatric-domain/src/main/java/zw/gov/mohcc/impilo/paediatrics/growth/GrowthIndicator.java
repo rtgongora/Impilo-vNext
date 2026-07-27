@@ -12,18 +12,29 @@ package zw.gov.mohcc.impilo.paediatrics.growth;
  */
 public enum GrowthIndicator {
 
-    WEIGHT_FOR_AGE("weight_for_age"),
-    LENGTH_HEIGHT_FOR_AGE("length_height_for_age"),
-    BODY_MASS_INDEX_FOR_AGE("body_mass_index_for_age"),
-    HEAD_CIRCUMFERENCE_FOR_AGE("head_circumference_for_age");
+    WEIGHT_FOR_AGE("weight_for_age", "kg"),
+    LENGTH_HEIGHT_FOR_AGE("length_height_for_age", "cm"),
+    BODY_MASS_INDEX_FOR_AGE("body_mass_index_for_age", "kg/m2"),
+    HEAD_CIRCUMFERENCE_FOR_AGE("head_circumference_for_age", "cm");
 
     private final String datasetKey;
+    private final String canonicalUnit;
 
-    GrowthIndicator(String datasetKey) {
+    GrowthIndicator(String datasetKey, String canonicalUnit) {
         this.datasetKey = datasetKey;
+        this.canonicalUnit = canonicalUnit;
     }
 
     public String datasetKey() {
         return datasetKey;
+    }
+
+    /**
+     * The unit a measurement of this indicator arrives in. A reference table may publish its
+     * median in a different unit — Fenton publishes weight in grams — in which case the
+     * table declares its own unit and the engine converts before scoring.
+     */
+    public String canonicalUnit() {
+        return canonicalUnit;
     }
 }

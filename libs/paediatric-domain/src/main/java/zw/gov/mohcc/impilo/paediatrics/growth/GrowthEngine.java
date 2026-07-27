@@ -1,38 +1,42 @@
 package zw.gov.mohcc.impilo.paediatrics.growth;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import zw.gov.mohcc.impilo.paediatrics.age.AgeCalculator;
 import zw.gov.mohcc.impilo.paediatrics.age.CorrectedAge;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.EnumMap;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.TreeMap;
 
 /**
- * WHO 2006 child growth standards z-score engine.
+ * Growth z-score engine over the standards a child is actually eligible for.
  *
- * <p>Scores a measurement against the sex- and age-specific LMS tables using the
- * standard Box-Cox transformation. The engine is deliberately conservative: an
- * indicator it cannot score returns null rather than an approximation, and no score is
- * produced outside the age range the embedded standard actually covers
- * ({@value #UNDER_FIVE_MAX_AGE_DAYS} days). Scores older children only once the WHO
- * 5–19 year reference is added — never by extrapolating the under-five curves.</p>
+ * <p>Two standards are embedded. The WHO 2006 child growth standards score children from
+ * birth to five years against age in days, using corrected age where the child was born
+ * preterm. The Fenton 2013 preterm growth chart scores infants born before term against
+ * completed postmenstrual weeks, from 22 weeks up to the end of its published range.</p>
  *
- * <p>Every assessment carries the standard identifier and engine version so a stored
- * z-score can be re-derived, and so a later standard revision does not silently
- * reinterpret historical measurements.</p>
+ * <p><strong>The engine chooses the standard; the caller cannot.</strong> A preterm infant
+ * scored against the term chart looks severely malnourished while growing exactly as
+ * expected — a 28-week baby two weeks old is roughly two-thirds of a term newborn's weight,
+ * which the WHO tables read as a z-score below −6. That is not a finding, it is a category
+ * error, and it would put a well baby into a malnutrition pathway.</p>
  *
- * <p>Thread-safe and immutable once constructed; the LMS tables are read once.</p>
+ * <p>The engine is deliberately conservative: an indicator it cannot score returns no score
+ * and a stated reason, never an approximation. Where a preterm infant's own reference is
+ * missing, the measurement goes unscored — the term standard is never substituted for it.</p>
+ *
+ * <p>Every assessment carries the standard identifier and engine version so a stored z-score
+ * can be re-derived, and so a later standard revision does not silently reinterpret
+ * historical measurements.</p>
+ *
+ * <p>Thread-safe and immutable once constructed; the reference tables are read once.</p>
  */
 public final class GrowthEngine {
 
@@ -42,26 +46,59 @@ public final class GrowthEngine {
     /** Age at which measurement convention switches from recumbent length to standing height. */
     public static final int STATURE_MODE_SWITCH_AGE_DAYS = 731;
 
+    /** First completed postmenstrual week the Fenton 2013 chart covers. */
+    public static final int FENTON_MIN_POSTMENSTRUAL_WEEKS = 22;
+
+    /**
+     * Last completed postmenstrual week the Fenton 2013 chart publishes. Beyond it a
+     * preterm infant is followed on the WHO standard at corrected age, which is the
+     * transition the chart itself is drawn for: 50 weeks postmenstrual is 10 weeks
+     * corrected, well inside the WHO tables, so the handover leaves no unscored gap.
+     */
+    public static final int FENTON_MAX_POSTMENSTRUAL_WEEKS = 49;
+
+    private static final int DAYS_PER_WEEK = 7;
+
     /** Length and height differ systematically by ~0.7 cm in the same child. */
     private static final BigDecimal LENGTH_HEIGHT_DIFFERENCE_CM = BigDecimal.valueOf(0.7d);
 
-    public static final String STANDARD_ID = "WHO_2006_CHILD_GROWTH_STANDARDS";
-    public static final String ENGINE_VERSION = "1.0.0";
+    /**
+     * Retained for callers that stamped this identifier before Fenton was added; new scores
+     * take it from {@link GrowthStandard}.
+     */
+    public static final String STANDARD_ID = GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS.standardId();
 
-    private static final String RESOURCE_PATH = "growth/who_under5_lms.json";
+    /**
+     * Bumped from 1.0.0 when preterm infants stopped being scored on the term standard, and
+     * from 2.0.0 when corrected age began targeting 40 weeks rather than 37 — which moved the
+     * age a preterm child is read at on the WHO tables, and so their z-scores, by up to three
+     * weeks. The version is stamped on every score, so a record written by any of these
+     * engines stays interpretable as the thing it actually was. Each bump is major because a
+     * score is not comparable across it for the same child and the same measurement.
+     */
+    public static final String ENGINE_VERSION = "3.0.0";
 
-    private final Map<GrowthIndicator, Map<String, NavigableMap<Integer, LmsPoint>>> standards;
+    private final Map<GrowthStandard, GrowthReferenceTables> references;
 
     public GrowthEngine() {
         this(new ObjectMapper());
     }
 
     public GrowthEngine(ObjectMapper objectMapper) {
-        this.standards = loadStandards(objectMapper);
+        Map<GrowthStandard, GrowthReferenceTables> loaded = new EnumMap<>(GrowthStandard.class);
+        // WHO is required: a deployment missing it can score nothing at all, and that is a
+        // packaging fault worth failing loudly on. Fenton is optional so a deployment whose
+        // licence or ratification is still pending starts, and says so, rather than either
+        // refusing to boot or quietly scoring preterm babies on the term chart.
+        loaded.put(GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS,
+                GrowthReferenceTables.load(GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS, objectMapper, true));
+        loaded.put(GrowthStandard.FENTON_2013_PRETERM_GROWTH,
+                GrowthReferenceTables.load(GrowthStandard.FENTON_2013_PRETERM_GROWTH, objectMapper, false));
+        this.references = loaded;
     }
 
     /**
-     * Score a measurement.
+     * Score a measurement against whichever standard the child is eligible for.
      *
      * @param patient     date of birth, sex, and gestational age at birth where known
      * @param measurement the anthropometry taken at this contact
@@ -70,136 +107,317 @@ public final class GrowthEngine {
         Integer chronologicalAgeDays = AgeCalculator.ageDays(patient.dateOfBirth(), measurement.measuredAt());
         Integer correctedAgeDays = CorrectedAge.correctedAgeDays(chronologicalAgeDays, patient.gestationalAgeWeeks());
         boolean correctionApplied = CorrectedAge.correctionApplied(chronologicalAgeDays, patient.gestationalAgeWeeks());
-
-        // Growth is read against corrected age for preterm children: a baby born at 30 weeks
-        // is not failing to grow simply because they have not yet reached term-equivalent age.
-        Integer scoringAgeDays = correctedAgeDays != null ? correctedAgeDays : chronologicalAgeDays;
+        Integer postmenstrualAgeWeeks =
+                postmenstrualAgeWeeks(chronologicalAgeDays, patient.gestationalAgeWeeks());
         String sex = normaliseSex(patient.sex());
 
-        BigDecimal normalisedStature = normaliseStature(scoringAgeDays, measurement);
-        String statureModeUsed = normalisedStature == null ? null : expectedStatureMode(scoringAgeDays);
-        BigDecimal statureAdjustment = statureAdjustment(scoringAgeDays, measurement);
+        // Stature is normalised against age since birth: which way round a baby was measured
+        // is a property of how it was done, not of which chart it is read on.
+        Integer statureAgeDays = correctedAgeDays != null ? correctedAgeDays : chronologicalAgeDays;
+        BigDecimal normalisedStature = normaliseStature(statureAgeDays, measurement);
+        String statureModeUsed = normalisedStature == null ? null : expectedStatureMode(statureAgeDays);
+        BigDecimal statureAdjustment = statureAdjustment(statureAgeDays, measurement);
         BigDecimal bmi = resolveBmi(measurement, normalisedStature);
 
-        boolean scorable = scoringAgeDays != null
-                && scoringAgeDays >= 0
-                && scoringAgeDays <= UNDER_FIVE_MAX_AGE_DAYS
-                && sex != null;
+        Selection selection = selectStandard(chronologicalAgeDays, correctedAgeDays,
+                postmenstrualAgeWeeks, patient.gestationalAgeWeeks(), sex);
 
         Map<GrowthIndicator, Score> scores = new EnumMap<>(GrowthIndicator.class);
-        if (scorable) {
-            putIfPresent(scores, GrowthIndicator.WEIGHT_FOR_AGE,
-                    score(GrowthIndicator.WEIGHT_FOR_AGE, sex, scoringAgeDays, measurement.weightKg()));
-            putIfPresent(scores, GrowthIndicator.LENGTH_HEIGHT_FOR_AGE,
-                    score(GrowthIndicator.LENGTH_HEIGHT_FOR_AGE, sex, scoringAgeDays, normalisedStature));
-            putIfPresent(scores, GrowthIndicator.BODY_MASS_INDEX_FOR_AGE,
-                    score(GrowthIndicator.BODY_MASS_INDEX_FOR_AGE, sex, scoringAgeDays, bmi));
-            putIfPresent(scores, GrowthIndicator.HEAD_CIRCUMFERENCE_FOR_AGE,
-                    score(GrowthIndicator.HEAD_CIRCUMFERENCE_FOR_AGE, sex, scoringAgeDays, measurement.headCircumferenceCm()));
+        Map<GrowthIndicator, String> gaps = new LinkedHashMap<>();
+
+        if (selection.standard() != null) {
+            GrowthReferenceTables tables = references.get(selection.standard());
+            scoreInto(scores, gaps, tables, selection, sex, GrowthIndicator.WEIGHT_FOR_AGE, measurement.weightKg());
+            scoreInto(scores, gaps, tables, selection, sex, GrowthIndicator.LENGTH_HEIGHT_FOR_AGE, normalisedStature);
+            scoreInto(scores, gaps, tables, selection, sex, GrowthIndicator.BODY_MASS_INDEX_FOR_AGE, bmi);
+            scoreInto(scores, gaps, tables, selection, sex, GrowthIndicator.HEAD_CIRCUMFERENCE_FOR_AGE,
+                    measurement.headCircumferenceCm());
         }
 
+        boolean scored = !scores.isEmpty();
         return new GrowthAssessment(
                 chronologicalAgeDays,
                 correctedAgeDays,
                 correctionApplied,
-                scorable ? STANDARD_ID : null,
-                scorable ? ENGINE_VERSION : null,
+                postmenstrualAgeWeeks,
+                scored ? selection.standard().standardId() : null,
+                scored ? ENGINE_VERSION : null,
                 bmi,
                 normalisedStature,
                 statureModeUsed,
                 statureAdjustment,
                 scores,
-                unsupportedReason(chronologicalAgeDays, scoringAgeDays, sex));
+                gaps,
+                scored ? null : selection.reason());
+    }
+
+    /**
+     * Completed weeks since the mother's last menstrual period: gestational age at birth
+     * plus completed weeks lived. Gestational age is recorded in completed weeks only, so
+     * the days part of it is not available to add here.
+     */
+    public static Integer postmenstrualAgeWeeks(Integer chronologicalAgeDays, Integer gestationalAgeWeeks) {
+        if (chronologicalAgeDays == null || chronologicalAgeDays < 0
+                || gestationalAgeWeeks == null || gestationalAgeWeeks <= 0) {
+            return null;
+        }
+        return gestationalAgeWeeks + (chronologicalAgeDays / DAYS_PER_WEEK);
     }
 
     /**
      * The measurement value that sits exactly on a given z-score curve, used to draw
-     * reference curves. Returns null where the standard does not cover the age.
+     * reference curves. Returns null where the standard published no point there.
+     *
+     * @param axisPosition age in days for WHO, completed postmenstrual weeks for Fenton
      */
-    public BigDecimal valueAtZScore(GrowthIndicator indicator, String sex, int ageDays, double zScore) {
-        LmsPoint point = lmsPoint(indicator, normaliseSex(sex), ageDays);
+    public BigDecimal valueAtZScore(GrowthStandard standard, GrowthIndicator indicator,
+                                    String sex, int axisPosition, double zScore) {
+        GrowthReferenceTables tables = references.get(standard);
+        if (tables == null) {
+            return null;
+        }
+        LmsPoint point = tables.point(indicator, normaliseSex(sex), axisPosition);
         if (point == null) {
             return null;
         }
-        double value;
-        if (Math.abs(point.l()) < 1e-12) {
-            value = point.m() * Math.exp(point.s() * zScore);
-        } else {
-            value = point.m() * Math.pow(1.0d + point.l() * point.s() * zScore, 1.0d / point.l());
-        }
-        if (!Double.isFinite(value) || value <= 0) {
+        Double value = valueAt(point, zScore);
+        if (value == null) {
             return null;
         }
-        return BigDecimal.valueOf(value).setScale(3, RoundingMode.HALF_UP);
+        BigDecimal inTableUnit = BigDecimal.valueOf(value);
+        return toMeasurementUnit(inTableUnit, tables.unit(indicator), indicator).setScale(3, RoundingMode.HALF_UP);
     }
 
-    /** Ages (in days) for which the standard has data for this indicator and sex, ascending. */
+    /** WHO curve value at an age in days; kept for callers predating multi-standard support. */
+    public BigDecimal valueAtZScore(GrowthIndicator indicator, String sex, int ageDays, double zScore) {
+        return valueAtZScore(GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS, indicator, sex, ageDays, zScore);
+    }
+
+    /** Axis positions for which a standard has data for this indicator and sex, ascending. */
+    public NavigableMap<Integer, LmsPoint> table(GrowthStandard standard, GrowthIndicator indicator, String sex) {
+        GrowthReferenceTables tables = references.get(standard);
+        return tables == null ? new java.util.TreeMap<>() : tables.table(indicator, normaliseSex(sex));
+    }
+
+    /** WHO table for this indicator and sex; kept for callers predating multi-standard support. */
     public NavigableMap<Integer, LmsPoint> table(GrowthIndicator indicator, String sex) {
-        Map<String, NavigableMap<Integer, LmsPoint>> bySex = standards.get(indicator);
-        if (bySex == null) {
-            return new TreeMap<>();
-        }
-        NavigableMap<Integer, LmsPoint> rows = bySex.get(normaliseSex(sex));
-        return rows == null ? new TreeMap<>() : rows;
+        return table(GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS, indicator, sex);
     }
 
-    // --- internals -------------------------------------------------------------------
+    /** The loaded tables for a standard, including whether they are present at all. */
+    public GrowthReferenceTables reference(GrowthStandard standard) {
+        return references.get(standard);
+    }
 
-    private static void putIfPresent(Map<GrowthIndicator, Score> target, GrowthIndicator indicator, Score score) {
-        if (score != null) {
-            target.put(indicator, score);
+    /**
+     * Which standard a child of this age and gestation would be scored against, without
+     * needing a measurement. Surfaces use it to label a chart before anything is plotted.
+     */
+    public Selection standardFor(LocalDate dateOfBirth, String sex, Integer gestationalAgeWeeks, OffsetDateTime asOf) {
+        Integer chronologicalAgeDays = AgeCalculator.ageDays(dateOfBirth, asOf);
+        return selectStandard(chronologicalAgeDays,
+                CorrectedAge.correctedAgeDays(chronologicalAgeDays, gestationalAgeWeeks),
+                postmenstrualAgeWeeks(chronologicalAgeDays, gestationalAgeWeeks),
+                gestationalAgeWeeks,
+                normaliseSex(sex));
+    }
+
+    // --- standard selection ------------------------------------------------------------
+
+    /**
+     * The standard that applies, the axis position to read it at, and — when none applies —
+     * the reason in words a clinician can act on.
+     */
+    public record Selection(GrowthStandard standard, Integer axisPosition, String reason) {
+
+        static Selection of(GrowthStandard standard, int axisPosition) {
+            return new Selection(standard, axisPosition, null);
+        }
+
+        static Selection none(String reason) {
+            return new Selection(null, null, reason);
         }
     }
 
-    private String unsupportedReason(Integer chronologicalAgeDays, Integer scoringAgeDays, String sex) {
+    private Selection selectStandard(Integer chronologicalAgeDays,
+                                     Integer correctedAgeDays,
+                                     Integer postmenstrualAgeWeeks,
+                                     Integer gestationalAgeWeeks,
+                                     String sex) {
         if (chronologicalAgeDays == null) {
-            return "Date of birth is not recorded, so age-based growth standards cannot be applied.";
+            return Selection.none("Date of birth is not recorded, so age-based growth standards cannot be applied.");
+        }
+        if (chronologicalAgeDays < 0) {
+            return Selection.none("The measurement is dated before the child's date of birth,"
+                    + " so no age could be established. Check the measurement date.");
         }
         if (sex == null) {
-            return "Sex is not recorded; WHO growth standards are sex-specific.";
+            return Selection.none("Sex is not recorded; growth standards are sex-specific.");
         }
-        if (scoringAgeDays != null && scoringAgeDays > UNDER_FIVE_MAX_AGE_DAYS) {
-            return "Child is older than five years. The WHO 5-19 year reference is not yet loaded,"
-                    + " and the under-five standard must not be extrapolated.";
+
+        boolean preterm = CorrectedAge.isPreterm(gestationalAgeWeeks);
+        if (preterm && postmenstrualAgeWeeks != null
+                && postmenstrualAgeWeeks <= FENTON_MAX_POSTMENSTRUAL_WEEKS) {
+            return selectPretermStandard(postmenstrualAgeWeeks, gestationalAgeWeeks);
         }
-        return null;
+
+        Integer scoringAgeDays = correctedAgeDays != null ? correctedAgeDays : chronologicalAgeDays;
+        if (scoringAgeDays > UNDER_FIVE_MAX_AGE_DAYS) {
+            return Selection.none("Child is older than five years. The WHO 5-19 year reference is not yet loaded,"
+                    + " and the under-five standard must not be extrapolated.");
+        }
+        return Selection.of(GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS, scoringAgeDays);
     }
 
-    private Score score(GrowthIndicator indicator, String sex, Integer ageDays, BigDecimal value) {
-        if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
-            return null;
+    /**
+     * A baby born preterm is read on the preterm chart or not at all. Falling back to the
+     * term standard here is the single most dangerous thing this engine could do, because
+     * the resulting z-score looks entirely plausible and is wrong by several standard
+     * deviations in the direction that triggers referral.
+     */
+    private Selection selectPretermStandard(int postmenstrualAgeWeeks, Integer gestationalAgeWeeks) {
+        GrowthReferenceTables fenton = references.get(GrowthStandard.FENTON_2013_PRETERM_GROWTH);
+        String pretermContext = "This infant was born at " + gestationalAgeWeeks + " weeks and is now "
+                + postmenstrualAgeWeeks + " weeks postmenstrual age.";
+
+        if (fenton == null || !fenton.available()) {
+            return Selection.none(pretermContext + " " + (fenton == null ? "The preterm growth reference is not loaded."
+                    : fenton.unavailableReason())
+                    + " The measurement is recorded but not scored: WHO term standards are not valid for a preterm"
+                    + " infant and are deliberately not substituted.");
         }
-        LmsPoint point = lmsPoint(indicator, sex, ageDays);
+        if (postmenstrualAgeWeeks < FENTON_MIN_POSTMENSTRUAL_WEEKS) {
+            return Selection.none(pretermContext + " The Fenton 2013 preterm chart begins at "
+                    + FENTON_MIN_POSTMENSTRUAL_WEEKS + " weeks postmenstrual age, so this measurement"
+                    + " falls before any published reference. Check the recorded gestational age.");
+        }
+        return Selection.of(GrowthStandard.FENTON_2013_PRETERM_GROWTH, postmenstrualAgeWeeks);
+    }
+
+    // --- scoring -----------------------------------------------------------------------
+
+    private void scoreInto(Map<GrowthIndicator, Score> scores,
+                           Map<GrowthIndicator, String> gaps,
+                           GrowthReferenceTables tables,
+                           Selection selection,
+                           String sex,
+                           GrowthIndicator indicator,
+                           BigDecimal measuredValue) {
+        if (measuredValue == null || measuredValue.compareTo(BigDecimal.ZERO) <= 0) {
+            // Nothing was measured. That is the caller's business to report, not a gap in
+            // the standard, so it is left unrecorded here.
+            return;
+        }
+        GrowthStandard standard = selection.standard();
+        if (!standard.covers(indicator)) {
+            gaps.put(indicator, standard.label() + " does not publish a " + readable(indicator)
+                    + " reference, so this measurement cannot be scored on it.");
+            return;
+        }
+        LmsPoint point = tables.point(indicator, sex, selection.axisPosition());
         if (point == null) {
-            return null;
+            gaps.put(indicator, standard.label() + " has no published " + readable(indicator)
+                    + " point at " + axisDescription(standard, selection.axisPosition()) + ".");
+            return;
         }
 
-        double measurement = value.doubleValue();
+        BigDecimal inTableUnit = toTableUnit(measuredValue, tables.unit(indicator), indicator);
+        Double raw = zScore(point, inTableUnit.doubleValue());
+        if (raw == null) {
+            gaps.put(indicator, "The recorded " + readable(indicator)
+                    + " could not be scored against " + standard.label() + ".");
+            return;
+        }
+
+        double z = raw;
+        if (standard == GrowthStandard.FENTON_2013_PRETERM_GROWTH
+                && indicator == GrowthIndicator.WEIGHT_FOR_AGE) {
+            z = applyExtremeTailCorrection(point, inTableUnit.doubleValue(), z);
+        }
+
+        scores.put(indicator, new Score(
+                BigDecimal.valueOf(z).setScale(2, RoundingMode.HALF_UP),
+                BigDecimal.valueOf(100.0d * normalCdf(z)).setScale(1, RoundingMode.HALF_UP)));
+    }
+
+    private static Double zScore(LmsPoint point, double measurement) {
         double z;
         if (Math.abs(point.l()) < 1e-12) {
             z = Math.log(measurement / point.m()) / point.s();
         } else {
             z = (Math.pow(measurement / point.m(), point.l()) - 1.0d) / (point.l() * point.s());
         }
-        if (!Double.isFinite(z)) {
-            return null;
-        }
-
-        return new Score(
-                BigDecimal.valueOf(z).setScale(2, RoundingMode.HALF_UP),
-                BigDecimal.valueOf(100.0d * normalCdf(z)).setScale(1, RoundingMode.HALF_UP));
+        return Double.isFinite(z) ? z : null;
     }
 
-    private LmsPoint lmsPoint(GrowthIndicator indicator, String sex, Integer ageDays) {
-        if (indicator == null || sex == null || ageDays == null || ageDays < 0) {
-            return null;
+    private static Double valueAt(LmsPoint point, double zScore) {
+        double value;
+        if (Math.abs(point.l()) < 1e-12) {
+            value = point.m() * Math.exp(point.s() * zScore);
+        } else {
+            value = point.m() * Math.pow(1.0d + point.l() * point.s() * zScore, 1.0d / point.l());
         }
-        Map<String, NavigableMap<Integer, LmsPoint>> bySex = standards.get(indicator);
-        if (bySex == null) {
-            return null;
+        return Double.isFinite(value) && value > 0 ? value : null;
+    }
+
+    /**
+     * The WHO tail correction, as applied by the Fenton chart's own published calculator.
+     *
+     * <p>Beyond three standard deviations the Box-Cox curve is fitted to almost no data and
+     * a small difference in weight produces an implausibly large change in z. Outside that
+     * range the score is instead measured in units of the distance between the second and
+     * third standard deviation. This matters more for preterm infants than for any other
+     * group, because a great many of them genuinely sit in the tails.</p>
+     */
+    private static double applyExtremeTailCorrection(LmsPoint point, double measurement, double z) {
+        if (z > 3.0d) {
+            Double sd3 = valueAt(point, 3.0d);
+            Double sd2 = valueAt(point, 2.0d);
+            if (sd3 == null || sd2 == null || sd3 <= sd2) {
+                return z;
+            }
+            return 3.0d + (measurement - sd3) / (sd3 - sd2);
         }
-        NavigableMap<Integer, LmsPoint> rows = bySex.get(sex);
-        return rows == null ? null : rows.get(ageDays);
+        if (z < -3.0d) {
+            Double sd3 = valueAt(point, -3.0d);
+            Double sd2 = valueAt(point, -2.0d);
+            if (sd3 == null || sd2 == null || sd2 <= sd3) {
+                return z;
+            }
+            return -3.0d + (measurement - sd3) / (sd2 - sd3);
+        }
+        return z;
+    }
+
+    // --- units, stature, helpers -------------------------------------------------------
+
+    private static BigDecimal toTableUnit(BigDecimal measured, String tableUnit, GrowthIndicator indicator) {
+        if ("g".equalsIgnoreCase(tableUnit) && "kg".equals(indicator.canonicalUnit())) {
+            return measured.multiply(BigDecimal.valueOf(1000));
+        }
+        return measured;
+    }
+
+    private static BigDecimal toMeasurementUnit(BigDecimal inTableUnit, String tableUnit, GrowthIndicator indicator) {
+        if ("g".equalsIgnoreCase(tableUnit) && "kg".equals(indicator.canonicalUnit())) {
+            return inTableUnit.divide(BigDecimal.valueOf(1000), 6, RoundingMode.HALF_UP);
+        }
+        return inTableUnit;
+    }
+
+    private static String readable(GrowthIndicator indicator) {
+        return switch (indicator) {
+            case WEIGHT_FOR_AGE -> "weight-for-age";
+            case LENGTH_HEIGHT_FOR_AGE -> "length/height-for-age";
+            case BODY_MASS_INDEX_FOR_AGE -> "BMI-for-age";
+            case HEAD_CIRCUMFERENCE_FOR_AGE -> "head-circumference-for-age";
+        };
+    }
+
+    private static String axisDescription(GrowthStandard standard, Integer axisPosition) {
+        return standard.axis() == GrowthStandard.Axis.POSTMENSTRUAL_WEEKS
+                ? axisPosition + " weeks postmenstrual age"
+                : "day " + axisPosition;
     }
 
     private BigDecimal resolveBmi(GrowthMeasurement measurement, BigDecimal normalisedStature) {
@@ -284,39 +502,6 @@ public final class GrowthEngine {
         };
     }
 
-    private Map<GrowthIndicator, Map<String, NavigableMap<Integer, LmsPoint>>> loadStandards(ObjectMapper objectMapper) {
-        try (InputStream inputStream = GrowthEngine.class.getClassLoader().getResourceAsStream(RESOURCE_PATH)) {
-            if (inputStream == null) {
-                throw new IllegalStateException("WHO growth standards resource not found: " + RESOURCE_PATH);
-            }
-            JsonNode root = objectMapper.readTree(inputStream);
-            Map<String, NavigableMap<Integer, LmsPoint>> empty = Map.of();
-            Map<String, Map<String, NavigableMap<Integer, LmsPoint>>> byKey = new HashMap<>();
-
-            root.path("indicators").fields().forEachRemaining(indicatorEntry -> {
-                Map<String, NavigableMap<Integer, LmsPoint>> bySex = new HashMap<>();
-                indicatorEntry.getValue().fields().forEachRemaining(sexEntry -> {
-                    NavigableMap<Integer, LmsPoint> rows = new TreeMap<>();
-                    for (JsonNode row : sexEntry.getValue()) {
-                        rows.put(row.path("day").asInt(),
-                                new LmsPoint(row.path("l").asDouble(), row.path("m").asDouble(), row.path("s").asDouble()));
-                    }
-                    bySex.put(sexEntry.getKey(), rows);
-                });
-                byKey.put(indicatorEntry.getKey(), bySex);
-            });
-
-            Map<GrowthIndicator, Map<String, NavigableMap<Integer, LmsPoint>>> loaded =
-                    new EnumMap<>(GrowthIndicator.class);
-            for (GrowthIndicator indicator : GrowthIndicator.values()) {
-                loaded.put(indicator, byKey.getOrDefault(indicator.datasetKey(), empty));
-            }
-            return loaded;
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to load WHO growth standards", exception);
-        }
-    }
-
     /** Standard normal CDF via the Abramowitz-Stegun error-function approximation. */
     private static double normalCdf(double z) {
         return 0.5d * (1.0d + erf(z / Math.sqrt(2.0d)));
@@ -350,13 +535,18 @@ public final class GrowthEngine {
     }
 
     /**
-     * @param unsupportedReason plain-language explanation when no scores could be produced;
-     *                          null when the measurement was scored
+     * @param postmenstrualAgeWeeks completed weeks since the last menstrual period, where
+     *                              gestational age is known; the axis the preterm chart is read on
+     * @param unavailableIndicators per-indicator explanations of why something measured was
+     *                              not scored — a stated gap rather than a silent omission
+     * @param unsupportedReason     plain-language explanation when no scores could be produced;
+     *                              null when the measurement was scored
      */
     public record GrowthAssessment(
             Integer ageDays,
             Integer correctedAgeDays,
             boolean correctedAgeApplied,
+            Integer postmenstrualAgeWeeks,
             String standard,
             String engineVersion,
             BigDecimal bmi,
@@ -364,6 +554,7 @@ public final class GrowthEngine {
             String normalisedStatureMode,
             BigDecimal statureAdjustmentCm,
             Map<GrowthIndicator, Score> scores,
+            Map<GrowthIndicator, String> unavailableIndicators,
             String unsupportedReason) {
 
         public Score score(GrowthIndicator indicator) {
@@ -374,11 +565,13 @@ public final class GrowthEngine {
             Score score = score(indicator);
             return score == null ? null : score.zScore();
         }
+
+        /** The standard these scores were produced against, or null when nothing was scored. */
+        public GrowthStandard growthStandard() {
+            return GrowthStandard.fromId(standard);
+        }
     }
 
     public record Score(BigDecimal zScore, BigDecimal percentile) {
-    }
-
-    public record LmsPoint(double l, double m, double s) {
     }
 }

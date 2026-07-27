@@ -21,6 +21,7 @@ CHECKS=(
   check-dak-traceability.sh
   check-rmnp-capture-coverage.sh
   check-source-text-integrity.sh
+  check-migration-version-collisions.sh
   check-butano-data-durability.sh
 )
 

@@ -50,6 +50,13 @@ public class PlatformOriginService {
     public static final String ACTION_CREATE_COUNTRY_OPERATION = "CREATE_COUNTRY_OPERATION";
     public static final String ACTION_APPOINT_NATIONAL_ADMIN = "APPOINT_NATIONAL_ADMIN";
     public static final String ACTION_REVOKE_APPOINTMENT = "REVOKE_APPOINTMENT";
+    /**
+     * Found a regulator by appointing its first administrator (RB-3). Same species as
+     * APPOINT_NATIONAL_ADMIN — a privileged grant no single person may make — so it rides the same
+     * two-person rail. The domain record and the activation event are owned by
+     * {@code RegulatorBootstrapService}; this rail supplies only the four-eyes vehicle.
+     */
+    public static final String ACTION_APPOINT_FOUNDING_REGULATOR_ADMIN = "APPOINT_FOUNDING_REGULATOR_ADMIN";
 
     /** Two-person rule: every platform action needs two distinct PLATFORM_ORIGIN_ADMINISTRATOR approvals. */
     public static final List<String> TWO_PERSON_PLATFORM_APPROVALS =
@@ -121,6 +128,16 @@ public class PlatformOriginService {
         params.put("expiresAt", str(body.get("expiresAt")));
         params.put("scope", body.get("scope"));
         return initiatePlatformAction(tenantId, requesterId, ACTION_APPOINT_NATIONAL_ADMIN, params);
+    }
+
+    /**
+     * Start a founding-regulator-administrator appointment on the two-person rail (RB-3). The
+     * caller ({@code RegulatorBootstrapService}) has already written the domain request row and
+     * passes its identifiers through {@code params}; this only creates the four-eyes vehicle.
+     */
+    public AccessRequestEntity initiateFoundingRegulatorAdmin(UUID tenantId, String requesterId,
+                                                              Map<String, Object> params) {
+        return initiatePlatformAction(tenantId, requesterId, ACTION_APPOINT_FOUNDING_REGULATOR_ADMIN, params);
     }
 
     /** Initiate REVOKE_APPOINTMENT — revocation is itself a two-person platform action. */
@@ -213,6 +230,8 @@ public class PlatformOriginService {
                     result = executeAppointment(request, params);
             case ACTION_REVOKE_APPOINTMENT ->
                     result = executeRevocation(request, params, actorId);
+            case ACTION_APPOINT_FOUNDING_REGULATOR_ADMIN ->
+                    result = executeFoundingRegulatorAdmin(request, params);
             default -> throw new IllegalArgumentException("Unknown platform action: " + action);
         }
         accessRequestService.transition(accessRequestId, STATUS_EXECUTED,
@@ -268,6 +287,31 @@ public class PlatformOriginService {
         log.info("Country operation {} ({}) created via platform action {}",
                 saved.getId(), saved.getIsoCountryCode(), request.getId());
         return saved;
+    }
+
+    /**
+     * Execute a founding-regulator-administrator appointment (RB-3): with the two approvals in
+     * hand, emit the event org-registry consumes to create and verify the founding appointment.
+     *
+     * <p>This service does not write the appointment — appointments are org-registry's (R2). It
+     * emits and returns; {@code RegulatorBootstrapService} marks its domain row ACTIVATED. The
+     * event carries the approval vehicle's id so org-registry's {@code verify} can record which
+     * four-eyes decision authorised the activation, rather than a bare system actor.</p>
+     */
+    private Map<String, Object> executeFoundingRegulatorAdmin(AccessRequestEntity request,
+                                                              Map<String, Object> params) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("bootstrapRequestId", str(params.get("bootstrapRequestId")));
+        payload.put("organizationId", str(params.get("organizationId")));
+        payload.put("personHealthId", str(params.get("personHealthId")));
+        payload.put("roleCode", str(params.get("roleCode")));
+        payload.put("evidenceRef", str(params.get("evidenceRef")));
+        payload.put("accessRequestId", request.getId().toString());
+        payload.put("approvedVia", "TWO_PERSON_PLATFORM_APPROVAL");
+
+        emit("REGULATOR_BOOTSTRAP", request.getId(),
+                "impilo.governance.regulator_bootstrap.activated", payload, request.getTenantId());
+        return payload;
     }
 
     private NationalAppointmentEntity executeAppointment(AccessRequestEntity request,

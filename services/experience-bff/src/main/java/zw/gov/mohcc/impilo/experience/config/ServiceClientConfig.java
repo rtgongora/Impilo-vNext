@@ -8,6 +8,8 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.auth.ServiceTokenProperties;
+import zw.gov.mohcc.impilo.experience.auth.ServiceTokenProvider;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -25,7 +27,7 @@ import java.util.List;
  * ensures the sovereign service receives the same trust context as the BFF.</p>
  */
 @Configuration
-@EnableConfigurationProperties(ServiceClientConfig.ServiceEndpoints.class)
+@EnableConfigurationProperties({ServiceClientConfig.ServiceEndpoints.class, ServiceTokenProperties.class})
 public class ServiceClientConfig {
     private static final String X_SERVICE_ID = "X-Service-Id";
     private static final String X_SERVICE_NAME = "X-Service-Name";
@@ -292,9 +294,20 @@ public class ServiceClientConfig {
     /**
      * Interceptor that copies v1.1 trust headers from the current inbound
      * HTTP request onto every outbound RestTemplate call.
+     *
+     * <p>Authorization precedence (preview==prod auth wave, stage 2 slice 1):</p>
+     * <ol>
+     *   <li>An Authorization header pre-set by the client method wins outright.</li>
+     *   <li>Otherwise the inbound user token is forwarded unchanged (JWT propagation).</li>
+     *   <li>Only when NEITHER exists (scheduled jobs, Kafka consumers, public-lane
+     *       composition, service-originated calls) is {@link ServiceTokenProvider}
+     *       consulted for this workload's own client_credentials token. Trust headers
+     *       are context, not authentication — see the 2026-07-22 confused-deputy
+     *       finding; NetworkPolicy is proven non-enforcing on preview k3s.</li>
+     * </ol>
      */
     @Bean
-    public ClientHttpRequestInterceptor trustHeaderForwardingInterceptor() {
+    public ClientHttpRequestInterceptor trustHeaderForwardingInterceptor(ServiceTokenProvider serviceTokenProvider) {
         return (request, body, execution) -> {
             ServletRequestAttributes attrs =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -374,6 +387,15 @@ public class ServiceClientConfig {
                 // do not expose the constant yet.
                 forwardHeader(inbound, request, "X-Step-Up-Token");
             }
+            // No inbound user token and none pre-set by the caller: attach this workload's
+            // OWN credential (client_credentials) so OAuth-enforcing downstreams (ndila,
+            // clinical-knowledge-platform, …) stop 401ing service-originated calls into
+            // silent degradation. Empty provider result = proceed without Authorization
+            // (the provider has already logged SERVICE_TOKEN_MINT_FAILED).
+            if (!request.getHeaders().containsKey(CompanionHeaders.AUTHORIZATION)) {
+                serviceTokenProvider.getAccessToken()
+                        .ifPresent(token -> request.getHeaders().setBearerAuth(token));
+            }
             request.getHeaders().set(CompanionHeaders.ACCESS_MODE, "INTERNAL");
             // BFF identifies itself as the caller for downstream S2S trust
             // contracts. Downstream services can use this to authorize against
@@ -388,8 +410,18 @@ public class ServiceClientConfig {
 
     @Bean
     public RestTemplate serviceRestTemplate(ClientHttpRequestInterceptor trustHeaderForwardingInterceptor) {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofSeconds(3));
+        // JDK HttpClient, NOT SimpleClientHttpRequestFactory. The latter is backed by
+        // HttpURLConnection, which cannot send PATCH — it throws ProtocolException, the client
+        // catches it, and the BFF returns 502. Seven downstream clients PATCH through this bean
+        // (Msika, PatientSafety, Costa, Pacs, Dispatch, and the vashandi swap-decide), so every one
+        // of them silently 502'd on any PATCH. Unit tests mock the client and never exercise a real
+        // PATCH, so the estate-wide break was invisible until a WireMock loopback test caught it —
+        // pin PATCH over a real loopback; mocks hide it.
+        java.net.http.HttpClient httpClient = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
+        org.springframework.http.client.JdkClientHttpRequestFactory factory =
+                new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(Duration.ofSeconds(5));
         RestTemplate restTemplate = new RestTemplate(factory);
         restTemplate.setInterceptors(List.of(trustHeaderForwardingInterceptor));

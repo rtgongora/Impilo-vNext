@@ -678,3 +678,37 @@ birthdays complete a month late rather than early, so a minimum-age gate never o
 | IMAM programme knowledge | `services/clinical-knowledge-platform-service/.../imam/`, `resources/clinical/imam-programme.json` |
 | IMAM episode record | `services/pct-service/.../core/clinical/Imam*.java`, migrations V400–V401 |
 | Clinical content | `services/*/src/main/resources/clinical/*.json` |
+| Growth reference tables (WHO 2006 and Fenton 2013) | `libs/paediatric-domain/src/main/resources/growth/` |
+
+---
+
+## 8. Preterm growth — Fenton 2013
+
+Full report: [`fenton-2013-preterm-growth.md`](fenton-2013-preterm-growth.md).
+
+Infants born before 37 weeks are no longer scored against the WHO term standard. They are
+read against the Fenton 2013 preterm chart at postmenstrual age until 49 completed weeks,
+and handed over to WHO at corrected age from 50 weeks, where the Fenton chart ends.
+
+**This closed a live safety defect, not a gap.** `CorrectedAge` clamps a negative corrected
+age to zero, so a 28-week infant weighed at two weeks old was scored against the WHO curve
+for a newborn — a z-score below −6, which `NutritionClassifier` turns into severe acute
+malnutrition and an IMAM referral for a baby growing exactly as expected. The stored row
+looked entirely well-formed. Every earlier test, deployment and live proof had used a term
+baby.
+
+Where the preterm reference has no published point the measurement is stored unscored, with
+a reason that says the term standard was withheld deliberately. Fenton joins the pack's
+existing honest-absence inventory alongside WHO weight-for-length and the WHO 5–19 year
+reference.
+
+Also closed on the way through: the BFF's duplicate WHO scorer, which had no corrected-age
+handling and so disagreed with the stored score for every preterm infant; and the growth read
+contract, which had never been reconciled between PCT's flat rows and the shell's
+`attributes.derived`, so the growth page had always fallen into its error state. The growth
+chart component — built, tested and mounted nowhere for want of reference curves — is now
+plotted.
+
+Content is `ENGINEERING_SEED` pending MoHCC, and carries a CC BY-NC-ND licence whose
+attribution obligations travel through the API to the screen. Migration band `V400`–`V429`
+is reserved in [`docs/registry/iatg-paediatrics-leases.md`](../../registry/iatg-paediatrics-leases.md).
