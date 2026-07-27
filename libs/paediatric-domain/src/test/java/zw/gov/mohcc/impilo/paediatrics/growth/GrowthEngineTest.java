@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -92,7 +93,9 @@ class GrowthEngineTest {
 
     @Test
     void pretermInfantIsScoredAgainstCorrectedAge() {
-        // Born at 32 weeks, measured at 120 days chronological => 85 days corrected.
+        // Born at 32 weeks — eight weeks short of full term — measured at 120 days
+        // chronological => 64 days corrected. This read 85 while corrected age was measured
+        // back to the 37-week preterm threshold rather than to 40 weeks.
         GrowthEngine.GrowthAssessment assessment = engine.assess(
                 new GrowthEngine.PatientContext(LocalDate.parse("2026-01-01"), "FEMALE", 32),
                 new GrowthEngine.GrowthMeasurement(
@@ -100,15 +103,49 @@ class GrowthEngineTest {
                         BigDecimal.valueOf(5.0d), null, null, null, null, null));
 
         assertEquals(120, assessment.ageDays());
-        assertEquals(85, assessment.correctedAgeDays());
+        assertEquals(120 - 56, assessment.correctedAgeDays());
         assertTrue(assessment.correctedAgeApplied());
+
+        // At 32 weeks' gestation plus 17 completed weeks lived, this infant is 49 weeks
+        // postmenstrual age and belongs on the preterm chart, not the term one.
+        assertEquals(49, assessment.postmenstrualAgeWeeks());
+
+        // The invariant holds whether or not the preterm reference is loaded in this
+        // deployment: either it scored on the preterm chart, or it scored on nothing and
+        // said why. What it must never do is quietly answer with the term standard.
+        assertNotEquals(GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS.standardId(), assessment.standard(),
+                "a preterm infant inside the preterm chart's range must never be scored on WHO term standards");
+        if (engine.reference(GrowthStandard.FENTON_2013_PRETERM_GROWTH).available()) {
+            assertEquals(GrowthStandard.FENTON_2013_PRETERM_GROWTH.standardId(), assessment.standard());
+            assertNotNull(assessment.zScore(GrowthIndicator.WEIGHT_FOR_AGE));
+        } else {
+            assertNull(assessment.zScore(GrowthIndicator.WEIGHT_FOR_AGE));
+            assertTrue(assessment.unsupportedReason().contains("not substituted"),
+                    "an unscored preterm measurement must say that the term standard was withheld deliberately");
+        }
+    }
+
+    @Test
+    void pretermInfantPastThePretermChartMovesToWhoAtCorrectedAge() {
+        // Born at 32 weeks, measured at 300 days chronological => 74 weeks postmenstrual,
+        // beyond the Fenton chart, so follow-up continues on WHO at 244 days corrected
+        // (300 less the eight weeks this baby was born short of term).
+        GrowthEngine.GrowthAssessment assessment = engine.assess(
+                new GrowthEngine.PatientContext(LocalDate.parse("2025-01-01"), "FEMALE", 32),
+                new GrowthEngine.GrowthMeasurement(
+                        OffsetDateTime.parse("2025-10-28T00:00:00Z"),
+                        BigDecimal.valueOf(7.0d), null, null, null, null, null));
+
+        assertEquals(300, assessment.ageDays());
+        assertEquals(300 - 56, assessment.correctedAgeDays());
+        assertEquals(GrowthStandard.WHO_2006_CHILD_GROWTH_STANDARDS.standardId(), assessment.standard());
 
         // The same weight scored against chronological age would look worse than it is.
         GrowthEngine.GrowthAssessment asIfTerm = engine.assess(
-                new GrowthEngine.PatientContext(LocalDate.parse("2026-01-01"), "FEMALE", 40),
+                new GrowthEngine.PatientContext(LocalDate.parse("2025-01-01"), "FEMALE", 40),
                 new GrowthEngine.GrowthMeasurement(
-                        OffsetDateTime.parse("2026-05-01T00:00:00Z"),
-                        BigDecimal.valueOf(5.0d), null, null, null, null, null));
+                        OffsetDateTime.parse("2025-10-28T00:00:00Z"),
+                        BigDecimal.valueOf(7.0d), null, null, null, null, null));
 
         assertTrue(assessment.zScore(GrowthIndicator.WEIGHT_FOR_AGE)
                         .compareTo(asIfTerm.zScore(GrowthIndicator.WEIGHT_FOR_AGE)) > 0,

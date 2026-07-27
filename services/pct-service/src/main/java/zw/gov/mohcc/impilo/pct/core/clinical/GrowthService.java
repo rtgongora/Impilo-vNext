@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.pct.core.clinical;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +13,10 @@ import zw.gov.mohcc.impilo.paediatrics.growth.NutritionClassifier;
 import zw.gov.mohcc.impilo.pct.integration.VitoIntegration;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.GrowthMeasurementEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.NewbornBirthRecordEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.GrowthMeasurementRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.NewbornBirthRecordRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -31,11 +34,17 @@ import java.util.UUID;
  * Growth measurement system of record for the paediatric pathway.
  *
  * <p>Recording a measurement does three things in one transaction: it stores what was
- * measured and under what conditions, it scores the measurement against the WHO growth
- * standard using the child's age at that moment, and it draws a nutrition conclusion from
- * MUAC, oedema and weight-for-age. Scoring happens on write rather than on read so that a
- * measurement taken offline carries its own interpretation, and so a later change to the
- * standard or to the recorded date of birth cannot silently restate a historical reading.</p>
+ * measured and under what conditions, it scores the measurement against whichever growth
+ * standard the child is eligible for, and it draws a nutrition conclusion from MUAC, oedema
+ * and weight-for-age. Scoring happens on write rather than on read so that a measurement
+ * taken offline carries its own interpretation, and so a later change to the standard or to
+ * the recorded date of birth cannot silently restate a historical reading.</p>
+ *
+ * <p>The standard is chosen by the engine from gestational age: term children are read on
+ * the WHO 2006 standard and infants born preterm on the Fenton 2013 preterm chart until
+ * they grow off it. Gestational age therefore decides the clinical meaning of every score
+ * here, which is why it is resolved from the child's birth record rather than relying on
+ * whichever screen happened to submit the measurement knowing it.</p>
  *
  * <p>Scoring never blocks recording. If the child's date of birth or sex is unknown, or the
  * child is older than the loaded standard covers, the measurement is still stored and the
@@ -53,19 +62,22 @@ public class GrowthService {
     private final ClinicalAccessGuard accessGuard;
     private final VitoIntegration vitoIntegration;
     private final GrowthEngine growthEngine;
+    private final NewbornBirthRecordRepository newbornRepository;
 
     public GrowthService(GrowthMeasurementRepository growthRepository,
                          EventOutboxRepository outboxRepository,
                          ObjectMapper objectMapper,
                          ClinicalAccessGuard accessGuard,
                          VitoIntegration vitoIntegration,
-                         GrowthEngine growthEngine) {
+                         GrowthEngine growthEngine,
+                         NewbornBirthRecordRepository newbornRepository) {
         this.growthRepository = growthRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.accessGuard = accessGuard;
         this.vitoIntegration = vitoIntegration;
         this.growthEngine = growthEngine;
+        this.newbornRepository = newbornRepository;
     }
 
     @Transactional(readOnly = true)
@@ -142,7 +154,7 @@ public class GrowthService {
     }
 
     /**
-     * Stamps age, WHO z-scores and nutrition status onto the row. Any failure to resolve
+     * Stamps age, z-scores and nutrition status onto the row. Any failure to resolve
      * the child's demographics degrades to an explained absence of scores, never to a
      * rejected measurement: losing the measurement is worse than losing the score.
      */
@@ -167,8 +179,18 @@ public class GrowthService {
             sex = str(body.get("sex"));
         }
 
+        // Which standard applies turns entirely on gestational age, so it is resolved from
+        // the birth record when the caller does not carry it. A growth screen has no reason
+        // to know a baby's gestation, but the newborn record does — and without this the
+        // preterm chart could never be selected outside the neonatal unit that recorded it.
         Integer gestationalAgeWeeks = integer(body.get("gestational_age_weeks"));
+        String gestationalAgeSource = gestationalAgeWeeks != null ? "SUPPLIED" : null;
+        if (gestationalAgeWeeks == null) {
+            gestationalAgeWeeks = gestationalAgeFromBirthRecord(row.getSubjectCpid());
+            gestationalAgeSource = gestationalAgeWeeks != null ? "NEWBORN_BIRTH_RECORD" : "NOT_RECORDED";
+        }
         row.setGestationalAgeWeeks(gestationalAgeWeeks);
+        row.setGestationalAgeSource(gestationalAgeSource);
 
         GrowthEngine.GrowthAssessment assessment = growthEngine.assess(
                 new GrowthEngine.PatientContext(dateOfBirth, sex, gestationalAgeWeeks),
@@ -189,9 +211,11 @@ public class GrowthService {
         row.setLengthHeightForAgeZ(assessment.zScore(GrowthIndicator.LENGTH_HEIGHT_FOR_AGE));
         row.setBmiForAgeZ(assessment.zScore(GrowthIndicator.BODY_MASS_INDEX_FOR_AGE));
         row.setHeadCircumferenceForAgeZ(assessment.zScore(GrowthIndicator.HEAD_CIRCUMFERENCE_FOR_AGE));
+        row.setPostmenstrualAgeWeeks(assessment.postmenstrualAgeWeeks());
         row.setGrowthStandard(assessment.standard());
         row.setGrowthEngineVersion(assessment.engineVersion());
         row.setScoringNote(assessment.unsupportedReason());
+        row.setScoringGaps(serialiseGaps(assessment.unavailableIndicators()));
 
         NutritionClassifier.NutritionAssessment nutrition = NutritionClassifier.classify(
                 assessment.ageDays(),
@@ -200,6 +224,37 @@ public class GrowthService {
                 row.getWeightForAgeZ());
         row.setNutritionStatus(nutrition.status().name());
         row.setNutritionContentVersion(nutrition.contentVersion());
+    }
+
+    /**
+     * Gestational age at birth from this child's own birth record. A failure to read it is
+     * logged and treated as unknown: the measurement still gets recorded, and the row says
+     * the gestational age was not established rather than implying the baby was term.
+     */
+    private Integer gestationalAgeFromBirthRecord(String subjectCpid) {
+        try {
+            return newbornRepository
+                    .findByTenantIdAndSubjectCpid(TrustContextHolder.require().tenantId(), subjectCpid)
+                    .map(NewbornBirthRecordEntity::getGestationalAgeWeeks)
+                    .orElse(null);
+        } catch (RuntimeException e) {
+            log.warn("Growth scoring could not read the birth record for gestational age: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private String serialiseGaps(Map<GrowthIndicator, String> gaps) {
+        if (gaps == null || gaps.isEmpty()) {
+            return null;
+        }
+        Map<String, String> byKey = new LinkedHashMap<>();
+        gaps.forEach((indicator, reason) -> byKey.put(indicator.datasetKey(), reason));
+        try {
+            return objectMapper.writeValueAsString(byKey);
+        } catch (JsonProcessingException e) {
+            log.warn("Could not serialise growth scoring gaps: {}", e.getMessage());
+            return null;
+        }
     }
 
     private Map<String, Object> resolveDemographics(String subjectCpid) {

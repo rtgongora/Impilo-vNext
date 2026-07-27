@@ -17,37 +17,50 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Every condition key a seeded policy rule uses must be a key {@code PolicyEngine} implements.
+ * Every condition key a <em>live</em> policy rule uses must be a key {@code PolicyEngine} implements.
  *
- * <p><strong>Why this exists.</strong> {@code evaluateConditions} tests the keys it knows —
- * {@code if (conditions.containsKey("path_contains")) …} — and then falls through to
- * {@code return true}. An <em>unrecognised</em> key is therefore silently ignored, not failed.
- * That has a consequence nobody would guess from reading a seed migration:</p>
+ * <p><strong>Why this exists.</strong> {@code evaluateConditions} once tested the keys it knew —
+ * {@code if (conditions.containsKey("path_contains")) …} — and then fell through to
+ * {@code return true}. An <em>unrecognised</em> key was therefore silently ignored, not failed, so a
+ * rule carrying one did not sit inert: it evaluated on whatever remained and fired more broadly than
+ * it read. The classic shape:</p>
  *
  * <pre>
  *   DENY … '{"path_contains": "/regulatory/", "deny_operational_lanes": true}'
  * </pre>
  *
- * <p>reads as "deny the operational lanes under /regulatory/", but evaluates as "deny
- * <em>everything</em> under /regulatory/", because the qualifying key does not exist. On an ALLOW
- * the same mistake grants more than intended; on a DENY it denies more than intended — and DENY
- * wins, so it can swallow the very ALLOW rules seeded beside it.</p>
+ * <p>reads as "deny the operational lanes under /regulatory/", but evaluated as "deny
+ * <em>everything</em> under /regulatory/", because the qualifying key did not exist — and DENY wins,
+ * so it could swallow the very ALLOW rules seeded beside it. The engine now treats an unknown key as
+ * a non-match with a WARN, which closes that hole in the runtime; this guard is the second lock,
+ * catching a bad key at build time so a seed cannot ship a rule whose stated intent the engine will
+ * decline to honour.</p>
  *
- * <p>A rule carrying an unimplemented key is not inert. It is <em>differently active</em>, which is
- * worse, because the seed file documents an intention the engine never enforces.</p>
+ * <p><strong>It reads effective state, not file text.</strong> An applied migration can never be
+ * edited (Flyway validates its checksum), so a rule authored with a bad key is repaired by a later
+ * migration that {@code UPDATE}s its conditions — exactly what V053 did for the ROM shadow rows. A
+ * guard that re-scanned raw {@code '{…}'} literals would go on reporting keys that were rewritten
+ * migrations ago, which is why the previous version needed a hand-maintained {@code BASELINE} of
+ * known offenders that could never quite reach zero and rotted the moment a key was implemented (as
+ * {@code allowed_jurisdictions} was, in RB-2c, with nothing making anyone remove it). Reading the
+ * rules as the database would end up holding them ({@link SeededPolicyRules}) removes the baseline
+ * entirely: a repaired rule is clean, a withdrawn rule ({@code active=false}) claims nothing, and
+ * only a genuinely unimplemented key on a genuinely live rule fails the build.</p>
  *
- * <p><strong>It ratchets</strong>, like the BFF's downstream-route guard: known offenders live in
- * {@link #BASELINE} and are reported but do not fail; a new one fails the build. Fix a baseline
- * entry — by implementing the key or by rewriting the rule — and delete its line. The list may only
- * shrink.</p>
+ * <p>There is deliberately <strong>no baseline and no allowlist</strong>. Implemented keys are read
+ * from the service source, so implementing one in the engine widens what the guard accepts with no
+ * second edit; repairing or withdrawing a rule in a migration narrows what it must accept with no
+ * second edit. Nothing here is kept in sync by hand — which is the property a ratchet is supposed to
+ * have and a static list never does.</p>
  */
 class PolicyConditionKeyContractTest {
 
-    private static final Path MIGRATIONS = Path.of("src/main/resources/db/migration");
     private static final Path SOURCE = Path.of("src/main/java/zw/gov/mohcc/impilo/tshepo/authz");
+    private static final Path MIGRATIONS = Path.of("src/main/resources/db/migration");
 
     /**
-     * Any map lookup of a snake_case literal anywhere in the service counts as "implemented".
+     * Any map lookup of a snake_case literal (or {@code visibility}) anywhere in the service counts
+     * as "implemented".
      *
      * <p>Deliberately broader than {@code evaluateConditions}: a condition can legitimately be
      * consumed elsewhere. {@code visibility} is read at {@code PolicyEngine} via
@@ -60,106 +73,74 @@ class PolicyConditionKeyContractTest {
     private static final Pattern IMPLEMENTED =
             Pattern.compile("\\.(?:containsKey|get)\\(\"([a-z][a-z0-9_]*_[a-z0-9_]*|visibility)\"\\)");
 
-    /** Keys appearing in a seeded conditions JSON literal. */
-    private static final Pattern SEEDED = Pattern.compile("\"([a-z_]+)\"\\s*:");
-
     /**
-     * Known unimplemented keys, recorded rather than fixed here because they belong to the ROM
-     * lane's SHADOW rows (authz V045–V047). Each is a real defect waiting on the engine work that
-     * would give it meaning — and every one of those rows is {@code active=false}, so none is
-     * currently mis-evaluating in production. They must not be flipped ACTIVE while listed here:
-     * {@code rom-hpa-no-operational-access} in particular would, on activation, deny
-     * HPA_OVERSIGHT_OFFICER every {@code /regulatory/} path — including the two oversight ALLOW
-     * rules seeded immediately above it.
+     * A top-level snake_case key in a conditions JSON object. Camel-cased keys inside the
+     * {@code visibility} overlay ({@code confidentialCategories}, {@code drillDownAllowed}, …) do not
+     * match, and correctly so — they are read from the overlay object, not looked up as condition
+     * keys, and the overlay itself is reached through the implemented {@code visibility}.
      */
-    private static final Set<String> BASELINE = Set.of(
-            "require_token_org_match",
-            "deny_when_org_mismatch",
-            "require_docket_assignment",
-            "deny_when_not_docketed",
-            "require_escalation_grant",
-            "deny_operational_lanes");
+    private static final Pattern SEEDED_KEY = Pattern.compile("\"([a-z][a-z0-9_]*)\"\\s*:");
 
     @Test
-    void everyConditionKeySeededIsOneTheEngineImplements() throws IOException {
-        Set<String> implemented = new TreeSet<>();
-        try (Stream<Path> sources = Files.walk(SOURCE)) {
-            for (Path java : sources.filter(p -> p.toString().endsWith(".java")).toList()) {
-                Matcher m = IMPLEMENTED.matcher(Files.readString(java));
-                while (m.find()) {
-                    implemented.add(m.group(1));
-                }
-            }
-        }
+    void everyConditionKeyOnALiveRuleIsOneTheEngineImplements() throws IOException {
+        Set<String> implemented = implementedKeys();
         assertThat(implemented)
                 .withFailMessage("no condition keys resolved from the service source — the pattern "
                                  + "has stopped working, so this guard would pass while checking nothing")
                 .hasSizeGreaterThan(5);
 
-        List<String> violations = new ArrayList<>();
-        int rulesScanned = 0;
+        SeededPolicyRules.Seeds seeds = SeededPolicyRules.read();
 
-        try (Stream<Path> files = Files.list(MIGRATIONS)) {
-            for (Path file : files.filter(p -> p.toString().endsWith(".sql")).sorted().toList()) {
-                String sql = Files.readString(file);
-                // Only look inside conditions JSON literals, not at arbitrary SQL strings.
-                Matcher conditions = Pattern.compile("'\\{[^']*\\}'").matcher(sql);
-                while (conditions.find()) {
-                    rulesScanned++;
-                    Matcher keys = SEEDED.matcher(conditions.group());
-                    while (keys.find()) {
-                        String key = keys.group(1);
-                        if (!implemented.contains(key)) {
-                            violations.add(file.getFileName() + " -> " + key);
-                        }
-                    }
+        // If a migration seeds policy_rule but nothing parsed out of it, every seed guard is blind
+        // to it — surface that rather than quietly checking fewer rules than exist.
+        assertThat(seeds.complaints())
+                .withFailMessage("the seed parser could not read part of the migration set, so this "
+                                 + "guard is not seeing every rule:%n  %s",
+                                 join(seeds.complaints().stream().map(Object::toString).toList()))
+                .isEmpty();
+
+        List<String> violations = new ArrayList<>();
+        int liveRulesWithConditions = 0;
+
+        for (SeededPolicyRules.Rule rule : seeds.live()) {
+            String conditions = rule.conditions();
+            if (conditions == null || conditions.isBlank()) {
+                continue;
+            }
+            liveRulesWithConditions++;
+            for (String key : keysIn(conditions)) {
+                if (!implemented.contains(key)) {
+                    violations.add(rule.location() + " -> '" + key + "' (rule '" + rule.name() + "')");
                 }
             }
         }
 
-        assertThat(rulesScanned)
-                .withFailMessage("no conditions literals found — the scanner has stopped working")
+        // A live rule with conditions is exactly what this guard checks; none means the seed set or
+        // the parser drifted out from under it.
+        assertThat(liveRulesWithConditions)
+                .withFailMessage("no live policy rules carry conditions — the seed set changed shape "
+                                 + "and this guard is checking nothing")
                 .isGreaterThan(10);
 
-        Set<String> fresh = new LinkedHashSet<>(new TreeSet<>(violations));
-        fresh.removeIf(v -> BASELINE.contains(v.substring(v.lastIndexOf("-> ") + 3)));
-
-        assertThat(fresh)
+        assertThat(new TreeSet<>(violations))
                 .withFailMessage("""
-                        %d seeded policy condition key(s) are not implemented in PolicyEngine.
+                        %d live policy rule condition key(s) are not implemented in PolicyEngine.
 
-                        An unrecognised key is SILENTLY IGNORED by evaluateConditions, which then
-                        returns true — so the rule does not sit inert, it evaluates on whatever
-                        remains. On a DENY that means denying more than intended, and DENY wins.
+                        A key the engine does not recognise is treated as a NON-MATCH (fail-closed for
+                        an ALLOW, fail-narrow for a DENY) — so the rule does not do what its seed says.
+                        Either implement the key in evaluateConditions (coordinate the PolicyEngine
+                        slot; keep the recognised-key set exhaustive), or repair the rule in a later
+                        migration so its conditions say what the engine can enforce, or withdraw it
+                        (active=false) when the PDP structurally cannot express it.
 
-                        Either implement the key in evaluateConditions (CZO channel), or rewrite the
-                        rule so its conditions say what it actually enforces.
-
-                        %s""", fresh.size(), String.join("\n  ", fresh))
-                .isEmpty();
-
-        // Force the ratchet. Without this the list only ever grows stale: a key that has since
-        // been implemented sits here implying a defect that no longer exists, and the next reader
-        // cannot tell the live entries from the historical ones. allowed_jurisdictions was exactly
-        // that — listed as unimplemented, then implemented in RB-2c, and nothing made anyone
-        // remove it.
-        Set<String> seededKeys = new TreeSet<>();
-        for (String violation : violations) {
-            seededKeys.add(violation.substring(violation.lastIndexOf("-> ") + 3));
-        }
-        Set<String> stale = new TreeSet<>(BASELINE);
-        stale.removeAll(seededKeys);
-        assertThat(stale)
-                .withFailMessage("These baseline entries no longer violate — either the key is now "
-                                 + "implemented or the rule was rewritten. Delete them so the list "
-                                 + "keeps shrinking:%n  %s", String.join("\n  ", stale))
+                        %s""", violations.size(), join(new TreeSet<>(violations)))
                 .isEmpty();
     }
 
     /**
-     * The country root's limits must be real rules, not an absence of grant: an ALLOW added later
-     * by someone who has not read org-registry V009 would out-rank an absence, but cannot out-rank
-     * a DENY.
+     * The country root's limits must be real rules, not an absence of grant: an ALLOW added later by
+     * someone who has not read org-registry V009 would out-rank an absence, but cannot out-rank a
+     * DENY.
      */
     @Test
     void theCountryRootIsDeniedCaseDataAndGrantedNothing() throws IOException {
@@ -176,5 +157,31 @@ class PolicyConditionKeyContractTest {
         assertThat(allowForRoot)
                 .as("the country root is a trust function, not a superuser — it is granted nothing here")
                 .isZero();
+    }
+
+    private static Set<String> implementedKeys() throws IOException {
+        Set<String> implemented = new TreeSet<>();
+        try (Stream<Path> sources = Files.walk(SOURCE)) {
+            for (Path java : sources.filter(p -> p.toString().endsWith(".java")).toList()) {
+                Matcher m = IMPLEMENTED.matcher(Files.readString(java));
+                while (m.find()) {
+                    implemented.add(m.group(1));
+                }
+            }
+        }
+        return implemented;
+    }
+
+    private static Set<String> keysIn(String conditionsJson) {
+        Set<String> keys = new LinkedHashSet<>();
+        Matcher m = SEEDED_KEY.matcher(conditionsJson);
+        while (m.find()) {
+            keys.add(m.group(1));
+        }
+        return keys;
+    }
+
+    private static String join(Iterable<String> lines) {
+        return String.join("\n  ", lines);
     }
 }

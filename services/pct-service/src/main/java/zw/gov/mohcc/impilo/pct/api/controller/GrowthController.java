@@ -112,6 +112,8 @@ public class GrowthController {
         m.put("corrected_age_days", row.getCorrectedAgeDays());
         m.put("corrected_age_applied", row.isCorrectedAgeApplied());
         m.put("gestational_age_weeks", row.getGestationalAgeWeeks());
+        m.put("gestational_age_source", row.getGestationalAgeSource());
+        m.put("postmenstrual_age_weeks", row.getPostmenstrualAgeWeeks());
 
         m.put("weight_for_age_z", row.getWeightForAgeZ());
         m.put("length_height_for_age_z", row.getLengthHeightForAgeZ());
@@ -120,6 +122,7 @@ public class GrowthController {
         m.put("growth_standard", row.getGrowthStandard());
         m.put("growth_engine_version", row.getGrowthEngineVersion());
         m.put("scoring_note", row.getScoringNote());
+        m.put("scoring_gaps", row.getScoringGaps());
 
         m.put("nutrition_status", row.getNutritionStatus());
         m.put("nutrition_content_version", row.getNutritionContentVersion());

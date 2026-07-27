@@ -42,7 +42,21 @@ public record TabularRule(
         String adaptationAuthority,
         String contentVersion,
         DakProvenance provenance,
-        List<TestCase> testCases) {
+        List<TestCase> testCases,
+        String signalFamily,
+        int signalRank) {
+
+    /**
+     * A group of rules describing the same underlying condition at escalating severity — the
+     * hypertensive-disorders ladder is the archetype: gestational hypertension, pre-eclampsia,
+     * pre-eclampsia with severe features, eclampsia. Within one family only the most severe firing
+     * rule should be the top-line signal, because showing all four at once buries the eclampsia in
+     * the noise of the three milder alarms. Null for a rule that belongs to no ladder and is never
+     * suppressed. {@code signalRank} orders the rungs; higher is more severe.
+     */
+    public boolean inSignalFamily() {
+        return signalFamily != null && !signalFamily.isBlank();
+    }
 
     /**
      * True when this rule's age window covers the patient.

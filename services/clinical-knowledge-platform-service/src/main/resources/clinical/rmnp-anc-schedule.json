@@ -1,0 +1,102 @@
+{
+  "scheduleId": "rmnp-anc-schedule",
+  "name": "WHO 2016 antenatal care contact schedule",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Antenatal care contact schedule",
+    "primarySource": "WHO recommendations on antenatal care for a positive pregnancy experience (2016); WHO SMART ANC ANCS01",
+    "why": "The 2016 model replaced four focused visits with eight contacts, because the evidence showed more contact reduces perinatal death. The word is 'contact', not 'visit', on purpose: it includes community and outreach contact, and the schedule must not silently assume a facility.",
+    "sourceVerification": {
+      "primaryTextVendored": true,
+      "vendoredArtefact": "docs/reference/who-dak/smart-anc — ANCS01.cql supplies the 8-contact timing and EDD = LMP + 280 days",
+      "blocksRatification": true,
+      "note": "The contact WEEKS are taken from the vendored ANCS01 logic. The window widths around each contact (how early a contact may count, how late before it is overdue) are an engineering seed — the guideline names target gestations, not tolerances — and each is stated so a ministry can set it. blocksRatification stays true until the windows are ratified."
+    }
+  },
+  "totalContacts": 8,
+  "contacts": [
+    {
+      "contactNumber": 1,
+      "name": "First contact",
+      "targetWeek": 12,
+      "opensWeek": 0,
+      "overdueAfterWeek": 16,
+      "note": "By 12 weeks. This is the contact that dates the pregnancy, and dating is only reliable early — a first contact in the third trimester cannot be redated by a scan.",
+      "keyActions": ["Confirm and date the pregnancy", "Full history and examination", "Baseline investigations", "Commence iron and folic acid", "Screen for danger signs"]
+    },
+    {
+      "contactNumber": 2,
+      "name": "Second contact",
+      "targetWeek": 20,
+      "opensWeek": 16,
+      "overdueAfterWeek": 24,
+      "keyActions": ["Ultrasound before 24 weeks", "Blood pressure and proteinuria", "Symphysis-fundal height", "Screen for danger signs"]
+    },
+    {
+      "contactNumber": 3,
+      "name": "Third contact",
+      "targetWeek": 26,
+      "opensWeek": 24,
+      "overdueAfterWeek": 28,
+      "keyActions": ["Blood pressure and proteinuria", "Haemoglobin", "Fetal growth and movements", "Screen for danger signs"]
+    },
+    {
+      "contactNumber": 4,
+      "name": "Fourth contact",
+      "targetWeek": 30,
+      "opensWeek": 28,
+      "overdueAfterWeek": 32,
+      "keyActions": ["Blood pressure and proteinuria", "Fetal growth and presentation", "Screen for pre-eclampsia", "Screen for danger signs"]
+    },
+    {
+      "contactNumber": 5,
+      "name": "Fifth contact",
+      "targetWeek": 34,
+      "opensWeek": 32,
+      "overdueAfterWeek": 35,
+      "keyActions": ["Blood pressure and proteinuria", "Fetal presentation", "Birth preparedness", "Screen for danger signs"]
+    },
+    {
+      "contactNumber": 6,
+      "name": "Sixth contact",
+      "targetWeek": 36,
+      "opensWeek": 35,
+      "overdueAfterWeek": 37,
+      "keyActions": ["Assess presentation — refer breech for review", "Blood pressure and proteinuria", "Confirm birth plan", "Screen for danger signs"]
+    },
+    {
+      "contactNumber": 7,
+      "name": "Seventh contact",
+      "targetWeek": 38,
+      "opensWeek": 37,
+      "overdueAfterWeek": 39,
+      "keyActions": ["Blood pressure and proteinuria", "Fetal wellbeing", "Confirm place of birth and transport", "Screen for danger signs"]
+    },
+    {
+      "contactNumber": 8,
+      "name": "Eighth contact",
+      "targetWeek": 40,
+      "opensWeek": 39,
+      "overdueAfterWeek": 41,
+      "note": "At 40 weeks. Beyond this the pregnancy is post-term and the question changes from routine care to a plan for birth, so the schedule does not simply keep counting contacts — it hands over to post-term surveillance.",
+      "keyActions": ["Blood pressure and proteinuria", "Fetal wellbeing", "Plan for post-term surveillance if not yet delivered", "Screen for danger signs"]
+    }
+  ],
+  "postTerm": {
+    "fromWeek": 41,
+    "message": "The pregnancy is post-term. Routine contacts no longer apply; this needs an active plan for birth and increased fetal surveillance.",
+    "note": "A separate state, not a ninth contact. Counting contacts past term would report a woman at 42 weeks as merely due for another routine check."
+  },
+  "adaptation": {
+    "type": "ADOPTED_VERBATIM",
+    "whoStatement": "A minimum of eight antenatal contacts is recommended, at weeks 12, 20, 26, 30, 34, 36, 38 and 40.",
+    "nationalStatement": "Adopted as published. The contact windows around each target are an engineering seed pending ratification.",
+    "evidenceRefs": [
+      "WHO recommendations on antenatal care for a positive pregnancy experience (2016)",
+      "WHO SMART ANC ANCS01"
+    ],
+    "approvingAuthority": "PENDING_MOHCC_RATIFICATION"
+  }
+}

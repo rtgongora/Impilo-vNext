@@ -10,11 +10,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import zw.gov.mohcc.impilo.paediatrics.growth.GrowthEngine;
+import zw.gov.mohcc.impilo.paediatrics.growth.GrowthStandard;
 import zw.gov.mohcc.impilo.pct.integration.VitoIntegration;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.GrowthMeasurementEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.NewbornBirthRecordEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.GrowthMeasurementRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.NewbornBirthRecordRepository;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -23,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -46,6 +50,7 @@ class GrowthServiceTest {
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private ClinicalAccessGuard accessGuard;
     @Mock private VitoIntegration vitoIntegration;
+    @Mock private NewbornBirthRecordRepository newbornRepository;
 
     private GrowthService growthService;
     private TrustContext context;
@@ -54,7 +59,7 @@ class GrowthServiceTest {
     void setUp() {
         growthService = new GrowthService(
                 growthRepository, outboxRepository, new ObjectMapper(),
-                accessGuard, vitoIntegration, new GrowthEngine());
+                accessGuard, vitoIntegration, new GrowthEngine(), newbornRepository);
         context = new TrustContext(
                 TENANT, "nurse-1", "PROVIDER", "TREATMENT", null,
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, AccessMode.INTERNAL);
@@ -81,7 +86,7 @@ class GrowthServiceTest {
     }
 
     @Test
-    void scoresPretermInfantAgainstCorrectedAge() {
+    void scoresPretermInfantOnThePretermChartAtPostmenstrualAge() {
         demographics("2026-01-01", "FEMALE");
 
         GrowthMeasurementEntity row = record(body -> {
@@ -91,9 +96,56 @@ class GrowthServiceTest {
         });
 
         assertThat(row.getAgeDays()).isEqualTo(120);
-        assertThat(row.getCorrectedAgeDays()).isEqualTo(85);
+        // Born eight weeks short of full term, so 120 days lived is 64 days corrected.
+        assertThat(row.getCorrectedAgeDays()).isEqualTo(120 - 56);
         assertThat(row.isCorrectedAgeApplied()).isTrue();
         assertThat(row.getGestationalAgeWeeks()).isEqualTo(32);
+        assertThat(row.getGestationalAgeSource()).isEqualTo("SUPPLIED");
+
+        // 32 weeks at birth plus 17 completed weeks lived is 49 weeks postmenstrual age.
+        assertThat(row.getPostmenstrualAgeWeeks()).isEqualTo(49);
+        assertThat(row.getGrowthStandard()).isEqualTo(GrowthStandard.FENTON_2013_PRETERM_GROWTH.standardId());
+        assertThat(row.getWeightForAgeZ()).isNotNull();
+    }
+
+    @Test
+    void gestationalAgeIsReadFromTheBirthRecordWhenTheScreenDoesNotCarryIt() {
+        // A growth screen has no reason to know a baby's gestation. Without this the
+        // preterm chart could only ever be selected by the unit that recorded the birth,
+        // and every later weighing would silently fall back to the term standard.
+        demographics("2026-01-01", "MALE");
+        NewbornBirthRecordEntity birth = new NewbornBirthRecordEntity();
+        birth.setGestationalAgeWeeks(28);
+        when(newbornRepository.findByTenantIdAndSubjectCpid(TENANT, SUBJECT)).thenReturn(Optional.of(birth));
+
+        GrowthMeasurementEntity row = record(body -> {
+            body.put("weight_kg", "1.05");
+            body.put("measured_at", "2026-01-15T09:00:00Z");
+        });
+
+        assertThat(row.getGestationalAgeWeeks()).isEqualTo(28);
+        assertThat(row.getGestationalAgeSource()).isEqualTo("NEWBORN_BIRTH_RECORD");
+        assertThat(row.getPostmenstrualAgeWeeks()).isEqualTo(30);
+        assertThat(row.getGrowthStandard()).isEqualTo(GrowthStandard.FENTON_2013_PRETERM_GROWTH.standardId());
+
+        // The defect this closes: on the term standard this well infant scored below -6
+        // and was classified as severely acutely malnourished.
+        assertThat(row.getWeightForAgeZ()).isGreaterThan(BigDecimal.valueOf(-2));
+        assertThat(row.getNutritionStatus()).isNotEqualTo("SEVERE_ACUTE_MALNUTRITION");
+    }
+
+    @Test
+    void aChildWithNoRecordedGestationSaysSoRatherThanImplyingTerm() {
+        demographics("2025-07-26", "MALE");
+        when(newbornRepository.findByTenantIdAndSubjectCpid(TENANT, SUBJECT)).thenReturn(Optional.empty());
+
+        GrowthMeasurementEntity row = record(body -> {
+            body.put("weight_kg", "7.0");
+            body.put("measured_at", "2026-07-26T09:00:00Z");
+        });
+
+        assertThat(row.getGestationalAgeWeeks()).isNull();
+        assertThat(row.getGestationalAgeSource()).isEqualTo("NOT_RECORDED");
     }
 
     @Test

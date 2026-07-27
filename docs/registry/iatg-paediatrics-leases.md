@@ -29,13 +29,36 @@ start at `V001`.
 
 | Service | Reserved | Consumed |
 |---|---|---|
-| `pct-service` | **V400–V429** | IMAM episodes + visits `V400` · IMAM tracing notification `V401` |
+| `pct-service` | **V400–V429** | IMAM episodes + visits `V400` · IMAM tracing notification `V401` · growth standard selection `V402` |
 | `clinical-knowledge-platform-service` | — | none; paediatric clinical content is classpath JSON |
 | `inpatient-service` | — | PEWS thresholds are content; the V066 EWS migration predates this lease |
 
 Growth (`V053`), immunisations (`V054`) and newborn records (`V055`) were cut before the lease
 existed and are landed and immutable. They are recorded here for completeness, not as a claim on
 the V050s — that range is RMNP's neighbourhood now.
+
+### 2b. This band was claimed twice, in two files, and collided
+
+Two lease files existed for this one programme: this one, and `iatg-paediatric-leases.md`
+(singular) authored by the growth-standards lane. Both independently reserved `V400`–`V429`
+by the same reasoning, and both then cut a `V400` — IMAM episodes here, growth standard
+selection there.
+
+The band convention worked exactly as intended and the *filename* is what failed. Two files
+whose names differ by one letter are two registries, and a lane checking `iatg-*-leases.md`
+before cutting a number can read the wrong one, or read only the one that existed when it
+looked. Worse, **git merges the collision silently**: two migrations with the same version
+have different filenames, so there is no conflict to resolve — and `pct-service` sets
+`validate-on-migrate: false`, which hides the duplicate from Flyway too.
+
+Resolved by folding the growth-standards lane's lease into this file, deleting the duplicate,
+and renumbering growth standard selection to `V402`.
+
+**Rule this adds: one lease file per pack means one *name* per pack.** Before authoring a
+lease, list `docs/registry/iatg-*leases.md` and read every one — including any whose name is
+a near-miss of the one you were about to create. Before cutting a migration, list the
+migration directory itself rather than trusting the lease's "Consumed" column; the column is
+a claim, the directory is the fact.
 
 ### 2a. Why V400 and not the next free number
 
@@ -108,3 +131,46 @@ live engine as a build gate (`PaediatricRuleContentTest`, `DoseCalculationServic
 `ImamProgrammeServiceTest`). A content edit that changes clinical behaviour fails the build before
 it can reach a patient. None of it is national protocol and none of it should drive care until
 MoHCC and a paediatric specialist have signed it off.
+
+## Growth standards — seams frozen by the Fenton 2013 slice
+
+Folded in from `iatg-paediatric-leases.md` (deleted; see §2b).
+
+1. **One growth system of record.** `pct.pct_growth_measurements` is the only store of a
+   child's anthropometry and its z-scores. No lane adds a parallel growth table, and no lane
+   recomputes a z-score from a stored measurement.
+
+2. **`libs/paediatric-domain` is the only growth arithmetic.** `experience-bff` previously
+   carried a second WHO scorer with its own copy of the LMS tables and **no corrected-age
+   handling**, so a preterm infant was scored twice and the two answers disagreed. Removed.
+   Any service needing a z-score depends on the library.
+
+3. **Standard selection belongs to the engine, not the caller.** A caller supplies date of
+   birth, sex, gestational age and the measurement; the engine decides which standard applies
+   and stamps its identifier on the result. "Score this preterm baby against the term chart"
+   is deliberately not expressible.
+
+4. **Preterm infants are never scored against WHO term standards.** Where the applicable
+   preterm reference has no published point, the measurement is stored unscored with a stated
+   reason — the same stance the pack takes on WHO weight-for-length and the WHO 5–19 year
+   reference.
+
+5. **Corrected age has two constants, and they are not the same number.**
+   `PRETERM_THRESHOLD_WEEKS` = 37 decides *whether* to correct; `TERM_CORRECTION_TARGET_WEEKS`
+   = 40 decides *how far*. Collapsing them again is the defect returning, and a test asserts
+   they differ.
+
+### Content governance — Fenton 2013
+
+- **Ratification: `ENGINEERING_SEED`, pending MoHCC**, matching every other content pack here.
+- **Licence: CC BY-NC-ND 4.0.** Two obligations travel with the data and are carried in the
+  content pack's metadata through the API to the screen: any chart drawn from it must display
+  the label **"Fenton 2013 Preterm Growth Chart"** conspicuously, and the development paper
+  must be cited (*Fenton TR, Kim JH. BMC Pediatr. 2013;13:59*).
+- **Two determinations are the ministry's, not engineering's**, and are recorded rather than
+  assumed: whether a national public health service deployment satisfies the *NonCommercial*
+  term, and whether embedding the published weekly values verbatim for lookup is use rather
+  than a *derivative*. This lane took the conservative reading — values stored exactly as
+  published, no smoothing, no re-fitting, no interpolation between published weekly points.
+  The publishers direct data requests to tfenton@ucalgary.ca; a file being publicly served is
+  not by itself a licence to embed it.
