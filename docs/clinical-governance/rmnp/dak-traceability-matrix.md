@@ -14,13 +14,13 @@ matrix exists to make visible.
 - Published artefacts: **140**
 - Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_BLOOD` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_PATIENT_SAFETY` (5), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3)
 - Published data elements: **4098**
-- Shipped citations: **98**
+- Shipped citations: **102**
 
 | Status | Count |
 |---|---|
 | `COVERED_ELSEWHERE` | 7 |
-| `DEFERRED` | 121 |
-| `SHIPPED` | 12 |
+| `DEFERRED` | 120 |
+| `SHIPPED` | 13 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -96,7 +96,7 @@ matrix exists to make visible.
 | `EMS.IITT.PAEDIATRIC` | IITT | TRIAGE_CHART | — | Interagency Integrated Triage Tool, Age < 12 — a different logical shape from th | `DEFERRED` | — | — | Encoded and tested in the engine (distinct paediatric logic — no numeric HR red criterion, the meningism conjunction, ag |
 | `EMS.SSC26.SCREENING` | SSC26 | CLINICAL_GUIDELINE | — | Sepsis screening by an early warning score (NEWS/NEWS2/MEWS/SIRS) rather than qS | `DEFERRED` | — | — | The seeded ED_SEPSIS pathway still screens on qSOFA (the defect); routing sepsis screening through the existing server-s |
 | `HIV.ADVANCED_DISEASE` | WHO_DAK | DECISION_LOGIC | — | Advanced HIV disease package (CD4 <200 or WHO stage 3/4) | `SHIPPED` | `HIV_ADVANCED_DISEASE` | ADOPTED_VERBATIM |  |
-| `HIV.PMTCT` | WHO_DAK | DECISION_LOGIC | — | Prevention of mother-to-child transmission of HIV | `DEFERRED` | — | — | The last standard of the wave, and the only one that crosses into another lane. PMTCT sits across HIV care and the RMNP  |
+| `HIV.PMTCT` | WHO_DAK | DECISION_LOGIC | — | Prevention of mother-to-child transmission of HIV | `SHIPPED` | `PMTCT_MATERNAL_ART`, `PMTCT_MATERNAL_VL_IN_PREGNANCY`, `PMTCT_INFANT_PROPHYLAXIS`, `PMTCT_INFANT_EID_DUE` | ADOPTED_VERBATIM |  |
 | `HIV.PREP` | WHO_DAK | DECISION_LOGIC | — | Pre-exposure prophylaxis eligibility and follow-up | `SHIPPED` | `PREP_NOT_FOR_HIV_POSITIVE`, `PREP_EXCLUDE_ACUTE_HIV`, `PREP_ELIGIBLE`, `PREP_RETEST_DUE` | ADOPTED_VERBATIM |  |
 | `HIV.TB_COINFECTION` | WHO_DAK | DECISION_LOGIC | — | TB screening and preventive therapy in people living with HIV | `SHIPPED` | `TPT_ELIGIBLE_PLHIV` | ADOPTED_VERBATIM |  |
 | `HIV.TESTING` | WHO_DAK | DECISION_LOGIC | — | HIV testing services algorithm and diagnosis | `SHIPPED` | `HIV_TEST_NONREACTIVE`, `HIV_TEST_DISCREPANT`, `HIV_TEST_POSITIVE_VERIFIED`, `HIV_INFANT_VIROLOGICAL_REQUIRED` | ADOPTED_VERBATIM |  |

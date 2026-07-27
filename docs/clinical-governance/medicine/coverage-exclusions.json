@@ -1,13 +1,5 @@
 {
   "domain": "medicine",
-  "note": "W3 is being completed in full \u2014 no HIV/TB standard is being left deferred out of the wave. Shipped so far: the treatment-and-monitoring core (viral-load monitoring, treatment failure, advanced disease, TB monitoring, DR-TB, TB outcome) AND the diagnostic front door (HIV testing algorithm, TB symptom screening, TB diagnostic algorithm) \u2014 all cited by governed content in the clinical knowledge platform. The entries remaining below are the last of the wave and are being built in this same completion pass: TB preventive therapy and TB/HIV co-infection, HIV PrEP, and PMTCT (the one that crosses into the RMNP lane and so carries a coordinated seam). Each is removed the moment its content lands; an entry that survives this pass is a signal, not paperwork.",
-  "exclusions": [
-    {
-      "standardId": "HIV.PMTCT",
-      "decision": "DEFERRED",
-      "plannedWave": "W3j (this completion pass)",
-      "reason": "The last standard of the wave, and the only one that crosses into another lane. PMTCT sits across HIV care and the RMNP pregnancy episode; building it in the medicine pack alone would either duplicate RMNP's pregnancy episode or fork the HIV programme by pregnancy status. The coordinated seam has been proposed to the RMNP lane (soft-reference from the HIV_CARE enrolment to the pregnancy episode; ownership of the exposed-infant record agreed rather than assumed). It is being built this pass and is blocked only on RMNP's answer to that seam, not punted to a later wave.",
-      "revisitCondition": "RMNP confirms the pregnancy-episode reference and exposed-infant ownership; PMTCT content + the enrolment↔episode link then land, and this entry is removed."
-    }
-  ]
+  "note": "W3 is COMPLETE \u2014 every HIV/TB standard in the medicine baseline is SHIPPED, cited by governed content in the clinical knowledge platform. Nothing is deferred out of the wave. This register is intentionally empty: the treatment-and-monitoring core, the diagnostic front door (HIV testing, TB screening, TB diagnosis), the prevention programmes (PrEP, TPT), TB/HIV co-infection and PMTCT all landed in W3. One integration seam remains tracked outside this DAK register (not a standards gap): the soft data link from an HIV_CARE enrolment to the RMNP pregnancy episode and exposed-infant record ownership, pending the RMNP lane's confirmation of the reference. The PMTCT decision logic itself is shipped and does not depend on it.",
+  "exclusions": []
 }

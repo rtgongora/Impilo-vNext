@@ -1,0 +1,103 @@
+{
+  "packId": "pmtct-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Prevention of mother-to-child transmission — maternal ART, infant prophylaxis and early infant diagnosis",
+    "primarySource": "WHO Consolidated guidelines on HIV, 2021 — PMTCT / elimination of mother-to-child transmission",
+    "why": "Without intervention a large fraction of infants born to mothers living with HIV acquire it; with maternal ART sustained through pregnancy and breastfeeding, infant ARV prophylaxis, and early infant diagnosis, transmission falls to near zero. The decision logic is a small number of non-negotiable steps: every pregnant or breastfeeding woman living with HIV on lifelong ART; every HIV-exposed infant on prophylaxis and into a virological testing schedule; maternal viral load watched so she is suppressed at delivery. This pack owns that logic. Where the RECORD of the pregnancy and the infant lives is a seam with the RMNP lane, tracked separately — the guidance does not depend on it.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO HIV DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against the published 2021 PMTCT guidance; ships ENGINEERING_SEED until the primary text is vendored. Infant prophylaxis regimen choice by risk and the exact EID schedule are national-guideline decisions; the invariant structure (maternal lifelong ART, infant prophylaxis + EID, maternal VL in pregnancy) is WHO-wide."
+    }
+  },
+  "rules": [
+    {
+      "code": "PMTCT_MATERNAL_ART",
+      "name": "Pregnant or breastfeeding and HIV-positive — lifelong ART now",
+      "layer": "PMTCT",
+      "ruleType": "TREATMENT",
+      "severity": "HIGH",
+      "requiredInputs": ["pregnantOrBreastfeeding", "hivPositive"],
+      "appliesWhen": {"input": "hivPositive", "op": "eq", "value": "YES"},
+      "logic": {"input": "pregnantOrBreastfeeding", "op": "eq", "value": "YES"},
+      "message": "Start (or continue) lifelong ART — pregnant or breastfeeding and living with HIV.",
+      "explanation": "Every pregnant or breastfeeding woman living with HIV is started on lifelong ART immediately, regardless of clinical stage or CD4 (the 'treat all / Option B+' approach). Maternal ART sustained through pregnancy and breastfeeding is the single largest driver of preventing transmission.",
+      "requiredAction": "Start or continue lifelong ART today, enrol in HIV care, and link this care to the pregnancy record so ANC and HIV follow the same woman.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — PMTCT, lifelong ART in pregnancy"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.PMTCT", "row": "maternal ART"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "All pregnant and breastfeeding women living with HIV should receive lifelong ART.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]},
+      "testCases": [
+        {"name": "pregnant PLHIV starts ART", "facts": {"hivPositive": "YES", "pregnantOrBreastfeeding": "YES"}, "expectFires": true},
+        {"name": "non-pregnant is handled by ordinary HIV care, not this rule", "facts": {"hivPositive": "YES", "pregnantOrBreastfeeding": "NO"}, "expectFires": false},
+        {"name": "HIV-negative pregnant does not take this rule", "facts": {"hivPositive": "NO", "pregnantOrBreastfeeding": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PMTCT_MATERNAL_VL_IN_PREGNANCY",
+      "name": "Pregnant and living with HIV — viral load to confirm suppression before delivery",
+      "layer": "PMTCT",
+      "ruleType": "MONITORING",
+      "severity": "MEDIUM",
+      "requiredInputs": ["pregnant", "hivPositive"],
+      "appliesWhen": {"input": "hivPositive", "op": "eq", "value": "YES"},
+      "logic": {"input": "pregnant", "op": "eq", "value": "YES"},
+      "message": "Check maternal viral load in pregnancy — suppression at delivery is what protects the infant.",
+      "explanation": "Transmission risk tracks maternal viral load around delivery. A viral load in pregnancy identifies a mother who is not suppressed in time to act (adherence support, regimen review, enhanced infant prophylaxis).",
+      "requiredAction": "Send a maternal viral load at the first antenatal HIV contact and again in the third trimester; act on any result at or above 1000 copies/mL before delivery.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — viral load monitoring in pregnancy"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.PMTCT", "row": "maternal VL"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Viral load should be monitored in pregnancy to ensure suppression before delivery.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]},
+      "testCases": [
+        {"name": "pregnant PLHIV needs VL", "facts": {"hivPositive": "YES", "pregnant": "YES"}, "expectFires": true},
+        {"name": "not pregnant does not take this rule", "facts": {"hivPositive": "YES", "pregnant": "NO"}, "expectFires": false},
+        {"name": "HIV-negative does not", "facts": {"hivPositive": "NO", "pregnant": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PMTCT_INFANT_PROPHYLAXIS",
+      "name": "HIV-exposed newborn — start ARV prophylaxis",
+      "layer": "PMTCT",
+      "ruleType": "PROPHYLAXIS",
+      "severity": "HIGH",
+      "referralRequired": true,
+      "requiredInputs": ["hivExposedInfant", "ageDays"],
+      "appliesWhen": {"input": "hivExposedInfant", "op": "eq", "value": "YES"},
+      "logic": {"input": "ageDays", "op": "lte", "value": 42},
+      "message": "Start infant ARV prophylaxis — HIV-exposed newborn.",
+      "explanation": "An HIV-exposed infant is started on ARV prophylaxis as soon as possible after birth (the regimen and duration depend on transmission risk). Prophylaxis plus maternal ART is what brings transmission close to zero.",
+      "requiredAction": "Start infant ARV prophylaxis per the risk category, and enrol the infant into exposed-infant follow-up with an early infant diagnosis schedule.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — infant ARV prophylaxis"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.PMTCT", "row": "infant prophylaxis"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "HIV-exposed infants should receive ARV prophylaxis from birth.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]},
+      "testCases": [
+        {"name": "exposed newborn starts prophylaxis", "facts": {"hivExposedInfant": "YES", "ageDays": 1}, "expectFires": true},
+        {"name": "exposed infant past the newborn window is handled by follow-up, not this rule", "facts": {"hivExposedInfant": "YES", "ageDays": 120}, "expectFires": false},
+        {"name": "not exposed does not take this rule", "facts": {"hivExposedInfant": "NO", "ageDays": 1}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "PMTCT_INFANT_EID_DUE",
+      "name": "HIV-exposed infant — early infant diagnosis (virological) due",
+      "layer": "PMTCT",
+      "ruleType": "MONITORING",
+      "severity": "HIGH",
+      "requiredInputs": ["hivExposedInfant", "ageWeeks"],
+      "appliesWhen": {"input": "hivExposedInfant", "op": "eq", "value": "YES"},
+      "logic": {"input": "ageWeeks", "op": "gte", "value": 6},
+      "message": "Early infant diagnosis due — send a virological (NAT/PCR) test.",
+      "explanation": "An HIV-exposed infant is tested virologically from 4–6 weeks of age (antibody tests cannot diagnose under 18 months). The EID schedule continues at defined ages and at the end of breastfeeding; a positive result means the infant starts ART immediately.",
+      "requiredAction": "Send a virological test now; if positive, start infant ART immediately and enrol in HIV care. Continue the EID schedule through the breastfeeding period.",
+      "sourceRefs": ["WHO 2021 consolidated HIV guidelines — early infant diagnosis"],
+      "dakRef": {"dak": "WHO HIV", "dakVersion": "2021-consolidated", "id": "HIV.PMTCT", "row": "early infant diagnosis"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "HIV-exposed infants receive virological testing from 4–6 weeks and on a defined schedule.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO 2021 consolidated HIV guidelines"]},
+      "testCases": [
+        {"name": "6-week exposed infant is due for EID", "facts": {"hivExposedInfant": "YES", "ageWeeks": 6}, "expectFires": true},
+        {"name": "2-week exposed infant not yet due", "facts": {"hivExposedInfant": "YES", "ageWeeks": 2}, "expectFires": false},
+        {"name": "not exposed does not take this rule", "facts": {"hivExposedInfant": "NO", "ageWeeks": 6}, "expectFires": false}
+      ]
+    }
+  ]
+}
