@@ -1,0 +1,132 @@
+{
+  "packId": "cvd-risk-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Cardiovascular disease — total-risk management, the blood-pressure treatment threshold, and the statin indication",
+    "primarySource": "WHO HEARTS technical package for cardiovascular disease management; WHO package of essential noncommunicable disease interventions (WHO PEN)",
+    "why": "The change WHO HEARTS makes is to treat cardiovascular risk as a total, not a single number. A person is managed on their combined 10-year risk of a heart attack or stroke, not on blood pressure or cholesterol read in isolation — because the same systolic pressure carries very different absolute risk in a 40-year-old non-smoker and a 60-year-old smoker with diabetes. So the rules here work off a total-risk score where the caller supplies one, and off the individual thresholds (blood pressure, established disease, diabetes) that HEARTS still treats as standalone triggers when they cross a line. The statin decision is deliberately gated on total risk, established disease, or diabetes-with-age rather than on a blood pressure or an arithmetic age derivation, because that is how HEARTS frames who benefits.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO HEARTS / WHO PEN DAK is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against the published HEARTS technical package and WHO PEN protocols; ships ENGINEERING_SEED until the primary text is vendored. The structure is WHO-invariant: manage on total cardiovascular risk, treat a sustained systolic at or above 140 mmHg, apply a tighter target in diabetes, offer a statin to established disease / high total risk / diabetes with age, and review a systolic at or above 180 mmHg the same day. The exact national numbers — the risk band that defines 'high', the diabetes blood-pressure target, and the statin age cut-off — are MoHCC's to ratify; the values encoded here are the WHO reference thresholds used as placeholders."
+    }
+  },
+  "rules": [
+    {
+      "code": "CVD_HIGH_TOTAL_RISK",
+      "name": "High total cardiovascular risk — intensive management",
+      "layer": "CHRONIC_CVD",
+      "ruleType": "RISK_STRATIFICATION",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["cvdRisk10yrPercent"],
+      "logic": {"input": "cvdRisk10yrPercent", "op": "gte", "value": 20},
+      "message": "High total cardiovascular risk (10-year risk 20% or more) — manage intensively.",
+      "explanation": "WHO HEARTS manages people on their total 10-year cardiovascular risk rather than a single measurement. A 10-year risk of 20% or more marks the high-risk group who gain the most from combined intervention — blood-pressure lowering, a statin, and aspirin where indicated — alongside lifestyle measures, regardless of whether any single reading looks alarming on its own.",
+      "requiredAction": "Enrol in intensive cardiovascular risk management: lifestyle counselling, blood-pressure lowering to target, a statin, and aspirin where indicated, with scheduled follow-up.",
+      "sourceRefs": ["WHO HEARTS technical package — total cardiovascular risk management; WHO PEN risk-based protocol"],
+      "dakRef": {"dak": "WHO HEARTS", "dakVersion": "2020", "id": "WHO_HEARTS.CVD_RISK", "row": "high total risk >= 20%"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "People with a total 10-year cardiovascular risk of 20% or higher should receive intensive combined risk management.", "nationalStatement": "Adopted as published; the risk band that defines 'high' is a national ratification decision.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO HEARTS technical package", "WHO PEN"]},
+      "testCases": [
+        {"name": "10-year risk of 25% is high risk", "facts": {"cvdRisk10yrPercent": 25}, "expectFires": true},
+        {"name": "10-year risk of 10% is not high risk here", "facts": {"cvdRisk10yrPercent": 10}, "expectFires": false},
+        {"name": "no risk score supplied never reads as high risk", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "CVD_BP_START_ANTIHYPERTENSIVE",
+      "name": "Sustained systolic 140 mmHg or more — start antihypertensive treatment",
+      "layer": "CHRONIC_CVD",
+      "ruleType": "TREATMENT_THRESHOLD",
+      "severity": "MEDIUM",
+      "requiredInputs": ["systolicBp"],
+      "logic": {"input": "systolicBp", "op": "gte", "value": 140},
+      "message": "Sustained systolic blood pressure of 140 mmHg or more — start antihypertensive treatment.",
+      "explanation": "WHO HEARTS treats a sustained systolic pressure at or above 140 mmHg as the threshold to begin drug treatment alongside lifestyle measures. The word that matters is sustained — the decision rests on repeated readings, not a single elevated measurement, which the caller confirms before this fires.",
+      "requiredAction": "Confirm the elevation on repeat readings, then start antihypertensive treatment per protocol and enrol in blood-pressure follow-up.",
+      "sourceRefs": ["WHO HEARTS technical package — hypertension treatment protocol; WHO PEN"],
+      "dakRef": {"dak": "WHO HEARTS", "dakVersion": "2020", "id": "WHO_HEARTS.CVD_RISK", "row": "start antihypertensive at systolic >= 140"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Antihypertensive treatment should be started at a sustained systolic pressure of 140 mmHg or higher.", "nationalStatement": "Adopted as published; confirmation on repeat readings is assumed before the threshold is acted on.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO HEARTS technical package", "WHO PEN"]},
+      "testCases": [
+        {"name": "systolic 150 crosses the treatment threshold", "facts": {"systolicBp": 150}, "expectFires": true},
+        {"name": "systolic 130 is below the treatment threshold", "facts": {"systolicBp": 130}, "expectFires": false},
+        {"name": "no blood pressure supplied never reads as at-threshold", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "CVD_BP_DIABETES_TIGHTER_TARGET",
+      "name": "Diabetes with systolic 130 mmHg or more — tighter blood-pressure target",
+      "layer": "CHRONIC_CVD",
+      "ruleType": "TREATMENT_THRESHOLD",
+      "severity": "MEDIUM",
+      "requiredInputs": ["diabetes", "systolicBp"],
+      "appliesWhen": {"input": "diabetes", "op": "eq", "value": "YES"},
+      "logic": {"input": "systolicBp", "op": "gte", "value": 130},
+      "message": "Person with diabetes and systolic 130 mmHg or more — treat to the tighter diabetes target.",
+      "explanation": "Diabetes multiplies cardiovascular risk at any given blood pressure, so WHO HEARTS applies a lower treatment target in people with diabetes than in the general hypertensive population. A systolic at or above 130 mmHg in someone with diabetes warrants intensifying treatment toward that tighter target rather than the standard one.",
+      "requiredAction": "Intensify antihypertensive treatment toward the tighter diabetes target and review glycaemic control; schedule closer follow-up.",
+      "sourceRefs": ["WHO HEARTS technical package — blood-pressure targets in diabetes; WHO PEN diabetes protocol"],
+      "dakRef": {"dak": "WHO HEARTS", "dakVersion": "2020", "id": "WHO_HEARTS.CVD_RISK", "row": "tighter BP target in diabetes"},
+      "adaptation": {"type": "STRENGTHENED", "rationale": "Encodes a lower systolic action threshold (130 mmHg) for people with diabetes than the general 140 mmHg threshold, reflecting HEARTS' tighter diabetes target. The exact diabetes target is a national ratification decision; 130 mmHg is used as the WHO reference placeholder.", "whoStatement": "People with diabetes should be treated to a lower blood-pressure target than the general hypertensive population.", "nationalStatement": "A tighter systolic action threshold of 130 mmHg is applied in diabetes pending national ratification of the exact target.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO HEARTS technical package", "WHO PEN"]},
+      "testCases": [
+        {"name": "diabetes with systolic 135 crosses the tighter target", "facts": {"diabetes": "YES", "systolicBp": 135}, "expectFires": true},
+        {"name": "diabetes with systolic 125 is within the tighter target", "facts": {"diabetes": "YES", "systolicBp": 125}, "expectFires": false},
+        {"name": "no diabetes — the tighter target does not apply", "facts": {"diabetes": "NO", "systolicBp": 135}, "expectFires": false},
+        {"name": "diabetes but no blood pressure supplied never reads as at-threshold", "facts": {"diabetes": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "CVD_STATIN_INDICATED",
+      "name": "Statin indicated — established CVD, high total risk, or diabetes with age",
+      "layer": "CHRONIC_CVD",
+      "ruleType": "TREATMENT_INDICATION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["establishedCvd", "cvdRisk10yrPercent", "diabetes", "ageMonths"],
+      "logic": {"any": [
+        {"input": "establishedCvd", "op": "eq", "value": "YES"},
+        {"input": "cvdRisk10yrPercent", "op": "gte", "value": 20},
+        {"all": [
+          {"input": "diabetes", "op": "eq", "value": "YES"},
+          {"input": "ageMonths", "op": "gte", "value": 480}
+        ]}
+      ]},
+      "message": "Statin indicated — established cardiovascular disease, high total risk, or diabetes with age.",
+      "explanation": "WHO HEARTS offers a statin to three groups: anyone with established cardiovascular disease (secondary prevention), anyone at high total 10-year risk, and people with diabetes above a defined age. The indication is framed on established disease, total risk, and diabetes-with-age rather than on a cholesterol reading, because those are the groups in whom benefit is established. Age is read here as ageMonths, where 480 months is 40 years.",
+      "requiredAction": "Offer a statin at the protocol dose alongside lifestyle measures, and enrol in cardiovascular follow-up to monitor adherence and tolerance.",
+      "sourceRefs": ["WHO HEARTS technical package — statin therapy for cardiovascular risk; WHO PEN"],
+      "dakRef": {"dak": "WHO HEARTS", "dakVersion": "2020", "id": "WHO_HEARTS.CVD_RISK", "row": "statin indication"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "A statin should be offered to people with established cardiovascular disease, those at high total cardiovascular risk, and people with diabetes above a defined age.", "nationalStatement": "Adopted as published; the statin age cut-off in diabetes (encoded as 40 years) is a national ratification decision.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO HEARTS technical package", "WHO PEN"]},
+      "testCases": [
+        {"name": "established CVD indicates a statin", "facts": {"establishedCvd": "YES", "cvdRisk10yrPercent": 5, "diabetes": "NO", "ageMonths": 600}, "expectFires": true},
+        {"name": "high total risk indicates a statin", "facts": {"establishedCvd": "NO", "cvdRisk10yrPercent": 30, "diabetes": "NO", "ageMonths": 600}, "expectFires": true},
+        {"name": "diabetes over 40 indicates a statin", "facts": {"establishedCvd": "NO", "cvdRisk10yrPercent": 5, "diabetes": "YES", "ageMonths": 600}, "expectFires": true},
+        {"name": "no established disease, low risk, no diabetes — not indicated", "facts": {"establishedCvd": "NO", "cvdRisk10yrPercent": 5, "diabetes": "NO", "ageMonths": 360}, "expectFires": false},
+        {"name": "diabetes but under 40 with low risk — not indicated on these grounds", "facts": {"establishedCvd": "NO", "cvdRisk10yrPercent": 5, "diabetes": "YES", "ageMonths": 420}, "expectFires": false},
+        {"name": "no inputs supplied never reads as a statin indication", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "CVD_BP_SEVERE_SAME_DAY_REVIEW",
+      "name": "Systolic 180 mmHg or more — same-day review",
+      "layer": "CHRONIC_CVD",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["systolicBp"],
+      "logic": {"input": "systolicBp", "op": "gte", "value": 180},
+      "message": "Systolic blood pressure of 180 mmHg or more — review the same day.",
+      "explanation": "A systolic pressure at or above 180 mmHg is severe hypertension. WHO HEARTS treats this as needing same-day clinical assessment for symptoms and signs of target-organ damage — chest pain, breathlessness, neurological signs, visual change — rather than a routine review appointment, because a hypertensive emergency at this level needs immediate action.",
+      "requiredAction": "Assess the same day for symptoms and signs of a hypertensive emergency (target-organ damage); if present, treat or refer urgently, otherwise start or intensify treatment with early follow-up.",
+      "sourceRefs": ["WHO HEARTS technical package — severe hypertension and hypertensive emergency; WHO PEN"],
+      "dakRef": {"dak": "WHO HEARTS", "dakVersion": "2020", "id": "WHO_HEARTS.CVD_RISK", "row": "severe hypertension >= 180 same-day review"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "A systolic pressure of 180 mmHg or higher requires same-day clinical assessment for a hypertensive emergency.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO HEARTS technical package", "WHO PEN"]},
+      "testCases": [
+        {"name": "systolic 190 needs same-day review", "facts": {"systolicBp": 190}, "expectFires": true},
+        {"name": "systolic 160 is not severe enough for this rule", "facts": {"systolicBp": 160}, "expectFires": false},
+        {"name": "no blood pressure supplied never triggers a same-day review", "facts": {}, "expectFires": false}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "packId": "deprescribing-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Renal-safety deprescribing — the medicines that must be stopped or dose-reviewed when the kidney can no longer clear them",
+    "primarySource": "WHO package of essential noncommunicable disease interventions (WHO PEN); renal-dosing safety principles",
+    "why": "A failing kidney does not announce itself in the drug chart. Medicines dosed for a normal eGFR keep being taken while the clearance that made them safe quietly disappears — metformin accumulates toward lactic acidosis, NSAIDs and other nephrotoxins push an already-injured kidney further, and renally-cleared drugs reach toxic concentrations at unchanged doses. This pack is a medication-review layer: given the boolean medication flags the caller has already resolved from the patient's active list, and the current renal (and where relevant hepatic) function, it names the specific medicine-and-function combinations where the safe action is to stop, avoid or dose-review. It never reads the medication list itself — the evaluator has no list-contains operator, so the caller must resolve each medicine class to a YES/NO flag before the rule can speak to it.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO PEN protocols and any national renal-dosing schedule are NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against WHO PEN and general renal-dosing safety principles (and EDLIZ where a Zimbabwean formulary position exists); ships ENGINEERING_SEED until the primary text is vendored and MOHCC ratifies. The eGFR thresholds (30, 60 mL/min/1.73m2) are the widely-used KDIGO/formulary bands and are placeholders pending the national deprescribing/renal-dosing guideline; the medication-class flags are supplied by the caller and are not adjudicated here."
+    }
+  },
+  "rules": [
+    {
+      "code": "DEPRX_METFORMIN_STOP_EGFR_LT_30",
+      "name": "Metformin with eGFR below 30 — stop (lactic-acidosis risk)",
+      "layer": "DEPRESCRIBING",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["onMetformin", "egfr"],
+      "appliesWhen": {"input": "onMetformin", "op": "eq", "value": "YES"},
+      "logic": {"input": "egfr", "op": "lt", "value": 30},
+      "message": "Stop metformin — eGFR is below 30 mL/min/1.73m2 and metformin is contraindicated.",
+      "explanation": "Metformin is renally cleared. When eGFR falls below 30 it accumulates, and the accumulated drug raises the risk of lactic acidosis — uncommon but frequently fatal. This is a hard stop, not a dose reduction: metformin is contraindicated at this level of renal function.",
+      "requiredAction": "Stop metformin now. Review and adjust glycaemic control with an agent that is safe in severe renal impairment, and document the reason for stopping.",
+      "sourceRefs": ["WHO PEN — diabetes protocol, metformin and renal function", "Renal-dosing safety: metformin contraindicated at eGFR < 30 (KDIGO/formulary consensus)"],
+      "dakRef": {"dak": "WHO PEN", "dakVersion": "2020", "id": "WHO_PEN.DEPRESCRIBING", "row": "metformin stop eGFR<30"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Metformin is contraindicated in severe renal impairment (eGFR below 30 mL/min/1.73m2) because of the risk of lactic acidosis.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PEN diabetes protocol", "EDLIZ metformin cautions"]},
+      "testCases": [
+        {"name": "on metformin with eGFR 20 — stop fires", "facts": {"onMetformin": "YES", "egfr": 20}, "expectFires": true},
+        {"name": "on metformin with eGFR 50 — above threshold, does not fire", "facts": {"onMetformin": "YES", "egfr": 50}, "expectFires": false},
+        {"name": "not on metformin — gate excludes the rule", "facts": {"onMetformin": "NO", "egfr": 20}, "expectFires": false},
+        {"name": "on metformin but eGFR not measured — must not fire on absent renal function", "facts": {"onMetformin": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "DEPRX_NSAID_AVOID_EGFR_LT_30",
+      "name": "NSAID with eGFR below 30 — stop / avoid",
+      "layer": "DEPRESCRIBING",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["onNsaid", "egfr"],
+      "appliesWhen": {"input": "onNsaid", "op": "eq", "value": "YES"},
+      "logic": {"input": "egfr", "op": "lt", "value": 30},
+      "message": "Stop the NSAID — eGFR is below 30 mL/min/1.73m2 and NSAIDs should be avoided in severe renal impairment.",
+      "explanation": "NSAIDs reduce renal perfusion by inhibiting prostaglandin-mediated vasodilation of the afferent arteriole. In a kidney already down to an eGFR below 30 this can precipitate a further, sometimes irreversible, decline in function, and NSAIDs also blunt the response to diuretics and antihypertensives. In severe renal impairment they should be stopped and an alternative analgesic used.",
+      "requiredAction": "Stop the NSAID. Manage pain with a non-nephrotoxic alternative (e.g. paracetamol, or an opioid with renal dose adjustment) and review any co-prescribed diuretic/ACE-inhibitor/ARB combination for the 'triple whammy' risk.",
+      "sourceRefs": ["WHO PEN — safe prescribing in renal impairment", "Renal-dosing safety: avoid NSAIDs at eGFR < 30"],
+      "dakRef": {"dak": "WHO PEN", "dakVersion": "2020", "id": "WHO_PEN.DEPRESCRIBING", "row": "NSAID avoid eGFR<30"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "NSAIDs should be used with caution in renal impairment.", "nationalStatement": "In severe renal impairment (eGFR below 30) NSAIDs should be stopped, not merely used with caution.", "rationale": "WHO PEN frames NSAID use in renal impairment as a caution. This seed strengthens it to a stop at eGFR < 30 to match the acute-kidney-injury risk at that level of function and to give the clinician an unambiguous action rather than an open-ended caution. The threshold is a placeholder pending the national renal-dosing guideline.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PEN prescribing cautions", "KDIGO AKI prevention — avoid nephrotoxins"]},
+      "testCases": [
+        {"name": "on NSAID with eGFR 25 — stop fires", "facts": {"onNsaid": "YES", "egfr": 25}, "expectFires": true},
+        {"name": "on NSAID with eGFR 70 — above threshold, does not fire", "facts": {"onNsaid": "YES", "egfr": 70}, "expectFires": false},
+        {"name": "not on an NSAID — gate excludes the rule", "facts": {"onNsaid": "NO", "egfr": 25}, "expectFires": false},
+        {"name": "on NSAID but eGFR not measured — must not fire on absent renal function", "facts": {"onNsaid": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "DEPRX_NEPHROTOXIN_REVIEW_EGFR_LT_30",
+      "name": "Nephrotoxin with eGFR below 30 — urgent review / stop",
+      "layer": "DEPRESCRIBING",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["onNephrotoxin", "egfr"],
+      "appliesWhen": {"input": "onNephrotoxin", "op": "eq", "value": "YES"},
+      "logic": {"input": "egfr", "op": "lt", "value": 30},
+      "message": "Urgently review the nephrotoxic medicine — eGFR is below 30 mL/min/1.73m2.",
+      "explanation": "A medicine flagged as nephrotoxic (for example an aminoglycoside, amphotericin B, or high-dose contrast exposure) directly injures the kidney. Continuing it while eGFR is below 30 risks compounding the existing impairment and tipping the patient into dialysis-requiring failure. Each such medicine needs an explicit decision: stop, or continue only with a documented indication that outweighs the renal risk and with monitoring.",
+      "requiredAction": "Review the nephrotoxic medicine urgently. Stop it unless there is a compelling, documented indication; if it must continue, use the lowest effective dose with drug-level and renal-function monitoring.",
+      "sourceRefs": ["WHO PEN — safe prescribing in renal impairment", "KDIGO: minimise nephrotoxin exposure in reduced GFR"],
+      "dakRef": {"dak": "WHO PEN", "dakVersion": "2020", "id": "WHO_PEN.DEPRESCRIBING", "row": "nephrotoxin review eGFR<30"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "Avoid or minimise nephrotoxic medicines in patients with reduced kidney function.", "nationalStatement": "At eGFR below 30 any nephrotoxic medicine must trigger an explicit stop-or-justify review rather than passive avoidance.", "rationale": "The general 'avoid nephrotoxins' guidance is turned into an interruptive review at the eGFR < 30 band because passive avoidance does not remove a nephrotoxin that is already prescribed. The threshold mirrors the metformin/NSAID band for consistency and is a placeholder pending the national renal-dosing guideline.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PEN prescribing cautions", "KDIGO AKI prevention"]},
+      "testCases": [
+        {"name": "on nephrotoxin with eGFR 18 — review fires", "facts": {"onNephrotoxin": "YES", "egfr": 18}, "expectFires": true},
+        {"name": "on nephrotoxin with eGFR 45 — above threshold, does not fire", "facts": {"onNephrotoxin": "YES", "egfr": 45}, "expectFires": false},
+        {"name": "no nephrotoxin flagged — gate excludes the rule", "facts": {"onNephrotoxin": "NO", "egfr": 18}, "expectFires": false},
+        {"name": "on nephrotoxin but eGFR not measured — must not fire on absent renal function", "facts": {"onNephrotoxin": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "DEPRX_RENAL_DOSE_REVIEW_EGFR_LT_60",
+      "name": "Renally-cleared medicine with eGFR below 60 — dose review",
+      "layer": "DEPRESCRIBING",
+      "ruleType": "REVIEW",
+      "severity": "MEDIUM",
+      "requiredInputs": ["onRenallyClearedDrug", "egfr"],
+      "appliesWhen": {"input": "onRenallyClearedDrug", "op": "eq", "value": "YES"},
+      "logic": {"input": "egfr", "op": "lt", "value": 60},
+      "message": "Review the dose — a renally-cleared medicine at eGFR below 60 mL/min/1.73m2 may need adjustment.",
+      "explanation": "Medicines cleared mainly by the kidney accumulate as GFR falls. Below an eGFR of 60 many need a reduced dose or an extended interval to stay in the therapeutic range rather than climbing toward toxicity. This is a review prompt, not a stop: the correct dose depends on the specific medicine, so the action is to check it against a renal-dosing reference.",
+      "requiredAction": "Check each renally-cleared medicine against a renal-dosing reference and adjust dose or interval for the current eGFR. Recheck renal function and re-review after any change in function.",
+      "sourceRefs": ["WHO PEN — dose adjustment in renal impairment", "Renal-dosing references (eGFR < 60 dose-review band)"],
+      "dakRef": {"dak": "WHO PEN", "dakVersion": "2020", "id": "WHO_PEN.DEPRESCRIBING", "row": "renal dose review eGFR<60"},
+      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "WHO PEN does not enumerate a general renally-cleared-drug dose-review threshold.", "nationalStatement": "At eGFR below 60 any renally-cleared medicine should prompt a dose-review against a renal-dosing reference.", "rationale": "There is no single WHO PEN table row that states a generic dose-review threshold for all renally-cleared medicines, so this is authored as a national decision-support prompt rather than an adaptation of a specific WHO statement. The eGFR < 60 band is the conventional point at which renal dose-adjustment tables begin to apply and is a placeholder pending the national renal-dosing guideline.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["Renal drug handbook dose-adjustment bands", "WHO PEN prescribing principles"]},
+      "testCases": [
+        {"name": "on renally-cleared drug with eGFR 45 — dose review fires", "facts": {"onRenallyClearedDrug": "YES", "egfr": 45}, "expectFires": true},
+        {"name": "on renally-cleared drug with eGFR 90 — normal function, does not fire", "facts": {"onRenallyClearedDrug": "YES", "egfr": 90}, "expectFires": false},
+        {"name": "no renally-cleared drug flagged — gate excludes the rule", "facts": {"onRenallyClearedDrug": "NO", "egfr": 45}, "expectFires": false},
+        {"name": "on renally-cleared drug but eGFR not measured — must not fire on absent renal function", "facts": {"onRenallyClearedDrug": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "DEPRX_DUPLICATE_THERAPY_REVIEW",
+      "name": "Duplicate therapy detected — medication review",
+      "layer": "DEPRESCRIBING",
+      "ruleType": "REVIEW",
+      "severity": "MEDIUM",
+      "requiredInputs": ["duplicateTherapyDetected"],
+      "logic": {"input": "duplicateTherapyDetected", "op": "eq", "value": "YES"},
+      "message": "Duplicate therapy detected — review the medication list for two medicines doing the same job.",
+      "explanation": "Duplicate therapy — two medicines from the same class, or two products delivering the same active ingredient — is a common source of avoidable harm: additive dose-related toxicity and unnecessary cost, often arising when a new prescriber adds a medicine without reconciling the existing list. The caller has already detected the overlap; this rule surfaces it for an explicit reconciliation decision.",
+      "requiredAction": "Review the medication list and reconcile the duplicate: keep the single most appropriate agent and stop the redundant one, documenting the decision. Confirm the intended total dose is safe.",
+      "sourceRefs": ["WHO PEN — medication review and rational prescribing", "Medicines reconciliation good practice"],
+      "dakRef": {"dak": "WHO PEN", "dakVersion": "2020", "id": "WHO_PEN.DEPRESCRIBING", "row": "duplicate therapy review"},
+      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "WHO PEN promotes rational prescribing and periodic medication review but does not specify a duplicate-therapy detection rule.", "nationalStatement": "A detected duplicate therapy should trigger an explicit reconciliation review.", "rationale": "Duplicate-therapy detection is a national decision-support addition built on WHO PEN's rational-prescribing principle rather than an adaptation of a specific WHO statement; the detection itself is performed upstream and passed in as a boolean flag.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PEN rational prescribing", "Medicines reconciliation good practice"]},
+      "testCases": [
+        {"name": "duplicate therapy detected — review fires", "facts": {"duplicateTherapyDetected": "YES"}, "expectFires": true},
+        {"name": "no duplicate therapy — does not fire", "facts": {"duplicateTherapyDetected": "NO"}, "expectFires": false},
+        {"name": "duplicate-therapy check not performed — must not fire on an unanswered check", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "DEPRX_HEPATIC_SEVERE_CAUTION",
+      "name": "Severe hepatic impairment — review hepatically-metabolised medicines",
+      "layer": "DEPRESCRIBING",
+      "ruleType": "REVIEW",
+      "severity": "MEDIUM",
+      "requiredInputs": ["hepaticImpairment"],
+      "logic": {"input": "hepaticImpairment", "op": "eq", "value": "SEVERE"},
+      "message": "Severe hepatic impairment — review medicines that are metabolised or cleared by the liver.",
+      "explanation": "A severely impaired liver clears many medicines far more slowly and produces less of the clotting factors and albumin that shape their safe use. Sedatives, opioids, statins, and other hepatically-metabolised medicines can accumulate to toxic effect, and some (for example medicines that raise bleeding risk) are especially hazardous. Each such medicine needs review for whether to stop, reduce, or substitute.",
+      "requiredAction": "Review all hepatically-metabolised medicines against a hepatic-dosing reference; stop, reduce or substitute where accumulation or bleeding risk is significant, and avoid initiating hepatotoxic agents.",
+      "sourceRefs": ["WHO PEN — prescribing in hepatic impairment", "Hepatic-dosing safety principles"],
+      "dakRef": {"dak": "WHO PEN", "dakVersion": "2020", "id": "WHO_PEN.DEPRESCRIBING", "row": "hepatic severe review"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "Use caution with medicines metabolised by the liver in hepatic impairment.", "nationalStatement": "Severe hepatic impairment should trigger an explicit review of all hepatically-metabolised medicines.", "rationale": "The generic caution is turned into an interruptive review that fires only at the SEVERE grade, so it does not flood every mildly-deranged liver panel with a low-value alert. The rule keys on the graded hepaticImpairment fact rather than a per-drug flag because no hepatic-metabolism medication flag is supplied to this pack.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO PEN prescribing cautions", "Hepatic dose-adjustment references"]},
+      "testCases": [
+        {"name": "severe hepatic impairment — review fires", "facts": {"hepaticImpairment": "SEVERE"}, "expectFires": true},
+        {"name": "mild hepatic impairment — below trigger, does not fire", "facts": {"hepaticImpairment": "MILD"}, "expectFires": false},
+        {"name": "no hepatic impairment — does not fire", "facts": {"hepaticImpairment": "NONE"}, "expectFires": false},
+        {"name": "hepatic status not assessed — must not fire on an unassessed liver", "facts": {}, "expectFires": false}
+      ]
+    }
+  ]
+}
