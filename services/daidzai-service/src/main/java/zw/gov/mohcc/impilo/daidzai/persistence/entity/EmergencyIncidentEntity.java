@@ -34,6 +34,9 @@ public class EmergencyIncidentEntity {
     @Column(name = "trauma_episode_id") private UUID traumaEpisodeId;
     @Column(name = "command_post", length = 255) private String commandPost;
     @Column(name = "incident_commander", length = 128) private String incidentCommander;
+    /** Stamped once (never cleared) the first time casualty count crosses MciCasualtyService.SURGE_THRESHOLD (V202, W11). */
+    @Column(name = "surge_declared_at") private OffsetDateTime surgeDeclaredAt;
+    @Column(name = "surge_casualty_count") private Integer surgeCasualtyCount;
     @Column(name = "opened_at", nullable = false) private OffsetDateTime openedAt;
     @Column(name = "closed_at") private OffsetDateTime closedAt;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;
@@ -100,6 +103,10 @@ public class EmergencyIncidentEntity {
     public void setCommandPost(String v) { this.commandPost = v; }
     public String getIncidentCommander() { return incidentCommander; }
     public void setIncidentCommander(String v) { this.incidentCommander = v; }
+    public OffsetDateTime getSurgeDeclaredAt() { return surgeDeclaredAt; }
+    public void setSurgeDeclaredAt(OffsetDateTime v) { this.surgeDeclaredAt = v; }
+    public Integer getSurgeCasualtyCount() { return surgeCasualtyCount; }
+    public void setSurgeCasualtyCount(Integer v) { this.surgeCasualtyCount = v; }
     public OffsetDateTime getOpenedAt() { return openedAt; }
     public void setOpenedAt(OffsetDateTime v) { this.openedAt = v; }
     public OffsetDateTime getClosedAt() { return closedAt; }

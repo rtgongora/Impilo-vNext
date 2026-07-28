@@ -1,12 +1,15 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs
 #
-# HAND-EDITED 2026-07-28 to add PROCEDURES_BASE_URL, NOT regenerated. The generator crashed on
+# HAND-EDITED 2026-07-28 to add MENTAL_HEALTH_BASE_URL/MENTAL_HEALTH_SERVICE_BASE_URL (W13) and,
+# earlier the same day, PROCEDURES_BASE_URL, NOT regenerated. The generator crashed on
 # this checkout with ERR_MODULE_NOT_FOUND before writing anything (confirmed by diffing against
 # a pre-run snapshot), and the runtime-values generator's sibling script already dropped a
 # hand-authored block once this session (pct-service secretEnv) — same law now applies here:
 # diff before trusting, and this one could not even be diffed because it never ran.
-# Downstream env vars: 109
+# HAND-EDITED 2026-07-28 (SB-3 reachability): added SURGERY_BASE_URL beside PROCEDURES_BASE_URL,
+# NOT regenerated, per the same law above.
+# Downstream env vars: 112
 experienceBff:
   env:
     FHIR_BASE_URL: http://hapi-fhir:8090/fhir
@@ -32,10 +35,13 @@ experienceBff:
     NHUME_SERVICE_BASE_URL: http://nhume-service:8210
     MADI_BASE_URL: http://madi-service:8300
     MADI_SERVICE_BASE_URL: http://madi-service:8300
+    MENTAL_HEALTH_BASE_URL: http://mental-health-service:8397
+    MENTAL_HEALTH_SERVICE_BASE_URL: http://mental-health-service:8397
     LIVE_BASE_URL: http://live-service:8380
     IOT_INGESTION_BASE_URL: http://iot-ingestion-service:8330
     TELEMONITORING_BASE_URL: http://telemonitoring-service:8394
     PROCEDURES_BASE_URL: http://procedures-service:8395
+    SURGERY_BASE_URL: http://surgery-service:8396
     RTC_GATEWAY_BASE_URL: http://rtc-gateway-service:8196
     ANALYTICS_PIPELINE_BASE_URL: http://analytics-pipeline-service:8365
     VITO_BASE_URL: http://vito-service:8082

@@ -30,7 +30,9 @@ class HivTbProgrammeRuleContentTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RuleContentLoader loader = new RuleContentLoader(objectMapper);
-    private final ProgrammeGuidanceService service = new ProgrammeGuidanceService(loader);
+    private final ProgrammeGuidanceService service = new ProgrammeGuidanceService(loader,
+            new zw.gov.mohcc.impilo.clinical.multimorbidity.MedicationFactDeriver(
+                    new zw.gov.mohcc.impilo.clinical.multimorbidity.MedicineClassifier(objectMapper)));
 
     private static final List<String> PACKS = List.of(
             ProgrammeGuidanceService.HIV_CONTENT_PATH,

@@ -118,6 +118,9 @@
         <module>participation-service</module>
         <module>telemonitoring-service</module>
         <module>procedures-service</module>
+        <module>surgery-service</module>
+        <!-- Mental Health — psychiatric-emergency acceptance & handover (v1.1-native, W13) -->
+        <module>mental-health-service</module>
         <!-- Forms Service — Clinical Content Platform -->
         <module>forms-service</module>
         <!-- Data Pipeline — v1.1-Native Ingestion & Watermarking -->

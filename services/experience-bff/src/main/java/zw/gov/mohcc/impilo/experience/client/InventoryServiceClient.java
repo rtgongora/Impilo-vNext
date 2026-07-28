@@ -259,6 +259,32 @@ public class InventoryServiceClient {
         return getJson(url);
     }
 
+    // ── implant lifecycle (Wave P8 §14; inventory-service ImplantController, the implant SoR).
+    // Direct to inventory-service deliberately: inpatient's theatre implant proxy covers
+    // record/list plus a case-side recall projection only — removal, revision and the SoR-side
+    // recall trace have no inpatient path, and inpatient-service source is out of scope for
+    // the SB-3 reachability wave. ──
+
+    /** Record removal (explant) — POST /v1/internal/implants/{patientImplantId}/remove */
+    public JsonNode removeImplant(String patientImplantId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/v1/internal/implants/" + patientImplantId + "/remove", body);
+    }
+
+    /** Record revision (explant + replacement) — POST /v1/internal/implants/{patientImplantId}/revise */
+    public JsonNode reviseImplant(String patientImplantId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/v1/internal/implants/" + patientImplantId + "/revise", body);
+    }
+
+    /** SoR recall trace — GET /v1/internal/implants/recall?udi=&lot= */
+    public JsonNode traceImplantRecall(String udi, String lot) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/implants/recall");
+        if (udi != null && !udi.isBlank()) b.queryParam("udi", udi);
+        if (lot != null && !lot.isBlank()) b.queryParam("lot", lot);
+        return extractData(getJsonEntity(b.encode().toUriString()));
+    }
+
     private JsonNode getJson(String url) {
         return getJsonEntity(url).getBody();
     }

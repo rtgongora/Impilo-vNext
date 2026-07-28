@@ -305,7 +305,10 @@ export function resolveIdentityContext(input: IdentityContextInput): IdentityCon
     if (!hasFacility && activeAffiliationCount === 1) {
       defaultLandingPath = "/facility";
     } else if (hasFacility) {
-      defaultLandingPath = "/provider-workspace";
+      // Phase F6: /provider-workspace is now an intent-resolution shim to /work — land there
+      // directly. The Java-side twin (SessionExperienceService#resolveDefaultRoute) makes the
+      // same change; landing-parity is asserted in resolve-post-login-destination.test.ts.
+      defaultLandingPath = "/work";
     } else if (providerLogin) {
       defaultLandingPath = "/facility";
     } else {

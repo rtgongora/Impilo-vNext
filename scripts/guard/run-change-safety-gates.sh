@@ -34,6 +34,7 @@ CHECKS=(
   check-source-text-integrity.sh
   check-migration-version-collisions.sh
   check-butano-data-durability.sh
+  check-identity-repoint-coverage.sh
 )
 
 FAIL=0

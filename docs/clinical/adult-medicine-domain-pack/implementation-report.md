@@ -1,5 +1,14 @@
 # Adult Medicine and Medical Specialties Clinical Domain Pack — Implementation Report
 
+> **START HERE, 2026-07-28.** The per-section truth of this pack now lives in
+> [`completion-register.md`](completion-register.md) — one row per brief section, with PARTIAL never
+> counted as delivered. This report predates it and describes waves rather than sections, so where
+> the two differ the register wins.
+>
+> Summary of the register: **3 sections DONE, 17 PARTIAL, 3 NOT BUILT.** This report's accurate claim
+> that "the clinical decision-support backbone is complete" has twice been read as "the pack is
+> complete". The backbone is a minority of the brief.
+
 **Status as of 2026-07-27.** W0 (vertical repair), W1 (canonical clinical spine), most of W2
 (adult decision-support foundation) and **W3 (HIV and TB as governed DAK-traceable programmes)** are
 implemented, tested and pushed. **W4 (chronic-disease CDS), W5 (medical-procedure indication) and W6
@@ -324,11 +333,26 @@ that would unblock it** is additive and read-only: add `READ_PROBLEM` and `READ_
 then be **consuming an existing seam rather than building one** — a materially better position than
 first reported, and the reason the correction was worth making rather than quietly leaving.
 
-**Remaining:** the ten §23 demonstrations. The brief is **not in this repository** — no version was
-ever committed — so the list is not recoverable from it, and the proposals in
-`docs/clinical/adult-medicine-domain-pack/proposed-demonstrations.md` are exactly that: proposed,
-pending product-owner confirmation, and deliberately not presented as the recovered requirement. The clinical decision-support backbone of the pack is complete; what
-remains is experience-shell surface, interoperability breadth, and the demonstration proofs.
+**Remaining:** the ten §23 demonstrations — **none of which is runnable end to end today.**
+
+> ⚠ **Correction (2026-07-28) — this paragraph previously said the brief was not in this repository
+> and the §23 list was unrecoverable.** That was true when written and is no longer. The product
+> owner supplied the brief, and it is now committed verbatim as
+> [`brief.md`](brief.md) — the pack's source of truth. The real §23 list is in
+> [`demonstrations.md`](demonstrations.md); the earlier `proposed-demonstrations.md` has been
+> retired, with its ten proposals mapped in that file's appendix to the tests that now carry them.
+>
+> **The proposals were not merely different — they were a different kind of thing.** They asserted
+> the pack's *safety properties* (a failed read must not render as "no disease"). §23 asks for ten
+> *clinical journeys*. Comparing the two makes the honest scale of the remaining work visible: this
+> report's claim that "the clinical decision-support backbone is complete" is accurate, but the
+> backbone is a minority of the brief. Read [`brief.md`](brief.md) §§1–25 against this report before
+> treating any part of the pack as finished.
+
+The clinical decision-support backbone (§16) is complete and is the pack's strongest asset. What
+remains is the multimorbidity engine (§9), chronic registers, the examination framework (§7), the
+thirteen specialty workspaces (§8), diagnostic orchestration (§11), consultation and MDT (§14),
+interoperability breadth (§19), offline (§20), analytics (§21), and the demonstration proofs (§23).
 
 > ⚠ **Correction (2026-07-28) — the earlier BUTANO statement in this report was wrong, and it
 > understated the gap.** This report previously said "BUTANO still maps only `Condition` and

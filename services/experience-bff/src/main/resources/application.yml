@@ -144,6 +144,7 @@ impilo:
     participation-base-url: ${PARTICIPATION_BASE_URL:${PARTICIPATION_SERVICE_BASE_URL:http://localhost:8393}}
     telemonitoring-base-url: ${TELEMONITORING_BASE_URL:http://localhost:8394}
     procedures-base-url: ${PROCEDURES_BASE_URL:http://localhost:8395}
+    surgery-base-url: ${SURGERY_BASE_URL:http://localhost:8396}
     daidzai-base-url: ${DAIDZAI_BASE_URL:${DAIDZAI_SERVICE_BASE_URL:http://localhost:8392}}
     live-base-url: ${LIVE_BASE_URL:http://localhost:8380}
     iot-ingestion-base-url: ${IOT_INGESTION_BASE_URL:http://localhost:8330}

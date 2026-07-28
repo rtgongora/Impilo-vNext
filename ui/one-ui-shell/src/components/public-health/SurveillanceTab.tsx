@@ -12,6 +12,9 @@ import {
   usePublicHealthOutbreaks,
   usePublicHealthSignals,
   usePublicHealthWeeklyIdsr,
+  useRecordCaseUpdate,
+  useLinkCaseContact,
+  useLineList,
 } from "@/hooks/queries/usePublicHealth";
 import {
   useInvestigations,
@@ -162,6 +165,13 @@ export function SurveillanceTab() {
   const [showNewCase, setShowNewCase] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
+  const [caseUpdate, setCaseUpdate] = useState({ classification: "", outcome: "", labResult: "", notes: "" });
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [caseActionMsg, setCaseActionMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const recordCaseUpdate = useRecordCaseUpdate(selectedCase);
+  const linkCaseContact = useLinkCaseContact(selectedCase);
+  const lineList = useLineList();
   const [activeSubTab, setActiveSubTab] = useState<"signals" | "cases" | "weekly">("signals");
   const [signalForm, setSignalForm] = useState<NewSignalEventForm>(EMPTY_SIGNAL_EVENT);
   const [signalFormError, setSignalFormError] = useState<string | null>(null);
@@ -1035,7 +1045,12 @@ export function SurveillanceTab() {
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="text-xs font-medium text-muted-foreground">Update Classification</label>
-                      <select className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1">
+                      <select
+                        className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
+                        value={caseUpdate.classification}
+                        onChange={(e) => setCaseUpdate({ ...caseUpdate, classification: e.target.value })}
+                      >
+                        <option value="">Not stated</option>
                         <option value="suspected">Suspected</option>
                         <option value="probable">Probable</option>
                         <option value="confirmed">Confirmed</option>
@@ -1044,7 +1059,12 @@ export function SurveillanceTab() {
                     </div>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground">Update Outcome</label>
-                      <select className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1">
+                      <select
+                        className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
+                        value={caseUpdate.outcome}
+                        onChange={(e) => setCaseUpdate({ ...caseUpdate, outcome: e.target.value })}
+                      >
+                        <option value="">Not stated</option>
                         <option value="admitted">Admitted</option>
                         <option value="recovering">Recovering</option>
                         <option value="discharged">Discharged</option>
@@ -1053,7 +1073,11 @@ export function SurveillanceTab() {
                     </div>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground">Lab Result</label>
-                      <select className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1">
+                      <select
+                        className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
+                        value={caseUpdate.labResult}
+                        onChange={(e) => setCaseUpdate({ ...caseUpdate, labResult: e.target.value })}
+                      >
                         <option value="">Select</option>
                         <option value="pending">Pending</option>
                         <option value="positive">Positive</option>
@@ -1064,12 +1088,130 @@ export function SurveillanceTab() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Investigation Notes</label>
-                    <textarea placeholder="Progress notes..." className="w-full text-xs border border-border rounded-lg mt-1 p-2 min-h-[40px]" />
+                    <textarea
+                      placeholder="Progress notes..."
+                      className="w-full text-xs border border-border rounded-lg mt-1 p-2 min-h-[40px]"
+                      value={caseUpdate.notes}
+                      onChange={(e) => setCaseUpdate({ ...caseUpdate, notes: e.target.value })}
+                    />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Contact name</label>
+                      <input
+                        className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
+                        placeholder="Name taken at the visit"
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Contact phone</label>
+                      <input
+                        className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
+                        placeholder="Optional"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {caseActionMsg && (
+                    <p
+                      data-testid="case-action-msg"
+                      className={`text-xs ${caseActionMsg.kind === "err" ? "text-red-600 font-medium" : "text-green-700"}`}
+                    >
+                      {caseActionMsg.text}
+                    </p>
+                  )}
+
                   <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover">Save Update</button>
-                    <button className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg">Link Contacts</button>
-                    <button className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg">Generate Line List</button>
+                    <button
+                      type="button"
+                      className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50"
+                      disabled={recordCaseUpdate.isPending}
+                      onClick={() => {
+                        setCaseActionMsg(null);
+                        recordCaseUpdate.mutate(
+                          {
+                            classification: caseUpdate.classification || undefined,
+                            outcome: caseUpdate.outcome || undefined,
+                            labResult: caseUpdate.labResult || undefined,
+                            notes: caseUpdate.notes || undefined,
+                          },
+                          {
+                            onSuccess: () => {
+                              setCaseUpdate({ classification: "", outcome: "", labResult: "", notes: "" });
+                              setCaseActionMsg({ kind: "ok", text: "Investigation update recorded." });
+                            },
+                            // A failed update must never read as a saved one — the officer moves on
+                            // believing the case has been reclassified.
+                            onError: (e: unknown) =>
+                              setCaseActionMsg({
+                                kind: "err",
+                                text: `NOT saved: ${e instanceof Error ? e.message : "the update was not recorded."}`,
+                              }),
+                          },
+                        );
+                      }}
+                    >
+                      {recordCaseUpdate.isPending ? "Saving..." : "Save Update"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                      disabled={!contactName.trim() || linkCaseContact.isPending}
+                      onClick={() => {
+                        setCaseActionMsg(null);
+                        linkCaseContact.mutate(
+                          { contactName: contactName.trim(), contactPhone: contactPhone.trim() || undefined },
+                          {
+                            onSuccess: () => {
+                              setContactName("");
+                              setContactPhone("");
+                              setCaseActionMsg({ kind: "ok", text: "Contact linked and queued for tracing." });
+                            },
+                            // The consequence is named because the officer's next action depends on
+                            // it: if this failed, nobody is tracing this person.
+                            onError: (e: unknown) =>
+                              setCaseActionMsg({
+                                kind: "err",
+                                text: `Contact NOT linked — this person is not being traced. ${
+                                  e instanceof Error ? e.message : ""
+                                }`,
+                              }),
+                          },
+                        );
+                      }}
+                    >
+                      {linkCaseContact.isPending ? "Linking..." : "Link Contact"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                      disabled={lineList.isPending}
+                      onClick={() => {
+                        setCaseActionMsg(null);
+                        lineList.mutate(undefined, {
+                          onSuccess: (res: unknown) => {
+                            const rows = (res as { data?: { data?: { items?: unknown[] } } })?.data?.data?.items ?? [];
+                            setCaseActionMsg({
+                              kind: "ok",
+                              text: `Line list generated — ${rows.length} case(s).`,
+                            });
+                          },
+                          onError: (e: unknown) =>
+                            setCaseActionMsg({
+                              kind: "err",
+                              text: `Line list NOT generated: ${e instanceof Error ? e.message : ""}`,
+                            }),
+                        });
+                      }}
+                    >
+                      {lineList.isPending ? "Generating..." : "Generate Line List"}
+                    </button>
                   </div>
                 </div>
               );

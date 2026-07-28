@@ -29,6 +29,11 @@ import {
   useCatalogueSearch,
   useCatalogueDetail,
   useAppropriatenessCheck,
+  useSafetyPauseTemplate,
+  useSedationLevel,
+  useRecoverySetting,
+  useAftercareTemplate,
+  useAnalyticsIndicators,
   type AppropriatenessRequest,
 } from "@/hooks/queries/useProceduresCatalogue";
 
@@ -39,6 +44,237 @@ const DISPOSITION_STYLE: Record<string, string> = {
   PROPOSE_ALTERNATIVE: "border-amber-300 bg-amber-50 text-amber-800",
   CLARIFY: "border-blue-200 bg-blue-50 text-blue-800",
 };
+
+/**
+ * Wave P-R2 — safety-pause, sedation, recovery and aftercare panels for the selected catalogue
+ * entry. A separate component (not inlined into the page body) so the four hooks it calls are
+ * scoped to the current selection and reset cleanly when `selectedCode` changes.
+ *
+ * Each panel renders one of three states, same discipline as the rest of this page:
+ * unavailable (isError, a real fetch failure) vs not-declared (the linkage field itself is
+ * null — an honest gap, not a failure) vs resolved. A panel never renders nothing silently for
+ * an error; only for a genuinely undeclared linkage does it show the quieter "not declared" copy.
+ */
+function PostProcedurePanels({
+  safetyPauseTemplateCode,
+  defaultSedationLevelCode,
+  defaultRecoverySettingCode,
+  aftercareTemplateCode,
+  defaultAftercareTemplateCode,
+}: {
+  safetyPauseTemplateCode: string | null;
+  defaultSedationLevelCode: string | null;
+  defaultRecoverySettingCode: string | null;
+  aftercareTemplateCode: string | null;
+  defaultAftercareTemplateCode: string | null;
+}) {
+  const safetyPauseQ = useSafetyPauseTemplate(safetyPauseTemplateCode);
+  const sedationQ = useSedationLevel(defaultSedationLevelCode);
+  const recoveryQ = useRecoverySetting(defaultRecoverySettingCode);
+
+  // Two-step resolution, done here (not inside the hook) so the caller can see which code
+  // actually answered: try the SPECIFIC per-procedure aftercare code first; only fall back to
+  // the coarse setting-class code if the specific one is absent or fails to resolve (most of
+  // the catalogue's remaining ~27 specific codes have no template row yet — see V007).
+  const specificAftercareQ = useAftercareTemplate(aftercareTemplateCode);
+  const useFallback = !aftercareTemplateCode || specificAftercareQ.isError;
+  const fallbackAftercareQ = useAftercareTemplate(useFallback ? defaultAftercareTemplateCode : null);
+  const aftercareResolved = specificAftercareQ.data ?? fallbackAftercareQ.data;
+  const aftercareIsFromFallback = !specificAftercareQ.data && !!fallbackAftercareQ.data;
+  const aftercareStillUnavailable =
+    useFallback && defaultAftercareTemplateCode && fallbackAftercareQ.isError;
+
+  return (
+    <div className="mt-4 space-y-3" data-testid="procedures-postprocedure-panels">
+      {safetyPauseTemplateCode && (
+        <div className="rounded border border-gray-100 p-2 text-xs" data-testid="procedures-safety-pause-panel">
+          <h5 className="font-semibold uppercase text-muted-foreground">Safety pause</h5>
+          {safetyPauseQ.isLoading ? (
+            <p className="mt-1 text-muted-foreground">Loading…</p>
+          ) : safetyPauseQ.isError ? (
+            <p className="mt-1 text-danger" role="alert">Could not load the safety-pause template.</p>
+          ) : safetyPauseQ.data ? (
+            <ul className="mt-1 space-y-0.5">
+              {safetyPauseQ.data.confirmationItems.map((item) => (
+                <li key={item.confirmationItem}>• {item.promptText}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      )}
+
+      {defaultSedationLevelCode && (
+        <div className="rounded border border-gray-100 p-2 text-xs" data-testid="procedures-sedation-panel">
+          <h5 className="font-semibold uppercase text-muted-foreground">Sedation</h5>
+          {sedationQ.isLoading ? (
+            <p className="mt-1 text-muted-foreground">Loading…</p>
+          ) : sedationQ.isError ? (
+            <p className="mt-1 text-danger" role="alert">Could not load the sedation level.</p>
+          ) : sedationQ.data ? (
+            <div className="mt-1">
+              <p>{sedationQ.data.levelLabel} — {sedationQ.data.monitoringRequired}</p>
+              {sedationQ.data.rescueCapability && (
+                <p className="mt-0.5 text-muted-foreground">
+                  Rescue capability required: {sedationQ.data.rescueCapability.levelLabel}
+                </p>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {defaultRecoverySettingCode && (
+        <div className="rounded border border-gray-100 p-2 text-xs" data-testid="procedures-recovery-panel">
+          <h5 className="font-semibold uppercase text-muted-foreground">Recovery</h5>
+          {recoveryQ.isLoading ? (
+            <p className="mt-1 text-muted-foreground">Loading…</p>
+          ) : recoveryQ.isError ? (
+            <p className="mt-1 text-danger" role="alert">Could not load the recovery setting.</p>
+          ) : recoveryQ.data ? (
+            <p className="mt-1">
+              {recoveryQ.data.settingLabel} — {recoveryQ.data.dischargeReadinessCriteria}
+            </p>
+          ) : null}
+        </div>
+      )}
+
+      {(aftercareTemplateCode || defaultAftercareTemplateCode) && (
+        <div className="rounded border border-gray-100 p-2 text-xs" data-testid="procedures-aftercare-panel">
+          <h5 className="font-semibold uppercase text-muted-foreground">Aftercare</h5>
+          {specificAftercareQ.isLoading || fallbackAftercareQ.isLoading ? (
+            <p className="mt-1 text-muted-foreground">Loading…</p>
+          ) : aftercareStillUnavailable ? (
+            <p className="mt-1 text-danger" role="alert">Could not load an aftercare template.</p>
+          ) : aftercareResolved ? (
+            <div className="mt-1">
+              {aftercareIsFromFallback && (
+                <p className="mb-1 text-[10px] uppercase text-muted-foreground">
+                  Generic {aftercareResolved.applicableSetting ?? ""} guidance — a procedure-specific
+                  template ({aftercareTemplateCode}) has not been authored yet.
+                </p>
+              )}
+              {aftercareResolved.contentMaturity === "ENGINEERING_SEED" && (
+                <p className="mb-1 text-[10px] uppercase text-amber-700">
+                  Engineering seed content — pending MoHCC ratification of the wording.
+                </p>
+              )}
+              <ul className="space-y-0.5">
+                {aftercareResolved.instructions.map((i) => (
+                  <li key={i.instructionKind}>• {i.instructionText}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="mt-1 text-muted-foreground">No aftercare template declared for this procedure yet.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const COMPUTATION_STATUS_STYLE: Record<string, string> = {
+  COMPUTED: "bg-emerald-50 text-emerald-800",
+  PARTIAL: "bg-amber-50 text-amber-800",
+  NOT_YET_INSTRUMENTED: "bg-gray-100 text-gray-600",
+};
+
+/**
+ * Wave SB-3 — P14 analytics indicator catalogue panel. Indicator DEFINITIONS and their honest
+ * computation status, not computed numbers: computationStatus and gapReason are rendered
+ * verbatim, because "this number does not exist yet, and here is why" is the deliverable —
+ * hiding a NOT_YET_INSTRUMENTED row would fabricate an analytics capability that isn't there.
+ */
+function AnalyticsIndicatorsPanel() {
+  const indicatorsQ = useAnalyticsIndicators();
+
+  return (
+    <div className="mt-6 rounded-lg border border-gray-100 p-4" data-testid="procedures-analytics-panel">
+      <h3 className="text-sm font-semibold">Pipeline analytics indicators (§26)</h3>
+      {indicatorsQ.isLoading ? (
+        <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading indicator catalogue…
+        </div>
+      ) : indicatorsQ.isError ? (
+        <div
+          className="flex items-center gap-2 p-4 text-sm text-danger"
+          role="alert"
+          data-testid="procedures-analytics-unavailable"
+        >
+          <AlertTriangle className="h-5 w-5" />
+          Could not reach the indicator catalogue. This is not the same as there being no
+          indicators — try again, or report if it persists.
+        </div>
+      ) : indicatorsQ.data && !Array.isArray(indicatorsQ.data.indicators) ? (
+        // A 200 whose body is not the indicator-summary shape is UNAVAILABLE, not empty — a
+        // malformed upstream must never render as "no indicators" (and must never crash the
+        // page; this branch was added after exactly that crash under a blanket fetch mock).
+        <div
+          className="flex items-center gap-2 p-4 text-sm text-danger"
+          role="alert"
+          data-testid="procedures-analytics-malformed"
+        >
+          <AlertTriangle className="h-5 w-5" />
+          The indicator catalogue answered in an unexpected shape — treating it as unavailable,
+          not as empty.
+        </div>
+      ) : indicatorsQ.data ? (
+        <div className="mt-2">
+          <div className="flex flex-wrap gap-4 text-sm" data-testid="procedures-analytics-summary">
+            <span>Total: <strong>{indicatorsQ.data.total}</strong></span>
+            <span className="text-emerald-800">Computed: <strong>{indicatorsQ.data.computed}</strong></span>
+            <span className="text-amber-800">Partial: <strong>{indicatorsQ.data.partial}</strong></span>
+            <span className="text-gray-600">
+              Not yet instrumented: <strong>{indicatorsQ.data.notYetInstrumented}</strong>
+            </span>
+          </div>
+          {indicatorsQ.data.indicators.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground" data-testid="procedures-analytics-empty">
+              The indicator catalogue is genuinely empty.
+            </p>
+          ) : (
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-left text-xs" data-testid="procedures-analytics-table">
+                <thead>
+                  <tr className="border-b border-gray-100 uppercase text-muted-foreground">
+                    <th className="py-1.5 pr-3">Indicator</th>
+                    <th className="py-1.5 pr-3">Status</th>
+                    <th className="py-1.5 pr-3">Executable via</th>
+                    <th className="py-1.5">Gap reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {indicatorsQ.data.indicators.map((ind) => (
+                    <tr key={ind.indicatorCode} className="border-b border-gray-50 align-top">
+                      <td className="py-1.5 pr-3">
+                        <div className="font-medium">{ind.indicatorName}</div>
+                        <div className="text-muted-foreground">{ind.indicatorCode}</div>
+                      </td>
+                      <td className="py-1.5 pr-3">
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
+                            COMPUTATION_STATUS_STYLE[ind.computationStatus] ?? "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {ind.computationStatus}
+                        </span>
+                        {ind.delegatedOutOfScope && (
+                          <span className="ml-1 text-[10px] uppercase text-muted-foreground">delegated</span>
+                        )}
+                      </td>
+                      <td className="py-1.5 pr-3">{ind.executableVia ?? "—"}</td>
+                      <td className="py-1.5 text-muted-foreground">{ind.gapReason ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function ProceduresCataloguePage() {
   const [specialty, setSpecialty] = useState("");
@@ -198,6 +434,14 @@ export default function ProceduresCataloguePage() {
                   ))}
                 </ul>
 
+                <PostProcedurePanels
+                  safetyPauseTemplateCode={detailQ.data.safetyPauseTemplate}
+                  defaultSedationLevelCode={detailQ.data.defaultSedationLevelCode}
+                  defaultRecoverySettingCode={detailQ.data.defaultRecoverySettingCode}
+                  aftercareTemplateCode={detailQ.data.aftercareTemplate}
+                  defaultAftercareTemplateCode={detailQ.data.defaultAftercareTemplateCode}
+                />
+
                 {/* Site/side capture — mirrors the closed vocabulary inpatient.procedure_episode.laterality
                     enforces server-side, deliberately, so a value this UI could send is never one the
                     backend gate would reject. Full anatomical-map capture is S16 (surgical graphics); an
@@ -269,6 +513,8 @@ export default function ProceduresCataloguePage() {
             ) : null}
           </div>
         </div>
+
+        <AnalyticsIndicatorsPanel />
       </PageShell>
     </AppLayout>
   );

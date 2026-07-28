@@ -95,4 +95,74 @@ public class ProceduresServiceClient {
                 .toUriString();
         return restTemplate.getForEntity(url, String.class);
     }
+
+    // ── Wave P-R2 — the P7 safety-pause/sedation and P9 recovery/aftercare read surfaces.
+    // Unlike catalogueDetail above, SafetyPauseController and RecoveryAndAftercareController
+    // were built with the query-param code shape from the start (P7, P9) — no BFF-vs-internal
+    // shape mismatch to manage here; this client calls procedures-service the same way its
+    // own external contract already looks. ──
+
+    /** Safety-pause template — GET /internal/v1/procedures/safety-pause-templates?code= */
+    public ResponseEntity<String> safetyPauseTemplate(String templateCode) {
+        log.info("Procedures: fetching safety-pause template={}", templateCode);
+        String url = UriComponentsBuilder.fromUriString(baseUrl + "/internal/v1/procedures/safety-pause-templates")
+                .queryParam("code", templateCode).toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    /** Sedation continuum — GET /internal/v1/procedures/sedation-levels */
+    public ResponseEntity<String> sedationLevels() {
+        log.info("Procedures: fetching sedation continuum");
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/procedures/sedation-levels", String.class);
+    }
+
+    /** One sedation level — GET /internal/v1/procedures/sedation-level-detail?code= */
+    public ResponseEntity<String> sedationLevel(String levelCode) {
+        log.info("Procedures: fetching sedation level={}", levelCode);
+        String url = UriComponentsBuilder.fromUriString(baseUrl + "/internal/v1/procedures/sedation-level-detail")
+                .queryParam("code", levelCode).toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    /** Recovery settings — GET /internal/v1/procedures/recovery-settings */
+    public ResponseEntity<String> recoverySettings() {
+        log.info("Procedures: fetching recovery settings");
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/procedures/recovery-settings", String.class);
+    }
+
+    /** One recovery setting — GET /internal/v1/procedures/recovery-setting-detail?code= */
+    public ResponseEntity<String> recoverySetting(String settingCode) {
+        log.info("Procedures: fetching recovery setting={}", settingCode);
+        String url = UriComponentsBuilder.fromUriString(baseUrl + "/internal/v1/procedures/recovery-setting-detail")
+                .queryParam("code", settingCode).toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    /** Aftercare template — GET /internal/v1/procedures/aftercare-templates?code= */
+    public ResponseEntity<String> aftercareTemplate(String templateCode) {
+        log.info("Procedures: fetching aftercare template={}", templateCode);
+        String url = UriComponentsBuilder.fromUriString(baseUrl + "/internal/v1/procedures/aftercare-templates")
+                .queryParam("code", templateCode).toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    // ── Wave SB-3 — the P14 analytics indicator catalogue read surface. Read-only like
+    // everything else here (engine-not-store): indicator DEFINITIONS and their computation
+    // status, not computed numbers. Indicator codes are query parameters from the start
+    // (AnalyticsIndicatorController, P14) — no route-shape workaround needed. ──
+
+    /** Indicator catalogue + summary counts — GET /internal/v1/procedures/analytics/indicators */
+    public ResponseEntity<String> analyticsIndicators() {
+        log.info("Procedures: fetching analytics indicator catalogue");
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/procedures/analytics/indicators", String.class);
+    }
+
+    /** One indicator — GET /internal/v1/procedures/analytics/indicator?code= */
+    public ResponseEntity<String> analyticsIndicator(String indicatorCode) {
+        log.info("Procedures: fetching analytics indicator={}", indicatorCode);
+        String url = UriComponentsBuilder.fromUriString(baseUrl + "/internal/v1/procedures/analytics/indicator")
+                .queryParam("code", indicatorCode).toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
 }

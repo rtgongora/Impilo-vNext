@@ -130,6 +130,28 @@ public class DaidzaiController {
         return ResponseEntity.ok(daidzai.closeDisaster(id, body != null ? body : Map.of()));
     }
 
+    // ── MCI casualty tracking (W15) ───────────────────────────────────
+    @PostMapping("/disasters/{id}/casualties")
+    public ResponseEntity<JsonNode> tagCasualty(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(daidzai.tagCasualty(id, body));
+    }
+
+    @GetMapping("/disasters/{id}/casualties")
+    public ResponseEntity<JsonNode> listCasualties(@PathVariable String id) {
+        return ResponseEntity.ok(daidzai.listCasualties(id));
+    }
+
+    @GetMapping("/disasters/{id}/casualties/unminted")
+    public ResponseEntity<JsonNode> unmintedCasualties(@PathVariable String id) {
+        return ResponseEntity.ok(daidzai.unmintedCasualties(id));
+    }
+
+    @PostMapping("/disasters/{id}/casualties/{casualtyId}/status")
+    public ResponseEntity<JsonNode> updateCasualtyStatus(@PathVariable String id, @PathVariable String casualtyId,
+                                                          @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(daidzai.updateCasualtyStatus(id, casualtyId, body));
+    }
+
     // ── EMS clinical dispatch + prehospital ePCR (responder mobile app) ──────
     @PostMapping("/ems/incidents/{id}/dispatch")
     public ResponseEntity<JsonNode> emsDispatch(@PathVariable String id,

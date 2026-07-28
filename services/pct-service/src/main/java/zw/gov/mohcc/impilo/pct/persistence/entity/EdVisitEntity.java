@@ -33,6 +33,10 @@ public class EdVisitEntity {
     @Column(name = "trauma_episode_id")
     private UUID traumaEpisodeId;
 
+    /** The pct.emergency_episode minted alongside this visit at registration (W15). See V211. */
+    @Column(name = "emergency_episode_id")
+    private UUID emergencyEpisodeId;
+
     @Column(name = "arrival_mode", nullable = false)
     private String arrivalMode = "WALK_IN";
 
@@ -119,6 +123,8 @@ public class EdVisitEntity {
     public void setEmergencyCaseId(UUID emergencyCaseId) { this.emergencyCaseId = emergencyCaseId; }
     public UUID getTraumaEpisodeId() { return traumaEpisodeId; }
     public void setTraumaEpisodeId(UUID traumaEpisodeId) { this.traumaEpisodeId = traumaEpisodeId; }
+    public UUID getEmergencyEpisodeId() { return emergencyEpisodeId; }
+    public void setEmergencyEpisodeId(UUID emergencyEpisodeId) { this.emergencyEpisodeId = emergencyEpisodeId; }
     public String getArrivalMode() { return arrivalMode; }
     public void setArrivalMode(String arrivalMode) { this.arrivalMode = arrivalMode; }
     public String getAmbulanceCallSign() { return ambulanceCallSign; }

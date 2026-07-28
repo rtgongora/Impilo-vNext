@@ -67,6 +67,22 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /**
+     * The multimorbidity view (brief.md §9) — eleven panels and seven detections over the whole
+     * patient at once.
+     *
+     * <p>The body is passed through as built. A key omitted by the caller means that source could not
+     * be obtained and the engine answers the detections depending on it as unanswered; a key present
+     * with an empty array means the source was read and is empty. This client must not normalise
+     * between the two.</p>
+     */
+    public JsonNode multimorbidityAssess(Object body) {
+        String url = baseUrl + "/internal/v1/clinical/multimorbidity/assess";
+        log.debug("Clinical platform: multimorbidity assess");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";

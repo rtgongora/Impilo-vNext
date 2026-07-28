@@ -13,6 +13,7 @@ import { SelectFacilityScreen } from "../screens/SelectFacilityScreen";
 import { SelectWorkspaceScreen } from "../screens/SelectWorkspaceScreen";
 import { ProviderActivationScreen } from "../screens/ProviderActivationScreen";
 import { useAppStore } from "../stores/appStore";
+import { useAutoResolveWorkContext } from "../hooks/useAutoResolveWorkContext";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -21,6 +22,10 @@ interface AuthGuardProps {
 export function AuthGuard({ children }: AuthGuardProps) {
   const auth = useAuth();
   const { facilityId, workspaceId } = useAppStore();
+  // Phase G1 — best-effort, non-blocking: mints a real work-context token once
+  // facility+workspace are set. Never gates rendering on its result (see the
+  // hook's doc comment for why some accounts legitimately resolve nothing yet).
+  useAutoResolveWorkContext();
 
   if (auth.isLoading) {
     return (

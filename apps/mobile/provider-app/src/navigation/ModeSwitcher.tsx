@@ -6,10 +6,12 @@
  */
 
 import React, { useCallback } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
 import { Button, colors } from "@impilo/mobile-design-system";
-import { appStore, useAppStore } from "../stores/appStore";
+import { useAppStore } from "../stores/appStore";
+import { deriveAvailableAppModes } from "./modeAvailability";
+import { useSwitchAppMode } from "../hooks/useSwitchAppMode";
 import type { AppMode } from "../types";
 
 const MODE_LABELS: Record<AppMode, string> = {
@@ -43,13 +45,23 @@ function getAvailableModes(roles: string[]): AppMode[] {
 
 export function ModeSwitcher() {
   const auth = useAuth();
-  const { mode } = useAppStore();
+  const { mode, resolvedWorkContexts } = useAppStore();
   const userRoles = auth.user?.realm_access?.roles ?? [];
-  const availableModes = getAvailableModes(userRoles);
+  const roleBasedModes = getAvailableModes(userRoles);
+  // Phase G3 — a real resolved work context can additionally unlock a mode
+  // button the raw Keycloak role string hasn't caught up to yet; it never
+  // removes one. See modeAvailability.ts for why this is additive-only.
+  const availableModes = deriveAvailableAppModes(roleBasedModes, resolvedWorkContexts);
+  const { switching, error, switchAppMode } = useSwitchAppMode();
 
-  const handleModeChange = useCallback((newMode: AppMode) => {
-    appStore.getState().setMode(newMode);
-  }, []);
+  const handleModeChange = useCallback(
+    (newMode: AppMode) => {
+      // Authority-bearing modes mint a duty token first; the visible mode only
+      // moves if that succeeds. See useSwitchAppMode.
+      void switchAppMode(newMode);
+    },
+    [switchAppMode]
+  );
 
   return (
     <View testID="mode-switcher" accessibilityLabel="App mode selector" style={styles.container}>
@@ -67,6 +79,16 @@ export function ModeSwitcher() {
           </View>
         ))}
       </ScrollView>
+      {switching ? (
+        <Text testID="mode-switch-pending" style={styles.pending}>
+          Switching…
+        </Text>
+      ) : null}
+      {error ? (
+        <Text testID="mode-switch-error" style={styles.error}>
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -85,5 +107,15 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     marginRight: 8,
+  },
+  pending: {
+    fontSize: 12,
+    color: colors.gray[500],
+    marginTop: 6,
+  },
+  error: {
+    fontSize: 12,
+    color: colors.ui.error.main,
+    marginTop: 6,
   },
 });

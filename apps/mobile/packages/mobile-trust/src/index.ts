@@ -31,6 +31,22 @@ export {
 export type { PublicHeaderContext } from "./headerBuilder";
 
 export {
+  WORK_MODES,
+  WORK_MODE_DEFINITIONS,
+  grantsIdentifiedClinicalRead,
+} from "./workMode";
+export type {
+  WorkMode,
+  WorkModeAnchorKind,
+  WorkModeClinicalDataAccess,
+  WorkModeDefinition,
+  ResolvedWorkContextView,
+  WorkContextSourceStatus,
+  ResolvedWorkContextsAttributes,
+  WorkModeSessionAttributes,
+} from "./workMode";
+
+export {
   PUSH_APP_NAME,
   PUSH_GENERIC_NEW_MESSAGE_BODY,
   PUSH_GENERIC_HEALTH_UPDATE_BODY,

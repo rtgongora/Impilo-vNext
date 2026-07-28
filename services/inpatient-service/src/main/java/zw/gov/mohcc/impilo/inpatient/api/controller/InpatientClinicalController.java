@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.inpatient.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.inpatient.core.ClinicalPayloadMapper;
 import zw.gov.mohcc.impilo.inpatient.core.InpatientClinicalService;
 
@@ -194,6 +195,41 @@ public class InpatientClinicalController {
     @GetMapping("/emergency/{activationId}/resuscitation/events")
     public Map<String, Object> listResuscitationEvents(@PathVariable UUID activationId) {
         return clinicalService.listResuscitationEvents(activationId);
+    }
+
+    /**
+     * Batch append (W6b) — a device catching up after a connectivity gap. Each entry is independently
+     * idempotent on its own client_event_id; a partial-batch retry is safe to resubmit wholesale.
+     */
+    @PostMapping("/emergency/{activationId}/resuscitation/events/batch")
+    public ResponseEntity<List<Map<String, Object>>> recordResuscitationEventsBatch(
+            @PathVariable UUID activationId,
+            @RequestBody List<Map<String, Object>> events,
+            @RequestHeader(value = "X-Trauma-Episode-ID", required = false) String traumaEpisodeId) {
+        List<Map<String, Object>> payload = events;
+        if (traumaEpisodeId != null && !traumaEpisodeId.isBlank()) {
+            payload = events.stream().map(e -> {
+                Map<String, Object> m = new java.util.LinkedHashMap<>(e != null ? e : Map.of());
+                m.putIfAbsent("traumaEpisodeId", traumaEpisodeId);
+                return m;
+            }).toList();
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(clinicalService.recordResuscitationEventsBatch(activationId, payload));
+    }
+
+    /**
+     * Stamp the PCT emergency_episode id back onto this activation (W6b) — the write-back half of the
+     * correlation column V200 added. Called by PCT's EMERGENCY_ACTIVATION_RAISED consumer after it
+     * mints the episode.
+     */
+    @PostMapping("/emergency/{id}/link-episode")
+    public Map<String, Object> linkEmergencyEpisode(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        UUID emergencyEpisodeId = ClinicalPayloadMapper.uuid(body, "emergencyEpisodeId", "emergency_episode_id");
+        if (emergencyEpisodeId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "emergency_episode_id is required");
+        }
+        return clinicalService.linkEmergencyEpisode(id, emergencyEpisodeId);
     }
 
     /**

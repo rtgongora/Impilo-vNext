@@ -330,10 +330,16 @@ definitely new".
   `Condition` publisher, `experience-bff`'s `FhirPublisher`, is **dead code that nothing injects.**
   BUTANO actually ingests `Patient`, `Observation`, `ImagingStudy`, `DiagnosticReport`,
   `DocumentReference`, `ServiceRequest`.
-  **Consequence any lane writing clinical truth should know: the PCT problem list never reaches the
-  SHR.** `ProblemService` writes an outbox row (`aggregateType = "PROBLEM"`) but
-  `OutboxPublisher.routeTopic()` has no arm for it and no BUTANO listener consumes one — so a
-  recorded diagnosis is absent from the SHR, the IPS bundle and the cross-facility timeline.
+  ~~**Consequence any lane writing clinical truth should know: the PCT problem list never reaches
+  the SHR.**~~ — **CLOSED 2026-07-28. Do not re-do this.** `OutboxPublisher.routeTopic()` now routes
+  `PROBLEM_ADDED` / `PROBLEM_RESOLVED` / `PROBLEM_STATUS_CHANGED` to `pct.problem.recorded`
+  (`OutboxPublisher.java:192`), and `ButanoEventConsumer` consumes that topic
+  (`ButanoEventConsumer.java:562`) and archives a FHIR `Condition`, idempotent on problem id. A
+  recorded diagnosis now reaches the SHR, the IPS bundle and the cross-facility timeline. Two
+  properties were built in deliberately and must survive: the payload carries `code`, `codeSystem`
+  and `onsetDate` but **not** `notes` (free text is PII and the SHR is CPID-only); and unknown
+  clinical/verification status maps to **null, never a guess** — an unstated diagnostic certainty
+  must never arrive in the SHR as "confirmed".
   `EpisodeOfCare`, `ClinicalImpression`, `RiskAssessment`, `DetectedIssue`, `GuidanceResponse`,
   `MedicationStatement`, `Flag` and `Goal` likewise have no producer — but note `butano-service` is
   an unrestricted HAPI JPA server, so storage/REST for all of them already works: **the missing half
@@ -351,14 +357,48 @@ reconciliation, CV risk) · W3 HIV and TB DAKs · W4 chronic disease + multimorb
 W5 inpatient medicine + medical procedure integration · W6+ specialty workspaces, geriatrics/ICOPE,
 palliative, oncology, analytics, offline, demonstrations.
 
-## 9. Open question for the coordinator
+> **What these waves actually delivered, 2026-07-28 — two labels overstated their contents.** This
+> index is the *plan*; read it against [`../clinical/adult-medicine-domain-pack/brief.md`](../clinical/adult-medicine-domain-pack/brief.md),
+> now committed as the pack's source of truth.
+>
+> - **W4 "chronic disease + multimorbidity engine"** delivered CV-risk and deprescribing CDS content.
+>   **No multimorbidity engine exists** — brief §9's eleven-item view and seven detections are not
+>   built, and no chronic-disease register exists. The label was aspirational.
+> - **W6+ "specialty workspaces"** delivered **five governed CDS content packs and one shared CDS
+>   page**, not thirteen workspaces. Brief §8 names thirteen specialties, each with its own disease
+>   list and tooling.
+> - W3 (HIV/TB DAKs) and the CDS backbone (§16) are complete and are the pack's strongest assets.
+>
+> Remaining, by brief section: §7 examination framework, §8 specialty workspaces, §9 multimorbidity,
+> §11 diagnostic orchestration, §14 consultation/MDT, §19 FHIR producers, §20 offline, §21 analytics,
+> §23 demonstrations. Sequenced in [`../clinical/adult-medicine-domain-pack/demonstrations.md`](../clinical/adult-medicine-domain-pack/demonstrations.md).
 
-**Confidentiality blocks W3.** The HIV/TB requirement is explicitly "one person record with
-appropriate programme views and confidentiality", which rests on `SPECIALLY_PROTECTED`. That class
-is currently decorative: it appears only in its own declaration and in one
-`ResourceSensitivityClassifier` switch arm that maps it to the *same* visibility tier as
-`FULL_CLINICAL`. Nothing assigns it, no policy branches on it. Building HIV care on it would
-manufacture a false assurance for the clinician deciding whether it is safe to write something
-down, and for the patient told their record is confidential. Either the enforcement seam lands
-first, or HIV/TB ships at `FULL_CLINICAL` with the gap stated on the record. Recorded for a
-product-owner ruling; the paediatric pack's Wave 5 is blocked on the same seam.
+## 9. ~~Open question for the coordinator~~ — RESOLVED, and the stale note is the point
+
+> 🔴 **This section previously read "Confidentiality blocks W3" and described `SPECIALLY_PROTECTED`
+> as decorative. Both statements are obsolete.** Corrected 2026-07-28, after the RMNP lane found
+> three lease files still carrying the same stale claim.
+
+**What is actually true now**, re-verified in code rather than taken from the relay that reported it:
+
+- The enforcement seam **exists**: `PolicyEngine.evaluateConfidentiality`,
+  `SpeciallyProtectedVisibilityGuard` (referenced across five files), and zibo's
+  `ConfidentialCategoryService` governed category map.
+- It is **inert by construction**, which is the correct state, not an omission:
+  `CATEGORY_MAP_RATIFIED = false`, the authz confidentiality mode stays SHADOW, and V048 rules stay
+  `active = false`. Flipping it live is a governance act with two genuinely unresolved questions
+  (mandatory reporting vs confidentiality; one SRH age or three), not an engineering one.
+- **W3 shipped regardless, and did not wait for it.** All 13 HIV/TB standards are SHIPPED. HIV is on
+  the confidential lane and TB is `FULL_CLINICAL` — because TB is notifiable, not confidential from
+  the guardian — with the ENFORCE gap **stated on the deliverable rather than claimed as protection**.
+  A record must never carry a protection label that does not protect it.
+
+**Why this note is worth keeping rather than deleting.** It was accurate when written and quietly
+stopped being true, and nothing re-checked it — the seam landed under a lane that registered no lease
+row, so three packs went on believing they were blocked by something that had shipped. That is the
+same failure family as `EXPECTED_ROUTE_COUNT` surviving a merge unchanged while what it counted
+changed underneath, and a registry row that is no evidence of execution.
+
+> **A lease row is a claim about the world at the time it was written, and nothing re-checks it.**
+> Re-verify a blocker before you accept it — and before you cite it as the reason something is not
+> done.

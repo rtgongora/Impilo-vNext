@@ -72,6 +72,9 @@ libraries:
   - id: emergency-domain
     maven_module: emergency-domain
     path: libs/emergency-domain
+  - id: medicine-domain
+    maven_module: medicine-domain
+    path: libs/medicine-domain
   - id: tech-companion-mock
     maven_module: tech-companion-mock
     path: libs/tech-companion-mock
@@ -2390,6 +2393,52 @@ services:
     api_contract_status: not-started
     authz_audit_status: not-started
     observability_status: partial
+  - id: surgery-service
+    maven_module: surgery-service
+    primary_plane: clinical
+    plane: clinical
+    domain: care-delivery
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
+    primary_protocol: rest
+    default_http_port: 8396
+    product_names:
+      - Surgery
+      - Surgery and Surgical Specialties domain pack
+    owner_team: TBD
+    system_of_record_for:
+      - Surgical episode as a management-course record that ATTACHES TO PCT journeys and never contains them
+      - Structured surgical assessment content
+      - Operative indication and the non-operative options weighed
+      - Prehabilitation and optimisation execution
+      - Planned-versus-performed reconciliation
+      - Complication pathway INSTANCES as workflow — the resulting problem lands in pct_problems, not here
+      - Waiting-list clinical revalidation state
+      - The fifteen specialty extensions — indications, operative content, templates, maps
+    consumes_from:
+      - tshepo-authz-service
+      - inpatient-service     # the procedure EXECUTION record (procedure_episode) — read, never duplicated
+      - procedures-service    # the readiness/competence/catalogue engine
+      - pct-service           # care-continuum anchor (CC-5); writes condition/staging facts with responsible_service=surgery
+    exposes_to:
+      - experience-bff
+    forbidden_responsibilities:
+      - must-not-own-surgical-condition-diagnosis-certainty-severity-staging-recurrence  # pct_problems, responsible_service=surgery (CC-2 amendment)
+      - must-not-own-the-surveillance-plan                # pct_care_plans + pct_care_plan_goals; proposes/executes only
+      - must-not-own-the-clinical-decision-that-opens-or-closes-a-phase-of-care  # PCT decides (admission-handshake model); surgery owns the reasoning and executes
+      - must-not-own-functional-or-patient-reported-outcomes  # PCT person-level; surgery contributes measurements
+      - must-not-own-serial-burn-assessment                # pct.burn_assessment, emergency lane delegation — no parallel acute copy
+      - must-not-be-a-second-theatre-workflow              # inpatient.procedure_episode owns the operation itself
+    production_status: scaffold
+    implementation_status: scaffold
+    frontend_wiring_status: not-wired
+    api_contract_status: not-started
+    authz_audit_status: not-started
+    observability_status: partial
   - id: telemonitoring-service
     maven_module: telemonitoring-service
     primary_plane: clinical
@@ -2425,6 +2474,47 @@ services:
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
+  - id: mental-health-service
+    maven_module: mental-health-service
+    primary_plane: clinical
+    plane: clinical
+    domain: care-delivery
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
+    primary_protocol: rest
+    default_http_port: 8397
+    product_names:
+      - Mental Health
+    owner_team: TBD
+    system_of_record_for:
+      - mh_referral — the accepting side of a psychiatric emergency handover (target_type=MENTAL_HEALTH)
+      - mh_assessment / mh_risk_formulation / mh_safety_plan — psychiatric assessment and risk-formulation truth
+      - mh_involuntary_episode — statutory detention/observation with a legal-basis field
+      - mh_restraint_event — a restraint-REDUCTION register, not a restraint log
+      - mh_admission_request — the ASK to PCT, never the admission decision itself
+      - mh_followup
+    consumes_from:
+      - tshepo-authz-service
+      - pct-service           # reads/writes pct's emergency_handover for the acceptance handshake
+    exposes_to:
+      - experience-bff
+      - pct-service           # accept/decline write-back
+    forbidden_responsibilities:
+      - must-not-own-the-admission-decision       # PCT's own admission-handshake decides; this service only raises the request
+      - must-not-own-person-level-longitudinal-registries   # PCT's
+      - must-not-fork-wellness-continuum
+      - must-not-own-care-continuum                # component of pct-service's continuum, not a peer continuum
+      - must-not-own-clinical-encounter-lifecycle
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: not-wired
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial

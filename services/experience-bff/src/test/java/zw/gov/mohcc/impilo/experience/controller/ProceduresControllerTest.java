@@ -107,6 +107,164 @@ class ProceduresControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
+    // ── Wave P-R2 — P7 safety-pause/sedation and P9 recovery/aftercare routes ──
+
+    @Test
+    void safetyPauseTemplateForwardsTheCodeFromTheQueryParameter() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> safetyPauseTemplate(String templateCode) {
+                assertEquals("SAFETY-PAUSE-SURGERY", templateCode);
+                return ResponseEntity.ok("{\"templateCode\":\"SAFETY-PAUSE-SURGERY\"}");
+            }
+        });
+
+        var response = controller.safetyPauseTemplate("SAFETY-PAUSE-SURGERY");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void sedationLevelsReturnsTheDownstreamResponseVerbatim() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> sedationLevels() {
+                return ResponseEntity.ok("[{\"levelCode\":\"NO_SEDATION\"}]");
+            }
+        });
+
+        var response = controller.sedationLevels();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("[{\"levelCode\":\"NO_SEDATION\"}]", response.getBody());
+    }
+
+    @Test
+    void sedationLevelForwardsTheCodeFromTheQueryParameter() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> sedationLevel(String levelCode) {
+                assertEquals("MODERATE_SEDATION", levelCode);
+                return ResponseEntity.ok("{\"levelCode\":\"MODERATE_SEDATION\"}");
+            }
+        });
+
+        var response = controller.sedationLevel("MODERATE_SEDATION");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void recoverySettingsReturnsTheDownstreamResponseVerbatim() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> recoverySettings() {
+                return ResponseEntity.ok("[{\"settingCode\":\"PACU\"}]");
+            }
+        });
+
+        var response = controller.recoverySettings();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("[{\"settingCode\":\"PACU\"}]", response.getBody());
+    }
+
+    @Test
+    void recoverySettingForwardsTheCodeFromTheQueryParameter() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> recoverySetting(String settingCode) {
+                assertEquals("PACU", settingCode);
+                return ResponseEntity.ok("{\"settingCode\":\"PACU\"}");
+            }
+        });
+
+        var response = controller.recoverySetting("PACU");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void aftercareTemplateForwardsTheCodeFromTheQueryParameter() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> aftercareTemplate(String templateCode) {
+                assertEquals("AFTERCARE-THEATRE", templateCode);
+                return ResponseEntity.ok("{\"templateCode\":\"AFTERCARE-THEATRE\"}");
+            }
+        });
+
+        var response = controller.aftercareTemplate("AFTERCARE-THEATRE");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    /**
+     * A second failure-propagation control on the new surface, not just the old one — the same
+     * guarantee must hold for every route this controller adds, not merely the one it started
+     * with.
+     */
+    @Test
+    void aDownstreamFailureOnTheNewSurfaceAlsoPropagates() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> aftercareTemplate(String templateCode) {
+                throw new org.springframework.web.client.ResourceAccessException(
+                        "procedures-service unreachable");
+            }
+        });
+
+        assertThrows(org.springframework.web.client.ResourceAccessException.class,
+                () -> controller.aftercareTemplate("AFTERCARE-THEATRE"));
+    }
+
+    // ── Wave SB-3 — P14 analytics indicator catalogue routes ──
+
+    @Test
+    void analyticsIndicatorsReturnsTheDownstreamResponseVerbatim() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> analyticsIndicators() {
+                return ResponseEntity.ok("{\"total\":33,\"computed\":0,\"indicators\":[]}");
+            }
+        });
+
+        var response = controller.analyticsIndicators();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("{\"total\":33,\"computed\":0,\"indicators\":[]}", response.getBody());
+    }
+
+    @Test
+    void analyticsIndicatorForwardsTheCodeFromTheQueryParameter() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> analyticsIndicator(String indicatorCode) {
+                assertEquals("IND-PROC-001", indicatorCode);
+                return ResponseEntity.ok("{\"indicatorCode\":\"IND-PROC-001\"}");
+            }
+        });
+
+        var response = controller.analyticsIndicator("IND-PROC-001");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    /** The propagation control again, on the analytics surface this wave adds. */
+    @Test
+    void aDownstreamFailureOnTheAnalyticsSurfaceAlsoPropagates() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> analyticsIndicators() {
+                throw new org.springframework.web.client.ResourceAccessException(
+                        "procedures-service unreachable");
+            }
+        });
+
+        assertThrows(org.springframework.web.client.ResourceAccessException.class,
+                controller::analyticsIndicators);
+    }
+
     /** Overridable stub so each test only implements the one method it exercises. */
     private static class StubClient extends ProceduresServiceClient {
         StubClient() {

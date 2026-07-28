@@ -1,0 +1,116 @@
+/**
+ * Impilo vNext — Mobile Work Mode Contract
+ *
+ * Mirror of contracts/trust/types/work-mode.ts (itself the TS twin of
+ * libs/tshepo-contracts/.../enums/WorkMode.java), kept in step by
+ * test/workModeParity.test.ts — which loads the canonical file and fails the
+ * build on any disagreement in modes, labels, anchorKind, clinicalDataAccess,
+ * or the identified-clinical-read rule. Edit the canonical file first, then
+ * mirror here; the test is what makes that safe.
+ *
+ * A mirror exists at all because apps/mobile is its own pnpm workspace and
+ * Metro's watchFolders stop at apps/mobile, so mobile cannot `import` the
+ * canonical file the way ui/one-ui-shell does (a relative import escaping its
+ * own workspace). Collapsing this into a direct import is still the better end
+ * state, but it needs bundler work verified against a real Metro build.
+ */
+
+export type WorkMode =
+  | "CLINICAL_CARE"
+  | "VIRTUAL_CARE"
+  | "DEPARTMENT_MANAGEMENT"
+  | "FACILITY_MANAGEMENT"
+  | "JURISDICTION_OPERATIONS"
+  | "PROGRAMME_MANAGEMENT"
+  | "TECHNICAL_SUPPORT"
+  | "FACILITY_SUPPORT"
+  | "REGULATORY_OPERATIONS"
+  | "INSPECTION_COMPLIANCE";
+
+export const WORK_MODES: readonly WorkMode[] = [
+  "CLINICAL_CARE",
+  "VIRTUAL_CARE",
+  "DEPARTMENT_MANAGEMENT",
+  "FACILITY_MANAGEMENT",
+  "JURISDICTION_OPERATIONS",
+  "PROGRAMME_MANAGEMENT",
+  "TECHNICAL_SUPPORT",
+  "FACILITY_SUPPORT",
+  "REGULATORY_OPERATIONS",
+  "INSPECTION_COMPLIANCE",
+];
+
+export type WorkModeAnchorKind = "FACILITY" | "ORGANISATION" | "JURISDICTION" | "PROGRAMME" | "FACILITY_OR_ORGANISATION";
+
+export type WorkModeClinicalDataAccess = "IDENTIFIED" | "AGGREGATE" | "NONE";
+
+export interface WorkModeDefinition {
+  mode: WorkMode;
+  label: string;
+  anchorKind: WorkModeAnchorKind;
+  clinicalDataAccess: WorkModeClinicalDataAccess;
+}
+
+export const WORK_MODE_DEFINITIONS: Readonly<Record<WorkMode, WorkModeDefinition>> = {
+  CLINICAL_CARE: { mode: "CLINICAL_CARE", label: "Clinical Care", anchorKind: "FACILITY", clinicalDataAccess: "IDENTIFIED" },
+  VIRTUAL_CARE: { mode: "VIRTUAL_CARE", label: "Virtual Care", anchorKind: "FACILITY_OR_ORGANISATION", clinicalDataAccess: "IDENTIFIED" },
+  DEPARTMENT_MANAGEMENT: { mode: "DEPARTMENT_MANAGEMENT", label: "Department Management", anchorKind: "FACILITY", clinicalDataAccess: "AGGREGATE" },
+  FACILITY_MANAGEMENT: { mode: "FACILITY_MANAGEMENT", label: "Facility Management", anchorKind: "FACILITY", clinicalDataAccess: "AGGREGATE" },
+  JURISDICTION_OPERATIONS: { mode: "JURISDICTION_OPERATIONS", label: "Jurisdiction Operations", anchorKind: "JURISDICTION", clinicalDataAccess: "AGGREGATE" },
+  PROGRAMME_MANAGEMENT: { mode: "PROGRAMME_MANAGEMENT", label: "Programme Management", anchorKind: "PROGRAMME", clinicalDataAccess: "AGGREGATE" },
+  TECHNICAL_SUPPORT: { mode: "TECHNICAL_SUPPORT", label: "Technical Support", anchorKind: "ORGANISATION", clinicalDataAccess: "NONE" },
+  FACILITY_SUPPORT: { mode: "FACILITY_SUPPORT", label: "Facility Support", anchorKind: "FACILITY", clinicalDataAccess: "NONE" },
+  REGULATORY_OPERATIONS: { mode: "REGULATORY_OPERATIONS", label: "Regulatory Operations", anchorKind: "ORGANISATION", clinicalDataAccess: "NONE" },
+  INSPECTION_COMPLIANCE: { mode: "INSPECTION_COMPLIANCE", label: "Inspection & Compliance", anchorKind: "ORGANISATION", clinicalDataAccess: "NONE" },
+};
+
+export function grantsIdentifiedClinicalRead(mode: WorkMode): boolean {
+  return WORK_MODE_DEFINITIONS[mode].clinicalDataAccess === "IDENTIFIED";
+}
+
+/**
+ * A single resolved work context as returned by
+ * `GET /internal/v1/work-context/resolved` (mirrors experience-bff's
+ * WorkContextController#toContextView / ResolvedWorkContext.java field-for-field).
+ */
+export interface ResolvedWorkContextView {
+  contextId: string;
+  contextKind: "facility" | "organisation" | "jurisdiction" | "programme" | "regulator" | "virtual" | "support" | string;
+  sourceSystem: "VASHANDI" | "WGV" | "ORG_REGISTRY" | "TUSO" | "SUPPORT" | string;
+  facilityId?: string | null;
+  organisationId?: string | null;
+  jurisdictionCode?: string | null;
+  programmeId?: string | null;
+  departmentId?: string | null;
+  roleTemplateId?: string | null;
+  availableModes: WorkMode[];
+  defaultMode?: WorkMode | null;
+  modeSource?: "CATALOG" | "DERIVED_REMOTE" | "DERIVED_LOCAL" | string;
+  restrictions: string[];
+  label: string;
+  groupHint: "today" | "regular" | "virtual" | "oversight" | "other" | "personal" | string;
+  rankScore?: number;
+}
+
+export interface WorkContextSourceStatus {
+  system: string;
+  state: "LIVE" | "EMPTY" | "DEGRADED" | string;
+  message?: string;
+}
+
+export interface ResolvedWorkContextsAttributes {
+  contexts: ResolvedWorkContextView[];
+  sourceStatuses: WorkContextSourceStatus[];
+  recommendedContextId?: string | null;
+  requiresContextChooser: boolean;
+  friendlyResolutionState?: string;
+}
+
+/** Attributes of the `work-mode-session` resource returned by session/mode mint. */
+export interface WorkModeSessionAttributes {
+  token?: string;
+  jti?: string;
+  expiresAt?: string | null;
+  contextId?: string;
+  workMode?: string;
+}

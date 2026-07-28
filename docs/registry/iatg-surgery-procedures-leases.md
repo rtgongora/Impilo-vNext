@@ -288,8 +288,12 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P9 done, P10–P15 remaining — see §10–§12) · **Wave P-R2 reachability
-re-wire (next — see §13)** · Phase S surgery (S0–S18, not started). Full plan in the programme
+**Phase P pipeline COMPLETE (P0–P15, see §10–§19)** — P13/P14/P15 all partial by design (§17–§19),
+with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
+not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
+(S0–S3 done — see §20–§23; **replaced from S4 onward by backlog-clearing batches SB-1–SB-6,
+SB-1/2/3/4/6 done — see §24–§28, SB-5 remains gated on the ten theatre rigs**). Full plan in
+the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
 
@@ -426,3 +430,741 @@ below, which this wave triggers (P7+P8+P9 = three backend waves since Wave P-R, 
 
 Proof: `RecoveryAndAftercareServiceTest` (9 tests) + `procedures-recovery-aftercare-journeys.sh`
 (22/22, real Postgres). Module regression: 45/45.
+
+## 13. Wave P-R2 — reachability re-wire for P7+P9, plus a real defect fix (done)
+
+Closed the authz/BFF/UI gap for P7's `SafetyPauseController` and P9's
+`RecoveryAndAftercareController` — six routes total, all already query-param shaped (P7/P9 built
+them that way from the start, so no route-shape workaround was needed here unlike catalogue-detail
+in V300). tshepo-authz V301 (30 ALLOW rows), BFF client+controller extended, UI panels added to
+the EXISTING `/work/clinical/procedures` detail view rather than a new page — `procedure_definition`
+already carries the linkage codes (`default_sedation_level_code`, `default_recovery_setting_code`,
+`default_aftercare_template_code` from P7/P9, plus the pre-existing `safety_pause_template`/
+`aftercare_template` columns from V002) to key off.
+
+**Cross-lane finding, not mine to fix alone but fixed enough to unblock this wave**:
+`scripts/runtime-proof/procedures-authz-journeys.sh` (committed in P-R.4) was MISSING from this
+worktree's fresh checkout. Traced to commit `90e64207f` ("feat(org-registry): source-pack seeder…
+(NCZ-W1A)") — a 65-file diff with no stated reason to touch a procedures-service rig script,
+almost certainly a broad non-path-scoped commit sweeping up another session's local deletion
+(exactly what `shared-index-commit-law` in memory warns against). Recovered the file VERBATIM via
+`git show <origin-commit>:<path>`, not rewritten from memory, then extended it for V301. Flagged
+via `spawn_task` (task_b04ee443) for someone to audit whether that commit dropped anything else;
+not blocking.
+
+**A second real defect, found while wiring the UI and fixed forward** (V006 was already pushed,
+so this is a new migration, not a rewrite): `procedure_definition.aftercare_template` has existed
+since V002/V003 with 34 distinct SPECIFIC per-procedure codes (`AFTERCARE-LAPAROTOMY`,
+`AFTERCARE-CENTRAL-LINE`, `AFTERCARE-LUMBAR-PUNCTURE`, …) — "a code with nothing to resolve to",
+the exact state V005's own header describes for `safety_pause_template` before P7 correctly fixed
+it by resolving that pre-existing column. P9 missed that `aftercare_template` already existed and
+built a SEPARATE, coarser six-value taxonomy (`default_aftercare_template_code`) instead — a
+parallel system, not the fix P7 already modelled. V007 (procedures-service) seeds five specific
+templates for the same demonstration procedures P7/P9 already sedation/recovery-linked
+(`AFTERCARE-LAPAROTOMY`, `AFTERCARE-CAESAREAN`, `AFTERCARE-ARTHROPLASTY`, `AFTERCARE-CENTRAL-LINE`,
+`AFTERCARE-LUMBAR-PUNCTURE`); the remaining ~27 specific codes stay honestly unresolved — named as
+a debt below, not silently closed. `default_aftercare_template_code` is NOT dropped (already
+shipped) but is now documented as a coarse FALLBACK only, and the UI panel does real two-step
+resolution: specific code first, coarse fallback labelled as generic second, "not declared" only
+when both are genuinely absent.
+
+Proof: `procedures-authz-journeys.sh` 11/11 (restored + extended for V301, including a direct
+substring-collision check for the sedation-levels/recovery-settings vs their own -detail routes —
+the same shape V300's catalogue/catalogue-detail pair already proved safe). BFF: 22 new tests +
+full 1445-test regression, same 5 pre-existing TUSO-shift-lane failures verified via stash
+isolation (zero new). `procedures-recovery-aftercare-journeys.sh` extended to 26/26 proving the
+V007 fix at the row level. procedures-service module regression 45/45. UI: 14+3=17/17 (page +
+integration tests), including three tests proving the two-step aftercare resolution (prefers
+specific, falls back and labels generic, both-unavailable renders as unavailable not empty).
+
+**New debt registered, not silently absorbed**: ~27 of `aftercare_template`'s 34 specific V003
+codes remain unresolved (no template row). Same shape as the already-accepted "catalogue depth"
+debt (only 13 of 66 procedures carry full requirement sets) — a content-population task for a
+future wave, not a structural gap.
+
+## 14. Wave P10 — complication profiles and Clavien-Dindo severity grading (done)
+
+Closes §18 (complications, PARTIAL). Scoped by the ADR, not assumed: classification CONTENT is
+procedures-service's own layer (engine-not-store, matching §9/§10/§15/§17); complication
+EXECUTION records stay with the performing service (inpatient-service, the P8 precedent);
+complication PATHWAY INSTANCES are named to `surgery-service` (port 8396, not yet built —
+ADR decision 5/5a/6) and out of scope until that service exists; reopen-episode semantics is a
+confirmed, real, separate gap in `inpatient.procedure_episode`'s own state machine (no
+`REOPENED` state, no reopen method) — an inpatient-service change, not attempted here.
+
+**Applied the P-R2 lesson from the start, not needing a fourth fix-forward migration**:
+`procedure_definition.complication_profile` has existed since V002 with no seed value and no
+resolving table — one step earlier in the exact "code with nothing to resolve to" state V005
+found for `safety_pause_template` and V007 found+fixed for `aftercare_template`. V008 resolves
+`complication_profile` against the pre-existing column directly, rather than building a parallel
+one the way P9 (accidentally) did for aftercare.
+
+**Two content axes, sourced and flagged distinctly, not blurred into one honesty level**: the
+seven Clavien-Dindo severity grades are a REAL, literature-cited, internationally-used standard
+(Dindo/Demartines/Clavien, Ann Surg 2004) — added to `standards-baseline.json` as
+`SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING`, registered `COVERED_ELSEWHERE` in
+`coverage-exclusions.json` (implemented directly in procedures-service content; not a WHO DAK
+artefact at all, so the traceability generator's SHIPPED path was never going to apply), and
+seeded `status=PUBLISHED` with no `content_maturity` flag — this is real, not engineering-seed.
+The complication TYPES within each profile have no sourced taxonomy in this repository — same
+honest gap V006 already declared for aftercare instruction kinds — so `complication_profile`
+itself carries `content_maturity='ENGINEERING_SEED'`, not claimed as a canonical nineteen-class
+list nobody in this session has read.
+
+Proof: `ComplicationProfileServiceTest` (8 tests) including a never-event-flag-surfaces-intact
+test. `procedures-complications-journeys.sh` (25/25, real Postgres). DAK traceability guard
+regenerated and green (149 artefacts, 8 COVERED_ELSEWHERE, 0 uncovered). Module regression: 53/53.
+
+## 15. Wave P11 — IPC requirement depth (done)
+
+Closes §21 (IPC + sterile processing), specifically the four standards this domain's own
+`coverage-exclusions.json` committed to P11 BY NAME at Wave 0.4: `IPC.CORE.HAND_HYGIENE`,
+`IPC.CORE.ASEPTIC_TECHNIQUE`, `IPC.CORE.STERILE_PROCESSING`, `IPC.CORE.INJECTION_SAFETY`. Their
+own `revisitCondition` text already named the mechanism — "infection-prevention readiness as
+catalogue requirements with named owners per unresolved item" — so this wave shipped that
+literally: `requirement_kind` `IPC`/`STERILE_PROCESSING` have been valid since V002; no new
+schema, service or controller was needed, only real content.
+
+Five new requirement codes: `IPC-HAND_HYGIENE`, `IPC-PPE`, `IPC-SKIN_PREP`,
+`IPC-INJECTION_SAFETY` (single-use + exposure-incident + waste folded into one, same WHO
+guideline family) seeded universally across all 66 published entries — genuinely universal WHO
+IPC core practices for any invasive intervention, which every catalogue entry is by
+construction. `IPC-ASEPTIC` broadened from V003's original two-procedure seed to all 66
+(`ON CONFLICT DO NOTHING` left the original rows untouched). `CSSD-REPROCESSING_LIMITS` (kind
+`STERILE_PROCESSING`) scoped to THEATRE/ENDOSCOPY settings only (49 rows) — a reprocessed
+instrument set or scope, not single-use bedside kit, is what reprocessing limits are about.
+
+All four standards moved `DEFERRED` → `COVERED_ELSEWHERE`, each reason stating precisely what's
+real and what remains named-but-absent: `STERILE_PROCESSING` still has no path for environmental
+cleaning; `INJECTION_SAFETY`'s requirement is a DECLARATION only — the EXECUTION half (an actual
+exposure incident routed to Rito) is inpatient-service's to build, the same content/execution
+boundary P8 drew for specimens/implants and P10 drew for complications.
+
+No new Java: `ProcedureCatalogueService` already exposes requirements via `CatalogueDetail` —
+pure content depth into an already-reachable API. Extended `procedures-catalogue-journeys.sh`
+(P1's own rig) rather than a new file, since the content lives entirely in
+`procedure_requirement`.
+
+Proof: 36/36 (7 new P11 assertions, real Postgres). DAK traceability matrix regenerated (149
+artefacts, 12 COVERED_ELSEWHERE, 116 DEFERRED, 0 uncovered). Module regression: 53/53 unchanged
+(H2 tests use hand-inserted fixtures, not the shipped seed).
+
+## 16. Wave P12 — financial clearance gate (done)
+
+Closes §23 (financial). Research before building found the audit's own framing misleading:
+estimate/authorisation/denial/appeal are NOT absent — coverage-service and COSTA already have
+that machinery (`AuthorisationService`, `EstimateService`, `AppealController`,
+`ServiceAccessDecisionEntity`). What was genuinely missing was a CONNECTION:
+`TheatreService`/`ProcedureEpisodeService` never referenced COSTA, payment or authorisation at
+all, so "the emergency-rules invariant" was asserted in prose and enforced nowhere.
+
+Per the ADR (procedures-service/surgery-service must never become "a second payment truth"),
+this landed in **inpatient-service**, the P8 precedent (specimens→inpatient, implants→
+inventory). `ProcedureEpisodeService.requireFinancialClearance`, called LAST in `startProcedure`
+(after site-and-side and the full consent block, so it never reorders any existing gate):
+EMERGENCY/IMMEDIATE triage bypasses before COSTA is even asked; otherwise COSTA is queried FRESH
+via a new read-only `CostaServiceAccessClient` and only an explicit `BLOCKED_PENDING_PAYMENT`/
+`BLOCKED_PENDING_AUTHORISATION` refuses the start. A block never cancels the episode — only
+refuses the start attempt, true by the absence of any code path that could do otherwise.
+
+`ECO.WHA76-2.FINANCING` (surgery's own baseline, `plannedWave: P12`) moved DEFERRED →
+COVERED_ELSEWHERE: this wave shipped exactly what its own `revisitCondition` asked for. Honestly
+scoped: estimate/authorisation as an ORIGINATING workflow (a cost estimate before booking, a
+formal prior-authorisation request) is still not wired — this is the GATE that consults an
+existing decision, not the origination of one.
+
+**Cross-lane care taken**: `ProcedureEpisodeService`'s constructor gained a 17th parameter; the
+two existing test files that directly construct it were updated; the emergency/theatre lane was
+flagged per the plan's own workflow rule (`task_2c0d3f7f`) since this touches their shared,
+heavily-tested `startProcedure` method. Full regression re-run AFTER rebase, not just before, to
+catch anything concurrent lanes landed in the meantime — 164/164 both times.
+
+Proof: `ProcedureFinancialClearanceTest` (10 tests). `procedures-financial-clearance-
+journeys.sh` (9/9, real Postgres, whole inpatient migration chain). DAK matrix regenerated (149
+artefacts, 13 COVERED_ELSEWHERE, 115 DEFERRED, 0 uncovered). Module regression: 164/164.
+
+## 17. Wave P13 — FHIR Specimen resource (done, partial by design)
+
+Closes only the SPECIMEN slice of §24 (interoperability — 8 resources named absent). Research
+first: `ADR-SURGERY-AND-PROCEDURES-SERVICE-BOUNDARIES` §3 already delegates FHIR projection to
+`butano-service`/`fhir-gateway-service`, and the real estate precedent (confirmed via `git log`)
+is domain-service-authored — `oros-service` already built its own FHIR Observation writeback and
+ImagingStudy mapping, not a centralised FHIR service doing all 8.
+
+Of the 8 named-absent resources: ServiceRequest, Specimen, Device/DeviceUseStatement have real
+DATA already (OROS orders; this session's own P8 specimen custody and implant lifecycle) — pure
+mapping tasks. Task, DetectedIssue, GuidanceResponse, Provenance have NO adequate data model
+anywhere yet — mapping them now would mean inventing content to have something to map, the exact
+trap this programme has refused everywhere else (SNOMED, aftercare taxonomy, complication
+classes). This wave closes ONLY Specimen — most directly connected to this session's own P8
+work, in a service already deeply understood this session, using an EXISTING integration point
+(`ButanoProcedureClient`, which already authors FHIR Procedure/DocumentReference for the same
+episode).
+
+`ButanoProcedureClient.writeSpecimen`: a real FHIR Specimen resource with a genuine vocabulary
+TRANSLATION (REJECTED→entered-in-error, INADEQUATE→unsatisfactory), not a passthrough — the two
+vocabularies have already diverged. `SpecimenCustodyService.recordCollection` writes it at the
+point real collector/container data first exists, stores the ref in a new `fhir_specimen_ref`
+column (V303, distinct from the pre-existing `butano_document_ref`, which is the eventual
+pathology-report DocumentReference — a different resource, a different fact). Best-effort: a
+Butano outage never blocks recording custody.
+
+**Two real debts named, not silently absorbed**: ServiceRequest (oros-service, needs an outbound
+FHIR authoring path — only inbound exists today) and Device/DeviceUseStatement
+(inventory-service, which has ZERO existing FHIR/Butano integration to build on — a bigger lift
+than Specimen's, which only needed a new method on an already-existing client). §25 (offline) is
+ALSO not touched this wave — the ADR names `offline-sync-service`/`offline-edge-service`/
+`tshepo-offline-service` as the owner, and "procedure scope" concretely means new `actionType`
+constants in `OfflineRulesEngine`'s hardcoded switch (not a config table), which is that lane's
+own mechanism to extend, not procedures-service's.
+
+Proof: `ButanoProcedureClientTest` (6 tests) proves the actual FHIR resource shape — status
+derivation both directions, optional-block omission, custody notes, best-effort null-on-outage.
+`SpecimenCustodyServiceTest` extended (+3). `procedures-fhir-specimen-journeys.sh` (6/6, real
+Postgres). Full inpatient-service regression: 173/173 (164 prior + 9 new), re-run both before
+and after rebase.
+
+## 18. Wave P14 — pipeline analytics indicator catalogue; §12 graphics deliberately deferred (done, partial by design)
+
+Closes §26 as GOVERNED CONTENT, not a second execution engine. Research first found that
+reporting-service already has the one proven-executable projection in this estate:
+`TheatreReportingConsumer` (from a prior, completed programme) projects `theatre.*` events
+(`inpatient.events`/`inpatient.safety`) into `rpt_theatre_case_metric`, and the seeded
+`theatre-utilisation`/`theatre-case-register` report definitions
+(`V002__theatre_report_catalog.sql`) query it directly — confirmed executable (real event
+projection → local table → JDBC query, no cross-database reference, unlike the 5 inert
+`varapi.*`-querying definitions [[registered-is-not-executable]] found elsewhere in the same
+service). Building a SECOND projection table in `procedures-service` consuming the same topics to
+recompute the same facts would have repeated the exact duplicate-system-of-record mistake P8/P9
+already corrected, at architecture scale. Instead, `procedures.analytics_indicator_definition`
+(V010) is a governed catalogue — one row per indicator, declaring its numerator/denominator, its
+REAL computation status today, and (for anything computed) a reference to reporting-service's
+actual query (`executable_via = 'reporting-service:<report_key>'`) rather than a re-derived
+number.
+
+**Honesty on the count**: dak-baseline.md §7 and audit.md both assert "the twenty-four
+indicators", but the checked-in indicator list (dak-baseline.md §7) enumerates only twenty-two
+dot-separated names — a pre-existing inconsistency from an earlier session, not resolved here by
+inventing two more to hit the round number. All twenty-two named indicators are seeded.
+
+**Real distribution, not aspirational**: 5 COMPUTED (procedure volume, cancellation, completion,
+complications, unplanned surgery — all genuinely answered by reporting-service's existing
+projection), 7 PARTIAL (waiting time, delay reason, unplanned admission, result acknowledgement,
+infection, device outcomes, operator/supervision — each has a real signal on some event bus or
+table today, but no consumer aggregates it into a queryable metric yet; `gap_reason` names the
+exact missing consumer), 10 NOT_YET_INSTRUMENTED (indication, specialty, failure, aborted,
+specimen adequacy, result turnaround, sedation safety, equity, cost, stockout impact — nothing
+exists yet; `gap_reason` names what would need to be built and by which service). Two of the ten
+(cost, stockout impact) are flagged `delegated_out_of_scope=true`: the ADR delegates money to
+coverage-service/COSTA and commodities to inventory-service, so these are not debts owed by this
+programme, distinct from the eight genuine gaps. Every non-COMPUTED row is schema-enforced to
+carry a `gap_reason` (`CHECK chk_analytics_indicator_gap_reason`); every COMPUTED row is
+schema-enforced to carry an `executable_via` (`CHECK chk_analytics_indicator_executable_via`) —
+the same "don't skirt incomplete functionality" discipline V006–V009 already held themselves to,
+enforced at the database rather than left to a comment.
+
+Two real findings this wave's own investigation surfaced, named rather than silently used to
+inflate the COMPUTED count: `inventory.implant.recorded`/`.removed`/`.revised` (P8,
+`ImplantTraceabilityService`) and `theatre.trainee.logbook`/`theatre.specimen.acknowledged`
+(prior waves, `TheatreService`) are ALL real events already published today — genuine signal,
+not vapourware — but none has a consumer aggregating it anywhere, so each is PARTIAL, not
+COMPUTED. A fourth instance of the constraint-evaluation-order surprise (P8, P12, P13) recurred
+in the rig itself: an `UPDATE` isolating the `computation_status` CHECK tripped the
+`gap_reason` CHECK first when targeting a COMPUTED row with no `gap_reason`; fixed by targeting a
+row that already satisfies every other constraint.
+
+**§12 graphics — deliberately deferred, not silently dropped.** The pipeline audit's own finding
+14 already names why: "the 20 maps of §12 and the 17 of the surgical pack's §7 overlap heavily
+and must be built once." `features/body-map`
+(`ui/one-ui-shell/src/features/body-map`) is a real, generic, JSON-configured primitive (6 region
+maps today across 2 files, one generic `BodyMapCanvas.tsx` renderer) — extending it with more
+maps is genuinely additive data, not bespoke engineering, but each of the 20 maps needs real
+anatomically-correct SVG paths and SNOMED codes authored and clinically verified, which is
+authoring effort this wave will not fabricate placeholders for. Building any subset now, before
+the surgical pack (S0–S18, not yet started) defines its own 17 overlapping maps, risks doing the
+authoring work twice. Deferred to Wave S7 (surgical pack, when it starts) by explicit decision,
+not by omission.
+
+Proof: `AnalyticsIndicatorServiceTest` (7 tests). `procedures-analytics-journeys.sh` (23/23, real
+Postgres) — proves both the honesty-governance CHECKs and the exact status distribution above (5
+COMPUTED / 7 PARTIAL / 10 NOT_YET_INSTRUMENTED, tenant-isolated). Full procedures-service module
+regression: 60/60 (53 prior + 7 new).
+
+## 19. Wave P15 — closing §27 tests and §28 demonstrations; two named gaps not closed (done, partial by design)
+
+Final pipeline wave before Phase S. Research first, via a re-verification of the (now partly
+stale) pipeline audit against current source rather than trusting its original text — several of
+its "absent" findings (site/side, trainee/competence, sedation, specimen mismatch, recall,
+non-theatre settings) were already closed by P4/P6/P7/P8's own migrations, confirmed by reading
+each one, not assumed from the audit's wording.
+
+**Closed real gaps, invented nothing:**
+- **Demonstration 3 (paediatric assent)**: `mvumo.consent_request`'s assent/decision-maker
+  columns (V300, Wave P5) had a real schema-level proof (`procedures-consent-depth-journeys.sh`
+  J-P5-9 — a REFUSED child assent coexisting with a GRANTED guardian consent) but **no Java code
+  anywhere read or wrote any of them** — `MvumoService.transition`'s field whitelist and
+  `toRequestView`'s map both predate V300 and were never extended. `ConsentRequestEntity` now maps
+  the six columns; `MvumoService.recordAssent` records them — deliberately NOT routed through
+  `transition()`, because assent is a separate act from granting or refusing consent and must be
+  able to coexist with either. New route: `POST .../consent-requests/{id}/assent`.
+  `MvumoServiceAssentTest` (5 tests) proves the coexistence at the Java layer the SQL rig already
+  proved at the schema layer.
+- **§27 duplication detection**: `AppropriatenessEngine`'s `DUPLICATE_OPEN_REQUEST` branch has
+  been real code since P2 with zero test coverage anywhere in the estate (confirmed by grep) — 2
+  new `AppropriatenessEngineTest` cases close it, including the null-is-not-asserted case (an
+  unchecked open-request flag must not read as "none exists" any more than as "one exists").
+
+**`docs/clinical/procedures-pipeline/demonstrations-traceability.md`** (new): traces all ten named
+demonstrations to the real code and existing proof that makes each executable today — the
+concrete deliverable `audit.md` §29 said had never existed ("this audit is the first"). 7 of 10
+are closeable today (1, 2, 4, 5, 7, 8, 9 — three with one unconfirmed peer-owned leg named rather
+than assumed: reproductive-pack gating for #4, patient-notification-on-recall for #8, rebooking-
+link and cancellation comms for #9).
+
+**Two demonstrations named as NOT closed, not silently dropped:**
+- **#6 (dialysis recurrence)** — no session/series/recurring data model exists anywhere in
+  inpatient-service for any procedure. This is new schema and new domain logic, not a
+  wire-the-existing-pieces task like 1/2/5/7 — sized for its own wave, not folded into a
+  proof-only wave.
+- **#10 (complication reopens the episode)** — confirmed STILL absent since P10's own V008 header
+  named it. Closing it means a `REOPENED` lifecycle state on `ProcedureEpisodeService`/
+  `TheatreService`, whose status vocabulary the ten pre-existing theatre rigs and the emergency
+  lane both depend on. Per §5 of this document, those ten rigs have **never been run by this
+  programme even once**, confirmed still true as of this wave (no commit or lease update since P4
+  shows the debt closed). Recorded here as the single largest remaining gap in the whole
+  programme, with an explicit recommendation: run the ten theatre rigs FIRST, in their own
+  dedicated pass, before any wave touches the shared lifecycle to add REOPENED — closing a gap by
+  stacking an unverified change on an already-unconfirmed regression surface would be exactly the
+  kind of unstated risk this document exists to prevent.
+
+Proof: `MvumoServiceAssentTest` (5 tests, new). `AppropriatenessEngineTest` extended (+2, 12/12).
+Full module regression: mvumo-service 45/45, procedures-service 62/62.
+
+## 20. Wave S0 — surgery-service scaffold (done)
+
+First wave of Phase S. Stands up `surgery-service` (port 8396, clinical plane) — the system of
+record for surgical DISEASE, which nothing owns today.
+
+**The scaffold is smaller than decision 5 originally specified, and that is the point.** The
+ADR's own §5a (2026-07-26 CC-2 amendment) records that an earlier draft of decision 5 would have
+built `surgical_condition`, a surveillance plan, an outcome registry and a decision-to-operate
+record inside this service — four duplicate person-level longitudinal registries, found by
+verifying an unrelated doctrine citation from the emergency lane and discovering the same
+prohibition (care-continuum-doctrine CC-2) lands here too. The corrected scope: a management-
+course record that ATTACHES TO `pct_problems`/`pct_care_plans` and never contains them. S0
+respects that correction from the first migration — the CC-2 regression guard in
+`surgery-scaffold-journeys.sh` (J-S0-4) asserts no condition/diagnosis/staging/surveillance/
+outcome/recurrence table exists in this schema, so a future wave cannot silently reintroduce
+what the amendment excised.
+
+S0 is deliberately thin — schema (`CREATE SCHEMA surgery`) and the house outbox pattern only,
+mirroring `procedures-service`'s own P0. The surgical episode itself is S1's own wave: it must
+extend PCT's structures per the CC-2 amendment, which is real design work (the join, the
+`responsible_service` attribution, the admission-handshake-model decision recording) that
+deserves its own wave rather than being folded into scaffold work.
+
+**Reachability wired from day one, not deferred.** Wave P-R had to retrofit deploy
+classification, Helm values, and the services registry onto `procedures-service` after six
+waves of undeployable capability — the exact failure this line records in §9. S0 applies that
+lesson from the start: `config/full-boot-service-classification.yml`, both hand-edited Helm
+values files (never regenerated — see §9's own finding on the generator), `services-registry.yaml`,
+`system-of-record-map.md`, and `docs/runbooks/port-allocation.md` (8396 moved from RESERVED to
+built) are all updated in this same commit. What is NOT wired yet, and correctly so — the same
+shape P0→P1 already used successfully: tshepo-authz policy rows, an experience-bff proxy, and a
+UI surface, because there is no business endpoint yet to authorize, proxy or render. Deferred to
+whichever S-wave adds the first one, exactly as P0's own equivalents were deferred to P1.
+
+Proof: `SurgeryApplicationTest` (3 tests) mirrors `ProceduresApplicationTest`'s schema-health
+honesty pattern (DOWN when unmigrated, UP and counting when migrated — never UP merely because
+the datasource answered). `surgery-scaffold-journeys.sh` (5/5, real Postgres) proves the outbox
+idempotency guarantee, the partial index the drainage rig will query, and the CC-2 regression
+guard above.
+
+**Before any later S-wave touches inpatient-service's shared theatre lifecycle** (flagged
+repeatedly in §5 and again in §19): the ten pre-existing theatre rigs have still never been run
+by this programme even once since P4. This debt predates Phase S and is not this wave's to
+close, but it is closer now that Phase S has begun — surgical episodes will reference
+`inpatient.procedure_episode`, the exact table those rigs guard.
+
+## 21. Wave S1 — the surgical episode extending PCT, not duplicating it (done)
+
+Adds `surgical_episode` to `surgery-service` — the management-course record the CC-2 amendment
+(§5a) permits, extending `pct_problems` per that amendment rather than the four duplicate
+registries the ADR's original decision 5 would have built.
+
+**Research first, before any schema.** Read `pct-service`'s actual `pct_problems`/
+`pct_care_plans` code before designing anything, rather than assuming the ADR's description was
+still current. Two load-bearing findings:
+- `pct_problems` already has a REAL, callable write API — `POST /v1/problems` accepts a
+  free-text `responsible_service` field with no allow-list (`ProblemService.add`). Surgery-service
+  can genuinely CONTRIBUTE a surgical condition today; no new pct-service surface was needed for
+  this half of the amendment.
+- `pct_care_plans`/`pct_care_plan_goals` has NO equivalent attribution column — there is no way
+  to record who is executing a given surveillance-plan goal. Closing that is pct-service's own
+  migration, not this wave's, and not attempted here.
+
+**What S1 builds.** `surgical_episode` (V002) carries a PCT anchor that is a required PAIR
+(`journey_id` or `encounter_id`, enforced by CHECK) — unlike `inpatient.procedure_episode`'s own
+anchor columns, which care-continuum-doctrine's own compliance table records as an open
+violation (V-1). A fresh table need not repeat a known violation just because the table it
+references does. `procedure_episode_ref` references the operation once one exists — referenced,
+never contained (component question 1). `pct_problem_ref` is the CONTRIBUTION's own reference,
+populated only once `PctProblemContributionClient` actually succeeds (component question 2);
+NULL means "not yet contributed", never "no condition" — the condition itself is never copied
+into this schema. `operative_indication`/`non_operative_options_considered` are the surgical
+REASONING this service may own; `status` tracks only this service's own view of that reasoning's
+progress and makes no claim to open or close a phase of care (component question 3) — an
+operation needing inpatient admission still goes through the unmodified admission-handshake in
+inpatient-service.
+
+`PctProblemContributionClient` mirrors `inpatient-service`'s own `PctTeleconsultClient` exactly:
+best-effort, forwards the CURRENT clinician's trust context rather than a service identity
+(`pct-service`'s `ClinicalAccessGuard.requireCareRelationship` binds the write to an actor with
+an active care relationship, which only the real acting clinician has), fails open so a PCT
+outage never blocks recording the episode locally.
+
+**One gap named, not built: the "decision to open/close a phase of care" for elective surgery.**
+No generic API exists for this beyond the admission-handshake model, which is hard-wired to
+inpatient census admission specifically. Inventing a new decision mechanism unilaterally inside
+surgery-service would itself breach CC-2 in the other direction — claiming a decision authority
+PCT has never delegated. S1 therefore makes NO claim here at all: `surgical_episode.status`
+tracks reasoning progress only, and any operation requiring admission continues through the
+existing, untouched handshake. Closing this properly (a general phase-opening decision API, if
+elective surgery genuinely needs one distinct from admission) is pct-service's own design work,
+flagged here rather than worked around.
+
+Backend-internal only, same shape as P0→P1: this is the first business endpoint in
+`surgery-service`, so authz/BFF/UI wiring is deferred to a dedicated reachability wave rather
+than attempted inline, mirroring P7–P12's own precedent.
+
+Proof: `SurgicalEpisodeServiceTest` (10 tests — the CC-5/indication/status refusals, and the
+demonstration this wave exists for: a PCT outage never blocks the episode being recorded
+locally). `PctProblemContributionClientTest` (4 tests, captured-payload lambda proving
+`responsible_service=surgery` actually reaches the request body, mirroring
+`ButanoProcedureClientTest`'s pattern from the sibling procedures-service programme).
+`surgery-episode-journeys.sh` (10/10, real Postgres) — the CC-5 anchor CHECK and a second CC-2
+regression guard, now at the table-column level. Full surgery-service module regression: 17/17
+(3 prior from S0 + 10 service + 4 client, all new this wave).
+
+## 22. Wave S2 — general surgical assessment (done)
+
+Closes the surgical domain pack's own §5 (`docs/clinical/surgical-domain-pack/audit.md`), ~27
+assessment elements marked ABSENT everywhere. Research first, element by element, rather than
+trusting the ADR/audit's descriptions or adding a column per named element by default — most of
+the 27 already have a canonical home elsewhere in the estate:
+
+| Element | Home | Why not duplicated here |
+|---|---|---|
+| Allergies | `pct.pct_allergies` (V052) | The table's own comment names it the estate's designated fix for the `ALLERGIES_UNVERIFIED` gap |
+| Current medications / anticoagulants | OROS's prescription list | `pct_medication_reconciliations`' own comment: "the current list stays OROS's" — reconciliation is a comparison event, not a second list |
+| Tobacco / alcohol | `pct_social_history` (V106) | One row per category per subject, already governed |
+| Functional status | `pct_functional_assessments` (V106) | BARTHEL/LAWTON/KATZ/ECOG, already scored |
+| Pregnancy status | `pct_pregnancy_episodes` (V059) | A true current-fact registry — "one ONGOING episode per person" |
+| Previous surgery | `pct_past_procedures` (V106) | Its own comment: "history... NOT a procedure record" |
+| Imaging / pathology findings | `pacs.imaging_study` / OROS histopath (V014) | Existing results SoRs |
+
+`surgical_assessment` (V003) therefore carries, for every one of the above, only a REVIEWED flag
+plus a short clinical note plus an opaque reference id — never the underlying value — with a
+CHECK requiring the flag whenever a reference id is set (`chk_surgical_assessment_functional_ref`
+and three siblings), so a reference can never fabricate a review that never happened. The
+application layer (`SurgicalAssessmentService`) enforces the identical pairing before the CHECK
+ever fires, giving a coded 400 instead of an opaque constraint-violation 500.
+
+**Genuinely new content** (confirmed absent everywhere by the research above, and explicitly
+listed under ADR §5a's "structured surgical assessment content" MAY-own grant): presenting
+problem, symptom timeline, wound-healing/bleeding-thrombosis/infection history, nutrition,
+frailty notes, social support, transport, work/livelihood impact, patient goals, examination
+findings, differential-diagnosis working notes, surgical risk assessment.
+
+**One named debt**: anaesthetic history (a longitudinal "has this patient had an anaesthetic
+complication before" fact) has no home anywhere, including `pct_past_procedures`. Recorded here
+as free text (`anaesthetic_history_notes`) rather than inventing a new PCT category unilaterally
+— the same restraint S1 already applied to the `pct_care_plans` attribution gap. Both debts are
+pct-service's own schema to extend, not this programme's to force.
+
+**One row per episode, refined not versioned** (`uq_surgical_assessment_episode`) — the same
+mutable-conversation-record idiom mvumo's V300 informed-consent-content migration uses: an
+assessment gets more complete over repeated review, it does not accumulate snapshots.
+
+Proof: `SurgicalAssessmentServiceTest` (11 tests) — every reference-requires-review refusal, the
+refine-not-duplicate behaviour, the not-found paths. `surgery-assessment-journeys.sh` (12/12,
+real Postgres) — the CHECKs themselves, the UNIQUE constraint, the FK to a real episode, and a
+CC-2 regression guard confirming no column holds a registry value directly (no `allergies`,
+`medications`, `functional_status`, `pregnancy_status`, `tobacco`/`alcohol` column exists). Full
+surgery-service module regression: 28/28.
+
+## 23. Wave S3 — surgical decision-making record (done)
+
+Closes the surgical domain pack's own §8, 18 elements, ABSENT per its audit: natural history,
+expected benefit, material risks considered, anaesthetic/blood/functional/fertility
+implications, stoma/implant possibility, rehabilitation expectation, financial/access
+implications, patient preference, final decision, who decided and when.
+
+**Two duplication checks, both element-by-element like S2, not assumed at the table level:**
+- **Diagnosis and certainty are NOT re-stored.** `surgical_episode.pct_problem_ref` (S1) already
+  resolves to the `pct_problems` row this service contributed with `responsible_service=surgery`,
+  which carries `diagnostic_certainty`. A second column here would be the exact "two records of
+  one fact" duplication S1 refused for the same table.
+- **`material_risks_considered` is deliberately NOT the same field as mvumo's
+  `consent_request.material_risks_explained`** (V300, Wave P5), despite the similar name. That
+  field records what was explained TO THE PATIENT during the consent conversation. This one is
+  the SURGEON'S OWN clinical weighing that leads to recommending an operation in the first
+  place — typically before that conversation, and informing it. Two related facts at different
+  points in the same course of care, not one fact stored twice — the same distinction S2 drew
+  between `differential_diagnosis_notes` and `pct_problems`' formal DIFFERENTIAL status.
+
+**"Final decision, who decided, when" is NOT PCT's admission-handshake decision.** A day-case
+procedure needs no inpatient admission at all, so "open a phase of care" (PCT's, per the
+admission-handshake model) and "decide to proceed with an operation" (a clinical call) are
+different decisions. ADR §5a explicitly permits surgery-service to own the latter as "the
+surgical reasoning and the options considered" — component test question 3 (execute, not
+decide) is satisfied because this is a decision surgery itself is authorised to make.
+
+Enforced as a three-way pair (`chk_surgical_decision_pair`): `final_decision`, `decided_by` and
+`decided_at` travel together or not at all — the same withdrawal-pair idiom mvumo's V300 uses.
+A decision with no recorded author or timestamp is not a decision anyone can stand behind. One
+row per episode, refined over time exactly like S2's assessment, not versioned.
+
+Proof: `SurgicalDecisionServiceTest` (8 tests) — the pairing rule (including that an EXPLICIT
+`decidedBy` can override the acting clinician, e.g. a consultant countersigning a trainee's
+proposed decision), the closed `final_decision` vocabulary, refine-not-duplicate.
+`surgery-decision-journeys.sh` (12/12, real Postgres) — the CHECKs themselves and a CC-2
+regression guard confirming no diagnosis/certainty column exists on this table. Full
+surgery-service module regression: 36/36.
+
+## 24. Wave SB-1 — histology closure gate + complication pathways + prehab (§16/§15/§10, done)
+
+First batch of the 2026-07-28 backlog-clearing strategy (see the programme plan document —
+S4–S18 replaced by six consolidated batches SB-1–SB-6 across three lanes after the ten-theatre-
+rigs debt repeated across four consecutive S-waves without closing).
+
+**§16 histology closure gate.** New `InpatientSpecimenClient` reads inpatient-service's real
+specimen list/status (`procedure_specimen`, V022: PARSED..ACKNOWLEDGED/REJECTED) and blocks a
+`surgical_episode` CLOSED transition while any linked specimen is unreviewed. Deliberately
+**fail-safe** — the opposite posture to `PctProblemContributionClient`'s fail-open: an
+unreachable specimen list blocks closure rather than clearing it, because this sits on a gate
+path (NFR1), not a best-effort record. An episode with no linked operation has nothing to gate
+on and closes freely. Consequence #3 of the surgical-pack audit called this "close to free once
+S1 lands" — it was.
+
+**§15 complication pathway instances.** `surgical_complication_pathway` (V005) is the EXECUTION
+record procedures-service's own P10 explicitly left out of scope (its `complication_class`/
+`clavien_dindo_grade` are content — what to monitor for and how to grade it, never an actual
+occurrence). Shares P10's vocabularies rather than inventing a second registry. Enforces R8's
+full order — recognised → graded → owned → investigated → treated → disclosed → closed — at the
+schema layer: `chk_complication_pathway_closure` refuses CLOSED unless graded, owned, disclosed
+AND given an outcome, so a pathway cannot be closed by skipping a stage. On close, the resulting
+complication is CONTRIBUTED to `pct_problems` via S1's existing `PctProblemContributionClient`
+(CC-2: contribute, never copy) — best-effort, matching that client's own posture exactly.
+
+**§10 prehabilitation/optimisation execution.** `surgical_prehab_item` (V005) — the ADR's
+explicit "prehabilitation and optimisation execution" MAY-own grant. The 16-domain vocabulary is
+ENGINEERING-derived: the source spec (§1–25) is not vendored in this repository, so the domain
+list is recorded as content a future ratification pass can amend, the same honesty posture every
+other invented vocabulary in this programme carries. One row per (episode, domain), refined not
+duplicated (`uq_prehab_item_domain`) — the underlying clinical fact an item optimises (smoking/
+alcohol status, weight, etc.) stays in its own registry (`pct_social_history` and siblings),
+referenced only via an opaque `registry_ref`, never copied.
+
+Proof: `SurgicalEpisodeServiceTest` +4 (the histology gate, including the fail-safe UNKNOWN
+case). `ComplicationPathwayServiceTest` (10 tests, the full closure-order refusal chain).
+`PrehabItemServiceTest` (5 tests). `surgery-complication-prehab-journeys.sh` (17/17, real
+Postgres). Full surgery-service module regression: 55/55.
+
+Batches SB-3 (consolidated reachability) and SB-4 (37 maps + 15-specialty deep content) ran in
+parallel lanes as of this wave; SB-5 (operative record depth) stays gated on the ten-theatre-
+rigs background task.
+
+## 25. Wave SB-2 — longitudinal objects, follow-up, waiting-list revalidation, specialty dimension (done)
+
+Course spine B. §17 `surgical_longitudinal_object` (drains/stomas/wounds, implants still
+federated to inventory-service P8), §18 `surgical_followup` (restrictions/fit-note/transport/
+future-surgery intent — surveillance stays `pct_care_plans`, referenced only), §9
+`surgical_waitlist_revalidation` (surgery's ONLY slice of the 19-field waiting-list model —
+the rest is `scheduling.surgical_waitlist_entry`, untouched), and the §6 specialty dimension:
+`surgical_episode.specialty` hardened from free text to the 15-value vocabulary now that ZIBO
+has coded all fifteen, plus two empty content tables (`surgical_specialty_indication`,
+`surgical_operative_template`) for the "content over shared infrastructure" spine.
+
+`zibo-service` V300 (co-edited, additive-only): publishes CodeSystem/ValueSet version 1.1.0 —
+the original 21 concepts (V006) plus the ten surgical specialties the pack's own audit named
+missing. A NEW version, never a mutation of 1.0.0 — verified against the full 11-migration
+zibo-service chain on real Postgres: 1.0.0 keeps its original 21 concepts, 1.1.0 carries 31.
+
+One real defect the rig caught before commit: the fit-note pairing CHECK originally tied only
+`fit_note_issued_at`/`fit_note_issued_by` to each other, not to `fit_note_notes` — a direct-DB
+write could have created fit-note CONTENT with no recorded issuer. Fixed to a proper three-way
+pair before push, the same idiom `surgical_decision`'s own `final_decision` pairing (S3) uses.
+
+Proof: `LongitudinalObjectServiceTest` (6), `SurgicalFollowupServiceTest` (5),
+`WaitlistRevalidationServiceTest` (4), `SpecialtyContentServiceTest` (3).
+`surgery-longitudinal-followup-specialty-journeys.sh` (23/23 at this point, extended to 25/25
+once SB-4's content landed — see §26). Full surgery-service module regression: 73/73.
+
+## 26. Wave SB-4 — 118 specialty indications + 75 operative templates + 37 body maps (done, one named debt)
+
+The Lane C content fan-out, integrated into SB-2's empty tables and the estate's shared
+body-map primitive.
+
+**Specialty content** (`V007__specialty_content_seed.sql`): 118 indications (7-8 per
+specialty) and 75 operative templates (5 per specialty) across all fifteen surgical
+specialties, Zimbabwe-service-aware throughout (open-first with laparoscopy noted only where
+realistic at central hospitals; SIGN nailing alongside plating, MMF arch bars where plates are
+scarce, MSICS over phaco named explicitly as resource-aware alternatives). Every row
+`ENGINEERING_SEED`/`PENDING_MOHCC_RATIFICATION` (the table's own defaults). Validated in a
+throwaway schema before writing the real migration — all 193 rows parse and insert cleanly,
+zero duplicate-key collisions across specialties, every specialty/wound-classification value
+checked against the real CHECK vocabularies — then re-verified against the full V001-V007
+chain on real Postgres. Each specialty's own authoring pass named specific, deliberate
+omissions (Whipple/liver resection, valve replacement, TME) where a seeded district-level
+template would misrepresent capability that does not exist at the levels this pack targets —
+those indications are still present, routed to MDT/central level, without a false template.
+
+**Body maps** (`ui/one-ui-shell`): 37 new region maps / 617 regions across six files, closing
+the pipeline's own §12 (20 maps) and the surgical pack's §7 (17 maps) together — "built once as
+one feature" per the pipeline audit's own consequence #5, rather than the second deferral the
+programme originally planned (Wave S7). Genuinely additive RegionMapDef data matching the
+existing body-map primitive's shape exactly — no bespoke component work. SNOMED coverage is
+honestly partial (roughly 200/617 regions fully coded; the rest bound to an explicit
+unmapped/pending marker per two register files, never a plausible-looking guessed code). Six
+new site-marking instruments (one per anatomical grouping) registered into the shared
+`BODY_MAP_INSTRUMENTS`, scoped to site-marking questions (planned/confirmed/avoid/marked-not-
+confirmed) rather than diagnostic-finding vocabularies — a different clinical question from the
+four pre-existing exam instruments. The pre-existing strict-SNOMED-coverage test is
+deliberately NOT extended to the new maps, since forcing genuinely partial coverage into a
+test that asserts full coverage would be dishonest; the register files carry that signal
+instead.
+
+**One named debt, not silently dropped** (counted exactly at close-out: **147** rules, now
+preserved in-repo at `docs/clinical/surgical-domain-pack/rule-fragments/` with the four
+verified integration blockers written up in its README): the accompanying six-layer CDS rules
+(DANGER_SIGN/THERAPY/MONITORING/FOLLOW_UP/CLASSIFICATION/DATA_VALIDATION per specialty) Lane C
+also produced are NOT integrated — `clinical-knowledge-platform-service`'s `rule_definitions`
+schema was not reviewed before V007 was written, and mapping rule content into a co-edited
+service's table needs that review first rather than guessing a column mapping. The fragments
+are preserved for that follow-up integration.
+
+Proof: full `ui/one-ui-shell` typecheck (exit 0). `body-map.test.tsx`: 28/28 unchanged.
+`surgery-longitudinal-followup-specialty-journeys.sh` extended to 25/25 (all fifteen
+specialties have seeded content; every row honestly flagged).
+
+## 27. Wave SB-3 — consolidated reachability for S1-S3, SB-1/SB-2 and P8/P14 (done)
+
+The Lane B batch: everything the surgery pipeline had built up to this point (episodes,
+assessment, decision, complication pathways, prehab, longitudinal objects, follow-up,
+waiting-list revalidation, specialty content reads) plus P8 specimen-custody/implant routes
+and P14 analytics endpoints, made reachable end-to-end. Delivered on a separate worktree
+(`worktree-surgery-sb3-reachability`) as six commits, independently verified by Lane A before
+integration rather than accepted on the agent's own report (per the estate's trust-but-verify
+discipline) — every claim was re-run, not just re-read.
+
+**Authz** (`tshepo-authz-service V302__surgery_reachability_policy_rules.sql`): policy rows for
+the full surgery/analytics/custody/implant route set. Both known PDP defects designed around
+correctly: negatives modeled as correct-cadre-only ALLOW → `NO_ALLOW_RULE` rather than a
+path-pinned DENY, and every path pin omits the trailing slash. `SurgeryReachabilityRouteShapeTest`
+(8 tests) + `PathContainsSegmentTest` (5 tests) prove the route-shape derivation and the
+trailing-slash defect directly, in Java, not just via the shell rig. Independently re-ran:
+224/224 tshepo-authz-service tests, 23/23 `surgery-authz-journeys.sh` rig (re-run again after
+rebase, still 23/23).
+
+**BFF** (`experience-bff`): `SurgeryServiceClient`/`SurgeryController` following the established
+`TelemonitoringServiceClient`/`RitoController` idiom; `SURGERY_BASE_URL` env wired into the
+full-preview Helm values. Independently re-ran: 77/77 across the six touched test classes
+(`SurgeryServiceClientTest`, `SurgeryControllerTest`, `ProceduresServiceClientTest`,
+`ProceduresControllerTest`, `InventoryControllerTest`, `TheatreControllerTest`).
+
+**UI** (`ui/one-ui-shell`): new `/work/clinical/surgery` workspace (`page.tsx` +
+`useSurgeryEpisodes.ts`) registered in `routes.ts`, and — the orphan-page check's own finding —
+the pre-existing `/work/clinical/procedures` page had shipped unregistered since P-R and is now
+registered alongside it. Client honesty: `useSurgeryEpisodes` distinguishes a 404
+("not recorded yet", real absence) from a genuine fetch failure via an `isNotRecorded(error)`
+helper, rather than collapsing both to an empty state; the procedures analytics panel now
+renders a malformed-but-200 indicators payload (missing its `indicators` array) as unavailable
+rather than as a false empty/zero-count success — a real defect Lane B found and fixed via its
+own integration test. Independently re-ran: `npx tsc --noEmit` clean, `routes.test.ts` 32/32,
+procedures page tests 17/17.
+
+**Integration note**: SB-3's branch point predated SB-1/SB-2/SB-4 by several commits; rebasing
+onto the post-SB-4 tip produced one real conflict in `routes.ts` — trunk had independently added
+one unrelated route (W15b MCI casualty tagging, 826→827) while SB-3 added two more from its own
+826 baseline (→828). Resolved by keeping both route-array additions and recomputing
+`EXPECTED_ROUTE_COUNT` to 829 (827 + 2), not by discarding either side. Every rig/test/typecheck
+re-run clean after the rebase, not assumed clean from the pre-rebase run. Pushed as `6f188c46b`.
+
+Filed separately, not this wave's responsibility: `task_aff0c53a`, four pre-existing
+`ShiftControllerTest` failures (stale `/v1/shifts` URL expectations vs `TusoServiceClient`'s
+actual `/v1/internal/shifts`) predating this diff, flagged by the SB-3 agent itself.
+
+## 28. Wave SB-6 — close-out: analytics, S14 rig, offline deferral, S18 traceability (done)
+
+The final backlog-clearing batch. Four independent pieces, each closing a specific named debt
+rather than a generic "polish" pass.
+
+**§23 analytics** (`surgery-service V008__analytics_indicator_catalogue.sql`): the surgical
+pack's own twenty named indicators, seeded as governed content mirroring procedures-service's
+own P14/V010 pattern exactly — a reference to reporting-service's real `rpt_theatre_case_metric`
+projection where one exists, never a second computation path. **Reconciled a three-way count
+disagreement rather than picking the most flattering number**: `audit.md` says "2 of 20";
+`dak-baseline.md`'s own prose says "the four with a real projection today", but its own indicator
+list two lines later carries only three `Y` tags. Checked the actual projection
+(`V002__theatre_report_catalog.sql`) column by column: the true answer is **four** COMPUTED
+(surgical volume, cancellation, complications, unplanned return to theatre) — dak-baseline's
+count is right, its SET is wrong. It tags `emergency versus elective` as real; that projection has
+**no triage/urgency column at all**, confirmed by reading the `CREATE TABLE` directly — recorded
+here as a correction, not silently reproduced. FR18's facility-level stratification is also not
+met by the current projection (`facility_id` is a raw UUID with no level join and no `GROUP BY`
+in either seeded report query) — named on the EQUITY row rather than claimed closed because a
+column happens to exist. 7 new tests (`AnalyticsIndicatorServiceTest`), 23/23
+`surgery-analytics-journeys.sh` on real Postgres, 80/80 full surgery-service module regression.
+
+**S14 obligation** (`iatg-surgery-procedures-leases.md` §6's own recorded debt: "needs a rig
+assertion, not prose"): extended `procedures-financial-clearance-journeys.sh` (P12's own rig,
+inpatient-service) with four new assertions (J-P12-9..12) that insert a real
+`triage_priority='EMERGENCY'` episode and a real `triage_priority='ELECTIVE'` episode and prove,
+against real Postgres, the exact row shape `ProcedureEpisodeService.requireFinancialClearance`
+produces for each — `EMERGENCY_OVERRIDE` with no `BLOCKED_*` value ever recorded for the
+emergency case, a genuine `BLOCKED_PENDING_PAYMENT` for the elective contrast case. This closes
+the gap between the mocked unit-level proof (`ProcedureFinancialClearanceTest`, 7 tests,
+`verify(costaServiceAccessClient, never())` — already comprehensive at the Java-logic level) and
+a genuine real-Postgres proof that ties `triage_priority` to `financial_clearance_status` on the
+SAME row, which no existing rig assertion did before this wave despite V302's own migration
+comment already claiming the rig proved it. 13/13 rig (was 9/9).
+
+**§22 offline** (honest deferral, mirroring P13's own approach for FHIR scope rather than a new
+document): FR17's "nine required offline surfaces" is asserted but never itemised anywhere in
+this repo — the "nine DAK components" `dak-baseline.md` §0 refers to are this document's own nine
+sections (recommendations/actors/scenarios/workflows/core-data/decision-support/scheduling/
+indicators/requirements), a different "nine" entirely; conflating them would fabricate a
+specification that does not exist in-repo. No surgical offline scope is built — confirmed still
+true (audit.md finding 13). Per the ADR, offline capability is a mechanism owned by
+offline-sync-service/offline-edge-service/tshepo-offline-service; extending it for surgical
+content is that owner's work, not a schema or API this programme builds. Named scope, not
+silently dropped, same shape as P13's own FHIR-resource deferrals.
+
+**S18 demonstrations traceability**: `docs/clinical/surgical-domain-pack/
+demonstrations-traceability.md`, mirroring `docs/clinical/procedures-pipeline/
+demonstrations-traceability.md` (P15) exactly for this pack's own ten named demonstrations. Six
+closeable today (1, 2, 5\*, 6, 7\*, 8\* — three with an unconfirmed cross-pack/cross-service leg,
+same shape P15 already named for its own demonstrations 4/8/9), one partial (10 — the histology
+gate blocks closure but does not actively "reopen" planning), **two genuinely not closed**:
+demonstration 4 (diabetic foot shared care across two specialties — `surgical_episode.specialty`
+is a single column, no structural way to represent two specialties sharing one episode) and
+demonstration 9 (reoperation joining the same episode — no `REOPENED` state or
+`parent_episode_id`/`reoperation_of` column exists on either `surgery.surgical_episode` or
+`inpatient.procedure_episode`). Demonstration 9 and demonstration 3's MDT-representation gap are
+both smaller instances of the SAME structural absence P10/P15 already named as the single largest
+remaining gap in the whole programme.
+
+**The ten pre-existing theatre rigs still have not been run since P4** — confirmed again this
+wave, the fifth consecutive Phase-S wave to make and repeat this same finding. This has now been
+running as background task `task_697c66e2` for the duration of the whole backlog-clearing batch
+(SB-1 through SB-6); its result was not available in this session by the time SB-6 closed. **SB-5
+(operative record depth, §13) remains gated on that task's outcome** — it is the one part of the
+original backlog-clearing plan not attempted this wave, deliberately, per the plan's own
+PO-level-decision-point rule. Whoever picks this programme back up next should check that task's
+result FIRST, before touching either schema's shared lifecycle for SB-5 or for the REOPENED-state
+work demonstrations 4/9 above would need.
+
+Proof: `AnalyticsIndicatorServiceTest` (7 tests, surgery-service), full surgery-service module
+regression (80/80), `surgery-analytics-journeys.sh` (23/23), extended
+`procedures-financial-clearance-journeys.sh` (13/13, inpatient-service, real Postgres).

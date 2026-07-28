@@ -1242,3 +1242,70 @@ export function useExportPublicHealthBrief() {
     },
   });
 }
+
+// ── Case investigation, contact tracing, line list ──────────────────────────────────────────────
+// These back three controls that sat on the surveillance panel with no handler at all. The panel
+// collected a classification, an outcome and a lab result, and none of those fields existed
+// anywhere in the model. A public-health officer could click "Link Contacts" mid-outbreak, get no
+// error, and conclude tracing had started.
+
+export interface CaseInvestigationUpdate {
+  classification?: string;
+  outcome?: string;
+  labResult?: string;
+  notes?: string;
+}
+
+export function useRecordCaseUpdate(caseId: number | string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CaseInvestigationUpdate) =>
+      apiClient.post(`/internal/v1/public-health/cases/${caseId}/updates`, body),
+    onSuccess: () => {
+      // The case list carries the current classification, so it is stale the moment this lands.
+      queryClient.invalidateQueries({ queryKey: ["public-health-cases"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-case-updates", String(caseId)] });
+    },
+  });
+}
+
+export interface CaseContactInput {
+  contactName: string;
+  contactPhone?: string;
+  contactCpid?: string;
+  relationship?: string;
+  exposureDate?: string;
+  notes?: string;
+}
+
+export function useLinkCaseContact(caseId: number | string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CaseContactInput) =>
+      apiClient.post(`/internal/v1/public-health/cases/${caseId}/contacts`, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-case-contacts", String(caseId)] });
+    },
+  });
+}
+
+export function useCaseContacts(caseId: number | string | null) {
+  return useQuery({
+    queryKey: ["public-health-case-contacts", String(caseId)],
+    queryFn: () => apiClient.get(`/internal/v1/public-health/cases/${caseId}/contacts`),
+    enabled: caseId !== null && caseId !== undefined && caseId !== "",
+  });
+}
+
+/**
+ * The outbreak line list. Fetched on demand rather than on mount — it is an export a response team
+ * asks for, not something the panel should be pulling continuously.
+ */
+export function useLineList() {
+  return useMutation({
+    mutationFn: (caseType?: string) =>
+      apiClient.get(
+        `/internal/v1/public-health/cases/line-list${caseType ? `?caseType=${encodeURIComponent(caseType)}` : ""}`,
+      ),
+  });
+}

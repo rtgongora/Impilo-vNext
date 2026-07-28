@@ -199,6 +199,24 @@ public class DaidzaiServiceClient {
         return post(baseUrl + API + "/disasters/" + id + "/close", body, "closeDisaster");
     }
 
+    // ── MCI casualty tracking (W11 backend, W15 BFF) ─────────────────
+    public JsonNode tagCasualty(String incidentId, Map<String, Object> body) {
+        return post(baseUrl + API + "/disasters/" + incidentId + "/casualties", body, "tagCasualty");
+    }
+
+    public JsonNode listCasualties(String incidentId) {
+        return get(baseUrl + API + "/disasters/" + incidentId + "/casualties", "listCasualties");
+    }
+
+    public JsonNode unmintedCasualties(String incidentId) {
+        return get(baseUrl + API + "/disasters/" + incidentId + "/casualties/unminted", "unmintedCasualties");
+    }
+
+    public JsonNode updateCasualtyStatus(String incidentId, String casualtyId, Map<String, Object> body) {
+        return post(baseUrl + API + "/disasters/" + incidentId + "/casualties/" + casualtyId + "/status",
+                body, "updateCasualtyStatus");
+    }
+
     // ── helpers ──────────────────────────────────────────────────────
     // ── Assistance cases (crowdfunding — Daidzai owns the case, mushe the money) ──
 

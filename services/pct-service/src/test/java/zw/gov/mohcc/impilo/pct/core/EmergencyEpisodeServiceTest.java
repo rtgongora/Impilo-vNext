@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class EmergencyEpisodeServiceTest {
+public class EmergencyEpisodeServiceTest {
 
     private static final UUID TENANT = UUID.fromString("00000000-0000-4000-8000-000000000001");
     private static final UUID FACILITY = UUID.fromString("00000000-0000-4000-8000-000000000002");
@@ -306,7 +306,7 @@ class EmergencyEpisodeServiceTest {
     }
 
     /** Captures what the service told the estate. */
-    private static final class CountingOutbox implements zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository {
+    public static final class CountingOutbox implements zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository {
         private final List<zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> events = new ArrayList<>();
 
         @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity> S save(S e) {
@@ -349,7 +349,7 @@ class EmergencyEpisodeServiceTest {
      * query methods were wrong; this at least honours the tenant filter and the state filter, which
      * are the two things the board and the tenant-isolation tests are actually about.
      */
-    private static final class InMemoryRepo implements EmergencyEpisodeRepository {
+    public static final class InMemoryRepo implements EmergencyEpisodeRepository {
         private final Map<UUID, EmergencyEpisodeEntity> store = new LinkedHashMap<>();
 
         @Override public Optional<EmergencyEpisodeEntity> findByEpisodeIdAndTenantId(UUID id, UUID tenant) {
@@ -571,7 +571,7 @@ class EmergencyEpisodeServiceTest {
     }
 
     /** Hand-written in-memory handover repository, same rationale as InMemoryRepo above. */
-    private static final class InMemoryHandoverRepo implements EmergencyHandoverRepository {
+    public static final class InMemoryHandoverRepo implements EmergencyHandoverRepository {
         private final Map<UUID, zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> store = new java.util.LinkedHashMap<>();
 
         @Override public Optional<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity>
@@ -601,6 +601,14 @@ class EmergencyEpisodeServiceTest {
                     .filter(h -> h.getTenantId().equals(tenantId) && targetType.equals(h.getTargetType())
                             && "PENDING".equals(h.getStatus()))
                     .sorted((a, b) -> a.getRequestedAt().compareTo(b.getRequestedAt())).toList();
+        }
+
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity>
+        findExpiredPending(java.time.OffsetDateTime now) {
+            return store.values().stream()
+                    .filter(h -> "PENDING".equals(h.getStatus())
+                            && h.getResponseDueAt() != null && h.getResponseDueAt().isBefore(now))
+                    .toList();
         }
 
         @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> S save(S h) {

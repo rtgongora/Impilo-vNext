@@ -35,6 +35,12 @@ export interface CdsTopicPanelProps {
   description: string;
   fields: CdsFactField[];
   footer?: ReactNode;
+  /**
+   * The patient this evaluation is about. Passed to the BFF so the server can compose the current
+   * medicine list into the facts — the medication facts the renal-safety rules read are derived from
+   * it, never typed in here.
+   */
+  subjectCpid?: string;
 }
 
 const SEVERITY_CLASS: Record<string, string> = {
@@ -43,10 +49,17 @@ const SEVERITY_CLASS: Record<string, string> = {
   LOW: "border-border bg-muted/30",
 };
 
-export function CdsTopicPanel({ topic, title, description, fields, footer }: CdsTopicPanelProps) {
+export function CdsTopicPanel({ topic, title, description, fields, footer, subjectCpid }: CdsTopicPanelProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const cds = useMedicineCds();
   const result = cds.data?.data;
+
+  // Facts the engine could not derive and fell back to a human answer for. Named explicitly rather
+  // than folded into "incomplete", because the assessment IS complete — it is the evidence behind
+  // one of its inputs that is weaker than it looks.
+  const assertedFacts = Object.entries(result?.fact_provenance ?? {})
+    .filter(([, provenance]) => provenance === "CLINICIAN_ASSERTED")
+    .map(([fact]) => fact);
 
   const evaluate = () => {
     // Only non-empty facts are sent. An empty box means "not stated", and sending it as "" would
@@ -58,7 +71,7 @@ export function CdsTopicPanel({ topic, title, description, fields, footer }: Cds
       if (raw === undefined || raw === "") continue;
       facts[f.key] = f.type === "number" ? Number(raw) : raw;
     }
-    cds.mutate({ topic, facts });
+    cds.mutate({ topic, facts, subjectCpid });
   };
 
   return (
@@ -151,6 +164,20 @@ export function CdsTopicPanel({ topic, title, description, fields, footer }: Cds
           {result.incomplete && (
             <p className="text-sm text-warning-foreground" data-testid={`cds-incomplete-${topic}`}>
               Incomplete — not assessed: {result.not_assessed.join(", ")}. This is not an all-clear.
+            </p>
+          )}
+
+          {/* Where a medication fact came from. A clinician must be able to tell a fact the system
+              detected from one it was told, because only the first is evidence. */}
+          {assertedFacts.length > 0 && (
+            <p className="text-sm text-warning-foreground" data-testid={`cds-asserted-${topic}`}>
+              Stated rather than detected: {assertedFacts.join(", ")}. These were not confirmed
+              against the medicine list.
+            </p>
+          )}
+          {result.derivation_note && (
+            <p className="text-sm text-muted-foreground" data-testid={`cds-derivation-${topic}`}>
+              {result.derivation_note}
             </p>
           )}
 

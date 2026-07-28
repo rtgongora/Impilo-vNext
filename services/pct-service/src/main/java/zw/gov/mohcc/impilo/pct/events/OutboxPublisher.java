@@ -191,6 +191,13 @@ public class OutboxPublisher {
             // does not know this patient has this diagnosis" is most dangerous.
             case "PROBLEM_ADDED", "PROBLEM_RESOLVED", "PROBLEM_STATUS_CHANGED" -> "pct.problem.recorded";
 
+            // The structured examination (§7/§19). BUTANO archives it as a FHIR ClinicalImpression so
+            // the next facility sees not only the diagnosis but the examination behind it — and, above
+            // all, the regions that were never looked at. Routed in the same change as the emitter,
+            // because this estate has repeatedly shipped an event with no route: it publishes
+            // successfully, lands on the pct.events catch-all, and reaches nobody.
+            case "EXAMINATION_RECORDED" -> "pct.examination.recorded";
+
             // A birth is the one clinical event that other planes must act on rather than merely
             // record: VITO asserts the mother-child relationship from it, UBOMI raises the civil
             // birth notification a human then attests, and BUTANO archives the birth summary.
@@ -236,6 +243,12 @@ public class OutboxPublisher {
                  "EMERGENCY_HANDOVER_ACCEPTED",
                  "EMERGENCY_HANDOVER_DECLINED",
                  "EMERGENCY_HANDOVER_EXPIRED" -> "pct.emergency.handover.updated";
+
+            // W12 identity proof: a clinical resolution of an emergency episode's identity.
+            // reporting derives time-to-identification; a downstream identity-repoint consumer
+            // (none exists yet — see docs/registry/iatg-emergency-leases.md) would subscribe here
+            // rather than filtering the whole pct.events catch-all.
+            case "EMERGENCY_IDENTITY_LINKED" -> "pct.emergency.identity.linked";
 
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import ProceduresCataloguePage from "./page";
 
 vi.mock("@/components/AppLayout", () => ({
@@ -16,12 +16,39 @@ vi.mock("@/components/PageShell", () => ({
 const searchState = vi.fn();
 const detailState = vi.fn();
 const checkState = vi.fn();
+const safetyPauseState = vi.fn();
+const sedationLevelState = vi.fn();
+const recoverySettingState = vi.fn();
+const aftercareTemplateState = vi.fn();
+const analyticsIndicatorsState = vi.fn();
+
+const IDLE = { isLoading: false, isError: false, data: undefined };
 
 vi.mock("@/hooks/queries/useProceduresCatalogue", () => ({
   useCatalogueSearch: () => searchState(),
   useCatalogueDetail: () => detailState(),
   useAppropriatenessCheck: () => checkState(),
+  useSafetyPauseTemplate: (code: string | null) => safetyPauseState(code),
+  useSedationLevel: (code: string | null) => sedationLevelState(code),
+  useRecoverySetting: (code: string | null) => recoverySettingState(code),
+  // Called twice by PostProcedurePanels (specific code, then fallback code) — the mock must
+  // answer per-argument, the same reason searchState/detailState answer per-hook rather than
+  // sharing one canned value.
+  useAftercareTemplate: (code: string | null) => aftercareTemplateState(code),
+  // SB-3: the analytics indicators panel renders on every page mount; default IDLE below.
+  useAnalyticsIndicators: () => analyticsIndicatorsState(),
+  useAnalyticsIndicator: () => IDLE,
 }));
+
+beforeEach(() => {
+  // Default every P-R2 panel hook to idle so tests that don't exercise the panels (most of
+  // this file, predating them) don't need to know these hooks exist.
+  safetyPauseState.mockReturnValue(IDLE);
+  sedationLevelState.mockReturnValue(IDLE);
+  recoverySettingState.mockReturnValue(IDLE);
+  aftercareTemplateState.mockReturnValue(IDLE);
+  analyticsIndicatorsState.mockReturnValue(IDLE);
+});
 
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -185,5 +212,183 @@ describe("ProceduresCataloguePage — appropriateness check", () => {
 
     expect(screen.getByText(/could not evaluate appropriateness/i)).toBeInTheDocument();
     expect(screen.queryByTestId("procedures-appropriateness-outcome")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProceduresCataloguePage — Wave P-R2 post-procedure panels (safety pause / sedation / recovery / aftercare)", () => {
+  const DETAIL = {
+    ...ITEM, synonyms: [], anatomicalSite: null, ageMinDays: null, ageMaxDays: null,
+    pregnancyApplicability: "NO_CONSTRAINT", recoveryRequired: true, consentType: "CONSENT-SURGICAL",
+    snomedCtCode: null, status: "PUBLISHED", approvingAuthority: "PENDING_MOHCC_RATIFICATION",
+    sourceCitation: null, requirements: [],
+    safetyPauseTemplate: "SAFETY-PAUSE-SURGERY",
+    defaultSedationLevelCode: "GENERAL_ANAESTHESIA",
+    defaultRecoverySettingCode: "PACU",
+    aftercareTemplate: "AFTERCARE-LAPAROTOMY",
+    defaultAftercareTemplateCode: "AFTERCARE-THEATRE",
+  };
+
+  function selectDetail() {
+    searchState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { items: [ITEM], matched: 1, catalogueSize: 66 },
+    });
+    detailState.mockReturnValue({ isLoading: false, isError: false, data: DETAIL });
+    checkState.mockReturnValue(IDLE);
+  }
+
+  it("does not render any panel when a procedure declares none of the four linkages", () => {
+    searchState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { items: [ITEM], matched: 1, catalogueSize: 66 },
+    });
+    detailState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { ...DETAIL, safetyPauseTemplate: null, defaultSedationLevelCode: null,
+               defaultRecoverySettingCode: null, aftercareTemplate: null, defaultAftercareTemplateCode: null },
+    });
+    checkState.mockReturnValue(IDLE);
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    expect(screen.queryByTestId("procedures-safety-pause-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("procedures-sedation-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("procedures-recovery-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("procedures-aftercare-panel")).not.toBeInTheDocument();
+  });
+
+  it("renders the safety-pause confirmation items", () => {
+    selectDetail();
+    safetyPauseState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: {
+        templateCode: "SAFETY-PAUSE-SURGERY", templateName: "WHO Surgical Safety Checklist Time Out",
+        applicableSetting: "THEATRE", description: null, status: "PUBLISHED", approvingAuthority: "PENDING_MOHCC_RATIFICATION",
+        confirmationItems: [{ confirmationItem: "PATIENT", promptText: "Confirm patient identity, out loud, with the whole team." }],
+      },
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    expect(screen.getByTestId("procedures-safety-pause-panel")).toHaveTextContent(
+      "Confirm patient identity, out loud, with the whole team.",
+    );
+  });
+
+  it("renders the sedation level and its resolved rescue capability", () => {
+    selectDetail();
+    sedationLevelState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: {
+        levelCode: "GENERAL_ANAESTHESIA", levelLabel: "General anaesthesia", depthRank: 5,
+        monitoringRequired: "Continuous pulse oximetry, capnography, cardiac monitoring, temperature.",
+        providerCompetenceRequired: "An anaesthesia provider throughout.", typicalRecoveryCriteria: null,
+        rescueCapability: null,
+      },
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    expect(screen.getByTestId("procedures-sedation-panel")).toHaveTextContent("General anaesthesia");
+  });
+
+  it("renders the recovery setting's discharge-readiness criteria", () => {
+    selectDetail();
+    recoverySettingState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: {
+        settingCode: "PACU", settingLabel: "Post-anaesthesia care unit", minimumObservationMinutes: 60,
+        dischargeReadinessCriteria: "Aldrete or equivalent discharge-readiness score met.",
+        monitoringRequired: "Continuous pulse oximetry.",
+      },
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    expect(screen.getByTestId("procedures-recovery-panel")).toHaveTextContent(
+      "Aldrete or equivalent discharge-readiness score met.",
+    );
+  });
+
+  /** The two-step resolution's primary path: the specific per-procedure code resolves directly. */
+  it("prefers the specific aftercare template over the coarse fallback when the specific one resolves", () => {
+    selectDetail();
+    aftercareTemplateState.mockImplementation((code: string | null) => {
+      if (code === "AFTERCARE-LAPAROTOMY") {
+        return {
+          isLoading: false, isError: false,
+          data: {
+            templateCode: "AFTERCARE-LAPAROTOMY", templateName: "Laparotomy aftercare",
+            applicableSetting: "THEATRE", description: null, status: "PUBLISHED",
+            approvingAuthority: "PENDING_MOHCC_RATIFICATION", contentMaturity: "ENGINEERING_SEED",
+            instructions: [{ instructionKind: "WOUND_SITE_CARE", instructionText: "Keep the abdominal wound clean and dry." }],
+            deliveryChannels: ["CLINICAL_SUMMARY"],
+          },
+        };
+      }
+      return IDLE; // fallback query not enabled — the specific one already resolved
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    const panel = screen.getByTestId("procedures-aftercare-panel");
+    expect(panel).toHaveTextContent("Keep the abdominal wound clean and dry.");
+    expect(panel).not.toHaveTextContent(/generic/i);
+  });
+
+  /**
+   * The two-step resolution's fallback path — the finding V007 exists to fix for a growing
+   * subset, but most of the catalogue still lands here. MUTATION-SHAPED: proves the fallback
+   * copy actually distinguishes itself from the primary path, not just that content renders.
+   */
+  it("falls back to the coarse setting-class template and labels it as generic when the specific one has no row", () => {
+    selectDetail();
+    aftercareTemplateState.mockImplementation((code: string | null) => {
+      if (code === "AFTERCARE-LAPAROTOMY") {
+        return { isLoading: false, isError: true, data: undefined }; // specific code: no template row
+      }
+      if (code === "AFTERCARE-THEATRE") {
+        return {
+          isLoading: false, isError: false,
+          data: {
+            templateCode: "AFTERCARE-THEATRE", templateName: "Post-surgical aftercare",
+            applicableSetting: "THEATRE", description: null, status: "PUBLISHED",
+            approvingAuthority: "PENDING_MOHCC_RATIFICATION", contentMaturity: "ENGINEERING_SEED",
+            instructions: [{ instructionKind: "WOUND_SITE_CARE", instructionText: "Keep the wound clean and dry." }],
+            deliveryChannels: ["CLINICAL_SUMMARY"],
+          },
+        };
+      }
+      return IDLE;
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    const panel = screen.getByTestId("procedures-aftercare-panel");
+    expect(panel).toHaveTextContent("Keep the wound clean and dry.");
+    expect(panel).toHaveTextContent(/generic/i);
+    expect(panel).toHaveTextContent("AFTERCARE-LAPAROTOMY"); // names the code that's still missing
+  });
+
+  it("renders unavailable, not empty, when neither the specific nor the fallback aftercare template can be read", () => {
+    selectDetail();
+    aftercareTemplateState.mockImplementation((code: string | null) => {
+      if (code === "AFTERCARE-LAPAROTOMY") return { isLoading: false, isError: true, data: undefined };
+      if (code === "AFTERCARE-THEATRE") return { isLoading: false, isError: true, data: undefined };
+      return IDLE;
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    const panel = screen.getByTestId("procedures-aftercare-panel");
+    expect(panel).toHaveTextContent(/could not load an aftercare template/i);
+    expect(panel).not.toHaveTextContent(/no aftercare template declared/i);
   });
 });

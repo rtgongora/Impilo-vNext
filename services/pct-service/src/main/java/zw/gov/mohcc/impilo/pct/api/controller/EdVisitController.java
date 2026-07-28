@@ -167,6 +167,25 @@ public class EdVisitController {
         return ResponseEntity.ok(ApiResponse.ok(diagnosticsService.reconcileCriticalResult(body), correlationId));
     }
 
+    /** Record that a clinician has acted on a diagnostic result — distinct from acknowledging it (W7a). */
+    @PostMapping("/diagnostics/{linkId}/act")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> actOnDiagnosticOrder(
+            @PathVariable UUID linkId, @RequestBody(required = false) Map<String, Object> body) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(diagnosticsService.actOnDiagnosticOrder(linkId, body != null ? body : Map.of()), correlationId));
+    }
+
+    /**
+     * Close (or cancel) a diagnostic order (W7a). Refused with 409 if an unacknowledged critical
+     * result exists on it — see chk_edo_critical_not_closed.
+     */
+    @PostMapping("/diagnostics/{linkId}/close")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> closeDiagnosticOrder(
+            @PathVariable UUID linkId, @RequestBody Map<String, Object> body) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(diagnosticsService.closeDiagnosticOrder(linkId, body), correlationId));
+    }
+
     // ── Trauma-team roster → ack → escalate (G1.7) ──────────────────────────
     @GetMapping("/trauma/{traumaId}/team")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> traumaTeam(@PathVariable UUID traumaId) {

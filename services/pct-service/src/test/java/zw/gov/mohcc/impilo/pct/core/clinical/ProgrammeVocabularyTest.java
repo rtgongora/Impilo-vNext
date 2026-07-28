@@ -28,11 +28,17 @@ class ProgrammeVocabularyTest {
     // PREVENTIVE stage, so it — not V108/V109 — is the authoritative source for those two vocabularies.
     private static final Path PREVENTION_MIGRATION =
             Path.of("src/main/resources/db/migration/V110__prevention_programmes.sql");
+    // V112 widened the programme CHECK again (the four chronic-disease registers) and the exit-reason
+    // CHECK (DIAGNOSIS_REFUTED), and added the control-status CHECK. It is therefore the authoritative
+    // source for those three — reading V108 or V110 for them would assert a vocabulary two migrations
+    // out of date and pass while doing it.
+    private static final Path REGISTERS_MIGRATION =
+            Path.of("src/main/resources/db/migration/V112__chronic_disease_registers.sql");
 
     @Test
     void programmesMatchTheDatabaseCheckConstraint() throws IOException {
         assertThat(ProgrammeVocabulary.PROGRAMMES).containsExactlyInAnyOrderElementsOf(
-                checkValues(PREVENTION_MIGRATION, "pct_programme_enrolments_programme_check"));
+                checkValues(REGISTERS_MIGRATION, "pct_programme_enrolments_programme_check"));
     }
 
     @Test
@@ -44,13 +50,47 @@ class ProgrammeVocabularyTest {
     @Test
     void exitReasonsMatchTheDatabaseCheckConstraint() throws IOException {
         assertThat(ProgrammeVocabulary.EXIT_REASONS).containsExactlyInAnyOrderElementsOf(
-                checkValues(ENROLMENT_MIGRATION, "pct_programme_enrolments_exit_reason_check"));
+                checkValues(REGISTERS_MIGRATION, "pct_programme_enrolments_exit_reason_check"));
     }
 
     @Test
     void regimenStagesMatchTheDatabaseCheckConstraint() throws IOException {
         assertThat(ProgrammeVocabulary.REGIMEN_STAGES).containsExactlyInAnyOrderElementsOf(
                 checkValues(PREVENTION_MIGRATION, "pct_treatment_regimens_stage_check"));
+    }
+
+    @Test
+    void controlStatusesMatchTheDatabaseCheckConstraint() throws IOException {
+        assertThat(ProgrammeVocabulary.CONTROL_STATUSES).containsExactlyInAnyOrderElementsOf(
+                checkValues(REGISTERS_MIGRATION, "pct_programme_enrolments_control_status_check"));
+    }
+
+    @Test
+    void everyChronicRegisterIsAProgramme() {
+        assertThat(ProgrammeVocabulary.PROGRAMMES)
+                .containsAll(ProgrammeVocabulary.CHRONIC_REGISTERS);
+    }
+
+    @Test
+    void aChronicRegisterCarriesNoTreatmentRegimenStage() {
+        // A hypertension entry has no ART line and no TB phase. The absence from STAGES_BY_PROGRAMME
+        // is what makes requireStageForProgramme refuse one, so this asserts the absence rather than
+        // trusting that nobody adds a mapping later.
+        for (String register : ProgrammeVocabulary.CHRONIC_REGISTERS) {
+            assertThat(ProgrammeVocabulary.STAGES_BY_PROGRAMME).doesNotContainKey(register);
+            assertThatThrownBy(() -> ProgrammeVocabulary.requireStageForProgramme(register, "FIRST_LINE"))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Test
+    void noChronicRegisterIsOnTheConfidentialLane() {
+        // Hypertension and diabetes are not specially protected. Marking them so would restrict a
+        // register that public-health reporting legitimately reads, and would dilute a label whose
+        // whole value is that it is rare.
+        for (String register : ProgrammeVocabulary.CHRONIC_REGISTERS) {
+            assertThat(ProgrammeVocabulary.isConfidential(register)).isFalse();
+        }
     }
 
     @Test

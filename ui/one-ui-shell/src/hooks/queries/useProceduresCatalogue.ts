@@ -71,6 +71,21 @@ export interface CatalogueDetail {
   expectedDurationMin: number | null;
   recoveryRequired: boolean;
   consentType: string | null;
+  /** Specific per-procedure safety-pause code (V002/V003) — resolve via useSafetyPauseTemplate. */
+  safetyPauseTemplate: string | null;
+  /**
+   * Specific per-procedure aftercare code (V002/V003) — resolve via useAftercareTemplate FIRST.
+   * Many procedures declare this with no matching template row yet (a real, named catalogue-
+   * depth debt, not a bug) — fall back to `defaultAftercareTemplateCode` only when this either
+   * is null or fails to resolve, never silently prefer the coarser one.
+   */
+  aftercareTemplate: string | null;
+  /** Wave P7 — resolve via useSedationLevel. Null when this procedure declares no default depth. */
+  defaultSedationLevelCode: string | null;
+  /** Wave P9 — resolve via useRecoverySetting. */
+  defaultRecoverySettingCode: string | null;
+  /** Wave P9 — the coarse setting-class FALLBACK for aftercareTemplate above, not the primary source. */
+  defaultAftercareTemplateCode: string | null;
   ziboCode: string | null;
   snomedCtCode: string | null;
   status: string;
@@ -191,5 +206,173 @@ export function useCompetence(providerId: string | null, definitionCode: string 
         })}`,
       ),
     enabled: !!providerId && !!definitionCode,
+  });
+}
+
+// ── Wave P-R2 — P7 safety-pause/sedation and P9 recovery/aftercare hooks. Same
+// empty/unknown/unavailable discipline as everything above: apiClient throws on non-2xx, so
+// isError is always the real "could not read this" signal, never a resolved empty value. ──
+
+export interface ConfirmationItemView {
+  confirmationItem: string;
+  promptText: string;
+}
+
+export interface SafetyPauseTemplateView {
+  templateCode: string;
+  templateName: string;
+  applicableSetting: string | null;
+  description: string | null;
+  status: string;
+  approvingAuthority: string | null;
+  confirmationItems: ConfirmationItemView[];
+}
+
+export interface RescueCapability {
+  levelCode: string;
+  levelLabel: string;
+  monitoringRequired: string;
+  providerCompetenceRequired: string;
+}
+
+export interface SedationLevelView {
+  levelCode: string;
+  levelLabel: string;
+  depthRank: number;
+  monitoringRequired: string;
+  providerCompetenceRequired: string;
+  typicalRecoveryCriteria: string | null;
+  rescueCapability: RescueCapability | null;
+}
+
+export interface RecoverySettingView {
+  settingCode: string;
+  settingLabel: string;
+  minimumObservationMinutes: number | null;
+  dischargeReadinessCriteria: string;
+  monitoringRequired: string;
+}
+
+export interface AftercareInstructionView {
+  instructionKind: string;
+  instructionText: string;
+}
+
+export interface AftercareTemplateView {
+  templateCode: string;
+  templateName: string;
+  applicableSetting: string | null;
+  description: string | null;
+  status: string;
+  approvingAuthority: string | null;
+  /** ENGINEERING_SEED | RATIFIED — see V006/V007's own honesty note; render ENGINEERING_SEED visibly. */
+  contentMaturity: string;
+  instructions: AftercareInstructionView[];
+  deliveryChannels: string[];
+}
+
+export function useSafetyPauseTemplate(templateCode: string | null) {
+  return useQuery<SafetyPauseTemplateView>({
+    queryKey: ["procedures", "safety-pause-template", templateCode],
+    queryFn: () =>
+      apiClient.get<SafetyPauseTemplateView>(
+        `/internal/v1/procedures/safety-pause-templates${buildQuery({ code: templateCode ?? undefined })}`,
+      ),
+    enabled: !!templateCode,
+  });
+}
+
+export function useSedationLevels() {
+  return useQuery<SedationLevelView[]>({
+    queryKey: ["procedures", "sedation-levels"],
+    queryFn: () => apiClient.get<SedationLevelView[]>("/internal/v1/procedures/sedation-levels"),
+  });
+}
+
+export function useSedationLevel(levelCode: string | null) {
+  return useQuery<SedationLevelView>({
+    queryKey: ["procedures", "sedation-level", levelCode],
+    queryFn: () =>
+      apiClient.get<SedationLevelView>(
+        `/internal/v1/procedures/sedation-level-detail${buildQuery({ code: levelCode ?? undefined })}`,
+      ),
+    enabled: !!levelCode,
+  });
+}
+
+export function useRecoverySetting(settingCode: string | null) {
+  return useQuery<RecoverySettingView>({
+    queryKey: ["procedures", "recovery-setting", settingCode],
+    queryFn: () =>
+      apiClient.get<RecoverySettingView>(
+        `/internal/v1/procedures/recovery-setting-detail${buildQuery({ code: settingCode ?? undefined })}`,
+      ),
+    enabled: !!settingCode,
+  });
+}
+
+/**
+ * Resolves an aftercare template by code — call with the SPECIFIC per-procedure code
+ * (`CatalogueDetail.aftercareTemplate`) first; if that is null or this query errors as
+ * not-found, the caller falls back to `defaultAftercareTemplateCode`. See the procedures
+ * detail page for the two-step resolution this hook is deliberately too narrow to do itself —
+ * a hook that silently tried both would hide from the caller which one actually answered.
+ */
+export function useAftercareTemplate(templateCode: string | null) {
+  return useQuery<AftercareTemplateView>({
+    queryKey: ["procedures", "aftercare-template", templateCode],
+    queryFn: () =>
+      apiClient.get<AftercareTemplateView>(
+        `/internal/v1/procedures/aftercare-templates${buildQuery({ code: templateCode ?? undefined })}`,
+      ),
+    enabled: !!templateCode,
+    retry: false,
+  });
+}
+
+// ── Wave SB-3 — P14 analytics indicator catalogue. Indicator DEFINITIONS and their
+// computation status, not computed numbers — computationStatus/gapReason are the honest
+// "this number does not exist yet" fields and must be rendered, not hidden. Same
+// empty/unknown/unavailable discipline as everything above. ──
+
+export interface IndicatorView {
+  indicatorCode: string;
+  indicatorName: string;
+  numeratorDescription: string;
+  denominatorDescription: string;
+  /** COMPUTED | PARTIAL | NOT_YET_INSTRUMENTED — render honestly; PARTIAL/NOT_YET are not failures. */
+  computationStatus: string;
+  executableVia: string | null;
+  /** Why this indicator cannot be computed yet — the named gap, shown verbatim. */
+  gapReason: string | null;
+  owningService: string | null;
+  delegatedOutOfScope: boolean;
+  sourceCitation: string | null;
+}
+
+export interface IndicatorSummary {
+  total: number;
+  computed: number;
+  partial: number;
+  notYetInstrumented: number;
+  indicators: IndicatorView[];
+}
+
+export function useAnalyticsIndicators() {
+  return useQuery<IndicatorSummary>({
+    queryKey: ["procedures", "analytics-indicators"],
+    queryFn: () =>
+      apiClient.get<IndicatorSummary>("/internal/v1/procedures/analytics/indicators"),
+  });
+}
+
+export function useAnalyticsIndicator(indicatorCode: string | null) {
+  return useQuery<IndicatorView>({
+    queryKey: ["procedures", "analytics-indicator", indicatorCode],
+    queryFn: () =>
+      apiClient.get<IndicatorView>(
+        `/internal/v1/procedures/analytics/indicator${buildQuery({ code: indicatorCode ?? undefined })}`,
+      ),
+    enabled: !!indicatorCode,
   });
 }

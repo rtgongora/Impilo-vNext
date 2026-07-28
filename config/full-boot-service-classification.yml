@@ -2,7 +2,7 @@ metadata:
   generated_at: '2026-07-16T10:15:06.589Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
-  total_entries: 151
+  total_entries: 152
 classifications:
   - id: ai-model-registry-service
     canonical_name: ai-model-registry-service
@@ -3931,6 +3931,47 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
+  - id: mental-health-service
+    canonical_name: mental-health-service
+    plane: clinical
+    domain: care-delivery
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: build-runtime-image-from-jar.sh mental-health-service
+    image_name: impilo/mental-health-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/mental-health-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/mental-health-service
+    build_tool: maven
+    default_http_port: 8397
+    priority: P2
+    blocker: null
+    reason: Java service — default shared JRE template after mvn install
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: pct-service
     canonical_name: pct-service
     plane: clinical
@@ -4543,6 +4584,47 @@ classifications:
     source_path: services/procedures-service
     build_tool: maven
     default_http_port: 8395
+    priority: P2
+    blocker: null
+    reason: Java service — thin JAR-copy Dockerfile, equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
+  - id: surgery-service
+    canonical_name: surgery-service
+    plane: clinical
+    domain: care-delivery
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: build-runtime-image-from-jar.sh surgery-service
+    image_name: impilo/surgery-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/surgery-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/surgery-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: false
+    mobile_surface_expected: false
+    doctrine_compliance_required: true
+    source_path: services/surgery-service
+    build_tool: maven
+    default_http_port: 8396
     priority: P2
     blocker: null
     reason: Java service — thin JAR-copy Dockerfile, equivalent to shared template

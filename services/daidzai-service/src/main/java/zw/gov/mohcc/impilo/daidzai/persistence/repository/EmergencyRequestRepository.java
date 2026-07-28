@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.daidzai.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.daidzai.persistence.entity.EmergencyRequestEntity;
 
@@ -18,4 +21,12 @@ public interface EmergencyRequestRepository extends JpaRepository<EmergencyReque
     List<EmergencyRequestEntity> findByTenantIdAndIncidentId(UUID tenantId, UUID incidentId);
     List<EmergencyRequestEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
     List<EmergencyRequestEntity> findByTenantIdAndStatusOrderByCreatedAtDesc(UUID tenantId, String status);
+
+    /** VITO identity repoint (see DaidzaiIntakeRepointHook). Idempotent: a replay matches nothing. */
+    @Modifying
+    @Query("update EmergencyRequestEntity r set r.subjectCpid = :confirmed "
+            + "where r.tenantId = :tenantId and r.subjectCpid = :provisional")
+    int repointSubjectCpid(@Param("tenantId") UUID tenantId,
+                           @Param("provisional") String provisionalCpid,
+                           @Param("confirmed") String confirmedCpid);
 }

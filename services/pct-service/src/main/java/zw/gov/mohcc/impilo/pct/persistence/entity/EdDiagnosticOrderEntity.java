@@ -27,6 +27,12 @@ public class EdDiagnosticOrderEntity {
     @Column(name = "oros_result_id", length = 64) private String orosResultId;
     @Column(name = "critical_reason", columnDefinition = "TEXT") private String criticalReason;
     @Column(name = "acked_at") private OffsetDateTime ackedAt;
+    @Column(name = "acked_by", length = 128) private String ackedBy;
+    @Column(name = "acted_at") private OffsetDateTime actedAt;
+    @Column(name = "acted_by", length = 128) private String actedBy;
+    @Column(name = "closed_at") private OffsetDateTime closedAt;
+    @Column(name = "closed_by", length = 128) private String closedBy;
+    @Column(name = "close_reason", columnDefinition = "TEXT") private String closeReason;
     @Column(name = "safety_emitted_at") private OffsetDateTime safetyEmittedAt;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt;
@@ -61,6 +67,18 @@ public class EdDiagnosticOrderEntity {
     public void setCriticalReason(String v) { this.criticalReason = v; }
     public OffsetDateTime getAckedAt() { return ackedAt; }
     public void setAckedAt(OffsetDateTime v) { this.ackedAt = v; }
+    public String getAckedBy() { return ackedBy; }
+    public void setAckedBy(String v) { this.ackedBy = v; }
+    public OffsetDateTime getActedAt() { return actedAt; }
+    public void setActedAt(OffsetDateTime v) { this.actedAt = v; }
+    public String getActedBy() { return actedBy; }
+    public void setActedBy(String v) { this.actedBy = v; }
+    public OffsetDateTime getClosedAt() { return closedAt; }
+    public void setClosedAt(OffsetDateTime v) { this.closedAt = v; }
+    public String getClosedBy() { return closedBy; }
+    public void setClosedBy(String v) { this.closedBy = v; }
+    public String getCloseReason() { return closeReason; }
+    public void setCloseReason(String v) { this.closeReason = v; }
     public OffsetDateTime getSafetyEmittedAt() { return safetyEmittedAt; }
     public void setSafetyEmittedAt(OffsetDateTime v) { this.safetyEmittedAt = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

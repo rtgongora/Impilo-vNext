@@ -10,11 +10,23 @@
  */
 
 import { createStore } from "zustand/vanilla";
-import type { AppMode, ProviderTabKey } from "../types";
+import type { ResolvedWorkContextView } from "@impilo/mobile-trust";
+import type { AppMode, GovernedAppMode, ProviderTabKey, UngovernedAppMode } from "../types";
 
 export interface AppState {
   mode: AppMode;
   isOnline: boolean;
+  /**
+   * Phase G3 — the real resolved work contexts from
+   * GET /internal/v1/work-context/resolved (populated best-effort by
+   * useAutoResolveWorkContext once facility+workspace are set). Null until
+   * the first resolution attempt completes; empty array is a real "resolved
+   * to nothing yet" result, not the same as null/not-yet-tried. Feeds
+   * ModeSwitcher's deriveAvailableAppModes so a real backend-proven
+   * assignment can unlock a mode button even when the Keycloak role string
+   * hasn't caught up — see modeAvailability.ts for why this is additive-only.
+   */
+  resolvedWorkContexts: ResolvedWorkContextView[] | null;
   facilityId: string | null;
   facilityName: string | null;
   workspaceId: string | null;
@@ -34,7 +46,24 @@ export interface AppState {
   learningSubjectType: string | null;
   learningSubjectId: string | null;
 
-  setMode: (mode: AppMode) => void;
+  /**
+   * Enters an UNGOVERNED workspace (outreach/offline/courier) — free local
+   * navigation, no duty token involved because the resolver models no WorkMode
+   * for these.
+   *
+   * Governed modes are deliberately NOT accepted here; use `setGrantedMode`
+   * via `useSwitchAppMode`. This is a type-level fence: before it, four call
+   * sites jumped straight into supervisor mode while the person still held a
+   * CLINICAL_CARE token, so the UI changed posture and the access envelope did
+   * not.
+   */
+  setMode: (mode: UngovernedAppMode) => void;
+  /**
+   * Enters a GOVERNED workspace. Only `useSwitchAppMode` may call this, and
+   * only after `switchWorkContext` has minted a token for the target mode —
+   * the visible mode must never move ahead of the authority behind it.
+   */
+  setGrantedMode: (mode: GovernedAppMode) => void;
   setOnlineStatus: (online: boolean) => void;
   setFacilityContext: (id: string, name: string) => void;
   setWorkspaceContext: (id: string, name: string) => void;
@@ -47,18 +76,37 @@ export interface AppState {
   setSupervisorEntryTab: (tab: AppState["supervisorEntryTab"]) => void;
   setAppsFocus: (focus: AppState["appsFocus"]) => void;
   setLearningSubject: (subjectType: string | null, subjectId: string | null) => void;
+  setResolvedWorkContexts: (contexts: ResolvedWorkContextView[]) => void;
   clearContext: () => void;
+}
+
+/**
+ * Shared mode-entry effect for both setters. Split from them so the governed
+ * and ungoverned paths cannot drift in behaviour — the only difference between
+ * them is who is allowed to call which, enforced by the argument types.
+ */
+function applyMode(state: AppState, mode: AppMode): Partial<AppState> {
+  return {
+    mode,
+    // Work-Home-first entry whenever the clinician returns to Provider mode —
+    // the mobile counterpart of web's F6 flip from /provider-workspace to /work.
+    // Work Home is the role- and context-aware composition (worklist included,
+    // alongside professional alerts and the other governed sections); the
+    // Worklist tab remains one tap away for anyone who wants only that.
+    providerTab: mode === "provider" ? "workhome" : state.providerTab,
+  };
 }
 
 export const appStore = createStore<AppState>((set) => ({
   mode: "provider",
   isOnline: true,
+  resolvedWorkContexts: null,
   facilityId: null,
   facilityName: null,
   workspaceId: null,
   workspaceName: null,
   shiftId: null,
-  providerTab: "dashboard",
+  providerTab: "workhome",
   unreadNotifications: 0,
   pendingSyncCount: 0,
   globalError: null,
@@ -68,12 +116,8 @@ export const appStore = createStore<AppState>((set) => ({
   learningSubjectType: null,
   learningSubjectId: null,
 
-  setMode: (mode) =>
-    set((state) => ({
-      mode,
-      // Enforce worklist-first entry whenever the clinician returns to Provider mode.
-      providerTab: mode === "provider" ? "dashboard" : state.providerTab,
-    })),
+  setMode: (mode) => set((state) => applyMode(state, mode)),
+  setGrantedMode: (mode) => set((state) => applyMode(state, mode)),
   setOnlineStatus: (isOnline) => set({ isOnline }),
   setFacilityContext: (id, name) => set({ facilityId: id, facilityName: name }),
   setWorkspaceContext: (id, name) => set({ workspaceId: id, workspaceName: name }),
@@ -86,6 +130,7 @@ export const appStore = createStore<AppState>((set) => ({
   setSupervisorEntryTab: (supervisorEntryTab) => set({ supervisorEntryTab }),
   setAppsFocus: (appsFocus) => set({ appsFocus }),
   setLearningSubject: (learningSubjectType, learningSubjectId) => set({ learningSubjectType, learningSubjectId }),
+  setResolvedWorkContexts: (resolvedWorkContexts) => set({ resolvedWorkContexts }),
   clearContext: () =>
     set({
       facilityId: null,

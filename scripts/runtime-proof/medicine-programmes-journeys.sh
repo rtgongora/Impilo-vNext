@@ -172,8 +172,120 @@ chk "the pregnancy-episode FK is validated in pg_constraint (convalidated)" \
     "$(q "SELECT convalidated FROM pg_constraint WHERE conname='pct_programme_enrolments_pregnancy_episode_fk';")" \
     "t"
 
+# ── V112 chronic-disease registers: the register is a programme, and control is a dated claim ──
+#
+# A migration that LANDED is not a migration that is CORRECT. Each of these shows the constraint
+# actually biting on this database, positive alongside negative, because a hand-repaired or
+# old-jar table can be present, shape-correct and constraintless — invisible to a positive probe
+# until bad data is already in.
+REG_ENR="44444444-4444-4444-8444-444444444444"
+chk "a hypertension register entry is accepted (V112 positive control)" \
+    "$(q "INSERT INTO pct.pct_programme_enrolments
+          (enrolment_id, tenant_id, subject_cpid, programme, status, anchor_problem_id, enrolled_on, created_by)
+          VALUES ('$REG_ENR','$TENANT','cpid-1','HYPERTENSION','ON_TREATMENT','$PROB', now(), 'clin-1')
+          RETURNING enrolment_id;")" \
+    "$REG_ENR"
+chk "an unknown control status is refused (negative control)" \
+    "$(q "UPDATE pct.pct_programme_enrolments
+             SET control_status='MOSTLY_FINE', control_assessed_on=now()
+           WHERE enrolment_id='$REG_ENR';")" \
+    "violates check constraint"
+# The one that matters most: an undated control status is a claim about now resting on an
+# assessment of unknown age, and the register is exactly where somebody decides who to recall.
+chk "a control status without an assessment date is refused (negative control)" \
+    "$(q "UPDATE pct.pct_programme_enrolments SET control_status='CONTROLLED'
+           WHERE enrolment_id='$REG_ENR';")" \
+    "violates check constraint"
+chk "a dated control status is accepted (positive control)" \
+    "$(q "UPDATE pct.pct_programme_enrolments
+             SET control_status='NOT_CONTROLLED', control_assessed_on=now()
+           WHERE enrolment_id='$REG_ENR' RETURNING control_status;")" \
+    "NOT_CONTROLLED"
+chk "a control assessment dated before enrolment is refused (negative control)" \
+    "$(q "UPDATE pct.pct_programme_enrolments
+             SET control_assessed_on = enrolled_on - INTERVAL '1 day'
+           WHERE enrolment_id='$REG_ENR';")" \
+    "violates check constraint"
+# DIAGNOSIS_REFUTED exists so that leaving a register because the diagnosis was wrong is not
+# recorded as the patient having declined care they never needed.
+chk "DIAGNOSIS_REFUTED is an accepted exit reason (positive control)" \
+    "$(q "UPDATE pct.pct_programme_enrolments
+             SET status='EXITED', exit_on=now(), exit_reason='DIAGNOSIS_REFUTED'
+           WHERE enrolment_id='$REG_ENR' RETURNING exit_reason;")" \
+    "DIAGNOSIS_REFUTED"
+chk "the cohort index exists, so a register read is not a sequential scan (V112)" \
+    "$(q "SELECT indexname FROM pg_indexes
+           WHERE schemaname='pct' AND indexname='idx_pct_programme_enrolments_cohort';")" \
+    "idx_pct_programme_enrolments_cohort"
+
+# ── V113 examination framework: the six states, and the ones that must say something ───────────
+#
+# The framework exists because a two-state examination form forces every unperformed examination
+# into "normal". These checks prove the database refuses the shapes that would let that happen.
+EXAM="55555555-5555-4555-8555-555555555555"
+chk "an examination with neither journey nor encounter is refused (CC-5 anchor, negative control)" \
+    "$(q "INSERT INTO pct.pct_examinations
+          (examination_id, tenant_id, subject_cpid, examined_at, examined_by)
+          VALUES (gen_random_uuid(),'$TENANT','cpid-1', now(), 'clin-1');")" \
+    "violates check constraint"
+chk "an anchored examination is accepted (positive control)" \
+    "$(q "INSERT INTO pct.pct_examinations
+          (examination_id, tenant_id, subject_cpid, journey_id, examined_at, examined_by)
+          VALUES ('$EXAM','$TENANT','cpid-1','66666666-6666-4666-8666-666666666666', now(), 'clin-1')
+          RETURNING examination_id;")" \
+    "$EXAM"
+chk "an invented examination state is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','ABDOMEN','PROBABLY_FINE');")" \
+    "violates check constraint"
+# The invariant that carries the clinical weight: an abnormality nobody wrote down reads to the next
+# clinician as a normal examination somebody bothered to document.
+chk "ABNORMAL with no detail is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','ABDOMEN','ABNORMAL');")" \
+    "violates check constraint"
+chk "UNABLE_TO_EXAMINE with no reason is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','NEUROLOGY','UNABLE_TO_EXAMINE');")" \
+    "violates check constraint"
+chk "NOT_EXAMINED stands alone with no detail (positive control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','CARDIOVASCULAR','NOT_EXAMINED')
+          RETURNING state;")" \
+    "NOT_EXAMINED"
+chk "ABNORMAL with detail is accepted (positive control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state, detail)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','ABDOMEN','ABNORMAL','tender right upper quadrant')
+          RETURNING state;")" \
+    "ABNORMAL"
+chk "the same region twice in one examination is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state, detail)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','ABDOMEN','NORMAL', NULL);")" \
+    "duplicate key value"
+# A site pin with no diagram is a coordinate with no map — it cannot be drawn or read back.
+chk "a site without a graphic is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state, detail, site)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','SKIN','ABNORMAL','ulcer','left heel');")" \
+    "violates check constraint"
+chk "a sited finding on a named graphic is accepted (positive control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state, detail, graphic, site, laterality)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','FEET','ABNORMAL','neuropathic ulcer',
+                  'DIABETIC_FOOT','plantar first metatarsal head','LEFT')
+          RETURNING graphic;")" \
+    "DIABETIC_FOOT"
+
 # Leave the probe table as we found it (nothing else references these rows).
-q "DELETE FROM pct.pct_treatment_regimens WHERE enrolment_id='$ENR';
+q "DELETE FROM pct.pct_examinations WHERE examination_id='$EXAM';
+   DELETE FROM pct.pct_programme_enrolments WHERE enrolment_id='$REG_ENR';
+   DELETE FROM pct.pct_treatment_regimens WHERE enrolment_id='$ENR';
    DELETE FROM pct.pct_programme_enrolments WHERE enrolment_id='$ENR';
    DELETE FROM pct.pct_problems WHERE problem_id='$PROB';" >/dev/null
 LEFT="$(q "SELECT count(*) FROM pct.pct_programme_enrolments WHERE subject_cpid='cpid-1';")"

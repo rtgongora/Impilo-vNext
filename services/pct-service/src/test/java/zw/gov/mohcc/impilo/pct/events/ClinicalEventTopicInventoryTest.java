@@ -60,6 +60,10 @@ class ClinicalEventTopicInventoryTest {
         // catch-all. See the maintenance note above: it is emitted via setEventType(), not emit().
         put("pct.ed.critical_result", "pct.emergency.critical_result");
 
+        // BUTANO archives the structured examination as a FHIR ClinicalImpression (brief.md §19), so
+        // the next facility sees not only the diagnosis but the regions nobody looked at.
+        put("EXAMINATION_RECORDED", "pct.examination.recorded");
+
         // The emergency episode lifecycle. daidzai back-fills its continuum link from the state
         // change, butano archives it, reporting derives time-to-clinician and length-of-stay.
         put("EMERGENCY_EPISODE_OPENED", "pct.emergency.episode.state_changed");

@@ -1094,6 +1094,145 @@ public class PctServiceClient {
     // pct, so dead resuscitation methods squatting on that exact namespace would collide
     // semantically with it. Found by DownstreamRouteContractTest.
 
+    // ── Emergency episode + acceptance handshake (emergency pack, W19b) ─────────────────────
+    //
+    // pct.EmergencyEpisodeController at /v1/emergency/**. Never proxied before this wave —
+    // DownstreamRouteContractTest's own comment above named this exact gap. Care-first mint (open),
+    // the FSM (transition/arrive/location), and the acceptance handshake (handover request/accept/
+    // decline/expire) — the invariant that responsibility transfers ONLY on the accepting party's
+    // own write, never a request or a timeout.
+
+    public JsonNode openEmergencyEpisode(Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getEmergencyEpisode(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** The facility board: every open episode. */
+    public JsonNode emergencyEpisodeBoard(UUID facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/emergency/episodes")
+                .queryParam("facilityId", facilityId)
+                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode arriveEmergencyEpisode(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/arrive";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode transitionEmergencyEpisode(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/transition";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode confirmEmergencyEpisodeLocation(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/location";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** THE ACCEPTANCE HANDSHAKE — requesting is not accepting; see pct's own EmergencyHandoverEntity doc. */
+    public JsonNode requestEmergencyHandover(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/handover";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyHandoverHistory(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/handovers";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** The ONE write that closes the episode as CLOSED_HANDED_OVER — carries the accepting party's own record id. */
+    public JsonNode acceptEmergencyHandover(UUID handoverId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/handovers/" + handoverId + "/accept";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode declineEmergencyHandover(UUID handoverId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/handovers/" + handoverId + "/decline";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode expireEmergencyHandover(UUID handoverId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/handovers/" + handoverId + "/expire";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency disposition + observation stay (W9b) ───────────────────────────────────────
+
+    public JsonNode recordEmergencyDisposition(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/disposition";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getEmergencyDisposition(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/disposition";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency alerts (W5/W5b) ─────────────────────────────────────────────────────────────
+
+    public JsonNode emergencyAlertBoard(UUID facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/emergency/alerts")
+                .queryParam("facilityId", facilityId)
+                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyEpisodeAlerts(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/alerts";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode acknowledgeEmergencyAlert(UUID alertId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/alerts/" + alertId + "/acknowledge";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode respondEmergencyAlert(UUID alertId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/alerts/" + alertId + "/respond";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** MCI bulk-mint (W11): mint one emergency_episode per not-yet-minted casualty on an incident. */
+    public JsonNode mciBulkMint(UUID incidentId, UUID facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/emergency/mci/" + incidentId + "/bulk-mint")
+                .queryParam("facilityId", facilityId)
+                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Episode-by-state + alert-by-severity counts for one facility (W10 command view). */
+    public JsonNode emergencyCommandSummary(UUID facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/emergency/command-summary")
+                .queryParam("facilityId", facilityId)
+                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Clinical Depth — Care Plans (strangler migration) ───────
 
     public JsonNode addCarePlanGoal(String planId, Map<String, Object> body) {
@@ -1543,9 +1682,105 @@ public class PctServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    // ── Structured examinations (brief.md §7) ───────────────────
+    //
+    // pct serves these at /v1/examinations. The read carries a `coverage` block naming what was NOT
+    // examined; the BFF must forward it intact, because a findings list on its own shows only what
+    // was looked at and absence has no row.
+
+    public JsonNode listExaminations(String subjectCpid) {
+        String url = baseUrl + "/v1/examinations?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8);
+        log.debug("PCT: listing examinations for subject={}", subjectCpid);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getExamination(String examinationId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/examinations/" + examinationId, JsonNode.class));
+    }
+
+    public JsonNode examinationVocabulary() {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/examinations/vocabulary", JsonNode.class));
+    }
+
+    public JsonNode recordExamination(Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/examinations", body, JsonNode.class));
+    }
+
+    // ── Consultation and MDT (brief.md §14) ─────────────────────
+    //
+    // Every consultation response carries owning_service and a sentence saying what it means. The
+    // BFF must forward both: the failure this record prevents is a reader assuming the answering
+    // team took the patient, and stripping the note to tidy the payload reintroduces it.
+
+    public JsonNode listConsultations(String subjectCpid) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/consultations?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode consultationWorklist(String service) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/consultations/worklist?service="
+                + java.net.URLEncoder.encode(service, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode requestConsultation(Object body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/consultations", body, JsonNode.class));
+    }
+
+    public JsonNode answerConsultation(String consultationId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/consultations/" + consultationId + "/answer", body, JsonNode.class));
+    }
+
+    public JsonNode declineConsultation(String consultationId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/consultations/" + consultationId + "/decline", body, JsonNode.class));
+    }
+
+    public JsonNode listMdtDecisions(String subjectCpid) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/consultations/mdt?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode recordMdtDecision(Object body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/consultations/mdt", body, JsonNode.class));
+    }
+
     public JsonNode getProgrammeEnrolment(String enrolmentId) {
         return extractData(restTemplate.getForEntity(
                 baseUrl + "/v1/programme-enrolments/" + enrolmentId, JsonNode.class));
+    }
+
+    /**
+     * The chronic-disease register for one programme at one facility — a recall worklist.
+     *
+     * <p>pct refuses this with 403 for programmes on the confidential lane, because a patient-level
+     * listing names everyone on it as having the condition and the classification that would restrict
+     * it is not enforcing. That refusal must reach the caller as a refusal: turning it into an empty
+     * list here would tell a clinician nobody is on the register.</p>
+     */
+    public JsonNode programmeRegister(String programme, String facilityId, java.util.List<String> statuses) {
+        StringBuilder url = new StringBuilder(baseUrl)
+                .append("/v1/programme-enrolments/register?programme=")
+                .append(java.net.URLEncoder.encode(programme, java.nio.charset.StandardCharsets.UTF_8));
+        if (facilityId != null && !facilityId.isBlank()) {
+            url.append("&facility_id=")
+               .append(java.net.URLEncoder.encode(facilityId, java.nio.charset.StandardCharsets.UTF_8));
+        }
+        if (statuses != null) {
+            for (String status : statuses) {
+                url.append("&status=")
+                   .append(java.net.URLEncoder.encode(status, java.nio.charset.StandardCharsets.UTF_8));
+            }
+        }
+        log.debug("PCT: register programme={} facility={}", programme, facilityId);
+        return extractData(restTemplate.getForEntity(url.toString(), JsonNode.class));
     }
 
     public JsonNode enrolProgramme(Map<String, Object> body) {

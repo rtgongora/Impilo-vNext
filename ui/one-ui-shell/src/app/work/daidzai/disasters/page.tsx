@@ -8,6 +8,7 @@
  * Route: /work/daidzai/disasters
  */
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Loader2, RefreshCw, ShieldAlert, Plus } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -221,18 +222,28 @@ export default function DaidzaiDisastersPage() {
                     {d.commandPost ? ` · ${d.commandPost}` : ""}
                   </div>
                 </div>
-                {d.status !== "CLOSED" ? (
-                  <button
-                    type="button"
-                    onClick={() => void close(d.id)}
-                    disabled={busy}
-                    className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-background disabled:opacity-60"
-                  >
-                    Close + after-action
-                  </button>
-                ) : (
-                  <span className="text-xs font-medium text-emerald-700">Closed</span>
-                )}
+                <div className="flex items-center gap-2">
+                  {d.incidentType === "MCI" && (
+                    <Link
+                      href={`/work/daidzai/disasters/${encodeURIComponent(d.id)}/casualties`}
+                      className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
+                    >
+                      Casualties
+                    </Link>
+                  )}
+                  {d.status !== "CLOSED" ? (
+                    <button
+                      type="button"
+                      onClick={() => void close(d.id)}
+                      disabled={busy}
+                      className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-background disabled:opacity-60"
+                    >
+                      Close + after-action
+                    </button>
+                  ) : (
+                    <span className="text-xs font-medium text-emerald-700">Closed</span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

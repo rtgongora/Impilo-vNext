@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -74,6 +75,48 @@ public class ProgrammesController {
                     "error", "programme_list_unavailable",
                     "message", "Programme enrolments could not be retrieved. Do not treat this as the "
                                + "patient being in no programme.",
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    /**
+     * The chronic-disease register for one programme at one facility (brief.md §8).
+     *
+     * <p>Declared before {@code /{enrolmentId}} so "register" is not read as an id.</p>
+     *
+     * <p>pct refuses this with 403 for the confidential programmes. That refusal is passed through as
+     * a refusal rather than flattened into an empty list — an empty HIV register on screen reads as
+     * "nobody here is in HIV care", which is false and reassuring at the same time.</p>
+     */
+    @GetMapping("/register")
+    public ResponseEntity<Map<String, Object>> register(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam("programme") String programme,
+            @RequestParam(required = false, name = "facility_id") String facilityId,
+            @RequestParam(required = false, name = "status") List<String> statuses) {
+        try {
+            JsonNode data = pct.programmeRegister(programme, facilityId, statuses);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (HttpClientErrorException.Forbidden e) {
+            // The confidential-lane refusal. Preserved as 403 with its reason, because the reason is
+            // the point: the list exists, and the control that would protect it does not.
+            log.info("Register refused for confidential programme={}", programme);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", "confidential_register_not_served",
+                    "message", "A patient-level register is not served for this programme: it would "
+                               + "name every person on it as having the condition, and the "
+                               + "classification that would restrict that list is not yet enforcing. "
+                               + "This is not a statement that the register is empty.",
+                    "programme", programme,
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.error("PCT programmeRegister failed programme={} facility={}: {}",
+                    programme, facilityId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "register_unavailable",
+                    "message", "The register could not be retrieved. Do not treat this as nobody "
+                               + "being on it.",
                     "meta", meta(requestId, correlationId)));
         }
     }

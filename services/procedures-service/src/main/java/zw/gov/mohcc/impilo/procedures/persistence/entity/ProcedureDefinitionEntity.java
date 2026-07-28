@@ -103,6 +103,20 @@ public class ProcedureDefinitionEntity {
     @Column(name = "aftercare_template", length = 64)
     private String aftercareTemplate;
 
+    // ── P7/P9 linkage columns. Resolve the SPECIFIC codes above (safetyPauseTemplate,
+    // aftercareTemplate) first — they name a real procedure class, not a coarse setting. These
+    // three are the coarser setting-class fallbacks P7/P9 seeded; defaultAftercareTemplateCode
+    // in particular exists only because aftercareTemplate's own specific taxonomy (34 distinct
+    // V003 codes) is far from fully resolved — see V007's header for the finding and the fix. ──
+    @Column(name = "default_sedation_level_code", length = 32)
+    private String defaultSedationLevelCode;
+
+    @Column(name = "default_recovery_setting_code", length = 32)
+    private String defaultRecoverySettingCode;
+
+    @Column(name = "default_aftercare_template_code", length = 64)
+    private String defaultAftercareTemplateCode;
+
     @Column(name = "complication_profile", length = 64)
     private String complicationProfile;
 
@@ -172,6 +186,9 @@ public class ProcedureDefinitionEntity {
     public String getSafetyPauseTemplate() { return safetyPauseTemplate; }
     public String getFindingsTemplate() { return findingsTemplate; }
     public String getAftercareTemplate() { return aftercareTemplate; }
+    public String getDefaultSedationLevelCode() { return defaultSedationLevelCode; }
+    public String getDefaultRecoverySettingCode() { return defaultRecoverySettingCode; }
+    public String getDefaultAftercareTemplateCode() { return defaultAftercareTemplateCode; }
     public String getComplicationProfile() { return complicationProfile; }
     public String getFollowUpPolicy() { return followUpPolicy; }
     public String getZiboCode() { return ziboCode; }

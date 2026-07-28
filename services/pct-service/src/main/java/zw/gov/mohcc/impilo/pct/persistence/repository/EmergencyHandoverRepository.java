@@ -32,4 +32,14 @@ public interface EmergencyHandoverRepository extends JpaRepository<EmergencyHand
             + "order by h.requestedAt asc")
     List<EmergencyHandoverEntity> findPendingByTarget(@Param("tenantId") UUID tenantId,
                                                        @Param("targetType") String targetType);
+
+    /**
+     * Sweep-eligible: still PENDING and past its declared response deadline. Cross-tenant, matching
+     * {@code EmergencyAlertRepository.findBreached} — the sweep runs system-wide, not per-tenant.
+     * Rows with a NULL deadline (predating V209, or an undeclared target type) never match — the
+     * sweep never guesses a deadline for a row that never declared one.
+     */
+    @Query("select h from EmergencyHandoverEntity h where h.status = 'PENDING' "
+            + "and h.responseDueAt is not null and h.responseDueAt < :now")
+    List<EmergencyHandoverEntity> findExpiredPending(@Param("now") java.time.OffsetDateTime now);
 }

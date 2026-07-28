@@ -31,7 +31,8 @@ describe("resolvePostLoginDestination", () => {
       ],
       hasFacility: true,
     });
-    expect(result.href).toBe("/provider-workspace");
+    // Phase F6: /provider-workspace is now an intent-resolution shim to /work.
+    expect(result.href).toBe("/work");
     expect(result.operationalMode).toBe("facility_work");
   });
 
@@ -73,7 +74,7 @@ describe("resolvePostLoginDestination", () => {
       },
       linkedProviderId: "PRV-2024-00001",
     });
-    expect(result.href).toBe("/provider/activate?returnTo=%2Fprovider-workspace");
+    expect(result.href).toBe("/provider/activate?returnTo=%2Fwork");
   });
 
   it("does not replay blocked /work returnTo after no_work resolution", () => {

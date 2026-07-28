@@ -11,15 +11,15 @@ or a domain's own `<domain>/coverage-exclusions.json`. `UNCOVERED` means nobody
 has decided yet, and the guard fails on it — a table nobody looked at is the failure this
 matrix exists to make visible.
 
-- Published artefacts: **148**
-- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_AMS` (1), `WHO_BLOOD` (1), `WHO_CANCER` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_HEARTS` (1), `WHO_ICOPE` (1), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_MHGAP` (1), `WHO_PALLIATIVE` (1), `WHO_PATIENT_SAFETY` (5), `WHO_PEN` (1), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3), `ZW_POLICY` (1)
+- Published artefacts: **149**
+- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (3), `LCOGS` (9), `SSC26` (1), `WHO_AMS` (1), `WHO_BLOOD` (1), `WHO_CANCER` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_HEARTS` (1), `WHO_ICOPE` (1), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_MHGAP` (1), `WHO_PALLIATIVE` (1), `WHO_PATIENT_SAFETY` (5), `WHO_PEN` (1), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3), `ZW_POLICY` (1)
 - Published data elements: **4098**
 - Shipped citations: **158**
 
 | Status | Count |
 |---|---|
-| `COVERED_ELSEWHERE` | 7 |
-| `DEFERRED` | 120 |
+| `COVERED_ELSEWHERE` | 13 |
+| `DEFERRED` | 115 |
 | `SHIPPED` | 21 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
@@ -84,7 +84,7 @@ matrix exists to make visible.
 | `BLOOD.TRANSFUSION.APPROPRIATE_USE` | WHO_BLOOD | GUIDELINE_SECTION | — | Clinical transfusion practice — indication, consent, pretransfusion compatibilit | `COVERED_ELSEWHERE` | — | — | Implemented across MADI and the theatre blood gate: a procedure's blood requirement is checked against a real MADI reser |
 | `ECO.WHA76-2.CONTINUUM` | WHO_ECO | POLICY_FRAMEWORK | — | Emergency, critical and operative care is one continuum, from community recognit | `DEFERRED` | — | — | The repository has the operative phase of the continuum in real depth and almost nothing on either side of it: six of th |
 | `ECO.WHA76-2.DATA_INDICATORS` | WHO_ECO | INDICATOR_FRAMEWORK | — | Establish data and indicator systems that track emergency and operative care per | `DEFERRED` | — | — | Two report definitions exist — theatre utilisation and a case register — against twenty required surgical indicators. Re |
-| `ECO.WHA76-2.FINANCING` | WHO_ECO | POLICY_FRAMEWORK | — | Financing mechanisms sustain integrated emergency, critical and operative care w | `DEFERRED` | — | — | COSTA posts a surgical case bundle over seeded AHFOZ tariffs, so cost is computed. Financial protection is not modelled: |
+| `ECO.WHA76-2.FINANCING` | WHO_ECO | POLICY_FRAMEWORK | — | Financing mechanisms sustain integrated emergency, critical and operative care w | `COVERED_ELSEWHERE` | — | — | P12 (procedures pipeline programme) shipped exactly what this entry's own revisitCondition asked for: ProcedureEpisodeSe |
 | `ECO.WHA76-2.REFERRAL_NETWORKS` | WHO_ECO | POLICY_FRAMEWORK | — | Functional referral systems connecting primary, secondary and tertiary care | `DEFERRED` | — | — | Surgical referral exists as a record (referral.surgical_referral, with indication, laterality, site, urgency and target  |
 | `ECO.WHA76-2.SAFETY_CHECKLISTS` | WHO_ECO | POLICY_FRAMEWORK | — | Implement safety checklists and standardised protocols for emergency and operati | `DEFERRED` | — | — | One safety checklist exists — the WHO surgical one — and it is real and gated. The standard asks for checklists across e |
 | `ECO.WHA76-2.SURGICAL_ANAESTHESIA_PERIOP` | WHO_ECO | POLICY_FRAMEWORK | — | Member States strengthen surgical, anaesthesia and perioperative care capability | `DEFERRED` | — | — | Surgical, anaesthesia and perioperative care exist as three separately-wired capabilities rather than one integrated ser |
@@ -102,10 +102,10 @@ matrix exists to make visible.
 | `HIV.TESTING` | WHO_DAK | DECISION_LOGIC | — | HIV testing services algorithm and diagnosis | `SHIPPED` | `HIV_TEST_NONREACTIVE`, `HIV_TEST_DISCREPANT`, `HIV_TEST_POSITIVE_VERIFIED`, `HIV_INFANT_VIROLOGICAL_REQUIRED` | ADOPTED_VERBATIM |  |
 | `HIV.TREATMENT_FAILURE` | WHO_DAK | DECISION_LOGIC | — | Recognition of treatment failure and the enhanced-adherence-then-switch sequence | `SHIPPED` | `HIV_VL_UNSUPPRESSED`, `HIV_CONFIRMED_FAILURE` | ADOPTED_VERBATIM |  |
 | `HIV.VL.MONITORING` | WHO_DAK | DECISION_LOGIC | — | Routine viral-load monitoring and interpretation (suppressed, low-level viraemia | `SHIPPED` | `HIV_VL_SUPPRESSED`, `HIV_VL_LOW_LEVEL_VIRAEMIA` | ADOPTED_VERBATIM |  |
-| `IPC.CORE.ASEPTIC_TECHNIQUE` | WHO_IPC | GUIDELINE_SECTION | — | Aseptic technique, sterile field and skin preparation for invasive procedures | `DEFERRED` | — | — | Skin preparation, sterile field and aseptic technique are not captured anywhere. Skin preparation is also a WHO surgical |
-| `IPC.CORE.HAND_HYGIENE` | WHO_IPC | GUIDELINE_SECTION | — | Hand hygiene at the WHO Five Moments, as a precondition of any invasive procedur | `DEFERRED` | — | — | Not modelled. The specification is explicit that a generic sterile checkbox is not acceptable where the risk warrants tr |
-| `IPC.CORE.INJECTION_SAFETY` | WHO_IPC | GUIDELINE_SECTION | — | Injection and sharps safety, single-use device discipline, exposure incident han | `DEFERRED` | — | — | Sharps safety, exposure incidents and clinical waste are not modelled. Exposure incident is the notable one: it is a sta |
-| `IPC.CORE.STERILE_PROCESSING` | WHO_IPC | GUIDELINE_SECTION | — | Decontamination and sterilisation of medical devices, with traceable cycle or lo | `DEFERRED` | — | — | Partially real, and deferred rather than claimed for that reason. tuso.instrument_set_cssd_cycle and inpatient.procedure |
+| `IPC.CORE.ASEPTIC_TECHNIQUE` | WHO_IPC | GUIDELINE_SECTION | — | Aseptic technique, sterile field and skin preparation for invasive procedures | `COVERED_ELSEWHERE` | — | — | P11 broadened V003's two-procedure IPC-ASEPTIC seed to all 66 catalogue entries, and added IPC-PPE and IPC-SKIN_PREP as  |
+| `IPC.CORE.HAND_HYGIENE` | WHO_IPC | GUIDELINE_SECTION | — | Hand hygiene at the WHO Five Moments, as a precondition of any invasive procedur | `COVERED_ELSEWHERE` | — | — | P11 seeded IPC-HAND_HYGIENE as a real procedure_requirement row (kind IPC) across all 66 published catalogue entries — e |
+| `IPC.CORE.INJECTION_SAFETY` | WHO_IPC | GUIDELINE_SECTION | — | Injection and sharps safety, single-use device discipline, exposure incident han | `COVERED_ELSEWHERE` | — | — | P11 seeded IPC-INJECTION_SAFETY (kind IPC, all 66 procedures) declaring single-use device discipline, immediate exposure |
+| `IPC.CORE.STERILE_PROCESSING` | WHO_IPC | GUIDELINE_SECTION | — | Decontamination and sterilisation of medical devices, with traceable cycle or lo | `COVERED_ELSEWHERE` | — | — | P11 closed the specific gap the previous DEFERRED entry named — declared reprocessing limits — with CSSD-REPROCESSING_LI |
 | `LCOGS.BELLWETHER.CAESAREAN` | LCOGS | CAPABILITY | — | Bellwether procedure — caesarean delivery | `DEFERRED` | — | — | Caesarean section is seeded in ZIBO and the obstetric caesarean journey is live-proven including maternal, fetal and neo |
 | `LCOGS.BELLWETHER.LAPAROTOMY` | LCOGS | CAPABILITY | — | Bellwether procedure — laparotomy | `DEFERRED` | — | — | Exploratory laparotomy is one of the ten procedure codes ZIBO seeds, and the theatre stream has proven an emergency lapa |
 | `LCOGS.BELLWETHER.OPEN_FRACTURE` | LCOGS | CAPABILITY | — | Bellwether procedure — open fracture care | `DEFERRED` | — | — | The weakest of the three today. Open reduction with internal fixation is a seeded ZIBO code, but open fracture care spec |
@@ -156,6 +156,7 @@ matrix exists to make visible.
 | `SSI.2018.INTRAOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Intraoperative measures for the prevention of surgical site infection | `DEFERRED` | — | — | Intraoperative infection-prevention measures are not modelled. Wound classification, which is the entry point for surgic |
 | `SSI.2018.POSTOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Postoperative measures for the prevention of surgical site infection, including  | `DEFERRED` | — | — | Surgical-site infection is one of the twenty complications the surgical pack must manage as a pathway, and complications |
 | `SSI.2018.PREOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Preoperative measures for the prevention of surgical site infection | `DEFERRED` | — | — | No surgical-site-infection prevention logic exists anywhere in the repository. The clinical knowledge platform has the r |
+| `SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING` | INTERNATIONAL_SPECIALTY | STANDARD | — | Surgical/procedural complications are graded by the therapy required to treat th | `COVERED_ELSEWHERE` | — | — | Fully implemented as governed content in procedures.clavien_dindo_grade (all seven grades, real literature citation) and |
 | `TB.DIAGNOSIS` | WHO_DAK | DECISION_LOGIC | — | TB diagnostic algorithm (rapid molecular testing first) | `SHIPPED` | `TB_DX_CONFIRMED`, `TB_DX_RIF_RESISTANT`, `TB_DX_CLINICAL` | ADOPTED_VERBATIM |  |
 | `TB.DR_TB` | WHO_DAK | DECISION_LOGIC | — | Rifampicin resistance recognition and drug-resistant TB regimen selection | `SHIPPED` | `TB_RIF_RESISTANCE` | ADOPTED_VERBATIM |  |
 | `TB.OUTCOME` | WHO_DAK | DECISION_LOGIC | — | TB treatment failure and cohort treatment outcomes | `SHIPPED` | `TB_SMEAR_MONTH5_POSITIVE` | ADOPTED_VERBATIM |  |

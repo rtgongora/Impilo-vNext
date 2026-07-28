@@ -146,6 +146,12 @@ export default function EmergencyDepartmentPage() {
         subtitle="ED trackboard, full patient journey, critical event activations"
       >
         <div className="space-y-6">
+          <div className="flex justify-end">
+            <Link href="/clinical/emergency/board" className="text-sm text-primary underline">
+              Emergency episode board →
+            </Link>
+          </div>
+
           <CriticalResultsPanel />
 
           <EdPreArrivalBoard facilityId={facility?.id} />

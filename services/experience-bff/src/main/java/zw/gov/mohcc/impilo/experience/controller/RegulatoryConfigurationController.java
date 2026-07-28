@@ -38,6 +38,10 @@ public class RegulatoryConfigurationController {
 
     private static final Logger log = LoggerFactory.getLogger(RegulatoryConfigurationController.class);
 
+    /** The org types that are regulators. A clinic is an organisation; it is not a regulator. */
+    private static final java.util.Set<String> REGULATORY_ORG_TYPES = java.util.Set.of(
+            "PROFESSIONAL_COUNCIL", "STATUTORY_REGULATOR", "PUBLIC_HEALTH_AUTHORITY");
+
     private final OrganizationRegistryServiceClient orgRegistryClient;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
@@ -45,6 +49,52 @@ public class RegulatoryConfigurationController {
                                              com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         this.orgRegistryClient = orgRegistryClient;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * The regulatory organisations, served from org-registry (NCZ-W1B).
+     *
+     * <p>This exists to retire the shell's private copy of the nine councils. That copy was the
+     * third in the estate — after varapi V028 and org-registry V007 — and the only one with no
+     * mechanism to notice when it drifted: a council renamed, added or retired in the registry
+     * would have left the interface confidently displaying the old name.</p>
+     *
+     * <p>{@code kind} is derived from the organisation's type rather than restated, so an
+     * authority cannot be mislabelled as a council by a hand-maintained list.</p>
+     */
+    @GetMapping("/organizations")
+    public ResponseEntity<Map<String, Object>> organizations(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode organizations = orgRegistryClient.listOrganizations("ACTIVE");
+            JsonNode rows = organizations != null && organizations.has("data")
+                    ? organizations.get("data") : organizations;
+            List<Map<String, Object>> composed = new ArrayList<>();
+            if (rows != null && rows.isArray()) {
+                for (JsonNode organization : rows) {
+                    String orgType = organization.path("orgType").asText("");
+                    if (!REGULATORY_ORG_TYPES.contains(orgType)) {
+                        continue;
+                    }
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("id", text(organization, "id"));
+                    row.put("code", text(organization, "code"));
+                    row.put("name", text(organization, "legalName"));
+                    row.put("orgType", orgType);
+                    row.put("kind", "PROFESSIONAL_COUNCIL".equals(orgType) ? "council" : "authority");
+                    composed.add(row);
+                }
+            }
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("organizations", composed);
+            return ResponseEntity.ok(body);
+        } catch (HttpStatusCodeException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).build();
+        } catch (Exception ex) {
+            log.error("Regulatory organisation list failed [{}]", correlationId, ex);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
     }
 
     /** Every configuration pack a regulator holds, with the definitions currently governing it. */
