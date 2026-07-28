@@ -278,10 +278,21 @@ Every W4–W6 pack is `ENGINEERING_SEED` (primaryTextVendored=false); all standa
 traceability matrix and the DAK guard is green. 383 content fixtures across twelve packs run through
 the real engine.
 
-**Honestly remaining (frontend/ops horizon, not governed-content gaps):** the per-specialty UI
-*workspaces* (the content behind them exists and is API-reachable, but dedicated screens are not
-built); the inpatient medical-ward workspace; analytics and offline surfaces; and the ten §23
-demonstrations (unproven). The clinical decision-support backbone of the pack is complete; what
+**Experience surface — DONE (28 Jul 2026).** The backbone is no longer API-only:
+- `/ehr/[patientId]/medicine` — the medicine workspace (programmes, problem list, allergies), each
+  block degrading independently so a failed read never renders as "none".
+- `/ehr/[patientId]/medicine/cds` — all eight governed CDS topics, with an empty alert list rendered
+  three distinct ways (nothing fired / incomplete / evaluation failed), because only one of those is
+  an all-clear.
+- Two pages that had shipped **unregistered and unreachable** (`programmes`,
+  `workspace/[specialty]`) are registered and in the chart sidebar.
+- The specialty workspace stopped misleading in both directions: order-set "buttons" with no
+  handler are now reference chips, and tools that said "Not available yet" while their pages existed
+  are wired.
+
+**Honestly remaining (not governed-content gaps):** the inpatient medical-ward workspace; analytics
+and offline surfaces; and the ten §23 demonstrations (unproven — and note the brief itself is not in
+the repository, so the demonstration list is not recoverable from it). The clinical decision-support backbone of the pack is complete; what
 remains is experience-shell surface, interoperability breadth, and the demonstration proofs.
 
 > ⚠ **Correction (2026-07-28) — the earlier BUTANO statement in this report was wrong, and it
