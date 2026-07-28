@@ -1,0 +1,22 @@
+{
+  "typeCode": "REGISTER_ENTRY_RULE",
+  "definitionKey": "provisional-to-main-migration",
+  "label": "Migration from Provisional to Main Register",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/registers/provisional",
+  "policyStatus": "PENDING_REGULATOR_APPROVAL",
+  "policyDecisionRef": "NCZ-DEC-006",
+  "dependencies": [
+    { "typeCode": "REGISTER", "definitionKey": "provisional-register", "optional": false },
+    { "typeCode": "REGISTER", "definitionKey": "main-register", "optional": false },
+    { "typeCode": "SUPERVISED_PRACTICE", "definitionKey": "supervised-practice", "optional": false }
+  ],
+  "payload": {
+    "fromRegister": "PROVISIONAL",
+    "toRegister": "MAIN",
+    "requiredSupervisedPracticeMonths": null,
+    "interruptionHandling": null,
+    "partTimeFactor": null,
+    "note": "Three years of supervised practice is stated in the brief, but how interruption, part-time service and concurrent placements accumulate is not — and that answer decides when a nurse may migrate. Recording placements, supervisors and duration is built; the eligibility verdict waits on NCZ-DEC-006."
+  }
+}

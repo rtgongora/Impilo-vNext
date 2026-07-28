@@ -1,0 +1,23 @@
+{
+  "typeCode": "REGISTER_ENTRY_RULE",
+  "definitionKey": "student-admission",
+  "label": "Admission to the Student Register",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/registers/student",
+  "policyStatus": "CONFIRMED",
+  "dependencies": [
+    { "typeCode": "REGISTER", "definitionKey": "student-register", "optional": false },
+    { "typeCode": "NUMBERING_POLICY", "definitionKey": "student-index", "optional": false }
+  ],
+  "payload": {
+    "register": "STUDENT",
+    "preconditions": [
+      "The application has been approved by the Council.",
+      "The student index fee has been settled.",
+      "The training institution has confirmed enrolment."
+    ],
+    "issuesIdentifier": "student-index",
+    "effectiveDated": true,
+    "recordsProvenance": true
+  }
+}

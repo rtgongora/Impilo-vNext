@@ -90,6 +90,14 @@ public class InpatientClinicalService {
     private zw.gov.mohcc.impilo.inpatient.persistence.repository.ResuscitationEventRepository resuscitationEventRepository;
 
     /**
+     * Structured medication administrations during a resuscitation (W6a). Field-injected for the
+     * same reason as resuscitationEventRepository just above: keeps the large shared constructor a
+     * stable merge surface with the parallel theatre session.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.inpatient.persistence.repository.ResuscitationMedicationRepository resuscitationMedicationRepository;
+
+    /**
      * Server-side early warning calculator. Field-injected (not constructor) to keep the
      * large shared constructor a stable merge surface, following the convention already
      * used above; required, so a missing bean fails at startup rather than silently
@@ -865,6 +873,7 @@ public class InpatientClinicalService {
                 .findFirstByActivationIdOrderByCreatedAtDesc(activationId)
                 .orElseGet(ResuscitationRecordEntity::new);
         record.setActivationId(activationId);
+        record.setTenantId(currentTenant());
         Integer cprCycles = ClinicalPayloadMapper.integer(body, "cprCycles", "cpr_cycles", "cycleNumber", "cycle_number");
         if (cprCycles != null) record.setCprCycles(cprCycles);
         Integer defibrillations = ClinicalPayloadMapper.integer(body, "defibrillations", "defibCount", "defib_count");
@@ -972,6 +981,115 @@ public class InpatientClinicalService {
         m.put("trauma_episode_id", e.getTraumaEpisodeId() != null ? e.getTraumaEpisodeId().toString() : null);
         m.put("actor_id", e.getActorId());
         return m;
+    }
+
+    /**
+     * Record one medication administration during a resuscitation (W6a) — the structured replacement
+     * for the free-text medications_json blob. {@code clientEventId} (if the caller supplies one)
+     * gives idempotent-retry protection: a blind retry of the same administration during a code is
+     * deduplicated by {@code uq_resuscitation_medication_client_event}, never double-dosed.
+     */
+    @Transactional
+    public Map<String, Object> recordResuscitationMedication(UUID activationId, Map<String, Object> body) {
+        requireActivation(activationId);
+        if (resuscitationMedicationRepository == null) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Resuscitation medication recording is not available");
+        }
+        String drugName = ClinicalPayloadMapper.str(body, "drugName", "drug_name", "drug");
+        if (drugName == null || drugName.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "drug_name is required");
+        }
+        String doseUnit = ClinicalPayloadMapper.str(body, "doseUnit", "dose_unit");
+        String route = ClinicalPayloadMapper.str(body, "route");
+        String administeredBy = ClinicalPayloadMapper.str(body, "administeredBy", "administered_by");
+        if (doseUnit == null || doseUnit.isBlank() || route == null || route.isBlank()
+                || administeredBy == null || administeredBy.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "dose_unit, route and administered_by are required");
+        }
+        Object doseRaw = body.get("doseValue") != null ? body.get("doseValue") : body.get("dose_value");
+        java.math.BigDecimal doseValue;
+        try {
+            doseValue = new java.math.BigDecimal(String.valueOf(doseRaw));
+        } catch (NumberFormatException | NullPointerException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "dose_value must be a positive number");
+        }
+        if (doseValue.signum() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "dose_value must be positive");
+        }
+
+        ResuscitationMedicationEntity med = new ResuscitationMedicationEntity();
+        med.setTenantId(currentTenant());
+        med.setActivationId(activationId);
+        UUID episodeId = ClinicalPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
+        var record = resuscitationRecordRepository.findFirstByActivationIdOrderByCreatedAtDesc(activationId);
+        if (episodeId == null) {
+            episodeId = record.map(ResuscitationRecordEntity::getTraumaEpisodeId).orElse(null);
+        }
+        med.setTraumaEpisodeId(episodeId);
+        record.ifPresent(r -> med.setResusId(r.getResusId()));
+        med.setDrugName(drugName);
+        med.setDrugCode(ClinicalPayloadMapper.str(body, "drugCode", "drug_code"));
+        med.setDoseValue(doseValue);
+        med.setDoseUnit(doseUnit);
+        med.setRoute(route);
+        med.setAdministeredBy(administeredBy);
+        med.setWitnessedBy(ClinicalPayloadMapper.str(body, "witnessedBy", "witnessed_by"));
+        med.setClientEventId(ClinicalPayloadMapper.str(body, "clientEventId", "client_event_id"));
+        med.setNotes(ClinicalPayloadMapper.str(body, "notes"));
+
+        ResuscitationMedicationEntity saved;
+        try {
+            saved = resuscitationMedicationRepository.save(med);
+        } catch (org.springframework.dao.DataIntegrityViolationException dup) {
+            // The unique index on (tenant_id, activation_id, client_event_id) fired: this is a retry
+            // of an administration already recorded, not a new dose. Return the existing row rather
+            // than a 500 or a silently-lost duplicate.
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This medication administration was already recorded (duplicate client_event_id)");
+        }
+
+        if (episodeId != null && daidzaiEpisodes != null) {
+            daidzaiEpisodes.registerPhase(episodeId, "RESUS", saved.getMedId().toString(),
+                    saved.getDrugName(), "inpatient.resuscitation.medication");
+        }
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("id", saved.getMedId().toString());
+        result.put("activation_id", activationId.toString());
+        result.put("drug_name", saved.getDrugName());
+        if (episodeId != null) result.put("trauma_episode_id", episodeId.toString());
+        return result;
+    }
+
+    /** The ordered medication administration history for a resuscitation. */
+    @Transactional(readOnly = true)
+    public Map<String, Object> listResuscitationMedications(UUID activationId) {
+        requireActivation(activationId);
+        List<ResuscitationMedicationEntity> meds = resuscitationMedicationRepository != null
+                ? resuscitationMedicationRepository.findByActivationIdOrderByAdministeredAtAsc(activationId)
+                : List.of();
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("activation_id", activationId.toString());
+        out.put("medications", meds.stream().map(this::resuscitationMedicationRow).toList());
+        return out;
+    }
+
+    private Map<String, Object> resuscitationMedicationRow(ResuscitationMedicationEntity m) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("id", m.getMedId().toString());
+        out.put("drug_name", m.getDrugName());
+        out.put("drug_code", m.getDrugCode());
+        out.put("dose_value", m.getDoseValue());
+        out.put("dose_unit", m.getDoseUnit());
+        out.put("route", m.getRoute());
+        out.put("administered_at", m.getAdministeredAt() != null ? m.getAdministeredAt().toString() : null);
+        out.put("administered_by", m.getAdministeredBy());
+        out.put("witnessed_by", m.getWitnessedBy());
+        out.put("superseded_by", m.getSupersededBy() != null ? m.getSupersededBy().toString() : null);
+        out.put("correction_reason", m.getCorrectionReason());
+        out.put("trauma_episode_id", m.getTraumaEpisodeId() != null ? m.getTraumaEpisodeId().toString() : null);
+        return out;
     }
 
     public Map<String, Object> getResuscitation(UUID activationId) {
@@ -1378,6 +1496,7 @@ public class InpatientClinicalService {
         requireActivation(activationId);
         ResuscitationPhaseEntity phase = new ResuscitationPhaseEntity();
         phase.setActivationId(activationId);
+        phase.setTenantId(currentTenant());
         phase.setPhaseType(Objects.requireNonNullElse(
                 ClinicalPayloadMapper.str(body, "phase", "phaseType", "phase_type"), "RESUSCITATION"));
         phase.setRhythm(ClinicalPayloadMapper.str(body, "rhythm"));

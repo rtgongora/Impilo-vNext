@@ -1,0 +1,25 @@
+{
+  "typeCode": "ROLE_WORKSPACE",
+  "definitionKey": "finance-officer",
+  "label": "Finance Officer workspace",
+  "semanticVersion": "1.1.0",
+  "payload": {
+    "roleCode": "FINANCE_OFFICER",
+    "requiresFacilityAssignment": false,
+    "sees": [
+      "INVOICES",
+      "RECEIPTS",
+      "REFUNDS",
+      "RECONCILIATION",
+      "FEE_SCHEDULE_READ"
+    ],
+    "neverSees": [
+      "EXAMINATION_MARKS",
+      "EVIDENCE_REVIEW",
+      "DISCIPLINARY_CASES",
+      "REGISTER_ENTRIES"
+    ],
+    "note": "Separation is the point: money and marks are different duties, and a workspace that shows both makes the separation unenforceable however the policy is written.",
+    "vocabularyNote": "sees and neverSees draw on ONE capability vocabulary. Two spellings for the same capability would make the separation unenforceable while reading as if it held."
+  }
+}

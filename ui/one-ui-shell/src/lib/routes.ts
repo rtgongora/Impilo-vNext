@@ -349,6 +349,9 @@ export const ROUTES: RouteDefinition[] = [
   // route-parity-check only validates registry -> filesystem, never the reverse, so an unregistered
   // page is invisible to it. Registering them is the fix, not a new capability.
   { path: "/ehr/[patientId]/programmes", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Care programmes", navLabel: "Programmes", navZone: "work" },
+  { path: "/ehr/[patientId]/medicine", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Medicine workspace", navLabel: "Medicine", navZone: "work" },
+  { path: "/ehr/[patientId]/medicine/cds", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Decision support", navLabel: "Decision support", navZone: "work" },
+  { path: "/ehr/[patientId]/ward-round", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Ward round", navLabel: "Ward round", navZone: "work" },
   { path: "/ehr/[patientId]/workspace/[specialty]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Specialty Workspace", navLabel: "Specialty", navZone: "work" },
 
   // â”€â”€ Zone: Admin / TSHEPO Governance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1051,7 +1054,9 @@ export const ROUTES: RouteDefinition[] = [
 // IMAM nutrition treatment (Jul 2026): +2 — the child's treatment episode and the facility's
 // defaulter tracing worklist, which are different jobs done by different people. Total 805.
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
-export const EXPECTED_ROUTE_COUNT = 811;
+// Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
+// workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
+export const EXPECTED_ROUTE_COUNT = 814;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

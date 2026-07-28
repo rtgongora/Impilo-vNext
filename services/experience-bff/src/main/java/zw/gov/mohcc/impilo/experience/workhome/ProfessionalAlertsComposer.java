@@ -48,7 +48,13 @@ public class ProfessionalAlertsComposer {
         return FanoutTask.of(SECTION_ID, () -> compose(actorHealthId));
     }
 
-    private WorkHomeSection compose(String actorHealthId) {
+    /**
+     * Standalone composition, independent of any active work context — used by
+     * {@code ProfessionalAlertsController} (Phase F4) for /professional, which has no
+     * {@code context_id} to re-prove and needs licence/CPD/assignment alerts regardless of
+     * whether the person currently has a work session open at all.
+     */
+    public WorkHomeSection compose(String actorHealthId) {
         String providerPublicId = resolveProviderPublicId(actorHealthId);
         if (providerPublicId == null) {
             return WorkHomeSection.empty(SECTION_ID, TITLE, "No provider identity resolved for this actor");

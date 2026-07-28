@@ -15,6 +15,10 @@ public class ResuscitationPhaseEntity {
     @Column(name = "activation_id", nullable = false)
     private UUID activationId;
 
+    /** Denormalised from emergency_activation.tenant_id (W6a) — see ResuscitationRecordEntity. */
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
     @Column(name = "phase_type", nullable = false)
     private String phaseType;
 
@@ -43,6 +47,8 @@ public class ResuscitationPhaseEntity {
     public void setPhaseId(UUID phaseId) { this.phaseId = phaseId; }
     public UUID getActivationId() { return activationId; }
     public void setActivationId(UUID activationId) { this.activationId = activationId; }
+    public UUID getTenantId() { return tenantId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
     public String getPhaseType() { return phaseType; }
     public void setPhaseType(String phaseType) { this.phaseType = phaseType; }
     public String getRhythm() { return rhythm; }

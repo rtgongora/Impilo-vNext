@@ -45,6 +45,7 @@ const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
     tools: [
       { label: "ECG Interpretation", description: "12-lead ECG analysis", icon: Activity },
       { label: "Cardiac Risk Score", description: "HEART / TIMI / GRACE", icon: AlertTriangle },
+      { label: "Cardiovascular Risk (WHO HEARTS)", description: "Total CV risk, BP thresholds and statin indication", icon: Activity, href: "/ehr/[patientId]/medicine/cds" },
       { label: "Echo Results", description: "Echocardiogram findings", icon: Heart },
     ],
     assessments: ["Chest pain assessment", "Heart failure classification (NYHA)", "Arrhythmia evaluation"],
@@ -112,9 +113,11 @@ const DEFAULT_CONFIG: SpecialtyConfig = {
   label: "General", description: "General clinical workspace",
   icon: Stethoscope, color: "bg-neutral-100 text-muted-foreground",
   tools: [
-    { label: "Clinical Notes", description: "SOAP documentation", icon: FileText },
-    { label: "Orders", description: "Lab and imaging orders", icon: ClipboardList },
-    { label: "Medications", description: "Prescribing", icon: Pill },
+    { label: "Medicine Workspace", description: "Programmes, problem list and allergies in one view", icon: Stethoscope, href: "/ehr/[patientId]/medicine" },
+    { label: "Decision Support", description: "Governed guidance across eight topics", icon: AlertTriangle, href: "/ehr/[patientId]/medicine/cds" },
+    { label: "Clinical Notes", description: "SOAP documentation", icon: FileText, href: "/ehr/[patientId]/notes" },
+    { label: "Orders", description: "Lab and imaging orders", icon: ClipboardList, href: "/ehr/[patientId]/orders" },
+    { label: "Medications", description: "Prescribing", icon: Pill, href: "/ehr/[patientId]/medications" },
   ],
   assessments: ["General assessment", "Systems review"],
   orderSets: ["Admission orders", "Discharge medications"],
@@ -191,13 +194,13 @@ export default function SpecialtyWorkspacePage() {
 
         {/* Order Sets */}
         <div className="bg-card rounded-lg border border-border p-5">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Quick Order Sets</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Common Order Sets</h3>
           <div className="flex flex-wrap gap-2">
             {config.orderSets.map((orderSet) => (
-              <button key={orderSet}
-                className="px-3 py-1.5 text-xs font-medium bg-primary-soft text-primary rounded-lg hover:bg-primary-soft transition-colors">
+              <span key={orderSet}
+                className="px-3 py-1.5 text-xs font-medium bg-muted text-muted-foreground rounded-lg">
                 {orderSet}
-              </button>
+              </span>
             ))}
           </div>
         </div>

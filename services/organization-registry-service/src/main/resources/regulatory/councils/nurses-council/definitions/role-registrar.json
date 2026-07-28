@@ -1,0 +1,25 @@
+{
+  "typeCode": "ROLE_WORKSPACE",
+  "definitionKey": "registrar",
+  "label": "Registrar workspace",
+  "semanticVersion": "1.1.0",
+  "payload": {
+    "roleCode": "REGISTRAR",
+    "requiresFacilityAssignment": false,
+    "sees": [
+      "APPLICATION_QUEUE",
+      "REGISTER_ENTRIES",
+      "RESTRICTIONS",
+      "DECISIONS",
+      "CORRESPONDENCE",
+      "OPERATIONAL_DASHBOARD",
+      "CONFIGURATION_READ",
+      "AUDIT"
+    ],
+    "neverSees": [
+      "EXAMINATION_MARKS"
+    ],
+    "note": "The registrar approves decisions but does not mark examinations; breadth of authority is not the same as breadth of visibility.",
+    "vocabularyNote": "sees and neverSees draw on ONE capability vocabulary. Two spellings for the same capability would make the separation unenforceable while reading as if it held."
+  }
+}

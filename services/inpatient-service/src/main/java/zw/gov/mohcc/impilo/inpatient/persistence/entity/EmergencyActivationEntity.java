@@ -27,6 +27,21 @@ public class EmergencyActivationEntity {
     @Column(name = "protocol_type", nullable = false)
     private String protocolType;
 
+    /**
+     * Where in the facility this activation was called from (W6a) — distinct from
+     * pct.emergency_episode.entry_route, which is how the person reached the facility at all.
+     */
+    @Column(name = "origin")
+    private String origin;
+
+    /**
+     * Cross-reference to pct.emergency_episode (a different service/database — no FK, same pattern
+     * as trauma_episode_id). Lets an in-facility deterioration mint on the admission's existing
+     * journey rather than opening a second one.
+     */
+    @Column(name = "emergency_episode_id")
+    private UUID emergencyEpisodeId;
+
     @Column(name = "status", nullable = false)
     private String status = "ACTIVE";
 
@@ -66,6 +81,10 @@ public class EmergencyActivationEntity {
     public void setEncounterId(UUID encounterId) { this.encounterId = encounterId; }
     public String getProtocolType() { return protocolType; }
     public void setProtocolType(String protocolType) { this.protocolType = protocolType; }
+    public String getOrigin() { return origin; }
+    public void setOrigin(String origin) { this.origin = origin; }
+    public UUID getEmergencyEpisodeId() { return emergencyEpisodeId; }
+    public void setEmergencyEpisodeId(UUID emergencyEpisodeId) { this.emergencyEpisodeId = emergencyEpisodeId; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getOutcome() { return outcome; }

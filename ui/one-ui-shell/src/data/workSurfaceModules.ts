@@ -27,6 +27,19 @@ import {
 } from "lucide-react";
 import { WORKER_ACCESS_LABELS } from "@/lib/identity-context";
 
+/**
+ * Navigation-affordance data for /home's module grid — label/icon/href PRESENTATION, gated by
+ * role flags (roles.isClinical etc.) that come from useRoleGroup(), itself derived from the
+ * authenticated JWT's roles, not anything editable from the browser. Editing this file cannot
+ * create access: every href here is independently re-guarded downstream by routes.ts
+ * (guard !== "none") and the destination's own backend authz — see
+ * workSurfaceModules.test.ts, which proves both of those claims directly rather than assuming
+ * them. A future TSHEPO-issued capability-ID list (the same presentation-only pattern
+ * lib/work-home/section-registry.ts already uses for Work Home) would be the more architecturally
+ * clean version of this file, but is a separate, larger change — not required for the safety
+ * property above to hold today.
+ */
+
 export interface WorkSurfaceModuleItem {
   label: string;
   description: string;

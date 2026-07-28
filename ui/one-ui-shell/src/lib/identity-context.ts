@@ -140,6 +140,7 @@ const ABOVE_SITE_ROLES = new Set([
 const CITIZEN_BLOCKED_PREFIXES = [
   "/clinical",
   "/queue",
+  "/work",
   "/provider-workspace",
   "/operations/facility-operations",
   "/organization-admin",

@@ -15,6 +15,14 @@ public class ResuscitationRecordEntity {
     @Column(name = "activation_id", nullable = false)
     private UUID activationId;
 
+    /**
+     * Denormalised from emergency_activation.tenant_id (W6a). Immutable — never repointed, so this
+     * needs no identity-repoint hook, unlike subject_cpid which deliberately stays only on the
+     * activation (see InpatientResuscitationRepointHook).
+     */
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
     /** Canonical trauma-episode correlation id (DAIDZAI-minted). Re-keyed onto the episode in W5. */
     @Column(name = "trauma_episode_id")
     private UUID traumaEpisodeId;
@@ -53,6 +61,8 @@ public class ResuscitationRecordEntity {
     public void setResusId(UUID resusId) { this.resusId = resusId; }
     public UUID getActivationId() { return activationId; }
     public void setActivationId(UUID activationId) { this.activationId = activationId; }
+    public UUID getTenantId() { return tenantId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
     public UUID getTraumaEpisodeId() { return traumaEpisodeId; }
     public void setTraumaEpisodeId(UUID traumaEpisodeId) { this.traumaEpisodeId = traumaEpisodeId; }
     public Integer getCprCycles() { return cprCycles; }

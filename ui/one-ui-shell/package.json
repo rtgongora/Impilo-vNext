@@ -15,6 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "test:routes": "node scripts/route-parity-check.mjs",
     "test:orphan-pages": "node scripts/orphan-page-check.mjs",
+    "test:decorative-controls": "node scripts/decorative-control-check.mjs",
     "test:launchers": "node ../../scripts/frontend/check-launcher-dead-ends.mjs",
     "test:no-stubs": "node scripts/no-stub-guard.mjs",
     "test:query-honesty": "node scripts/query-honesty-guard.mjs",

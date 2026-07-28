@@ -41,6 +41,12 @@ export interface ConfigDefinitionSummary {
   contentHash: string;
   pinnedAtMoment: string | null;
   policy: ConfigPolicyState;
+  /**
+   * What the definition actually says. Withholding it would leave a council able to see that a
+   * rule exists but not what it holds, and would leave role-aware navigation with no source for
+   * the capability lists it must honour.
+   */
+  payload: Record<string, unknown> | null;
 }
 
 export interface ConfigReleaseSummary {

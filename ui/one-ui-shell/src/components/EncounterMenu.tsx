@@ -49,6 +49,9 @@ function getDoctorFlow(): WizardPhase[] {
         { label: "Vitals", segment: "vitals", icon: HeartPulse, hint: "Record vital signs" },
         { label: "History", segment: "history", icon: History, hint: "Review/update history" },
         { label: "Conditions", segment: "conditions", icon: Stethoscope, hint: "Active problems" },
+        // Programmes + problems + allergies in one view; an overview belongs where the clinician
+        // orients themselves, not among the treatment steps.
+        { label: "Medicine", segment: "medicine", icon: LayoutDashboard, hint: "Chronic & programme overview" },
         { label: "Allergies", segment: "allergies", icon: ShieldAlert, hint: "Verify allergies" },
       ],
     },

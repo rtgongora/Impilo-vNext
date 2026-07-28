@@ -25,7 +25,13 @@ export function useSessionExperienceContract() {
   const { data: workAssignments = [] } = useWorkAssignments();
 
   const query = useQuery<SessionExperienceContract>({
-    queryKey: ["session-experience", user?.id, user?.providerId, hasFacility, workAssignments.length],
+    // Deliberately NOT keyed on workAssignments.length (Phase F10): useWorkAssignments() is a
+    // separate query, and keying on its result serialised this fetch behind it — the contract
+    // request couldn't even fire until assignments had already resolved, adding real latency to
+    // the critical /auth/resolving path for no benefit (the BFF response doesn't depend on the
+    // client's locally-cached assignment count; only the dev/offline local-resolver fallback
+    // below reads workAssignments, and it reads whatever value is in scope when it runs).
+    queryKey: ["session-experience", user?.id, user?.providerId, hasFacility],
     queryFn: async () => {
       try {
         const res = await apiClient.get<SessionExperienceResponse>("/internal/v1/session/experience");
@@ -38,7 +44,7 @@ export function useSessionExperienceContract() {
     enabled: isAuthenticated && !!user,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
-    // The key includes facility/assignment state; keep the last contract while
+    // The key includes facility state; keep the last contract while
     // the new one loads so route guards never see a transient undefined.
     placeholderData: (previous) => previous,
   });

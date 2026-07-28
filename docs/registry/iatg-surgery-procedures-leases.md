@@ -260,15 +260,169 @@ Recorded here so they cannot be quietly dropped:
 ## 7. Known defects inherited, not caused
 
 - `PolicyEngine` DENY ignores conditions.
-- tshepo-authz V029/V030 use a trailing-slash `path_contains` pin; `pathContainsSegment` is
-  segment-bounded, so the pin may not match `/theatre/cases/{id}/...`. Possible latent PDP defect,
-  flagged by the theatre programme and still unfixed.
+- **tshepo-authz V029/V030's trailing-slash `path_contains` pin — CONFIRMED, not merely
+  possible.** The theatre programme flagged this as a "possible latent defect" from reading a
+  comment; Wave P-R proved it directly by reflection into the real `pathContainsSegment`
+  (`PathContainsSegmentTest`, `tshepo-authz-service`). `pathContainsSegment` requires the
+  character immediately after a match to be `/` or end-of-string. A pin ending in `/` (V029's
+  and V030's own style, e.g. `"/theatre/cases/"`) can only satisfy that when the path ends
+  exactly there — it never matches `/theatre/cases/{id}/...`, because the character after the
+  match is the first character of the id segment. **This means V029/V030's ALLOW rules using
+  that pin style do not do what their own comments say they do.** Not fixed by this programme —
+  V300 avoids the pattern rather than touching V029/V030's rows — but it is no longer merely
+  suspected. Whoever owns V029/V030 should re-verify what those rules actually gate.
+- **A second, related PDP integration trap found and documented, not fixed at the source**:
+  `AuthzInternalRequest.deriveResourceType` walks a request path backward and returns the first
+  segment that is not blank, not `v1`/`api`, and not a 36-character UUID. Any route whose final
+  path segment is a human-readable free-text identifier — not a UUID — derives that identifier
+  as the resource type instead of the intended resource name, and no policy rule for the
+  intended resource is ever found. procedures-service's catalogue codes (`PROC-LAPAROTOMY` etc.)
+  hit this; any future route keyed on a non-UUID code will hit it too. Worked around here by
+  route shape (the code travels as a query parameter, never a path variable) rather than by
+  changing the shared derivation logic, which is estate-wide and not this programme's to change
+  alone.
 - MADI's ~40 entities share an undefaulted-jurisdiction pattern (trauma-owned).
 - Theatre carry-forwards: two amber elective-completeness board assertions, commodities UI panels
   backend-only.
 
 ## 8. Wave index
 
-Phase 0 audit and baseline (0.1–0.4) · Phase P pipeline (P0–P15) · Phase S surgery (S0–S18).
-Full plan in the programme plan document; per-wave status is tracked in the pack completion
-reports.
+Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
+Phase P pipeline (P0–P9 done, P10–P15 remaining — see §10–§12) · **Wave P-R2 reachability
+re-wire (next — see §13)** · Phase S surgery (S0–S18, not started). Full plan in the programme
+plan document; per-wave status is tracked in the pack
+completion reports and in programme memory (`surgery-procedures-program-state.md`).
+
+## 9. Wave P-R — reachability (done)
+
+Opened when six landed backend waves (P0–P6) turned out to have no BFF proxy, no envoy route,
+no authz rows, no UI, and — most consequentially — no entry in
+`config/full-boot-service-classification.yml`, so a full boot would not have built or deployed
+`procedures-service` at all. Closed the gap in seven pieces (P-R.1–P-R.7); full detail in
+programme memory. Built in a dedicated worktree (`procedures-p-r-reachability`, kept on disk per
+the never-remove-worktrees law) rather than the shared checkout, because this branch was
+measured at 150 commits/day across 12+ concurrent lanes during the wave — a long-lived isolated
+branch would have diverged badly, so each piece was committed, rebased onto the current tip, and
+pushed individually as it went green.
+
+**Findings worth any future wave reading before it touches the same files:**
+
+- Two generated Helm files (`values-full-preview-runtime.generated.yaml`,
+  `values-full-preview-bff-env.generated.yaml`) carry hand-authored content their own generators
+  cannot reconstruct — regenerating the first dropped `pct-service`'s `secretEnv` block for its
+  Keycloak service-to-service token. Diff any regeneration against a pre-run snapshot before
+  trusting it; the safe default is to hand-add the one entry a wave needs.
+- `docker-compose.runtime.yml` is a curated ~25-service bootstrap subset that excludes
+  `inpatient-service` itself. Do not add a service there on the assumption that "real" services
+  belong in compose — most do not.
+- `/internal/v1/` already routes generically to `experience_bff` in `infra/envoy/envoy.yaml`.
+  A new BFF-only service proxied under that prefix needs no envoy change.
+- `ServiceClientConfig.ServiceEndpoints` in `experience-bff` is a positional record with two
+  hand-maintained test factories sized to its exact field count. Adding a field means extending
+  both factories by exactly one slot; the compiler catches a missed one immediately on
+  `mvn test`.
+- Journey specs under `ui/one-ui-shell/e2e/journeys/**` are excluded from the main app's
+  `tsconfig.json` and must be checked against `tsconfig.e2e.json` instead — that config exists
+  specifically because specs were previously "never compiled, never run", and it will catch an
+  invented `AcceptancePoint` name that the main typecheck cannot see.
+- A worktree's symlinked `node_modules` (pointing back into the main checkout, per
+  `worktrees-need-node-modules-symlinked`) can be silently clobbered by `git stash -u` or a
+  rebase mid-session. If a typecheck or test run in a worktree looks suspiciously fast or
+  trivially clean, verify the symlink still resolves to real content before trusting the result.
+
+## 10. Wave P7 — safety-pause templates and sedation continuum (done)
+
+§9 (ten class-specific safety-pause templates, rows-not-columns confirmation items) and §10
+(eight-level sedation continuum with the rescue-capability chain) landed as a read-only layer on
+`procedures-service`, following the same worktree cycle as Wave P-R
+(`procedures-p7-safety-pauses`, kept on disk). No reachability wiring was needed — this is
+backend-internal content resolution with no new BFF/UI surface yet; it will be picked up whenever
+a caller (the aftercare or readiness engine, or a future clinician surface) needs it, at which
+point the P-R.4/P-R.5 route-shape and authz pattern below applies unchanged.
+
+**Two real seed defects caught by the new runtime-proof rig, not by review:**
+`scripts/runtime-proof/procedures-safety-pause-journeys.sh` asserts the migration's own stated
+invariant — every template carries PATIENT, PROCEDURE and CONSENT as its irreducible minimum —
+against actual seeded rows rather than trusting the comment that states it.
+`SAFETY-PAUSE-TRANSFUSION` was missing PROCEDURE and `SAFETY-PAUSE-DIALYSIS` was missing CONSENT;
+both fixed in the V005 seed before the commit that carries this section. Neither H2-based module
+test would have caught this — the module tests exercise the service's read logic against
+hand-inserted fixtures, not the shipped seed content itself.
+
+**The route-shape trap from P-R.4 was applied pre-emptively, not rediscovered.** The initial
+`SafetyPauseController` draft used `{templateCode}`/`{levelCode}` REST path variables — exactly
+the shape `AuthzInternalRequest.deriveResourceType` (§7 above) mis-derives a resource type from.
+Rewritten to query-param shape (`?code=`) before the controller was ever wired to authz, so
+whichever wave next proxies these routes through the BFF inherits routes that are already safe
+to pin, rather than a second instance of the same defect reaching a migration.
+
+**depth_rank is deliberately not unique.** `NO_SEDATION`/`NON_PHARMACOLOGICAL` both rank 0 and
+`GENERAL_ANAESTHESIA`/`REGIONAL_ANAESTHESIA` both rank 5 — parallel techniques measured on
+different axes (drug depth vs. block extent), not points on one strict scale. An earlier draft of
+the migration declared `UNIQUE (tenant_id, depth_rank)`, caught and removed in self-review before
+the migration was ever run against Postgres.
+
+Proof: `SafetyPauseAndSedationServiceTest` (9 tests, H2 — service read/resolve logic) +
+`procedures-safety-pause-journeys.sh` (22/22, real Postgres — CHECK constraints, the composite
+rescue-capability FK, the depth_rank non-uniqueness, both seed defects above). Module regression:
+36/36.
+
+## 11. Wave P8 — specimen chain of custody and implant removal/revision lifecycle (done)
+
+Closes §13 (specimens) and §14 (devices/implants), both rated THIN/absent by the Phase 0 audit.
+Unlike every prior P-wave, `procedures-service` itself is untouched — the gap was in the two
+services that already own these SoRs, so the fix landed there: `inpatient-service` V301
+(`procedure_specimen` custody/label-confirmation/adequacy, new `SpecimenCustodyService`) and
+`inventory-service` V300 (`inv_patient_implant` patient-facing fields + removal/revision,
+extending `ImplantTraceabilityService`) — inventory's first migration in this programme, joining
+the V300-V329 band rather than starting a new one. Built in worktree
+`procedures-p8-specimens-devices` (kept on disk).
+
+**Honest scope, stated in the migration and service javadoc, not left implicit**: inpatient's
+`TheatreService.processSpecimensFromNote` auto-collects and dispatches a specimen from the
+operative note in one transaction, with no human confirmation point. This wave adds the
+capability for a real person to RECORD collection, label confirmation, receipt and adequacy — it
+does **not** wire a blocking gate into that automatic path, because doing so would either
+auto-stamp a fake confirmation nobody made, or require redesigning theatre's dispatch flow, which
+is theatre/emergency-lane workflow, not a unilateral change from this programme. Declared PARTIAL,
+the same way P5 declared adolescent confidentiality PARTIAL rather than silently leaving it.
+
+**Rig caught a constraint-evaluation-order surprise, not a schema bug**: Postgres validates every
+CHECK on a row on every write, not just the one a test means to isolate. An UPDATE touching only
+the field under test could trip a *different*, also-violated CHECK first (e.g. setting an invented
+`status` alone tripped the removal/status-consistency CHECK before the vocabulary CHECK ever got a
+chance to fire). Fixed by satisfying the other CHECKs in the same UPDATE so only the intended one
+is left to fail — worth remembering for any future multi-CHECK table in this programme.
+
+Two new REST surfaces (`TheatreController` specimen-custody routes, `ImplantController`
+remove/revise routes) are backend-internal only, same as P7's `SafetyPauseController` — no new
+authz/BFF/UI wiring this wave; both are queued for the next reachability pass.
+
+Proof: `SpecimenCustodyServiceTest` (11 tests) + `ImplantTraceabilityServiceTest` extended (+5).
+`procedures-p8-specimen-device-journeys.sh` (19/19, real Postgres, whole migration chain applied
+to both services). Module regression: inpatient 154/154, inventory 115/115.
+
+## 12. Wave P9 — recovery settings and aftercare templates (done)
+
+Closes §15 (recovery, PARTIAL) and §17 (aftercare, ABSENT), both named as `procedures-service`'s
+own responsibility in the boundary ADR. Built in worktree `procedures-p9-recovery-aftercare`
+(kept on disk). procedures V006: `recovery_setting` (5 rows), `aftercare_template` +
+`aftercare_instruction` (rows-not-columns) + `aftercare_template_channel` (a join, not a column).
+
+**Honest sourcing, not fabricated precision**: the audit paraphrases the source spec as declaring
+"twelve outputs and five delivery channels" for aftercare, but the literal enumerated list was
+never vendored into this repository. The five delivery channels reused here come from this
+programme's own prior audit (`audit.md` line 175), not a fabrication; the thirteen instruction
+kinds are an engineering baseline grounded in R15's governing standard
+(`RESULTS.CRITICAL_ACKNOWLEDGEMENT`), NOT a claimed reproduction of the spec's literal list — every
+seeded template is flagged `content_maturity='ENGINEERING_SEED'` and the rig proves that flag
+can't silently read `RATIFIED`. Repeats the P1 SNOMED lesson for a taxonomy instead of a code.
+
+Same route-shape law applied pre-emptively a third time (`?code=`, never a path variable).
+`RecoveryAndAftercareController` (recovery-settings, recovery-setting-detail, aftercare-templates)
+has zero authz/BFF/UI wiring, same as P7's `SafetyPauseController` — both queued for Wave P-R2
+below, which this wave triggers (P7+P8+P9 = three backend waves since Wave P-R, per the plan's own
+"re-wire every third wave" rule).
+
+Proof: `RecoveryAndAftercareServiceTest` (9 tests) + `procedures-recovery-aftercare-journeys.sh`
+(22/22, real Postgres). Module regression: 45/45.

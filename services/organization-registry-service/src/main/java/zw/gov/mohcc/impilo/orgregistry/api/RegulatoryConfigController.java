@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.orgregistry.core.ConfigPackExporter;
 import zw.gov.mohcc.impilo.orgregistry.core.ConfigReleaseValidator;
 import zw.gov.mohcc.impilo.orgregistry.core.RegulatoryConfigService;
 import zw.gov.mohcc.impilo.orgregistry.persistence.entity.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -25,9 +27,12 @@ import java.util.UUID;
 public class RegulatoryConfigController {
 
     private final RegulatoryConfigService configService;
+    private final ConfigPackExporter exporter;
 
-    public RegulatoryConfigController(RegulatoryConfigService configService) {
+    public RegulatoryConfigController(RegulatoryConfigService configService,
+                                      ConfigPackExporter exporter) {
         this.configService = configService;
+        this.exporter = exporter;
     }
 
     // ── Catalogue and packs ──────────────────────────────────────────────────────────────────
@@ -138,6 +143,17 @@ public class RegulatoryConfigController {
     @GetMapping("/packs/{packId}/active")
     public List<RegulatoryConfigService.ResolvedDefinition> activeConfiguration(@PathVariable UUID packId) {
         return configService.resolveActive(tenantId(), packId);
+    }
+
+    /**
+     * Export the pack's ACTIVE configuration back to the file format the seeder reads (AD-3), so a
+     * council's approved rules can be reviewed in a pull request and promoted to another
+     * environment. Only activated configuration exports: promoting a draft would move rules nobody
+     * approved. Loading it elsewhere prepares a DRAFT — approval does not travel with the files.
+     */
+    @GetMapping("/packs/{packId}/export")
+    public Map<String, String> exportPack(@PathVariable UUID packId) {
+        return exporter.export(tenantId(), packId).files();
     }
 
     // ── Case bindings ────────────────────────────────────────────────────────────────────────

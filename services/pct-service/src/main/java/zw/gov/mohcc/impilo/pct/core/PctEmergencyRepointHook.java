@@ -44,7 +44,7 @@ public class PctEmergencyRepointHook implements IdentityRepointHook {
     public int repoint(IdentityRepointCommand command) {
         UUID tenantId = UUID.fromString(command.tenantId());
         return episodeRepository.repointSubjectCpid(
-                tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
+                tenantId, command.oldSubjectCpid(), command.newSubjectCpid(), java.time.OffsetDateTime.now());
     }
 
     @Override

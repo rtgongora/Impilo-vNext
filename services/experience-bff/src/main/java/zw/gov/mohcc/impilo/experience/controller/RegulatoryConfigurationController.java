@@ -39,9 +39,12 @@ public class RegulatoryConfigurationController {
     private static final Logger log = LoggerFactory.getLogger(RegulatoryConfigurationController.class);
 
     private final OrganizationRegistryServiceClient orgRegistryClient;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
-    public RegulatoryConfigurationController(OrganizationRegistryServiceClient orgRegistryClient) {
+    public RegulatoryConfigurationController(OrganizationRegistryServiceClient orgRegistryClient,
+                                             com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         this.orgRegistryClient = orgRegistryClient;
+        this.objectMapper = objectMapper;
     }
 
     /** Every configuration pack a regulator holds, with the definitions currently governing it. */
@@ -130,7 +133,7 @@ public class RegulatoryConfigurationController {
 
         composed.put("releases", releases(packId));
 
-        List<Map<String, Object>> definitions = new ArrayList<>();
+        List<com.fasterxml.jackson.databind.node.ObjectNode> definitions = new ArrayList<>();
         boolean activated = true;
         try {
             JsonNode active = orgRegistryClient.activeConfiguration(packId);
@@ -155,8 +158,8 @@ public class RegulatoryConfigurationController {
         return composed;
     }
 
-    private Map<String, Object> composeDefinition(JsonNode definition) {
-        Map<String, Object> row = new LinkedHashMap<>();
+    private com.fasterxml.jackson.databind.node.ObjectNode composeDefinition(JsonNode definition) {
+        com.fasterxml.jackson.databind.node.ObjectNode row = objectMapper.createObjectNode();
         row.put("typeCode", text(definition, "typeCode"));
         row.put("definitionKey", text(definition, "definitionKey"));
         row.put("label", text(definition, "label"));
@@ -164,15 +167,20 @@ public class RegulatoryConfigurationController {
         row.put("selfServiceRoute", text(definition, "selfServiceRoute"));
         row.put("contentHash", text(definition, "contentHash"));
         row.put("pinnedAtMoment", text(definition, "pinnedAtMoment"));
+        // The payload IS the configuration. Withholding it would leave the council able to see
+        // that a rule exists but not what it says, and would leave role-aware navigation with no
+        // source for the capability lists it must honour.
+        row.set("payload", definition.path("payload").isMissingNode()
+                ? null : definition.get("payload"));
 
         // A value the council has not set must read as awaiting a named decision — never as blank,
         // and never as zero. This is the field the whole screen exists to render honestly.
         String policyStatus = definition.path("policyStatus").asText(null);
-        Map<String, Object> policy = new LinkedHashMap<>();
+        com.fasterxml.jackson.databind.node.ObjectNode policy = objectMapper.createObjectNode();
         policy.put("status", policyStatus);
         policy.put("decisionRef", text(definition, "policyDecisionRef"));
         policy.put("valueSet", policyStatus == null || "CONFIRMED".equals(policyStatus));
-        row.put("policy", policy);
+        row.set("policy", policy);
         return row;
     }
 

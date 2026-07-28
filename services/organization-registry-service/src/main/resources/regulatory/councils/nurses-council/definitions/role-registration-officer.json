@@ -1,0 +1,25 @@
+{
+  "typeCode": "ROLE_WORKSPACE",
+  "definitionKey": "registration-officer",
+  "label": "Registration Officer workspace",
+  "semanticVersion": "1.1.0",
+  "payload": {
+    "roleCode": "REGISTRATION_OFFICER",
+    "requiresFacilityAssignment": false,
+    "sees": [
+      "APPLICATION_QUEUE",
+      "EVIDENCE_REVIEW",
+      "IDENTITY_RESOLUTION",
+      "REGISTER_ENTRIES",
+      "CORRESPONDENCE"
+    ],
+    "neverSees": [
+      "EXAMINATION_MARKS",
+      "REFUNDS",
+      "INVOICES",
+      "DISCIPLINARY_CASES"
+    ],
+    "note": "Council staff are org-attached, not facility-attached: a registration officer has no workplace in the clinical sense and must never be asked to pick one.",
+    "vocabularyNote": "sees and neverSees draw on ONE capability vocabulary. Two spellings for the same capability would make the separation unenforceable while reading as if it held."
+  }
+}

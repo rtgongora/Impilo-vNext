@@ -39,12 +39,25 @@ public interface EmergencyEpisodeRepository extends JpaRepository<EmergencyEpiso
      * record anchors on {@code episode_id} rather than on the cpid — which is what makes a merge
      * incapable of losing orders, results, medicines, procedures or notes.
      */
+    // The timestamps are BOUND, not CURRENT_TIMESTAMP. JPQL's CURRENT_TIMESTAMP resolves to
+    // java.sql.Timestamp, which Hibernate 6 refuses to assign to an OffsetDateTime path — and it
+    // does so at CONTEXT STARTUP, when Spring Data validates the @Query. Under the H2 dialect used
+    // by the test profile that made the entire pct Spring context unbootable, so no @SpringBootTest
+    // could run in this service at all. It survived because the six that exist are named *IT and
+    // are excluded from surefire: the context could not boot, and nothing was trying to boot it.
+    //
+    // Postgres accepts it at runtime, which is why the deployed service is healthy — the defect was
+    // never in production, only in the ability to test.
+    //
+    // Binding the instant also makes the update assertable: a test can pass a known time and check
+    // it landed, instead of hoping the database agreed.
     @Modifying
     @Query("update EmergencyEpisodeEntity e set e.subjectCpid = :confirmed, "
-            + "e.identityMode = 'KNOWN', e.identityResolvedAt = CURRENT_TIMESTAMP, "
-            + "e.updatedAt = CURRENT_TIMESTAMP "
+            + "e.identityMode = 'KNOWN', e.identityResolvedAt = :now, "
+            + "e.updatedAt = :now "
             + "where e.tenantId = :tenantId and e.subjectCpid = :provisional")
     int repointSubjectCpid(@Param("tenantId") UUID tenantId,
                            @Param("provisional") String provisional,
-                           @Param("confirmed") String confirmed);
+                           @Param("confirmed") String confirmed,
+                           @Param("now") java.time.OffsetDateTime now);
 }
