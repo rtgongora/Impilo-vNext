@@ -234,7 +234,12 @@ public class WorkforceContextService {
                 a.getRoleTemplateId(),
                 a.getSupervisorProfileId(),
                 deriveScope(a),
-                a.getEligibilityStatus());
+                a.getEligibilityStatus(),
+                a.getVirtualPoolId(),
+                a.getHostOrganisationId(),
+                a.getCoverScopeJson(),
+                a.getSupportTeamId(),
+                a.getSupportAssignmentId());
     }
 
     private VashandiDtos.WorkContextAffiliation toAffiliation(WorkforceMembershipEntity m) {
@@ -263,8 +268,17 @@ public class WorkforceContextService {
         if (a.getFacilityId() != null) {
             return "FACILITY";
         }
-        if (a.getProgrammeId() != null) {
+        // A4 fix: this previously mapped ANY programme-only assignment to
+        // VIRTUAL_POOL, conflating two distinct context families (programme
+        // management vs. virtual/telemedicine clinical work). virtualPoolId
+        // is now the real, unambiguous signal for virtual/cross-facility
+        // scope — a programme-only assignment (no facility, no virtual pool)
+        // is a PROGRAMME-scoped context, not a virtual one.
+        if (a.getVirtualPoolId() != null) {
             return "VIRTUAL_POOL";
+        }
+        if (a.getProgrammeId() != null) {
+            return "PROGRAMME";
         }
         return "ABOVE_SITE";
     }

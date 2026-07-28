@@ -297,7 +297,16 @@ public final class VashandiDtos {
             String roleTemplateId,
             UUID supervisorProfileId,
             String scope,
-            String eligibilityStatus
+            String eligibilityStatus,
+            // A4 — additive fields (frozen-shape contract: appended, never inserted/reordered).
+            // Virtual/cross-facility assignment anchors; all null for an ordinary
+            // single-facility assignment.
+            String virtualPoolId,
+            UUID hostOrganisationId,
+            String coverScopeJson,
+            // A3 — additive: cross-service support-context posting reference.
+            UUID supportTeamId,
+            UUID supportAssignmentId
     ) {
     }
 

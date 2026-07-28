@@ -50,6 +50,29 @@ public class WorkforceAssignmentEntity {
     /** Cross-service reference to support-service sup_support_assignment.assignment_id. */
     private UUID supportAssignmentId;
 
+    /**
+     * Frozen TUSO virtual-service routing-seam target_ref (A4) — the same
+     * identifier space as {@code vsh_shift.virtualPoolId} — anchoring a
+     * standing assignment to a virtual/telemedicine service without a
+     * physical facilityId.
+     */
+    private String virtualPoolId;
+
+    /**
+     * The organisation hosting/operating the virtual service, distinct from
+     * organisationId (the employing/appointing organisation).
+     */
+    private UUID hostOrganisationId;
+
+    /**
+     * JSON array of facility ids / WGV jurisdiction codes this outreach or
+     * cross-facility assignment covers. Null for an ordinary single-facility
+     * assignment.
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private String coverScopeJson;
+
     @Column(nullable = false, length = 32)
     private String status = "draft";
 
