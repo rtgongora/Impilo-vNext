@@ -14,6 +14,10 @@
 #
 # The check is deliberately narrow. It does not police encoding, line endings or unicode: those are
 # style. It catches the one thing that silently removes a file from human review.
+# `git ls-files` alone lists only TRACKED files, so a guard using it is blind to the new file it
+# exists to catch — the violation arrives untracked, the guard reports clean, and it ships. Found by
+# the RMNP lane, whose routing guard PASSED against a deliberately-planted violation.
+# --cached --others --exclude-standard = staged + untracked, minus anything gitignored.
 set -uo pipefail
 
 REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
@@ -38,12 +42,12 @@ echo "=== Source text integrity guard ==="
 #
 # Both passed a clean repository and passed a file containing a NUL. A gate that cannot fail is
 # worse than no gate: it reports safety it never checked.
-OFFENDERS=$(git ls-files -z -- \
+OFFENDERS=$(git ls-files -z --cached --others --exclude-standard -- \
   '*.java' '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.sh' '*.sql' '*.yml' '*.yaml' \
   '*.json' '*.md' '*.xml' '*.properties' '*.rego' '*.css' '*.html' 2>/dev/null \
   | xargs -0 -r env LC_ALL=C grep -laP '\x00' || true)
 
-CHECKED=$(git ls-files -- \
+CHECKED=$(git ls-files --cached --others --exclude-standard -- \
   '*.java' '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.sh' '*.sql' '*.yml' '*.yaml' \
   '*.json' '*.md' '*.xml' '*.properties' '*.rego' '*.css' '*.html' 2>/dev/null | wc -l)
 
