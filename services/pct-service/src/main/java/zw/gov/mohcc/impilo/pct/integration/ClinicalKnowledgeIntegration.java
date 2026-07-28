@@ -62,6 +62,45 @@ public class ClinicalKnowledgeIntegration {
         return post(tenantId, "/internal/v1/clinical/paediatric/imam/progress", body, "IMAM progress");
     }
 
+    /**
+     * A governed national policy parameter as it stood on {@code asOf}.
+     *
+     * @return the parameter, or {@code null} when the platform is unreachable or no version is in
+     *         force. The caller must distinguish those two only by its own degradation reason —
+     *         either way there is no value, and there is deliberately no fallback.
+     */
+    public Map<String, Object> policyParameter(UUID tenantId, String code, java.time.LocalDate asOf) {
+        String path = "/internal/v1/clinical/policy-parameters/" + code
+                + (asOf == null ? "" : "?asOf=" + asOf);
+        Map<String, Object> data = get(tenantId, path, "policy parameter " + code);
+        // The endpoint answers {"inForce": false} rather than 404 when no version covers the date,
+        // so a consumer can tell "no policy here" from "service down". Normalise that to null.
+        if (data != null && Boolean.FALSE.equals(data.get("inForce"))) {
+            return null;
+        }
+        return data;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> get(UUID tenantId, String path, String what) {
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(baseUrl + path, HttpMethod.GET,
+                    new HttpEntity<>(headers(tenantId)), Map.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn("{} returned {} with no body — recorded as unavailable", what, response.getStatusCode());
+                return null;
+            }
+            Object data = response.getBody().get("data");
+            if (data instanceof Map<?, ?> map) {
+                return (Map<String, Object>) map;
+            }
+            return (Map<String, Object>) response.getBody();
+        } catch (RestClientException e) {
+            log.warn("{} unreachable ({}) — recorded as unavailable", what, e.getMessage());
+            return null;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private Map<String, Object> post(UUID tenantId, String path, Map<String, Object> body, String what) {
         try {
