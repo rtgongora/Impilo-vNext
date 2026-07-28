@@ -99,4 +99,93 @@ class ProceduresServiceClientTest {
         assertEquals(200, response.getStatusCode().value());
         server.verify();
     }
+
+    // ── Wave P-R2 — P7 safety-pause/sedation and P9 recovery/aftercare clients. Unlike
+    // catalogueDetail above, these were built query-param-shaped from the start (P7, P9), so
+    // this client calls procedures-service the same way its own external contract already
+    // looks — no BFF-vs-internal shape split to test for here. ──
+
+    @Test
+    void safetyPauseTemplateSendsTheCodeAsAQueryParameter() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/safety-pause-templates?code=SAFETY-PAUSE-SURGERY"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"templateCode\":\"SAFETY-PAUSE-SURGERY\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).safetyPauseTemplate("SAFETY-PAUSE-SURGERY");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void sedationLevelsHitsTheFixedListRoute() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/sedation-levels"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).sedationLevels();
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void sedationLevelSendsTheCodeAsAQueryParameter() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/sedation-level-detail?code=MODERATE_SEDATION"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"levelCode\":\"MODERATE_SEDATION\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).sedationLevel("MODERATE_SEDATION");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void recoverySettingsHitsTheFixedListRoute() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/recovery-settings"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).recoverySettings();
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void recoverySettingSendsTheCodeAsAQueryParameter() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/recovery-setting-detail?code=PACU"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"settingCode\":\"PACU\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).recoverySetting("PACU");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void aftercareTemplateSendsTheCodeAsAQueryParameter() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/aftercare-templates?code=AFTERCARE-THEATRE"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"templateCode\":\"AFTERCARE-THEATRE\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).aftercareTemplate("AFTERCARE-THEATRE");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
 }

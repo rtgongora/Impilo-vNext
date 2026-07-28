@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 # Procedures pipeline P9 — recovery settings (§15) and aftercare templates (§17) runtime proof
-# (real Postgres).
+# (real Postgres). Extended for V007 (Wave P-R2).
 #
 # H2 (module tests) does not enforce CHECK constraints or the published-authority governance
 # rule; this proves what only Postgres can enforce. RecoveryAndAftercareServiceTest proves the
 # service's read/resolve logic on hand-inserted fixtures.
+#
+# V007 ADDENDUM: while wiring P9's content into the catalogue UI (Wave P-R2), found that
+# procedure_definition.aftercare_template (V002/V003, 34 distinct specific per-procedure codes)
+# already existed and had never been resolved — P9's own aftercare_template table used a
+# SEPARATE, coarser six-value taxonomy instead of resolving the pre-existing specific one, the
+# exact mistake P7 correctly avoided for safety_pause_template. V007 fixes this forward (V006
+# was already pushed) by seeding five specific templates for the same demonstration procedures
+# already sedation/recovery-linked. J-P9-17 below proves the fix at the row level, not just that
+# the migration applies.
 #
 # Usage:  bash scripts/runtime-proof/procedures-recovery-aftercare-journeys.sh
 #         KEEP_RIG=1 ... to leave the container up.
@@ -47,7 +56,8 @@ docker exec "$PG_NAME" psql -U impilo -d procedures -tAc "select 1" >/dev/null 2
   || { echo "FAIL: postgres never reachable"; exit 1; }
 
 for f in V001__init V002__procedure_catalogue V003__procedure_catalogue_seed \
-         V004__appropriateness_rules V005__safety_pause_and_sedation V006__recovery_and_aftercare; do
+         V004__appropriateness_rules V005__safety_pause_and_sedation V006__recovery_and_aftercare \
+         V007__aftercare_template_specific_codes; do
   out=$(docker exec -i "$PG_NAME" psql -U impilo -d procedures -v ON_ERROR_STOP=1 < "$MIG/$f.sql" 2>&1)
   echo "$out" > "$EVIDENCE/$f.txt"
   chk "J-P9-0 $f applies" "$(echo "$out" | grep -ci error || true)" "^0$"
@@ -68,8 +78,15 @@ chk "J-P9-3 PACU cites the anaesthesia monitoring standard, not the generic one"
   "ANAESTHESIA.WFSA_WHO.MONITORING"
 
 # ── §17 aftercare templates ──
-chk "J-P9-4 all six aftercare templates are seeded and PUBLISHED" \
-  "$(q "SELECT count(*) FROM procedures.aftercare_template WHERE status='PUBLISHED'")" "^6$"
+# Expressed relative to the total row count (P9's 6 setting-class + V007's 5 specific) rather
+# than a literal number that would need editing every time a future wave adds a template.
+chk "J-P9-4 every seeded aftercare template is PUBLISHED (none silently left DRAFT)" \
+  "$(q "SELECT CASE WHEN count(*) FILTER (WHERE status='PUBLISHED') = count(*) THEN 'ALL_PUBLISHED' ELSE 'GAP' END
+        FROM procedures.aftercare_template")" "ALL_PUBLISHED"
+
+chk "J-P9-4b at least eleven aftercare templates exist (6 setting-class + 5 V007 specific)" \
+  "$(q "SELECT CASE WHEN count(*) >= 11 THEN 'ENOUGH' ELSE 'TOO_FEW' END FROM procedures.aftercare_template")" \
+  "ENOUGH"
 
 chk "J-P9-5 every published template names an approving authority" \
   "$(q "SELECT count(*) FROM procedures.aftercare_template
@@ -100,11 +117,11 @@ chk "J-P9-10 an invented delivery channel is REFUSED" \
 # Every template reaches at least the clinical record — the same discipline §16 already applies
 # to results (nothing is optional to the chart itself).
 chk "J-P9-11 every template is deliverable through at least CLINICAL_SUMMARY" \
-  "$(q "SELECT CASE WHEN count(*) = 6 THEN 'ALL' ELSE 'MISSING' END FROM (
-        SELECT t.id FROM procedures.aftercare_template t
-        WHERE EXISTS (SELECT 1 FROM procedures.aftercare_template_channel c
-                      WHERE c.template_id = t.id AND c.delivery_channel = 'CLINICAL_SUMMARY')
-      ) x")" "ALL"
+  "$(q "SELECT CASE WHEN count(*) FILTER (WHERE EXISTS (
+                SELECT 1 FROM procedures.aftercare_template_channel c
+                WHERE c.template_id = t.id AND c.delivery_channel = 'CLINICAL_SUMMARY')) = count(*)
+             THEN 'ALL' ELSE 'MISSING' END
+        FROM procedures.aftercare_template t")" "ALL"
 
 # ── linkage to the catalogue (P7's own linkage pattern, reused) ──
 chk "J-P9-12 at least eleven catalogue entries declare both a recovery setting and an aftercare template" \
@@ -137,6 +154,24 @@ chk "J-P9-16 P1's site-and-side-never-overridable constraint still holds" \
   "$(q "UPDATE procedures.procedure_requirement SET overridable_in_emergency=true
         WHERE requirement_kind='SITE_SIDE_VERIFICATION'")" \
   "chk_procedure_requirement_site_side_never_overridable"
+
+# ── V007: the fix, proven at the row level — the pre-existing SPECIFIC aftercare_template
+# codes on the demonstration procedures now actually resolve, not just the coarse fallback. ──
+chk "J-P9-17 all ten demonstration procedures with a declared specific aftercare_template resolve to a real row" \
+  "$(q "SELECT CASE WHEN count(*) = 10 THEN 'ALL' ELSE 'MISSING' END FROM procedures.procedure_definition d
+        WHERE d.definition_code IN ('PROC-LAPAROTOMY','PROC-CAESAREAN-SECTION','PROC-TOTAL-HIP-REPLACEMENT',
+          'PROC-OGD','PROC-COLONOSCOPY','PROC-BRONCHOSCOPY','PROC-HAEMODIALYSIS','PROC-PERITONEAL-DIALYSIS',
+          'PROC-CENTRAL-LINE','PROC-LUMBAR-PUNCTURE')
+          AND d.aftercare_template IS NOT NULL
+          AND EXISTS (SELECT 1 FROM procedures.aftercare_template t
+                      WHERE t.tenant_id = d.tenant_id AND t.template_code = d.aftercare_template)")" \
+  "ALL"
+
+# The honest debt, not silently closed: PROC-ARTERIAL-LINE never had an aftercare_template value
+# seeded at all (V003), and V007 does not fabricate one for it.
+chk "J-P9-18 PROC-ARTERIAL-LINE's aftercare_template is still honestly undeclared, not backfilled" \
+  "$(q "SELECT aftercare_template FROM procedures.procedure_definition WHERE definition_code='PROC-ARTERIAL-LINE'")" \
+  "^$"
 
 { echo "procedures-service P9 recovery + aftercare proof"; echo "generated: $(date -Is)"; echo "PASS=$PASS FAIL=$FAIL"; } > "$EVIDENCE/summary.txt"
 echo
