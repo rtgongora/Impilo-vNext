@@ -102,6 +102,10 @@ public class ImplantTraceabilityService {
         link.setImplantedBy(request.implantedBy());
         link.setImplantedAt(request.implantedAt());
         link.setStatus("IMPLANTED");
+        link.setPatientFacingName(request.patientFacingName());
+        link.setPatientFacingDescription(request.patientFacingDescription());
+        link.setExpectedLifespanMonths(request.expectedLifespanMonths());
+        link.setNextReviewDueAt(request.nextReviewDueAt());
         link = patientImplantRepository.save(link);
 
         Map<String, Object> event = new LinkedHashMap<>();
@@ -124,6 +128,83 @@ public class ImplantTraceabilityService {
 
         return new RecordImplantResponse(unit.getImplantUnitId(), link.getPatientImplantId(),
                 unit.getUdi(), unit.getSerialNumber(), unit.getLotNumber(), unit.getStatus());
+    }
+
+    /**
+     * A device leaves the patient with no replacement recorded — the removal half of pipeline
+     * §14's removal/revision lifecycle. Refuses a link that is not currently IMPLANTED (there is
+     * only one removal per implant; a device already removed or revised cannot be removed again).
+     */
+    @Transactional
+    public PatientImplantEntity removeImplant(UUID patientImplantId, String removalReason) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID tenant = ctx.tenantId();
+        PatientImplantEntity link = requireImplantedLink(tenant, patientImplantId);
+
+        link.setStatus("REMOVED");
+        link.setRemovedAt(java.time.OffsetDateTime.now());
+        link.setRemovedBy(ctx.actorId());
+        link.setRemovalReason(removalReason);
+        link = patientImplantRepository.save(link);
+
+        publishOutboxEvent("IMPLANT", link.getPatientImplantId().toString(),
+                "inventory.implant.removed",
+                Map.of("patientImplantId", link.getPatientImplantId(), "removalReason",
+                        removalReason == null ? "" : removalReason),
+                tenant);
+        log.info("Implant removed: patientLink={}, reason={}", link.getPatientImplantId(), removalReason);
+        return link;
+    }
+
+    /**
+     * A device is replaced by a newer one — the revision half of §14. The OLD link is marked
+     * REVISED (the same fields a plain removal sets, plus the forward context that this was a
+     * revision, not just a removal) and the NEW link records the unit/patient details from
+     * {@code newImplant} and points back at the row it superseded via
+     * {@code revisionOfPatientImplantId}. Both writes happen in this one transaction, so there is
+     * no window where the old row is REVISED but no new row yet exists, or vice versa.
+     */
+    @Transactional
+    public RecordImplantResponse reviseImplant(UUID oldPatientImplantId, RecordImplantRequest newImplant,
+                                               String revisionReason) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID tenant = ctx.tenantId();
+        PatientImplantEntity old = requireImplantedLink(tenant, oldPatientImplantId);
+
+        old.setStatus("REVISED");
+        old.setRemovedAt(java.time.OffsetDateTime.now());
+        old.setRemovedBy(ctx.actorId());
+        old.setRemovalReason(revisionReason);
+        patientImplantRepository.save(old);
+
+        RecordImplantResponse response = recordImplant(newImplant);
+        PatientImplantEntity newLink = patientImplantRepository.findById(response.patientImplantId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Newly recorded implant link vanished within its own transaction"));
+        newLink.setRevisionOfPatientImplantId(old.getPatientImplantId());
+        patientImplantRepository.save(newLink);
+
+        publishOutboxEvent("IMPLANT", newLink.getPatientImplantId().toString(),
+                "inventory.implant.revised",
+                Map.of("revisionOfPatientImplantId", old.getPatientImplantId(),
+                        "newPatientImplantId", newLink.getPatientImplantId(),
+                        "revisionReason", revisionReason == null ? "" : revisionReason),
+                tenant);
+        log.info("Implant revised: old={}, new={}", old.getPatientImplantId(), newLink.getPatientImplantId());
+        return response;
+    }
+
+    private PatientImplantEntity requireImplantedLink(UUID tenant, UUID patientImplantId) {
+        PatientImplantEntity link = patientImplantRepository.findById(patientImplantId)
+                .orElseThrow(() -> new IllegalArgumentException("No implant link " + patientImplantId));
+        if (!link.getTenantId().equals(tenant)) {
+            throw new IllegalArgumentException("No implant link " + patientImplantId);
+        }
+        if (!"IMPLANTED".equals(link.getStatus())) {
+            throw new IllegalStateException(
+                    "Implant link " + patientImplantId + " is not IMPLANTED (status=" + link.getStatus() + ")");
+        }
+        return link;
     }
 
     /**

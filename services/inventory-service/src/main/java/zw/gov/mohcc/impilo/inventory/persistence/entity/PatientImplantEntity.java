@@ -45,6 +45,30 @@ public class PatientImplantEntity {
     @Column(name = "status", length = 24)
     private String status = "IMPLANTED";
 
+    @Column(name = "patient_facing_name", length = 255)
+    private String patientFacingName;
+
+    @Column(name = "patient_facing_description")
+    private String patientFacingDescription;
+
+    @Column(name = "expected_lifespan_months")
+    private Integer expectedLifespanMonths;
+
+    @Column(name = "next_review_due_at")
+    private OffsetDateTime nextReviewDueAt;
+
+    @Column(name = "removed_at")
+    private OffsetDateTime removedAt;
+
+    @Column(name = "removed_by", length = 128)
+    private String removedBy;
+
+    @Column(name = "removal_reason")
+    private String removalReason;
+
+    @Column(name = "revision_of_patient_implant_id")
+    private UUID revisionOfPatientImplantId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -82,6 +106,30 @@ public class PatientImplantEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getPatientFacingName() { return patientFacingName; }
+    public void setPatientFacingName(String v) { this.patientFacingName = v; }
+
+    public String getPatientFacingDescription() { return patientFacingDescription; }
+    public void setPatientFacingDescription(String v) { this.patientFacingDescription = v; }
+
+    public Integer getExpectedLifespanMonths() { return expectedLifespanMonths; }
+    public void setExpectedLifespanMonths(Integer v) { this.expectedLifespanMonths = v; }
+
+    public OffsetDateTime getNextReviewDueAt() { return nextReviewDueAt; }
+    public void setNextReviewDueAt(OffsetDateTime v) { this.nextReviewDueAt = v; }
+
+    public OffsetDateTime getRemovedAt() { return removedAt; }
+    public void setRemovedAt(OffsetDateTime v) { this.removedAt = v; }
+
+    public String getRemovedBy() { return removedBy; }
+    public void setRemovedBy(String v) { this.removedBy = v; }
+
+    public String getRemovalReason() { return removalReason; }
+    public void setRemovalReason(String v) { this.removalReason = v; }
+
+    public UUID getRevisionOfPatientImplantId() { return revisionOfPatientImplantId; }
+    public void setRevisionOfPatientImplantId(UUID v) { this.revisionOfPatientImplantId = v; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }

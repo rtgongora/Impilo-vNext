@@ -19,7 +19,18 @@ public record ImplantTraceDto(
         String lotNumber,
         String bodySite,
         String laterality,
-        OffsetDateTime implantedAt
+        OffsetDateTime implantedAt,
+        // §14: status is included rather than filtered out of trace/recall results — a recalled
+        // unit that has already been removed is still meaningful history, not something to hide.
+        String status,
+        String patientFacingName,
+        String patientFacingDescription,
+        Integer expectedLifespanMonths,
+        OffsetDateTime nextReviewDueAt,
+        OffsetDateTime removedAt,
+        String removedBy,
+        String removalReason,
+        UUID revisionOfPatientImplantId
 ) {
     public static ImplantTraceDto from(PatientImplantEntity link, ImplantUnitEntity unit) {
         return new ImplantTraceDto(
@@ -31,6 +42,15 @@ public record ImplantTraceDto(
                 unit != null ? unit.getLotNumber() : null,
                 link.getBodySite(),
                 link.getLaterality(),
-                link.getImplantedAt());
+                link.getImplantedAt(),
+                link.getStatus(),
+                link.getPatientFacingName(),
+                link.getPatientFacingDescription(),
+                link.getExpectedLifespanMonths(),
+                link.getNextReviewDueAt(),
+                link.getRemovedAt(),
+                link.getRemovedBy(),
+                link.getRemovalReason(),
+                link.getRevisionOfPatientImplantId());
     }
 }
