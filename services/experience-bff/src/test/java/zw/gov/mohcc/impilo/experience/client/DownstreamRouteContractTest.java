@@ -90,7 +90,13 @@ class DownstreamRouteContractTest {
             //   * rostering is vashandi's (vsh_roster/vsh_shift), and scheduled on-call is a
             //     projection over shifts carrying an on_call_role, not a rival concept beside the
             //     virtual-pool duty read.
-            "TusoServiceClient -> /v1/shifts",
+            //
+            // /v1/shifts is now FIXED too and has been removed from this list (2026-07-28, by the
+            // adult-medicine lane, because the guard failed the shared BFF build until someone did).
+            // Note HOW it was fixed, since it is not what the note above anticipated: tuso still does
+            // not serve /v1/shifts — it serves /v1/internal/shifts — and the fix was on the CALLER
+            // side. TusoServiceClient no longer requests that path at all. The violation disappeared
+            // because the call went away, not because the route arrived.
 
             // /v1/vitals was on this list and is FIXED: the vitals surface now reads and writes
             // pct's observation spine (/v1/observations, LOINC-coded) via VitalsObservationBridge,

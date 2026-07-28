@@ -70,6 +70,20 @@ public class ProgrammeEnrolmentEntity {
     @Column(name = "managing_facility_id")
     private String managingFacilityId;
 
+    // V112 — the control axis a chronic-disease register is read for. Nullable with no default:
+    // NULL means never assessed, which is deliberately not the same as NOT_CONTROLLED. A register is
+    // read to decide who to recall, and the patient nobody has reviewed must not look like the
+    // patient who is doing badly.
+    @Column(name = "control_status")
+    private String controlStatus;
+
+    @Column(name = "control_assessed_on")
+    private LocalDate controlAssessedOn;
+
+    /** The target agreed with this person where it differs from the guideline default (brief §9). */
+    @Column(name = "individualised_target")
+    private String individualisedTarget;
+
     @Column(name = "responsible_actor")
     private String responsibleActor;
 
@@ -139,6 +153,15 @@ public class ProgrammeEnrolmentEntity {
 
     public String getManagingFacilityId() { return managingFacilityId; }
     public void setManagingFacilityId(String managingFacilityId) { this.managingFacilityId = managingFacilityId; }
+
+    public String getControlStatus() { return controlStatus; }
+    public void setControlStatus(String controlStatus) { this.controlStatus = controlStatus; }
+
+    public LocalDate getControlAssessedOn() { return controlAssessedOn; }
+    public void setControlAssessedOn(LocalDate controlAssessedOn) { this.controlAssessedOn = controlAssessedOn; }
+
+    public String getIndividualisedTarget() { return individualisedTarget; }
+    public void setIndividualisedTarget(String individualisedTarget) { this.individualisedTarget = individualisedTarget; }
 
     public String getResponsibleActor() { return responsibleActor; }
     public void setResponsibleActor(String responsibleActor) { this.responsibleActor = responsibleActor; }

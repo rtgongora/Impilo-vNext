@@ -1548,6 +1548,32 @@ public class PctServiceClient {
                 baseUrl + "/v1/programme-enrolments/" + enrolmentId, JsonNode.class));
     }
 
+    /**
+     * The chronic-disease register for one programme at one facility — a recall worklist.
+     *
+     * <p>pct refuses this with 403 for programmes on the confidential lane, because a patient-level
+     * listing names everyone on it as having the condition and the classification that would restrict
+     * it is not enforcing. That refusal must reach the caller as a refusal: turning it into an empty
+     * list here would tell a clinician nobody is on the register.</p>
+     */
+    public JsonNode programmeRegister(String programme, String facilityId, java.util.List<String> statuses) {
+        StringBuilder url = new StringBuilder(baseUrl)
+                .append("/v1/programme-enrolments/register?programme=")
+                .append(java.net.URLEncoder.encode(programme, java.nio.charset.StandardCharsets.UTF_8));
+        if (facilityId != null && !facilityId.isBlank()) {
+            url.append("&facility_id=")
+               .append(java.net.URLEncoder.encode(facilityId, java.nio.charset.StandardCharsets.UTF_8));
+        }
+        if (statuses != null) {
+            for (String status : statuses) {
+                url.append("&status=")
+                   .append(java.net.URLEncoder.encode(status, java.nio.charset.StandardCharsets.UTF_8));
+            }
+        }
+        log.debug("PCT: register programme={} facility={}", programme, facilityId);
+        return extractData(restTemplate.getForEntity(url.toString(), JsonNode.class));
+    }
+
     public JsonNode enrolProgramme(Map<String, Object> body) {
         log.info("PCT: enrolling programme={} for subject={}", body.get("programme"), body.get("subject_cpid"));
         return extractData(restTemplate.postForEntity(

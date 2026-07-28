@@ -47,4 +47,39 @@ public interface ProgrammeEnrolmentRepository extends JpaRepository<ProgrammeEnr
            """)
     List<Object[]> cohortCounts(@Param("tenantId") UUID tenantId,
                                @Param("facilityId") String facilityId);
+
+    /**
+     * The register itself — who is on it, at one facility, with how their condition is running.
+     *
+     * <p><strong>This is the first cohort read in the estate.</strong> Every other problem and
+     * enrolment query here is subject-scoped: they answer "what does this patient have". A register
+     * is the other question — "who at this facility is on this register, and who among them needs
+     * recalling" — and until V112 added {@code idx_pct_programme_enrolments_cohort} no index led with
+     * the facility, so there was no efficient way to ask it. That access path, not a table, was what
+     * chronic-disease registers actually cost.</p>
+     *
+     * <p>Ordered by control status ascending with NULLs first, then by assessment date, so the two
+     * groups a recall list exists to find come out at the top: the people nobody has assessed, and
+     * then the people assessed longest ago. A register sorted by name is an administrative document;
+     * sorted this way it is a worklist.</p>
+     *
+     * <p>Excludes EXITED by default via the status filter the caller supplies. Left to the caller
+     * rather than hardcoded, because "who left this register and why" is a real clinical question —
+     * particularly for the people who left as LOST_TO_FOLLOW_UP.</p>
+     */
+    @Query("""
+           SELECT e
+             FROM ProgrammeEnrolmentEntity e
+            WHERE e.tenantId = :tenantId
+              AND e.programme = :programme
+              AND (:facilityId IS NULL OR e.managingFacilityId = :facilityId)
+              AND (:statuses IS NULL OR e.status IN :statuses)
+            ORDER BY CASE WHEN e.controlStatus IS NULL THEN 0 ELSE 1 END,
+                     e.controlAssessedOn ASC NULLS FIRST,
+                     e.enrolledOn ASC
+           """)
+    List<ProgrammeEnrolmentEntity> register(@Param("tenantId") UUID tenantId,
+                                            @Param("programme") String programme,
+                                            @Param("facilityId") String facilityId,
+                                            @Param("statuses") Collection<String> statuses);
 }
