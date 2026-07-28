@@ -115,14 +115,19 @@ public class StudentApplicationController {
             @PathVariable Long applicationId,
             @RequestBody Map<String, Object> body) {
 
+        // No defaults. These named NCZ's register, policy and fee, which is fine until a second
+        // council calls the same endpoint — and then a caller who omits one is admitting someone
+        // against ANOTHER council's configuration. It fails closed today (the lookup is scoped by
+        // council, so it 409s), but a confusing refusal is not the same as a clear requirement, and
+        // the next default might resolve. A council says which register it is admitting to.
         StudentAdmissionService.Admission admission = admissionService.admit(
                 tenantId,
                 Long.valueOf(String.valueOf(body.get("councilId"))),
                 applicationId,
                 Long.valueOf(String.valueOf(body.get("providerId"))),
-                String.valueOf(body.getOrDefault("registerCode", "NCZ_STUDENT")),
-                String.valueOf(body.getOrDefault("policyKey", "student-index")),
-                String.valueOf(body.getOrDefault("feeCode", "STUDENT_INDEX")),
+                required(body, "registerCode"),
+                required(body, "policyKey"),
+                required(body, "feeCode"),
                 actor);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -131,6 +136,17 @@ public class StudentApplicationController {
         response.put("registerCode", admission.registerCode());
         response.put("effectiveFrom", admission.effectiveFrom());
         return ResponseEntity.ok(response);
+    }
+
+    private static String required(Map<String, Object> body, String field) {
+        Object value = body.get(field);
+        if (value == null || String.valueOf(value).isBlank()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "'" + field + "' is required. Admission is council-specific and must not fall "
+                            + "back to another council's configuration.");
+        }
+        return String.valueOf(value);
     }
 
     /**
