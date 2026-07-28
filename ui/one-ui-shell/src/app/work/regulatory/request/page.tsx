@@ -21,7 +21,7 @@ import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
-import { REGULATORY_ORGS } from "@/lib/regulatory/organisations";
+import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
 
 interface ApiError {
   status?: number;
@@ -33,6 +33,7 @@ interface ApiError {
 const FOUNDING_ROLE = "FOUNDING_REGULATOR_ADMINISTRATOR";
 
 export default function RegulatoryAccessRequestPage() {
+  const { organisations } = useRegulatoryOrganisations();
   const [organisationId, setOrganisationId] = useState("");
   const [evidenceRef, setEvidenceRef] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -148,7 +149,7 @@ export default function RegulatoryAccessRequestPage() {
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
                     >
                       <option value="">Select a regulator…</option>
-                      {REGULATORY_ORGS.map((o) => (
+                      {organisations.map((o) => (
                         <option key={o.id} value={o.id}>
                           {o.name} ({o.code})
                         </option>

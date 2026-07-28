@@ -1,33 +1,17 @@
 /**
- * The nine regulatory organisations (ROM). Deterministic org-registry UUIDs
- * (a5000000-0000-4000-8000-00000000000N) — the same constants seeded in
- * org-registry V007 + varapi V028. Used to render friendly names in the
- * regulatory workspace picker without a round-trip.
+ * Regulatory UI vocabulary.
+ *
+ * The nine organisations USED to be listed here as a hardcoded array with their deterministic
+ * org-registry UUIDs. That copy has been retired (NCZ-W1B): it was the third in the estate, after
+ * varapi V028 and org-registry V007, and the only one that could drift without anything failing —
+ * a council renamed, added or retired in the registry would have left the interface confidently
+ * displaying the old name. Organisations now come from `useRegulatoryOrganisations`, which reads
+ * org-registry through the BFF.
+ *
+ * What remains here is a label map for the closed appointment-role vocabulary. It is not a second
+ * copy of the organisations, and org-registry serves the codes themselves; only the human wording
+ * lives here.
  */
-export interface RegulatoryOrg {
-  id: string;
-  code: string;
-  name: string;
-  kind: "authority" | "council";
-}
-
-export const REGULATORY_ORGS: RegulatoryOrg[] = [
-  { id: "a5000000-0000-4000-8000-000000000001", code: "HPA", name: "Health Professions Authority", kind: "authority" },
-  { id: "a5000000-0000-4000-8000-000000000002", code: "MDPCZ", name: "Medical and Dental Practitioners Council of Zimbabwe", kind: "council" },
-  { id: "a5000000-0000-4000-8000-000000000003", code: "NCZ", name: "Nurses Council of Zimbabwe", kind: "council" },
-  { id: "a5000000-0000-4000-8000-000000000004", code: "PCZ", name: "Pharmacists Council of Zimbabwe", kind: "council" },
-  { id: "a5000000-0000-4000-8000-000000000005", code: "AHPCZ", name: "Allied Health Practitioners Council of Zimbabwe", kind: "council" },
-  { id: "a5000000-0000-4000-8000-000000000006", code: "EHPCZ", name: "Environmental Health Practitioners Council of Zimbabwe", kind: "council" },
-  { id: "a5000000-0000-4000-8000-000000000007", code: "MRPCZ", name: "Medical Rehabilitation Practitioners Council of Zimbabwe", kind: "council" },
-  { id: "a5000000-0000-4000-8000-000000000008", code: "MLCSCZ", name: "Medical Laboratory and Clinical Scientists Council of Zimbabwe", kind: "council" },
-  { id: "a5000000-0000-4000-8000-000000000009", code: "NTCZ", name: "Natural Therapists Council of Zimbabwe", kind: "council" },
-];
-
-const BY_ID = new Map(REGULATORY_ORGS.map((o) => [o.id.toLowerCase(), o]));
-
-export function regulatoryOrg(id: string | null | undefined): RegulatoryOrg | undefined {
-  return id ? BY_ID.get(id.toLowerCase()) : undefined;
-}
 
 /** Human label for an appointment role_code (org_registry_appointment_role vocabulary). */
 export const APPOINTMENT_ROLE_LABELS: Record<string, string> = {

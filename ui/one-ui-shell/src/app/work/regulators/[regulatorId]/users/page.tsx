@@ -31,7 +31,7 @@ import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
-import { regulatoryOrg } from "@/lib/regulatory/organisations";
+import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
 
 interface Appointment {
   id: string;
@@ -81,7 +81,8 @@ const PENDING = "PENDING_VERIFICATION";
 export default function RegulatorUsersPage() {
   const params = useParams<{ regulatorId: string }>();
   const orgId = decodeURIComponent(String(params?.regulatorId ?? ""));
-  const org = regulatoryOrg(orgId);
+  const { organisation } = useRegulatoryOrganisations();
+  const org = organisation(orgId);
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [roles, setRoles] = useState<AppointmentRole[]>([]);

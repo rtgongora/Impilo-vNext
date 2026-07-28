@@ -49,6 +49,17 @@ public class CaseEntity {
     @Column(name = "facility_id")
     private UUID facilityId;
 
+    // Current investigation state, mirrored from the latest case_update for line-list queries.
+    // The authoritative history lives in surv.case_updates.
+    @Column(name = "classification")
+    private String classification;
+
+    @Column(name = "outcome")
+    private String outcome;
+
+    @Column(name = "lab_result")
+    private String labResult;
+
     @Column(name = "assigned_to")
     private String assignedTo;
 
@@ -98,4 +109,11 @@ public class CaseEntity {
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getClassification() { return classification; }
+    public void setClassification(String classification) { this.classification = classification; }
+    public String getOutcome() { return outcome; }
+    public void setOutcome(String outcome) { this.outcome = outcome; }
+    public String getLabResult() { return labResult; }
+    public void setLabResult(String labResult) { this.labResult = labResult; }
 }
