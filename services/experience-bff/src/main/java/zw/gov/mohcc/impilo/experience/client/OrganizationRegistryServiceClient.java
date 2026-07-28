@@ -59,6 +59,33 @@ public class OrganizationRegistryServiceClient {
     }
 
     /** The closed appointment-role vocabulary, so the invite form offers governed roles only. */
+    // ── Regulatory Configuration Registry reads (NCZ-W1A) ────────────────────────────────────
+
+    public JsonNode listConfigPacks(String organizationId) {
+        return exchangeJson(HttpMethod.GET,
+                baseUrl + "/v1/regulatory/config/organizations/" + organizationId + "/packs", null);
+    }
+
+    public JsonNode listConfigReleases(String packId) {
+        return exchangeJson(HttpMethod.GET,
+                baseUrl + "/v1/regulatory/config/packs/" + packId + "/releases", null);
+    }
+
+    public JsonNode listConfigDefinitions(String packId) {
+        return exchangeJson(HttpMethod.GET,
+                baseUrl + "/v1/regulatory/config/packs/" + packId + "/definitions", null);
+    }
+
+    public JsonNode activeConfiguration(String packId) {
+        return exchangeJson(HttpMethod.GET,
+                baseUrl + "/v1/regulatory/config/packs/" + packId + "/active", null);
+    }
+
+    public JsonNode configDefinitionVersions(String definitionId) {
+        return exchangeJson(HttpMethod.GET,
+                baseUrl + "/v1/regulatory/config/definitions/" + definitionId + "/versions", null);
+    }
+
     public JsonNode listAppointmentRoles() {
         return getForJson(trimSlash(baseUrl) + "/v1/regulatory/appointment-roles");
     }

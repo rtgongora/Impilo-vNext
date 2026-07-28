@@ -238,6 +238,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/regulators/[regulatorId]/committee", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Committee & hearings", navLabel: "Committee", navZone: "work" },
   { path: "/work/regulators/[regulatorId]/bulk-import", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Bulk import", navLabel: "Bulk import", navZone: "work" },
   { path: "/work/regulatory/[orgId]/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory dashboards", navLabel: "Dashboards", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/configuration", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory configuration", navLabel: "Configuration", navZone: "work" },
   { path: "/work/regulatory/hpa/oversight", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "HPA oversight", navLabel: "HPA oversight", navZone: "work" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
@@ -1050,7 +1051,7 @@ export const ROUTES: RouteDefinition[] = [
 // IMAM nutrition treatment (Jul 2026): +2 — the child's treatment episode and the facility's
 // defaulter tracing worklist, which are different jobs done by different people. Total 805.
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
-export const EXPECTED_ROUTE_COUNT = 810;
+export const EXPECTED_ROUTE_COUNT = 811;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
