@@ -37,6 +37,53 @@ const SUPERVISORY_WORK_MODES = new Set([
   "PROGRAMME_MANAGEMENT",
 ]);
 
+/**
+ * Which governed WorkModes an AppMode may be entered under, most-preferred
+ * first. An AppMode absent from this map has NO WorkMode analogue in the
+ * resolver (outreach, courier, offline) and stays a local navigation choice —
+ * see useSwitchAppMode.
+ *
+ * This is what makes "supervisor grants no automatic patient access" structural
+ * rather than cosmetic: entering supervisor mints a management-mode token, and
+ * the PDP's clinicalDataAccess gate (Phase B4) then declines to fold the
+ * clinical role every clinical policy rule matches on.
+ */
+export const WORK_MODES_FOR_APP_MODE: Partial<Record<AppMode, string[]>> = {
+  provider: ["CLINICAL_CARE", "VIRTUAL_CARE"],
+  supervisor: ["FACILITY_MANAGEMENT", "DEPARTMENT_MANAGEMENT", "JURISDICTION_OPERATIONS", "PROGRAMME_MANAGEMENT"],
+};
+
+/** True when entering this AppMode must be backed by a freshly minted duty token. */
+export function requiresWorkContextMint(appMode: AppMode): boolean {
+  return WORK_MODES_FOR_APP_MODE[appMode] !== undefined;
+}
+
+/**
+ * Picks the context + WorkMode to enter `appMode` under, preferring to stay in
+ * the context the person is already working in. Returns null when no resolved
+ * assignment grants the mode — the caller must refuse, never fall back to a
+ * mode the backend has not granted.
+ */
+export function selectContextForAppMode(
+  appMode: AppMode,
+  contexts: ResolvedWorkContextView[] | null,
+  currentContextId?: string
+): { context: ResolvedWorkContextView; workMode: string } | null {
+  const candidates = WORK_MODES_FOR_APP_MODE[appMode];
+  if (!candidates || !contexts?.length) return null;
+
+  const ordered = [
+    ...contexts.filter((c) => c.contextId === currentContextId),
+    ...contexts.filter((c) => c.contextId !== currentContextId),
+  ];
+
+  for (const workMode of candidates) {
+    const context = ordered.find((c) => c.availableModes?.includes(workMode as never));
+    if (context) return { context, workMode };
+  }
+  return null;
+}
+
 function anyContextGrants(contexts: ResolvedWorkContextView[], modes: Set<string>): boolean {
   return contexts.some((c) => c.availableModes?.some((m) => modes.has(m)));
 }
