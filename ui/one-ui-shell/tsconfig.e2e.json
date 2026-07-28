@@ -1,0 +1,23 @@
+{
+  // Type-checks the Playwright specs, which the app's own tsconfig excludes.
+  //
+  // WHY A SEPARATE CONFIG rather than dropping "e2e" from tsconfig.json's exclude:
+  // the main config drives `next build`. Pulling 112 spec files into it would make the
+  // production build depend on @playwright/test — a devDependency — and would fail the
+  // build on a test-only type error. Test code should be able to break without taking
+  // the app down with it. So the specs get their own pass, run by `test:typecheck-e2e`.
+  //
+  // WHY IT EXISTS AT ALL: the specs were excluded from every type-check in the repo, so
+  // a spec that could not compile reported zero failures rather than an error. That is
+  // the same shape as a suite that does not run and calls itself green — the difference
+  // between "nothing is wrong" and "nothing was checked" is invisible from the outside.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // Playwright specs run in Node, not the browser: they need Node globals the app
+    // config has no reason to carry.
+    "types": ["node"]
+  },
+  "include": ["e2e/**/*.ts", "playwright.config.ts"],
+  "exclude": ["node_modules"]
+}

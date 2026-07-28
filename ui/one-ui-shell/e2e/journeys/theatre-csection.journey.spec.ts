@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { requireHealthId } from "./personas";
 import type { JourneyPersona } from "./personas";
 import { RUN_PREVIEW, loginAs, gotoAs } from "./honest-auth";
 import { AcceptanceChecklist, expectActionable } from "./acceptance";
@@ -35,7 +36,7 @@ test.describe.serial("Theatre obstetric C-section (live preview, screen-driven)"
       await loginAs(page, SURGEON);
       await gotoAs(page, SURGEON, "/work/clinical/theatre");
       await page.getByTestId("emergency-activate-toggle").click();
-      await page.getByTestId("em-patient").fill(SURGEON.healthId);
+      await page.getByTestId("em-patient").fill(requireHealthId(SURGEON));
       await page.getByTestId("em-procedure").fill("Emergency Caesarean Section");
       await Promise.all([
         page.waitForURL(/\/work\/clinical\/theatre\/[0-9a-f-]{8}/i, { timeout: 20_000 }),

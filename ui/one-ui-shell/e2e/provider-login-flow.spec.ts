@@ -64,6 +64,7 @@ test.describe("Provider login resolving destinations", () => {
     expect(
       resolvePostLoginDestination({
         user: {
+          id: "user-provider-e2e",
           actorType: "PROVIDER",
           roles: ["CLINICIAN"],
           providerActivated: true,
@@ -76,6 +77,7 @@ test.describe("Provider login resolving destinations", () => {
     expect(
       resolvePostLoginDestination({
         user: {
+          id: "user-citizen-e2e",
           actorType: "CITIZEN",
           roles: ["CLINICIAN"],
           providerActivated: false,
@@ -87,6 +89,7 @@ test.describe("Provider login resolving destinations", () => {
     expect(
       resolvePostLoginDestination({
         user: {
+          id: "user-citizen-e2e",
           actorType: "CITIZEN",
           roles: ["CITIZEN"],
           providerActivated: false,

@@ -9,6 +9,9 @@ export const COVERAGE_E2E = {
   clientId: "e2e-provider-001",
 } as const;
 
+// Passed as `json:` — `route.fulfill(emptyList)` put the object in fulfill's OPTIONS
+// position, which has no `data` key, so every one of these mocks answered with an
+// empty body instead of an empty JSON:API list. The specs asserted against nothing.
 const emptyList = { data: [] as unknown[] };
 
 export async function installCoverageMocks(page: Page) {
@@ -65,23 +68,23 @@ export async function installCoverageMocks(page: Page) {
     }
 
     if (method === "GET" && path === "/eligibility") {
-      return route.fulfill(emptyList);
+      return route.fulfill({ json: emptyList });
     }
 
     if (method === "GET" && path === "/claims") {
-      return route.fulfill(emptyList);
+      return route.fulfill({ json: emptyList });
     }
 
     if (method === "GET" && path === "/contributions") {
-      return route.fulfill(emptyList);
+      return route.fulfill({ json: emptyList });
     }
 
     if (method === "GET" && path === "/preauths") {
-      return route.fulfill(emptyList);
+      return route.fulfill({ json: emptyList });
     }
 
     if (method === "GET" && path === "/utilization") {
-      return route.fulfill(emptyList);
+      return route.fulfill({ json: emptyList });
     }
 
     if (method === "GET" && path === "/appeals") {

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { requireHealthId } from "./personas";
 import type { JourneyPersona } from "./personas";
 import { RUN_PREVIEW, loginAs, gotoAs } from "./honest-auth";
 import { AcceptanceChecklist, expectActionable } from "./acceptance";
@@ -41,7 +42,7 @@ test.describe.serial("Theatre emergency activation (live preview, screen-driven)
     });
 
     await checklist.point("A2_actionEnabled", "the surgeon captures patient + procedure and the submit is actionable", async () => {
-      await page.getByTestId("em-patient").fill(SURGEON.healthId);
+      await page.getByTestId("em-patient").fill(requireHealthId(SURGEON));
       await page.getByTestId("em-procedure").fill("Emergency exploratory laparotomy");
       await expectActionable(page.getByTestId("em-submit"));
     });
