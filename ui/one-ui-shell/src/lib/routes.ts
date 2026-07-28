@@ -348,6 +348,7 @@ export const ROUTES: RouteDefinition[] = [
   // route-parity-check only validates registry -> filesystem, never the reverse, so an unregistered
   // page is invisible to it. Registering them is the fix, not a new capability.
   { path: "/ehr/[patientId]/programmes", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Care programmes", navLabel: "Programmes", navZone: "work" },
+  { path: "/ehr/[patientId]/medicine", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Medicine workspace", navLabel: "Medicine", navZone: "work" },
   { path: "/ehr/[patientId]/workspace/[specialty]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Specialty Workspace", navLabel: "Specialty", navZone: "work" },
 
   // â”€â”€ Zone: Admin / TSHEPO Governance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1046,7 +1047,7 @@ export const ROUTES: RouteDefinition[] = [
 // unguarded — resus/[activationId], episode/[episodeId], [visitId]. Total 803.
 // IMAM nutrition treatment (Jul 2026): +2 — the child's treatment episode and the facility's
 // defaulter tracing worklist, which are different jobs done by different people. Total 805.
-export const EXPECTED_ROUTE_COUNT = 809;
+export const EXPECTED_ROUTE_COUNT = 810;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
