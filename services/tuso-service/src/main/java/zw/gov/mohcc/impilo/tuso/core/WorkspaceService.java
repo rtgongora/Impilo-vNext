@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -426,6 +428,43 @@ public class WorkspaceService {
         log.info("Shift {} started for provider {} in workspace {} at facility {}",
                 shift.getId(), providerId, workspaceId, facilityId);
         return toShiftResponse(shift);
+    }
+
+    /**
+     * The provider's current shift, or empty if they are not on one.
+     *
+     * <p>Shift state is an authorization input — duty is one of the axes an access decision reads —
+     * so "is this clinician on shift" has to be answerable. It was not: the BFF called
+     * {@code /v1/shifts/current}, which nothing served, and every call failed.
+     */
+    @Transactional(readOnly = true)
+    public Optional<ShiftResponse> getCurrentShift(UUID tenantId, String providerId) {
+        return shiftRepository.findByTenantIdAndProviderIdAndStatus(tenantId, providerId, "ACTIVE")
+                .stream()
+                .max(Comparator.comparing(ShiftEntity::getStartedAt))
+                .map(this::toShiftResponse);
+    }
+
+    /**
+     * Ends a shift.
+     *
+     * <p>Idempotent: ending an already-ended shift returns it unchanged rather than moving its end
+     * time. A handover can be confirmed twice, and the second confirmation must not rewrite when
+     * the first clinician actually went off duty.
+     */
+    @Transactional
+    public Optional<ShiftResponse> endShift(UUID tenantId, UUID shiftId) {
+        return shiftRepository.findById(shiftId)
+                .filter(shift -> shift.getTenantId().equals(tenantId))
+                .map(shift -> {
+                    if (!"ENDED".equals(shift.getStatus())) {
+                        shift.setStatus("ENDED");
+                        shift.setEndedAt(Instant.now());
+                        shift = shiftRepository.save(shift);
+                        log.info("Shift {} ended for provider {}", shift.getId(), shift.getProviderId());
+                    }
+                    return toShiftResponse(shift);
+                });
     }
 
     // ---- Mapping helpers ----

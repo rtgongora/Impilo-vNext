@@ -206,27 +206,46 @@ public class VitoServiceClient {
         return extractData(response);
     }
 
-    /** Get citizen profile by CPID. */
+    // These three used to point at /v1/identity/profile/…, which VITO has never served. Every
+    // citizen profile read, every self-service edit and every account closure failed — on a
+    // statutory data-subject surface, where "delete my account" silently doing nothing is the worst
+    // possible outcome. The client registry is at /v1/clients.
+
+    /** Get citizen profile by health ID. */
     public JsonNode getCitizenProfile(String cpid) {
-        String url = baseUrl + "/v1/identity/profile/" + cpid;
+        String url = baseUrl + "/v1/clients/" + cpid;
         log.info("VITO: Getting citizen profile for cpid={}", cpid);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
 
-    /** Update citizen profile. */
+    /**
+     * Update citizen profile — the self-service path, guarded by subject-equals-actor in VITO.
+     * The SYSTEM-actor route ({@code PUT /v1/clients/{id}}) is for integrations writing on
+     * someone's behalf, not for the person themselves.
+     */
     public JsonNode updateCitizenProfile(String cpid, Map<String, Object> updates) {
-        String url = baseUrl + "/v1/identity/profile/" + cpid;
+        String url = baseUrl + "/v1/clients/" + cpid + "/self";
         log.info("VITO: Updating citizen profile for cpid={}", cpid);
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, updates, JsonNode.class);
+        ResponseEntity<JsonNode> response =
+                restTemplate.exchange(url, org.springframework.http.HttpMethod.PUT,
+                        new HttpEntity<>(updates), JsonNode.class);
         return extractData(response);
     }
 
-    /** Delete/deactivate citizen account. */
-    public void deleteCitizenAccount(String cpid) {
-        String url = baseUrl + "/v1/identity/profile/" + cpid + "/deactivate";
+    /**
+     * Deactivate a citizen account.
+     *
+     * <p>Returns VITO's payload rather than discarding it: the caller has to be able to tell a
+     * completed closure from a failed one. This used to swallow the response entirely, so the app
+     * confirmed an account closure that never happened.
+     */
+    public JsonNode deleteCitizenAccount(String cpid, String reason) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/clients/" + cpid + "/deactivate")
+                .queryParam("reason", reason == null || reason.isBlank() ? "CITIZEN_REQUESTED" : reason)
+                .toUriString();
         log.info("VITO: Deactivating citizen account for cpid={}", cpid);
-        restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
     }
 
     /** List patients with search, status, pagination (internal). */

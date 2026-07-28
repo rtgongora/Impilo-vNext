@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import java.util.LinkedHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
@@ -22,6 +26,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/internal/v1/mobile/citizen/profile")
 public class CitizenProfileController {
+
+    private static final Logger log = LoggerFactory.getLogger(CitizenProfileController.class);
 
     private final VitoServiceClient vitoClient;
     private final TshepoConsentServiceClient consentClient;
@@ -122,19 +128,47 @@ public class CitizenProfileController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Closes the citizen's own account.
+     *
+     * <p>This is a statutory data-subject surface, and it used to answer 204 unconditionally while
+     * calling a VITO path that has never existed — so the app confirmed a closure that had not
+     * happened, to the one person entitled to rely on it. A failure here must be visible.
+     *
+     * <p>Deactivation, not deletion: the clinical record is not the citizen's account and is not
+     * erasable on request. Closing the account withdraws the identity from active use and is
+     * audited by VITO with the reason.
+     */
     @DeleteMapping("/account")
-    public ResponseEntity<Void> deleteAccount(
+    public ResponseEntity<Map<String, Object>> deleteAccount(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        vitoClient.deleteCitizenAccount(actorId);
+        try {
+            JsonNode deactivated = vitoClient.deleteCitizenAccount(actorId, "CITIZEN_REQUESTED");
+            if (deactivated == null) {
+                return accountClosureFailed("The identity registry returned no confirmation",
+                        requestId, correlationId);
+            }
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", deactivated);
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Citizen account closure failed for actor={}: {}", actorId, e.getMessage());
+            return accountClosureFailed(e.getMessage(), requestId, correlationId);
+        }
+    }
 
-        // jdbcTemplate.update("UPDATE patients SET status = 'DELETED', updated_at = NOW() WHERE tenant_id = ? AND cpid = ?",
-        //         tenantId, actorId);
-
-        return ResponseEntity.noContent().build();
+    private ResponseEntity<Map<String, Object>> accountClosureFailed(
+            String detail, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", "account_closure_failed",
+                "message", "Your account was NOT closed. Please try again or contact support.",
+                "detail", detail == null ? "" : detail,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

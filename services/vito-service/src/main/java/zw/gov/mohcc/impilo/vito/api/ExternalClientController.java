@@ -54,6 +54,37 @@ public class ExternalClientController {
                 .body(ApiResponse.ok(result, ctx.correlationId().toString()));
     }
 
+    /**
+     * The data subject updating their own demographics.
+     *
+     * <p>{@link #updateDemographics} requires a SYSTEM actor, which is right for an integration
+     * writing on someone's behalf and wrong for the person themselves. Without this path the
+     * citizen app had nowhere to send a profile edit — it posted to {@code /v1/identity/profile/…},
+     * which VITO has never served, so every self-service profile update failed.
+     *
+     * <p>The guard is subject-equals-actor: you may edit your own record and no one else's. It runs
+     * through the same update service, so validation, provenance and audit are identical to the
+     * SYSTEM path — a self-service edit is not a lesser-governed one.
+     */
+    @PutMapping("/{healthId}/self")
+    public ResponseEntity<ApiResponse<ClientEntity>> updateOwnDemographics(
+            @PathVariable UUID healthId,
+            @RequestBody ClientDemographicsUpdateRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        String actorId = ctx.actorId();
+        if (actorId == null || !actorId.equalsIgnoreCase(healthId.toString())) {
+            throw new AccessDeniedException(
+                    "A self-service demographics update may only be made by the data subject");
+        }
+        ClientEntity updated = clientUpdateService.update(
+                ctx.tenantId(),
+                healthId,
+                request,
+                actorId,
+                ctx.correlationId().toString());
+        return ResponseEntity.ok(ApiResponse.ok(updated, ctx.correlationId().toString()));
+    }
+
     @PutMapping("/{healthId}")
     public ResponseEntity<ApiResponse<ClientEntity>> updateDemographics(
             @PathVariable UUID healthId,

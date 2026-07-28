@@ -667,7 +667,7 @@ public class TusoServiceClient {
 
     /** Get current active shift for a user. */
     public JsonNode getCurrentShift(String userId) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/shifts/current")
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/shifts/current")
                 .queryParam("userId", userId)
                 .toUriString();
         log.info("TUSO: Getting current shift for user={}", userId);
@@ -675,17 +675,28 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
-    /** Start a new shift. */
+    /**
+     * Start a new shift.
+     *
+     * <p>Shift start is facility-scoped in tuso — a shift happens somewhere. This used to post to
+     * {@code /v1/shifts/start}, which no service has ever served, so every attempt to go on duty
+     * failed and duty state could never be established.
+     */
     public JsonNode startShift(Map<String, Object> body) {
-        String url = baseUrl + "/v1/shifts/start";
-        log.info("TUSO: Starting shift for user={}", body.get("user_id"));
+        Object facilityId = body.get("facility_id") != null ? body.get("facility_id") : body.get("facilityId");
+        if (facilityId == null) {
+            throw new IllegalArgumentException("facility_id is required to start a shift");
+        }
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/start-shift";
+        log.info("TUSO: Starting shift for provider={} at facility={}",
+                body.get("provider_id") != null ? body.get("provider_id") : body.get("user_id"), facilityId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 
     /** End a shift. */
     public JsonNode endShift(String shiftId, Map<String, Object> body) {
-        String url = baseUrl + "/v1/shifts/" + shiftId + "/end";
+        String url = baseUrl + "/v1/internal/shifts/" + shiftId + "/end";
         log.info("TUSO: Ending shift={}", shiftId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
