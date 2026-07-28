@@ -829,7 +829,26 @@ public class InpatientClinicalService {
         a.setProtocolType(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "protocolType", "protocol_type"), "CODE_BLUE"));
         a.setLocation(ClinicalPayloadMapper.str(body, "location"));
         a.setTeamLeader(ClinicalPayloadMapper.str(body, "teamLeader", "team_leader"));
+        // Where in the facility this was called from (chk_ea_origin, V200). Null is legitimate — not
+        // every activation is in-facility (e.g. a trauma-bay code with no ward/ED distinction yet).
+        a.setOrigin(ClinicalPayloadMapper.str(body, "origin"));
         a = emergencyRepository.save(a);
+
+        // EMERGENCY_ACTIVATION_RAISED — the event W6b's own design doc names as the trigger for PCT
+        // to mint an in-facility emergency_episode on the admission's existing journey. Never emitted
+        // before this wave (activateEmergency wrote the row and stopped).
+        Map<String, Object> eventPayload = new LinkedHashMap<>();
+        eventPayload.put("activationId", a.getActivationId().toString());
+        eventPayload.put("tenantId", a.getTenantId().toString());
+        eventPayload.put("subjectCpid", a.getSubjectCpid());
+        eventPayload.put("admissionRef", a.getAdmissionRef() != null ? a.getAdmissionRef().toString() : null);
+        eventPayload.put("encounterId", a.getEncounterId() != null ? a.getEncounterId().toString() : null);
+        eventPayload.put("origin", a.getOrigin());
+        eventPayload.put("protocolType", a.getProtocolType());
+        eventPayload.put("activationTime", a.getActivationTime() != null ? a.getActivationTime().toString() : null);
+        emitClinicalEvent("EMERGENCY_ACTIVATION", a.getActivationId().toString(),
+                "EMERGENCY_ACTIVATION_RAISED", eventPayload);
+
         return emergencyRow(a);
     }
 
@@ -866,45 +885,78 @@ public class InpatientClinicalService {
         return actions.stream().map(this::emergencyActionRow).toList();
     }
 
+    /**
+     * Header-scalar edit only (W6b). {@code cpr_cycles}/{@code defibrillations}/{@code rosc_achieved}/
+     * {@code initial_rhythm} are no longer caller-settable here — they are DERIVED from
+     * {@code resuscitation_event} by {@link #recomputeResuscitationSummary}, which this method calls
+     * unconditionally so a record freshly created here still gets a real (zeroed, not null) summary.
+     * {@code final_rhythm} is the one exception: it is stamped HERE, from the current derived rhythm,
+     * but only at the moment an {@code outcome} is first supplied — that IS the stand-down.
+     *
+     * <p>{@code expectedVersion} is the optimistic-lock check against {@code record_version}: supplied
+     * and stale means a real concurrent header edit happened since the caller last read this record,
+     * and this call is refused with a 409 rather than silently overwriting it. Omitted (a first write,
+     * or a caller that has not read the record yet) skips the check — JPA's own {@code @Version} still
+     * catches a genuine race within this transaction as a backstop.
+     */
     @Transactional
     public Map<String, Object> recordResuscitation(UUID activationId, Map<String, Object> body) {
         requireActivation(activationId);
         ResuscitationRecordEntity record = resuscitationRecordRepository
                 .findFirstByActivationIdOrderByCreatedAtDesc(activationId)
                 .orElseGet(ResuscitationRecordEntity::new);
+        boolean isNew = record.getResusId() == null;
         record.setActivationId(activationId);
         record.setTenantId(currentTenant());
-        Integer cprCycles = ClinicalPayloadMapper.integer(body, "cprCycles", "cpr_cycles", "cycleNumber", "cycle_number");
-        if (cprCycles != null) record.setCprCycles(cprCycles);
-        Integer defibrillations = ClinicalPayloadMapper.integer(body, "defibrillations", "defibCount", "defib_count");
-        if (defibrillations != null) record.setDefibrillations(defibrillations);
-        String initialRhythm = ClinicalPayloadMapper.str(body, "initialRhythm", "initial_rhythm", "rhythm");
-        if (initialRhythm != null) record.setInitialRhythm(initialRhythm);
-        String finalRhythm = ClinicalPayloadMapper.str(body, "finalRhythm", "final_rhythm");
-        if (finalRhythm != null) record.setFinalRhythm(finalRhythm);
-        Boolean rosc = body.get("roscAchieved") instanceof Boolean b ? b
-                : Boolean.parseBoolean(String.valueOf(body.getOrDefault("rosc_achieved", "false")));
-        record.setRoscAchieved(rosc);
-        if (Boolean.TRUE.equals(rosc)) {
-            record.setRoscTime(OffsetDateTime.now());
+
+        String expectedVersionStr = ClinicalPayloadMapper.str(body, "expectedVersion", "expected_version");
+        if (!isNew && expectedVersionStr != null && !expectedVersionStr.isBlank()) {
+            long expected;
+            try { expected = Long.parseLong(expectedVersionStr.trim()); }
+            catch (NumberFormatException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "expected_version must be a number");
+            }
+            Long actual = record.getRecordVersion();
+            if (actual != null && actual != expected) {
+                throw new org.springframework.dao.OptimisticLockingFailureException(
+                        "Resuscitation record " + record.getResusId() + " was edited concurrently "
+                                + "(expected version " + expected + ", now at " + actual + ") — reload and retry");
+            }
         }
+
+        String teamLeader = ClinicalPayloadMapper.str(body, "teamLeader", "team_leader");
+        if (teamLeader != null) record.setTeamLeader(teamLeader);
+        String airwayStatus = ClinicalPayloadMapper.str(body, "airwayStatus", "airway_status");
+        if (airwayStatus != null) record.setAirwayStatus(airwayStatus);
+        String accessStatus = ClinicalPayloadMapper.str(body, "accessStatus", "access_status");
+        if (accessStatus != null) record.setAccessStatus(accessStatus);
         String medsJson = ClinicalPayloadMapper.str(body, "medicationsJson", "medications_json", "medications");
         if (medsJson != null) record.setMedicationsJson(medsJson);
+
+        // The stand-down moment: an outcome supplied for the first time. Stamps final_rhythm from
+        // whatever the derived current_rhythm is right now — never caller-supplied directly.
+        String outcome = ClinicalPayloadMapper.str(body, "outcome");
+        if (outcome != null && record.getOutcome() == null) {
+            record.setOutcome(outcome);
+            record.setStandDownReason(ClinicalPayloadMapper.str(body, "standDownReason", "stand_down_reason"));
+            record.setFinalRhythm(record.getCurrentRhythm());
+        }
+
         // Canonical trauma spine: a resuscitation on a trauma patient carries the DAIDZAI-minted
         // episode id (from X-Trauma-Episode-ID, folded into the body by the controller). Inpatient
         // keeps its own resuscitation SoR row and stamps the shared id (re-keyed fully in W5).
         UUID traumaEpisodeId = ClinicalPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
         if (traumaEpisodeId != null) record.setTraumaEpisodeId(traumaEpisodeId);
         record = resuscitationRecordRepository.save(record);
+        record = recomputeResuscitationSummary(activationId);
+
         UUID episodeId = record.getTraumaEpisodeId();
         if (episodeId != null && daidzaiEpisodes != null) {
             daidzaiEpisodes.registerPhase(episodeId, "RESUS", record.getResusId().toString(),
                     Boolean.TRUE.equals(record.getRoscAchieved()) ? "ROSC" : "IN_PROGRESS",
                     "inpatient.resuscitation.recorded");
         }
-        Map<String, Object> result = new java.util.LinkedHashMap<>();
-        result.put("id", record.getResusId().toString());
-        result.put("activation_id", activationId.toString());
+        Map<String, Object> result = resuscitationRow(record);
         if (episodeId != null) result.put("trauma_episode_id", episodeId.toString());
         return result;
     }
@@ -913,10 +965,74 @@ public class InpatientClinicalService {
      * Append one timed ABCDE resuscitation observation to the episode time-series (W5). Re-keys onto
      * the canonical trauma_episode_id (from the header/body, else inherited from the resuscitation
      * record). Multi-channel repeated entry — the real replacement for the hardcoded-vitals demo.
+     *
+     * <p>Idempotent on {@code client_event_id} (W6b) — a device retrying a blind write after a
+     * dropped ack gets the SAME event back, not a duplicate that would double-count in
+     * {@link #recomputeResuscitationSummary}.
      */
     @Transactional
     public Map<String, Object> recordResuscitationEvent(UUID activationId, Map<String, Object> body) {
         requireActivation(activationId);
+        ResuscitationEventEntity saved = insertResuscitationEvent(activationId, body);
+        ResuscitationRecordEntity record = recomputeResuscitationSummary(activationId);
+
+        // The recomputed summary is returned inline — a client posting a CPR-cycle event wants to see
+        // the updated count immediately, not issue a second GET to learn what it just caused.
+        Map<String, Object> result = resuscitationRow(record);
+        result.put("event_id", saved.getId().toString());
+        result.put("activation_id", activationId.toString());
+        result.put("channel", saved.getChannel());
+        if (saved.getTraumaEpisodeId() != null) result.put("trauma_episode_id", saved.getTraumaEpisodeId().toString());
+        return result;
+    }
+
+    /**
+     * Batch append (W6b) — a device catching up after a connectivity gap submits everything it
+     * queued in one call, most commonly a naive retry of the SAME batch after a partial failure. Each
+     * duplicate is skipped by a PRE-CHECK against already-recorded client_event_ids, not by catching
+     * the database's own constraint violation — a real Postgres transaction aborts on the first
+     * constraint failure inside it ("current transaction is aborted, commands ignored until end of
+     * transaction block"), so catching-and-continuing per item inside ONE {@code @Transactional} batch
+     * would poison every insert after the first duplicate, not just skip it. Pre-checking sidesteps
+     * that entirely for the realistic case (retrying the exact same batch); a genuine concurrent race
+     * between two callers minting the SAME client_event_id at the SAME instant is rare enough, and
+     * the database CHECK remains the real backstop, that this method accepts (and documents) failing
+     * the rest of the batch in that narrow case rather than adding untested savepoint machinery for it.
+     * The summary is recomputed ONCE at the end, not per event, since it is a pure read of the whole
+     * table anyway.
+     */
+    @Transactional
+    public List<Map<String, Object>> recordResuscitationEventsBatch(UUID activationId, List<Map<String, Object>> events) {
+        requireActivation(activationId);
+        List<Map<String, Object>> results = new ArrayList<>();
+        // Tracks ids seen WITHIN this batch too — a malformed payload repeating the same
+        // client_event_id twice in one call must not reach the database and abort the rest of the
+        // loop; the pre-check against the DB alone only catches the cross-request retry case.
+        java.util.Set<String> seenThisBatch = new java.util.HashSet<>();
+        for (Map<String, Object> body : events) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            String clientEventId = ClinicalPayloadMapper.str(body, "clientEventId", "client_event_id");
+            boolean isDuplicate = clientEventId != null && !clientEventId.isBlank()
+                    && (!seenThisBatch.add(clientEventId)
+                        || resuscitationEventRepository.existsByActivationIdAndClientEventId(activationId, clientEventId));
+            if (isDuplicate) {
+                row.put("client_event_id", clientEventId);
+                row.put("status", "DUPLICATE_SKIPPED");
+                results.add(row);
+                continue;
+            }
+            ResuscitationEventEntity saved = insertResuscitationEvent(activationId, body);
+            row.put("id", saved.getId().toString());
+            row.put("channel", saved.getChannel());
+            row.put("status", "RECORDED");
+            results.add(row);
+        }
+        recomputeResuscitationSummary(activationId);
+        return results;
+    }
+
+    /** Shared insert path for a single resuscitation event — used by both the single and batch endpoints. */
+    private ResuscitationEventEntity insertResuscitationEvent(UUID activationId, Map<String, Object> body) {
         String channel = ClinicalPayloadMapper.str(body, "channel");
         if (channel == null || channel.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "channel is required");
@@ -941,19 +1057,82 @@ public class InpatientClinicalService {
         }
         ev.setUnit(ClinicalPayloadMapper.str(body, "unit"));
         ev.setNotes(ClinicalPayloadMapper.str(body, "notes"));
+        ev.setClientEventId(ClinicalPayloadMapper.str(body, "clientEventId", "client_event_id"));
         try { ev.setActorId(TrustContextHolder.require().actorId()); } catch (RuntimeException ignored) { /* async/no ctx */ }
-        ResuscitationEventEntity saved = resuscitationEventRepository.save(ev);
+        ResuscitationEventEntity saved;
+        try {
+            saved = resuscitationEventRepository.save(ev);
+        } catch (org.springframework.dao.DataIntegrityViolationException dup) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This resuscitation event was already recorded (duplicate client_event_id)");
+        }
 
         if (episodeId != null && daidzaiEpisodes != null) {
             daidzaiEpisodes.registerPhase(episodeId, "RESUS", saved.getId().toString(),
                     saved.getChannel(), "inpatient.resuscitation.event");
         }
-        Map<String, Object> result = new java.util.LinkedHashMap<>();
-        result.put("id", saved.getId().toString());
-        result.put("activation_id", activationId.toString());
-        result.put("channel", saved.getChannel());
-        if (episodeId != null) result.put("trauma_episode_id", episodeId.toString());
-        return result;
+        return saved;
+    }
+
+    /**
+     * Recompute cpr_cycles / defibrillations / initial_rhythm / current_rhythm / rosc_achieved /
+     * rosc_time as a pure function of the resuscitation_event log — never incremented, always
+     * re-derived from scratch, so two writers recording DIFFERENT events converge to the same
+     * summary on the next read instead of racing to stomp a shared counter (W6b, the fix for the
+     * design doc's own named hazard: "two writers racing a counter is the actual lost-update source").
+     *
+     * <p>Convention (content, not schema — see V201's header comment): channel=CPR code=CYCLE counts
+     * a cpr_cycles; channel=CPR code=DEFIBRILLATION counts a defibrillation; channel=RHYTHM is the
+     * rhythm series — its FIRST event is initial_rhythm, its LATEST is current_rhythm; a RHYTHM event
+     * whose code is ROSC marks rosc_achieved, timed at its own recorded_at (the first such event, not
+     * the latest — ROSC is a fact about when it was first achieved, not a status that can un-happen
+     * by a later rhythm change).
+     */
+    private ResuscitationRecordEntity recomputeResuscitationSummary(UUID activationId) {
+        ResuscitationRecordEntity record = resuscitationRecordRepository
+                .findFirstByActivationIdOrderByCreatedAtDesc(activationId)
+                .orElseGet(() -> {
+                    ResuscitationRecordEntity r = new ResuscitationRecordEntity();
+                    r.setActivationId(activationId);
+                    r.setTenantId(currentTenant());
+                    return r;
+                });
+
+        List<ResuscitationEventEntity> events = resuscitationEventRepository.findByActivationIdOrderByRecordedAtAsc(activationId);
+
+        int cprCycles = 0;
+        int defibrillations = 0;
+        String initialRhythm = null;
+        String currentRhythm = null;
+        boolean roscAchieved = false;
+        OffsetDateTime roscTime = null;
+
+        for (ResuscitationEventEntity ev : events) {
+            if (!"CPR".equals(ev.getChannel())) {
+                if ("RHYTHM".equals(ev.getChannel())) {
+                    if (initialRhythm == null) initialRhythm = ev.getValueText();
+                    currentRhythm = ev.getValueText();
+                    if (!roscAchieved && "ROSC".equalsIgnoreCase(ev.getCode())) {
+                        roscAchieved = true;
+                        roscTime = ev.getRecordedAt();
+                    }
+                }
+                continue;
+            }
+            if ("CYCLE".equalsIgnoreCase(ev.getCode())) {
+                cprCycles++;
+            } else if ("DEFIBRILLATION".equalsIgnoreCase(ev.getCode())) {
+                defibrillations++;
+            }
+        }
+
+        record.setCprCycles(cprCycles);
+        record.setDefibrillations(defibrillations);
+        record.setInitialRhythm(initialRhythm);
+        record.setCurrentRhythm(currentRhythm);
+        record.setRoscAchieved(roscAchieved);
+        record.setRoscTime(roscTime);
+        return resuscitationRecordRepository.save(record);
     }
 
     /** The ordered multi-channel ABCDE resuscitation time-series for an activation. */
@@ -1177,6 +1356,13 @@ public class InpatientClinicalService {
         m.put("rosc_achieved", record.getRoscAchieved());
         m.put("rosc_time", record.getRoscTime());
         m.put("medications_json", record.getMedicationsJson());
+        m.put("team_leader", record.getTeamLeader());
+        m.put("current_rhythm", record.getCurrentRhythm());
+        m.put("airway_status", record.getAirwayStatus());
+        m.put("access_status", record.getAccessStatus());
+        m.put("outcome", record.getOutcome());
+        m.put("stand_down_reason", record.getStandDownReason());
+        m.put("record_version", record.getRecordVersion());
         return m;
     }
 
@@ -1200,7 +1386,29 @@ public class InpatientClinicalService {
         m.put("protocol_type", a.getProtocolType());
         m.put("status", a.getStatus());
         m.put("activation_time", a.getActivationTime());
+        m.put("origin", a.getOrigin());
+        m.put("emergency_episode_id", a.getEmergencyEpisodeId() != null ? a.getEmergencyEpisodeId().toString() : null);
         return m;
+    }
+
+    /**
+     * Stamp the PCT emergency_episode id back onto the activation this triggered (W6b). Called by PCT
+     * after it mints the episode from EMERGENCY_ACTIVATION_RAISED — the write-back half of the
+     * correlation column V200 added; nothing populated it until this endpoint existed. Idempotent:
+     * re-stamping the same id is a no-op, and a DIFFERENT id is refused rather than silently
+     * overwritten, since that would mean two episodes claim the same activation.
+     */
+    @Transactional
+    public Map<String, Object> linkEmergencyEpisode(UUID activationId, UUID emergencyEpisodeId) {
+        EmergencyActivationEntity a = emergencyRepository.findById(activationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Activation not found"));
+        if (a.getEmergencyEpisodeId() != null && !a.getEmergencyEpisodeId().equals(emergencyEpisodeId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Activation " + activationId + " is already linked to emergency episode " + a.getEmergencyEpisodeId());
+        }
+        a.setEmergencyEpisodeId(emergencyEpisodeId);
+        a = emergencyRepository.save(a);
+        return emergencyRow(a);
     }
 
     // ── Handover / takeover ─────────────────────────────────────────

@@ -25,7 +25,7 @@ import zw.gov.mohcc.impilo.pct.persistence.repository.EmergencyAlertRepository;
  * guarantee; this proves the service refuses the same scenarios up front and reaches only
  * DB-satisfiable states.
  */
-class EmergencyAlertServiceTest {
+public class EmergencyAlertServiceTest {
 
     private static final UUID TENANT = UUID.fromString("00000000-0000-4000-8000-000000000001");
     private static final UUID FACILITY = UUID.fromString("00000000-0000-4000-8000-000000000002");

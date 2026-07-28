@@ -1,7 +1,7 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
 #
-# HAND-EDITED 2026-07-28 to add procedures-service, NOT regenerated. Running the generator
+# HAND-EDITED 2026-07-28 to add procedures-service and surgery-service, NOT regenerated. Running the generator
 # here dropped pct-service's hand-authored secretEnv block (KEYCLOAK_BACKEND_SECRET,
 # PCT_INTEGRATION_CLINICAL_KNOWLEDGE_BASE_URL, KEYCLOAK_BACKEND_CLIENT_ID — its explained
 # service-to-service OAuth2 token for calling the clinical knowledge platform from Kafka
@@ -343,6 +343,10 @@ fullBootServices:
     enabled: true
     port: 8395
     database: procedures
+  surgery-service:
+    enabled: true
+    port: 8396
+    database: surgery
   procurement-service:
     enabled: true
     port: 8283
