@@ -149,7 +149,13 @@ public class ServiceClientConfig {
             /** Participation — citizen Get-Involved & co-design (port 8393). */
             String participationBaseUrl,
             /** Telemonitoring — monitoring plans, device assignments, readings, alert episodes (port 8394). */
-            String telemonitoringBaseUrl
+            String telemonitoringBaseUrl,
+            /**
+             * Procedures — Clinical Procedures Pipeline platform layer: catalogue, appropriateness/
+             * duplication, competence and privilege resolution (port 8395). Engine-not-store — read
+             * and evaluate only, nothing is written back through this client.
+             */
+            String proceduresBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -231,6 +237,7 @@ public class ServiceClientConfig {
             if (identityAssuranceBaseUrl == null) identityAssuranceBaseUrl = "http://localhost:8201";
             if (participationBaseUrl == null) participationBaseUrl = "http://localhost:8393";
             if (telemonitoringBaseUrl == null) telemonitoringBaseUrl = "http://localhost:8394";
+            if (proceduresBaseUrl == null) proceduresBaseUrl = "http://localhost:8395";
         }
     }
 
@@ -275,7 +282,7 @@ public class ServiceClientConfig {
                 u, u, u, u, u, u, u, u, u, u,
                 u, u, u, u, u, u, u, u, u, u,
                 u, u, u, u, u, u, u, u, u, u,
-                u, u, u, u, u, u, u, u
+                u, u, u, u, u, u, u, u, u
         );
     }
 
@@ -296,7 +303,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
     }
 
