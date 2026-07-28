@@ -513,4 +513,36 @@ public class TokenIssuanceService {
             log.error("Failed to write outbox event: {}", e.getMessage());
         }
     }
+
+    /**
+     * Feed for {@code WorkContextRevalidationJob} (Phase C, C4): every live
+     * WORK_CONTEXT token carrying a resolvable context_id, bounded by
+     * {@code limit}. A row this method cannot parse is skipped, not thrown —
+     * a malformed context_claims payload on one token must never abort the
+     * whole revalidation cycle.
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<zw.gov.mohcc.impilo.tshepo.identity.api.dto.ActiveWorkContextTokenSummary>
+            listActiveWorkContextTokens(int limit) {
+        java.util.List<ScopedTokenEntity> rows =
+                tokenRepo.findActiveWorkContextTokensWithContextId(Instant.now(), limit);
+        java.util.List<zw.gov.mohcc.impilo.tshepo.identity.api.dto.ActiveWorkContextTokenSummary> out =
+                new java.util.ArrayList<>();
+        for (ScopedTokenEntity row : rows) {
+            try {
+                JsonNode claims = objectMapper.readTree(row.getContextClaims());
+                String contextId = claims.has("context_id") ? claims.get("context_id").asText(null) : null;
+                String workMode = claims.has("work_mode") ? claims.get("work_mode").asText(null) : null;
+                if (contextId == null) {
+                    continue;
+                }
+                out.add(new zw.gov.mohcc.impilo.tshepo.identity.api.dto.ActiveWorkContextTokenSummary(
+                        row.getJti(), row.getActorId(), row.getTenantId(), contextId, workMode));
+            } catch (Exception e) {
+                log.warn("Skipping unparsable context_claims for jti={} in revalidation feed: {}",
+                        row.getJti(), e.getMessage());
+            }
+        }
+        return out;
+    }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.ScopedTokenEntity;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -63,4 +64,19 @@ public interface ScopedTokenRepository extends JpaRepository<ScopedTokenEntity, 
     int revokeWorkContextForActorAtOrganisation(@Param("actorId") String actorId,
                                                 @Param("organisationId") String organisationId,
                                                 @Param("now") Instant now);
+
+    /**
+     * Feed for {@code WorkContextRevalidationJob} (Phase C, C4): every live,
+     * unexpired WORK_CONTEXT token that carries a resolvable context_id claim
+     * (Phase B mints), oldest first so a token near natural expiry is not
+     * starved behind a large backlog. Bounds the job's per-cycle work — with
+     * a 15-minute token TTL and a short poll interval, this need not (and
+     * should not) attempt to revalidate the whole table every cycle.
+     */
+    @Query(value = "SELECT * FROM tshepo_identity.scoped_token"
+            + " WHERE status = 'ACTIVE' AND token_kind = 'WORK_CONTEXT'"
+            + "   AND expires_at > :now"
+            + "   AND context_claims->>'context_id' IS NOT NULL"
+            + " ORDER BY id ASC LIMIT :limit", nativeQuery = true)
+    List<ScopedTokenEntity> findActiveWorkContextTokensWithContextId(@Param("now") Instant now, @Param("limit") int limit);
 }

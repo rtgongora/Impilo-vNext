@@ -63,4 +63,15 @@ public class TokenController {
         tokenService.revokeToken(jti);
         return ResponseEntity.ok(ApiResponse.ok(null, null));
     }
+
+    /**
+     * Feed for experience-bff's {@code WorkContextRevalidationJob} (Phase C,
+     * C4): every live WORK_CONTEXT token carrying a resolvable context_id.
+     * Internal S2S only — never called from a browser.
+     */
+    @GetMapping("/work-context/active")
+    public ResponseEntity<ApiResponse<java.util.List<ActiveWorkContextTokenSummary>>> listActiveWorkContextTokens(
+            @RequestParam(defaultValue = "200") int limit) {
+        return ResponseEntity.ok(ApiResponse.ok(tokenService.listActiveWorkContextTokens(limit), null));
+    }
 }

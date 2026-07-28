@@ -191,6 +191,23 @@ public class TshepoIdentityServiceClient {
     }
 
     /**
+     * Feed for {@code WorkContextRevalidationJob} (Phase C, C4): every live
+     * WORK_CONTEXT token carrying a resolvable context_id. Returns an empty
+     * array on any error — a feed outage must degrade to "revalidate nothing
+     * this cycle", never throw and abort the scheduler.
+     */
+    public JsonNode listActiveWorkContextTokens(int limit) {
+        String url = baseUrl + "/v1/identity/tokens/work-context/active?limit=" + limit;
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            return extractData(response);
+        } catch (Exception e) {
+            log.warn("TSHEPO-IDENTITY: listActiveWorkContextTokens failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * C3 silent identifier resolution ({@code kind} = HEALTH_ID | PHONE | EMAIL |
      * IMPILO_ID | PROVIDER_ID | COUNCIL_NUMBER). Anti-enumeration upstream: a miss
      * and an error return the same {@code resolved=false} shape.
