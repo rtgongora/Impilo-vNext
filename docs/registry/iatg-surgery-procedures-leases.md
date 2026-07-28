@@ -291,7 +291,7 @@ Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7
 **Phase P pipeline COMPLETE (P0–P15, see §10–§19)** — P13/P14/P15 all partial by design (§17–§19),
 with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
 not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
-(S0–S18, not started). Full plan in
+(S0 done, reachability wired from day one — see §20; S1–S18 remaining). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -738,3 +738,49 @@ link and cancellation comms for #9).
 
 Proof: `MvumoServiceAssentTest` (5 tests, new). `AppropriatenessEngineTest` extended (+2, 12/12).
 Full module regression: mvumo-service 45/45, procedures-service 62/62.
+
+## 20. Wave S0 — surgery-service scaffold (done)
+
+First wave of Phase S. Stands up `surgery-service` (port 8396, clinical plane) — the system of
+record for surgical DISEASE, which nothing owns today.
+
+**The scaffold is smaller than decision 5 originally specified, and that is the point.** The
+ADR's own §5a (2026-07-26 CC-2 amendment) records that an earlier draft of decision 5 would have
+built `surgical_condition`, a surveillance plan, an outcome registry and a decision-to-operate
+record inside this service — four duplicate person-level longitudinal registries, found by
+verifying an unrelated doctrine citation from the emergency lane and discovering the same
+prohibition (care-continuum-doctrine CC-2) lands here too. The corrected scope: a management-
+course record that ATTACHES TO `pct_problems`/`pct_care_plans` and never contains them. S0
+respects that correction from the first migration — the CC-2 regression guard in
+`surgery-scaffold-journeys.sh` (J-S0-4) asserts no condition/diagnosis/staging/surveillance/
+outcome/recurrence table exists in this schema, so a future wave cannot silently reintroduce
+what the amendment excised.
+
+S0 is deliberately thin — schema (`CREATE SCHEMA surgery`) and the house outbox pattern only,
+mirroring `procedures-service`'s own P0. The surgical episode itself is S1's own wave: it must
+extend PCT's structures per the CC-2 amendment, which is real design work (the join, the
+`responsible_service` attribution, the admission-handshake-model decision recording) that
+deserves its own wave rather than being folded into scaffold work.
+
+**Reachability wired from day one, not deferred.** Wave P-R had to retrofit deploy
+classification, Helm values, and the services registry onto `procedures-service` after six
+waves of undeployable capability — the exact failure this line records in §9. S0 applies that
+lesson from the start: `config/full-boot-service-classification.yml`, both hand-edited Helm
+values files (never regenerated — see §9's own finding on the generator), `services-registry.yaml`,
+`system-of-record-map.md`, and `docs/runbooks/port-allocation.md` (8396 moved from RESERVED to
+built) are all updated in this same commit. What is NOT wired yet, and correctly so — the same
+shape P0→P1 already used successfully: tshepo-authz policy rows, an experience-bff proxy, and a
+UI surface, because there is no business endpoint yet to authorize, proxy or render. Deferred to
+whichever S-wave adds the first one, exactly as P0's own equivalents were deferred to P1.
+
+Proof: `SurgeryApplicationTest` (3 tests) mirrors `ProceduresApplicationTest`'s schema-health
+honesty pattern (DOWN when unmigrated, UP and counting when migrated — never UP merely because
+the datasource answered). `surgery-scaffold-journeys.sh` (5/5, real Postgres) proves the outbox
+idempotency guarantee, the partial index the drainage rig will query, and the CC-2 regression
+guard above.
+
+**Before any later S-wave touches inpatient-service's shared theatre lifecycle** (flagged
+repeatedly in §5 and again in §19): the ten pre-existing theatre rigs have still never been run
+by this programme even once since P4. This debt predates Phase S and is not this wave's to
+close, but it is closer now that Phase S has begun — surgical episodes will reference
+`inpatient.procedure_episode`, the exact table those rigs guard.
