@@ -1,0 +1,16 @@
+{
+  "typeCode": "REGISTER",
+  "definitionKey": "student-register",
+  "label": "Student Register",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/registers/student",
+  "payload": {
+    "registerCode": "STUDENT",
+    "workingTitle": "Student Register",
+    "statutoryTitle": null,
+    "statutoryTitleDecisionRef": "NCZ-DEC-013",
+    "admits": "A student nurse enrolled at a recognised training institution.",
+    "publiclyVerifiable": false,
+    "note": "The register is confirmed by the approved brief. Its exact statutory title is not, and is not guessed here — a title appears on certificates and cannot be quietly corrected later."
+  }
+}

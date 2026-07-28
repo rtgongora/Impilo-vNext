@@ -23,6 +23,12 @@ export interface WorkSession {
   workspaceId: string | null;
   roleTemplateId: string | null;
   expiresAt: string | null;
+  // Phase F8/F9 (mode-aware Work Home switching, POST /work-context/session/mode) — additive.
+  // The original mint flow above is facility/workspace-only; a resolved context may instead
+  // anchor to an organisation, jurisdiction or programme, so `facilityId` alone cannot carry
+  // it. `contextId` is what `useWorkHome` needs to compose the right family's sections.
+  contextId?: string;
+  workMode?: string;
 }
 
 interface WorkSessionState {

@@ -196,6 +196,28 @@ public class InpatientClinicalController {
         return clinicalService.listResuscitationEvents(activationId);
     }
 
+    /**
+     * Record one medication administration during a resuscitation (W6a) — the structured replacement
+     * for the free-text medications_json blob.
+     */
+    @PostMapping("/emergency/{activationId}/resuscitation/medications")
+    public ResponseEntity<Map<String, Object>> recordResuscitationMedication(@PathVariable UUID activationId,
+                                                                              @RequestBody Map<String, Object> body,
+                                                                              @RequestHeader(value = "X-Trauma-Episode-ID", required = false) String traumaEpisodeId) {
+        Map<String, Object> payload = body;
+        if (traumaEpisodeId != null && !traumaEpisodeId.isBlank()) {
+            payload = new java.util.LinkedHashMap<>(body != null ? body : Map.of());
+            payload.putIfAbsent("traumaEpisodeId", traumaEpisodeId);
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(clinicalService.recordResuscitationMedication(activationId, payload));
+    }
+
+    /** The medication administration history for a resuscitation. */
+    @GetMapping("/emergency/{activationId}/resuscitation/medications")
+    public Map<String, Object> listResuscitationMedications(@PathVariable UUID activationId) {
+        return clinicalService.listResuscitationMedications(activationId);
+    }
+
     @PostMapping("/apgar")
     public ResponseEntity<Map<String, Object>> recordApgar(@RequestBody Map<String, Object> body) {
         return ResponseEntity.status(HttpStatus.CREATED).body(clinicalService.recordApgar(body));

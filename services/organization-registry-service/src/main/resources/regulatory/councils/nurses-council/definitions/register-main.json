@@ -1,0 +1,16 @@
+{
+  "typeCode": "REGISTER",
+  "definitionKey": "main-register",
+  "label": "Main Register",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/registers/main",
+  "payload": {
+    "registerCode": "MAIN",
+    "workingTitle": "Main Register",
+    "statutoryTitle": null,
+    "statutoryTitleDecisionRef": "NCZ-DEC-013",
+    "admits": "A fully registered nurse holding a current practising certificate.",
+    "publiclyVerifiable": true,
+    "supportsMultipleQualifications": true
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "typeCode": "ROLE_WORKSPACE",
+  "definitionKey": "examination-officer",
+  "label": "Examination Officer workspace",
+  "semanticVersion": "1.0.0",
+  "payload": {
+    "roleCode": "CPD_OFFICER",
+    "requiresFacilityAssignment": false,
+    "sees": ["EXAMINATION_SESSIONS", "CANDIDATES", "MARKS", "MODERATION", "RESULTS"],
+    "neverSees": ["REFUNDS", "INVOICES", "RECONCILIATION"],
+    "capabilityStatus": "AWAITING_IMPLEMENTATION",
+    "capabilityNote": "Examinations are a deferred wave. This workspace is declared so the pack states the role honestly; its surfaces are marked unavailable rather than shown as empty pages.",
+    "capabilityDecisionRefs": ["NCZ-DEC-004", "NCZ-DEC-005"]
+  }
+}

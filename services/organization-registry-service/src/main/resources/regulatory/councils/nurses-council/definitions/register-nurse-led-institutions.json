@@ -1,0 +1,17 @@
+{
+  "typeCode": "REGISTER",
+  "definitionKey": "nurse-led-institution-register",
+  "label": "Registered Nurse-Led Health Institutions",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/registers/institutions",
+  "payload": {
+    "registerCode": "NURSE_LED_INSTITUTION",
+    "workingTitle": "Register of Nurse-Led Health Institutions",
+    "statutoryTitle": null,
+    "statutoryTitleDecisionRef": "NCZ-DEC-013",
+    "admits": "A health institution operated under the professional responsibility of a registered nurse.",
+    "publiclyVerifiable": true,
+    "subjectIsInstitution": true,
+    "note": "The institution lifecycle itself is deferred; this definition establishes the register so the pack states all four, rather than implying the Council has three."
+  }
+}

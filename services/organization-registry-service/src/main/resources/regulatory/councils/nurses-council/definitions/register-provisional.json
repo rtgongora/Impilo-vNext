@@ -1,0 +1,16 @@
+{
+  "typeCode": "REGISTER",
+  "definitionKey": "provisional-register",
+  "label": "Provisional Register",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/registers/provisional",
+  "payload": {
+    "registerCode": "PROVISIONAL",
+    "workingTitle": "Provisional Register",
+    "statutoryTitle": null,
+    "statutoryTitleDecisionRef": "NCZ-DEC-013",
+    "admits": "A nurse who has completed training and is undertaking supervised practice.",
+    "publiclyVerifiable": true,
+    "note": "Migration from this register to the Main Register depends on supervised-practice accumulation rules the Council has not yet confirmed (NCZ-DEC-006)."
+  }
+}
