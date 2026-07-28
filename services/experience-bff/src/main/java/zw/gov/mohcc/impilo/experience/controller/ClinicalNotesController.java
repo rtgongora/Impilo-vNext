@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.util.LinkedHashMap;
@@ -64,7 +65,11 @@ public class ClinicalNotesController {
         try {
             JsonNode pctData = pctClient.listClinicalNotes(patientId, page, size);
             return ResponseEntity.ok(Map.of(
-                    "data", pctData != null ? pctData : List.of(),
+                    // PCT's list projection (toSummary) carries id/patient_id/note_type/created_at
+                    // only — body, subjective and status exist solely on the single-note GET. Wrapping
+                    // makes the row readable; the missing fields are a real gap, registered in
+                    // docs/product/DECLARED-BUT-UNSOURCED-FIELDS.md rather than invented here.
+                    "data", JsonApiRows.rows(pctData, "clinical_note", "note_id", "id"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             // An empty 200 here reads as "nothing has been documented about this patient", which

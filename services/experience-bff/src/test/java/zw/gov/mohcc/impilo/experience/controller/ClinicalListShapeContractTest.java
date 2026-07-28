@@ -96,6 +96,85 @@ class ClinicalListShapeContractTest {
         assertThat(body.get("meta").get("total").asLong()).isEqualTo(1L);
     }
 
+    /**
+     * Verbatim from pct {@code EncounterController.getTimeline} — journeys with their encounters
+     * nested inside. Both {@code /encounters} and {@code /timeline} read this one payload.
+     */
+    private static final String PCT_JOURNEY_TIMELINE = """
+            [{"journey":{"journeyId":"J-1","patientCpid":"CPID-1","facilityId":"F-1",
+                         "referralId":"REF-9","referralSource":"Chitungwiza Central",
+                         "createdAt":"2026-03-01T08:00:00Z"},
+              "encounters":[{"id":41,"encounterRef":"ENC-1","journeyId":"J-1",
+                             "subjectCpid":"CPID-1","facilityId":"F-1","status":"STARTED",
+                             "encounterType":"OUTPATIENT","assignedProviderId":"PRV-3",
+                             "startedAt":"2026-03-01T08:05:00Z","endedAt":null}]}]
+            """;
+
+    @Test
+    void encounterListIsFlatBecauseThirtyFivePagesAndTheBannerDereferenceItDirectly() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        when(pct.getPatientTimeline(anyString())).thenReturn(json(PCT_JOURNEY_TIMELINE));
+
+        JsonNode body = wireBody(new EncounterController(pct, null, null)
+                .listEncounters("tenant", "req", "corr", 0, 20, "CPID-1"));
+        JsonNode data = body.get("data");
+
+        assertThat(data.isArray()).isTrue();
+        assertThat(data).as("the encounters must be lifted out of their journeys").hasSize(1);
+
+        JsonNode attributes = data.get(0).get("attributes");
+        assertThat(attributes.get("status").asText()).isEqualTo("STARTED");
+        assertThat(data.get(0).get("id").asText()).isEqualTo("ENC-1");
+        // The hook types these names; PCT calls them subjectCpid / assignedProviderId / endedAt.
+        assertThat(attributes.get("patientId").asText()).isEqualTo("CPID-1");
+        assertThat(attributes.get("providerId").asText()).isEqualTo("PRV-3");
+        assertThat(attributes.get("closedAt").isNull()).isTrue();
+        // Flattening must not lose the grouping — callers regroup without a second PCT round-trip.
+        assertThat(attributes.get("journeyId").asText()).isEqualTo("J-1");
+    }
+
+    @Test
+    void timelineDerivesEventsIncludingTheReferralTheTimelinePageFiltersOn() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        when(pct.getPatientTimeline(anyString())).thenReturn(json(PCT_JOURNEY_TIMELINE));
+
+        JsonNode body = wireBody(new ClinicalTimelineController(pct)
+                .listTimeline("tenant", "req", "corr", 0, 20, "CPID-1", null));
+        JsonNode data = body.get("data");
+
+        assertThat(data.isArray()).isTrue();
+        java.util.List<String> eventTypes = new java.util.ArrayList<>();
+        data.forEach(entry -> eventTypes.add(entry.get("attributes").get("eventType").asText()));
+
+        assertThat(eventTypes)
+                .as("timeline/page.tsx filters entries on eventType === \"REFERRAL\"")
+                .contains("REFERRAL", "JOURNEY_OPENED", "ENCOUNTER");
+
+        JsonNode encounterEvent = null;
+        for (JsonNode entry : data) {
+            if ("ENCOUNTER".equals(entry.get("attributes").get("eventType").asText())) {
+                encounterEvent = entry;
+            }
+        }
+        assertThat(encounterEvent).isNotNull();
+        assertThat(encounterEvent.get("attributes").get("occurredAt").asText())
+                .isEqualTo("2026-03-01T08:05:00Z");
+        assertThat(encounterEvent.get("attributes").get("encounterId").asText()).isEqualTo("ENC-1");
+        // No actor name is available upstream; inventing one would print an id where a person goes.
+        assertThat(encounterEvent.get("attributes").get("actorName").isNull()).isTrue();
+    }
+
+    @Test
+    void aPatientWithNoJourneysGetsAnEmptyTimelineNotAFabricatedOne() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        when(pct.getPatientTimeline(anyString())).thenReturn(json("[]"));
+
+        assertThat(wireBody(new EncounterController(pct, null, null)
+                .listEncounters("tenant", "req", "corr", 0, 20, "CPID-1")).get("data")).isEmpty();
+        assertThat(wireBody(new ClinicalTimelineController(pct)
+                .listTimeline("tenant", "req", "corr", 0, 20, "CPID-1", null)).get("data")).isEmpty();
+    }
+
     @Test
     void anEmptyUpstreamStillYieldsAnArrayRatherThanNothingTheHookCanIterate() {
         PctServiceClient pct = mock(PctServiceClient.class);
