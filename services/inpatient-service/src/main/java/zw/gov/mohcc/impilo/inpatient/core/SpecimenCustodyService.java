@@ -4,7 +4,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.inpatient.integration.ButanoProcedureClient;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.ProcedureEpisodeEntity;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.ProcedureSpecimenEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureEpisodeRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureSpecimenRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -37,9 +40,15 @@ public class SpecimenCustodyService {
     private static final Set<String> ADEQUACY_VALUES = Set.of("NOT_ASSESSED", "ADEQUATE", "INADEQUATE");
 
     private final ProcedureSpecimenRepository specimenRepository;
+    private final ProcedureEpisodeRepository episodeRepository;
+    private final ButanoProcedureClient butanoClient;
 
-    public SpecimenCustodyService(ProcedureSpecimenRepository specimenRepository) {
+    public SpecimenCustodyService(ProcedureSpecimenRepository specimenRepository,
+                                  ProcedureEpisodeRepository episodeRepository,
+                                  ButanoProcedureClient butanoClient) {
         this.specimenRepository = specimenRepository;
+        this.episodeRepository = episodeRepository;
+        this.butanoClient = butanoClient;
     }
 
     private UUID currentTenant() {
@@ -77,7 +86,13 @@ public class SpecimenCustodyService {
                 .toList();
     }
 
-    /** Records who physically collected the specimen and its container/fixative, and when. */
+    /**
+     * Records who physically collected the specimen and its container/fixative, and when. Also
+     * writes a real FHIR {@code Specimen} resource (pipeline §24) — this is the first point real
+     * collector/container data exists to put in one; writing it earlier (at note-parse time, with
+     * only a free-text label) would have nothing genuine to report. Best-effort: a Butano outage
+     * must not block recording custody, which remains the local truth either way.
+     */
     @Transactional
     public ProcedureSpecimenEntity recordCollection(UUID episodeId, UUID specimenId,
                                                      String containerType, String fixative) {
@@ -86,6 +101,12 @@ public class SpecimenCustodyService {
         s.setCollectedAt(OffsetDateTime.now());
         s.setContainerType(containerType);
         s.setFixative(fixative);
+        episodeRepository.findById(episodeId).ifPresent(episode -> {
+            String fhirRef = butanoClient.writeSpecimen(episode.getSubjectCpid(), s);
+            if (fhirRef != null) {
+                s.setFhirSpecimenRef(fhirRef);
+            }
+        });
         return specimenRepository.save(s);
     }
 
@@ -141,6 +162,7 @@ public class SpecimenCustodyService {
         m.put("adequacy", s.getAdequacy());
         m.put("adequacy_assessed_by", s.getAdequacyAssessedBy());
         m.put("adequacy_assessed_at", s.getAdequacyAssessedAt());
+        m.put("fhir_specimen_ref", s.getFhirSpecimenRef());
         return m;
     }
 }

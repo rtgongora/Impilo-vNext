@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.ProcedureNoteEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.ProcedureSpecimenEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -84,6 +85,73 @@ public class ButanoProcedureClient {
         doc.put("description", note.getPerformedProcedure() != null
                 ? note.getPerformedProcedure() : "Operative note");
         return write("DocumentReference", doc);
+    }
+
+    /**
+     * Write a real FHIR {@code Specimen} resource (pipeline §13/§24) — not the DocumentReference
+     * {@link #attachPathology} writes for the eventual pathology report, but the specimen ITSELF:
+     * what was collected, when, by whom, in what container, and its adequacy. Called once custody
+     * is confirmed (see {@code SpecimenCustodyService.recordCollection}), which is also the first
+     * point real collector/container data exists to put in one — writing this at note-parse time
+     * (before any human confirmation) would have nothing but a free-text label to report.
+     *
+     * <p>{@code status} follows FHIR's own Specimen.status vocabulary
+     * (available | unavailable | unsatisfactory | entered-in-error), derived from this
+     * projection's own status/adequacy fields rather than copied from OROS, which has already
+     * diverged in vocabulary from FHIR here (REJECTED vs entered-in-error, INADEQUATE vs
+     * unsatisfactory) — this mapping is the translation, not a passthrough.</p>
+     */
+    public String writeSpecimen(String cpid, ProcedureSpecimenEntity specimen) {
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("resourceType", "Specimen");
+        res.put("status", specimenStatus(specimen));
+        if (specimen.getOrosSpecimenId() != null) {
+            res.put("accessionIdentifier", Map.of("value", specimen.getOrosSpecimenId()));
+        }
+        if (specimen.getSpecimenType() != null) {
+            res.put("type", Map.of("text", specimen.getSpecimenType()));
+        }
+        res.put("subject", Map.of("identifier", Map.of("value", cpid)));
+
+        Map<String, Object> collection = new LinkedHashMap<>();
+        if (specimen.getCollectedAt() != null) {
+            collection.put("collectedDateTime", specimen.getCollectedAt().toString());
+        }
+        if (specimen.getCollectedBy() != null) {
+            collection.put("collector", Map.of("display", specimen.getCollectedBy()));
+        }
+        if (specimen.getBodySite() != null) {
+            collection.put("bodySite", Map.of("text", specimen.getBodySite()));
+        }
+        if (!collection.isEmpty()) {
+            res.put("collection", collection);
+        }
+        if (specimen.getContainerType() != null) {
+            res.put("container", List.of(Map.of("type", Map.of("text", specimen.getContainerType()))));
+        }
+        List<Map<String, Object>> notes = new java.util.ArrayList<>();
+        if (specimen.getLabelConfirmedBy() != null) {
+            notes.add(Map.of("text", "Label confirmed against patient identity by "
+                    + specimen.getLabelConfirmedBy() + " at " + specimen.getLabelConfirmedAt()));
+        }
+        if (specimen.getReceivedBy() != null) {
+            notes.add(Map.of("text", "Received into custody by " + specimen.getReceivedBy()
+                    + " at " + specimen.getReceivedAt()));
+        }
+        if (!notes.isEmpty()) {
+            res.put("note", notes);
+        }
+        // No encounter parameter, unlike this class's other write* methods: FHIR R4's Specimen
+        // resource has no direct Encounter reference (Specimen.request points at a
+        // ServiceRequest, not an Encounter) — inventing a non-standard field here would be a
+        // worse error than simply not having the link.
+        return write("Specimen", res);
+    }
+
+    private String specimenStatus(ProcedureSpecimenEntity specimen) {
+        if ("REJECTED".equals(specimen.getStatus())) return "entered-in-error";
+        if ("INADEQUATE".equals(specimen.getAdequacy())) return "unsatisfactory";
+        return "available";
     }
 
     /**
