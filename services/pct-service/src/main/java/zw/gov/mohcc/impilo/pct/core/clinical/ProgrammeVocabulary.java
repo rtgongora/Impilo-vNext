@@ -24,8 +24,20 @@ public final class ProgrammeVocabulary {
     public static final String HIV_PREVENTION = "HIV_PREVENTION"; // PrEP
     public static final String TB_PREVENTION = "TB_PREVENTION";   // TPT
 
+    // Chronic-disease registers (brief.md §8). Lifelong care rather than a course with an end;
+    // V112 makes them programmes rather than a parallel table, as V108's header anticipated.
+    public static final String HYPERTENSION = "HYPERTENSION";
+    public static final String DIABETES = "DIABETES";
+    public static final String CHRONIC_KIDNEY_DISEASE = "CHRONIC_KIDNEY_DISEASE";
+    public static final String CHRONIC_RESPIRATORY = "CHRONIC_RESPIRATORY"; // asthma and COPD
+
+    /** The registers read for control rather than for a treatment outcome. */
+    public static final Set<String> CHRONIC_REGISTERS =
+            Set.of(HYPERTENSION, DIABETES, CHRONIC_KIDNEY_DISEASE, CHRONIC_RESPIRATORY);
+
     public static final Set<String> PROGRAMMES =
-            Set.of(HIV_CARE, TB_TREATMENT, HIV_PREVENTION, TB_PREVENTION);
+            Set.of(HIV_CARE, TB_TREATMENT, HIV_PREVENTION, TB_PREVENTION,
+                    HYPERTENSION, DIABETES, CHRONIC_KIDNEY_DISEASE, CHRONIC_RESPIRATORY);
 
     public static final Set<String> ENROLMENT_STATUSES = Set.of(
             "SCREENING",
@@ -48,7 +60,23 @@ public final class ProgrammeVocabulary {
             "LOST_TO_FOLLOW_UP",
             "DIED",
             "STOPPED_BY_PATIENT",
-            "TREATMENT_FAILED");
+            "TREATMENT_FAILED",
+            // The condition was not present. Without it, leaving a register because the diagnosis
+            // was wrong had to be recorded as STOPPED_BY_PATIENT — making a clinician's error look
+            // like a patient's refusal, in the patient's record.
+            "DIAGNOSIS_REFUTED");
+
+    /**
+     * How a chronic condition is running against its agreed target. NULL — absent from this set —
+     * means never assessed, which is deliberately not the same as NOT_CONTROLLED: a register is read
+     * to decide who to recall, and the patient nobody has reviewed must not look like the patient
+     * who is doing badly.
+     */
+    public static final Set<String> CONTROL_STATUSES = Set.of(
+            "CONTROLLED",
+            "PARTIALLY_CONTROLLED",
+            "NOT_CONTROLLED",
+            "TARGET_NOT_SET");
 
     // ── Treatment regimen ────────────────────────────────────────────────────────
 
@@ -81,6 +109,17 @@ public final class ProgrammeVocabulary {
             TB_TREATMENT, TB_STAGES,
             HIV_PREVENTION, PREVENTION_STAGES,
             TB_PREVENTION, PREVENTION_STAGES);
+
+    /**
+     * Whether this programme is a chronic-disease register — lifelong care measured by control,
+     * rather than a finite course measured by outcome. A register carries no treatment regimen
+     * stage, so it is deliberately absent from {@link #STAGES_BY_PROGRAMME}: attaching an ART line
+     * or a TB phase to a hypertension entry is a category error, and the absence makes
+     * {@link #requireStageForProgramme} refuse it rather than needing a separate rule.
+     */
+    public static boolean isChronicRegister(String programme) {
+        return CHRONIC_REGISTERS.contains(programme);
+    }
 
     /**
      * Validates that the stage belongs to the programme, throwing with both named when it does not.
