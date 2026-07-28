@@ -64,11 +64,27 @@ public class ClinicalNoteController {
         return ResponseEntity.ok(ApiResponse.ok(toDetail(row), ctx.correlationId().toString()));
     }
 
+    /**
+     * List projection.
+     *
+     * <p>The signature state and the encounter anchor are here deliberately. A notes list that
+     * cannot say whether a note is signed shows a draft and a signed note identically, and the
+     * shell's notes screen filters and labels on exactly that. The full note body stays on the
+     * detail endpoint — a list of encounter narratives is a large payload and, more to the point,
+     * the list view never renders it.
+     */
     private Map<String, Object> toSummary(ClinicalNoteEntity e) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", e.getId());
         m.put("patient_id", e.getPatientId());
+        m.put("encounter_id", e.getEncounterId() != null ? e.getEncounterId().toString() : null);
         m.put("note_type", e.getNoteType());
+        m.put("author_id", e.getAuthorId());
+        m.put("author_name", e.getAuthorName());
+        m.put("signed", e.isSigned());
+        m.put("signed_at", e.getSignedAt() != null ? e.getSignedAt().toString() : null);
+        m.put("signed_by", e.getSignedBy());
+        m.put("status", e.isSigned() ? "SIGNED" : "DRAFT");
         m.put("created_at", e.getCreatedAt() != null ? e.getCreatedAt().toString() : null);
         m.put("patient_share_grant_id", e.getPatientShareGrantId());
         m.put("temporary_provider_public_id", e.getTemporaryProviderPublicId());
