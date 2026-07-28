@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
-# Procedures pipeline P1 — canonical catalogue runtime proof (real Postgres).
+# Procedures pipeline P1 — canonical catalogue runtime proof (real Postgres). Extended for
+# P7-P11 (all of which write into or read the catalogue's own tables).
 #
 # The catalogue is the keystone: §5 appropriateness, §7 competence, §8 readiness, §9 safety
 # pauses and §17 aftercare are all functions of it. This proves the properties those waves
 # will depend on, and proves them where they are actually enforced — Postgres. The module
 # tests run on H2, which does not honour the partial unique index, does not enforce the CHECK
 # constraints, and mishandles JSON; anything asserted only there is asserted nowhere.
+#
+# P11 ADDENDUM: closes §21 (IPC + sterile processing) as CONTENT — real procedure_requirement
+# rows (requirement_kind IPC/STERILE_PROCESSING, both valid since V002) rather than a new
+# reference table, because the standard's own revisitCondition already named this mechanism:
+# "infection-prevention readiness as catalogue requirements with named owners per unresolved
+# item." No new Java/schema; this rig belongs here rather than a separate P11 rig file because
+# the content lives entirely in the catalogue's own procedure_requirement table.
 #
 # Usage:  bash scripts/runtime-proof/procedures-catalogue-journeys.sh
 #         KEEP_RIG=1 ... to leave the container up.
@@ -47,7 +55,9 @@ done; echo
 docker exec "$PG_NAME" psql -U impilo -d procedures -tAc "select 1" >/dev/null 2>&1 \
   || { echo "FAIL: postgres never reachable"; exit 1; }
 
-for f in V001__init V002__procedure_catalogue V003__procedure_catalogue_seed V004__appropriateness_rules; do
+for f in V001__init V002__procedure_catalogue V003__procedure_catalogue_seed V004__appropriateness_rules \
+         V005__safety_pause_and_sedation V006__recovery_and_aftercare V007__aftercare_template_specific_codes \
+         V008__complication_profile V009__ipc_requirement_depth; do
   out=$(docker exec -i "$PG_NAME" psql -U impilo -d procedures -v ON_ERROR_STOP=1 < "$MIG/$f.sql" 2>&1)
   echo "$out" > "$EVIDENCE/$f.txt"
   chk "J-P1-0 $f applies" "$(echo "$out" | grep -ci error || true)" "^0$"
@@ -176,6 +186,39 @@ chk "J-P3-4 every declared prerequisite names a procedure that exists" \
   "$(q "SELECT count(*) FROM procedures.procedure_definition d,
              jsonb_array_elements_text(d.prerequisite_codes) p
         WHERE NOT EXISTS (SELECT 1 FROM procedures.procedure_definition x WHERE x.definition_code = p)")" "^0$"
+
+# ── P11 §21 — IPC requirement depth. The four standards this domain's own
+# coverage-exclusions.json committed to P11 at Wave 0.4, closed as real catalogue requirements
+# rather than a generic sterile checkbox. ──
+chk "J-P11-1 hand hygiene is a real requirement on every one of the 66 published procedures" \
+  "$(q "SELECT count(*) FROM procedures.procedure_requirement WHERE requirement_code='IPC-HAND_HYGIENE'")" "^66$"
+
+chk "J-P11-2 aseptic technique now covers the whole catalogue, not just V003's original two procedures" \
+  "$(q "SELECT count(*) FROM procedures.procedure_requirement WHERE requirement_code='IPC-ASEPTIC'")" "^66$"
+
+chk "J-P11-3 injection safety (single-use, exposure incident, waste) is declared on every procedure" \
+  "$(q "SELECT count(*) FROM procedures.procedure_requirement WHERE requirement_code='IPC-INJECTION_SAFETY'")" "^66$"
+
+chk "J-P11-4 PPE and skin preparation are both real requirements, not folded into one vague row" \
+  "$(q "SELECT CASE WHEN count(DISTINCT requirement_code) = 2 THEN 'BOTH' ELSE 'MISSING' END
+        FROM procedures.procedure_requirement WHERE requirement_code IN ('IPC-PPE','IPC-SKIN_PREP')")" "BOTH"
+
+chk "J-P11-5 sterile-reprocessing limits are scoped to THEATRE/ENDOSCOPY, not applied to every bedside procedure" \
+  "$(q "SELECT count(*) FROM procedures.procedure_requirement r
+        JOIN procedures.procedure_definition d ON d.id = r.definition_id
+        WHERE r.requirement_code = 'CSSD-REPROCESSING_LIMITS'
+          AND NOT (d.permitted_settings ? 'THEATRE' OR d.permitted_settings ? 'ENDOSCOPY')")" "^0$"
+
+chk "J-P11-6 V003's original two IPC-ASEPTIC rows were left untouched, not duplicated" \
+  "$(q "SELECT count(*) FROM procedures.procedure_requirement r
+        JOIN procedures.procedure_definition d ON d.id = r.definition_id
+        WHERE r.requirement_code = 'IPC-ASEPTIC' AND d.definition_code IN ('PROC-LUMBAR-PUNCTURE','PROC-CHEST-DRAIN')
+        GROUP BY d.definition_code HAVING count(*) > 1")" "^$"
+
+chk "J-P11-7 every new IPC/STERILE_PROCESSING row names an owner, same discipline as every other requirement" \
+  "$(q "SELECT count(*) FROM procedures.procedure_requirement
+        WHERE requirement_code IN ('IPC-HAND_HYGIENE','IPC-PPE','IPC-SKIN_PREP','IPC-INJECTION_SAFETY','CSSD-REPROCESSING_LIMITS')
+          AND (owner_role IS NULL OR btrim(owner_role)='')")" "^0$"
 
 { echo "procedures-service P1 catalogue proof"; echo "generated: $(date -Is)"; echo "PASS=$PASS FAIL=$FAIL"; } > "$EVIDENCE/summary.txt"
 echo

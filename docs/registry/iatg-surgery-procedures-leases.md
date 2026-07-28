@@ -288,8 +288,9 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P9 done, P10–P15 remaining — see §10–§12) · **Wave P-R2 reachability
-re-wire (done — see §13)** · Phase S surgery (S0–S18, not started). Full plan in the programme
+Phase P pipeline (P0–P11 done, P12–P15 remaining — see §10–§12, §14–§15) · **Wave P-R2
+reachability re-wire (done — see §13)** · Phase S surgery (S0–S18, not started). Full plan in
+the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
 
@@ -477,3 +478,70 @@ specific, falls back and labels generic, both-unavailable renders as unavailable
 codes remain unresolved (no template row). Same shape as the already-accepted "catalogue depth"
 debt (only 13 of 66 procedures carry full requirement sets) — a content-population task for a
 future wave, not a structural gap.
+
+## 14. Wave P10 — complication profiles and Clavien-Dindo severity grading (done)
+
+Closes §18 (complications, PARTIAL). Scoped by the ADR, not assumed: classification CONTENT is
+procedures-service's own layer (engine-not-store, matching §9/§10/§15/§17); complication
+EXECUTION records stay with the performing service (inpatient-service, the P8 precedent);
+complication PATHWAY INSTANCES are named to `surgery-service` (port 8396, not yet built —
+ADR decision 5/5a/6) and out of scope until that service exists; reopen-episode semantics is a
+confirmed, real, separate gap in `inpatient.procedure_episode`'s own state machine (no
+`REOPENED` state, no reopen method) — an inpatient-service change, not attempted here.
+
+**Applied the P-R2 lesson from the start, not needing a fourth fix-forward migration**:
+`procedure_definition.complication_profile` has existed since V002 with no seed value and no
+resolving table — one step earlier in the exact "code with nothing to resolve to" state V005
+found for `safety_pause_template` and V007 found+fixed for `aftercare_template`. V008 resolves
+`complication_profile` against the pre-existing column directly, rather than building a parallel
+one the way P9 (accidentally) did for aftercare.
+
+**Two content axes, sourced and flagged distinctly, not blurred into one honesty level**: the
+seven Clavien-Dindo severity grades are a REAL, literature-cited, internationally-used standard
+(Dindo/Demartines/Clavien, Ann Surg 2004) — added to `standards-baseline.json` as
+`SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING`, registered `COVERED_ELSEWHERE` in
+`coverage-exclusions.json` (implemented directly in procedures-service content; not a WHO DAK
+artefact at all, so the traceability generator's SHIPPED path was never going to apply), and
+seeded `status=PUBLISHED` with no `content_maturity` flag — this is real, not engineering-seed.
+The complication TYPES within each profile have no sourced taxonomy in this repository — same
+honest gap V006 already declared for aftercare instruction kinds — so `complication_profile`
+itself carries `content_maturity='ENGINEERING_SEED'`, not claimed as a canonical nineteen-class
+list nobody in this session has read.
+
+Proof: `ComplicationProfileServiceTest` (8 tests) including a never-event-flag-surfaces-intact
+test. `procedures-complications-journeys.sh` (25/25, real Postgres). DAK traceability guard
+regenerated and green (149 artefacts, 8 COVERED_ELSEWHERE, 0 uncovered). Module regression: 53/53.
+
+## 15. Wave P11 — IPC requirement depth (done)
+
+Closes §21 (IPC + sterile processing), specifically the four standards this domain's own
+`coverage-exclusions.json` committed to P11 BY NAME at Wave 0.4: `IPC.CORE.HAND_HYGIENE`,
+`IPC.CORE.ASEPTIC_TECHNIQUE`, `IPC.CORE.STERILE_PROCESSING`, `IPC.CORE.INJECTION_SAFETY`. Their
+own `revisitCondition` text already named the mechanism — "infection-prevention readiness as
+catalogue requirements with named owners per unresolved item" — so this wave shipped that
+literally: `requirement_kind` `IPC`/`STERILE_PROCESSING` have been valid since V002; no new
+schema, service or controller was needed, only real content.
+
+Five new requirement codes: `IPC-HAND_HYGIENE`, `IPC-PPE`, `IPC-SKIN_PREP`,
+`IPC-INJECTION_SAFETY` (single-use + exposure-incident + waste folded into one, same WHO
+guideline family) seeded universally across all 66 published entries — genuinely universal WHO
+IPC core practices for any invasive intervention, which every catalogue entry is by
+construction. `IPC-ASEPTIC` broadened from V003's original two-procedure seed to all 66
+(`ON CONFLICT DO NOTHING` left the original rows untouched). `CSSD-REPROCESSING_LIMITS` (kind
+`STERILE_PROCESSING`) scoped to THEATRE/ENDOSCOPY settings only (49 rows) — a reprocessed
+instrument set or scope, not single-use bedside kit, is what reprocessing limits are about.
+
+All four standards moved `DEFERRED` → `COVERED_ELSEWHERE`, each reason stating precisely what's
+real and what remains named-but-absent: `STERILE_PROCESSING` still has no path for environmental
+cleaning; `INJECTION_SAFETY`'s requirement is a DECLARATION only — the EXECUTION half (an actual
+exposure incident routed to Rito) is inpatient-service's to build, the same content/execution
+boundary P8 drew for specimens/implants and P10 drew for complications.
+
+No new Java: `ProcedureCatalogueService` already exposes requirements via `CatalogueDetail` —
+pure content depth into an already-reachable API. Extended `procedures-catalogue-journeys.sh`
+(P1's own rig) rather than a new file, since the content lives entirely in
+`procedure_requirement`.
+
+Proof: 36/36 (7 new P11 assertions, real Postgres). DAK traceability matrix regenerated (149
+artefacts, 12 COVERED_ELSEWHERE, 116 DEFERRED, 0 uncovered). Module regression: 53/53 unchanged
+(H2 tests use hand-inserted fixtures, not the shipped seed).

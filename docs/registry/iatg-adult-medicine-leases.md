@@ -330,10 +330,16 @@ definitely new".
   `Condition` publisher, `experience-bff`'s `FhirPublisher`, is **dead code that nothing injects.**
   BUTANO actually ingests `Patient`, `Observation`, `ImagingStudy`, `DiagnosticReport`,
   `DocumentReference`, `ServiceRequest`.
-  **Consequence any lane writing clinical truth should know: the PCT problem list never reaches the
-  SHR.** `ProblemService` writes an outbox row (`aggregateType = "PROBLEM"`) but
-  `OutboxPublisher.routeTopic()` has no arm for it and no BUTANO listener consumes one — so a
-  recorded diagnosis is absent from the SHR, the IPS bundle and the cross-facility timeline.
+  ~~**Consequence any lane writing clinical truth should know: the PCT problem list never reaches
+  the SHR.**~~ — **CLOSED 2026-07-28. Do not re-do this.** `OutboxPublisher.routeTopic()` now routes
+  `PROBLEM_ADDED` / `PROBLEM_RESOLVED` / `PROBLEM_STATUS_CHANGED` to `pct.problem.recorded`
+  (`OutboxPublisher.java:192`), and `ButanoEventConsumer` consumes that topic
+  (`ButanoEventConsumer.java:562`) and archives a FHIR `Condition`, idempotent on problem id. A
+  recorded diagnosis now reaches the SHR, the IPS bundle and the cross-facility timeline. Two
+  properties were built in deliberately and must survive: the payload carries `code`, `codeSystem`
+  and `onsetDate` but **not** `notes` (free text is PII and the SHR is CPID-only); and unknown
+  clinical/verification status maps to **null, never a guess** — an unstated diagnostic certainty
+  must never arrive in the SHR as "confirmed".
   `EpisodeOfCare`, `ClinicalImpression`, `RiskAssessment`, `DetectedIssue`, `GuidanceResponse`,
   `MedicationStatement`, `Flag` and `Goal` likewise have no producer — but note `butano-service` is
   an unrestricted HAPI JPA server, so storage/REST for all of them already works: **the missing half
@@ -350,6 +356,22 @@ W1 canonical problem and episode model · W2 adult CDS foundation (`PatientFacts
 reconciliation, CV risk) · W3 HIV and TB DAKs · W4 chronic disease + multimorbidity engine ·
 W5 inpatient medicine + medical procedure integration · W6+ specialty workspaces, geriatrics/ICOPE,
 palliative, oncology, analytics, offline, demonstrations.
+
+> **What these waves actually delivered, 2026-07-28 — two labels overstated their contents.** This
+> index is the *plan*; read it against [`../clinical/adult-medicine-domain-pack/brief.md`](../clinical/adult-medicine-domain-pack/brief.md),
+> now committed as the pack's source of truth.
+>
+> - **W4 "chronic disease + multimorbidity engine"** delivered CV-risk and deprescribing CDS content.
+>   **No multimorbidity engine exists** — brief §9's eleven-item view and seven detections are not
+>   built, and no chronic-disease register exists. The label was aspirational.
+> - **W6+ "specialty workspaces"** delivered **five governed CDS content packs and one shared CDS
+>   page**, not thirteen workspaces. Brief §8 names thirteen specialties, each with its own disease
+>   list and tooling.
+> - W3 (HIV/TB DAKs) and the CDS backbone (§16) are complete and are the pack's strongest assets.
+>
+> Remaining, by brief section: §7 examination framework, §8 specialty workspaces, §9 multimorbidity,
+> §11 diagnostic orchestration, §14 consultation/MDT, §19 FHIR producers, §20 offline, §21 analytics,
+> §23 demonstrations. Sequenced in [`../clinical/adult-medicine-domain-pack/demonstrations.md`](../clinical/adult-medicine-domain-pack/demonstrations.md).
 
 ## 9. ~~Open question for the coordinator~~ — RESOLVED, and the stale note is the point
 
