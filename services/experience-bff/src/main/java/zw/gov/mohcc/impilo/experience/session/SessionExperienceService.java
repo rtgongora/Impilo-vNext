@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
 import zw.gov.mohcc.impilo.experience.vashandi.VashandiSessionContextResolver;
+import zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext;
+import zw.gov.mohcc.impilo.experience.workcontext.WorkContextResolutionService;
+import zw.gov.mohcc.impilo.experience.workcontext.WorkContextSourceStatus;
 
 import java.util.*;
 
@@ -23,15 +26,18 @@ public class SessionExperienceService {
     private final VarapiServiceClient varapiClient;
     private final WorkforceGovernanceClient workforceGovernanceClient;
     private final VashandiSessionContextResolver vashandiSessionContextResolver;
+    private final WorkContextResolutionService workContextResolutionService;
     private final ObjectMapper objectMapper;
 
     public SessionExperienceService(VarapiServiceClient varapiClient,
                                       WorkforceGovernanceClient workforceGovernanceClient,
                                       VashandiSessionContextResolver vashandiSessionContextResolver,
+                                      WorkContextResolutionService workContextResolutionService,
                                       ObjectMapper objectMapper) {
         this.varapiClient = varapiClient;
         this.workforceGovernanceClient = workforceGovernanceClient;
         this.vashandiSessionContextResolver = vashandiSessionContextResolver;
+        this.workContextResolutionService = workContextResolutionService;
         this.objectMapper = objectMapper;
     }
 
@@ -118,7 +124,71 @@ public class SessionExperienceService {
         contract.put("facilityModeActive", hasSelectedFacility);
         contract.put("defaultRoute", resolveDefaultRoute(defaultTab, friendlyState, activeAssignments, hasSelectedFacility));
         vashandiSessionContextResolver.applyToContract(contract, actorId, resolvedProviderId);
+        applyResolvedWorkContexts(contract, actorId);
         return contract;
+    }
+
+    /**
+     * Phase C — additive enrichment only (v1.4.0): unions all six work-context
+     * families via {@link WorkContextResolutionService}, alongside the v1.3.0
+     * keys above which are left untouched (including the "facility_clinical"
+     * availableContexts derivation and the current facilityModeAvailable
+     * formula — both are known-narrow/known-buggy, but fixing their VALUE
+     * semantics requires a coordinated update to the frontend session-contract
+     * validator's approved_work_context_type list and is deferred to the
+     * Phase F frontend wave rather than silently changed here). A resolver
+     * failure must never break the existing v1.3.0 contract, hence the guard.
+     */
+    private void applyResolvedWorkContexts(Map<String, Object> contract, String actorId) {
+        try {
+            WorkContextResolutionService.ResolutionOutcome outcome = workContextResolutionService.resolve(actorId, null);
+            List<Map<String, Object>> contexts = new ArrayList<>();
+            for (ResolvedWorkContext c : outcome.contexts()) {
+                Map<String, Object> v = new LinkedHashMap<>();
+                v.put("contextId", c.contextId());
+                v.put("contextKind", c.contextKind());
+                v.put("sourceSystem", c.sourceSystem());
+                v.put("facilityId", c.facilityId());
+                v.put("organisationId", c.organisationId());
+                v.put("jurisdictionCode", c.jurisdictionCode());
+                v.put("programmeId", c.programmeId());
+                v.put("roleTemplateId", c.roleTemplateId());
+                v.put("availableModes", c.availableModes());
+                v.put("defaultMode", c.defaultMode());
+                v.put("restrictions", c.restrictions());
+                v.put("label", c.label());
+                v.put("groupHint", c.groupHint());
+                contexts.add(v);
+            }
+            List<Map<String, Object>> statuses = new ArrayList<>();
+            for (WorkContextSourceStatus s : outcome.sourceStatuses()) {
+                Map<String, Object> sv = new LinkedHashMap<>();
+                sv.put("system", s.system());
+                sv.put("state", s.state().name());
+                if (s.message() != null) sv.put("message", s.message());
+                statuses.add(sv);
+            }
+            Set<String> availableModes = new LinkedHashSet<>();
+            for (ResolvedWorkContext c : outcome.contexts()) {
+                availableModes.addAll(c.availableModes());
+            }
+
+            contract.put("resolvedWorkContexts", contexts);
+            contract.put("workContextSourceStatuses", statuses);
+            contract.put("recommendedContextId", outcome.recommendedContextId());
+            contract.put("availableWorkModes", List.copyOf(availableModes));
+            if (outcome.friendlyResolutionState() != null
+                    && "".equals(contract.get("friendlyResolutionState"))) {
+                // Only fills the gap when v1.3.0 logic found nothing to say — never
+                // overrides an existing friendlyResolutionState (e.g. provider_suspended).
+                contract.put("friendlyResolutionState", outcome.friendlyResolutionState());
+            }
+        } catch (Exception e) {
+            contract.put("resolvedWorkContexts", List.of());
+            contract.put("workContextSourceStatuses", List.of());
+            contract.put("recommendedContextId", null);
+            contract.put("availableWorkModes", List.of());
+        }
     }
 
     public Map<String, Object> buildExperienceContract(String actorId,
@@ -345,8 +415,12 @@ public class SessionExperienceService {
     private static final List<String> PRIVATE_ONLY_WORKSPACES = List.of(
             "private_facility_user_management", "private_clinician_assignment");
 
-    /** Session Experience Contract version — kept in lockstep with the TS contract constant. */
-    private static final String CONTRACT_VERSION = "1.3.0";
+    /**
+     * Session Experience Contract version — kept in lockstep with the TS contract constant.
+     * 1.4.0 (Phase C): additive-only — resolvedWorkContexts/workContextSourceStatuses/
+     * recommendedContextId/availableWorkModes. No 1.3.0 key removed or changed shape.
+     */
+    private static final String CONTRACT_VERSION = "1.4.0";
 
     private static final Map<String, List<String>> MANAGEMENT_WORKSPACE_DEFAULTS = Map.ofEntries(
             Map.entry("sovereign_public_owner", List.of("national_organisation_registry", "national_trust_console", "national_platform_user_administration")),

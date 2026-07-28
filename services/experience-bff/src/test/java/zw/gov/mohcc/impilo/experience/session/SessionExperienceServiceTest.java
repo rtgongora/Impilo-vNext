@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
 import zw.gov.mohcc.impilo.experience.vashandi.VashandiSessionContextResolver;
+import zw.gov.mohcc.impilo.experience.workcontext.WorkContextResolutionService;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,9 @@ class SessionExperienceServiceTest {
     @Mock
     private VashandiSessionContextResolver vashandiSessionContextResolver;
 
+    @Mock
+    private WorkContextResolutionService workContextResolutionService;
+
     private SessionExperienceService service;
 
     @BeforeEach
@@ -40,10 +44,17 @@ class SessionExperienceServiceTest {
                 varapiClient,
                 workforceGovernanceClient,
                 vashandiSessionContextResolver,
+                workContextResolutionService,
                 new ObjectMapper()
         );
         when(vashandiSessionContextResolver.applyToContract(any(), anyString(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        // Phase C additive enrichment — default to a harmless empty resolution so
+        // existing v1.3.0-focused tests below don't need to know about it. Tests that
+        // care about the resolver's output stub this explicitly.
+        when(workContextResolutionService.resolve(anyString(), any()))
+                .thenReturn(new WorkContextResolutionService.ResolutionOutcome(
+                        List.of(), List.of(), null, false, null));
     }
 
     @Test
@@ -104,7 +115,7 @@ class SessionExperienceServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> policy = (Map<String, Object>) contract.get("policyMetadata");
         assertNull(policy.get("previewProductOwnerAccess"));
-        assertEquals("1.3.0", policy.get("contractVersion"));
+        assertEquals("1.4.0", policy.get("contractVersion"));
     }
 
     @Test

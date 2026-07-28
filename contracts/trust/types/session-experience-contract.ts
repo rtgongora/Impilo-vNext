@@ -115,6 +115,39 @@ export interface SessionExperienceContract {
   blockedVashandiWorkspaces: string[];
   vashandiFriendlyResolutionState?: string;
   vashandiIntegrationStatus?: VashandiIntegrationStatus;
+
+  // Phase C (v1.4.0, additive only) — the unified work-context resolver's
+  // output, unioning facility-clinical/department/facility-management/
+  // jurisdiction/programme/virtual/support/regulatory families. Existing
+  // v1.3.0 fields (availableContexts, facilityModeAvailable, ...) are left
+  // as-is above; consuming these new fields is Phase F frontend work.
+  resolvedWorkContexts?: ResolvedWorkContextView[];
+  workContextSourceStatuses?: WorkContextSourceStatusView[];
+  recommendedContextId?: string | null;
+  availableWorkModes?: string[];
+}
+
+/** Wire shape of a resolved work context on the session contract (Phase C). */
+export interface ResolvedWorkContextView {
+  contextId: string;
+  contextKind: "facility" | "organisation" | "jurisdiction" | "programme" | "regulator" | "virtual" | "support";
+  sourceSystem: "VASHANDI" | "WGV" | "ORG_REGISTRY" | "TUSO" | "SUPPORT";
+  facilityId?: string | null;
+  organisationId?: string | null;
+  jurisdictionCode?: string | null;
+  programmeId?: string | null;
+  roleTemplateId?: string | null;
+  availableModes: string[];
+  defaultMode?: string | null;
+  restrictions: string[];
+  label: string;
+  groupHint: "today" | "regular" | "virtual" | "oversight" | "other" | "personal";
+}
+
+export interface WorkContextSourceStatusView {
+  system: string;
+  state: "LIVE" | "EMPTY" | "DEGRADED";
+  message?: string;
 }
 
 /** Organisation context bound to non-citizen Work and management workspaces */
@@ -133,4 +166,4 @@ export interface SessionOrganisationContext {
   activeOrganisationAssignment?: boolean;
 }
 
-export const SESSION_EXPERIENCE_CONTRACT_VERSION = "1.3.0";
+export const SESSION_EXPERIENCE_CONTRACT_VERSION = "1.4.0";
