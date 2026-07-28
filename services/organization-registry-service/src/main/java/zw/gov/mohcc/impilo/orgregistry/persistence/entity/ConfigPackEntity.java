@@ -40,6 +40,24 @@ public class ConfigPackEntity {
     @Column(nullable = false, length = 24)
     private String status = "ACTIVE";
 
+    /**
+     * Whether the version-controlled source pack on disk agrees with what the Registry recorded.
+     * LOAD_FAILED stops further seeding from that pack; it never withdraws an activated release,
+     * which was separately approved and is what live cases are pinned to.
+     */
+    @Column(nullable = false, length = 24)
+    private String loadState = "NEVER_LOADED";
+
+    private String loadFailureReason;
+
+    @Column(length = 64)
+    private String sourceManifestHash;
+
+    @Column(length = 256)
+    private String sourceRef;
+
+    private OffsetDateTime loadCheckedAt;
+
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 

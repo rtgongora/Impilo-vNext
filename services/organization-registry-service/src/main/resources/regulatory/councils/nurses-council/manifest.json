@@ -1,0 +1,35 @@
+{
+  "packKey": "nurses-council",
+  "organizationCode": "NCZ",
+  "label": "Nurses Council of Zimbabwe",
+  "description": "The first council configuration pack on the shared regulatory platform. It is a configuration pack, not a fork: nothing here is NCZ-specific code.",
+  "sourceAuthority": "docs/requirements/regulators/nurses-council/PRODUCT_OWNER_IMPLEMENTATION_BRIEF.md",
+  "sourceClassification": "BRD_DERIVED_PO_APPROVED",
+  "release": {
+    "releaseKey": "ncz-v1",
+    "label": "Nurses Council pack v1",
+    "notes": "Seeded from the source pack as a DRAFT. A deploy never activates a release: two people approve, or commit access to this directory becomes a sole approver of fee and penalty changes."
+  },
+  "pendingCouncilDecisions": [
+    "NCZ-DEC-001",
+    "NCZ-DEC-002"
+  ],
+  "definitions": [
+    {
+      "file": "council-identity.json",
+      "sha256": "5f00b46dd42d198b5ee55a2c0905dc09ce6cf76683acafa1888b75f6fb771a0e"
+    },
+    {
+      "file": "student-index-fee.json",
+      "sha256": "2a880596d168fd7cc55254c6dde209d7c5a84fd0ccbc8f624062391aaf9292fc"
+    },
+    {
+      "file": "student-index-number.json",
+      "sha256": "c2273f235c24b4949faca14f588c3ecfe4277581d18f1b50d0896454b3b03083"
+    },
+    {
+      "file": "student-registration.json",
+      "sha256": "c55f22532d237747fbfa9f4d36e1b49e409f2c37becb58fffa3392c3dcd6b82e"
+    }
+  ]
+}

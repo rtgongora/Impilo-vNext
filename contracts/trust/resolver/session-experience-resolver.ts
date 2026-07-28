@@ -440,7 +440,7 @@ export function sessionContractAllowsRoute(
 ): boolean {
   if (!contract.authenticated) return false;
   const path = pathname.split("?")[0];
-  const workPrefixes = ["/clinical", "/queue", "/provider-workspace", "/operations/facility-operations", "/organization-admin"];
+  const workPrefixes = ["/work", "/clinical", "/queue", "/provider-workspace", "/operations/facility-operations", "/organization-admin"];
   const professionalPrefixes = ["/registry-admin", "/admin", "/registry/providers"];
   if (!contract.tabs.work.visible && workPrefixes.some((p) => path === p || path.startsWith(`${p}/`))) return false;
   if (!contract.tabs.professional.visible && professionalPrefixes.some((p) => path === p || path.startsWith(`${p}/`))) return false;

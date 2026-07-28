@@ -41,4 +41,7 @@ export type {
   SessionIdentityType,
   SessionLoginMethod,
   OrganisationGovernanceInput,
+  // Phase C (v1.4.0) unified work-context resolver output — consumed by Work Home (Phase F).
+  ResolvedWorkContextView,
+  WorkContextSourceStatusView,
 } from "../../../../../contracts/trust";

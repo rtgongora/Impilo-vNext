@@ -1,0 +1,16 @@
+{
+  "typeCode": "FEE_SCHEDULE",
+  "definitionKey": "student-index-fee",
+  "label": "Student index fee",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/invoices",
+  "policyStatus": "PENDING_REGULATOR_APPROVAL",
+  "policyDecisionRef": "NCZ-DEC-002",
+  "payload": {
+    "feeCode": "STUDENT_INDEX",
+    "description": "Payable on admission to the Student Register.",
+    "amount": null,
+    "currency": null,
+    "note": "Fees are set by instrument, not by software. The gate, invoice, payment and reconciliation rails are built; the amount is absent until the Council sets it, and the capability surfaces as NOT_CONFIGURED rather than guessing."
+  }
+}

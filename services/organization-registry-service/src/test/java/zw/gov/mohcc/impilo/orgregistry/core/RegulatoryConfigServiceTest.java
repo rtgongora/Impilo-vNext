@@ -169,6 +169,14 @@ class RegulatoryConfigServiceTest {
         // Before this guard, a fee authored with amount null and no declared status validated
         // completely clean — it read as fully configured. Silence must not be cheaper than honesty.
         when(typeRepository.findById("FEE_SCHEDULE")).thenReturn(Optional.of(feeType(true)));
+        // The declaration guards deliberately run AFTER the checksum check, so these tests now reach
+        // the definition lookup: "you are changing a published version" must not be masked by
+        // "you did not declare your policy value".
+        ConfigDefinitionEntity definition = definition();
+        when(definitionRepository.findByTenantIdAndPackIdAndTypeCodeAndDefinitionKey(
+                TENANT, PACK, "FEE_SCHEDULE", "student-index-fee")).thenReturn(Optional.of(definition));
+        when(versionRepository.findByTenantIdAndDefinitionIdAndSemanticVersion(
+                TENANT, definition.getId(), "1.0.0")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.authorVersion(TENANT, PACK, "FEE_SCHEDULE",
                 "student-index-fee", "Student index fee", "1.0.0", json("{\"amount\":null}"),
@@ -182,6 +190,14 @@ class RegulatoryConfigServiceTest {
     @Test
     void declaringPendingWithoutNamingTheDecisionIsRefused() {
         when(typeRepository.findById("FEE_SCHEDULE")).thenReturn(Optional.of(feeType(true)));
+        // The declaration guards deliberately run AFTER the checksum check, so these tests now reach
+        // the definition lookup: "you are changing a published version" must not be masked by
+        // "you did not declare your policy value".
+        ConfigDefinitionEntity definition = definition();
+        when(definitionRepository.findByTenantIdAndPackIdAndTypeCodeAndDefinitionKey(
+                TENANT, PACK, "FEE_SCHEDULE", "student-index-fee")).thenReturn(Optional.of(definition));
+        when(versionRepository.findByTenantIdAndDefinitionIdAndSemanticVersion(
+                TENANT, definition.getId(), "1.0.0")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.authorVersion(TENANT, PACK, "FEE_SCHEDULE",
                 "student-index-fee", "Student index fee", "1.0.0", json("{\"amount\":null}"),

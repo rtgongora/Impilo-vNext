@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.core.clinical;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.reproductive.confidentiality.ConfidentialityCategory;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pct.persistence.entity.PregnancyLossRecordEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.PregnancyLossRecordRepository;
@@ -31,8 +32,43 @@ public class PregnancyLossRecordService {
 
     private final PregnancyLossRecordRepository losses;
 
-    public PregnancyLossRecordService(PregnancyLossRecordRepository losses) {
+    private final ConfidentialCarePolicyProvider confidentiality;
+    private final ConfidentialRecordGuard confidentialRecords;
+
+    public PregnancyLossRecordService(PregnancyLossRecordRepository losses,
+                                      ConfidentialCarePolicyProvider confidentiality,
+                                      ConfidentialRecordGuard confidentialRecords) {
         this.losses = losses;
+        this.confidentiality = confidentiality;
+        this.confidentialRecords = confidentialRecords;
+    }
+
+    /**
+     * A TERMINATION loss is confidential at any age, for the same reason the TOP record is. Every
+     * other loss — miscarriage, stillbirth, ectopic, molar — is confidential only for a young person
+     * below the governed age, and whether even that holds is itself a governed parameter
+     * (SRH_NON_TERMINATION_LOSS_CONFIDENTIAL_FROM_GUARDIAN), because bereavement support frequently
+     * involves the guardian and the protective answer is genuinely less obvious here.
+     */
+    private ConfidentialityStamper.Stamp stampFor(PregnancyLossRecordEntity loss) {
+        var actDate = loss.getOccurredOn() == null ? java.time.LocalDate.now() : loss.getOccurredOn();
+        var policy = confidentiality.policyAsOf(loss.getTenantId(), actDate);
+        var category = ConfidentialityCategory.SEXUAL_REPRODUCTIVE_HEALTH;
+
+        ConfidentialityStamper.Stamp decided;
+        if (PregnancyLossRecordEntity.TYPE_TERMINATION.equals(loss.getLossType())) {
+            decided = ConfidentialityStamper.alwaysConfidential(category, policy);
+        } else if (Boolean.FALSE.equals(policy.nonTerminationLossConfidentialFromGuardian().orElse(null))) {
+            // Policy says a non-termination loss is NOT confidential from a guardian. The category is
+            // still recorded — it is true content classification — but no protection is claimed.
+            decided = new ConfidentialityStamper.Stamp(category.code(),
+                    ConfidentialityStamper.CLASS_FULL_CLINICAL,
+                    ConfidentialityStamper.BASIS_SUBJECT_UNDER_POLICY_AGE, policy.contentVersion());
+        } else {
+            var subject = confidentiality.subjectAt(loss.getTenantId(), loss.getMotherCpid(), category, actDate);
+            decided = ConfidentialityStamper.ageGated(category, subject, actDate, policy);
+        }
+        return ConfidentialityStamper.gated(decided, confidentiality.classStampingEnabled());
     }
 
     @Transactional(readOnly = true)
@@ -40,7 +76,9 @@ public class PregnancyLossRecordService {
         if (tenantId == null || motherCpid == null || motherCpid.isBlank()) {
             return List.of();
         }
-        return losses.findByMother(tenantId, motherCpid);
+        return confidentialRecords.filter(losses.findByMother(tenantId, motherCpid),
+                PregnancyLossRecordEntity::getSensitivityClass,
+                PregnancyLossRecordEntity::getConfidentialityCategory);
     }
 
     @Transactional
@@ -58,9 +96,11 @@ public class PregnancyLossRecordService {
         if (loss.getRecordedAt() == null) {
             loss.setRecordedAt(OffsetDateTime.now());
         }
-        if (loss.getSensitivityClass() == null) {
-            loss.setSensitivityClass("FULL_CLINICAL");
-        }
+        var stamp = stampFor(loss);
+        loss.setSensitivityClass(stamp.sensitivityClass());
+        loss.setConfidentialityCategory(stamp.category());
+        loss.setConfidentialityBasis(stamp.basis());
+        loss.setConfidentialityPolicyVersion(stamp.policyVersion());
         // Defaults for the boolean gates, so a null never reads as an affirmative.
         if (loss.getStillbirthCertifiable() == null) {
             loss.setStillbirthCertifiable(Boolean.FALSE);
