@@ -175,6 +175,38 @@ class ProceduresServiceClientTest {
         server.verify();
     }
 
+    // ── Wave SB-3 — P14 analytics indicator catalogue clients. Query-param code shape from
+    // the start (AnalyticsIndicatorController), same as the P7/P9 routes above. ──
+
+    @Test
+    void analyticsIndicatorsHitsTheFixedCatalogueRoute() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/analytics/indicators"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"total\":33,\"computed\":0,\"indicators\":[]}",
+                        MediaType.APPLICATION_JSON));
+
+        var response = client(rt).analyticsIndicators();
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void analyticsIndicatorSendsTheCodeAsAQueryParameter() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/analytics/indicator?code=IND-PROC-001"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"indicatorCode\":\"IND-PROC-001\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).analyticsIndicator("IND-PROC-001");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
     @Test
     void aftercareTemplateSendsTheCodeAsAQueryParameter() {
         RestTemplate rt = new RestTemplate();

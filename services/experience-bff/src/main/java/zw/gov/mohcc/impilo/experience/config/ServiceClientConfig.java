@@ -155,7 +155,13 @@ public class ServiceClientConfig {
              * duplication, competence and privilege resolution (port 8395). Engine-not-store — read
              * and evaluate only, nothing is written back through this client.
              */
-            String proceduresBaseUrl
+            String proceduresBaseUrl,
+            /**
+             * Surgery — the surgical episode spine (S1), general surgical assessment (S2) and
+             * surgical decision-making record (S3) (port 8396). Unlike procedures-service this
+             * IS a store: episodes, assessments and decisions are its own rows.
+             */
+            String surgeryBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -238,6 +244,7 @@ public class ServiceClientConfig {
             if (participationBaseUrl == null) participationBaseUrl = "http://localhost:8393";
             if (telemonitoringBaseUrl == null) telemonitoringBaseUrl = "http://localhost:8394";
             if (proceduresBaseUrl == null) proceduresBaseUrl = "http://localhost:8395";
+            if (surgeryBaseUrl == null) surgeryBaseUrl = "http://localhost:8396";
         }
     }
 
@@ -282,7 +289,7 @@ public class ServiceClientConfig {
                 u, u, u, u, u, u, u, u, u, u,
                 u, u, u, u, u, u, u, u, u, u,
                 u, u, u, u, u, u, u, u, u, u,
-                u, u, u, u, u, u, u, u, u
+                u, u, u, u, u, u, u, u, u, u
         );
     }
 
@@ -303,7 +310,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null
         );
     }
 

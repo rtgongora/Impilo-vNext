@@ -99,4 +99,17 @@ public class ProceduresController {
     public ResponseEntity<String> aftercareTemplate(@RequestParam String code) {
         return procedures.aftercareTemplate(code);
     }
+
+    // ── Wave SB-3 — P14 analytics indicator catalogue routes. See V302 in tshepo-authz-service
+    // for the policy rows. Query-param code shape, same PDP-derivation reason as above. ──
+
+    @GetMapping("/analytics/indicators")
+    public ResponseEntity<String> analyticsIndicators() {
+        return procedures.analyticsIndicators();
+    }
+
+    @GetMapping("/analytics/indicator")
+    public ResponseEntity<String> analyticsIndicator(@RequestParam String code) {
+        return procedures.analyticsIndicator(code);
+    }
 }

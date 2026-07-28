@@ -145,4 +145,24 @@ public class ProceduresServiceClient {
                 .queryParam("code", templateCode).toUriString();
         return restTemplate.getForEntity(url, String.class);
     }
+
+    // ── Wave SB-3 — the P14 analytics indicator catalogue read surface. Read-only like
+    // everything else here (engine-not-store): indicator DEFINITIONS and their computation
+    // status, not computed numbers. Indicator codes are query parameters from the start
+    // (AnalyticsIndicatorController, P14) — no route-shape workaround needed. ──
+
+    /** Indicator catalogue + summary counts — GET /internal/v1/procedures/analytics/indicators */
+    public ResponseEntity<String> analyticsIndicators() {
+        log.info("Procedures: fetching analytics indicator catalogue");
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/procedures/analytics/indicators", String.class);
+    }
+
+    /** One indicator — GET /internal/v1/procedures/analytics/indicator?code= */
+    public ResponseEntity<String> analyticsIndicator(String indicatorCode) {
+        log.info("Procedures: fetching analytics indicator={}", indicatorCode);
+        String url = UriComponentsBuilder.fromUriString(baseUrl + "/internal/v1/procedures/analytics/indicator")
+                .queryParam("code", indicatorCode).toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
 }
