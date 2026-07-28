@@ -280,10 +280,32 @@ the real engine.
 
 **Honestly remaining (frontend/ops horizon, not governed-content gaps):** the per-specialty UI
 *workspaces* (the content behind them exists and is API-reachable, but dedicated screens are not
-built); the inpatient medical-ward workspace; analytics and offline surfaces; the ten §23
-demonstrations (unproven); and BUTANO still maps only `Condition` and `CarePlan` of the FHIR
-resources in §19. The clinical decision-support backbone of the pack is complete; what remains is
-experience-shell surface, interoperability breadth, and the demonstration proofs.
+built); the inpatient medical-ward workspace; analytics and offline surfaces; and the ten §23
+demonstrations (unproven). The clinical decision-support backbone of the pack is complete; what
+remains is experience-shell surface, interoperability breadth, and the demonstration proofs.
+
+> ⚠ **Correction (2026-07-28) — the earlier BUTANO statement in this report was wrong, and it
+> understated the gap.** This report previously said "BUTANO still maps only `Condition` and
+> `CarePlan`". Verified against the code, **nothing writes `Condition` or `CarePlan` into BUTANO at
+> all.** They appear only on the *read* side — in `TimelineService`, `ReconciliationService`,
+> `ResourceStatsService` and `IpsBundleGenerator`, each of which already enumerates 11–12 resource
+> types. The only `Condition` publisher in the tree is `experience-bff`'s `FhirPublisher`, which is
+> **dead code — nothing injects it.**
+>
+> What BUTANO actually ingests today: `Patient`, `Observation`, `ImagingStudy`, `DiagnosticReport`,
+> `DocumentReference`, `ServiceRequest` (via `ButanoEventConsumer` and OROS's `ButanoIntegration`).
+>
+> **The real gap is bigger than a missing mapping: this pack's central artefact — the problem list —
+> never reaches the shared health record.** `ProblemService` does write an outbox row
+> (`aggregateType = "PROBLEM"`), but `OutboxPublisher.routeTopic()` has no arm for it and BUTANO
+> consumes no problem-shaped topic. So a diagnosis recorded in PCT is invisible to the SHR, the
+> IPS bundle and cross-facility timeline. Correcting the claim here rather than leaving it: a
+> readable-but-never-written resource looks mapped and is not. Raised with the coordinator; the fix
+> (a producer arm + consumer + read-side registration) is scoped in the delivery plan.
+>
+> Because `butano-service` is an unrestricted HAPI JPA server, storage/REST for `EpisodeOfCare`,
+> `MedicationStatement`, `RiskAssessment`, `DetectedIssue`, `Goal` and `Flag` already work — the
+> missing half is always the **producer**, never the FHIR store.
 
 ---
 
