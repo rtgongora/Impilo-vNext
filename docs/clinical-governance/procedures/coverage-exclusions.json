@@ -99,6 +99,13 @@
       "plannedWave": "S10",
       "reason": "Implemented in OROS and stronger than the audit's first pass suggested. The order lifecycle distinguishes preliminary, final, released, acknowledged, amended and superseded states, result escalation exists, and a notification consumer for critical results was enabled by the trauma stream. Not visible here because the states are Java enums, not governed content. The gap is not acknowledgement itself but its consequence: nothing prevents a clinical episode closing while a required result sits unacknowledged.",
       "revisitCondition": "S10 makes the surgical episode refuse to close on an unreviewed histology result, using the existing ACKNOWLEDGED state as the gate."
+    },
+    {
+      "standardId": "SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING",
+      "decision": "COVERED_ELSEWHERE",
+      "plannedWave": "P10",
+      "reason": "Fully implemented as governed content in procedures.clavien_dindo_grade (all seven grades, real literature citation) and procedures.complication_class (typical_grade_code resolved against it, proven to reject an invented grade). Not visible to this generator because this standard is not a WHO DAK artefact at all — it is a peer-reviewed surgical-literature classification (Dindo, Demartines, Clavien, Ann Surg 2004), declared in this domain's own standards-baseline.json rather than extracted from a WHO source under docs/reference/who-dak/. The generator's SHIPPED detection only recognises CKP content JSON carrying dakRef+adaptation, which does not apply to a non-DAK standard implemented directly in procedures-service's own migration content.",
+      "revisitCondition": "None expected — this is complete as implemented. Would only need revisiting if the traceability generator gains a non-DAK coverage path, at which point this entry could flip to SHIPPED instead of COVERED_ELSEWHERE."
     }
   ]
 }

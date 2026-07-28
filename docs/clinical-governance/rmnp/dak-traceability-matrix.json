@@ -4,7 +4,7 @@
     "DSEC": 1,
     "EDLIZ": 1,
     "IITT": 3,
-    "INTERNATIONAL_SPECIALTY": 2,
+    "INTERNATIONAL_SPECIALTY": 3,
     "LCOGS": 9,
     "SSC26": 1,
     "WHO_AMS": 1,
@@ -30,7 +30,7 @@
     "docs/reference/who-dak/*/extracted",
     "docs/clinical-governance/*/standards-baseline.json"
   ],
-  "publishedArtefacts": 148,
+  "publishedArtefacts": 149,
   "publishedDataElements": 4098,
   "rows": [
     {
@@ -2654,6 +2654,25 @@
       "titleIsSheetLevel": false
     },
     {
+      "adaptationTypes": [],
+      "dakId": null,
+      "exclusionReason": "Fully implemented as governed content in procedures.clavien_dindo_grade (all seven grades, real literature citation) and procedures.complication_class (typical_grade_code resolved against it, proven to reject an invented grade). Not visible to this generator because this standard is not a WHO DAK artefact at all — it is a peer-reviewed surgical-literature classification (Dindo, Demartines, Clavien, Ann Surg 2004), declared in this domain's own standards-baseline.json rather than extracted from a WHO source under docs/reference/who-dak/. The generator's SHIPPED detection only recognises CKP content JSON carrying dakRef+adaptation, which does not apply to a non-DAK standard implemented directly in procedures-service's own migration content.",
+      "family": "INTERNATIONAL_SPECIALTY",
+      "hitPolicy": null,
+      "implementations": [],
+      "kind": "STANDARD",
+      "pack": "procedures",
+      "publishedRows": null,
+      "revisitCondition": "None expected — this is complete as implemented. Would only need revisiting if the traceability generator gains a non-DAK coverage path, at which point this entry could flip to SHIPPED instead of COVERED_ELSEWHERE.",
+      "sheet": null,
+      "sourceCitation": "Dindo D, Demartines N, Clavien PA. Classification of surgical complications: a new proposal with evaluation in a cohort of 6336 patients and results of a survey. Ann Surg. 2004;240(2):205-213. https://doi.org/10.1097/01.sla.0000133083.54934.ae",
+      "sourceFile": "docs/clinical-governance/procedures/standards-baseline.json",
+      "standardId": "SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING",
+      "status": "COVERED_ELSEWHERE",
+      "title": "Surgical/procedural complications are graded by the therapy required to treat them, not by their apparent clinical severity alone — a reproducible severity scale (Grade I through V) rather than free-text description.",
+      "titleIsSheetLevel": false
+    },
+    {
       "adaptationTypes": [
         "ADOPTED_VERBATIM"
       ],
@@ -3362,7 +3381,7 @@
   ],
   "shippedCitations": 158,
   "statusCounts": {
-    "COVERED_ELSEWHERE": 7,
+    "COVERED_ELSEWHERE": 8,
     "DEFERRED": 120,
     "SHIPPED": 21
   }
