@@ -228,6 +228,15 @@ public class OutboxPublisher {
                  "EMERGENCY_ALERT_RESPONDED",
                  "EMERGENCY_ALERT_CLOSED" -> "pct.emergency.alert.raised";
 
+            // The acceptance handshake (W9). inpatient/theatre/mental-health consume ACCEPTED to
+            // confirm their own record is the one that closed the episode; rito consumes EXPIRED to
+            // open a safety case. Routed with the emitter, same reason as every other emergency case
+            // above: an event without a route publishes successfully and reaches nobody.
+            case "EMERGENCY_HANDOVER_REQUESTED",
+                 "EMERGENCY_HANDOVER_ACCEPTED",
+                 "EMERGENCY_HANDOVER_DECLINED",
+                 "EMERGENCY_HANDOVER_EXPIRED" -> "pct.emergency.handover.updated";
+
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             // Nutrition programme lifecycle. Tracing gets its own topic because it is acted on by a
