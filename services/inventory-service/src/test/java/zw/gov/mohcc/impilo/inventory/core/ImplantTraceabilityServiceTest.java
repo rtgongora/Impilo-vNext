@@ -29,9 +29,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,7 +81,8 @@ class ImplantTraceabilityServiceTest {
         RecordImplantRequest req = new RecordImplantRequest(
                 "UDI-001", "SER-9", "LOT-A", null, "HIP-STEM", "hip prosthesis",
                 "Acme", "X1", null, "CPID-777", "EP-1", "hip", "LEFT",
-                "provider-42", OffsetDateTime.now());
+                "provider-42", OffsetDateTime.now(),
+                null, null, null, null);
 
         RecordImplantResponse resp = service.recordImplant(req);
 
@@ -130,5 +133,119 @@ class ImplantTraceabilityServiceTest {
         assertThat(t.udi()).isEqualTo("UDI-001");
         assertThat(t.serialNumber()).isEqualTo("SER-9");
         assertThat(t.bodySite()).isEqualTo("hip");
+    }
+
+    // ── Wave P8 (pipeline §14): removal / revision lifecycle ──
+
+    private PatientImplantEntity implantedLink(UUID id) {
+        PatientImplantEntity link = new PatientImplantEntity();
+        link.setPatientImplantId(id);
+        link.setTenantId(TENANT);
+        link.setImplantUnitId(UUID.randomUUID());
+        link.setPatientCpid("CPID-777");
+        link.setStatus("IMPLANTED");
+        return link;
+    }
+
+    @Test
+    @DisplayName("removeImplant marks the link REMOVED with an actor, a timestamp and the reason")
+    void removeImplant_marksLinkRemoved() {
+        UUID linkId = UUID.randomUUID();
+        when(patientImplantRepository.findById(linkId)).thenReturn(Optional.of(implantedLink(linkId)));
+        when(patientImplantRepository.save(any(PatientImplantEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        PatientImplantEntity result = service.removeImplant(linkId, "Patient elected explant");
+
+        assertThat(result.getStatus()).isEqualTo("REMOVED");
+        assertThat(result.getRemovedAt()).isNotNull();
+        assertThat(result.getRemovedBy()).isEqualTo("actor-1");
+        assertThat(result.getRemovalReason()).isEqualTo("Patient elected explant");
+    }
+
+    @Test
+    @DisplayName("removeImplant refuses a link that is not currently IMPLANTED — no double removal")
+    void removeImplant_refusesAnAlreadyRemovedLink() {
+        UUID linkId = UUID.randomUUID();
+        PatientImplantEntity alreadyRemoved = implantedLink(linkId);
+        alreadyRemoved.setStatus("REMOVED");
+        when(patientImplantRepository.findById(linkId)).thenReturn(Optional.of(alreadyRemoved));
+
+        assertThatThrownBy(() -> service.removeImplant(linkId, "again?"))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("removeImplant refuses a link from another tenant")
+    void removeImplant_refusesCrossTenantLink() {
+        UUID linkId = UUID.randomUUID();
+        PatientImplantEntity foreign = implantedLink(linkId);
+        foreign.setTenantId(UUID.randomUUID());
+        when(patientImplantRepository.findById(linkId)).thenReturn(Optional.of(foreign));
+
+        assertThatThrownBy(() -> service.removeImplant(linkId, "x"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    /**
+     * The standard's own point for a revision: the OLD row becomes REVISED (not merely REMOVED)
+     * and the NEW row's revisionOfPatientImplantId resolves back to it in the SAME call — a
+     * caller never sees a half-completed revision.
+     */
+    @Test
+    @DisplayName("reviseImplant marks the old link REVISED and links the new one back to it")
+    void reviseImplant_linksNewImplantBackToTheOldOne() {
+        UUID oldLinkId = UUID.randomUUID();
+        UUID newLinkId = UUID.randomUUID();
+        PatientImplantEntity old = implantedLink(oldLinkId);
+        when(patientImplantRepository.findById(oldLinkId)).thenReturn(Optional.of(old));
+
+        when(unitRepository.findByTenantIdAndUdi(eq(TENANT), eq("UDI-002"))).thenReturn(Optional.empty());
+        when(unitRepository.save(any(ImplantUnitEntity.class))).thenAnswer(inv -> {
+            ImplantUnitEntity u = inv.getArgument(0);
+            if (u.getImplantUnitId() == null) u.setImplantUnitId(UUID.randomUUID());
+            return u;
+        });
+        when(patientImplantRepository.save(any(PatientImplantEntity.class))).thenAnswer(inv -> {
+            PatientImplantEntity l = inv.getArgument(0);
+            if (l.getPatientImplantId() == null) l.setPatientImplantId(newLinkId);
+            return l;
+        });
+        // reviseImplant re-fetches the just-created new link to attach revisionOfPatientImplantId.
+        PatientImplantEntity newLinkHolder = new PatientImplantEntity();
+        newLinkHolder.setPatientImplantId(newLinkId);
+        newLinkHolder.setTenantId(TENANT);
+        newLinkHolder.setStatus("IMPLANTED");
+        when(patientImplantRepository.findById(newLinkId)).thenReturn(Optional.of(newLinkHolder));
+
+        RecordImplantRequest newImplant = new RecordImplantRequest(
+                "UDI-002", "SER-10", "LOT-B", null, "HIP-STEM", "hip prosthesis",
+                "Acme", "X2", null, "CPID-777", "EP-2", "hip", "LEFT",
+                "provider-99", OffsetDateTime.now(), null, null, null, null);
+
+        RecordImplantResponse response = service.reviseImplant(oldLinkId, newImplant, "Component wear");
+
+        assertThat(response.patientImplantId()).isEqualTo(newLinkId);
+        assertThat(old.getStatus()).isEqualTo("REVISED");
+        assertThat(old.getRemovedAt()).isNotNull();
+        assertThat(old.getRemovalReason()).isEqualTo("Component wear");
+        assertThat(newLinkHolder.getRevisionOfPatientImplantId()).isEqualTo(oldLinkId);
+    }
+
+    @Test
+    @DisplayName("ImplantTraceDto.from surfaces status and removal fields rather than hiding removed history")
+    void implantTraceDto_surfacesRemovalHistory() {
+        PatientImplantEntity link = implantedLink(UUID.randomUUID());
+        link.setStatus("REMOVED");
+        link.setRemovedAt(OffsetDateTime.now());
+        link.setRemovedBy("actor-1");
+        link.setRemovalReason("Infection");
+        link.setImplantUnitId(UUID.randomUUID());
+
+        ImplantTraceDto dto = ImplantTraceDto.from(link, null);
+
+        assertThat(dto.status()).isEqualTo("REMOVED");
+        assertThat(dto.removedBy()).isEqualTo("actor-1");
+        assertThat(dto.removalReason()).isEqualTo("Infection");
     }
 }

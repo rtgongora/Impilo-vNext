@@ -67,6 +67,40 @@ public class ProcedureSpecimenEntity {
     @Column(name = "idempotency_key")
     private String idempotencyKey;
 
+    // ── Wave P8 (pipeline §13) — chain of custody, label-mismatch prevention, adequacy. ──
+    @Column(name = "collected_by")
+    private String collectedBy;
+
+    @Column(name = "collected_at")
+    private OffsetDateTime collectedAt;
+
+    @Column(name = "container_type")
+    private String containerType;
+
+    @Column(name = "fixative")
+    private String fixative;
+
+    @Column(name = "label_confirmed_by")
+    private String labelConfirmedBy;
+
+    @Column(name = "label_confirmed_at")
+    private OffsetDateTime labelConfirmedAt;
+
+    @Column(name = "received_by")
+    private String receivedBy;
+
+    @Column(name = "received_at")
+    private OffsetDateTime receivedAt;
+
+    @Column(name = "adequacy", nullable = false)
+    private String adequacy = "NOT_ASSESSED";
+
+    @Column(name = "adequacy_assessed_by")
+    private String adequacyAssessedBy;
+
+    @Column(name = "adequacy_assessed_at")
+    private OffsetDateTime adequacyAssessedAt;
+
     @Column(name = "created_by")
     private String createdBy;
 
@@ -123,6 +157,28 @@ public class ProcedureSpecimenEntity {
     public void setButanoDocumentRef(String v) { this.butanoDocumentRef = v; }
     public String getIdempotencyKey() { return idempotencyKey; }
     public void setIdempotencyKey(String v) { this.idempotencyKey = v; }
+    public String getCollectedBy() { return collectedBy; }
+    public void setCollectedBy(String v) { this.collectedBy = v; }
+    public OffsetDateTime getCollectedAt() { return collectedAt; }
+    public void setCollectedAt(OffsetDateTime v) { this.collectedAt = v; }
+    public String getContainerType() { return containerType; }
+    public void setContainerType(String v) { this.containerType = v; }
+    public String getFixative() { return fixative; }
+    public void setFixative(String v) { this.fixative = v; }
+    public String getLabelConfirmedBy() { return labelConfirmedBy; }
+    public void setLabelConfirmedBy(String v) { this.labelConfirmedBy = v; }
+    public OffsetDateTime getLabelConfirmedAt() { return labelConfirmedAt; }
+    public void setLabelConfirmedAt(OffsetDateTime v) { this.labelConfirmedAt = v; }
+    public String getReceivedBy() { return receivedBy; }
+    public void setReceivedBy(String v) { this.receivedBy = v; }
+    public OffsetDateTime getReceivedAt() { return receivedAt; }
+    public void setReceivedAt(OffsetDateTime v) { this.receivedAt = v; }
+    public String getAdequacy() { return adequacy; }
+    public void setAdequacy(String v) { this.adequacy = v; }
+    public String getAdequacyAssessedBy() { return adequacyAssessedBy; }
+    public void setAdequacyAssessedBy(String v) { this.adequacyAssessedBy = v; }
+    public OffsetDateTime getAdequacyAssessedAt() { return adequacyAssessedAt; }
+    public void setAdequacyAssessedAt(OffsetDateTime v) { this.adequacyAssessedAt = v; }
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String v) { this.createdBy = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

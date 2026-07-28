@@ -290,9 +290,40 @@ the real engine.
   handler are now reference chips, and tools that said "Not available yet" while their pages existed
   are wired.
 
-**Honestly remaining (not governed-content gaps):** the inpatient medical-ward workspace; analytics
-and offline surfaces; and the ten §23 demonstrations (unproven — and note the brief itself is not in
-the repository, so the demonstration list is not recoverable from it). The clinical decision-support backbone of the pack is complete; what
+**Inpatient medical ward — DONE.** `/ehr/[patientId]/ward-round` is patient-centred, complementing
+the ward-centred boards under `/clinical/inpatient` rather than duplicating them. It exists because no
+existing round surface shows the problem list. Admission status is three states — a failed read
+renders as UNKNOWN, never as "not admitted", because the dangerous direction of a failed read is
+always the reassuring one.
+
+**Analytics — DONE, by a different route than planned.** `GET /v1/programme-enrolments/cohort-counts`
+in the system of record, **not** a reporting-service definition: reporting holds a separate database
+and cannot see `pct.*`, so a seeded SQL template would be registered, ACTIVE and unrunnable. (Five
+existing regulatory definitions are already in exactly that state — proven live against preview and
+routed to the ROM lane.) Counts enrolments, not people, and says so.
+
+**Offline — NOT built, and the reason is structural rather than "not got to yet."** Three independent
+blockers, each verified and each in a service this pack does not own:
+
+| Blocker | Evidence | Owner |
+|---|---|---|
+| The offline action vocabulary has no read for problems or programmes | `READ_PROBLEM` / `READ_PROGRAMME` / `READ_CONDITION`: **0 occurrences** in `tshepo-offline-service`; `READ_ACTIONS` is a hardcoded `Set.of(READ_PATIENT, READ_MEDICATION, READ_ENCOUNTER, READ_OBSERVATION)` | trust plane |
+| No offline collection is registered in production | `createCollection` in `apps/mobile/packages/mobile-offline`: **0 production callers** (test-only) | mobile |
+| The edge replay surface carries one resource | `offline-edge-service` `ButanoFhirClient` posts `/fhir/Observation` **only** | offline-edge |
+
+So an HIV/TB clinician offline cannot see whether a patient is on ART or which regimen — the single
+most valuable offline fact in this domain. Building a medicine-specific offline path on top of this
+would be a vertical over a foundation that does not exist, which is the exact anti-pattern
+`usePaediatricContext` documents. **The minimal change that would unblock it** is additive and
+read-only: add `READ_PROBLEM` and `READ_PROGRAMME` to `OfflineRulesEngine.READ_ACTIONS`, then
+register a medicine collection against the existing mobile factory. This pack is ready to consume
+that seam the moment the owning lanes want it; it is not something to build unilaterally into three
+services it does not own.
+
+**Remaining:** the ten §23 demonstrations. The brief is **not in this repository** — no version was
+ever committed — so the list is not recoverable from it, and the proposals in
+`docs/clinical/adult-medicine-domain-pack/proposed-demonstrations.md` are exactly that: proposed,
+pending product-owner confirmation, and deliberately not presented as the recovered requirement. The clinical decision-support backbone of the pack is complete; what
 remains is experience-shell surface, interoperability breadth, and the demonstration proofs.
 
 > ⚠ **Correction (2026-07-28) — the earlier BUTANO statement in this report was wrong, and it
