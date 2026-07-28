@@ -167,6 +167,13 @@ public class WorkContextController {
         if (roleTemplateId != null) {
             issueRequest.put("roleTemplateId", roleTemplateId);
         }
+        // TODO(Phase C): mode is hardcoded pending the resolver's proveContext
+        // restructuring (POST /work-context/session/mode-aware) — CLINICAL_CARE
+        // is correct for every context this branch proves today (a Vashandi
+        // clinical facility assignment), but the request should carry the
+        // caller's requested mode once non-clinical facility contexts
+        // (department/facility management) are resolvable here.
+        issueRequest.put("workMode", "CLINICAL_CARE");
         issueRequest.put("purposeOfUse", "TREATMENT");
         if (previousJti != null) {
             issueRequest.put("previousJti", previousJti);
@@ -248,6 +255,11 @@ public class WorkContextController {
         issueRequest.put("organisationId", organisationId);
         issueRequest.put("assignmentId", text(matched, "id"));
         issueRequest.put("roleTemplateId", text(matched, "roleCode"));
+        // TODO(Phase C): INSPECTION_COMPLIANCE should be selectable for
+        // roleCode=INSPECTOR/HPA_INSPECTORATE_OFFICER once the resolver can
+        // offer a mode choice; REGULATORY_OPERATIONS is a correct default for
+        // every regulatory appointment role in the meantime.
+        issueRequest.put("workMode", "REGULATORY_OPERATIONS");
         issueRequest.put("purposeOfUse", "REGULATORY_DUTY");
         // The appointment's jurisdiction bounds the session. It was read here and used only to
         // decorate the response — the minted token never carried it, so the PDP had no jurisdiction

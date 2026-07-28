@@ -473,10 +473,15 @@ class TokenIssuanceServiceTest {
     class WorkContext {
 
         private IssueWorkContextTokenRequest workRequest(String previousJti) {
+            return workRequest(previousJti, "CLINICAL_CARE");
+        }
+
+        private IssueWorkContextTokenRequest workRequest(String previousJti, String workMode) {
             return new IssueWorkContextTokenRequest(
                     tenantId(),
                     "person-hid-1",
                     "PROVPUBLICID0000000000001",
+                    workMode,
                     UUID.fromString("11111111-1111-4111-8111-111111111111"),
                     null,   // departmentId (String)
                     null,   // wardId
@@ -485,6 +490,9 @@ class TokenIssuanceServiceTest {
                     null,   // jurisdictionCode
                     null,   // assignmentId
                     UUID.fromString("22222222-2222-4222-8222-222222222222"),
+                    null,   // servicePointId
+                    null,   // contextId
+                    null,   // contextKind
                     "NURSE_GENERAL",
                     "TREATMENT",
                     "LOA2",
@@ -545,6 +553,66 @@ class TokenIssuanceServiceTest {
             service.issueWorkContextToken(workRequest("prev-jti"));
 
             verify(tokenRepo, times(1)).save(any(ScopedTokenEntity.class));
+        }
+
+        @Test
+        @DisplayName("unknown work mode is rejected, never defaulted")
+        void unknownWorkModeRejected() {
+            IssueWorkContextTokenRequest bad = workRequest(null, "NOT_A_REAL_MODE");
+            assertThrows(IllegalArgumentException.class, () -> service.issueWorkContextToken(bad));
+        }
+
+        @Test
+        @DisplayName("FACILITY_MANAGEMENT without a facilityId is rejected")
+        void facilityManagementWithoutFacilityRejected() {
+            IssueWorkContextTokenRequest bad = new IssueWorkContextTokenRequest(
+                    tenantId(), "person-hid-1", "PROVPUBLICID0000000000001", "FACILITY_MANAGEMENT",
+                    null, null, null, null, null, null, null, null, null, null, null,
+                    "FACILITY_ADMINISTRATOR", null, null, null, null);
+            assertThrows(IllegalArgumentException.class, () -> service.issueWorkContextToken(bad));
+        }
+
+        @Test
+        @DisplayName("JURISDICTION_OPERATIONS without a jurisdictionCode is rejected")
+        void jurisdictionOperationsWithoutJurisdictionRejected() {
+            IssueWorkContextTokenRequest bad = new IssueWorkContextTokenRequest(
+                    tenantId(), "person-hid-1", null, "JURISDICTION_OPERATIONS",
+                    null, null, null, null, "org-1", null, null, null, null, null, null,
+                    null, null, null, null, null);
+            assertThrows(IllegalArgumentException.class, () -> service.issueWorkContextToken(bad));
+        }
+
+        @Test
+        @DisplayName("TECHNICAL_SUPPORT with TREATMENT purpose falls back to the mode default (SYSTEM)")
+        void incompatiblePurposeFallsBackToModeDefault() {
+            stubKeysServiceSuccess();
+            IssueWorkContextTokenRequest req = new IssueWorkContextTokenRequest(
+                    tenantId(), "person-hid-1", null, "TECHNICAL_SUPPORT",
+                    null, null, null, null, "org-1", null, null, null, null, null, null,
+                    "SUPPORT_OFFICER", "TREATMENT", null, null, null);
+
+            service.issueWorkContextToken(req);
+
+            ArgumentCaptor<ScopedTokenEntity> captor = ArgumentCaptor.forClass(ScopedTokenEntity.class);
+            verify(tokenRepo).save(captor.capture());
+            String claims = captor.getValue().getContextClaims();
+            assertTrue(claims.contains("\"purpose_of_use\":\"SYSTEM\""));
+            assertTrue(claims.contains("\"work_mode\":\"TECHNICAL_SUPPORT\""));
+            assertTrue(claims.contains("\"clinical_data_access\":\"NONE\""));
+        }
+
+        @Test
+        @DisplayName("CLINICAL_CARE persists clinical_data_access=IDENTIFIED")
+        void clinicalCarePersistsIdentifiedClinicalAccess() {
+            stubKeysServiceSuccess();
+
+            service.issueWorkContextToken(workRequest(null));
+
+            ArgumentCaptor<ScopedTokenEntity> captor = ArgumentCaptor.forClass(ScopedTokenEntity.class);
+            verify(tokenRepo).save(captor.capture());
+            String claims = captor.getValue().getContextClaims();
+            assertTrue(claims.contains("\"work_mode\":\"CLINICAL_CARE\""));
+            assertTrue(claims.contains("\"clinical_data_access\":\"IDENTIFIED\""));
         }
     }
 }

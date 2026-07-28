@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
+import zw.gov.mohcc.impilo.tshepo.contracts.enums.WorkMode;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.*;
 import zw.gov.mohcc.impilo.tshepo.identity.config.IdentityProperties;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.EventOutboxEntity;
@@ -134,16 +136,19 @@ public class TokenIssuanceService {
      */
     @Transactional
     public ScopedTokenResponse issueWorkContextToken(IssueWorkContextTokenRequest request) {
+        String previousWorkMode = null;
         if (request.previousJti() != null && !request.previousJti().isBlank()) {
-            tokenRepo.findByTenantIdAndJti(request.tenantId(), request.previousJti())
-                    .filter(t -> "ACTIVE".equals(t.getStatus()))
-                    .ifPresent(t -> {
-                        t.setStatus("REVOKED");
-                        t.setRevokedAt(Instant.now());
-                        tokenRepo.save(t);
-                        log.info("Work-context switch: revoked previous token jti={}", t.getJti());
-                    });
+            var previous = tokenRepo.findByTenantIdAndJti(request.tenantId(), request.previousJti())
+                    .filter(t -> "ACTIVE".equals(t.getStatus()));
+            if (previous.isPresent()) {
+                previousWorkMode = extractWorkMode(previous.get().getContextClaims());
+                previous.get().setStatus("REVOKED");
+                previous.get().setRevokedAt(Instant.now());
+                tokenRepo.save(previous.get());
+                log.info("Work-context switch: revoked previous token jti={}", previous.get().getJti());
+            }
         }
+        final String previousWorkModeForOutbox = previousWorkMode;
 
         int ttl = (request.ttlSeconds() != null && request.ttlSeconds() > 0)
                 ? request.ttlSeconds()
@@ -153,16 +158,16 @@ public class TokenIssuanceService {
         Instant now = Instant.now();
         Instant expiresAt = now.plusSeconds(ttl);
 
-        // Stable-for-the-session context only; live licence/scope truth stays PDP-resolved.
-        // A regulatory work session (ROM-W2) is ORG-scoped: no facility, no provider — the
-        // context subject is the organisation + appointment role. A clinical session is
-        // facility-scoped as before. Exactly one of the two must anchor the token.
-        boolean orgScoped = (request.facilityId() == null)
-                && request.organisationId() != null && !request.organisationId().isBlank();
-        if (!orgScoped && request.facilityId() == null) {
-            throw new IllegalArgumentException(
-                    "a work-context token requires either a facilityId (clinical) or an organisationId (regulatory)");
-        }
+        // Mode-driven anchor validation (Phase B): an unparseable or missing mode
+        // is a 400, never a default — a defaulted mode would silently mint the
+        // platform's most permissive session. Supersedes the old two-way
+        // facility-or-organisation check, which could not express jurisdiction-
+        // or programme-anchored sessions.
+        WorkMode mode = WorkMode.parse(request.workMode())
+                .orElseThrow(() -> new IllegalArgumentException("unknown work mode: " + request.workMode()));
+        assertAnchorPresent(mode, request);
+        boolean orgScoped = request.organisationId() != null && !request.organisationId().isBlank();
+
         Map<String, Object> context = new java.util.LinkedHashMap<>();
         if (request.providerPublicId() != null && !request.providerPublicId().isBlank()) {
             context.put("provider_id", request.providerPublicId());
@@ -191,10 +196,23 @@ public class TokenIssuanceService {
         if (request.workspaceId() != null) {
             context.put("workspace_id", request.workspaceId().toString());
         }
+        if (request.servicePointId() != null && !request.servicePointId().isBlank()) {
+            context.put("service_point_id", request.servicePointId());
+        }
+        if (request.contextId() != null && !request.contextId().isBlank()) {
+            context.put("context_id", request.contextId());
+        }
+        if (request.contextKind() != null && !request.contextKind().isBlank()) {
+            context.put("context_kind", request.contextKind());
+        }
         if (request.roleTemplateId() != null && !request.roleTemplateId().isBlank()) {
             context.put("role", request.roleTemplateId());
         }
-        context.put("purpose_of_use", request.purposeOfUse() != null ? request.purposeOfUse() : "TREATMENT");
+        context.put("work_mode", mode.name());
+        // Derived from the mode, never caller-supplied — a caller cannot claim
+        // IDENTIFIED clinical access for a management/support/regulatory session.
+        context.put("clinical_data_access", mode.clinicalDataAccess().name());
+        context.put("purpose_of_use", resolvePurposeOfUse(mode, request.purposeOfUse()));
         if (request.sessionAssurance() != null && !request.sessionAssurance().isBlank()) {
             context.put("session_assurance", request.sessionAssurance());
         }
@@ -248,13 +266,94 @@ public class TokenIssuanceService {
         if (orgScoped) {
             outbox.put("organisationId", request.organisationId());
         }
+        outbox.put("workMode", mode.name());
+        if (previousWorkModeForOutbox != null) {
+            outbox.put("previousWorkMode", previousWorkModeForOutbox);
+        }
+        if (request.contextId() != null && !request.contextId().isBlank()) {
+            outbox.put("contextId", request.contextId());
+        }
         publishOutboxEvent("ScopedToken", jti, "WORK_CONTEXT_TOKEN_ISSUED", outbox);
 
-        log.info("Issued work-context token: jti={}, actor={}, {}={}, workspace={}, ttl={}s",
-                jti, request.actorId(), orgScoped ? "org" : "facility",
+        log.info("Issued work-context token: jti={}, actor={}, mode={}, {}={}, workspace={}, ttl={}s",
+                jti, request.actorId(), mode.name(), orgScoped ? "org" : "facility",
                 orgScoped ? request.organisationId() : request.facilityId(), request.workspaceId(), ttl);
 
         return new ScopedTokenResponse(signedToken, jti, "work:context", "tshepo-authz", expiresAt);
+    }
+
+    /**
+     * Validate that the request carries the anchor(s) {@code mode.anchorKind()}
+     * requires. This is exhaustive by construction (a switch over the enum) —
+     * adding a new {@link WorkMode.AnchorKind} without a case here fails to
+     * compile, so a new mode can never silently skip anchor validation.
+     */
+    private void assertAnchorPresent(WorkMode mode, IssueWorkContextTokenRequest request) {
+        boolean hasFacility = request.facilityId() != null;
+        boolean hasOrg = request.organisationId() != null && !request.organisationId().isBlank();
+        boolean hasJurisdiction = request.jurisdictionCode() != null && !request.jurisdictionCode().isBlank();
+        boolean hasProgramme = request.programmeId() != null && !request.programmeId().isBlank();
+        switch (mode.anchorKind()) {
+            case FACILITY -> requireAnchor(hasFacility, mode, "facilityId");
+            case ORGANISATION -> requireAnchor(hasOrg, mode, "organisationId");
+            case JURISDICTION -> {
+                requireAnchor(hasJurisdiction, mode, "jurisdictionCode");
+                requireAnchor(hasOrg, mode, "organisationId (the appointing body)");
+            }
+            case PROGRAMME -> {
+                requireAnchor(hasProgramme, mode, "programmeId");
+                requireAnchor(hasOrg, mode, "organisationId (the appointing body)");
+            }
+            case FACILITY_OR_ORGANISATION -> requireAnchor(hasFacility || hasOrg, mode, "facilityId or organisationId");
+        }
+    }
+
+    private void requireAnchor(boolean present, WorkMode mode, String description) {
+        if (!present) {
+            throw new IllegalArgumentException("work mode " + mode.name() + " requires " + description);
+        }
+    }
+
+    /**
+     * Purpose defaults from the mode; a caller-supplied override is honoured
+     * only when compatible — a management/support/regulatory session
+     * (anything short of {@link WorkMode#grantsIdentifiedClinicalRead()})
+     * cannot claim TREATMENT/EMERGENCY/BREAK_GLASS. An unparseable override
+     * falls back to the mode default rather than failing the mint outright.
+     */
+    private String resolvePurposeOfUse(WorkMode mode, String requestedPurpose) {
+        if (requestedPurpose == null || requestedPurpose.isBlank()) {
+            return mode.defaultPurposeOfUse().name();
+        }
+        PurposeOfUse requested;
+        try {
+            requested = PurposeOfUse.valueOf(requestedPurpose.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return mode.defaultPurposeOfUse().name();
+        }
+        boolean clinicalPurpose = requested == PurposeOfUse.TREATMENT
+                || requested == PurposeOfUse.EMERGENCY
+                || requested == PurposeOfUse.BREAK_GLASS;
+        if (clinicalPurpose && !mode.grantsIdentifiedClinicalRead()) {
+            log.warn("Rejected incompatible purposeOfUse={} for workMode={} (no identified clinical access) — using default {}",
+                    requested, mode.name(), mode.defaultPurposeOfUse());
+            return mode.defaultPurposeOfUse().name();
+        }
+        return requested.name();
+    }
+
+    /** Best-effort extraction of work_mode from a previous token's persisted context_claims JSON. */
+    private String extractWorkMode(String contextClaimsJson) {
+        if (contextClaimsJson == null || contextClaimsJson.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(contextClaimsJson);
+            JsonNode modeNode = node.get("work_mode");
+            return modeNode != null && !modeNode.isNull() ? modeNode.asText() : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
