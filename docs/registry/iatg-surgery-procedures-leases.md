@@ -291,7 +291,7 @@ Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7
 **Phase P pipeline COMPLETE (P0–P15, see §10–§19)** — P13/P14/P15 all partial by design (§17–§19),
 with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
 not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
-(S0–S2 done — see §20–§22; S3–S18 remaining). Full plan in
+(S0–S3 done — see §20–§23; S4–S18 remaining). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -891,3 +891,42 @@ real Postgres) — the CHECKs themselves, the UNIQUE constraint, the FK to a rea
 CC-2 regression guard confirming no column holds a registry value directly (no `allergies`,
 `medications`, `functional_status`, `pregnancy_status`, `tobacco`/`alcohol` column exists). Full
 surgery-service module regression: 28/28.
+
+## 23. Wave S3 — surgical decision-making record (done)
+
+Closes the surgical domain pack's own §8, 18 elements, ABSENT per its audit: natural history,
+expected benefit, material risks considered, anaesthetic/blood/functional/fertility
+implications, stoma/implant possibility, rehabilitation expectation, financial/access
+implications, patient preference, final decision, who decided and when.
+
+**Two duplication checks, both element-by-element like S2, not assumed at the table level:**
+- **Diagnosis and certainty are NOT re-stored.** `surgical_episode.pct_problem_ref` (S1) already
+  resolves to the `pct_problems` row this service contributed with `responsible_service=surgery`,
+  which carries `diagnostic_certainty`. A second column here would be the exact "two records of
+  one fact" duplication S1 refused for the same table.
+- **`material_risks_considered` is deliberately NOT the same field as mvumo's
+  `consent_request.material_risks_explained`** (V300, Wave P5), despite the similar name. That
+  field records what was explained TO THE PATIENT during the consent conversation. This one is
+  the SURGEON'S OWN clinical weighing that leads to recommending an operation in the first
+  place — typically before that conversation, and informing it. Two related facts at different
+  points in the same course of care, not one fact stored twice — the same distinction S2 drew
+  between `differential_diagnosis_notes` and `pct_problems`' formal DIFFERENTIAL status.
+
+**"Final decision, who decided, when" is NOT PCT's admission-handshake decision.** A day-case
+procedure needs no inpatient admission at all, so "open a phase of care" (PCT's, per the
+admission-handshake model) and "decide to proceed with an operation" (a clinical call) are
+different decisions. ADR §5a explicitly permits surgery-service to own the latter as "the
+surgical reasoning and the options considered" — component test question 3 (execute, not
+decide) is satisfied because this is a decision surgery itself is authorised to make.
+
+Enforced as a three-way pair (`chk_surgical_decision_pair`): `final_decision`, `decided_by` and
+`decided_at` travel together or not at all — the same withdrawal-pair idiom mvumo's V300 uses.
+A decision with no recorded author or timestamp is not a decision anyone can stand behind. One
+row per episode, refined over time exactly like S2's assessment, not versioned.
+
+Proof: `SurgicalDecisionServiceTest` (8 tests) — the pairing rule (including that an EXPLICIT
+`decidedBy` can override the acting clinician, e.g. a consultant countersigning a trainee's
+proposed decision), the closed `final_decision` vocabulary, refine-not-duplicate.
+`surgery-decision-journeys.sh` (12/12, real Postgres) — the CHECKs themselves and a CC-2
+regression guard confirming no diagnosis/certainty column exists on this table. Full
+surgery-service module regression: 36/36.
