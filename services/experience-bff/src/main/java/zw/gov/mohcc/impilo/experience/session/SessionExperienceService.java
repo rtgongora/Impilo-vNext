@@ -478,12 +478,18 @@ public class SessionExperienceService {
         return List.of("View My Health");
     }
 
-    private static String resolveDefaultRoute(String defaultTab, String friendlyState, List<Map<String, Object>> assignments, boolean hasFacility) {
+    // Package-private (not private): SessionExperienceServiceTest exercises this directly,
+    // including the Phase F6 landing-parity case against the TS twin
+    // (identity-context.ts / resolve-post-login-destination.ts) that must agree with it.
+    static String resolveDefaultRoute(String defaultTab, String friendlyState, List<Map<String, Object>> assignments, boolean hasFacility) {
         if ("provider_suspended".equals(friendlyState)) return "/provider/status";
         if ("work".equals(defaultTab)) {
             if (assignments.size() > 1 && !hasFacility) return "/auth/context-chooser";
             if (assignments.size() == 1 && !hasFacility) return "/facility";
-            return "/provider-workspace";
+            // Phase F6: /provider-workspace is now an intent-resolution shim to /work (Work
+            // Home, Phase F1-F4/F8-F9) — land there directly. /provider-workspace itself still
+            // exists and still redirects here for any stale bookmark/deep link.
+            return "/work";
         }
         if ("professional".equals(defaultTab)) return "/professional";
         return "/home";

@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.time.LocalDate;
 import java.util.Map;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * HTTP client for the Surveillance sovereign service (cases, signals, ingest, counters).
@@ -36,6 +37,31 @@ public class SurveillanceServiceClient {
         }
         log.info("Surveillance: list cases [status={}, page={}, size={}]", status, page, size);
         return extractData(restTemplate.getForEntity(url.toString(), JsonNode.class));
+    }
+
+    /** Records an investigation update on a case (classification / outcome / lab result / note). */
+    public JsonNode recordCaseUpdate(long caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/cases/" + caseId + "/updates";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    /** Links a traced contact to a case. */
+    public JsonNode linkCaseContact(long caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/cases/" + caseId + "/contacts";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode listCaseContacts(long caseId) {
+        String url = baseUrl + "/internal/v1/cases/" + caseId + "/contacts";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** The outbreak line list — one row per case, with contact counts. */
+    public JsonNode lineList(String caseType) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/cases/line-list")
+                .queryParam("caseType", caseType == null ? "" : caseType)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
     public JsonNode listSignals() {

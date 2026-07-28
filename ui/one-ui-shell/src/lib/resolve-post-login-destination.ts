@@ -152,10 +152,13 @@ export function resolvePostLoginDestination(
   }
 
   if (context.hasWorkAccess) {
-    const target = context.defaultLandingPath === "/home" ? "/provider-workspace" : context.defaultLandingPath;
-    if (!hasFacility && (target === "/provider-workspace" || target.startsWith("/clinical"))) {
+    // Phase F6: /provider-workspace is now an intent-resolution shim to /work — land there
+    // directly. The Java-side twin (SessionExperienceService#resolveDefaultRoute) makes the
+    // same change; landing-parity is asserted below in this file's own test.
+    const target = context.defaultLandingPath === "/home" ? "/work" : context.defaultLandingPath;
+    if (!hasFacility && (target === "/work" || target.startsWith("/clinical"))) {
       return {
-        href: withReturnTo("/facility", "/provider-workspace"),
+        href: withReturnTo("/facility", "/work"),
         operationalMode: "facility_work",
         autoActivateProvider: context.isProviderActivated && !user?.providerActivated,
         linkedProviderId,
@@ -171,7 +174,7 @@ export function resolvePostLoginDestination(
 
   if (linkedProviderId && !context.isProviderActivated && !context.needsProviderStatusResolution) {
     return {
-      href: `/provider/activate?returnTo=${encodeURIComponent("/provider-workspace")}`,
+      href: `/provider/activate?returnTo=${encodeURIComponent("/work")}`,
       linkedProviderId,
     };
   }

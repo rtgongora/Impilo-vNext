@@ -42,6 +42,10 @@
 #      They are excluded from the version comparison rather than flagged — but a directory whose
 #      ONLY files are non-versioned still trips trap 2, because that is far more likely a parse
 #      failure than a real Flyway layout.
+# `git ls-files` alone lists only TRACKED files, so a guard using it is blind to the new file it
+# exists to catch — the violation arrives untracked, the guard reports clean, and it ships. Found by
+# the RMNP lane, whose routing guard PASSED against a deliberately-planted violation.
+# --cached --others --exclude-standard = staged + untracked, minus anything gitignored.
 set -uo pipefail
 
 REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
@@ -58,7 +62,7 @@ FAIL=0
 # The migration directories on the MERGED TREE, from git (tracked files only — an untracked,
 # not-yet-added migration is not yet part of the namespace git will merge, and the lane cutting it
 # is the one running this guard against its own `git add`).
-mapfile -t MIG_DIRS < <(git ls-files -- '*/db/migration/*.sql' 2>/dev/null \
+mapfile -t MIG_DIRS < <(git ls-files --cached --others --exclude-standard -- '*/db/migration/*.sql' 2>/dev/null \
   | sed -E 's#(.*/db/migration)/[^/]+$#\1#' | sort -u)
 
 if [[ ${#MIG_DIRS[@]} -eq 0 ]]; then
@@ -87,7 +91,7 @@ for d in "${MIG_DIRS[@]}"; do
   # Per-directory: normalise each versioned file to its Flyway version and detect any version
   # claimed by more than one file. awk carries the whole directory's map so it can name BOTH
   # colliding files, not just the second.
-  dir_out=$(git ls-files -- "$d/*.sql" 2>/dev/null | awk -F/ '
+  dir_out=$(git ls-files --cached --others --exclude-standard -- "$d/*.sql" 2>/dev/null | awk -F/ '
     {
       base = $NF
       files_seen++
@@ -154,7 +158,7 @@ done
 # It reports; the lanes reconcile.
 # ----------------------------------------------------------------------------------------------
 
-mapfile -t LEASE_FILES < <(git ls-files -- 'docs/registry/*-leases.md' 2>/dev/null | sort)
+mapfile -t LEASE_FILES < <(git ls-files --cached --others --exclude-standard -- 'docs/registry/*-leases.md' 2>/dev/null | sort)
 
 if [[ ${#LEASE_FILES[@]} -gt 1 ]]; then
   # Edit distance ≤ 1 between two lease basenames (insertion, deletion, or substitution of a single

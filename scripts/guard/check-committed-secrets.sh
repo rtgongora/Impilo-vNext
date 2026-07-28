@@ -16,6 +16,10 @@
 # For REAL secrets: never commit — provision out-of-band (secretKeyRef). For an
 # intentional non-secret placeholder: re-run with --update-baseline and justify
 # the addition in review.
+# `git ls-files` alone lists only TRACKED files, so a guard using it is blind to the new file it
+# exists to catch — the violation arrives untracked, the guard reports clean, and it ships. Found by
+# the RMNP lane, whose routing guard PASSED against a deliberately-planted violation.
+# --cached --others --exclude-standard = staged + untracked, minus anything gitignored.
 set -uo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
@@ -25,7 +29,7 @@ PATTERN='[A-Za-z0-9_.:/-]*([Cc]hange[_-][Mm]e|CHANGE_ME)[A-Za-z0-9_-]*'
 # Emit "path<TAB>token" for every placeholder/secret hit in the tracked,
 # non-generated-doc scope. Kept in one function so baseline and check never drift.
 scan() {
-  git ls-files -z \
+  git ls-files -z --cached --others --exclude-standard \
     | grep -zvE '(^|/)(node_modules|target|dist|build|reports|\.git)/' \
     | grep -zvE '\.(md|example)$|example\.env$|\.example\.' \
     | grep -zvE '^scripts/guard/(committed-secrets-baseline\.txt|check-committed-secrets\.sh)$' \
