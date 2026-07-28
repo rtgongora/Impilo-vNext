@@ -1,0 +1,149 @@
+package zw.gov.mohcc.impilo.pct.api.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
+import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeService;
+import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeServiceTest;
+import zw.gov.mohcc.impilo.shared.auth.AccessMode;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+
+import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * The controller that finally makes {@link EmergencyEpisodeService} reachable over HTTP. Three
+ * fully-tested waves (W2 open/FSM, W5 alert clocks, W9 the acceptance handshake) had zero callers —
+ * this proves the wiring end to end through the actual HTTP-shaped request/response, not just the
+ * service layer underneath it (already covered by 27 cases in EmergencyEpisodeServiceTest).
+ *
+ * <p>Reuses {@link EmergencyEpisodeServiceTest}'s package-visible in-memory fakes rather than
+ * duplicating them — same tenant/facility constants, same fake repositories, so this test is
+ * genuinely exercising the same service the unit tests already trust.
+ */
+class EmergencyEpisodeControllerTest {
+
+    private static final UUID TENANT = UUID.fromString("00000000-0000-4000-8000-000000000001");
+    private static final UUID FACILITY = UUID.fromString("00000000-0000-4000-8000-000000000002");
+
+    private EmergencyEpisodeController controller;
+
+    @BeforeEach
+    void setUp() {
+        var repo = new EmergencyEpisodeServiceTest.InMemoryRepo();
+        var handoverRepo = new EmergencyEpisodeServiceTest.InMemoryHandoverRepo();
+        var outbox = new EmergencyEpisodeServiceTest.CountingOutbox();
+        EmergencyEpisodeService service = new EmergencyEpisodeService(repo, handoverRepo, outbox, new ObjectMapper());
+        controller = new EmergencyEpisodeController(service);
+        TrustContextHolder.set(new TrustContext(TENANT, "nurse-A", "PROVIDER", "TREATMENT",
+                null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
+    }
+
+    @AfterEach
+    void tearDown() {
+        TrustContextHolder.clear();
+    }
+
+    @Test
+    @DisplayName("opening an episode over HTTP returns the episode row with a real episode_id")
+    void openReturnsEpisodeRow() {
+        ResponseEntity<ApiResponse<Map<String, Object>>> resp =
+                controller.open(Map.of("entryRoute", "WALK_IN", "facilityId", FACILITY.toString()));
+
+        assertEquals(201, resp.getStatusCode().value());
+        Map<String, Object> data = resp.getBody().data();
+        assertNotNull(data.get("episode_id"));
+        assertEquals(true, data.get("created"));
+        assertEquals("WALK_IN", data.get("entry_route"));
+    }
+
+    @Test
+    @DisplayName("a replayed pre-alert over HTTP is reported as not-created, same episode_id")
+    void replayIsIdempotentOverHttp() {
+        var first = controller.open(Map.of("entryRoute", "AMBULANCE",
+                "entrySourceRef", "ems-http-1", "facilityId", FACILITY.toString()));
+        var second = controller.open(Map.of("entryRoute", "AMBULANCE",
+                "entrySourceRef", "ems-http-1", "facilityId", FACILITY.toString()));
+
+        assertEquals(first.getBody().data().get("episode_id"), second.getBody().data().get("episode_id"));
+        assertEquals(false, second.getBody().data().get("created"));
+    }
+
+    @Test
+    @DisplayName("get() returns 404-shaped failure for an episode in a different tenant — read the exception, not a leak")
+    void getRefusesCrossTenantRead() {
+        var opened = controller.open(Map.of("entryRoute", "WALK_IN", "facilityId", FACILITY.toString()));
+        UUID episodeId = UUID.fromString((String) opened.getBody().data().get("episode_id"));
+
+        TrustContextHolder.set(new TrustContext(UUID.randomUUID(), "nurse-B", "PROVIDER", "TREATMENT",
+                null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
+        assertTrue(org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> controller.get(episodeId)).getMessage().contains("not found"));
+    }
+
+    @Test
+    @DisplayName("the full handshake is reachable end to end over the controller: open -> arrive -> in-care -> request -> accept")
+    void fullHandshakeOverHttp() {
+        var opened = controller.open(Map.of("entryRoute", "WALK_IN",
+                "facilityId", FACILITY.toString(), "journeyId", "J-HTTP-1"));
+        UUID episodeId = UUID.fromString((String) opened.getBody().data().get("episode_id"));
+
+        controller.arrive(episodeId, Map.of("journeyId", "J-HTTP-1"));
+        var toCare = controller.transition(episodeId, Map.of("state", "OPEN_IN_CARE"));
+        assertEquals("OPEN_IN_CARE", toCare.getBody().data().get("state"));
+
+        var handoverResp = controller.requestHandover(episodeId, Map.of(
+                "targetType", "ADMISSION", "targetService", "inpatient-service", "requestedBy", "nurse-A"));
+        assertEquals(201, handoverResp.getStatusCode().value());
+        UUID handoverId = UUID.fromString((String) handoverResp.getBody().data().get("handover_id"));
+
+        var awaiting = controller.get(episodeId);
+        assertEquals("OPEN_AWAITING_ACCEPTANCE", awaiting.getBody().data().get("state"));
+
+        var accepted = controller.acceptHandover(handoverId, Map.of(
+                "acceptedBy", "clerk", "acceptingRef", "ADM-HTTP-1", "acceptingService", "inpatient-service"));
+        assertEquals("CLOSED_HANDED_OVER", accepted.getBody().data().get("state"));
+        assertEquals(handoverId.toString(), accepted.getBody().data().get("handover_id"));
+    }
+
+    @Test
+    @DisplayName("declining a handover over HTTP returns the episode to OPEN_IN_CARE")
+    void declineOverHttp() {
+        var opened = controller.open(Map.of("entryRoute", "WALK_IN",
+                "facilityId", FACILITY.toString(), "journeyId", "J-HTTP-2"));
+        UUID episodeId = UUID.fromString((String) opened.getBody().data().get("episode_id"));
+        controller.arrive(episodeId, Map.of("journeyId", "J-HTTP-2"));
+        controller.transition(episodeId, Map.of("state", "OPEN_IN_CARE"));
+        var handoverResp = controller.requestHandover(episodeId, Map.of(
+                "targetType", "THEATRE", "requestedBy", "doctor-B"));
+        UUID handoverId = UUID.fromString((String) handoverResp.getBody().data().get("handover_id"));
+
+        var declined = controller.declineHandover(handoverId, Map.of(
+                "declinedBy", "surgeon-C", "reason", "no theatre slot"));
+        assertEquals("OPEN_IN_CARE", declined.getBody().data().get("state"));
+    }
+
+    @Test
+    @DisplayName("the board endpoint returns only episodes for the caller's own tenant")
+    void boardIsTenantScoped() {
+        controller.open(Map.of("entryRoute", "WALK_IN", "facilityId", FACILITY.toString()));
+
+        TrustContextHolder.set(new TrustContext(UUID.randomUUID(), "nurse-C", "PROVIDER", "TREATMENT",
+                null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
+        controller.open(Map.of("entryRoute", "WALK_IN", "facilityId", FACILITY.toString()));
+
+        TrustContextHolder.set(new TrustContext(TENANT, "nurse-A", "PROVIDER", "TREATMENT",
+                null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
+        var board = controller.board(FACILITY);
+        assertEquals(1, board.getBody().data().size());
+    }
+}

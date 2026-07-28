@@ -11,14 +11,14 @@ or a domain's own `<domain>/coverage-exclusions.json`. `UNCOVERED` means nobody
 has decided yet, and the guard fails on it — a table nobody looked at is the failure this
 matrix exists to make visible.
 
-- Published artefacts: **148**
-- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (2), `LCOGS` (9), `SSC26` (1), `WHO_AMS` (1), `WHO_BLOOD` (1), `WHO_CANCER` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_HEARTS` (1), `WHO_ICOPE` (1), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_MHGAP` (1), `WHO_PALLIATIVE` (1), `WHO_PATIENT_SAFETY` (5), `WHO_PEN` (1), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3), `ZW_POLICY` (1)
+- Published artefacts: **149**
+- Families: `BEC` (1), `DSEC` (1), `EDLIZ` (1), `IITT` (3), `INTERNATIONAL_SPECIALTY` (3), `LCOGS` (9), `SSC26` (1), `WHO_AMS` (1), `WHO_BLOOD` (1), `WHO_CANCER` (1), `WHO_DAK` (93), `WHO_ECO` (6), `WHO_HEARTS` (1), `WHO_ICOPE` (1), `WHO_IPC` (4), `WHO_LABORATORY` (1), `WHO_MEDICAL_DEVICES` (1), `WHO_MHGAP` (1), `WHO_PALLIATIVE` (1), `WHO_PATIENT_SAFETY` (5), `WHO_PEN` (1), `WHO_SSC` (4), `WHO_SSI` (4), `ZW_NSOAS` (3), `ZW_POLICY` (1)
 - Published data elements: **4098**
 - Shipped citations: **158**
 
 | Status | Count |
 |---|---|
-| `COVERED_ELSEWHERE` | 7 |
+| `COVERED_ELSEWHERE` | 8 |
 | `DEFERRED` | 120 |
 | `SHIPPED` | 21 |
 
@@ -156,6 +156,7 @@ matrix exists to make visible.
 | `SSI.2018.INTRAOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Intraoperative measures for the prevention of surgical site infection | `DEFERRED` | — | — | Intraoperative infection-prevention measures are not modelled. Wound classification, which is the entry point for surgic |
 | `SSI.2018.POSTOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Postoperative measures for the prevention of surgical site infection, including  | `DEFERRED` | — | — | Surgical-site infection is one of the twenty complications the surgical pack must manage as a pathway, and complications |
 | `SSI.2018.PREOPERATIVE` | WHO_SSI | GUIDELINE_SECTION | — | Preoperative measures for the prevention of surgical site infection | `DEFERRED` | — | — | No surgical-site-infection prevention logic exists anywhere in the repository. The clinical knowledge platform has the r |
+| `SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING` | INTERNATIONAL_SPECIALTY | STANDARD | — | Surgical/procedural complications are graded by the therapy required to treat th | `COVERED_ELSEWHERE` | — | — | Fully implemented as governed content in procedures.clavien_dindo_grade (all seven grades, real literature citation) and |
 | `TB.DIAGNOSIS` | WHO_DAK | DECISION_LOGIC | — | TB diagnostic algorithm (rapid molecular testing first) | `SHIPPED` | `TB_DX_CONFIRMED`, `TB_DX_RIF_RESISTANT`, `TB_DX_CLINICAL` | ADOPTED_VERBATIM |  |
 | `TB.DR_TB` | WHO_DAK | DECISION_LOGIC | — | Rifampicin resistance recognition and drug-resistant TB regimen selection | `SHIPPED` | `TB_RIF_RESISTANCE` | ADOPTED_VERBATIM |  |
 | `TB.OUTCOME` | WHO_DAK | DECISION_LOGIC | — | TB treatment failure and cohort treatment outcomes | `SHIPPED` | `TB_SMEAR_MONTH5_POSITIVE` | ADOPTED_VERBATIM |  |
