@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.support.PctTimelineRows;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -71,8 +72,12 @@ public class ClinicalTimelineController {
         }
         try {
             JsonNode pctData = pctClient.getPatientTimeline(cpid);
+            // PCT returns journeys with nested encounters. useTimeline declares TimelineEntryResource[]
+            // with attributes.eventType/title/occurredAt, and the timeline page filters on
+            // `eventType === "REFERRAL"` — none of which exist in the grouped payload. Derive the
+            // events from what PCT actually recorded rather than handing the page a shape it cannot read.
             return ResponseEntity.ok(Map.of(
-                    "data", pctData != null ? pctData : List.of(),
+                    "data", PctTimelineRows.timelineEntries(pctData),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             // An empty 200 here reads as "this patient has no clinical history", which is an

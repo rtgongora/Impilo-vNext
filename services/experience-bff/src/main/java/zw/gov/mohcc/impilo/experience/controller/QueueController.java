@@ -12,6 +12,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
@@ -96,25 +97,49 @@ public class QueueController {
 
         // Try PCT
         try {
-            JsonNode data;
+            // This endpoint is /entries and its hook declares queue ENTRIES — people waiting.
+            // It used to answer with queue DEFINITIONS on two of its four branches: when no
+            // queue_type was supplied, and when the requested lane did not exist at the facility.
+            // /queue sends no queue_type, so the board always rendered lane definitions where it
+            // expected patients. Queue definitions have their own endpoint (/definitions); this
+            // one must never return them.
+            List<Map<String, Object>> rows = new ArrayList<>();
+            boolean resolved = false;
+
             if (queueId != null && !queueId.isBlank()) {
-                data = pctClient.listQueueItems(UUID.fromString(queueId.trim()), status);
+                rows.addAll(entryRows(pctClient.listQueueItems(UUID.fromString(queueId.trim()), status)));
+                resolved = true;
             } else if (facilityId != null && !facilityId.isBlank()) {
                 UUID fid = resolveFacilityUuid(facilityId);
                 UUID wid = workspaceId != null && !workspaceId.isBlank() ? UUID.fromString(workspaceId.trim()) : null;
                 JsonNode queues = pctClient.listQueues(fid, wid);
-                if (queueType != null && !queueType.isBlank() && queues != null && queues.isArray()) {
-                    UUID match = findQueueIdByType(queues, queueType);
-                    data = match != null ? pctClient.listQueueItems(match, status) : queues;
-                } else {
-                    data = queues;
+                if (queues != null) {
+                    resolved = true;
+                    if (queueType != null && !queueType.isBlank()) {
+                        UUID match = queues.isArray() ? findQueueIdByType(queues, queueType) : null;
+                        // No such lane at this facility means nobody is waiting in it. An empty
+                        // list is the truthful answer; the definitions were an accident of shape.
+                        if (match != null) {
+                            rows.addAll(entryRows(pctClient.listQueueItems(match, status)));
+                        }
+                    } else {
+                        // No lane asked for: everyone waiting at this facility, across every lane.
+                        for (JsonNode queue : JsonApiRows.items(queues)) {
+                            String id = JsonApiRows.text(queue, "queueId");
+                            if (id == null) {
+                                id = JsonApiRows.text(queue, "queue_id");
+                            }
+                            if (id != null) {
+                                rows.addAll(entryRows(pctClient.listQueueItems(UUID.fromString(id), status)));
+                            }
+                        }
+                    }
                 }
-            } else {
-                data = null;
             }
-            if (data != null) {
+
+            if (resolved) {
                 return ResponseEntity.ok(Map.of(
-                        "data", data,
+                        "data", rows,
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         } catch (Exception e) {
@@ -608,5 +633,29 @@ public class QueueController {
     private static ResponseEntity<Map<String, Object>> validation(String message) {
         return ResponseEntity.badRequest().body(Map.of(
                 "error", Map.of("code", "VALIDATION", "message", message)));
+    }
+
+    /** Queue items → the {@code QueueEntryResource} the board reads. */
+    private static List<Map<String, Object>> entryRows(JsonNode items) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (JsonNode item : JsonApiRows.items(items)) {
+            Map<String, Object> attributes = JsonApiRows.attributesOf(item);
+            if (item.has("subjectCpid")) {
+                attributes.putIfAbsent("patientId", item.get("subjectCpid"));
+                attributes.putIfAbsent("patient_id", item.get("subjectCpid"));
+            }
+            if (item.has("enqueuedAt")) {
+                attributes.putIfAbsent("queuedAt", item.get("enqueuedAt"));
+                attributes.putIfAbsent("queued_at", item.get("enqueuedAt"));
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", JsonApiRows.text(item, "queueItemId") != null
+                    ? JsonApiRows.text(item, "queueItemId")
+                    : JsonApiRows.text(item, "id"));
+            row.put("type", "queue_entry");
+            row.put("attributes", attributes);
+            rows.add(row);
+        }
+        return rows;
     }
 }

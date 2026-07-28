@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
@@ -76,12 +77,15 @@ public class ReferralsController {
         int limit = Math.min(size, 100);
 
         JsonNode referrals = pctClient.listPatientReferrals(patientId, page, limit);
+        // PCT returns raw ReferralPackageEntity rows. useReferrals declares attributes.status and
+        // summary/page.tsx sorts on attributes.respondedAt *inside a comparator*, so an unwrapped
+        // row threw on the second referral even when the first happened to render.
 
         // PageRequest pageable = PageRequest.of(page, limit, Sort.by("createdAt").descending());
         // Page<Referral> result = referralRepository.findByTenantIdAndPatientId(tenantId, UUID.fromString(patientId), pageable);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", referrals);
+        response.put("data", JsonApiRows.rows(referrals, "referral", "referralId", "referral_id"));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -104,10 +108,8 @@ public class ReferralsController {
 
         JsonNode referrals = pctClient.listIncomingReferrals(facilityId, status, page, limit);
 
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", referrals);
+        response.put("data", JsonApiRows.rows(referrals, "referral", "referralId", "referral_id"));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId

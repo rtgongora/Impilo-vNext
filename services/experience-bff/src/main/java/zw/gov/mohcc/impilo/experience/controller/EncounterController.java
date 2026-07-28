@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
+import zw.gov.mohcc.impilo.experience.support.PctTimelineRows;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -108,8 +109,12 @@ public class EncounterController {
             if (pctData == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No encounter list payload returned", requestId, correlationId);
             }
+            // PCT groups encounters inside their journeys: [{journey, encounters:[…]}]. The shell's
+            // useEncounters declares a flat EncounterResource[] and ~35 pages plus PatientBanner
+            // dereference `.attributes.status` on it, so passing the grouped shape through threw for
+            // every patient who has ever had a journey — and passed for every patient who has not.
             return ResponseEntity.ok(Map.of(
-                    "data", pctData,
+                    "data", PctTimelineRows.encounterRows(pctData),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("PCT unavailable for encounter list: {}", e.getMessage());

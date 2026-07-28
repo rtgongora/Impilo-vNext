@@ -11,6 +11,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
@@ -119,8 +120,12 @@ public class InpatientController {
         String cpid = patientCpid != null && !patientCpid.isBlank() ? patientCpid : patientId;
         try {
             JsonNode data = requirePayload(inpatientClient.listAdmissions(cpid), "Inpatient listAdmissions");
+            // inpatient-service returns bare AdmissionEntity rows. ehr/[patientId]/page.tsx casts
+            // the response to a shape with `attributes` at the call site — the hook itself is
+            // honestly typed ApiResponse<unknown> — and then reads `a.attributes.status`, so the
+            // EHR patient home page threw for any patient who has ever been admitted.
             return ResponseEntity.ok(Map.of(
-                    "data", data,
+                    "data", JsonApiRows.rows(data, "admission", "admissionId", "admission_id"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (ResponseStatusException e) {
             throw e;

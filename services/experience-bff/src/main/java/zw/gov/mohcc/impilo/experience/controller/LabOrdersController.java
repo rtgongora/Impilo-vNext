@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 
 import java.time.OffsetDateTime;
@@ -66,7 +67,7 @@ public class LabOrdersController {
                 JsonNode orosData = orosClient.listOrdersByEncounter(encounterId);
                 if (orosData != null) {
                     Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", orosData);
+                    response.put("data", labOrderRows(orosData));
                     response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
                     return ResponseEntity.ok(response);
                 }
@@ -87,7 +88,7 @@ public class LabOrdersController {
                 JsonNode orosData = orosClient.getPatientOrders(patientId);
                 if (orosData != null) {
                     Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", orosData);
+                    response.put("data", labOrderRows(orosData));
                     response.put("meta", Map.of(
                             "request_id", requestId,
                             "correlation_id", correlationId
@@ -375,5 +376,47 @@ public class LabOrdersController {
             return "PROCEDURE";
         }
         return "LAB";
+    }
+
+    /**
+     * OROS order rows → the {@code LabOrderResource} the shell declares.
+     *
+     * <p>{@code testName}, {@code testCode}, {@code collectedAt} and {@code resultedAt} arrive from
+     * OROS directly now. They used to be absent — the summary projection read {@code orders} alone
+     * and never joined {@code order_items}, {@code specimens} or {@code results} — so the EHR's
+     * results tab showed that an order existed without saying which test it was or whether anything
+     * had come back. A null {@code resultedAt} on that screen reads as "no result yet", which is a
+     * clinical claim, so the fix was to project the data rather than to alias a nearby field into
+     * its place: {@code orderType} ("LAB") in a test-name column would have read as a real test.
+     *
+     * <p>What is aliased here is only renaming — OROS calls the subject {@code patientCpid} and the
+     * clinician {@code placedBy}, where the hook types {@code patientId} and {@code orderedBy}.
+     */
+    private static List<Map<String, Object>> labOrderRows(JsonNode orosData) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (JsonNode order : JsonApiRows.items(orosData)) {
+            Map<String, Object> attributes = JsonApiRows.attributesOf(order);
+            aliasIfPresent(attributes, order, "patientCpid", "patientId", "patient_id");
+            aliasIfPresent(attributes, order, "encounterRef", "encounterId", "encounter_id");
+            aliasIfPresent(attributes, order, "orderId", "orderNumber", "order_number");
+            aliasIfPresent(attributes, order, "placedBy", "orderedBy", "ordered_by");
+            aliasIfPresent(attributes, order, "placedAt", "orderedAt", "ordered_at");
+            aliasIfPresent(attributes, order, "orderType", "category", "category");
+
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", JsonApiRows.text(order, "orderId"));
+            row.put("type", "lab_order");
+            row.put("attributes", attributes);
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    private static void aliasIfPresent(Map<String, Object> attributes, JsonNode source,
+                                       String from, String camelTo, String snakeTo) {
+        if (source.has(from)) {
+            attributes.putIfAbsent(camelTo, source.get(from));
+            attributes.putIfAbsent(snakeTo, source.get(from));
+        }
     }
 }
