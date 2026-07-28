@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.experience.service.NompiloSignalService;
 import zw.gov.mohcc.impilo.experience.service.NompiloSignalService.CitizenSignals;
 import zw.gov.mohcc.impilo.experience.service.PiiAccessAuditService;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -122,6 +123,55 @@ class NompiloGuidanceControllerTest {
         verify(auditService).recordAccess(eq("t1"), eq("CPID-1"), anyString(), eq("CPID-1"),
                 anyString(), eq("NOMPILO_KHULUMA_FOLLOW_UP"), any(), anyString(), anyString(),
                 anyString(), any(), any(), any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void next_actions_defaultContext_derivesCitizenSignalsUnchanged() {
+        when(signalService.citizenSignals(eq("CPID-1"), eq(false)))
+                .thenReturn(new CitizenSignals(Set.of("trust.not_verified"), 1));
+        when(guidanceClient.resolveContext(any())).thenReturn(guidanceWith(false));
+
+        var resp = controller().nextActions("t1", "req", "corr", "CPID-1", "CITIZEN", null, "citizen", null, null);
+
+        assertThat(resp.getStatusCode().value()).isEqualTo(200);
+        ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
+        verify(guidanceClient).resolveContext(cap.capture());
+        Map<String, Object> req = cap.getValue();
+        assertThat(req.get("userType")).isEqualTo("CITIZEN");
+        assertThat(req.get("routePath")).isEqualTo("/citizen/wallet");
+        assertThat((List<String>) req.get("signals")).contains("trust.not_verified");
+        verifyNoInteractions(auditService);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void next_actions_workContext_derivesWorkSignalsInsteadOfCitizenSignals() {
+        when(signalService.workSignals(eq("PROV-1"), any(), eq("ctx-1"), eq("CLINICAL_CARE")))
+                .thenReturn(new NompiloSignalService.WorkSignals(Set.of("work.act_now_pending"), null));
+        when(guidanceClient.resolveContext(any())).thenReturn(guidanceWith(false));
+
+        var resp = controller().nextActions("t1", "req", "corr", "PROV-1", "PROVIDER", null,
+                "work", "ctx-1", "CLINICAL_CARE");
+
+        assertThat(resp.getStatusCode().value()).isEqualTo(200);
+        verify(signalService, never()).citizenSignals(anyString(), anyBoolean());
+        ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
+        verify(guidanceClient).resolveContext(cap.capture());
+        Map<String, Object> req = cap.getValue();
+        assertThat(req.get("userType")).isEqualTo("PROVIDER");
+        assertThat(req.get("routePath")).isEqualTo("/work");
+        assertThat(req.get("trustLoa")).isEqualTo(4);
+        assertThat((List<String>) req.get("signals")).contains("work.act_now_pending");
+    }
+
+    @Test
+    void next_actions_workContext_missingContextId_returnsSafePartialWithoutCallingGuidance() {
+        var resp = controller().nextActions("t1", "req", "corr", "PROV-1", "PROVIDER", null, "work", null, null);
+
+        assertThat(resp.getStatusCode().value()).isEqualTo(200);
+        assertThat(((Map<?, ?>) resp.getBody().get("data")).get("degraded")).isEqualTo(true);
+        verifyNoInteractions(guidanceClient);
     }
 
     @Test

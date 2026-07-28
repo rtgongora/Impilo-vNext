@@ -23,6 +23,16 @@ public interface EmergencyEpisodeRepository extends JpaRepository<EmergencyEpiso
             UUID tenantId, UUID facilityId, List<String> states);
 
     /**
+     * Every open episode, across all tenants — the alert sweep's input (W5).
+     *
+     * <p>Deliberately not tenant-scoped: the sweep is a system job with no TrustContext, and an
+     * episode that alerts only when someone happens to be looking at its tenant is not a safety net.
+     * Tenant isolation is preserved where it matters — every alert it writes carries the episode's
+     * own {@code tenant_id}, and every read path is tenant-scoped.
+     */
+    List<EmergencyEpisodeEntity> findByStateIn(List<String> states);
+
+    /**
      * Repoint a provisional identity onto a confirmed CPID after a VITO merge.
      *
      * <p>This updates an attribute. It never re-parents a row, because every emergency clinical

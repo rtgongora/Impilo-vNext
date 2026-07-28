@@ -553,6 +553,17 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Canonical facility departments (A1, distinct from {@link #listFacilityUnits} — a
+     * facility_unit and a facility_department are separate entities by design, see
+     * FacilityDepartmentEntity's javadoc). Feeds the Work Home Department-family adapter (E4).
+     */
+    public JsonNode listFacilityDepartments(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/departments";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /** List facility units (departments). */
     public JsonNode listFacilityUnits(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/units";

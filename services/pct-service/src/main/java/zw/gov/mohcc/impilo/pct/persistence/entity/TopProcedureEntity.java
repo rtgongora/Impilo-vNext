@@ -31,7 +31,7 @@ public class TopProcedureEntity {
     @Column(name = "complications") private String complications;
     @Column(name = "followup_contraception") private String followupContraception;
     @Column(name = "followup_plan") private String followupPlan;
-    @Column(name = "confidentiality_category") private String confidentialityCategory;
+    @Column(name = "sensitivity_class") private String sensitivityClass;
     @Column(name = "recorded_by") private String recordedBy;
     @Column(name = "recorded_at") private OffsetDateTime recordedAt;
 
@@ -59,10 +59,24 @@ public class TopProcedureEntity {
     public void setFollowupContraception(String v) { this.followupContraception = v; }
     public String getFollowupPlan() { return followupPlan; }
     public void setFollowupPlan(String v) { this.followupPlan = v; }
-    public String getConfidentialityCategory() { return confidentialityCategory; }
-    public void setConfidentialityCategory(String v) { this.confidentialityCategory = v; }
+    public String getSensitivityClass() { return sensitivityClass; }
+    public void setSensitivityClass(String v) { this.sensitivityClass = v; }
     public String getRecordedBy() { return recordedBy; }
     public void setRecordedBy(String v) { this.recordedBy = v; }
     public OffsetDateTime getRecordedAt() { return recordedAt; }
     public void setRecordedAt(OffsetDateTime v) { this.recordedAt = v; }
+
+    // Confidentiality stamp (V437). Three values travel with the class above: the governed CATEGORY a
+    // grant is matched against, WHY the stamp was applied, and WHICH policy version decided it.
+    @Column(name = "confidentiality_category") private String confidentialityCategory;
+    @Column(name = "confidentiality_basis") private String confidentialityBasis;
+    @Column(name = "confidentiality_policy_version") private String confidentialityPolicyVersion;
+
+    public String getConfidentialityCategory() { return confidentialityCategory; }
+    public void setConfidentialityCategory(String v) { this.confidentialityCategory = v; }
+    public String getConfidentialityBasis() { return confidentialityBasis; }
+    public void setConfidentialityBasis(String v) { this.confidentialityBasis = v; }
+    public String getConfidentialityPolicyVersion() { return confidentialityPolicyVersion; }
+    public void setConfidentialityPolicyVersion(String v) { this.confidentialityPolicyVersion = v; }
+
 }

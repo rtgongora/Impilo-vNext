@@ -56,7 +56,7 @@ class PregnancyLossRecordServiceTest {
     void recordsWithFullClinicalDefault() {
         var saved = service.record(stillbirth());
         assertThat(saved.getLossRecordId()).isNotNull();
-        assertThat(saved.getConfidentialityCategory()).isEqualTo("FULL_CLINICAL");
+        assertThat(saved.getSensitivityClass()).isEqualTo("FULL_CLINICAL");
         // The boolean gates default to false, so a null never reads as an affirmative.
         assertThat(saved.getCertificateIssued()).isFalse();
         assertThat(saved.getStillbirthCertifiable()).isFalse();
