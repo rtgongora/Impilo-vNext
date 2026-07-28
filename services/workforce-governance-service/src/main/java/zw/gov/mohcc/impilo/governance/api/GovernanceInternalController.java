@@ -37,6 +37,7 @@ public class GovernanceInternalController {
     private final BootstrapGovernanceService bootstrapGovernanceService;
     private final AuthorisedRepresentativeService authorisedRepresentativeService;
     private final ImportBatchService importBatchService;
+    private final ProgrammeAdminService programmeAdminService;
 
     public GovernanceInternalController(OrganisationService organisationService,
                                         OrganisationUnitService organisationUnitService,
@@ -53,7 +54,8 @@ public class GovernanceInternalController {
                                         OrganisationMembershipService organisationMembershipService,
                                         BootstrapGovernanceService bootstrapGovernanceService,
                                         AuthorisedRepresentativeService authorisedRepresentativeService,
-                                        ImportBatchService importBatchService) {
+                                        ImportBatchService importBatchService,
+                                        ProgrammeAdminService programmeAdminService) {
         this.organisationService = organisationService;
         this.organisationUnitService = organisationUnitService;
         this.jurisdictionAdminService = jurisdictionAdminService;
@@ -70,6 +72,7 @@ public class GovernanceInternalController {
         this.bootstrapGovernanceService = bootstrapGovernanceService;
         this.authorisedRepresentativeService = authorisedRepresentativeService;
         this.importBatchService = importBatchService;
+        this.programmeAdminService = programmeAdminService;
     }
 
     private String corr() {
@@ -609,5 +612,74 @@ public class GovernanceInternalController {
                 : ctx != null && ctx.actorId() != null ? ctx.actorId() : "system";
         String notes = body != null ? body.notes() : null;
         return ResponseEntity.ok(ApiResponse.ok(accessRequestService.transition(requestId, status, notes, actorId), corr()));
+    }
+
+    // ---- Programme registry (A2) ----------------------------------------
+    // Programme appointments are wgv_assignment rows with target_type=PROGRAM
+    // and target_id=programme id — use POST /assignments, not a separate
+    // endpoint here.
+
+    @PostMapping("/programmes")
+    public ResponseEntity<ApiResponse<ProgrammeEntity>> createProgramme(@Valid @RequestBody GovernanceDtos.CreateProgrammeRequest req) {
+        ProgrammeEntity p = programmeAdminService.createProgramme(
+                tenant(), req.programmeCode(), req.name(), req.programmeType(), req.scopeLevel(),
+                req.parentProgrammeId(), req.responsibleOrganisationId(), req.accountableOffice(),
+                parseDate(req.validFrom()), parseDate(req.validTo()), req.description());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(p, corr()));
+    }
+
+    @GetMapping("/programmes")
+    public ResponseEntity<ApiResponse<List<ProgrammeEntity>>> listProgrammes(
+            @RequestParam(required = false) String status) {
+        return ResponseEntity.ok(ApiResponse.ok(programmeAdminService.list(tenant(), status), corr()));
+    }
+
+    @GetMapping("/programmes/{id}")
+    public ResponseEntity<ApiResponse<ProgrammeEntity>> getProgramme(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(programmeAdminService.get(id), corr()));
+    }
+
+    @PostMapping("/programmes/{id}/status")
+    public ResponseEntity<ApiResponse<ProgrammeEntity>> transitionProgramme(
+            @PathVariable UUID id, @Valid @RequestBody GovernanceDtos.ProgrammeStatusRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok(programmeAdminService.transition(id, req.status()), corr()));
+    }
+
+    @PostMapping("/programmes/{id}/jurisdictions")
+    public ResponseEntity<ApiResponse<ProgrammeJurisdictionEntity>> linkProgrammeJurisdiction(
+            @PathVariable UUID id, @Valid @RequestBody GovernanceDtos.LinkProgrammeJurisdictionRequest req) {
+        ProgrammeJurisdictionEntity link = programmeAdminService.linkJurisdiction(
+                tenant(), id, req.jurisdictionId(), parseDate(req.startDate()), parseDate(req.endDate()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(link, corr()));
+    }
+
+    @GetMapping("/programmes/{id}/jurisdictions")
+    public ResponseEntity<ApiResponse<List<ProgrammeJurisdictionEntity>>> listProgrammeJurisdictions(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(programmeAdminService.jurisdictions(id), corr()));
+    }
+
+    @PostMapping("/programmes/{id}/facilities")
+    public ResponseEntity<ApiResponse<ProgrammeFacilityEntity>> linkProgrammeFacility(
+            @PathVariable UUID id, @Valid @RequestBody GovernanceDtos.LinkProgrammeFacilityRequest req) {
+        ProgrammeFacilityEntity link = programmeAdminService.linkFacility(
+                tenant(), id, req.facilityId(), parseDate(req.startDate()), parseDate(req.endDate()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(link, corr()));
+    }
+
+    @GetMapping("/programmes/{id}/facilities")
+    public ResponseEntity<ApiResponse<List<ProgrammeFacilityEntity>>> listProgrammeFacilities(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(programmeAdminService.facilities(id), corr()));
+    }
+
+    @PostMapping("/programmes/{id}/services")
+    public ResponseEntity<ApiResponse<ProgrammeServiceEntity>> addProgrammeService(
+            @PathVariable UUID id, @Valid @RequestBody GovernanceDtos.AddProgrammeServiceRequest req) {
+        ProgrammeServiceEntity svc = programmeAdminService.addService(tenant(), id, req.serviceCode(), req.serviceLabel());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(svc, corr()));
+    }
+
+    @GetMapping("/programmes/{id}/services")
+    public ResponseEntity<ApiResponse<List<ProgrammeServiceEntity>>> listProgrammeServices(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(programmeAdminService.services(id), corr()));
     }
 }

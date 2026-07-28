@@ -3225,6 +3225,7 @@ services:
     system_of_record_for:
       - Workforce Governance canonical records
       - Facility-to-regulator (multi-council) relationships and status lifecycle
+      - Canonical health-programme registry (wgv_programme; programme appointments are wgv_assignment target_type=PROGRAM)
     consumes_from:
       - tshepo-authz-service
     exposes_to:

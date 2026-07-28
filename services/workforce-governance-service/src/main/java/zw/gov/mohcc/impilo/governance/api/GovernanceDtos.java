@@ -190,4 +190,36 @@ public final class GovernanceDtos {
             String disciplinaryEmploymentStatus,
             String verificationStatus
     ) {}
+
+    public record CreateProgrammeRequest(
+            @NotBlank String programmeCode,
+            @NotBlank String name,
+            @NotBlank String programmeType,
+            @NotBlank String scopeLevel,
+            UUID parentProgrammeId,
+            UUID responsibleOrganisationId,
+            String accountableOffice,
+            String validFrom,
+            String validTo,
+            String description
+    ) {}
+
+    public record ProgrammeStatusRequest(@NotBlank String status) {}
+
+    public record LinkProgrammeJurisdictionRequest(
+            @NotNull UUID jurisdictionId,
+            String startDate,
+            String endDate
+    ) {}
+
+    public record LinkProgrammeFacilityRequest(
+            @NotBlank String facilityId,
+            String startDate,
+            String endDate
+    ) {}
+
+    public record AddProgrammeServiceRequest(
+            @NotBlank String serviceCode,
+            String serviceLabel
+    ) {}
 }

@@ -20,17 +20,20 @@ public class AssignmentService {
     private final AssignmentRepository assignmentRepository;
     private final AssignmentStatusHistoryRepository historyRepository;
     private final RoleDefinitionRepository roleDefinitionRepository;
+    private final ProgrammeRepository programmeRepository;
     private final GovernanceEventService governanceEventService;
     private final ObjectMapper objectMapper;
 
     public AssignmentService(AssignmentRepository assignmentRepository,
                              AssignmentStatusHistoryRepository historyRepository,
                              RoleDefinitionRepository roleDefinitionRepository,
+                             ProgrammeRepository programmeRepository,
                              GovernanceEventService governanceEventService,
                              ObjectMapper objectMapper) {
         this.assignmentRepository = assignmentRepository;
         this.historyRepository = historyRepository;
         this.roleDefinitionRepository = roleDefinitionRepository;
+        this.programmeRepository = programmeRepository;
         this.governanceEventService = governanceEventService;
         this.objectMapper = objectMapper;
     }
@@ -63,6 +66,7 @@ public class AssignmentService {
             throw new IllegalArgumentException("Role definition inactive");
         }
         assertTargetAllowed(role, targetType);
+        assertProgrammeTargetValid(tenantId, targetType, targetId);
 
         AssignmentEntity a = new AssignmentEntity(
                 UUID.randomUUID(),
@@ -92,6 +96,28 @@ public class AssignmentService {
                         "targetType", targetType.name(), "targetId", targetId, "status", a.getStatus()),
                 tenantId, ctx.correlationId() != null ? ctx.correlationId().toString() : null);
         return a;
+    }
+
+    /**
+     * A PROGRAM-target assignment's target_id must resolve to an ACTIVE
+     * wgv_programme row in the same tenant — target_id is a polymorphic
+     * VARCHAR(128) with no DB-level FK across target types, so this is the
+     * application-level guarantee that "arbitrary programme strings" (the
+     * thing the programme registry exists to eliminate, see V014) can never
+     * back a work-context-issuing assignment.
+     */
+    private void assertProgrammeTargetValid(UUID tenantId, GovernanceEnums.AssignmentTargetType targetType, String targetId) {
+        if (targetType != GovernanceEnums.AssignmentTargetType.PROGRAM) {
+            return;
+        }
+        UUID programmeId;
+        try {
+            programmeId = UUID.fromString(targetId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("PROGRAM target_id must be a canonical programme id (wgv_programme.id), not a free-text string: " + targetId);
+        }
+        programmeRepository.findByTenantIdAndIdAndStatus(tenantId, programmeId, "ACTIVE")
+                .orElseThrow(() -> new IllegalArgumentException("Programme not found or not ACTIVE: " + programmeId));
     }
 
     private void assertTargetAllowed(RoleDefinitionEntity role, GovernanceEnums.AssignmentTargetType targetType) {
