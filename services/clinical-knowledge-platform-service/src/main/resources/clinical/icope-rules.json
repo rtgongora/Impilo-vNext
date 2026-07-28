@@ -1,0 +1,156 @@
+{
+  "packId": "icope-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "ICOPE intrinsic-capacity screening — an abnormal screen in an older adult is a door to a comprehensive assessment, not a diagnosis",
+    "primarySource": "WHO Integrated Care for Older People (ICOPE) guidelines and handbook, 2019",
+    "why": "ICOPE reframes care for older people around intrinsic capacity — the composite of the physical and mental capacities a person can draw on — rather than around a list of diseases. It works in two steps: a brief community-level screen across six domains (cognition, mobility, nutrition, vision, hearing and mood), and, wherever a domain screens abnormal, an in-depth person-centred assessment that builds a single care plan. The rules here encode only the first hinge of that model: a positive screen in an older adult opens the matching in-depth assessment and intervention. Each screen is gated on older age, because the domain cut-offs and the whole intrinsic-capacity frame are defined for older people; the same answer in a younger adult does not carry the same meaning or route to the same pathway.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO ICOPE guidelines and handbook are NOT vendored under docs/reference/who-dak/MANIFEST.json. This pack is authored against the published ICOPE two-step model (screen then in-depth assessment) and ships ENGINEERING_SEED until the primary text is vendored and the national geriatric-care programme ratifies the age gate and the domain screen instruments. The 60-year (720-month) older-adult threshold and the screen-instrument names are placeholders pending the national ICOPE adaptation."
+    }
+  },
+  "rules": [
+    {
+      "code": "ICOPE_COGNITION_DECLINE_ASSESS",
+      "name": "Cognition screen abnormal in an older adult — open cognitive assessment",
+      "layer": "GERIATRIC_ICOPE",
+      "ruleType": "SCREEN_POSITIVE",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["ageMonths", "cognitionScreenAbnormal"],
+      "appliesWhen": {"input": "ageMonths", "op": "gte", "value": 720},
+      "logic": {"input": "cognitionScreenAbnormal", "op": "eq", "value": "YES"},
+      "message": "Cognitive-decline screen is abnormal — proceed to the ICOPE in-depth cognitive assessment.",
+      "explanation": "A positive brief cognition screen (for example on orientation and recall) in an older adult is a signal, not a diagnosis. ICOPE routes it to an in-depth cognitive assessment to distinguish reversible causes (delirium, medication effects, depression, sensory loss) from an evolving cognitive impairment, and to plan support before capacity is lost.",
+      "requiredAction": "Perform the ICOPE in-depth cognitive assessment, review medications and reversible contributors, and record the finding in the person's ICOPE care plan.",
+      "sourceRefs": ["WHO ICOPE guidelines 2019 — cognitive decline pathway", "WHO ICOPE handbook 2019 — Step 1 screen, Step 2 assessment"],
+      "dakRef": {"dak": "WHO ICOPE", "dakVersion": "2019", "id": "WHO_ICOPE.INTRINSIC_CAPACITY", "row": "cognitive decline"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Older people whose cognition screen is abnormal should receive an in-depth cognitive assessment.", "nationalStatement": "Adopted as published; the older-adult age gate awaits national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO ICOPE guidelines 2019", "WHO ICOPE handbook 2019"]},
+      "testCases": [
+        {"name": "older adult with abnormal cognition screen opens assessment", "facts": {"ageMonths": 780, "cognitionScreenAbnormal": "YES"}, "expectFires": true},
+        {"name": "older adult with normal cognition screen does not fire", "facts": {"ageMonths": 780, "cognitionScreenAbnormal": "NO"}, "expectFires": false},
+        {"name": "younger adult below the age gate does not take this rule", "facts": {"ageMonths": 480, "cognitionScreenAbnormal": "YES"}, "expectFires": false},
+        {"name": "cognition screen never done — unassessed, not negative", "facts": {"ageMonths": 780}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ICOPE_MOBILITY_LIMITED_ASSESS",
+      "name": "Limited mobility in an older adult — open mobility assessment",
+      "layer": "GERIATRIC_ICOPE",
+      "ruleType": "SCREEN_POSITIVE",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["ageMonths", "chairRiseUnable"],
+      "appliesWhen": {"input": "ageMonths", "op": "gte", "value": 720},
+      "logic": {"input": "chairRiseUnable", "op": "eq", "value": "YES"},
+      "message": "Limited mobility on screening — proceed to the ICOPE in-depth mobility assessment.",
+      "explanation": "The ICOPE mobility screen asks whether the person can rise from a chair five times without using their arms. Inability (or marked slowness) predicts falls, frailty and loss of independence. A positive screen routes to a fuller assessment — gait, strength, balance and fall risk — and to exercise and environmental interventions.",
+      "requiredAction": "Perform the ICOPE in-depth mobility assessment (gait and strength, fall-risk review), prescribe multimodal exercise, and record it in the ICOPE care plan.",
+      "sourceRefs": ["WHO ICOPE guidelines 2019 — limited mobility pathway", "WHO ICOPE handbook 2019 — chair-rise screen"],
+      "dakRef": {"dak": "WHO ICOPE", "dakVersion": "2019", "id": "WHO_ICOPE.INTRINSIC_CAPACITY", "row": "limited mobility"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Older people who screen positive for limited mobility should receive an in-depth mobility assessment and multimodal exercise.", "nationalStatement": "Adopted as published; the older-adult age gate awaits national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO ICOPE guidelines 2019", "WHO ICOPE handbook 2019"]},
+      "testCases": [
+        {"name": "older adult unable to complete chair rise opens assessment", "facts": {"ageMonths": 840, "chairRiseUnable": "YES"}, "expectFires": true},
+        {"name": "older adult able to complete chair rise does not fire", "facts": {"ageMonths": 840, "chairRiseUnable": "NO"}, "expectFires": false},
+        {"name": "younger adult below the age gate does not take this rule", "facts": {"ageMonths": 600, "chairRiseUnable": "YES"}, "expectFires": false},
+        {"name": "mobility screen never done — unassessed, not negative", "facts": {"ageMonths": 840}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ICOPE_MALNUTRITION_RISK_ASSESS",
+      "name": "Weight loss or poor appetite in an older adult — open nutrition assessment",
+      "layer": "GERIATRIC_ICOPE",
+      "ruleType": "SCREEN_POSITIVE",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["ageMonths", "weightLossOrLowAppetite"],
+      "appliesWhen": {"input": "ageMonths", "op": "gte", "value": 720},
+      "logic": {"input": "weightLossOrLowAppetite", "op": "eq", "value": "YES"},
+      "message": "Malnutrition risk on screening — proceed to the ICOPE in-depth nutrition assessment.",
+      "explanation": "The ICOPE nutrition screen asks about recent unintentional weight loss and loss of appetite. Either is an early sign of malnutrition risk in older people, which drives sarcopenia, poor wound healing and readmission. A positive screen routes to a full nutritional assessment and dietary counselling with protein and energy support.",
+      "requiredAction": "Perform the ICOPE in-depth nutrition assessment, provide dietary counselling and oral nutritional support where indicated, and record it in the ICOPE care plan.",
+      "sourceRefs": ["WHO ICOPE guidelines 2019 — malnutrition pathway", "WHO ICOPE handbook 2019 — weight-loss and appetite screen"],
+      "dakRef": {"dak": "WHO ICOPE", "dakVersion": "2019", "id": "WHO_ICOPE.INTRINSIC_CAPACITY", "row": "malnutrition"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Older people who screen positive for weight loss or poor appetite should receive an in-depth nutrition assessment and dietary counselling.", "nationalStatement": "Adopted as published; the older-adult age gate awaits national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO ICOPE guidelines 2019", "WHO ICOPE handbook 2019"]},
+      "testCases": [
+        {"name": "older adult with weight loss or poor appetite opens assessment", "facts": {"ageMonths": 900, "weightLossOrLowAppetite": "YES"}, "expectFires": true},
+        {"name": "older adult without weight loss or appetite change does not fire", "facts": {"ageMonths": 900, "weightLossOrLowAppetite": "NO"}, "expectFires": false},
+        {"name": "younger adult below the age gate does not take this rule", "facts": {"ageMonths": 540, "weightLossOrLowAppetite": "YES"}, "expectFires": false},
+        {"name": "nutrition screen never done — unassessed, not negative", "facts": {"ageMonths": 900}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ICOPE_VISION_IMPAIRED_ASSESS",
+      "name": "Visual impairment on screening in an older adult — open vision assessment",
+      "layer": "GERIATRIC_ICOPE",
+      "ruleType": "SCREEN_POSITIVE",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["ageMonths", "visionImpaired"],
+      "appliesWhen": {"input": "ageMonths", "op": "gte", "value": 720},
+      "logic": {"input": "visionImpaired", "op": "eq", "value": "YES"},
+      "message": "Visual impairment on screening — proceed to the ICOPE in-depth vision assessment.",
+      "explanation": "Self-reported or measured visual difficulty in an older adult is often a correctable loss — refractive error or cataract — that compounds falls, cognitive-screen failure and social withdrawal when left unaddressed. ICOPE routes a positive screen to eye assessment and correction rather than treating poor vision as an unmodifiable part of ageing.",
+      "requiredAction": "Perform the ICOPE in-depth vision assessment, refer for refraction or cataract evaluation as indicated, and record it in the ICOPE care plan.",
+      "sourceRefs": ["WHO ICOPE guidelines 2019 — visual impairment pathway", "WHO ICOPE handbook 2019 — vision screen"],
+      "dakRef": {"dak": "WHO ICOPE", "dakVersion": "2019", "id": "WHO_ICOPE.INTRINSIC_CAPACITY", "row": "visual impairment"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Older people who screen positive for visual impairment should receive an in-depth eye assessment and correction where possible.", "nationalStatement": "Adopted as published; the older-adult age gate awaits national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO ICOPE guidelines 2019", "WHO ICOPE handbook 2019"]},
+      "testCases": [
+        {"name": "older adult with visual impairment opens assessment", "facts": {"ageMonths": 792, "visionImpaired": "YES"}, "expectFires": true},
+        {"name": "older adult without visual impairment does not fire", "facts": {"ageMonths": 792, "visionImpaired": "NO"}, "expectFires": false},
+        {"name": "younger adult below the age gate does not take this rule", "facts": {"ageMonths": 360, "visionImpaired": "YES"}, "expectFires": false},
+        {"name": "vision screen never done — unassessed, not negative", "facts": {"ageMonths": 792}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ICOPE_HEARING_LOSS_ASSESS",
+      "name": "Hearing loss on screening in an older adult — open hearing assessment",
+      "layer": "GERIATRIC_ICOPE",
+      "ruleType": "SCREEN_POSITIVE",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["ageMonths", "hearingImpaired"],
+      "appliesWhen": {"input": "ageMonths", "op": "gte", "value": 720},
+      "logic": {"input": "hearingImpaired", "op": "eq", "value": "YES"},
+      "message": "Hearing loss on screening — proceed to the ICOPE in-depth hearing assessment.",
+      "explanation": "A positive hearing screen (whisper test or reported difficulty) in an older adult is linked to social isolation, depression and accelerated cognitive decline. ICOPE routes it to audiometric assessment and hearing-aid provision, because unaddressed hearing loss also confounds the cognition and mood screens.",
+      "requiredAction": "Perform the ICOPE in-depth hearing assessment, refer for audiometry and hearing-aid fitting where indicated, and record it in the ICOPE care plan.",
+      "sourceRefs": ["WHO ICOPE guidelines 2019 — hearing loss pathway", "WHO ICOPE handbook 2019 — hearing screen"],
+      "dakRef": {"dak": "WHO ICOPE", "dakVersion": "2019", "id": "WHO_ICOPE.INTRINSIC_CAPACITY", "row": "hearing loss"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Older people who screen positive for hearing loss should receive an in-depth hearing assessment and hearing aids where indicated.", "nationalStatement": "Adopted as published; the older-adult age gate awaits national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO ICOPE guidelines 2019", "WHO ICOPE handbook 2019"]},
+      "testCases": [
+        {"name": "older adult with hearing loss opens assessment", "facts": {"ageMonths": 864, "hearingImpaired": "YES"}, "expectFires": true},
+        {"name": "older adult without hearing loss does not fire", "facts": {"ageMonths": 864, "hearingImpaired": "NO"}, "expectFires": false},
+        {"name": "younger adult below the age gate does not take this rule", "facts": {"ageMonths": 420, "hearingImpaired": "YES"}, "expectFires": false},
+        {"name": "hearing screen never done — unassessed, not negative", "facts": {"ageMonths": 864}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "ICOPE_DEPRESSIVE_SYMPTOMS_ASSESS",
+      "name": "Depressive symptoms on screening in an older adult — open psychological assessment",
+      "layer": "GERIATRIC_ICOPE",
+      "ruleType": "SCREEN_POSITIVE",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["ageMonths", "depressiveSymptoms"],
+      "appliesWhen": {"input": "ageMonths", "op": "gte", "value": 720},
+      "logic": {"input": "depressiveSymptoms", "op": "eq", "value": "YES"},
+      "message": "Depressive symptoms on screening — proceed to the ICOPE in-depth psychological assessment.",
+      "explanation": "The ICOPE mood screen asks about low mood and loss of interest over the past two weeks. A positive screen in an older adult warrants a full psychological assessment: depression in older people is under-recognised, treatable, and a reversible cause of poor performance on the cognition, nutrition and mobility domains.",
+      "requiredAction": "Perform the ICOPE in-depth psychological assessment, offer brief psychological intervention or referral per the mhGAP pathway, and record it in the ICOPE care plan.",
+      "sourceRefs": ["WHO ICOPE guidelines 2019 — depressive symptoms pathway", "WHO ICOPE handbook 2019 — mood screen"],
+      "dakRef": {"dak": "WHO ICOPE", "dakVersion": "2019", "id": "WHO_ICOPE.INTRINSIC_CAPACITY", "row": "depressive symptoms"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Older people who screen positive for depressive symptoms should receive an in-depth psychological assessment and appropriate intervention.", "nationalStatement": "Adopted as published; the older-adult age gate awaits national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO ICOPE guidelines 2019", "WHO ICOPE handbook 2019"]},
+      "testCases": [
+        {"name": "older adult with depressive symptoms opens assessment", "facts": {"ageMonths": 720, "depressiveSymptoms": "YES"}, "expectFires": true},
+        {"name": "older adult without depressive symptoms does not fire", "facts": {"ageMonths": 720, "depressiveSymptoms": "NO"}, "expectFires": false},
+        {"name": "younger adult below the age gate does not take this rule", "facts": {"ageMonths": 300, "depressiveSymptoms": "YES"}, "expectFires": false},
+        {"name": "mood screen never done — unassessed, not negative", "facts": {"ageMonths": 720}, "expectFires": false}
+      ]
+    }
+  ]
+}

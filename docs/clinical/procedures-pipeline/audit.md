@@ -244,3 +244,43 @@ place rather than replaced.
    elements.
 6. The 20 maps of §12 and the 17 of the surgical pack's §7 overlap heavily and must be built once
    as a shared feature, not twice.
+
+---
+
+## 7. P5 addendum — adolescent confidentiality is a PARTIAL, and why
+
+Pipeline §6 requires adolescent confidentiality. P5 ships everything else in that section —
+the recorded conversation, capacity, guardian consent, child assent as an act distinct from
+guardian consent, substitute decision-making with a basis, refusal, withdrawal, and the
+photography / specimen-use / research separations. Adolescent confidentiality specifically
+ships as **PARTIAL**, and this records exactly why rather than letting it look done.
+
+`SPECIALLY_PROTECTED` has moved since this programme opened, and the movement is real:
+`ResourceSensitivityClassifier` now has `isSpeciallyProtected(resourceType)` and a
+`PROTECTED_LANE_MARKERS` check that runs *first*, deliberately, so that
+`confidential-encounters` is not downgraded to `FULL_CLINICAL` by the substring match on
+`encounter`. That is a genuine enforcement seam and it did not exist in Phase 0.
+
+What has **not** moved is the line the whole guarantee rests on:
+
+```java
+case FULL_CLINICAL, SPECIALLY_PROTECTED -> DataVisibilityTier.FULL_IDENTIFIED_CLINICAL;
+```
+
+Specially-protected content still resolves to the same visibility tier as ordinary clinical
+data. `DataVisibilityTier` has six values and the protected lane shares the top one with
+everything else, so a resource can be *classified* as confidential and still be *seen* by
+anyone who can see a routine observation. A separate lane that ends in a shared tier is a
+label, not a boundary.
+
+**The position taken, following the reproductive lane's on HEADSS:** collecting
+adolescent-confidential consent into a record that only looks protected is worse than not
+collecting it, because the clinician and the adolescent both act on an assurance the system
+does not keep. So the consent model carries the fields, the pipeline does not yet claim the
+confidentiality, and the gap is stated here and in the coverage register rather than in a
+footnote nobody reads.
+
+**What would close it:** `SPECIALLY_PROTECTED` resolving to a distinct visibility tier,
+caregiver context as a first-class input to the policy decision, and both access and refusal
+audited. That is trust-plane work owned by the TSHEPO lane, not this programme, and it is
+larger than a consent wave. Recorded as the blocker it is.

@@ -47,6 +47,7 @@ class FacilityReadIsolationTest {
     @Mock private FacilityHistoryRepository historyRepository;
     @Mock private WorkspaceRepository workspaceRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private zw.gov.mohcc.impilo.tuso.persistence.repository.FacilitySourceLegitimacyRepository legitimacyRepository;
 
     private FacilityService service;
     private final UUID myTenant = UUID.randomUUID();
@@ -56,7 +57,8 @@ class FacilityReadIsolationTest {
     void setUp() {
         service = new FacilityService(facilityRepository, identifierRepository, contactRepository,
                 geoRepository, capabilityRepository, readinessRepository, historyRepository,
-                workspaceRepository, outboxRepository);
+                workspaceRepository, outboxRepository,
+                new FacilityLegitimacyReverificationService(legitimacyRepository));
         TrustContextHolder.set(new TrustContext(
                 myTenant, "org-admin-1", "OPERATOR", "ADMINISTRATION", "device-1",
                 UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));

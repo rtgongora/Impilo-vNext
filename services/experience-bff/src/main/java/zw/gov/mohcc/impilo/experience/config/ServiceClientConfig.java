@@ -322,7 +322,36 @@ public class ServiceClientConfig {
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attrs != null) {
                 HttpServletRequest inbound = attrs.getRequest();
-                forwardHeader(inbound, request, CompanionHeaders.TENANT_ID);
+                // Tenant is forwarded only-if-absent so a client method can declare the PLANE its
+                // rows live on. The two-plane model requires it: facility/provider/geo masters are
+                // registry-plane, and a care-plane caller asking a facility question must read
+                // registry data or find nothing (birth-destination 502'd on exactly this). The
+                // public-lane clients appeared to work only because their callers are anonymous,
+                // with no inbound tenant to overwrite.
+                //
+                // WHY THIS IS SAFE, and it is NOT "because the values are constants" — read this
+                // before assuming this line opened a door. Tenant is ALREADY client-supplied and
+                // unvalidated end to end: ui/one-ui-shell api-client reads it from
+                // sessionStorage["exp:tenant_id"], and every downstream consumes it as the isolation
+                // boundary via TrustContextFilter's raw getHeader, with no JWT claim cross-check
+                // anywhere in shared-core or tech-companion. An arbitrary-valued, browser-controlled
+                // cross-tenant read therefore already exists. What this line adds is strictly
+                // narrower: BFF-side, auditable, and limited to the PublicTenants constants. It
+                // cannot widen a boundary that is already fully writable by the caller.
+                //
+                // The asymmetry is deliberate elsewhere and simply missing here: ActorContextFilter
+                // overrides X-Actor-ID from the validated health_id claim precisely to close "a
+                // spoofing hole (a caller could claim any actor)" — and it does not touch tenant.
+                // Actor identity got the anti-spoofing fix; the isolation boundary never did. That
+                // is the real hole, tracked separately as a tenant equivalent of ActorContextFilter;
+                // it is NOT fixed here and this comment must not be read as claiming otherwise.
+                //
+                // Every pre-set today is a plane declaration from a constant (Daidzai CARE,
+                // Participation/Rito/Tuso REGISTRY, the anonymous-defaults filter REGISTRY). The one
+                // exception is PatientSafetyPublicController, which binds its value from config
+                // rather than a compile-time constant — not request-derived, so isolation holds, but
+                // it is the site to change if the invariant is ever tightened to constants-only.
+                forwardHeaderIfAbsent(inbound, request, CompanionHeaders.TENANT_ID);
                 forwardHeader(inbound, request, CompanionHeaders.POD_ID);
                 forwardHeader(inbound, request, CompanionHeaders.REQUEST_ID);
                 forwardHeader(inbound, request, CompanionHeaders.CORRELATION_ID);

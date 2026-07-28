@@ -10,6 +10,7 @@ public class TusoProperties {
     private ZiboProperties zibo = new ZiboProperties();
     private VarapiProperties varapi = new VarapiProperties();
     private RitoProperties rito = new RitoProperties();
+    private OrgRegistryProperties orgRegistry = new OrgRegistryProperties();
     private AlertThresholds alerts = new AlertThresholds();
     private int configCacheTtlSeconds = 300;
     private OutboxProperties outbox = new OutboxProperties();
@@ -34,6 +35,9 @@ public class TusoProperties {
     public RitoProperties getRito() { return rito; }
     public void setRito(RitoProperties rito) { this.rito = rito; }
 
+    public OrgRegistryProperties getOrgRegistry() { return orgRegistry; }
+    public void setOrgRegistry(OrgRegistryProperties orgRegistry) { this.orgRegistry = orgRegistry; }
+
     public AlertThresholds getAlerts() { return alerts; }
     public void setAlerts(AlertThresholds alerts) { this.alerts = alerts; }
 
@@ -44,6 +48,18 @@ public class TusoProperties {
     public void setOutbox(OutboxProperties outbox) { this.outbox = outbox; }
 
     // --- Nested classes ---
+
+    /**
+     * Organization registry — the system of record for organisations and the regulatory/Ministry
+     * appointments that carry verifying authority and its jurisdiction (FCV-W2). TUSO asks it who
+     * the caller is appointed as; it never trusts a client header for that.
+     */
+    public static class OrgRegistryProperties {
+        private String baseUrl = "http://localhost:8153";
+
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+    }
 
     /** Rito Experience & Reputation — read-only facility experience summary (RW8). */
     public static class RitoProperties {

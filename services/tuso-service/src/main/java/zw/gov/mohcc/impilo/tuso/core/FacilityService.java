@@ -47,6 +47,7 @@ public class FacilityService {
     private static final Logger log = LoggerFactory.getLogger(FacilityService.class);
 
     private final FacilityRepository facilityRepository;
+    private final FacilityLegitimacyReverificationService reverificationService;
     private final FacilityIdentifierRepository identifierRepository;
     private final FacilityContactRepository contactRepository;
     private final FacilityGeoRepository geoRepository;
@@ -64,8 +65,10 @@ public class FacilityService {
                            FacilityReadinessRepository readinessRepository,
                            FacilityHistoryRepository historyRepository,
                            WorkspaceRepository workspaceRepository,
-                           EventOutboxRepository outboxRepository) {
+                           EventOutboxRepository outboxRepository,
+                           FacilityLegitimacyReverificationService reverificationService) {
         this.facilityRepository = facilityRepository;
+        this.reverificationService = reverificationService;
         this.identifierRepository = identifierRepository;
         this.contactRepository = contactRepository;
         this.geoRepository = geoRepository;
@@ -234,6 +237,19 @@ public class FacilityService {
 
         log.info("Updating facility {} for tenant {}", id, tenantId);
 
+        // A Ministry legitimacy verdict is a statement about the facility AS IT WAS — at that
+        // address, under that ownership, at that level. Snapshot those before mutating so a
+        // material change can withdraw the operating permission (FCV-W1); the rest of the fields
+        // (name, description, tier…) do not invalidate an inspection.
+        java.util.Map<String, Object> materialBefore = new java.util.LinkedHashMap<>();
+        materialBefore.put("province", facility.getProvince());
+        materialBefore.put("district", facility.getDistrict());
+        materialBefore.put("ownership", facility.getOwnership());
+        materialBefore.put("level", facility.getLevel());
+        materialBefore.put("facility_type", facility.getFacilityType());
+        materialBefore.put("latitude", facility.getLatitude());
+        materialBefore.put("longitude", facility.getLongitude());
+
         // Track changes for history
         if (dto.name() != null && !dto.name().equals(facility.getName())) {
             recordHistory(id, "UPDATE", "name", facility.getName(), dto.name(), actorId, null);
@@ -294,6 +310,22 @@ public class FacilityService {
                     facility.getLongitude() != null ? facility.getLongitude().toString() : null,
                     dto.longitude().toString(), actorId, null);
             facility.setLongitude(dto.longitude());
+        }
+
+        java.util.Map<String, Object> materialAfter = new java.util.LinkedHashMap<>();
+        materialAfter.put("province", facility.getProvince());
+        materialAfter.put("district", facility.getDistrict());
+        materialAfter.put("ownership", facility.getOwnership());
+        materialAfter.put("level", facility.getLevel());
+        materialAfter.put("facility_type", facility.getFacilityType());
+        materialAfter.put("latitude", facility.getLatitude());
+        materialAfter.put("longitude", facility.getLongitude());
+        java.util.List<String> materiallyChanged = materialBefore.entrySet().stream()
+                .filter(e -> !java.util.Objects.equals(e.getValue(), materialAfter.get(e.getKey())))
+                .map(java.util.Map.Entry::getKey)
+                .toList();
+        if (!materiallyChanged.isEmpty()) {
+            reverificationService.onFacilityChanged(facility.getFacilityUuid(), materiallyChanged, actorId);
         }
 
         facility.setVersion(facility.getVersion() + 1);

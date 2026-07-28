@@ -206,10 +206,35 @@ public class ObjectStorageService {
      * @throws NoSuchElementException if the object does not exist or has been deleted
      */
     public ObjectResponse getObject(UUID objectId) {
+        return toResponse(requireObjectInTenant(objectId));
+    }
+
+    /**
+     * Load an object, refusing one that belongs to another tenant (FCV-W0d).
+     *
+     * <p>These reads previously took only an object id. The entity has carried {@code tenantId}
+     * since it was created and no read path compared it, so any authenticated internal caller who
+     * learned an id could fetch the bytes — and {@code generateSignedUrl} handed back a pre-signed
+     * URL that needs no further authentication at all. Object ids are UUIDs, so this was not
+     * enumerable, but "hard to guess" is not an authorisation model: evidence refs travel through
+     * claims, review queues, events and logs, and a facility claim's supporting documents are
+     * exactly the kind of thing another tenant should never be able to pull.</p>
+     *
+     * <p>An out-of-tenant id gets the same {@code NoSuchElementException} as one that does not
+     * exist, so a caller cannot use the difference to learn that an object is real.</p>
+     */
+    private ObjectEntity requireObjectInTenant(UUID objectId) {
         ObjectEntity entity = objectRepository.findByObjectIdAndDeletedAtIsNull(objectId)
                 .orElseThrow(() -> new NoSuchElementException("Object not found: " + objectId));
-        return toResponse(entity);
+        TrustContext ctx = TrustContextHolder.require();
+        if (entity.getTenantId() != null && ctx.tenantId() != null
+                && !entity.getTenantId().equals(ctx.tenantId())) {
+            log.warn("Refused cross-tenant object read: object {} belongs to another tenant", objectId);
+            throw new NoSuchElementException("Object not found: " + objectId);
+        }
+        return entity;
     }
+
 
     /**
      * Generate a pre-signed URL for direct object access.
@@ -221,8 +246,7 @@ public class ObjectStorageService {
     public SignedUrlResponse generateSignedUrl(UUID objectId) {
         TrustContext ctx = TrustContextHolder.require();
 
-        ObjectEntity entity = objectRepository.findByObjectIdAndDeletedAtIsNull(objectId)
-                .orElseThrow(() -> new NoSuchElementException("Object not found: " + objectId));
+        ObjectEntity entity = requireObjectInTenant(objectId);
         ObjectStorageProvider storageProvider = storageProviderRouter.activeProvider();
 
         try {
@@ -260,8 +284,7 @@ public class ObjectStorageService {
      * @return input stream of the object content
      */
     public InputStream downloadObject(UUID objectId) {
-        ObjectEntity entity = objectRepository.findByObjectIdAndDeletedAtIsNull(objectId)
-                .orElseThrow(() -> new NoSuchElementException("Object not found: " + objectId));
+        ObjectEntity entity = requireObjectInTenant(objectId);
         ObjectStorageProvider storageProvider = storageProviderRouter.activeProvider();
 
         try {
@@ -279,8 +302,7 @@ public class ObjectStorageService {
      * @return the object entity
      */
     public ObjectEntity getObjectEntity(UUID objectId) {
-        return objectRepository.findByObjectIdAndDeletedAtIsNull(objectId)
-                .orElseThrow(() -> new NoSuchElementException("Object not found: " + objectId));
+        return requireObjectInTenant(objectId);
     }
 
     /**

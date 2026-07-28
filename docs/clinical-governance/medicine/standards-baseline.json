@@ -106,6 +106,48 @@
       "kind": "DECISION_LOGIC",
       "title": "Renal-safety medication review and deprescribing (eGFR-gated cautions, duplicate therapy)",
       "sourceCitation": "WHO package of essential noncommunicable disease interventions for primary health care (WHO PEN), 2020; renal-dosing safety principles. https://www.who.int/publications/i/item/9789240009226"
+    },
+    {
+      "standardId": "MEDICINE.PROCEDURE_APPROPRIATENESS",
+      "family": "ZW_POLICY",
+      "kind": "DECISION_LOGIC",
+      "title": "Indication, contraindication and appropriateness for adult medical bedside procedures (LP, paracentesis, pleural aspiration)",
+      "sourceCitation": "EDLIZ \u2014 Zimbabwe Essential Medicines List and Standard Treatment Guidelines (2015), and standard procedural-safety practice. This pack owns indication/interpretation; procedures-service (8395) executes."
+    },
+    {
+      "standardId": "WHO_ICOPE.INTRINSIC_CAPACITY",
+      "family": "WHO_ICOPE",
+      "kind": "DECISION_LOGIC",
+      "title": "Integrated care for older people \u2014 intrinsic-capacity screening across cognition, mobility, nutrition, vision, hearing and mood",
+      "sourceCitation": "WHO Integrated Care for Older People (ICOPE): guidelines on community-level interventions to manage declines in intrinsic capacity, 2019. https://www.who.int/publications/i/item/9789241550109"
+    },
+    {
+      "standardId": "WHO_MHGAP.PRIORITY_CONDITIONS",
+      "family": "WHO_MHGAP",
+      "kind": "DECISION_LOGIC",
+      "title": "mhGAP priority mental-health conditions \u2014 assessment and escalation (self-harm risk, depression, psychosis, substance use)",
+      "sourceCitation": "WHO mhGAP Intervention Guide for mental, neurological and substance use disorders in non-specialized health settings, version 2.0, 2016. https://www.who.int/publications/i/item/9789241549790"
+    },
+    {
+      "standardId": "WHO_AMS.STEWARDSHIP",
+      "family": "WHO_AMS",
+      "kind": "DECISION_LOGIC",
+      "title": "Antimicrobial stewardship \u2014 IV-to-oral switch, duration review, culture-directed de-escalation, AWaRe reserve-antibiotic control",
+      "sourceCitation": "WHO AWaRe antibiotic classification; Antimicrobial stewardship programmes in health-care facilities in low- and middle-income countries: a WHO practical toolkit, 2019. https://www.who.int/publications/i/item/9789241515481"
+    },
+    {
+      "standardId": "WHO_PALLIATIVE.SYMPTOM_CONTROL",
+      "family": "WHO_PALLIATIVE",
+      "kind": "DECISION_LOGIC",
+      "title": "Palliative care \u2014 analgesic ladder, breakthrough pain, symptom control and identification of palliative need",
+      "sourceCitation": "WHO guidelines for the pharmacological and radiotherapeutic management of cancer pain in adults and adolescents, 2018; WHO palliative care guidance. https://www.who.int/publications/i/item/9789241550390"
+    },
+    {
+      "standardId": "WHO_CANCER.EARLY_DIAGNOSIS",
+      "family": "WHO_CANCER",
+      "kind": "DECISION_LOGIC",
+      "title": "Cancer early diagnosis \u2014 alarm-feature recognition and urgent referral for investigation",
+      "sourceCitation": "WHO Guide to cancer early diagnosis, 2017. https://www.who.int/publications/i/item/9789241511940"
     }
   ]
 }

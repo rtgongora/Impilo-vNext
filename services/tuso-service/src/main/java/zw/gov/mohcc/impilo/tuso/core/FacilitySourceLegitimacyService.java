@@ -74,6 +74,9 @@ public class FacilitySourceLegitimacyService {
             UUID facilityUuid,
             FacilityLegitimacySource source,
             FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest request) {
+        // Before the facility is even looked up: refusing on the source alone means a caller
+        // probing this endpoint learns nothing about which facilities exist.
+        assertDirectlyWritable(source);
         TrustContext ctx = TrustContextHolder.require();
         FacilityEntity facility = requireFacility(facilityUuid, ctx.tenantId());
         validate(request);
@@ -81,6 +84,14 @@ public class FacilitySourceLegitimacyService {
         FacilitySourceLegitimacyEntity row = legitimacyRepository
                 .findByFacilityIdAndSource(facility.getFacilityUuid(), source)
                 .orElseGet(FacilitySourceLegitimacyEntity::new);
+
+        // Even on the ingestion source, a row bound to a governed decision is not this endpoint's
+        // to rewrite (FCV-W0a).
+        if (row.getDecisionId() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This verdict is bound to a Ministry legitimacy decision and may only be changed "
+                            + "by issuing a new decision.");
+        }
 
         Map<String, Object> previous = row.getId() == null ? null : snapshot(row);
 
@@ -129,6 +140,19 @@ public class FacilitySourceLegitimacyService {
             FacilitySourceLegitimacyEntity row = legitimacyRepository
                     .findByFacilityIdAndSource(facility.getFacilityUuid(), source)
                     .orElseGet(FacilitySourceLegitimacyEntity::new);
+
+            // A row projected from a governed Ministry decision is not the import's to rewrite
+            // (FCV-W0a). Without this guard an ordinary re-import would silently re-stamp
+            // PENDING_VERIFICATION/false over a Ministry verdict and take the facility dark — no
+            // error, no audit, because this method swallows exceptions by design. The decision
+            // table is the system of record; only its projector may move this row.
+            if (row.getDecisionId() != null) {
+                log.info("Skipping {} legitimacy stamp for facility {} — the row is bound to Ministry "
+                                + "decision {} and only the decision projector may change it",
+                        source, facility.getFacilityUuid(), row.getDecisionId());
+                return;
+            }
+
             Map<String, Object> previous = row.getId() == null ? null : snapshot(row);
             row.setFacilityId(facility.getFacilityUuid());
             row.setSource(source);
@@ -175,6 +199,32 @@ public class FacilitySourceLegitimacyService {
      */
     @Transactional(readOnly = true)
     public boolean platformAccessAllowed(UUID facilityUuid, List<String> reasons) {
+        return platformAccessVerdict(facilityUuid, reasons) == PlatformAccessVerdict.ALLOW;
+    }
+
+    /**
+     * The platform-access rule as a tri-state.
+     *
+     * <p>For <em>gating</em>, {@code NO_VERDICT} and {@code DENY} are the same answer — silence
+     * never grants — which is why {@link #platformAccessAllowed} collapses them and every gate may
+     * keep using the boolean. But they are not the same <em>fact</em>: "no authority has recorded a
+     * verdict" is not "an authority denied". Trust reporting must not tell an operator their
+     * facility failed a check nobody has run, so {@code FacilityTrustDimensionService} distinguishes
+     * them. Keeping one implementation with three outcomes is what lets both readings stay correct
+     * — the rule was previously written out four times, and the fourth copy disagreed on exactly
+     * this point.</p>
+     */
+    public enum PlatformAccessVerdict {
+        /** No source has recorded a verdict. Gates deny; reporting says "unknown", not "failed". */
+        NO_VERDICT,
+        /** At least one authority allows and none denies. */
+        ALLOW,
+        /** At least one authority denies — one deny outranks any number of allows. */
+        DENY
+    }
+
+    @Transactional(readOnly = true)
+    public PlatformAccessVerdict platformAccessVerdict(UUID facilityUuid, List<String> reasons) {
         List<FacilitySourceLegitimacyEntity> rows =
                 legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid);
         if (rows.isEmpty()) {
@@ -182,17 +232,53 @@ public class FacilitySourceLegitimacyService {
                 reasons.add("No source legitimacy recorded for this facility; "
                         + "platform access is not granted by default");
             }
-            return false;
+            return PlatformAccessVerdict.NO_VERDICT;
         }
-        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
-        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
         if (reasons != null) {
             for (FacilitySourceLegitimacyEntity r : rows) {
                 reasons.add(r.getSource() + ": " + r.getStatus()
                         + (r.isAllowedOnPlatform() ? " (allows platform operation)" : " (denies platform operation)"));
             }
         }
-        return !anyDenies && anyAllows;
+        return verdictOf(rows);
+    }
+
+    /**
+     * Which sources this generic endpoint may write directly (FCV-W0c).
+     *
+     * <p>This endpoint had no authority gate at all — only a trust context — and no policy rule
+     * covered its path, so any caller reaching the internal plane could write
+     * {@code PLATFORM_OPERATIONAL / allowed=true} and make a facility operational. That is the
+     * direct contradiction of the rule that a facility cannot confer legitimacy on itself, and it
+     * mattered more than any case-decision gate because this row IS the operational verdict.</p>
+     *
+     * <p>{@code HPA_LEGAL} stays writable here because that is this endpoint's honest purpose:
+     * ingesting the regulator's own verdict about a facility. {@code MINISTRY_OPERATIONAL} and
+     * {@code PLATFORM_OPERATIONAL} are the platform's and the Ministry's own verdicts about
+     * operation — they may only be written by the governed decision rail (which records who
+     * decided, under what authority, in which jurisdiction, on what evidence, with what conditions
+     * and expiry) and by the import paths that stamp the initial not-yet-verified state.</p>
+     */
+    private static void assertDirectlyWritable(FacilityLegitimacySource source) {
+        if (source != FacilityLegitimacySource.HPA_LEGAL) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only HPA_LEGAL may be recorded directly. " + source + " expresses whether this "
+                            + "facility may operate on the platform and is issued through the Ministry "
+                            + "legitimacy decision rail, never written directly.");
+        }
+    }
+
+    /**
+     * The rule itself, over rows already loaded. The one place {@code !anyDenies && anyAllows} is
+     * written; every caller and every reason-format variant derives from here.
+     */
+    static PlatformAccessVerdict verdictOf(List<FacilitySourceLegitimacyEntity> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return PlatformAccessVerdict.NO_VERDICT;
+        }
+        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
+        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
+        return !anyDenies && anyAllows ? PlatformAccessVerdict.ALLOW : PlatformAccessVerdict.DENY;
     }
 
     @Transactional(readOnly = true)
@@ -206,9 +292,7 @@ public class FacilitySourceLegitimacyService {
                 certificateRepository.findByFacilityIdOrderByIssueDateDesc(facility.getId())
                         .stream().map(FacilitySourceLegitimacyService::toCertificateSummary).toList();
 
-        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
-        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
-        boolean platformAccessAllowed = !anyDenies && anyAllows;
+        boolean platformAccessAllowed = verdictOf(rows) == PlatformAccessVerdict.ALLOW;
 
         List<String> reasons = new ArrayList<>();
         if (rows.isEmpty()) {

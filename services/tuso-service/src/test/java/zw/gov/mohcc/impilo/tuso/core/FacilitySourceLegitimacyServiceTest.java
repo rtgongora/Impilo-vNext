@@ -139,12 +139,14 @@ class FacilitySourceLegitimacyServiceTest {
     void firstUpsertForSourceCreatesRowWithNoPreviousValues() {
         stubFacility();
         stubSaveEcho();
-        when(legitimacyRepository.findByFacilityIdAndSource(facilityUuid, FacilityLegitimacySource.MINISTRY_OPERATIONAL))
+        // (Source is incidental here — this asserts the outbox shape on a first write. It uses
+        // HPA_LEGAL because that is the one source this endpoint may write directly, FCV-W0c.)
+        when(legitimacyRepository.findByFacilityIdAndSource(facilityUuid, FacilityLegitimacySource.HPA_LEGAL))
                 .thenReturn(Optional.empty());
 
-        service.upsert(facilityUuid, FacilityLegitimacySource.MINISTRY_OPERATIONAL,
+        service.upsert(facilityUuid, FacilityLegitimacySource.HPA_LEGAL,
                 new FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest(
-                        FacilityLegitimacyStatus.REGISTERED_CURRENT, null, "NATIONAL_FACILITY_CODE:ZW010125",
+                        FacilityLegitimacyStatus.REGISTERED_CURRENT, null, "HPA_REGISTRATION_NUMBER:123",
                         true, null));
 
         ArgumentCaptor<EventOutboxEntity> outboxCaptor = ArgumentCaptor.forClass(EventOutboxEntity.class);
@@ -294,5 +296,126 @@ class FacilitySourceLegitimacyServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
                         .isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    // ── FCV-W0c: a facility cannot be made operational through the generic endpoint ──────────
+
+    @Test
+    void upsert_refusesToWriteThePlatformOperationalVerdictDirectly() {
+        // The whole doctrine in one test: this endpoint had no authority gate and no policy rule,
+        // so anyone on the internal plane could write PLATFORM_OPERATIONAL/allowed=true and make a
+        // facility operational without any verification.
+        assertThatThrownBy(() -> service.upsert(facilityUuid, FacilityLegitimacySource.PLATFORM_OPERATIONAL,
+                new FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest(
+                        FacilityLegitimacyStatus.GOVERNMENT_OPERATIONAL_EXCEPTION, null, null, true, "because")))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
+                        .isEqualTo(HttpStatus.FORBIDDEN));
+
+        assertThatThrownBy(() -> service.upsert(facilityUuid, FacilityLegitimacySource.MINISTRY_OPERATIONAL,
+                new FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest(
+                        FacilityLegitimacyStatus.REGISTERED_CURRENT, null, null, true, "because")))
+                .isInstanceOf(ResponseStatusException.class);
+
+        verify(legitimacyRepository, never()).save(any());
+    }
+
+    @Test
+    void upsert_stillAcceptsTheRegulatorsOwnVerdict() {
+        stubFacility();
+        when(legitimacyRepository.findByFacilityIdAndSource(facilityUuid, FacilityLegitimacySource.HPA_LEGAL))
+                .thenReturn(Optional.empty());
+        when(legitimacyRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.upsert(facilityUuid, FacilityLegitimacySource.HPA_LEGAL,
+                new FacilitySourceLegitimacyDtos.UpsertSourceLegitimacyRequest(
+                        FacilityLegitimacyStatus.REGISTERED_CURRENT, null, "HPA:123", true, null));
+
+        verify(legitimacyRepository).save(any());
+    }
+
+    // ── FCV-W0b: the rule is tri-state, so gates and reporting can both be right ─────────────
+
+    @Test
+    void verdictOf_distinguishesNoVerdictFromDeny() {
+        // The distinction the fourth copy of this rule depended on: a gate must refuse both, but
+        // trust reporting must not tell an operator their facility FAILED a check nobody has run.
+        assertThat(FacilitySourceLegitimacyService.verdictOf(List.of()))
+                .isEqualTo(FacilitySourceLegitimacyService.PlatformAccessVerdict.NO_VERDICT);
+
+        FacilitySourceLegitimacyEntity denies = new FacilitySourceLegitimacyEntity();
+        denies.setSource(FacilityLegitimacySource.PLATFORM_OPERATIONAL);
+        denies.setStatus(FacilityLegitimacyStatus.PENDING_VERIFICATION);
+        denies.setAllowedOnPlatform(false);
+
+        FacilitySourceLegitimacyEntity allows = new FacilitySourceLegitimacyEntity();
+        allows.setSource(FacilityLegitimacySource.MINISTRY_OPERATIONAL);
+        allows.setStatus(FacilityLegitimacyStatus.REGISTERED_CURRENT);
+        allows.setAllowedOnPlatform(true);
+
+        assertThat(FacilitySourceLegitimacyService.verdictOf(List.of(denies)))
+                .isEqualTo(FacilitySourceLegitimacyService.PlatformAccessVerdict.DENY);
+        assertThat(FacilitySourceLegitimacyService.verdictOf(List.of(allows)))
+                .isEqualTo(FacilitySourceLegitimacyService.PlatformAccessVerdict.ALLOW);
+        // One deny outranks any number of allows — a Ministry recognition cannot undercut the
+        // platform's "not verified", and a suspension cannot be undercut by a regulator listing.
+        assertThat(FacilitySourceLegitimacyService.verdictOf(List.of(allows, denies)))
+                .isEqualTo(FacilitySourceLegitimacyService.PlatformAccessVerdict.DENY);
+    }
+
+    @Test
+    void platformAccessAllowed_stillCollapsesNoVerdictToRefusal() {
+        when(legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid)).thenReturn(List.of());
+        assertThat(service.platformAccessAllowed(facilityUuid, null))
+                .as("silence never grants — the boolean contract every gate relies on is unchanged")
+                .isFalse();
+    }
+
+    // ── FCV-W0a: an import may not silently revoke a governed Ministry decision ──────────────
+
+    @Test
+    void stampFromImport_refusesToOverwriteADecisionBackedRow() {
+        // A re-import would otherwise re-stamp PENDING_VERIFICATION/false over a Ministry verdict
+        // and take the facility dark with no error — stampFromImport swallows exceptions by design,
+        // so nothing would surface it.
+        FacilitySourceLegitimacyEntity decisionBacked = new FacilitySourceLegitimacyEntity();
+        decisionBacked.setId(7L);
+        decisionBacked.setFacilityId(facilityUuid);
+        decisionBacked.setSource(FacilityLegitimacySource.PLATFORM_OPERATIONAL);
+        decisionBacked.setStatus(FacilityLegitimacyStatus.REGISTERED_CURRENT);
+        decisionBacked.setAllowedOnPlatform(true);
+        decisionBacked.setDecisionId(UUID.randomUUID());
+        when(legitimacyRepository.findByFacilityIdAndSource(
+                facilityUuid, FacilityLegitimacySource.PLATFORM_OPERATIONAL))
+                .thenReturn(Optional.of(decisionBacked));
+
+        service.stampFromImport(facility, FacilityLegitimacySource.PLATFORM_OPERATIONAL,
+                FacilityLegitimacyStatus.PENDING_VERIFICATION, false,
+                "MASTER_PACK", "re-import", "importer", tenantId, "corr-1");
+
+        verify(legitimacyRepository, never()).save(any());
+        verify(outboxRepository, never()).save(any());
+        assertThat(decisionBacked.isAllowedOnPlatform())
+                .as("the Ministry verdict must survive an import touching the same facility")
+                .isTrue();
+    }
+
+    @Test
+    void stampFromImport_stillWritesAnUnboundRow() {
+        FacilitySourceLegitimacyEntity unbound = new FacilitySourceLegitimacyEntity();
+        unbound.setId(8L);
+        unbound.setFacilityId(facilityUuid);
+        unbound.setSource(FacilityLegitimacySource.PLATFORM_OPERATIONAL);
+        unbound.setAllowedOnPlatform(false);
+        when(legitimacyRepository.findByFacilityIdAndSource(
+                facilityUuid, FacilityLegitimacySource.PLATFORM_OPERATIONAL))
+                .thenReturn(Optional.of(unbound));
+        when(legitimacyRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.stampFromImport(facility, FacilityLegitimacySource.PLATFORM_OPERATIONAL,
+                FacilityLegitimacyStatus.PENDING_VERIFICATION, false,
+                "MASTER_PACK", "import", "importer", tenantId, "corr-2");
+
+        verify(legitimacyRepository).save(any());
     }
 }

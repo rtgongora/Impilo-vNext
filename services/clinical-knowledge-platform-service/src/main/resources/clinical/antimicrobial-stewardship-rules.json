@@ -1,0 +1,163 @@
+{
+  "packId": "antimicrobial-stewardship-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Antimicrobial stewardship — the prompts that shorten, narrow and stop antibiotics",
+    "primarySource": "WHO AWaRe antibiotic classification and antimicrobial stewardship in health-care facilities toolkit, 2019",
+    "why": "Most antibiotic harm — resistance, C. difficile, avoidable toxicity and cost — comes not from the decision to start but from the failure to review. Stewardship is the discipline of the second look: switch intravenous to oral once the patient is improving and can swallow, narrow empirical broad-spectrum cover the moment a susceptibility result names the organism, stop or justify a course that has run past its indication, and never let a WHO AWaRe Watch or Reserve agent run without a documented indication, a stop/review date and, for Reserve, stewardship approval. These rules encode those prompts so the review happens on time rather than not at all.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO AWaRe / AMS toolkit is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against the 2019 AWaRe classification and the antimicrobial stewardship in health-care facilities toolkit; ships ENGINEERING_SEED until the primary text is vendored. The AWaRe Access/Watch/Reserve groupings are WHO principle; the numeric day thresholds here (review at 7 days, Watch-group review at 5 days) are placeholders pending the national antimicrobial guideline and MOHCC ratification."
+    }
+  },
+  "rules": [
+    {
+      "code": "AMS_IV_TO_ORAL_SWITCH",
+      "name": "On IV antibiotic, improving and tolerating oral — switch to oral",
+      "layer": "ANTIMICROBIAL_STEWARDSHIP",
+      "ruleType": "OPTIMISATION",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["onIvAntibiotic", "clinicallyImproving", "toleratingOral"],
+      "appliesWhen": {"input": "onIvAntibiotic", "op": "eq", "value": "YES"},
+      "logic": {"all": [
+        {"input": "clinicallyImproving", "op": "eq", "value": "YES"},
+        {"input": "toleratingOral", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Consider switching from intravenous to oral antibiotic — the patient is improving clinically and tolerating oral intake.",
+      "explanation": "Prolonged intravenous therapy adds line-related infection, thrombophlebitis and cost without benefit once a patient is improving and can absorb an oral agent. WHO stewardship prompts an IV-to-oral (IVOS) review at the point clinical improvement and oral tolerance coincide, using an oral agent with adequate bioavailability for the indication.",
+      "requiredAction": "Review for IV-to-oral switch: confirm the oral agent has adequate bioavailability for the site of infection, switch where appropriate, and record the switch decision.",
+      "sourceRefs": ["WHO AWaRe / AMS toolkit 2019 — intravenous-to-oral switch (IVOS) review"],
+      "dakRef": {"dak": "WHO AMS", "dakVersion": "2019", "id": "WHO_AMS.STEWARDSHIP", "row": "iv-to-oral switch"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Review the intravenous-to-oral switch once the patient is clinically improving and tolerating oral intake.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO AWaRe / AMS toolkit 2019 — IVOS"]},
+      "testCases": [
+        {"name": "improving and tolerating oral on IV — prompt switch", "facts": {"onIvAntibiotic": "YES", "clinicallyImproving": "YES", "toleratingOral": "YES"}, "expectFires": true},
+        {"name": "not yet tolerating oral — do not prompt", "facts": {"onIvAntibiotic": "YES", "clinicallyImproving": "YES", "toleratingOral": "NO"}, "expectFires": false},
+        {"name": "not on an IV antibiotic — rule does not apply", "facts": {"onIvAntibiotic": "NO", "clinicallyImproving": "YES", "toleratingOral": "YES"}, "expectFires": false},
+        {"name": "clinical improvement never assessed — cannot conclude switch", "facts": {"onIvAntibiotic": "YES", "toleratingOral": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "AMS_REVIEW_PROLONGED_COURSE",
+      "name": "Antibiotic course past the review point — review necessity",
+      "layer": "ANTIMICROBIAL_STEWARDSHIP",
+      "ruleType": "REVIEW_PROMPT",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["antibioticDurationDays", "reviewOverdue"],
+      "appliesWhen": {"input": "antibioticDurationDays", "op": "gte", "value": 7},
+      "logic": {"input": "reviewOverdue", "op": "eq", "value": "YES"},
+      "message": "Antibiotic has continued to or beyond the review point without a documented review — review the need to continue, narrow or stop.",
+      "explanation": "Antibiotics continued beyond the recommended course drive resistance and toxicity without added benefit. WHO stewardship requires a scheduled review of every continuing course; a course that has reached the review threshold with no review on record should trigger an active decision to continue with justification, narrow, or stop.",
+      "requiredAction": "Review the course now: confirm the indication still holds, narrow or stop where possible, and if continuation is justified record the reason and a new stop/review date.",
+      "sourceRefs": ["WHO AWaRe / AMS toolkit 2019 — antibiotic review and duration"],
+      "dakRef": {"dak": "WHO AMS", "dakVersion": "2019", "id": "WHO_AMS.STEWARDSHIP", "row": "review prolonged course"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "Every continuing antibiotic course must be reviewed against its indication and recommended duration.", "nationalStatement": "The review point is provisionally set at 7 days pending the national antimicrobial guideline; the principle of a scheduled review is adopted as published.", "rationale": "WHO states the review principle but recommended durations are indication-specific. A single 7-day threshold is an engineering placeholder to trigger review, not a WHO-stated cut-off, and must be replaced by indication-specific durations on national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO AWaRe / AMS toolkit 2019 — review and duration"]},
+      "testCases": [
+        {"name": "course at review point with review overdue — prompt review", "facts": {"antibioticDurationDays": 9, "reviewOverdue": "YES"}, "expectFires": true},
+        {"name": "course at review point but review already done — do not prompt", "facts": {"antibioticDurationDays": 9, "reviewOverdue": "NO"}, "expectFires": false},
+        {"name": "short course not yet at review point — rule does not apply", "facts": {"antibioticDurationDays": 3, "reviewOverdue": "YES"}, "expectFires": false},
+        {"name": "review status never recorded — cannot conclude overdue", "facts": {"antibioticDurationDays": 9}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "AMS_DEESCALATE_CULTURE_DIRECTED",
+      "name": "Empirical broad-spectrum with a susceptibility result — de-escalate",
+      "layer": "ANTIMICROBIAL_STEWARDSHIP",
+      "ruleType": "OPTIMISATION",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["onEmpiricalBroadSpectrum", "cultureSusceptibilityAvailable"],
+      "appliesWhen": {"input": "onEmpiricalBroadSpectrum", "op": "eq", "value": "YES"},
+      "logic": {"input": "cultureSusceptibilityAvailable", "op": "eq", "value": "YES"},
+      "message": "A culture and susceptibility result is available — de-escalate empirical broad-spectrum therapy to culture-directed treatment.",
+      "explanation": "Empirical broad-spectrum cover is a bridge until the organism and its susceptibilities are known. Once a susceptibility result is available, continuing the broad agent needlessly selects for resistance. WHO stewardship prompts de-escalation to the narrowest effective agent the result supports.",
+      "requiredAction": "Review the susceptibility result and de-escalate to the narrowest effective agent it supports; if broad cover is still required, record why.",
+      "sourceRefs": ["WHO AWaRe / AMS toolkit 2019 — de-escalation to culture-directed therapy"],
+      "dakRef": {"dak": "WHO AMS", "dakVersion": "2019", "id": "WHO_AMS.STEWARDSHIP", "row": "de-escalate culture-directed"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "De-escalate empirical broad-spectrum therapy to culture-directed treatment once susceptibility results are available.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO AWaRe / AMS toolkit 2019 — de-escalation"]},
+      "testCases": [
+        {"name": "broad-spectrum with a result available — prompt de-escalation", "facts": {"onEmpiricalBroadSpectrum": "YES", "cultureSusceptibilityAvailable": "YES"}, "expectFires": true},
+        {"name": "broad-spectrum but no result yet — do not prompt", "facts": {"onEmpiricalBroadSpectrum": "YES", "cultureSusceptibilityAvailable": "NO"}, "expectFires": false},
+        {"name": "not on empirical broad-spectrum — rule does not apply", "facts": {"onEmpiricalBroadSpectrum": "NO", "cultureSusceptibilityAvailable": "YES"}, "expectFires": false},
+        {"name": "susceptibility availability never recorded — cannot conclude", "facts": {"onEmpiricalBroadSpectrum": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "AMS_RESERVE_REQUIRES_APPROVAL",
+      "name": "WHO AWaRe Reserve antibiotic started without stewardship approval",
+      "layer": "ANTIMICROBIAL_STEWARDSHIP",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["reserveAntibioticStarted", "stewardshipApproval"],
+      "appliesWhen": {"input": "reserveAntibioticStarted", "op": "eq", "value": "YES"},
+      "logic": {"input": "stewardshipApproval", "op": "eq", "value": "NO"},
+      "message": "A WHO AWaRe Reserve antibiotic has been started without stewardship approval — obtain approval or review the choice.",
+      "explanation": "Reserve-group agents in the WHO AWaRe classification are last-resort antibiotics whose use must be preserved for confirmed or suspected multidrug-resistant infection. WHO stewardship restricts them to prescriptions approved by an antimicrobial stewardship team so that they are not eroded by routine use.",
+      "requiredAction": "Obtain antimicrobial stewardship team approval for the Reserve agent, or switch to an appropriate Access- or Watch-group alternative; record the approval or the review decision.",
+      "sourceRefs": ["WHO AWaRe antibiotic classification 2019 — Reserve group restriction; WHO AMS toolkit 2019 — pre-authorisation"],
+      "dakRef": {"dak": "WHO AMS", "dakVersion": "2019", "id": "WHO_AMS.STEWARDSHIP", "row": "reserve requires approval"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "WHO AWaRe Reserve-group antibiotics should be used only when approved, and reserved for confirmed or suspected multidrug-resistant infection.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO AWaRe classification 2019 — Reserve group"]},
+      "testCases": [
+        {"name": "Reserve agent started, no approval — block for approval", "facts": {"reserveAntibioticStarted": "YES", "stewardshipApproval": "NO"}, "expectFires": true},
+        {"name": "Reserve agent started with approval — permitted", "facts": {"reserveAntibioticStarted": "YES", "stewardshipApproval": "YES"}, "expectFires": false},
+        {"name": "no Reserve agent started — rule does not apply", "facts": {"reserveAntibioticStarted": "NO", "stewardshipApproval": "NO"}, "expectFires": false},
+        {"name": "approval status never recorded — cannot conclude unapproved", "facts": {"reserveAntibioticStarted": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "AMS_DOCUMENT_INDICATION_REVIEW",
+      "name": "Antibiotic started without a documented indication or stop/review date",
+      "layer": "ANTIMICROBIAL_STEWARDSHIP",
+      "ruleType": "REVIEW_PROMPT",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["antibioticStarted", "indicationDocumented", "stopReviewDateDocumented"],
+      "appliesWhen": {"input": "antibioticStarted", "op": "eq", "value": "YES"},
+      "logic": {"any": [
+        {"input": "indicationDocumented", "op": "eq", "value": "NO"},
+        {"input": "stopReviewDateDocumented", "op": "eq", "value": "NO"}
+      ]},
+      "message": "Antibiotic started without a documented indication and/or stop/review date — record both.",
+      "explanation": "WHO stewardship requires that every antibiotic prescription carry a documented indication and a stop or review date, so the next clinician knows why it was started and when to reassess. A missing indication or stop/review date is the commonest reason a course is silently continued past its purpose.",
+      "requiredAction": "Record the indication and a stop or review date for the prescription; where either is genuinely not yet determinable, record why and set an early review.",
+      "sourceRefs": ["WHO AWaRe / AMS toolkit 2019 — document indication and stop/review date"],
+      "dakRef": {"dak": "WHO AMS", "dakVersion": "2019", "id": "WHO_AMS.STEWARDSHIP", "row": "document indication and review date"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Every antibiotic prescription should have a documented indication and a stop or review date.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO AWaRe / AMS toolkit 2019 — prescription documentation"]},
+      "testCases": [
+        {"name": "indication not documented — prompt documentation", "facts": {"antibioticStarted": "YES", "indicationDocumented": "NO", "stopReviewDateDocumented": "YES"}, "expectFires": true},
+        {"name": "stop/review date not documented — prompt documentation", "facts": {"antibioticStarted": "YES", "indicationDocumented": "YES", "stopReviewDateDocumented": "NO"}, "expectFires": true},
+        {"name": "both documented — nothing to prompt", "facts": {"antibioticStarted": "YES", "indicationDocumented": "YES", "stopReviewDateDocumented": "YES"}, "expectFires": false},
+        {"name": "no antibiotic started at this contact — rule does not apply", "facts": {"antibioticStarted": "NO", "indicationDocumented": "NO", "stopReviewDateDocumented": "NO"}, "expectFires": false},
+        {"name": "whether an antibiotic was started never recorded — cannot conclude", "facts": {"indicationDocumented": "NO", "stopReviewDateDocumented": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "AMS_WATCH_ANTIBIOTIC_REVIEW",
+      "name": "WHO AWaRe Watch antibiotic continued past the review point",
+      "layer": "ANTIMICROBIAL_STEWARDSHIP",
+      "ruleType": "REVIEW_PROMPT",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "requiredInputs": ["watchAntibioticStarted", "antibioticDurationDays"],
+      "appliesWhen": {"input": "watchAntibioticStarted", "op": "eq", "value": "YES"},
+      "logic": {"input": "antibioticDurationDays", "op": "gte", "value": 5},
+      "message": "A WHO AWaRe Watch antibiotic has continued past the review point — review the need to continue, narrow or stop.",
+      "explanation": "Watch-group agents in the WHO AWaRe classification have higher resistance potential and are prioritised as stewardship targets. Continuing a Watch-group antibiotic beyond a few days without review is a common driver of avoidable resistance; WHO stewardship prompts an early, active review of continuation.",
+      "requiredAction": "Review the Watch-group antibiotic: confirm the indication still holds, de-escalate to an Access-group agent where the susceptibility allows, and record the decision to continue, narrow or stop.",
+      "sourceRefs": ["WHO AWaRe antibiotic classification 2019 — Watch group as stewardship target; WHO AMS toolkit 2019 — review"],
+      "dakRef": {"dak": "WHO AMS", "dakVersion": "2019", "id": "WHO_AMS.STEWARDSHIP", "row": "watch antibiotic review"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "WHO AWaRe Watch-group antibiotics are priority stewardship targets and their continuation should be actively reviewed.", "nationalStatement": "The review point for Watch-group continuation is provisionally set at 5 days pending the national antimicrobial guideline; the principle of prioritised Watch-group review is adopted as published.", "rationale": "WHO designates the Watch group as a stewardship priority but does not set a universal day cut-off. The 5-day threshold is an engineering placeholder to trigger review earlier than the general course review, and must be replaced by indication-specific durations on national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO AWaRe classification 2019 — Watch group"]},
+      "testCases": [
+        {"name": "Watch agent continued past review point — prompt review", "facts": {"watchAntibioticStarted": "YES", "antibioticDurationDays": 6}, "expectFires": true},
+        {"name": "Watch agent still within early window — do not prompt", "facts": {"watchAntibioticStarted": "YES", "antibioticDurationDays": 3}, "expectFires": false},
+        {"name": "no Watch agent started — rule does not apply", "facts": {"watchAntibioticStarted": "NO", "antibioticDurationDays": 6}, "expectFires": false},
+        {"name": "duration never recorded — cannot conclude past review point", "facts": {"watchAntibioticStarted": "YES"}, "expectFires": false}
+      ]
+    }
+  ]
+}

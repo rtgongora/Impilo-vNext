@@ -2,8 +2,12 @@ package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
+
+import java.nio.charset.StandardCharsets;
 import zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient;
 
@@ -79,6 +83,27 @@ class RegulatorUserAdminControllerTest {
         assertEquals(403, resp.getStatusCode().value(),
                 "an assurance outage must refuse, never open the door onto a regulator's roster");
         verify(org, never()).verifyAppointment(anyString(), any());
+    }
+
+    @Test
+    void end_surfacesTheSuccessionGuardConflict_notAGeneric502() {
+        // The org-registry client wraps HTTP errors in an IllegalStateException; the last-administrator
+        // 409 must reach the operator as a 409 with its reason, not be collapsed into an opaque 502.
+        OrganizationRegistryServiceClient org = mock(OrganizationRegistryServiceClient.class);
+        HttpClientErrorException conflict = HttpClientErrorException.create(
+                HttpStatus.CONFLICT, "Conflict", HttpHeaders.EMPTY,
+                "{\"error\":{\"code\":\"LAST_ADMINISTRATOR\",\"message\":\"Appoint a replacement first\"}}"
+                        .getBytes(StandardCharsets.UTF_8),
+                StandardCharsets.UTF_8);
+        when(org.endAppointment(anyString(), any()))
+                .thenThrow(new IllegalStateException("organization-registry POST failed", conflict));
+        RegulatorUserAdminController controller = new RegulatorUserAdminController(org, assuranceAt("LOA3"));
+
+        ResponseEntity<Map<String, Object>> resp = controller.end("req", "corr", "appt-1", null);
+
+        assertEquals(409, resp.getStatusCode().value());
+        assertEquals("LAST_ADMINISTRATOR",
+                ((Map<?, ?>) resp.getBody().get("error")).get("code"));
     }
 
     @Test

@@ -91,4 +91,26 @@ public class FacilityClaimController {
         return ResponseEntity.ok(ApiResponse.ok(
                 claimService.approve(appointmentId, request), ctx.correlationId().toString()));
     }
+
+    /** Refuse a PENDING appointment → REJECTED. A reason is required. */
+    @PostMapping("/v1/internal/facility-admin-appointments/{appointmentId}/reject")
+    public ResponseEntity<ApiResponse<FacilityClaimDtos.AppointmentView>> reject(
+            @PathVariable Long appointmentId,
+            @RequestBody(required = false) FacilityClaimDtos.DecisionReasonRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(
+                claimService.reject(appointmentId, request == null ? null : request.reason()),
+                ctx.correlationId().toString()));
+    }
+
+    /** Withdraw an ACTIVE appointment → REVOKED. A reason is required. */
+    @PostMapping("/v1/internal/facility-admin-appointments/{appointmentId}/revoke")
+    public ResponseEntity<ApiResponse<FacilityClaimDtos.AppointmentView>> revoke(
+            @PathVariable Long appointmentId,
+            @RequestBody(required = false) FacilityClaimDtos.DecisionReasonRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(
+                claimService.revoke(appointmentId, request == null ? null : request.reason()),
+                ctx.correlationId().toString()));
+    }
 }

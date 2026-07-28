@@ -393,6 +393,16 @@ public class EdWorkflowController {
             return ResponseEntity.ok(Map.of("data", data));
         } catch (ResponseStatusException e) {
             throw e;
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            // A 4xx from pct is a client/validation error, not an upstream outage. The triage
+            // endpoint now returns 422 for an unassessed patient (NOT_TRIAGEABLE) instead of
+            // defaulting to acuity 3 — surface that status and the upstream message so a clinician
+            // is told to complete the assessment, rather than collapsing it to a 502 that reads as
+            // "the service is down". Only genuine 5xx / transport failures fall through to 502.
+            if (e.getStatusCode().is4xxClientError()) {
+                throw new ResponseStatusException(e.getStatusCode(), e.getResponseBodyAsString(), e);
+            }
+            throw upstreamFailure(op, e);
         } catch (Exception e) {
             throw upstreamFailure(op, e);
         }

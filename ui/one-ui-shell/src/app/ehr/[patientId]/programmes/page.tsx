@@ -9,7 +9,7 @@
  * governed guidance, and does not itself enforce disclosure.
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { AlertTriangle, Loader2, Lock, ShieldAlert, Stethoscope } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
@@ -18,7 +18,8 @@ import {
   useProgrammeEnrolments,
   useProgrammeRegimens,
   useProgrammeGuidance,
-  type ProgrammeEnrolment } from "@/hooks/queries/usePrograms";
+  type ProgrammeEnrolment,
+  type ProgrammeGuidance } from "@/hooks/queries/usePrograms";
 
 const PROGRAMME_LABEL: Record<string, string> = {
   HIV_CARE: "HIV care",
@@ -209,7 +210,8 @@ function GuidancePanel({
   onEvaluate: () => void;
   pending: boolean;
   failed: boolean;
-  result?: { alerts: Array<{ code: string; severity: string; message: string; required_action: string }>; incomplete: boolean; not_assessed: string[] } | undefined;
+  result?: ProgrammeGuidance;
+  input: ReactNode;
 }) {
   return (
     <div className="border-t border-border pt-3 space-y-2">

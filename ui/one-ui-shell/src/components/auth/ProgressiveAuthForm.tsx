@@ -63,6 +63,40 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
   const [rememberDevice, setRememberDevice] = useState(false);
 
   const login = useLogin();
+  const setAuth = useAuthStore((s) => s.setAuth);
+
+  /**
+   * Establish the client session from the login response.
+   *
+   * `useLogin` only posts and clears the query cache — it does not touch the auth
+   * store. Every other entry point (MFA, register, scan, passkey, provider-id) calls
+   * `setAuth` itself, and password login was the one path that never did: the token
+   * was discarded, `exp_has_session` was never written, and `middleware.ts` therefore
+   * bounced every guarded route straight back to /auth/login. A successful sign-in
+   * looked like nothing happening.
+   */
+  const establishSessionAndNavigate = (
+    attributes: { token: string; expiresAt: string; user: { id: string; email: string; displayName: string; roles: string[]; actorType: string } },
+  ) => {
+    const { token, expiresAt, user } = attributes;
+    setAuth(
+      {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        roles: user.roles,
+        actorType: user.actorType as "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM" | "CAREGIVER",
+        assuranceLevel: "VERIFIED",
+        providerActivated: false,
+        loginMethod: "email",
+      },
+      token,
+      null,
+      expiresAt,
+    );
+    if (rememberDevice) writeReturnHint(user.displayName);
+    router.push(getTargetDestination());
+  };
 
   const handleIdentifierSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -73,7 +107,12 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
   const getTargetDestination = () => {
     let target = returnTo;
     if (intent === "work" && (!target || target === "/home" || target === "/")) {
-      target = "/home/workplace";
+      // `/home` IS the work destination: app/home/page.tsx is the role-aware dashboard
+      // that carries the workplace hub and adapts on operationalMode. There is no
+      // `/home/workplace` route and there never has been — targeting it here sent every
+      // Work & Practice sign-in to a non-existent page after a successful login, which
+      // read to the user as "login does nothing".
+      target = "/home";
     } else if (intent === "regulatory" && (!target || target === "/home" || target === "/")) {
       target = "/organization-admin";
     }
@@ -90,9 +129,8 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
         password,
       },
       {
-        onSuccess: () => {
-          if (rememberDevice) writeReturnHint(useAuthStore.getState().user?.displayName);
-          router.push(getTargetDestination());
+        onSuccess: (res) => {
+          establishSessionAndNavigate(res.data.attributes);
         },
       }
     );
@@ -104,9 +142,8 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
     login.mutate(
       { email, password: pass },
       {
-        onSuccess: () => {
-          if (rememberDevice) writeReturnHint(useAuthStore.getState().user?.displayName);
-          router.push(getTargetDestination());
+        onSuccess: (res) => {
+          establishSessionAndNavigate(res.data.attributes);
         },
       }
     );

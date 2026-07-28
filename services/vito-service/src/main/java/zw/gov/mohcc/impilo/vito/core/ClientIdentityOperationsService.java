@@ -584,6 +584,65 @@ public class ClientIdentityOperationsService {
         return toRelationshipView(relationship);
     }
 
+    /**
+     * The relationship timeline for a client — the read the registry never exposed. Matches edges
+     * from either side, so a mother sees her children and a child sees its mother from one query.
+     */
+    @Transactional(readOnly = true)
+    public List<ClientRegistryDtos.RelationshipView> listRelationships(UUID healthId) {
+        TrustContext ctx = TrustContextHolder.require();
+        requireClient(ctx.tenantId(), healthId);
+        return relationshipRepository.findTimelineByTenantIdAndHealthId(ctx.tenantId(), healthId).stream()
+                .map(this::toRelationshipView)
+                .toList();
+    }
+
+    /**
+     * Record the biological mother↔child birth dyad, established server-side from pct's
+     * newborn.episode.opened event. Deliberately context-free: it runs inside a Kafka consumer with
+     * no request TrustContext, so the tenant is passed explicitly and there is no self-service mode
+     * check (a birth event is not a self-service action).
+     *
+     * <p>Best-effort and idempotent, the NdilaLocationConsumer discipline: it establishes nothing it
+     * cannot ground. If either party is not yet a known client (the birth event can outrun
+     * registration), or an active edge already exists (at-least-once redelivery), it records nothing
+     * and returns false rather than throwing — a thrown exception would wedge the listener. The
+     * unique index (V055) is the hard backstop behind this soft check.
+     *
+     * @return true only if a new edge was written.
+     */
+    @Transactional
+    public boolean recordBirthDyad(UUID tenantId, UUID motherHealthId, UUID childHealthId) {
+        if (tenantId == null || motherHealthId == null || childHealthId == null) {
+            return false;
+        }
+        if (motherHealthId.equals(childHealthId)) {
+            return false; // a person cannot be their own mother
+        }
+        boolean bothKnown =
+                clientRepository.findByTenantIdAndHealthId(tenantId, motherHealthId).isPresent()
+                && clientRepository.findByTenantIdAndHealthId(tenantId, childHealthId).isPresent();
+        if (!bothKnown) {
+            return false; // recorded, never inferred: no edge to a party the registry does not hold
+        }
+        boolean alreadyLinked = relationshipRepository
+                .findFirstByTenantIdAndClientHealthIdAndRelatedClientHealthIdAndRelationshipTypeAndStatus(
+                        tenantId, motherHealthId, childHealthId,
+                        ClientRelationshipType.BIRTH_MOTHER_OF, "ACTIVE")
+                .isPresent();
+        if (alreadyLinked) {
+            return false;
+        }
+        ClientRelationshipEntity dyad = new ClientRelationshipEntity();
+        dyad.setTenantId(tenantId);
+        dyad.setClientHealthId(motherHealthId);
+        dyad.setRelatedClientHealthId(childHealthId);
+        dyad.setRelationshipType(ClientRelationshipType.BIRTH_MOTHER_OF);
+        // status defaults to ACTIVE on the entity; id + createdAt are set by @PrePersist.
+        relationshipRepository.save(dyad);
+        return true;
+    }
+
     @Transactional
     public ClientRegistryDtos.AuthorizationLinkView addAuthorizationLink(UUID healthId,
                                                                          ClientRegistryDtos.AddAuthorizationLinkRequest request) {

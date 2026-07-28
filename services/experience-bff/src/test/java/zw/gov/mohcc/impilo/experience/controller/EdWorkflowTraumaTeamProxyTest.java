@@ -11,11 +11,19 @@ import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -116,5 +124,38 @@ class EdWorkflowTraumaTeamProxyTest {
         assertEquals(200, resp.getStatusCode().value());
         assertEquals(1, ((JsonNode) resp.getBody().get("data")).size());
         verify(pct).edPreArrival(fac);
+    }
+
+    // W4d: a pct 422 (triage NOT_TRIAGEABLE / incomplete) must surface AS a 422, not collapse to
+    // a 502 that reads as an outage — an unassessed patient is a "complete the assessment" prompt.
+    @Test
+    void triage_422FromPct_surfacesAs422NotBadGateway() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        UUID visitId = UUID.randomUUID();
+        HttpClientErrorException notTriageable = HttpClientErrorException.create(
+                HttpStatus.UNPROCESSABLE_ENTITY, "Unprocessable Entity", HttpHeaders.EMPTY,
+                "not_triageable: assess and repeat".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        when(pct.edVisitPost(eq(visitId.toString()), eq("/triage"), any())).thenThrow(notTriageable);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> controllerWith(pct).triage(visitId, Map.of("triageSystem", "WHO_IITT")));
+
+        assertEquals(422, ex.getStatusCode().value());
+        assertNotNull(ex.getReason());
+        assertTrue(ex.getReason().contains("not_triageable"), "reason should carry the upstream message");
+    }
+
+    // A genuine 5xx / transport failure from pct still surfaces as 502 — only 4xx is passed through.
+    @Test
+    void triage_transportFailureFromPct_stillBecomesBadGateway() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        UUID visitId = UUID.randomUUID();
+        when(pct.edVisitPost(eq(visitId.toString()), eq("/triage"), any()))
+                .thenThrow(new RuntimeException("connection refused"));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> controllerWith(pct).triage(visitId, Map.of()));
+
+        assertEquals(502, ex.getStatusCode().value());
     }
 }

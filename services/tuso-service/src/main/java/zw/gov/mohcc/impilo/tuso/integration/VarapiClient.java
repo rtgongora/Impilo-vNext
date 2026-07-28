@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.tuso.config.TusoProperties;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Set;
 
 /**
@@ -44,6 +45,47 @@ public class VarapiClient {
      *
      * @return list of pair maps; empty if VARAPI is unavailable
      */
+    /**
+     * Resolve a professional identifier to a provider public id (FCV-W4).
+     *
+     * <p>VARAPI answers with a uniform hit/miss envelope behind a constant timing floor, and never
+     * a candidate list — probing it tells you nothing about who is registered. TUSO consumes that
+     * contract as-is: a regulated facility claim needs to know THIS identifier belongs to a real
+     * provider, nothing more.</p>
+     *
+     * @return the provider public id, or null when the identifier resolves to nobody (or VARAPI is
+     *         unavailable — which denies the regulated claim rather than waving it through)
+     */
+    @SuppressWarnings("unchecked")
+    public String resolveProfessionalIdentifier(UUID tenantId, String kind, String value, String councilCode) {
+        if (tenantId == null || value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            Map<String, Object> body = new java.util.LinkedHashMap<>();
+            body.put("tenantId", tenantId.toString());
+            body.put("kind", kind);
+            body.put("value", value);
+            if (councilCode != null && !councilCode.isBlank()) {
+                body.put("councilCode", councilCode);
+            }
+            Map<String, Object> response = restClient.post()
+                    .uri("/v1/registry/resolve")
+                    .body(body)
+                    .retrieve()
+                    .body(Map.class);
+            Object data = response == null ? null : response.get("data");
+            if (data instanceof Map<?, ?> m && Boolean.TRUE.equals(m.get("resolved"))) {
+                Object id = m.get("providerPublicId");
+                return id == null ? null : String.valueOf(id);
+            }
+            return null;
+        } catch (Exception e) {
+            log.warn("VARAPI resolve unavailable while checking a regulated facility claim: {}", e.getMessage());
+            return null;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> fetchHpaNominationPairs() {
         try {

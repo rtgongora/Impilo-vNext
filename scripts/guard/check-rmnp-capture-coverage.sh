@@ -70,7 +70,7 @@ DERIVED = {
     # captured on a form, because "the policy knows it" is not true of them.
     "malariaEndemicArea", "lowCalciumIntakePopulation",
 }
-DERIVED_PREFIXES = ("minutesSinceLastObservationOf.", "smbp.")
+DERIVED_PREFIXES = ("minutesSinceLastObservationOf.", "smbp.", "robson.")
 
 
 def load(path):
@@ -161,6 +161,7 @@ NO_CAPTURE_PACKS = {
                               "record of completed contacts, neither of which is a form field",
     "rmnp-eclampsia-bundle.json": "an emergency treatment bundle — recorded step completions + injected temporal facts, no form findings",
     "rmnp-maternal-sepsis-bundle.json": "an emergency treatment bundle — recorded step completions + injected temporal facts, no form findings",
+    "rmnp-robson-classification.json": "the Robson caesarean classification — computed from the delivery record and pregnancy episode (robson.* injected), a surveillance calculation with no clinician-entered form",
     "rmnp-pph-bundle.json": "an emergency treatment bundle — its inputs are recorded step "
                             "completions (an act log, not a form) and injected temporal facts, so "
                             "there is no clinician-entered finding for a form to capture",

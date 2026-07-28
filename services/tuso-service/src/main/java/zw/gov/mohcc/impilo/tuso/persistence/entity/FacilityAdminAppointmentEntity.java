@@ -71,6 +71,17 @@ public class FacilityAdminAppointmentEntity {
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
 
+    /** What the claimant says they are to the facility (FCV-W4, closed vocabulary). */
+    @jakarta.persistence.Column(name = "relationship_type", length = 64)
+    private String relationshipType;
+
+    /** Resolved provider public id — present only for a regulated relationship. */
+    @jakarta.persistence.Column(name = "provider_public_id", length = 64)
+    private String providerPublicId;
+
+    @jakarta.persistence.Column(name = "justification", columnDefinition = "text")
+    private String justification;
+
     /** NEW | RECOVERY (FJ8). */
     @Column(name = "claim_type", nullable = false, length = 16)
     private String claimType = CLAIM_TYPE_NEW;
@@ -118,6 +129,15 @@ public class FacilityAdminAppointmentEntity {
     public void setValidTo(LocalDate validTo) { this.validTo = validTo; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getRelationshipType() { return relationshipType; }
+    public void setRelationshipType(String relationshipType) { this.relationshipType = relationshipType; }
+
+    public String getProviderPublicId() { return providerPublicId; }
+    public void setProviderPublicId(String providerPublicId) { this.providerPublicId = providerPublicId; }
+
+    public String getJustification() { return justification; }
+    public void setJustification(String justification) { this.justification = justification; }
     public String getClaimType() { return claimType; }
     public void setClaimType(String claimType) { this.claimType = claimType; }
     public Instant getCreatedAt() { return createdAt; }

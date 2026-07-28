@@ -12,9 +12,11 @@ import zw.gov.mohcc.impilo.tuso.api.dto.FacilityClaimDtos;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityAdminAppointmentEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRelationshipTypeEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilitySourceLegitimacyEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityAdminAppointmentRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRelationshipTypeRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilitySourceLegitimacyRepository;
 
@@ -47,6 +49,8 @@ public class FacilityClaimService {
 
     public static final String EVENT_SUBMITTED = "tuso.facility.admin_appointment.submitted";
     public static final String EVENT_APPROVED = "tuso.facility.admin_appointment.approved";
+    public static final String EVENT_REJECTED = "tuso.facility.admin_appointment.rejected";
+    public static final String EVENT_REVOKED = "tuso.facility.admin_appointment.revoked";
 
     private static final Logger log = LoggerFactory.getLogger(FacilityClaimService.class);
 
@@ -54,15 +58,21 @@ public class FacilityClaimService {
     private final FacilitySourceLegitimacyRepository legitimacyRepository;
     private final FacilityAdminAppointmentRepository appointmentRepository;
     private final EventOutboxRepository outboxRepository;
+    private final FacilityRelationshipTypeRepository relationshipTypeRepository;
+    private final zw.gov.mohcc.impilo.tuso.integration.VarapiClient varapiClient;
 
     public FacilityClaimService(FacilityRepository facilityRepository,
                                 FacilitySourceLegitimacyRepository legitimacyRepository,
                                 FacilityAdminAppointmentRepository appointmentRepository,
-                                EventOutboxRepository outboxRepository) {
+                                EventOutboxRepository outboxRepository,
+                                FacilityRelationshipTypeRepository relationshipTypeRepository,
+                                zw.gov.mohcc.impilo.tuso.integration.VarapiClient varapiClient) {
         this.facilityRepository = facilityRepository;
         this.legitimacyRepository = legitimacyRepository;
         this.appointmentRepository = appointmentRepository;
         this.outboxRepository = outboxRepository;
+        this.relationshipTypeRepository = relationshipTypeRepository;
+        this.varapiClient = varapiClient;
     }
 
     // ── Eligibility ─────────────────────────────────────────────────────────────
@@ -151,9 +161,7 @@ public class FacilityClaimService {
         // submission gate — every well-formed claim lands PENDING and the
         // STEWARD sees the verdict in the review queue. A probing claimant
         // learns nothing about the facility's status from submitting.
-        List<String> legitimacyContext = new ArrayList<>();
-        boolean allowedOnPlatform = platformAccessAllowed(facility.getFacilityUuid(), legitimacyContext);
-        if (!allowedOnPlatform) {
+        if (!platformAccessAllowed(facility.getFacilityUuid())) {
             log.info("Facility {} claim submitted while platform access is not allowed — routed to steward review",
                     facility.getFacilityUuid());
         }
@@ -166,8 +174,23 @@ public class FacilityClaimService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "You already hold this role at this facility.");
         }
+        // Re-submitting the same claim would otherwise stack duplicates in the steward's queue, and
+        // approving the second after the first would trip the ACTIVE unique index as a raw
+        // constraint violation instead of a decision (V045 enforces this at the DB too).
+        if (appointmentRepository.existsByFacilityUuidAndPersonHealthIdAndRoleAndApprovalState(
+                facility.getFacilityUuid(), request.personHealthId(), role,
+                FacilityAdminAppointmentEntity.STATE_PENDING)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "You already have a claim for this role awaiting review at this facility.");
+        }
+
+        // What the claimant says they ARE to this facility, and what that demands of them (FCV-W4).
+        RelationshipRequirement relationship = resolveRelationship(request, facility);
 
         FacilityAdminAppointmentEntity appointment = new FacilityAdminAppointmentEntity();
+        appointment.setRelationshipType(relationship.code());
+        appointment.setProviderPublicId(relationship.providerPublicId());
+        appointment.setJustification(relationship.justification());
         appointment.setFacilityUuid(facility.getFacilityUuid());
         appointment.setPersonHealthId(request.personHealthId());
         appointment.setRole(role);
@@ -226,6 +249,83 @@ public class FacilityClaimService {
         return toView(appointment);
     }
 
+    /**
+     * Refuse a pending claim. {@code REJECTED} was a legal value on the appointment from V017 that
+     * no code path could ever write — a steward could approve a claim or leave it pending forever,
+     * which is not a review queue. A reason is mandatory: a claimant who is turned down is entitled
+     * to know why, and the steward's judgement is the record.
+     */
+    @Transactional
+    public FacilityClaimDtos.AppointmentView reject(Long appointmentId, String reason) {
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityAdminAppointmentEntity appointment = requireAppointment(appointmentId);
+        FacilityEntity facility = requireFacility(appointment.getFacilityUuid(), ctx.tenantId());
+
+        if (FacilityAdminAppointmentEntity.STATE_REJECTED.equals(appointment.getApprovalState())) {
+            return toView(appointment); // idempotent
+        }
+        if (!FacilityAdminAppointmentEntity.STATE_PENDING.equals(appointment.getApprovalState())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only a PENDING appointment can be rejected; current state is "
+                            + appointment.getApprovalState());
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A reason is required when rejecting a facility claim.");
+        }
+
+        appointment.setApprovalState(FacilityAdminAppointmentEntity.STATE_REJECTED);
+        appointment.setNotes(reason.trim());
+        appointment.setUpdatedBy(ctx.actorId());
+        appointment = appointmentRepository.save(appointment);
+
+        publish(EVENT_REJECTED, facility, appointment, ctx);
+        log.info("Facility {} admin appointment {} REJECTED by {}",
+                facility.getFacilityUuid(), appointment.getId(), ctx.actorId());
+        return toView(appointment);
+    }
+
+    /**
+     * Withdraw an appointment that is already active. {@code REVOKED} was likewise unreachable, so
+     * an administrator's access could be ended only by waiting for {@code valid_to} to lapse — there
+     * was no way to act on a person who should stop administering a facility today.
+     */
+    @Transactional
+    public FacilityClaimDtos.AppointmentView revoke(Long appointmentId, String reason) {
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityAdminAppointmentEntity appointment = requireAppointment(appointmentId);
+        FacilityEntity facility = requireFacility(appointment.getFacilityUuid(), ctx.tenantId());
+
+        if (FacilityAdminAppointmentEntity.STATE_REVOKED.equals(appointment.getApprovalState())) {
+            return toView(appointment); // idempotent
+        }
+        if (!FacilityAdminAppointmentEntity.STATE_ACTIVE.equals(appointment.getApprovalState())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only an ACTIVE appointment can be revoked; current state is "
+                            + appointment.getApprovalState());
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A reason is required when revoking a facility appointment.");
+        }
+
+        appointment.setApprovalState(FacilityAdminAppointmentEntity.STATE_REVOKED);
+        appointment.setNotes(reason.trim());
+        appointment.setUpdatedBy(ctx.actorId());
+        appointment = appointmentRepository.save(appointment);
+
+        publish(EVENT_REVOKED, facility, appointment, ctx);
+        log.info("Facility {} admin appointment {} REVOKED by {}",
+                facility.getFacilityUuid(), appointment.getId(), ctx.actorId());
+        return toView(appointment);
+    }
+
+    private FacilityAdminAppointmentEntity requireAppointment(Long appointmentId) {
+        return appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Appointment not found: " + appointmentId));
+    }
+
     /** All appointments for a facility (canonical UUID), tenant-guarded. */
     @Transactional(readOnly = true)
     public List<FacilityClaimDtos.AppointmentView> list(UUID facilityUuid) {
@@ -267,23 +367,78 @@ public class FacilityClaimService {
     // ── Helpers ─────────────────────────────────────────────────────────────────
 
     /**
-     * platformAccessAllowed = no source verdict denies AND at least one allows. Mirrors
-     * {@code FacilitySourceLegitimacyService.getComposite} so the two never diverge.
+     * The platform-access verdict, from the one implementation that owns the rule. This used to be
+     * a private copy carrying a comment hoping it would not diverge from the original; it is now a
+     * delegation, so it cannot.
      */
-    private boolean platformAccessAllowed(UUID facilityUuid, List<String> reasons) {
-        List<FacilitySourceLegitimacyEntity> rows =
-                legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid);
-        if (rows.isEmpty()) {
-            reasons.add("No source legitimacy recorded for this facility; platform access is not granted by default");
-            return false;
+    /** A validated relationship claim: the code, and whatever it required the claimant to prove. */
+    private record RelationshipRequirement(String code, String providerPublicId, String justification) {}
+
+    /**
+     * Validate what the claimant says they are, and demand proof only where the relationship is
+     * about regulated professional standing (FCV-W4).
+     *
+     * <p>The distinction cuts both ways. Claiming to be the responsible pharmacist is a claim about
+     * a licence, so a professional identifier must resolve in VARAPI before the claim can even be
+     * filed. But demanding one from a records officer, an ICT focal person or a district data
+     * officer would lock out exactly the administrative staff who keep a facility's record — people
+     * who are not clinicians and never will be. Requiring a Provider ID everywhere would look like
+     * rigour and function as exclusion.</p>
+     *
+     * <p>Relationship is optional for now: the existing claim surface does not send one yet, and
+     * failing those callers would break a working rail to enforce a field nobody fills. A claim
+     * without a relationship is simply an unregulated claim, exactly as it is today.</p>
+     */
+    private RelationshipRequirement resolveRelationship(
+            FacilityClaimDtos.SubmitClaimRequest request, FacilityEntity facility) {
+        String code = request.relationshipType() == null || request.relationshipType().isBlank()
+                ? null : request.relationshipType().trim().toUpperCase();
+        if (code == null) {
+            return new RelationshipRequirement(null, null, null);
         }
-        boolean anyDenies = rows.stream().anyMatch(r -> !r.isAllowedOnPlatform());
-        boolean anyAllows = rows.stream().anyMatch(FacilitySourceLegitimacyEntity::isAllowedOnPlatform);
-        for (FacilitySourceLegitimacyEntity r : rows) {
-            reasons.add(r.getSource() + ": " + r.getStatus()
-                    + (r.isAllowedOnPlatform() ? " (allows platform operation)" : " (denies platform operation)"));
+
+        FacilityRelationshipTypeEntity type = relationshipTypeRepository.findById(code)
+                .filter(FacilityRelationshipTypeEntity::isActive)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Unknown relationship to this facility: " + code));
+
+        String justification = request.justification() == null ? null : request.justification().trim();
+        if (type.isRequiresJustification() && (justification == null || justification.isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Describe your relationship to this facility so a steward can assess it.");
         }
-        return !anyDenies && anyAllows;
+
+        if (!type.isRequiresProviderId()) {
+            return new RelationshipRequirement(code, null, justification);
+        }
+
+        // Regulated: the identifier must resolve to a real provider. VARAPI answers with a uniform
+        // hit/miss behind a timing floor and never a candidate list, so this proves the claimant's
+        // identifier exists without telling a prober anything about who is registered.
+        String kind = request.professionalIdKind() == null || request.professionalIdKind().isBlank()
+                ? "PROVIDER_ID" : request.professionalIdKind().trim().toUpperCase();
+        String value = request.professionalIdValue();
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A professional registration or Provider ID is required to claim this role, "
+                            + "because it is a regulated clinical responsibility.");
+        }
+        String providerPublicId = varapiClient.resolveProfessionalIdentifier(
+                facility.getTenantId(), kind, value, request.councilCode());
+        if (providerPublicId == null) {
+            // Same message whether the identifier is wrong or VARAPI is unreachable — a claimant
+            // must not be able to use this endpoint to test which registration numbers are real.
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "That professional registration could not be confirmed. Check the details, or "
+                            + "claim an administrative role if you do not hold this clinical responsibility.");
+        }
+        return new RelationshipRequirement(code, providerPublicId, justification);
+    }
+
+    private boolean platformAccessAllowed(UUID facilityUuid) {
+        return FacilitySourceLegitimacyService.verdictOf(
+                legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))
+                == FacilitySourceLegitimacyService.PlatformAccessVerdict.ALLOW;
     }
 
     private FacilityEntity requireFacility(UUID facilityUuid, UUID tenantId) {

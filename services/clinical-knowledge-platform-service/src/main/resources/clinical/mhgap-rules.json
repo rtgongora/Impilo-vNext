@@ -1,0 +1,145 @@
+{
+  "packId": "mhgap-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "WHO mhGAP priority mental-health conditions — assess, and escalate the one that cannot wait",
+    "primarySource": "WHO mhGAP Intervention Guide, version 2.0, 2016",
+    "why": "The mhGAP Intervention Guide lets a non-specialist recognise and manage the priority mental, neurological and substance-use conditions where most of the burden and most of the treatment gap sit. The rule that cannot be softened is the one at the top: imminent risk of self-harm or suicide is a same-day emergency, and the correct response is to keep the person safe and not leave them alone — every other priority condition is assessed and managed, but a person with a suicidal plan or a high self-harm risk must never be allowed to leave the encounter as an ordinary, overridable notification. The remaining rules — moderate-to-severe depression, psychosis, harmful substance use, and epilepsy/seizure — open a management or referral pathway rather than an emergency one. Mental-health content of this kind is sensitive by nature (SPECIALLY_PROTECTED); the note below records that so downstream surfaces treat it accordingly, but this pack carries no access-control logic — confidentiality is enforced by the trust plane, not by clinical content.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO mhGAP Intervention Guide v2.0 (2016) is NOT vendored under docs/reference/who-dak/MANIFEST.json. This pack was authored against the published master chart and the DEP/PSY/SUB/EPI/SUI modules rather than extracted from a pinned artefact, so it ships ENGINEERING_SEED and blocks ratification until the primary text is vendored and the thresholds are ratified by MOHCC. The caller facts here (selfHarmRisk, suicidalPlan, depressionModerateSevere, psychosisFeatures, substanceUseHarmful, seizureConvulsion, mhAssessmentConducted) are structured-assessment outputs, not raw clinical text; their coded vocabularies are placeholders pending the national mental-health assessment forms. This content is SPECIALLY_PROTECTED by nature — the sensitivity is noted for downstream handling only and no access-control decision is made here."
+    }
+  },
+  "rules": [
+    {
+      "code": "MHGAP_SELF_HARM_IMMINENT_RISK",
+      "name": "Imminent self-harm / suicide risk — same-day safety response, do not leave alone",
+      "layer": "MENTAL_HEALTH",
+      "ruleType": "URGENT_SAFETY",
+      "severity": "HIGH",
+      "interruptive": true,
+      "overrideAllowed": false,
+      "referralRequired": true,
+      "requiredInputs": ["selfHarmRisk", "suicidalPlan"],
+      "logic": {"any": [
+        {"input": "selfHarmRisk", "op": "eq", "value": "HIGH"},
+        {"input": "suicidalPlan", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Imminent risk of self-harm or suicide — respond today and do not leave this person alone.",
+      "explanation": "In mhGAP, a high assessed risk of self-harm or a current suicidal plan is a medical emergency, not a routine finding. The immediate priorities are to keep the person physically safe, remove access to means, mobilise a support person, and arrange urgent specialist review — before any other priority condition is worked up. Because acting on this cannot be deferred, this alert is interruptive and cannot be overridden away as an ordinary notification.",
+      "requiredAction": "Do not leave the person alone. Remove access to means of self-harm, offer and activate psychosocial support, and arrange urgent same-day mental-health specialist assessment. Document the safety plan and the person contacted to stay with them.",
+      "sourceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — Self-harm / suicide (SUI) module; assessment and management of imminent risk"],
+      "dakRef": {"dak": "WHO mhGAP", "dakVersion": "2.0", "id": "WHO_MHGAP.PRIORITY_CONDITIONS", "row": "SUI — imminent self-harm / suicide risk"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "A person at imminent risk of self-harm or suicide must not be left alone; remove access to means and arrange urgent specialist care.", "nationalStatement": "Adopted as an interruptive, non-overridable same-day safety response pending national mental-health emergency pathway definition.", "rationale": "Non-verbatim: the WHO management step is expressed here as a non-overridable interruptive alert so the do-not-leave-alone action cannot be dismissed as a routine notification. The clinical instruction is unchanged; only its enforcement posture is made explicit.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — SUI module"]},
+      "testCases": [
+        {"name": "high assessed self-harm risk fires the emergency response", "facts": {"selfHarmRisk": "HIGH", "suicidalPlan": "NO"}, "expectFires": true},
+        {"name": "a current suicidal plan fires even when overall risk was scored lower", "facts": {"selfHarmRisk": "LOW", "suicidalPlan": "YES"}, "expectFires": true},
+        {"name": "neither risk fact assessed — a red flag must never fire on absent data", "facts": {}, "expectFires": false},
+        {"name": "risk assessed and low with no plan does not fire", "facts": {"selfHarmRisk": "LOW", "suicidalPlan": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "MHGAP_DEPRESSION_MODERATE_SEVERE",
+      "name": "Moderate-to-severe depression — start structured treatment",
+      "layer": "MENTAL_HEALTH",
+      "ruleType": "MANAGEMENT",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["mhAssessmentConducted", "depressionModerateSevere"],
+      "appliesWhen": {"input": "mhAssessmentConducted", "op": "eq", "value": "YES"},
+      "logic": {"input": "depressionModerateSevere", "op": "eq", "value": "YES"},
+      "message": "Moderate-to-severe depression — begin a structured treatment plan.",
+      "explanation": "Where a mental-health assessment identifies moderate-to-severe depression, mhGAP directs the non-specialist to start management: psychoeducation, a brief psychological intervention where available, consideration of an antidepressant, and follow-up. Mild presentations are watched and supported rather than medicated; this rule fires only for the moderate-to-severe band.",
+      "requiredAction": "Provide psychoeducation and a brief structured psychological intervention where available, consider antidepressant therapy per the national formulary, address concurrent self-harm risk, and schedule follow-up to review response.",
+      "sourceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — Depression (DEP) module; assessment and management protocol"],
+      "dakRef": {"dak": "WHO mhGAP", "dakVersion": "2.0", "id": "WHO_MHGAP.PRIORITY_CONDITIONS", "row": "DEP — moderate to severe depression"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Offer treatment for moderate-to-severe depression; mild depression should not be treated with antidepressants routinely.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — DEP module"]},
+      "testCases": [
+        {"name": "assessment done and moderate-to-severe depression identified fires", "facts": {"mhAssessmentConducted": "YES", "depressionModerateSevere": "YES"}, "expectFires": true},
+        {"name": "assessment done but depression band not recorded — must not fire on absent data", "facts": {"mhAssessmentConducted": "YES"}, "expectFires": false},
+        {"name": "assessment done and not moderate-to-severe does not fire", "facts": {"mhAssessmentConducted": "YES", "depressionModerateSevere": "NO"}, "expectFires": false},
+        {"name": "no mental-health assessment conducted — rule does not apply", "facts": {"mhAssessmentConducted": "NO", "depressionModerateSevere": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "MHGAP_PSYCHOSIS_FEATURES",
+      "name": "Features of psychosis — assess and start treatment or refer",
+      "layer": "MENTAL_HEALTH",
+      "ruleType": "MANAGEMENT",
+      "severity": "HIGH",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["mhAssessmentConducted", "psychosisFeatures"],
+      "appliesWhen": {"input": "mhAssessmentConducted", "op": "eq", "value": "YES"},
+      "logic": {"input": "psychosisFeatures", "op": "eq", "value": "YES"},
+      "message": "Features of psychosis present — assess, start antipsychotic treatment or refer.",
+      "explanation": "When an assessment finds features of psychosis — delusions, hallucinations, disorganised thinking or grossly abnormal behaviour — mhGAP directs the non-specialist to exclude a medical or substance-induced cause, start an antipsychotic where competent to do so, and arrange specialist review. Early treatment improves outcome, so this opens a management-plus-referral pathway.",
+      "requiredAction": "Exclude an acute medical or substance-induced cause, start antipsychotic treatment per the national formulary where competent, engage the family/carer, and refer for specialist mental-health assessment.",
+      "sourceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — Psychoses (PSY) module; assessment and management protocol"],
+      "dakRef": {"dak": "WHO mhGAP", "dakVersion": "2.0", "id": "WHO_MHGAP.PRIORITY_CONDITIONS", "row": "PSY — features of psychosis"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Assess for psychosis; start antipsychotic medication and refer for specialist review where features are present.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — PSY module"]},
+      "testCases": [
+        {"name": "assessment done and psychosis features present fires", "facts": {"mhAssessmentConducted": "YES", "psychosisFeatures": "YES"}, "expectFires": true},
+        {"name": "assessment done but psychosis features not recorded — must not fire on absent data", "facts": {"mhAssessmentConducted": "YES"}, "expectFires": false},
+        {"name": "assessment done and no psychosis features does not fire", "facts": {"mhAssessmentConducted": "YES", "psychosisFeatures": "NO"}, "expectFires": false},
+        {"name": "no mental-health assessment conducted — rule does not apply", "facts": {"mhAssessmentConducted": "NO", "psychosisFeatures": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "MHGAP_SUBSTANCE_USE_HARMFUL",
+      "name": "Harmful alcohol or drug use screen positive — brief intervention",
+      "layer": "MENTAL_HEALTH",
+      "ruleType": "BRIEF_INTERVENTION",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": false,
+      "requiredInputs": ["mhAssessmentConducted", "substanceUseHarmful"],
+      "appliesWhen": {"input": "mhAssessmentConducted", "op": "eq", "value": "YES"},
+      "logic": {"input": "substanceUseHarmful", "op": "eq", "value": "YES"},
+      "message": "Harmful alcohol or drug use identified — deliver a brief intervention.",
+      "explanation": "A positive screen for harmful use of alcohol or other substances is the point at which mhGAP recommends a structured brief intervention — feedback, motivational discussion and a plan to reduce use — with referral reserved for dependence or complicated withdrawal. Catching harmful use before dependence is where a short conversation changes the trajectory.",
+      "requiredAction": "Deliver a structured brief intervention (feedback, advice, goal-setting), assess for dependence and withdrawal risk, and refer to specialist substance-use services if dependence or complicated withdrawal is present.",
+      "sourceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — Disorders due to substance use (SUB) module; brief intervention"],
+      "dakRef": {"dak": "WHO mhGAP", "dakVersion": "2.0", "id": "WHO_MHGAP.PRIORITY_CONDITIONS", "row": "SUB — harmful substance use"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Offer a brief intervention to people with harmful use of alcohol or drugs; refer those with dependence.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — SUB module"]},
+      "testCases": [
+        {"name": "assessment done and harmful use screen positive fires", "facts": {"mhAssessmentConducted": "YES", "substanceUseHarmful": "YES"}, "expectFires": true},
+        {"name": "assessment done but substance-use screen not recorded — must not fire on absent data", "facts": {"mhAssessmentConducted": "YES"}, "expectFires": false},
+        {"name": "assessment done and screen negative does not fire", "facts": {"mhAssessmentConducted": "YES", "substanceUseHarmful": "NO"}, "expectFires": false},
+        {"name": "no mental-health assessment conducted — rule does not apply", "facts": {"mhAssessmentConducted": "NO", "substanceUseHarmful": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "MHGAP_EPILEPSY_SEIZURE",
+      "name": "Convulsive seizure / epilepsy — assess and manage or refer",
+      "layer": "MENTAL_HEALTH",
+      "ruleType": "MANAGEMENT",
+      "severity": "MEDIUM",
+      "interruptive": false,
+      "overrideAllowed": true,
+      "referralRequired": true,
+      "requiredInputs": ["mhAssessmentConducted", "seizureConvulsion"],
+      "appliesWhen": {"input": "mhAssessmentConducted", "op": "eq", "value": "YES"},
+      "logic": {"input": "seizureConvulsion", "op": "eq", "value": "YES"},
+      "message": "Convulsive seizure reported — assess for epilepsy and manage or refer.",
+      "explanation": "Epilepsy is an mhGAP priority condition because it is common, treatable, and heavily stigmatised. A reported convulsive seizure prompts a check for an acute cause, first-aid and safety counselling, consideration of antiepileptic treatment once a diagnosis of epilepsy is established, and referral where the diagnosis or the seizure type is uncertain.",
+      "requiredAction": "Exclude an acute provoked cause (fever, hypoglycaemia, head injury, eclampsia), give seizure first-aid and safety advice, consider antiepileptic treatment once epilepsy is established, and refer for confirmation where the diagnosis is uncertain.",
+      "sourceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — Epilepsy (EPI) module; assessment and management protocol"],
+      "dakRef": {"dak": "WHO mhGAP", "dakVersion": "2.0", "id": "WHO_MHGAP.PRIORITY_CONDITIONS", "row": "EPI — convulsive seizure / epilepsy"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Assess a person with convulsive seizures for epilepsy; exclude acute causes, and treat or refer.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO mhGAP Intervention Guide v2.0 (2016) — EPI module"]},
+      "testCases": [
+        {"name": "assessment done and a convulsive seizure reported fires", "facts": {"mhAssessmentConducted": "YES", "seizureConvulsion": "YES"}, "expectFires": true},
+        {"name": "assessment done but seizure history not recorded — must not fire on absent data", "facts": {"mhAssessmentConducted": "YES"}, "expectFires": false},
+        {"name": "assessment done and no seizure does not fire", "facts": {"mhAssessmentConducted": "YES", "seizureConvulsion": "NO"}, "expectFires": false},
+        {"name": "no mental-health assessment conducted — rule does not apply", "facts": {"mhAssessmentConducted": "NO", "seizureConvulsion": "YES"}, "expectFires": false}
+      ]
+    }
+  ]
+}
