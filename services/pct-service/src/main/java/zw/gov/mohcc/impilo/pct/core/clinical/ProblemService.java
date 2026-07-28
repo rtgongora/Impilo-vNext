@@ -241,7 +241,14 @@ public class ProblemService {
         payload.put("problemId", p.getProblemId().toString());
         payload.put("subjectCpid", p.getSubjectCpid());
         payload.put("journeyId", p.getJourneyId());
+        // The coded value travels because BUTANO archives this as a FHIR Condition, and a Condition
+        // carrying only a display string is not a diagnosis anyone can query, map or reconcile.
+        // Deliberately NOT carried: notes. Free text is the one field that can hold PII, and the
+        // SHR boundary rule is enforced by never putting it on the wire in the first place.
+        payload.put("code", p.getCode());
+        payload.put("codeSystem", p.getCodeSystem());
         payload.put("display", p.getDisplay());
+        payload.put("onsetDate", p.getOnsetDate() == null ? null : p.getOnsetDate().toString());
         payload.put("clinicalStatus", p.getClinicalStatus());
         payload.put("previousClinicalStatus", previousStatus);
         payload.put("diagnosticCertainty", p.getDiagnosticCertainty());

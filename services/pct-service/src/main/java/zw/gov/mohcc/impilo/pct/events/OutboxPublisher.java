@@ -181,6 +181,16 @@ public class OutboxPublisher {
             // them — and it missed them entirely, which is how this route came to be added.
             case "pct.observation.recorded" -> "pct.observation.recorded";
 
+            // The problem list is the clinical record's spine, and until now it reached nobody.
+            // ProblemService has emitted PROBLEM_ADDED/_RESOLVED/_STATUS_CHANGED since the problem
+            // list was built, but with no case here every one of them fell to the pct.events
+            // catch-all — published successfully, archived by no one. So a diagnosis recorded in
+            // PCT was absent from the SHR, from the IPS bundle a clinician reads at another
+            // facility, and from the cross-facility timeline. Exactly the failure the observation
+            // and newborn routes above were added to fix, on the one resource where "the record
+            // does not know this patient has this diagnosis" is most dangerous.
+            case "PROBLEM_ADDED", "PROBLEM_RESOLVED", "PROBLEM_STATUS_CHANGED" -> "pct.problem.recorded";
+
             // A birth is the one clinical event that other planes must act on rather than merely
             // record: VITO asserts the mother-child relationship from it, UBOMI raises the civil
             // birth notification a human then attests, and BUTANO archives the birth summary.
