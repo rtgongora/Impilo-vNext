@@ -218,8 +218,73 @@ chk "the cohort index exists, so a register read is not a sequential scan (V112)
            WHERE schemaname='pct' AND indexname='idx_pct_programme_enrolments_cohort';")" \
     "idx_pct_programme_enrolments_cohort"
 
+# ── V113 examination framework: the six states, and the ones that must say something ───────────
+#
+# The framework exists because a two-state examination form forces every unperformed examination
+# into "normal". These checks prove the database refuses the shapes that would let that happen.
+EXAM="55555555-5555-4555-8555-555555555555"
+chk "an examination with neither journey nor encounter is refused (CC-5 anchor, negative control)" \
+    "$(q "INSERT INTO pct.pct_examinations
+          (examination_id, tenant_id, subject_cpid, examined_at, examined_by)
+          VALUES (gen_random_uuid(),'$TENANT','cpid-1', now(), 'clin-1');")" \
+    "violates check constraint"
+chk "an anchored examination is accepted (positive control)" \
+    "$(q "INSERT INTO pct.pct_examinations
+          (examination_id, tenant_id, subject_cpid, journey_id, examined_at, examined_by)
+          VALUES ('$EXAM','$TENANT','cpid-1','66666666-6666-4666-8666-666666666666', now(), 'clin-1')
+          RETURNING examination_id;")" \
+    "$EXAM"
+chk "an invented examination state is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','ABDOMEN','PROBABLY_FINE');")" \
+    "violates check constraint"
+# The invariant that carries the clinical weight: an abnormality nobody wrote down reads to the next
+# clinician as a normal examination somebody bothered to document.
+chk "ABNORMAL with no detail is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','ABDOMEN','ABNORMAL');")" \
+    "violates check constraint"
+chk "UNABLE_TO_EXAMINE with no reason is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','NEUROLOGY','UNABLE_TO_EXAMINE');")" \
+    "violates check constraint"
+chk "NOT_EXAMINED stands alone with no detail (positive control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','CARDIOVASCULAR','NOT_EXAMINED')
+          RETURNING state;")" \
+    "NOT_EXAMINED"
+chk "ABNORMAL with detail is accepted (positive control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state, detail)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','ABDOMEN','ABNORMAL','tender right upper quadrant')
+          RETURNING state;")" \
+    "ABNORMAL"
+chk "the same region twice in one examination is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state, detail)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','ABDOMEN','NORMAL', NULL);")" \
+    "duplicate key value"
+# A site pin with no diagram is a coordinate with no map — it cannot be drawn or read back.
+chk "a site without a graphic is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state, detail, site)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','SKIN','ABNORMAL','ulcer','left heel');")" \
+    "violates check constraint"
+chk "a sited finding on a named graphic is accepted (positive control)" \
+    "$(q "INSERT INTO pct.pct_examination_findings
+          (finding_id, tenant_id, examination_id, region, state, detail, graphic, site, laterality)
+          VALUES (gen_random_uuid(),'$TENANT','$EXAM','FEET','ABNORMAL','neuropathic ulcer',
+                  'DIABETIC_FOOT','plantar first metatarsal head','LEFT')
+          RETURNING graphic;")" \
+    "DIABETIC_FOOT"
+
 # Leave the probe table as we found it (nothing else references these rows).
-q "DELETE FROM pct.pct_programme_enrolments WHERE enrolment_id='$REG_ENR';
+q "DELETE FROM pct.pct_examinations WHERE examination_id='$EXAM';
+   DELETE FROM pct.pct_programme_enrolments WHERE enrolment_id='$REG_ENR';
    DELETE FROM pct.pct_treatment_regimens WHERE enrolment_id='$ENR';
    DELETE FROM pct.pct_programme_enrolments WHERE enrolment_id='$ENR';
    DELETE FROM pct.pct_problems WHERE problem_id='$PROB';" >/dev/null
