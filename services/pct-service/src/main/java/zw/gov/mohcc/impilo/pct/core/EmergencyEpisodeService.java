@@ -410,10 +410,11 @@ public class EmergencyEpisodeService {
     /**
      * Expire a handover: a decision (by a clinician, or {@link HandoverExpirySweepJob} once
      * {@code response_due_at} has passed) that this attempt has gone unanswered too long. Returns the
-     * episode to OPEN_IN_CARE — same as a decline. {@code ritoCaseRef} is a link only; this method
-     * does not call rito synchronously — {@code EMERGENCY_HANDOVER_EXPIRED} is emitted to the outbox
-     * for a rito consumer to open the case and write the ref back, matching the alert sweep's own
-     * event-driven pattern (task W5b) rather than a synchronous cross-service call inside a sweep.
+     * episode to OPEN_IN_CARE — same as a decline. {@code ritoCaseRef} is a link only, supplied by the
+     * caller — this method never calls rito itself. {@link HandoverExpirySweepJob} opens the case
+     * synchronously (via {@code RitoSafetyClient}, matching inpatient-theatre's own pattern) BEFORE
+     * calling this method and passes the resulting ref straight through; a manual clinician-driven
+     * expiry over HTTP may likewise supply an already-opened case's ref, or leave it absent.
      */
     @Transactional
     public EmergencyEpisodeEntity expireHandover(UUID handoverId, UUID tenantId, String expiredBy, String ritoCaseRef) {
