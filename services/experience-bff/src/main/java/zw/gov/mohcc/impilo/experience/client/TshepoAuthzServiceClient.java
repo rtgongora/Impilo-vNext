@@ -293,6 +293,33 @@ public class TshepoAuthzServiceClient {
         return extractData(response);
     }
 
+    // ── WorkMode catalog (Phase B — mode as a governed dimension) ─────────────
+
+    /** Full WorkMode catalog for the caller's tenant (V054 work_mode_catalog). */
+    public JsonNode workModeCatalog() {
+        String url = baseUrl + "/v1/authz/work-modes";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Modes a role_template_id may hold, per the seeded {@code role_template_mode}
+     * catalog. An empty {@code modes} array means "no seeded entry" — the caller
+     * must fall back to the enum-level derivation in {@code WorkMode} (Phase C),
+     * never assume {@code CLINICAL_CARE} on a miss.
+     */
+    public JsonNode workModesForRole(String roleTemplateId) {
+        String url = baseUrl + "/v1/authz/work-modes/for-role?roleTemplateId="
+                + java.net.URLEncoder.encode(roleTemplateId, java.nio.charset.StandardCharsets.UTF_8);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            return extractData(response);
+        } catch (Exception e) {
+            log.warn("TSHEPO-AUTHZ: work-modes for-role lookup failed roleTemplateId={}: {}", roleTemplateId, e.getMessage());
+            return null;
+        }
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
