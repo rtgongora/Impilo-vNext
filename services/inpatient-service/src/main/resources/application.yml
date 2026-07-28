@@ -91,6 +91,10 @@ inpatient:
     learning:
       base-url: ${LEARNING_BASE_URL:http://localhost:8235}
       internal-key: ${VARAPI_TO_LEARNING_INTERNAL_KEY:}
+    # Wave P12 (pipeline §23) — read-only financial-clearance check at theatre start. COSTA
+    # remains the payment truth; this is never more than a query.
+    costa:
+      base-url: ${COSTA_BASE_URL:http://localhost:8101}
   theatre:
     reconciler:
       # TheatreProjectionReconciler poll cadence (ms). Disabled under the "test" profile.
