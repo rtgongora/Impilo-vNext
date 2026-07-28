@@ -73,7 +73,10 @@ public class ProcedureCatalogueService {
                 d.getIndicationRuleRef(), d.getContraindicationRuleRef(),
                 d.getExpectedDurationMin(), d.isRecoveryRequired(), d.getObservationMinutes(),
                 d.getConsentType(), d.getSafetyPauseTemplate(), d.getFindingsTemplate(),
-                d.getAftercareTemplate(), d.getComplicationProfile(), d.getFollowUpPolicy(),
+                d.getAftercareTemplate(),
+                d.getDefaultSedationLevelCode(), d.getDefaultRecoverySettingCode(),
+                d.getDefaultAftercareTemplateCode(),
+                d.getComplicationProfile(), d.getFollowUpPolicy(),
                 d.getZiboCode(), d.getSnomedCtCode(), d.getIcd9cmProcedureCode(),
                 d.getStatus(), d.getApprovingAuthority(), d.getSourceCitation(),
                 reqs.stream().map(r -> new RequirementView(
