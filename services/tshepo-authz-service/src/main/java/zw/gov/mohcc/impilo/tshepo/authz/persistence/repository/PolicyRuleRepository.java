@@ -30,4 +30,13 @@ public interface PolicyRuleRepository extends JpaRepository<PolicyRuleEntity, Lo
      * Find all rules for a tenant (including inactive), for admin listing.
      */
     List<PolicyRuleEntity> findByTenantIdOrderByPriorityAsc(UUID tenantId);
+
+    long countByTenantId(UUID tenantId);
+
+    long countByTenantIdAndActiveTrue(UUID tenantId);
+
+    /** Feeds the security-readiness report (Phase D, D6): named-prefix rule families. */
+    long countByTenantIdAndNameStartingWithAndActiveTrue(UUID tenantId, String namePrefix);
+
+    long countByTenantIdAndNameStartingWith(UUID tenantId, String namePrefix);
 }

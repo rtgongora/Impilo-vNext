@@ -28,6 +28,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // ext_authz endpoint — Envoy calls this unauthenticated
                 .requestMatchers("/v1/authorize", "/v1/authorize/**").permitAll()
+                // Security-readiness self-report (Phase D, D6) — a deployment gate needs to
+                // call this pre-flight without a user JWT. Exposes only booleans/counts about
+                // policy posture, never rule content or secrets — see the controller javadoc.
+                .requestMatchers("/v1/internal/security-readiness").permitAll()
                 // Actuator probes
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 // OpenAPI / Swagger
