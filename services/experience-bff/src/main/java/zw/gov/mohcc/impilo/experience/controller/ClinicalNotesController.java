@@ -65,10 +65,10 @@ public class ClinicalNotesController {
         try {
             JsonNode pctData = pctClient.listClinicalNotes(patientId, page, size);
             return ResponseEntity.ok(Map.of(
-                    // PCT's list projection (toSummary) carries id/patient_id/note_type/created_at
-                    // only — body, subjective and status exist solely on the single-note GET. Wrapping
-                    // makes the row readable; the missing fields are a real gap, registered in
-                    // docs/product/DECLARED-BUT-UNSOURCED-FIELDS.md rather than invented here.
+                    // PCT's list projection used to carry id/patient_id/note_type/created_at only,
+                    // so the notes screen could not tell a draft from a signed note and its
+                    // coordination banners — parsed out of the note body — never appeared. Both the
+                    // signature state and the body are in the projection now.
                     "data", JsonApiRows.rows(pctData, "clinical_note", "note_id", "id"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
@@ -92,8 +92,12 @@ public class ClinicalNotesController {
 
         JsonNode noteData = pctClient.getClinicalNote(id.toString());
 
+        // Single-item reads carry the same contract as the list: the hook declares
+        // ApiResponse<ClinicalNoteResource>, so an unwrapped row breaks the detail view exactly the
+        // way it broke the list. Fixing only the lists left half the defect standing.
+        List<Map<String, Object>> rows = JsonApiRows.rows(noteData, "clinical_note", "note_id", "id");
         return ResponseEntity.ok(Map.of(
-                "data", noteData != null ? noteData : Map.of(),
+                "data", rows.isEmpty() ? Map.of() : rows.get(0),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 

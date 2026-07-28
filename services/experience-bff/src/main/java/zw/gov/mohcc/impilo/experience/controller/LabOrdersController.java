@@ -126,8 +126,10 @@ public class LabOrdersController {
 
         JsonNode orderData = orosClient.getOrder(id);
 
+        // Same contract as the list — see labOrderRows.
+        List<Map<String, Object>> rows = labOrderRows(orderData);
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", orderData != null ? orderData : Map.of());
+        response.put("data", rows.isEmpty() ? Map.of() : rows.get(0));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId

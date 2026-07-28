@@ -69,9 +69,13 @@ public class ClinicalNoteController {
      *
      * <p>The signature state and the encounter anchor are here deliberately. A notes list that
      * cannot say whether a note is signed shows a draft and a signed note identically, and the
-     * shell's notes screen filters and labels on exactly that. The full note body stays on the
-     * detail endpoint — a list of encounter narratives is a large payload and, more to the point,
-     * the list view never renders it.
+     * shell's notes screen filters and labels on exactly that.
+     *
+     * <p>The body is here too. It was left off on the argument that a list of encounter narratives
+     * is a large payload — but the notes list screen reads it: it parses the consultation
+     * coordination markers (linked referral, linked teleconsult, next workspace action) straight
+     * out of the body text on every row. Without it those banners never appeared and a referral
+     * loop update was invisible in the list. Payload size lost to functionality that did not work.
      */
     private Map<String, Object> toSummary(ClinicalNoteEntity e) {
         Map<String, Object> m = new LinkedHashMap<>();
@@ -85,6 +89,7 @@ public class ClinicalNoteController {
         m.put("signed_at", e.getSignedAt() != null ? e.getSignedAt().toString() : null);
         m.put("signed_by", e.getSignedBy());
         m.put("status", e.isSigned() ? "SIGNED" : "DRAFT");
+        m.put("body", e.getBody());
         m.put("created_at", e.getCreatedAt() != null ? e.getCreatedAt().toString() : null);
         m.put("patient_share_grant_id", e.getPatientShareGrantId());
         m.put("temporary_provider_public_id", e.getTemporaryProviderPublicId());
