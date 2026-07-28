@@ -21,7 +21,16 @@ import { sessionContractAllowsRoute } from "@/lib/trust";
 import { isSafeReturnTo, resolvePostLoginDestination } from "@/lib/resolve-post-login-destination";
 import { consumeIntent, peekIntent, resolveIntentDestination } from "@/lib/gateway-intent";
 
-const RESOLUTION_TIMEOUT_MS = 5000;
+// Phase F10: two-phase deadline, each armed EXACTLY ONCE on mount (see the empty-dep effect
+// below). The previous single 5s timer was armed in a useEffect keyed on `navigate` — a
+// useCallback recreated every time contract/linkedIds/affiliations/user changed, which
+// re-triggered the effect and reset the timer on every dependency change. Real logins take
+// several async round-trips (identity, affiliations, work assignments, the session contract),
+// each of which recreates `navigate` — so the "5-second fallback" almost never actually fired
+// 5 seconds after mount; it fired 5 seconds after whichever dependency happened to settle last,
+// making the deadline nondeterministic and, on a slow network, effectively unbounded.
+const SOFT_DEADLINE_MS = 8000;
+const HARD_DEADLINE_MS = 12000;
 const PROFESSIONAL_NOTICE_DELAY_MS = 1200;
 
 interface ResolverStep {
@@ -40,7 +49,6 @@ export default function ResolvingPage() {
   const { contract } = useSessionExperienceContract();
   const [hasNavigated, setHasNavigated] = useState(false);
   const [showProfessionalNotice, setShowProfessionalNotice] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const linkedAttrs = data?.data?.attributes;
   const hasProfessionalId = !!(linkedAttrs?.providerId || linkedAttrs?.staffId);
@@ -121,7 +129,7 @@ export default function ResolvingPage() {
   const affiliationsResolved = affSuccess || isError;
   const assignmentsResolved = assignSuccess || isError || workAssignments.length >= 0;
   // Prefer to wait for the BFF contract so contract.defaultRoute drives the landing;
-  // the RESOLUTION_TIMEOUT_MS fallback still navigates if it never arrives.
+  // the SOFT_DEADLINE_MS/HARD_DEADLINE_MS fallback still navigates if it never arrives.
   const contractResolved = !!contract || isError;
 
   const steps: ResolverStep[] = [
@@ -139,15 +147,28 @@ export default function ResolvingPage() {
     },
   ];
 
+  // navigateRef always holds the LATEST navigate closure without the timer-arming effect below
+  // depending on it — that dependency is exactly what made the old single timer reset on every
+  // identity/affiliations/assignments/contract update instead of firing a fixed time after mount.
+  const navigateRef = useRef(navigate);
   useEffect(() => {
-    timeoutRef.current = setTimeout(() => {
-      navigate();
-    }, RESOLUTION_TIMEOUT_MS);
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
+    navigateRef.current = navigate;
   }, [navigate]);
+
+  // Armed exactly once (empty deps): a soft deadline that accepts a client-side fallback
+  // landing if the contract hasn't arrived by then, and a hard ceiling that fires regardless —
+  // a genuine second, independent safety net, not merely a later copy of the first. Both call
+  // through the ref, and `navigate()` itself is idempotent (`if (hasNavigated) return`), so
+  // whichever fires first — a normal data-resolved landing or either deadline — wins cleanly.
+  useEffect(() => {
+    const softTimer = setTimeout(() => navigateRef.current(), SOFT_DEADLINE_MS);
+    const hardTimer = setTimeout(() => navigateRef.current(), HARD_DEADLINE_MS);
+    return () => {
+      clearTimeout(softTimer);
+      clearTimeout(hardTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately armed once on mount, see comment above SOFT_DEADLINE_MS
+  }, []);
 
   useEffect(() => {
     if (!identityResolved || !affiliationsResolved || !assignmentsResolved || !contractResolved || hasNavigated) return;

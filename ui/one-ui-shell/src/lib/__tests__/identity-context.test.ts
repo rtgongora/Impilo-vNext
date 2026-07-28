@@ -71,6 +71,12 @@ describe("identity-context three-tab doctrine", () => {
     expect(isRouteBlockedForCitizen("/clinical", ctx)).toBe(true);
   });
 
+  it("blocks citizens from /work (Work Home, Phase F) and its deep links", () => {
+    const ctx = resolveIdentityContext({ user: citizen });
+    expect(isRouteBlockedForCitizen("/work", ctx)).toBe(true);
+    expect(isRouteBlockedForCitizen("/work/vashandi", ctx)).toBe(true);
+  });
+
   it("above-site admin without work assignments still gets chooser options", () => {
     const admin: AuthUser = {
       id: "H3",
