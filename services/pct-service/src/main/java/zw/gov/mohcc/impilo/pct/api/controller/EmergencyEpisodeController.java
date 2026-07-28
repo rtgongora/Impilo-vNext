@@ -3,10 +3,14 @@ package zw.gov.mohcc.impilo.pct.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.pct.core.EmergencyDispositionService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeService;
+import zw.gov.mohcc.impilo.pct.core.EmergencyObservationStayService;
 import zw.gov.mohcc.impilo.pct.domain.EmergencyEpisodeState;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyDispositionEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyEpisodeEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyObservationStayEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
@@ -35,9 +39,15 @@ import java.util.UUID;
 public class EmergencyEpisodeController {
 
     private final EmergencyEpisodeService episodeService;
+    private final EmergencyDispositionService dispositionService;
+    private final EmergencyObservationStayService observationStayService;
 
-    public EmergencyEpisodeController(EmergencyEpisodeService episodeService) {
+    public EmergencyEpisodeController(EmergencyEpisodeService episodeService,
+                                      EmergencyDispositionService dispositionService,
+                                      EmergencyObservationStayService observationStayService) {
         this.episodeService = episodeService;
+        this.dispositionService = dispositionService;
+        this.observationStayService = observationStayService;
     }
 
     @PostMapping("/episodes")
@@ -170,6 +180,51 @@ public class EmergencyEpisodeController {
         return ResponseEntity.ok(ApiResponse.ok(episodeRow(episode), ctx.correlationId().toString()));
     }
 
+    // ── Disposition (W9b) ────────────────────────────────────────────────────────────────────
+
+    @PostMapping("/episodes/{episodeId}/disposition")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> recordDisposition(@PathVariable UUID episodeId,
+                                                                                @RequestBody Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        var disposition = dispositionService.record(episodeId, ctx.tenantId(), body);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(dispositionRow(disposition), ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/episodes/{episodeId}/disposition")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDisposition(@PathVariable UUID episodeId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var disposition = dispositionService.forEpisode(episodeId, ctx.tenantId());
+        return ResponseEntity.ok(ApiResponse.ok(dispositionRow(disposition), ctx.correlationId().toString()));
+    }
+
+    // ── Observation / short-stay (W9b) ──────────────────────────────────────────────────────
+
+    @PostMapping("/episodes/{episodeId}/observation-stays")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> startObservationStay(@PathVariable UUID episodeId,
+                                                                                   @RequestBody Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        var stay = observationStayService.start(episodeId, ctx.tenantId(), body);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(observationStayRow(stay), ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/episodes/{episodeId}/observation-stays")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> observationStays(@PathVariable UUID episodeId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var stays = observationStayService.forEpisode(episodeId, ctx.tenantId());
+        return ResponseEntity.ok(ApiResponse.ok(stays.stream().map(this::observationStayRow).toList(),
+                ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/observation-stays/{stayId}/end")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> endObservationStay(@PathVariable UUID stayId,
+                                                                                 @RequestBody Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        var stay = observationStayService.end(stayId, ctx.tenantId(), body);
+        return ResponseEntity.ok(ApiResponse.ok(observationStayRow(stay), ctx.correlationId().toString()));
+    }
+
     // ── Mapping + parsing ────────────────────────────────────────────────────────────────────
 
     private EmergencyEpisodeService.OpenEpisodeCommand toOpenCommand(Map<String, Object> body, TrustContext ctx) {
@@ -228,6 +283,7 @@ public class EmergencyEpisodeController {
         m.put("status", h.getStatus());
         m.put("requested_by", h.getRequestedBy());
         m.put("requested_at", h.getRequestedAt() != null ? h.getRequestedAt().toString() : null);
+        m.put("response_due_at", h.getResponseDueAt() != null ? h.getResponseDueAt().toString() : null);
         m.put("accepted_by", h.getAcceptedBy());
         m.put("accepting_ref", h.getAcceptingRef());
         m.put("accepting_service", h.getAcceptingService());
@@ -235,6 +291,34 @@ public class EmergencyEpisodeController {
         m.put("decline_reason", h.getDeclineReason());
         m.put("expired_at", h.getExpiredAt() != null ? h.getExpiredAt().toString() : null);
         m.put("rito_case_ref", h.getRitoCaseRef());
+        return m;
+    }
+
+    private Map<String, Object> dispositionRow(EmergencyDispositionEntity d) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("disposition_id", d.getDispositionId().toString());
+        m.put("episode_id", d.getEpisodeId().toString());
+        m.put("disposition_type", d.getDispositionType());
+        m.put("disposition_reason", d.getDispositionReason());
+        m.put("disposed_by", d.getDisposedBy());
+        m.put("disposed_at", d.getDisposedAt() != null ? d.getDisposedAt().toString() : null);
+        m.put("destination", d.getDestination());
+        m.put("cause_or_circumstances", d.getCauseOrCircumstances());
+        m.put("last_seen_at", d.getLastSeenAt() != null ? d.getLastSeenAt().toString() : null);
+        return m;
+    }
+
+    private Map<String, Object> observationStayRow(EmergencyObservationStayEntity s) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("stay_id", s.getStayId().toString());
+        m.put("episode_id", s.getEpisodeId().toString());
+        m.put("started_at", s.getStartedAt() != null ? s.getStartedAt().toString() : null);
+        m.put("started_by", s.getStartedBy());
+        m.put("min_observation_minutes", s.getMinObservationMinutes());
+        m.put("ended_at", s.getEndedAt() != null ? s.getEndedAt().toString() : null);
+        m.put("ended_by", s.getEndedBy());
+        m.put("outcome", s.getOutcome());
+        m.put("notes", s.getNotes());
         return m;
     }
 

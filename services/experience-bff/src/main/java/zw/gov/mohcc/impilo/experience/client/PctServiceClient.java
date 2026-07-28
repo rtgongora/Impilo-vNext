@@ -1543,6 +1543,34 @@ public class PctServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    // ── Structured examinations (brief.md §7) ───────────────────
+    //
+    // pct serves these at /v1/examinations. The read carries a `coverage` block naming what was NOT
+    // examined; the BFF must forward it intact, because a findings list on its own shows only what
+    // was looked at and absence has no row.
+
+    public JsonNode listExaminations(String subjectCpid) {
+        String url = baseUrl + "/v1/examinations?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8);
+        log.debug("PCT: listing examinations for subject={}", subjectCpid);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getExamination(String examinationId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/examinations/" + examinationId, JsonNode.class));
+    }
+
+    public JsonNode examinationVocabulary() {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/examinations/vocabulary", JsonNode.class));
+    }
+
+    public JsonNode recordExamination(Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/examinations", body, JsonNode.class));
+    }
+
     public JsonNode getProgrammeEnrolment(String enrolmentId) {
         return extractData(restTemplate.getForEntity(
                 baseUrl + "/v1/programme-enrolments/" + enrolmentId, JsonNode.class));

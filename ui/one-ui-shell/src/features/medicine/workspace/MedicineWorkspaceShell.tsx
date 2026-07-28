@@ -76,6 +76,13 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
           Open decision support →
         </Link>
         <Link
+          href={`/ehr/${patientId}/examination`}
+          className="mt-2 ml-4 inline-block text-sm text-primary hover:underline"
+          data-testid="link-examination"
+        >
+          Record an examination →
+        </Link>
+        <Link
           href={`/ehr/${patientId}/multimorbidity`}
           className="mt-2 ml-4 inline-block text-sm text-primary hover:underline"
           data-testid="link-multimorbidity"
