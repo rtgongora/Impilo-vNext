@@ -40,6 +40,16 @@ class OutboxPublisherRouteTest {
     }
 
     @Test
+    void examination_events_route_to_the_shr_topic_not_the_catch_all() {
+        // brief.md §19. BUTANO archives the structured examination as a FHIR ClinicalImpression, which
+        // is how a clinician at the next facility learns not only what was found but which regions
+        // nobody looked at. On the catch-all that reaches no consumer at all, and the failure would be
+        // invisible — the event publishes successfully and simply arrives nowhere.
+        assertEquals("pct.examination.recorded", OutboxPublisher.routeTopic("EXAMINATION_RECORDED"));
+        assertNotEquals("pct.events", OutboxPublisher.routeTopic("EXAMINATION_RECORDED"));
+    }
+
+    @Test
     void teleconsult_completed_routes_to_value_topic() {
         // telemed->value: COSTA/L4 consumes the completed teleconsult to raise a charge.
         assertEquals("clinical.teleconsult.value", OutboxPublisher.routeTopic("TELECONSULT_COMPLETED"));

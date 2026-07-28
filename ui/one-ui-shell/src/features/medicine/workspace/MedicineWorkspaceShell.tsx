@@ -105,6 +105,13 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
           Record an examination →
         </Link>
         <Link
+          href={`/ehr/${patientId}/consultations`}
+          className="mt-2 ml-4 inline-block text-sm text-primary hover:underline"
+          data-testid="link-consultations"
+        >
+          Consultations and MDT →
+        </Link>
+        <Link
           href={`/ehr/${patientId}/multimorbidity`}
           className="mt-2 ml-4 inline-block text-sm text-primary hover:underline"
           data-testid="link-multimorbidity"
