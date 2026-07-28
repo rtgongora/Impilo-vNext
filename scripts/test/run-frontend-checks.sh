@@ -11,6 +11,9 @@ gate_run "frontend-typecheck" bash -c 'cd ui/one-ui-shell && npm run type-check'
 # a spec that could not compile reported zero failures instead of an error. Separate pass, because
 # pulling test code into the app's config would let a test-only type error fail the production build.
 gate_run "frontend-typecheck-e2e" bash -c 'cd ui/one-ui-shell && npm run test:typecheck-e2e' || FAIL=1
+# The reverse of route-parity: a page that exists but is in no registry is reachable by nothing.
+# route-parity-check only walks registry -> filesystem and is structurally blind to this.
+gate_run "frontend-orphan-pages" bash -c 'cd ui/one-ui-shell && npm run test:orphan-pages' || FAIL=1
 gate_run "frontend-unit-tests" bash -c 'cd ui/one-ui-shell && npm test' || FAIL=1
 gate_run "frontend-build" bash -c 'cd ui/one-ui-shell && npm run build' || FAIL=1
 
