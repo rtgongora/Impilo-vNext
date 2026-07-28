@@ -18,7 +18,7 @@
 #
 # Exit codes: 0 pass | 1 fail | 2 usage/unreachable
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH" 2>/dev/null || true
 
 URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"

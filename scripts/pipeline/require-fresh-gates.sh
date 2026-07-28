@@ -11,7 +11,7 @@
 # deploy can never be performed (script OR raw kubectl/helm) without fresh passing gates.
 set -uo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH" 2>/dev/null || { echo "require-fresh-gates: repo not found at $REPO_PATH"; exit 3; }
 
 REPORT="$REPO_PATH/reports/pipeline/latest-summary.json"

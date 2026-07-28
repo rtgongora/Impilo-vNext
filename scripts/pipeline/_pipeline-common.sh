@@ -2,7 +2,7 @@
 # Shared helpers for VM local quality pipeline and report generation.
 set -euo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 PIPELINE_REPORT_DIR="${PIPELINE_REPORT_DIR:-$REPO_PATH/reports/pipeline}"
 PIPELINE_LOG_DIR="${PIPELINE_LOG_DIR:-/tmp/impilo-pipeline-gates}"
 mkdir -p "$PIPELINE_REPORT_DIR" "$PIPELINE_LOG_DIR"

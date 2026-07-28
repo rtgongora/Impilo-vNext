@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 EXPECTED_BRANCH="${EXPECTED_BRANCH:-claude/staging-ux-orchestration-remediation-Yypyl}"
 
 cd "$REPO_PATH"

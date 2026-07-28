@@ -2,7 +2,7 @@
 # Shared paths for full vNext boot readiness scripts.
 set -euo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 FULL_BOOT_REPORTS="${FULL_BOOT_REPORTS:-$REPO_PATH/reports/full-boot}"

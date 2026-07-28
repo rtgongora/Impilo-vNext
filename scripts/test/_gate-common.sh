@@ -2,7 +2,7 @@
 # Shared helpers for preview gate scripts.
 set -euo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 GATE_LOG_DIR="${GATE_LOG_DIR:-/tmp/impilo-preview-gates}"
 mkdir -p "$GATE_LOG_DIR"
 

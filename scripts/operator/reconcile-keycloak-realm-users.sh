@@ -18,7 +18,7 @@
 #   REALM_NAME            (default: impilo)
 #   REALM_JSON            (default: tools/auth/impilo-realm.json)
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 NAMESPACE="${KEYCLOAK_NAMESPACE:-impilo-full-preview}"

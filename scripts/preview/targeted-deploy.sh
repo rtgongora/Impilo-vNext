@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Targeted preview deploy — affected services only when blast-radius class permits.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 source scripts/preview/_preview-common.sh
 source scripts/deploy/_preview-deploy-metadata.sh

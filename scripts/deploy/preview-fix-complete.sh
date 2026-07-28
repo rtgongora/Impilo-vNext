@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Complete preview fix: rebuild BFF with preview patches, import images, clean Helm, deploy, smoke test.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 SUDO_PASS="${SUDO_PASS:-}"
 if [[ -n "$SUDO_PASS" ]]; then echo "$SUDO_PASS" | sudo -S -v; fi
 

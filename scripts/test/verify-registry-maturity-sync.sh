@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Fail only when registry-maturity.json service rows drift, not when generatedAt timestamp updates.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 FILE="ui/one-ui-shell/src/generated/registry-maturity.json"
 

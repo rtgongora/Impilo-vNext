@@ -17,7 +17,7 @@
 # Mutating subcommands print intended actions and require --yes (or interactive confirm).
 # This script NEVER deletes PVCs/PVs/secrets/namespace, never `helm uninstall`, never prunes.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 source scripts/full-boot/_estate-guard.sh
 

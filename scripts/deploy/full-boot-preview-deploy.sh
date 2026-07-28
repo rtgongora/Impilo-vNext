@@ -9,7 +9,7 @@
 # DEFAULT = full estate. To run an explicitly partial debug mode, pass one of:
 #   --debug-required-spine-only | --debug-wave-zero-only | --slice | --allow-partial | --no-full-estate
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 source scripts/full-boot/_full-boot-common.sh
 source scripts/full-boot/_estate-guard.sh

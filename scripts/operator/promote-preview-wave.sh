@@ -7,7 +7,7 @@
 # Requires AUTHORIZE FULL BOOT PREVIEW DEPLOY for deploy phase.
 set -euo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 WAVE_N="${1:-${FULL_BOOT_MAX_WAVE:-1}}"

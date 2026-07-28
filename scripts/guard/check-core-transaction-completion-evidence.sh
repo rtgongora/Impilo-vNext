@@ -3,7 +3,7 @@
 # Authority: docs/frontend/GAP_CLOSURE_RULES.md
 set -euo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 source "$REPO_PATH/scripts/guard/_guard-common.sh"
 
