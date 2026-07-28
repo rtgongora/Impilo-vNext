@@ -102,7 +102,75 @@ describe("CdsTopicPanel — the three meanings of an empty alert list", () => {
   });
 });
 
+describe("CdsTopicPanel — a stated fact must not look like a detected one", () => {
+  beforeEach(() => {
+    cds.state = { data: undefined, isError: false, isPending: false, mutate: vi.fn() };
+  });
+
+  it("names the facts the engine was told rather than detected", () => {
+    // The harm: an assessment that rests on a clinician's recollection reads, on screen, exactly
+    // like one the system confirmed against the medicine list.
+    cds.state = {
+      ...cds.state,
+      data: guidance({
+        fact_provenance: { onNsaid: "CLINICIAN_ASSERTED", egfr: "DERIVED_FROM_MEDICATION_LIST" },
+      }).data,
+    };
+    renderPanel();
+    expect(screen.getByTestId("cds-asserted-cvd-risk")).toHaveTextContent(/onNsaid/);
+    expect(screen.getByTestId("cds-asserted-cvd-risk")).not.toHaveTextContent(/egfr/);
+  });
+
+  it("says nothing when every fact was derived", () => {
+    cds.state = {
+      ...cds.state,
+      data: guidance({ fact_provenance: { onNsaid: "DERIVED_FROM_MEDICATION_LIST" } }).data,
+    };
+    renderPanel();
+    expect(screen.queryByTestId("cds-asserted-cvd-risk")).not.toBeInTheDocument();
+  });
+
+  it("shows the derivation note when part of the medicine list could not be read", () => {
+    cds.state = {
+      ...cds.state,
+      data: guidance({ derivation_note: "1 of 3 medicine(s) could not be recognised" }).data,
+    };
+    renderPanel();
+    expect(screen.getByTestId("cds-derivation-cvd-risk")).toHaveTextContent(/could not be recognised/);
+  });
+
+  it("sends the subject so the server can compose the medicine list", () => {
+    const mutate = vi.fn();
+    cds.state = { ...cds.state, mutate };
+    render(
+      <CdsTopicPanel
+        topic="deprescribing"
+        title="Medication review"
+        description="WHO PEN"
+        fields={[{ key: "egfr", label: "eGFR", type: "number" }]}
+        subjectCpid="CPID-1"
+      />,
+    );
+    fireEvent.click(screen.getByTestId("evaluate-deprescribing"));
+    expect(mutate).toHaveBeenCalledWith({ topic: "deprescribing", facts: {}, subjectCpid: "CPID-1" });
+  });
+});
+
 describe("CDS topic coverage", () => {
+  it("the deprescribing panel never asks a clinician to assert a medication fact", () => {
+    // These five were YES/NO dropdowns, and were the only producers of the facts the renal-safety
+    // rules gate on — so DEPRX_DUPLICATE_THERAPY_REVIEW fired when a clinician had already spotted
+    // the duplicate and said so. They are now derived server-side from the medicine list. Asking
+    // again would let a typed answer overwrite evidence, so this guards the fabrication's return.
+    const derived = ["onMetformin", "onNsaid", "onNephrotoxin", "onRenallyClearedDrug", "duplicateTherapyDetected"];
+    for (const t of CDS_TOPICS) {
+      for (const f of t.fields) {
+        expect(derived, `${t.topic} asks for ${f.key}, which the server derives`).not.toContain(f.key);
+      }
+    }
+  });
+
+
   it("every topic the BFF serves has a panel definition, and none is invented", () => {
     // Guards both directions: a topic without a panel is CDS a clinician cannot reach, and a panel
     // for a topic the evaluator does not serve would 404 on click.

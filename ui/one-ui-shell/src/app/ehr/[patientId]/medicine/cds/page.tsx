@@ -43,6 +43,7 @@ export default function MedicineCdsPage() {
                   title={t.title}
                   description={t.description}
                   fields={t.fields}
+                  subjectCpid={patientId}
                 />
               ))}
             </div>

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.clinical.programme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.clinical.multimorbidity.MedicationFactDeriver;
 import zw.gov.mohcc.impilo.clinical.rules.tabular.DakProvenance;
 import zw.gov.mohcc.impilo.clinical.rules.tabular.PredicateEvaluator;
 import zw.gov.mohcc.impilo.clinical.rules.tabular.RuleContentLoader;
@@ -55,9 +56,12 @@ public class ProgrammeGuidanceService {
     static final String ONCOLOGY_PATH = "clinical/oncology-early-diagnosis-rules.json";
 
     private final RuleContentLoader contentLoader;
+    private final MedicationFactDeriver medicationFactDeriver;
 
-    public ProgrammeGuidanceService(RuleContentLoader contentLoader) {
+    public ProgrammeGuidanceService(RuleContentLoader contentLoader,
+                                    MedicationFactDeriver medicationFactDeriver) {
         this.contentLoader = contentLoader;
+        this.medicationFactDeriver = medicationFactDeriver;
     }
 
     /** Resolves the pack for a programme, or null if the programme has no governed content. */
@@ -109,7 +113,12 @@ public class ProgrammeGuidanceService {
                     "Programme content is not loaded, so no guidance could be produced.");
         }
 
-        Map<String, Object> workingFacts = new LinkedHashMap<>(facts == null ? Map.of() : facts);
+        // Derive the medication-class facts from the patient's actual medicine list before any rule
+        // reads them. Until this existed the only producer of onMetformin/onNsaid/duplicateTherapy-
+        // Detected was a clinician ticking a dropdown, so DEPRX_DUPLICATE_THERAPY_REVIEW advised on a
+        // finding the clinician had already made rather than making one.
+        MedicationFactDeriver.Derivation derivation = medicationFactDeriver.derive(facts);
+        Map<String, Object> workingFacts = new LinkedHashMap<>(derivation.facts());
 
         List<ProgrammeAlert> alerts = new ArrayList<>();
         Set<String> notAssessed = new LinkedHashSet<>();
@@ -171,7 +180,8 @@ public class ProgrammeGuidanceService {
                 resourcePath, applicable, alerts.size(), referralRequired, notAssessed.size());
 
         return new ProgrammeAssessment(true, referralRequired, interruptive, alerts,
-                List.copyOf(notAssessed), contentProblems, applicable, contentVersion(rules), null);
+                List.copyOf(notAssessed), contentProblems, applicable, contentVersion(rules), null,
+                derivation.provenance(), derivation.note());
     }
 
     private List<String> unassessedInputs(TabularRule rule, Map<String, Object> facts,
@@ -206,7 +216,24 @@ public class ProgrammeGuidanceService {
             List<String> contentProblems,
             int rulesApplied,
             String contentVersion,
-            String reason) {
+            String reason,
+            /**
+             * For each medication fact the rules gated on, whether its value was DERIVED from the
+             * patient's medicine list, CLINICIAN_ASSERTED, or UNDETERMINED. A consumer that cannot
+             * tell a detection from a recollection will present the second as if it were the first.
+             */
+            Map<String, String> factProvenance,
+            /** What could and could not be derived, in words, or null when everything could be. */
+            String derivationNote) {
+
+        /** Backward-compatible 9-arg constructor for callers that carry no derivation. */
+        public ProgrammeAssessment(boolean assessed, boolean referralRequired, boolean interruptive,
+                                   List<ProgrammeAlert> alerts, List<String> notAssessed,
+                                   List<String> contentProblems, int rulesApplied,
+                                   String contentVersion, String reason) {
+            this(assessed, referralRequired, interruptive, alerts, notAssessed, contentProblems,
+                    rulesApplied, contentVersion, reason, Map.of(), null);
+        }
 
         static ProgrammeAssessment unavailable(String reason) {
             return new ProgrammeAssessment(false, false, false, List.of(), List.of(), List.of(),
@@ -237,6 +264,12 @@ public class ProgrammeGuidanceService {
             }
             if (reason != null) {
                 map.put("reason", reason);
+            }
+            if (!factProvenance.isEmpty()) {
+                map.put("fact_provenance", factProvenance);
+            }
+            if (derivationNote != null) {
+                map.put("derivation_note", derivationNote);
             }
             return map;
         }
