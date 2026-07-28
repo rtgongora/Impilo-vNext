@@ -28,6 +28,8 @@
 #           * rebinding the old case returns its ORIGINAL binding
 #   RC-8  a frozen release cannot be edited, and an unbound case resolves to an
 #         error rather than silently falling back to what is active today
+#   RC-9  an unset value must be DECLARED unset, and the warning is graded by
+#         whether a journey this release publishes actually depends on it
 #
 # Usage:  scripts/runtime-proof/regulatory-config-registry-journeys.sh
 #         KEEP_RIG=1 to leave Postgres + the service running for inspection.
@@ -276,6 +278,74 @@ GHOST=$(code $(hdr) "$API/case-bindings/VARAPI/PROVIDER_APPLICATION/never-opened
 [ "$GHOST" = 404 ] \
     && ok "an unbound case 404s rather than silently answering with today's configuration" \
     || bad "an unbound case resolved to something (got $GHOST)"
+
+# ═════ RC-9: declared-unset, and graded by consequence ══════════════════════
+say "RC-9: silence about an unset value is refused; the warning is graded"
+
+# Before V014 this authored cleanly and the release validated with zero findings — a fee with no
+# amount and no declaration read exactly like a configured one.
+UNDECLARED=$(code $(hdr) -X POST "$API/packs/$PACK/versions" -d '{
+  "typeCode":"FEE_SCHEDULE","definitionKey":"renewal-fee","label":"Renewal fee",
+  "semanticVersion":"1.0.0","payload":{"amount":null},"selfServiceRoute":"/x"}')
+[ "$UNDECLARED" = 400 ] && ok "a fee that declares no policy status is refused (400)" \
+    || bad "an undeclared policy value was accepted (got $UNDECLARED)"
+
+NOREF=$(code $(hdr) -X POST "$API/packs/$PACK/versions" -d '{
+  "typeCode":"FEE_SCHEDULE","definitionKey":"renewal-fee","label":"Renewal fee",
+  "semanticVersion":"1.0.0","payload":{"amount":null},"selfServiceRoute":"/x",
+  "policyStatus":"PENDING_REGULATOR_APPROVAL"}')
+[ "$NOREF" = 400 ] && ok "pending without naming the decision is refused (400)" \
+    || bad "an untraceable pending decision was accepted (got $NOREF)"
+
+FORMOK=$(code $(hdr) -X POST "$API/packs/$PACK/versions" -d '{
+  "typeCode":"FORM","definitionKey":"renewal-form","label":"Renewal form",
+  "semanticVersion":"1.0.0","payload":{"sections":[]},"selfServiceRoute":"/x"}')
+[ "$FORMOK" = 201 ] && ok "a form needs no policy declaration (no ceremony where there is no value)" \
+    || bad "a non-policy type was forced to declare (got $FORMOK)"
+
+# Two unset values, identical lifecycle state, different consequence for an applicant.
+NUM=$(must 201 $(hdr) -X POST "$API/packs/$PACK/versions" -d '{
+  "typeCode":"NUMBERING_POLICY","definitionKey":"student-index","label":"Student index number",
+  "semanticVersion":"1.0.0","payload":{"format":null},
+  "selfServiceRoute":"/professional/regulatory/registration",
+  "policyStatus":"PENDING_REGULATOR_APPROVAL","policyDecisionRef":"NCZ-DEC-001"}' | jq_ "['id']")
+CPD=$(must 201 $(hdr) -X POST "$API/packs/$PACK/versions" -d '{
+  "typeCode":"CPD_RULES","definitionKey":"cpd-cycle","label":"CPD cycle",
+  "semanticVersion":"1.0.0","payload":{"credits":null},
+  "selfServiceRoute":"/professional/regulatory/cpd",
+  "policyStatus":"PENDING_REGULATOR_APPROVAL","policyDecisionRef":"NCZ-DEC-012"}' | jq_ "['id']")
+APPT=$(must 201 $(hdr) -X POST "$API/packs/$PACK/versions" -d '{
+  "typeCode":"APPLICATION_TYPE","definitionKey":"student-registration-graded",
+  "label":"Student registration","semanticVersion":"1.0.0",
+  "payload":{"name":"Student registration","graded":true},
+  "selfServiceRoute":"/professional/regulatory/apply/student",
+  "dependencies":[{"typeCode":"NUMBERING_POLICY","definitionKey":"student-index","optional":false}]}' \
+  | jq_ "['id']")
+
+R3=$(must 201 $(hdr) -X POST "$API/packs/$PACK/releases" \
+    -d '{"releaseKey":"graded","label":"Graded warnings"}' | jq_ "['id']")
+for v in "$NUM" "$CPD" "$APPT"; do
+    must 200 $(hdr) -X POST "$API/releases/$R3/items" -d "{\"definitionVersionId\":\"$v\"}" >/dev/null
+done
+
+VAL=$(curl -sS $(hdr) "$API/releases/$R3/validation")
+echo "$VAL" > "$EV/graded-validation.json"
+CRIT=$(echo "$VAL" | python3 -c "import json,sys;print(next((w['subject'] for w in json.load(sys.stdin)['warnings'] if w['code']=='POLICY_VALUE_UNSET_ON_CRITICAL_PATH'),''))")
+QUIET=$(echo "$VAL" | python3 -c "import json,sys;print(next((w['subject'] for w in json.load(sys.stdin)['warnings'] if w['code']=='POLICY_VALUE_UNSET'),''))")
+[ "$CRIT" = "student-index" ] \
+    && ok "the index-number format is loud: student registration depends on it" \
+    || bad "expected student-index on the critical path, got '$CRIT'"
+[ "$QUIET" = "cpd-cycle" ] \
+    && ok "the CPD cycle is quiet: unset, and nothing an applicant reaches depends on it" \
+    || bad "expected cpd-cycle as the ungraded warning, got '$QUIET'"
+NAMED=$(echo "$VAL" | python3 -c "import json,sys;print(next((w['message'] for w in json.load(sys.stdin)['warnings'] if w['code']=='POLICY_VALUE_UNSET_ON_CRITICAL_PATH'),''))")
+# Assert both strings independently — a single glob would silently encode an order the message
+# does not promise, and would fail on a rewording that is still correct.
+if [ -n "${NAMED##*Student registration*}" ] || [ -n "${NAMED##*NCZ-DEC-001*}" ]; then
+    bad "the loud warning does not name both the journey and the decision: $NAMED"
+else
+    ok "the loud warning names the journey and the pending decision"
+fi
 
 PSQL "SELECT case_ref, release_id FROM org_registry.regulatory_case_config_binding ORDER BY case_ref" \
     > "$EV/case-bindings.txt"

@@ -81,6 +81,16 @@ class RegulatoryConfigServiceTest {
         }
     }
 
+    private ConfigDefinitionTypeEntity feeType(boolean carriesPolicyValue) {
+        ConfigDefinitionTypeEntity type = new ConfigDefinitionTypeEntity();
+        type.setTypeCode("FEE_SCHEDULE");
+        type.setLabel("Fee schedule");
+        type.setRequiresFourEyes(true);
+        type.setApplicantFacing(true);
+        type.setCarriesPolicyValue(carriesPolicyValue);
+        return type;
+    }
+
     private ConfigDefinitionEntity definition() {
         ConfigDefinitionEntity definition = new ConfigDefinitionEntity();
         definition.setId(UUID.randomUUID());
@@ -97,7 +107,7 @@ class RegulatoryConfigServiceTest {
     @Test
     void reAuthoringAVersionWithDifferentContentIsRefused() {
         ConfigDefinitionEntity definition = definition();
-        when(typeRepository.existsById("FEE_SCHEDULE")).thenReturn(true);
+        when(typeRepository.findById("FEE_SCHEDULE")).thenReturn(Optional.of(feeType(true)));
         when(definitionRepository.findByTenantIdAndPackIdAndTypeCodeAndDefinitionKey(
                 TENANT, PACK, "FEE_SCHEDULE", "student-index-fee")).thenReturn(Optional.of(definition));
 
@@ -111,7 +121,7 @@ class RegulatoryConfigServiceTest {
 
         assertThatThrownBy(() -> service.authorVersion(TENANT, PACK, "FEE_SCHEDULE",
                 "student-index-fee", "Student index fee", "1.0.0", json("{\"amount\":25}"),
-                "/x", null, null, null, List.of(), "HID-AUTHOR"))
+                "/x", "CONFIRMED", null, null, List.of(), "HID-AUTHOR"))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("already recorded with different content");
 
@@ -121,7 +131,7 @@ class RegulatoryConfigServiceTest {
     @Test
     void reAuthoringAVersionWithIdenticalContentIsANoOpSoImportsAreIdempotent() {
         ConfigDefinitionEntity definition = definition();
-        when(typeRepository.existsById("FEE_SCHEDULE")).thenReturn(true);
+        when(typeRepository.findById("FEE_SCHEDULE")).thenReturn(Optional.of(feeType(true)));
         when(definitionRepository.findByTenantIdAndPackIdAndTypeCodeAndDefinitionKey(
                 TENANT, PACK, "FEE_SCHEDULE", "student-index-fee")).thenReturn(Optional.of(definition));
 
@@ -137,8 +147,8 @@ class RegulatoryConfigServiceTest {
         // Re-importing the pack with the keys in a different order must not read as a change.
         ConfigDefinitionVersionEntity result = service.authorVersion(TENANT, PACK, "FEE_SCHEDULE",
                 "student-index-fee", "Student index fee", "1.0.0",
-                json("{\"currency\":\"USD\",\"amount\":null}"), "/x", null, null, null,
-                List.of(), "HID-AUTHOR");
+                json("{\"currency\":\"USD\",\"amount\":null}"), "/x",
+                "PENDING_REGULATOR_APPROVAL", "NCZ-DEC-002", null, List.of(), "HID-AUTHOR");
 
         assertThat(result).isSameAs(existing);
         verify(versionRepository, never()).save(any());
@@ -146,12 +156,40 @@ class RegulatoryConfigServiceTest {
 
     @Test
     void aDefinitionTypeWithNoEngineIsRefusedAtAuthoringTime() {
-        when(typeRepository.existsById("EXOTIC")).thenReturn(false);
+        when(typeRepository.findById("EXOTIC")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.authorVersion(TENANT, PACK, "EXOTIC", "x", "X", "1.0.0",
                 json("{}"), null, null, null, null, List.of(), "HID-AUTHOR"))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Unknown definition type");
+    }
+
+    @Test
+    void authoringAPolicyCarryingDefinitionWithoutDeclaringItsStatusIsRefused() {
+        // Before this guard, a fee authored with amount null and no declared status validated
+        // completely clean — it read as fully configured. Silence must not be cheaper than honesty.
+        when(typeRepository.findById("FEE_SCHEDULE")).thenReturn(Optional.of(feeType(true)));
+
+        assertThatThrownBy(() -> service.authorVersion(TENANT, PACK, "FEE_SCHEDULE",
+                "student-index-fee", "Student index fee", "1.0.0", json("{\"amount\":null}"),
+                "/x", null, null, null, List.of(), "HID-AUTHOR"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("must declare policyStatus");
+
+        verify(versionRepository, never()).save(any());
+    }
+
+    @Test
+    void declaringPendingWithoutNamingTheDecisionIsRefused() {
+        when(typeRepository.findById("FEE_SCHEDULE")).thenReturn(Optional.of(feeType(true)));
+
+        assertThatThrownBy(() -> service.authorVersion(TENANT, PACK, "FEE_SCHEDULE",
+                "student-index-fee", "Student index fee", "1.0.0", json("{\"amount\":null}"),
+                "/x", "PENDING_REGULATOR_APPROVAL", "  ", null, List.of(), "HID-AUTHOR"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("does not say which one");
+
+        verify(versionRepository, never()).save(any());
     }
 
     // ── Four-eyes ────────────────────────────────────────────────────────────────────────────

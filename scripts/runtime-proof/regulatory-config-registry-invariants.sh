@@ -28,6 +28,9 @@
 #   I12  a (definition, version) pair cannot be redeclared with new content
 #   I13  a release cannot carry two versions of the same definition
 #   I14  semantic_version must be semver
+#   I15  a type that carries a regulator-only value must DECLARE whether it is set
+#   I16  anything PENDING_REGULATOR_APPROVAL must name the decision it awaits
+#   I17  a type carrying no policy value needs no declaration
 #
 # Usage:  scripts/runtime-proof/regulatory-config-registry-invariants.sh
 #         KEEP_RIG=1 to leave the Postgres container up for inspection.
@@ -102,8 +105,10 @@ BEGIN
     VALUES (tid, packid, 'FEE_SCHEDULE', 'student-index-fee', 'Student index fee')
     RETURNING id INTO defid;
   INSERT INTO org_registry.regulatory_config_definition_version
-      (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by)
-    VALUES (tid, defid, '1.0.0', '{"amount":null}'::jsonb, repeat('a',64), 'HID-AUTHOR')
+      (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by,
+       policy_status, policy_decision_ref)
+    VALUES (tid, defid, '1.0.0', '{"amount":null}'::jsonb, repeat('a',64), 'HID-AUTHOR',
+            'PENDING_REGULATOR_APPROVAL', 'NCZ-DEC-002')
     RETURNING id INTO verid;
   INSERT INTO org_registry.regulatory_config_release
       (tenant_id, pack_id, release_key, label, submitted_by)
@@ -192,15 +197,18 @@ BEGIN
   BEGIN
     INSERT INTO org_registry.regulatory_config_definition_version
         (tenant_id, definition_id, semantic_version, payload, content_hash,
-         authored_by, lifecycle_state)
-      VALUES (tid, defid, '2.0.0', '{}'::jsonb, repeat('b',64), 'HID-AUTHOR', 'ACTIVE');
+         authored_by, lifecycle_state, policy_status)
+      VALUES (tid, defid, '2.0.0', '{}'::jsonb, repeat('b',64), 'HID-AUTHOR', 'ACTIVE',
+              'CONFIRMED');
     RAISE EXCEPTION 'I11 FAIL — two ACTIVE versions of one definition';
   EXCEPTION WHEN unique_violation THEN RAISE NOTICE 'I11 one active version per definition'; END;
 
   BEGIN
     INSERT INTO org_registry.regulatory_config_definition_version
-        (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by)
-      VALUES (tid, defid, '1.0.0', '{"different":true}'::jsonb, repeat('c',64), 'HID-AUTHOR');
+        (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by,
+         policy_status)
+      VALUES (tid, defid, '1.0.0', '{"different":true}'::jsonb, repeat('c',64), 'HID-AUTHOR',
+              'CONFIRMED');
     RAISE EXCEPTION 'I12 FAIL — redeclared 1.0.0 with different content';
   EXCEPTION WHEN unique_violation THEN RAISE NOTICE 'I12 version identity immutable'; END;
 
@@ -214,10 +222,44 @@ BEGIN
 
   BEGIN
     INSERT INTO org_registry.regulatory_config_definition_version
-        (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by)
-      VALUES (tid, defid, 'v1', '{}'::jsonb, repeat('d',64), 'X');
+        (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by,
+         policy_status)
+      VALUES (tid, defid, 'v1', '{}'::jsonb, repeat('d',64), 'X', 'CONFIRMED');
     RAISE EXCEPTION 'I14 FAIL — accepted a non-semver version string';
   EXCEPTION WHEN check_violation THEN RAISE NOTICE 'I14 semver format enforced'; END;
+
+  -- V014. A fee schedule can be structurally complete while its amount is absent, so silence
+  -- about that amount must be impossible: an undeclared value is indistinguishable from a
+  -- configured one, and the author who says nothing must not fare better than the honest one.
+  BEGIN
+    INSERT INTO org_registry.regulatory_config_definition_version
+        (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by)
+      VALUES (tid, defid, '3.0.0', '{"amount":null}'::jsonb, repeat('e',64), 'X');
+    RAISE EXCEPTION 'I15 FAIL — authored a fee with no declared policy status';
+  EXCEPTION WHEN check_violation THEN RAISE NOTICE 'I15 policy value must be declared'; END;
+
+  BEGIN
+    INSERT INTO org_registry.regulatory_config_definition_version
+        (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by,
+         policy_status)
+      VALUES (tid, defid, '4.0.0', '{"amount":null}'::jsonb, repeat('f',64), 'X',
+              'PENDING_REGULATOR_APPROVAL');
+    RAISE EXCEPTION 'I16 FAIL — pending without naming the decision';
+  EXCEPTION WHEN check_violation THEN RAISE NOTICE 'I16 pending must name its decision'; END;
+
+  -- A type that carries no regulator-only value needs no declaration; requiring one everywhere
+  -- would be ceremony, and ceremony is what makes people stop reading findings.
+  DECLARE
+    formdef UUID;
+  BEGIN
+    INSERT INTO org_registry.regulatory_config_definition
+        (tenant_id, pack_id, type_code, definition_key, label)
+      VALUES (tid, packid, 'FORM', 'student-form', 'Student form') RETURNING id INTO formdef;
+    INSERT INTO org_registry.regulatory_config_definition_version
+        (tenant_id, definition_id, semantic_version, payload, content_hash, authored_by)
+      VALUES (tid, formdef, '1.0.0', '{"sections":[]}'::jsonb, repeat('9',64), 'X');
+    RAISE NOTICE 'I17 non-policy types need no declaration';
+  END;
 END $$;
 SQL
 rc=$?
@@ -226,10 +268,10 @@ grep -E '^NOTICE:' "$EV/invariants.log" | sed 's/^NOTICE:  //' | while read -r l
     echo "   $line"
 done
 n_ok=$(grep -cE '^NOTICE:  I' "$EV/invariants.log")
-if [ "$rc" -eq 0 ] && [ "$n_ok" -eq 15 ]; then
-    ok "15/15 schema invariants refused their violation"
+if [ "$rc" -eq 0 ] && [ "$n_ok" -eq 18 ]; then
+    ok "18/18 schema invariants held (each refusal proven by attempting the violation)"
 else
-    bad "invariant proof incomplete (rc=$rc, invariants observed=$n_ok/15)"
+    bad "invariant proof incomplete (rc=$rc, invariants observed=$n_ok/18)"
     grep -E '^(ERROR|psql:)' "$EV/invariants.log" | head -5
 fi
 
