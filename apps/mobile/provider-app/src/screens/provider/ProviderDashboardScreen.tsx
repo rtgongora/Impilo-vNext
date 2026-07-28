@@ -29,6 +29,8 @@ import type {
 } from "../../types";
 
 import { buildProviderCommsKpis } from "../../lib/providerCommsKpis";
+import { useSwitchAppMode } from "../../hooks/useSwitchAppMode";
+import type { AppMode } from "../../types";
 
 export { buildProviderCommsKpis };
 
@@ -68,7 +70,16 @@ function badgeVariantForPriority(priority?: string): "destructive" | "secondary"
 
 export function ProviderDashboardScreen() {
   const auth = useAuth();
-  const { facilityId, facilityName, workspaceName, setProviderTab, setMode, setLearningSubject } = useAppStore();
+  const { facilityId, facilityName, workspaceName, setProviderTab, setLearningSubject } = useAppStore();
+  // Every mode entry from this screen goes through the minting switcher —
+  // supervisor is a governed mode, so jumping straight there would leave the
+  // clinician's CLINICAL_CARE token in place behind a supervisory workspace.
+  const { switchAppMode } = useSwitchAppMode();
+  const enterMode = useCallback((mode: AppMode) => void switchAppMode(mode), [switchAppMode]);
+  const openSupervisorEscalations = useCallback(() => {
+    appStore.getState().setSupervisorEntryTab("escalations");
+    void switchAppMode("supervisor");
+  }, [switchAppMode]);
   const { activeEncounter } = useEncounterStore();
   const { dashboard: commsDashboard } = useCommunicationDashboard();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -86,10 +97,10 @@ export function ProviderDashboardScreen() {
     () =>
       buildProviderServiceCards({
         setProviderTab,
-        setMode,
+        enterMode,
         openClinicalTool: (toolId) => appStore.getState().setClinicalToolsInitialTab(toolId),
       }),
-    [setProviderTab, setMode]
+    [setProviderTab, enterMode]
   );
 
   const loadDashboard = useCallback(async () => {
@@ -270,7 +281,7 @@ export function ProviderDashboardScreen() {
               </View>
             ) : null}
             <View style={styles.metricsRow}>
-              {buildProviderCommsKpis(commsDashboard, setProviderTab, setMode).map((m) => (
+              {buildProviderCommsKpis(commsDashboard, setProviderTab, openSupervisorEscalations).map((m) => (
                 <Pressable
                   key={m.label}
                   onPress={m.onPress}
@@ -439,8 +450,7 @@ export function ProviderDashboardScreen() {
           <Pressable
             style={({ pressed }) => [styles.supportChip, { opacity: pressed ? 0.88 : 1 }]}
             onPress={() => {
-              appStore.getState().setSupervisorEntryTab("escalations");
-              setMode("supervisor");
+              openSupervisorEscalations();
             }}
             testID="launch-system-support"
           >
@@ -458,8 +468,7 @@ export function ProviderDashboardScreen() {
                   {
                     text: "Open support",
                     onPress: () => {
-                      appStore.getState().setSupervisorEntryTab("escalations");
-                      setMode("supervisor");
+                      openSupervisorEscalations();
                     },
                   },
                 ],

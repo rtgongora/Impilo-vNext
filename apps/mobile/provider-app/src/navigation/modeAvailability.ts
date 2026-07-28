@@ -27,7 +27,7 @@
  * real backend assignment exists yet to confirm or extend them.
  */
 import type { ResolvedWorkContextView } from "@impilo/mobile-trust";
-import type { AppMode } from "../types";
+import type { AppMode, GovernedAppMode } from "../types";
 
 const CLINICAL_WORK_MODES = new Set(["CLINICAL_CARE", "VIRTUAL_CARE"]);
 const SUPERVISORY_WORK_MODES = new Set([
@@ -48,14 +48,23 @@ const SUPERVISORY_WORK_MODES = new Set([
  * the PDP's clinicalDataAccess gate (Phase B4) then declines to fold the
  * clinical role every clinical policy rule matches on.
  */
-export const WORK_MODES_FOR_APP_MODE: Partial<Record<AppMode, string[]>> = {
+export const WORK_MODES_FOR_APP_MODE: Record<GovernedAppMode, string[]> = {
   provider: ["CLINICAL_CARE", "VIRTUAL_CARE"],
   supervisor: ["FACILITY_MANAGEMENT", "DEPARTMENT_MANAGEMENT", "JURISDICTION_OPERATIONS", "PROGRAMME_MANAGEMENT"],
 };
 
-/** True when entering this AppMode must be backed by a freshly minted duty token. */
-export function requiresWorkContextMint(appMode: AppMode): boolean {
-  return WORK_MODES_FOR_APP_MODE[appMode] !== undefined;
+/**
+ * True when entering this AppMode must be backed by a freshly minted duty token.
+ *
+ * A type predicate, not a plain boolean, so the compiler carries the answer to
+ * the call site: the ungoverned branch narrows to `UngovernedAppMode` (the only
+ * thing `appStore.setMode` accepts) and the governed branch narrows to
+ * `GovernedAppMode` (the only thing `setGrantedMode` accepts). Adding a mode to
+ * `WORK_MODES_FOR_APP_MODE` without widening `GovernedAppMode` is a compile
+ * error, and vice versa — the map and the type cannot drift apart.
+ */
+export function requiresWorkContextMint(appMode: AppMode): appMode is GovernedAppMode {
+  return appMode in WORK_MODES_FOR_APP_MODE;
 }
 
 /**
@@ -65,7 +74,7 @@ export function requiresWorkContextMint(appMode: AppMode): boolean {
  * mode the backend has not granted.
  */
 export function selectContextForAppMode(
-  appMode: AppMode,
+  appMode: GovernedAppMode,
   contexts: ResolvedWorkContextView[] | null,
   currentContextId?: string
 ): { context: ResolvedWorkContextView; workMode: string } | null {

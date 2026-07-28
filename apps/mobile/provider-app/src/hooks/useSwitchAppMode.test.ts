@@ -21,6 +21,7 @@ vi.mock("@impilo/mobile-auth", () => ({ useAuth: () => authMocks }));
 const storeState = vi.hoisted(() => ({
   resolvedWorkContexts: null as ResolvedWorkContextView[] | null,
   setMode: vi.fn(),
+  setGrantedMode: vi.fn(),
 }));
 vi.mock("../stores/appStore", () => ({
   useAppStore: () => storeState,
@@ -79,7 +80,7 @@ describe("useSwitchAppMode (G3)", () => {
       expect.objectContaining({ contextId: "ctx-1" }),
       "FACILITY_MANAGEMENT"
     );
-    expect(storeState.setMode).toHaveBeenCalledWith("supervisor");
+    expect(storeState.setGrantedMode).toHaveBeenCalledWith("supervisor");
   });
 
   it("does NOT move the visible mode when the mint fails", async () => {
@@ -93,7 +94,7 @@ describe("useSwitchAppMode (G3)", () => {
     });
 
     expect(ok).toBe(false);
-    expect(storeState.setMode).not.toHaveBeenCalled();
+    expect(storeState.setGrantedMode).not.toHaveBeenCalled();
   });
 
   it("refuses a mode no resolved assignment grants, rather than entering it locally", async () => {
@@ -107,7 +108,7 @@ describe("useSwitchAppMode (G3)", () => {
 
     expect(ok).toBe(false);
     expect(switchContextMocks.switchWorkContext).not.toHaveBeenCalled();
-    expect(storeState.setMode).not.toHaveBeenCalled();
+    expect(storeState.setGrantedMode).not.toHaveBeenCalled();
     expect(result.current().error).toContain("grant this way of working");
   });
 
@@ -128,6 +129,7 @@ describe("useSwitchAppMode (G3)", () => {
 
     for (const mode of ["outreach", "courier", "offline"] as const) {
       storeState.setMode.mockClear();
+      storeState.setGrantedMode.mockClear();
       switchContextMocks.switchWorkContext.mockClear();
       let ok: boolean | undefined;
       await act(async () => {
@@ -135,6 +137,8 @@ describe("useSwitchAppMode (G3)", () => {
       });
       expect(ok, `${mode} should switch locally`).toBe(true);
       expect(storeState.setMode).toHaveBeenCalledWith(mode);
+      // Ungoverned entry must never touch the granted-mode setter.
+      expect(storeState.setGrantedMode).not.toHaveBeenCalled();
       expect(switchContextMocks.switchWorkContext).not.toHaveBeenCalled();
     }
   });

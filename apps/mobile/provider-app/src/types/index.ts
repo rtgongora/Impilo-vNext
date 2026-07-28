@@ -5,7 +5,35 @@
  * Maps directly to BFF API response shapes.
  */
 
+/**
+ * Which workspace the shell is showing. Post-Phase-G3 this is a NAVIGATION
+ * selector, not an authority model: authority travels in the minted
+ * work-context token (x-work-context-token), and the PDP reads it from there.
+ *
+ * Architecture decision #11 says delete this enum "once no protected behaviour
+ * depends on it". Authority no longer does — but deleting it outright is still
+ * wrong today, because `outreach`, `offline` and `courier` have NO WorkMode
+ * analogue in the resolver's 10-mode catalog. Removing the enum would mean
+ * either losing three working workspaces or inventing backend modes that
+ * describe nothing real. The honest end state is a backend that models
+ * outreach/courier/offline as governed contexts; until then the enum stays,
+ * reduced to navigation and fenced by the split below.
+ */
 export type AppMode = "provider" | "outreach" | "supervisor" | "offline" | "courier";
+
+/**
+ * AppModes that DO map to a governed WorkMode (see WORK_MODES_FOR_APP_MODE).
+ * These may only be entered through `useSwitchAppMode`, which mints a duty
+ * token for the target mode first — entering one directly would leave the
+ * person holding their previous token while the UI claims a new posture,
+ * which is precisely the narrowing failure Phase B4's clinicalDataAccess gate
+ * exists to prevent. `appStore` accepts these only via `setGrantedMode`, so
+ * the compiler rejects a direct jump rather than relying on reviewer memory.
+ */
+export type GovernedAppMode = "provider" | "supervisor";
+
+/** AppModes with no governed WorkMode analogue — free local navigation. */
+export type UngovernedAppMode = Exclude<AppMode, GovernedAppMode>;
 export type ProviderTabKey =
   | "workhome"
   | "dashboard"
