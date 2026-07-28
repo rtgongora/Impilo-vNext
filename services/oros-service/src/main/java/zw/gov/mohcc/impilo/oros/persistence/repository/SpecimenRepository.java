@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.oros.domain.SpecimenStatus;
 import zw.gov.mohcc.impilo.oros.persistence.entity.SpecimenEntity;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +14,9 @@ public interface SpecimenRepository extends JpaRepository<SpecimenEntity, UUID> 
 
     /** Specimens for an order, newest first. */
     List<SpecimenEntity> findByOrderIdOrderByCreatedAtDesc(String orderId);
+
+    /** Batch form — see OrderItemRepository.findByOrderIdIn. */
+    List<SpecimenEntity> findByOrderIdIn(Collection<String> orderIds);
 
     /** Specimens in a tenant at a given status (e.g. awaiting receipt at the lab). */
     List<SpecimenEntity> findByTenantIdAndStatusOrderByCreatedAtDesc(UUID tenantId, SpecimenStatus status);

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.oros.domain.ResultStatus;
 import zw.gov.mohcc.impilo.oros.persistence.entity.ResultEntity;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,6 +16,9 @@ import java.util.UUID;
 public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
 
     List<ResultEntity> findByOrderIdOrderByCreatedAtDesc(String orderId);
+
+    /** Batch form — see OrderItemRepository.findByOrderIdIn. */
+    List<ResultEntity> findByOrderIdIn(Collection<String> orderIds);
 
     /** Highest-version result of a given report status for an order (e.g. the current FINAL). */
     Optional<ResultEntity> findFirstByOrderIdAndReportStatusOrderByVersionDesc(

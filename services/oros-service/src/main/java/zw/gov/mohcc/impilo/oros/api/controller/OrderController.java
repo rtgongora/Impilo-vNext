@@ -53,6 +53,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/v1/orders")
 public class OrderController {
 
+    private final zw.gov.mohcc.impilo.oros.core.OrderSummaryProjection orderSummaryProjection;
+
     private static final Logger log = LoggerFactory.getLogger(OrderController.class);
 
     private final OrderStateMachine stateMachine;
@@ -75,7 +77,9 @@ public class OrderController {
                            RoutingEngine routingEngine,
                            WorkstepEngine workstepEngine,
                            SlaService slaService,
-                           OrderLifecycleService lifecycleService) {
+                           OrderLifecycleService lifecycleService,
+                           zw.gov.mohcc.impilo.oros.core.OrderSummaryProjection orderSummaryProjection) {
+        this.orderSummaryProjection = orderSummaryProjection;
         this.stateMachine = stateMachine;
         this.submissionService = submissionService;
         this.imagingWorkflowService = imagingWorkflowService;
@@ -282,9 +286,8 @@ public class OrderController {
             @RequestParam(name = "encounter", required = false) String encounter) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
-        List<OrderSummaryDto> orders = orderQueryService.search(client, requester, status, type, encounter).stream()
-                .map(OrderSummaryDto::from)
-                .collect(Collectors.toList());
+        List<OrderSummaryDto> orders = orderSummaryProjection.summarise(
+                orderQueryService.search(client, requester, status, type, encounter));
 
         return ResponseEntity.ok(ApiResponse.ok(orders, correlationId));
     }
@@ -382,9 +385,7 @@ public class OrderController {
             @PathVariable String cpid) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
-        List<OrderSummaryDto> orders = stateMachine.getPatientOrders(cpid).stream()
-                .map(OrderSummaryDto::from)
-                .collect(Collectors.toList());
+        List<OrderSummaryDto> orders = orderSummaryProjection.summarise(stateMachine.getPatientOrders(cpid));
 
         return ResponseEntity.ok(ApiResponse.ok(orders, correlationId));
     }
