@@ -23,6 +23,10 @@ import {
   type Notice,
   type UpdateProfileInput,
 } from "../../services/profileService";
+import {
+  getProfessionalAlerts,
+  type ProfessionalAlerts,
+} from "../../services/professionalAlertsService";
 
 const SEVERITY_VARIANT: Record<string, "destructive" | "warning" | "secondary"> = {
   CRITICAL: "destructive",
@@ -37,6 +41,8 @@ function formatDate(iso: string): string {
 export function ProfessionalProfileScreen() {
   const [profile, setProfile] = useState<ProviderProfile | null>(null);
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [alerts, setAlerts] = useState<ProfessionalAlerts | null>(null);
+  const [alertsFailed, setAlertsFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -50,6 +56,18 @@ export function ProfessionalProfileScreen() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setAlertsFailed(false);
+    // Alerts are fetched alongside but NOT inside the Promise.all below: a
+    // professional-standing read failing must not blank the whole profile
+    // screen, and conversely must never be silently swallowed into a clean
+    // "no alerts" state — see the degraded banner in the Alerts section.
+    const alertsPromise = getProfessionalAlerts().then(
+      (result) => setAlerts(result),
+      () => {
+        setAlerts(null);
+        setAlertsFailed(true);
+      }
+    );
     try {
       const [profileResult, noticesResult] = await Promise.all([
         getProfile(),
@@ -63,6 +81,7 @@ export function ProfessionalProfileScreen() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
+      await alertsPromise;
       setLoading(false);
     }
   }, []);
@@ -285,6 +304,62 @@ export function ProfessionalProfileScreen() {
           </CardBody>
         </Card>
 
+        {/* Professional standing (Phase G5) — same BFF surface as web /professional */}
+        <CardHeader>Professional Standing</CardHeader>
+        {alertsFailed ? (
+          <Card>
+            <CardBody>
+              <View testID="professional-alerts-degraded">
+                <Text style={styles.alertsDegradedTitle}>Standing could not be checked</Text>
+                <Text style={styles.alertsDegradedBody}>
+                  Your licence, CPD and assignment status could not be read just now. This is not
+                  an all-clear — retry before relying on it.
+                </Text>
+              </View>
+            </CardBody>
+          </Card>
+        ) : alerts?.status === "DEGRADED" ? (
+          <Card>
+            <CardBody>
+              <View testID="professional-alerts-degraded">
+                <Text style={styles.alertsDegradedTitle}>Standing partially unavailable</Text>
+                <Text style={styles.alertsDegradedBody}>
+                  {alerts.note ?? "Some professional-standing sources did not answer."}
+                </Text>
+              </View>
+            </CardBody>
+          </Card>
+        ) : !alerts || alerts.items.length === 0 ? (
+          <EmptyState title="Nothing outstanding" message="No licence, CPD or assignment actions need you" />
+        ) : (
+          alerts.items.map((item) => (
+            <Card key={item.id}>
+              <CardBody>
+                <View testID={`professional-alert-${item.id}`}>
+                  <View style={styles.noticeHeader}>
+                    <Badge variant={item.priority === "HIGH" ? "destructive" : "warning"}>
+                      {item.kind === "LICENCE_ALERT"
+                        ? "Licence"
+                        : item.kind === "CPD_ALERT"
+                          ? "CPD"
+                          : item.kind === "ASSIGNMENT_ALERT"
+                            ? "Assignment"
+                            : "Standing"}
+                    </Badge>
+                    {item.due_at ? (
+                      <Text style={styles.noticeDate}>{formatDate(item.due_at)}</Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.noticeTitle}>{item.title}</Text>
+                  {item.description ? (
+                    <Text style={styles.noticeBody}>{item.description}</Text>
+                  ) : null}
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+
         {/* Notices */}
         <CardHeader>Professional Notices</CardHeader>
         {notices.length === 0 ? (
@@ -395,6 +470,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  alertsDegradedTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.ui.error.main,
+  },
+  alertsDegradedBody: {
+    fontSize: 14,
+    color: colors.gray[700],
+    marginTop: 4,
   },
   noticeDate: {
     fontSize: 12,

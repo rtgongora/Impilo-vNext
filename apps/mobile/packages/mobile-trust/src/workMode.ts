@@ -1,16 +1,18 @@
 /**
  * Impilo vNext — Mobile Work Mode Contract
  *
- * Hand-mirror of contracts/trust/types/work-mode.ts (itself the TS twin of
- * libs/tshepo-contracts/.../enums/WorkMode.java). This is the pragmatic G1
- * choice, not the target end-state: G2 is expected to give mobile a real
- * shared-package bridge into contracts/trust (apps/mobile is its own pnpm
- * workspace and cannot reach contracts/trust via a relative import the way
- * ui/one-ui-shell does), at which point this file should be deleted in favour
- * of the shared import. Until then, keep every value here byte-identical to
- * contracts/trust/types/work-mode.ts — there is no golden-thread test
- * enforcing that yet (unlike ~60 web-side tests that compare against the Java
- * enum), so a manual diff is required whenever WorkMode changes upstream.
+ * Mirror of contracts/trust/types/work-mode.ts (itself the TS twin of
+ * libs/tshepo-contracts/.../enums/WorkMode.java), kept in step by
+ * test/workModeParity.test.ts — which loads the canonical file and fails the
+ * build on any disagreement in modes, labels, anchorKind, clinicalDataAccess,
+ * or the identified-clinical-read rule. Edit the canonical file first, then
+ * mirror here; the test is what makes that safe.
+ *
+ * A mirror exists at all because apps/mobile is its own pnpm workspace and
+ * Metro's watchFolders stop at apps/mobile, so mobile cannot `import` the
+ * canonical file the way ui/one-ui-shell does (a relative import escaping its
+ * own workspace). Collapsing this into a direct import is still the better end
+ * state, but it needs bundler work verified against a real Metro build.
  */
 
 export type WorkMode =

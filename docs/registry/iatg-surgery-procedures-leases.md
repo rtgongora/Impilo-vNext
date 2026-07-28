@@ -288,8 +288,9 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P12 done, P13–P15 remaining — see §10–§12, §14–§16) · **Wave P-R2
-reachability re-wire (done — see §13)** · Phase S surgery (S0–S18, not started). Full plan in
+Phase P pipeline (P0–P13 done — P13 partial by design, see §17 — P14–P15 remaining — see
+§10–§12, §14–§17) · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
+(S0–S18, not started). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -579,3 +580,44 @@ catch anything concurrent lanes landed in the meantime — 164/164 both times.
 Proof: `ProcedureFinancialClearanceTest` (10 tests). `procedures-financial-clearance-
 journeys.sh` (9/9, real Postgres, whole inpatient migration chain). DAK matrix regenerated (149
 artefacts, 13 COVERED_ELSEWHERE, 115 DEFERRED, 0 uncovered). Module regression: 164/164.
+
+## 17. Wave P13 — FHIR Specimen resource (done, partial by design)
+
+Closes only the SPECIMEN slice of §24 (interoperability — 8 resources named absent). Research
+first: `ADR-SURGERY-AND-PROCEDURES-SERVICE-BOUNDARIES` §3 already delegates FHIR projection to
+`butano-service`/`fhir-gateway-service`, and the real estate precedent (confirmed via `git log`)
+is domain-service-authored — `oros-service` already built its own FHIR Observation writeback and
+ImagingStudy mapping, not a centralised FHIR service doing all 8.
+
+Of the 8 named-absent resources: ServiceRequest, Specimen, Device/DeviceUseStatement have real
+DATA already (OROS orders; this session's own P8 specimen custody and implant lifecycle) — pure
+mapping tasks. Task, DetectedIssue, GuidanceResponse, Provenance have NO adequate data model
+anywhere yet — mapping them now would mean inventing content to have something to map, the exact
+trap this programme has refused everywhere else (SNOMED, aftercare taxonomy, complication
+classes). This wave closes ONLY Specimen — most directly connected to this session's own P8
+work, in a service already deeply understood this session, using an EXISTING integration point
+(`ButanoProcedureClient`, which already authors FHIR Procedure/DocumentReference for the same
+episode).
+
+`ButanoProcedureClient.writeSpecimen`: a real FHIR Specimen resource with a genuine vocabulary
+TRANSLATION (REJECTED→entered-in-error, INADEQUATE→unsatisfactory), not a passthrough — the two
+vocabularies have already diverged. `SpecimenCustodyService.recordCollection` writes it at the
+point real collector/container data first exists, stores the ref in a new `fhir_specimen_ref`
+column (V303, distinct from the pre-existing `butano_document_ref`, which is the eventual
+pathology-report DocumentReference — a different resource, a different fact). Best-effort: a
+Butano outage never blocks recording custody.
+
+**Two real debts named, not silently absorbed**: ServiceRequest (oros-service, needs an outbound
+FHIR authoring path — only inbound exists today) and Device/DeviceUseStatement
+(inventory-service, which has ZERO existing FHIR/Butano integration to build on — a bigger lift
+than Specimen's, which only needed a new method on an already-existing client). §25 (offline) is
+ALSO not touched this wave — the ADR names `offline-sync-service`/`offline-edge-service`/
+`tshepo-offline-service` as the owner, and "procedure scope" concretely means new `actionType`
+constants in `OfflineRulesEngine`'s hardcoded switch (not a config table), which is that lane's
+own mechanism to extend, not procedures-service's.
+
+Proof: `ButanoProcedureClientTest` (6 tests) proves the actual FHIR resource shape — status
+derivation both directions, optional-block omission, custody notes, best-effort null-on-outage.
+`SpecimenCustodyServiceTest` extended (+3). `procedures-fhir-specimen-journeys.sh` (6/6, real
+Postgres). Full inpatient-service regression: 173/173 (164 prior + 9 new), re-run both before
+and after rebase.

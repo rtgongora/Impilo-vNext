@@ -7,7 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.inpatient.integration.ButanoProcedureClient;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.ProcedureEpisodeEntity;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.ProcedureSpecimenEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureEpisodeRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureSpecimenRepository;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -18,7 +21,11 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -33,6 +40,8 @@ import static org.mockito.Mockito.when;
 class SpecimenCustodyServiceTest {
 
     @Mock ProcedureSpecimenRepository specimenRepository;
+    @Mock ProcedureEpisodeRepository episodeRepository;
+    @Mock ButanoProcedureClient butanoClient;
 
     private SpecimenCustodyService service;
     private final UUID tenant = UUID.randomUUID();
@@ -42,10 +51,11 @@ class SpecimenCustodyServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SpecimenCustodyService(specimenRepository);
+        service = new SpecimenCustodyService(specimenRepository, episodeRepository, butanoClient);
         TrustContextHolder.set(new TrustContext(tenant, "actor-nurse", "STAFF", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
         lenient().when(specimenRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(episodeRepository.findById(episodeId)).thenReturn(Optional.empty());
     }
 
     @AfterEach
@@ -172,5 +182,50 @@ class SpecimenCustodyServiceTest {
         assertEquals("nurse-1", row.get("label_confirmed_by"));
         assertEquals("ADEQUATE", row.get("adequacy"));
         assertEquals("pathologist-1", row.get("adequacy_assessed_by"));
+    }
+
+    // ── Wave P13 (pipeline §24) — the FHIR Specimen resource write on collection ──
+
+    private ProcedureEpisodeEntity episode() {
+        ProcedureEpisodeEntity e = new ProcedureEpisodeEntity();
+        e.setEpisodeId(episodeId);
+        e.setTenantId(tenant);
+        e.setSubjectCpid("CPID-FHIR-1");
+        return e;
+    }
+
+    @Test
+    void recordCollectionWritesARealFhirSpecimenResourceAndStoresTheReturnedRef() {
+        when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode()));
+        when(specimenRepository.findById(specimenId)).thenReturn(Optional.of(specimen()));
+        when(butanoClient.writeSpecimen(eq("CPID-FHIR-1"), any(ProcedureSpecimenEntity.class)))
+                .thenReturn("Specimen/specimen-abc123");
+
+        ProcedureSpecimenEntity result = service.recordCollection(episodeId, specimenId, "formalin jar", "10% formalin");
+
+        assertEquals("Specimen/specimen-abc123", result.getFhirSpecimenRef());
+    }
+
+    /** Best-effort: a Butano outage must not surface as an error — custody is still recorded locally. */
+    @Test
+    void recordCollectionStillSucceedsWhenTheFhirWriteReturnsNull() {
+        when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode()));
+        when(specimenRepository.findById(specimenId)).thenReturn(Optional.of(specimen()));
+        when(butanoClient.writeSpecimen(anyString(), any(ProcedureSpecimenEntity.class))).thenReturn(null);
+
+        ProcedureSpecimenEntity result = service.recordCollection(episodeId, specimenId, "formalin jar", "10% formalin");
+
+        assertEquals("actor-nurse", result.getCollectedBy(), "custody is still recorded even when Butano is unavailable");
+        assertNull(result.getFhirSpecimenRef());
+    }
+
+    @Test
+    void recordCollectionNeverCallsButanoWhenTheEpisodeCannotBeFound() {
+        when(specimenRepository.findById(specimenId)).thenReturn(Optional.of(specimen()));
+        // episodeRepository.findById(episodeId) defaults to Optional.empty() from setUp()
+
+        service.recordCollection(episodeId, specimenId, "formalin jar", "10% formalin");
+
+        verify(butanoClient, never()).writeSpecimen(anyString(), any());
     }
 }

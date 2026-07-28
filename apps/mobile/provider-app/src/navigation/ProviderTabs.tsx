@@ -8,6 +8,7 @@ import React, { useCallback, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TabBar, useOptionalTheme, colors } from "@impilo/mobile-design-system";
+import { WorkHomeScreen } from "../screens/provider/WorkHomeScreen";
 import { ProviderDashboardScreen } from "../screens/provider/ProviderDashboardScreen";
 import { PatientLookupScreen } from "../screens/provider/PatientLookupScreen";
 import { ResultsViewScreen } from "../screens/provider/ResultsViewScreen";
@@ -50,8 +51,13 @@ export function ProviderTabs() {
 
   const tabs = [
     {
+      key: "workhome" as const,
+      label: "Work Home",
+      icon: tabIcon(providerTab === "workhome" ? "home" : "home-outline", providerTab === "workhome"),
+    },
+    {
       key: "dashboard" as const,
-      label: "Work",
+      label: "Worklist",
       icon: tabIcon(providerTab === "dashboard" ? "briefcase" : "briefcase-outline", providerTab === "dashboard"),
       badge: unreadNotifications > 0 ? unreadNotifications : undefined,
     },
@@ -113,6 +119,8 @@ export function ProviderTabs() {
 
   const renderContent = () => {
     switch (providerTab) {
+      case "workhome":
+        return <WorkHomeScreen />;
       case "dashboard":
         return <ProviderDashboardScreen />;
       case "patients":

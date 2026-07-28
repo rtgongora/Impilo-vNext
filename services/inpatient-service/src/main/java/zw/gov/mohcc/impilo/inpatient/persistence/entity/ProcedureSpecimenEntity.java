@@ -64,6 +64,11 @@ public class ProcedureSpecimenEntity {
     @Column(name = "butano_document_ref")
     private String butanoDocumentRef;
 
+    // Wave P13 (pipeline §24) — the FHIR Specimen resource id, distinct from
+    // butanoDocumentRef above (the eventual pathology-report DocumentReference).
+    @Column(name = "fhir_specimen_ref", length = 256)
+    private String fhirSpecimenRef;
+
     @Column(name = "idempotency_key")
     private String idempotencyKey;
 
@@ -155,6 +160,8 @@ public class ProcedureSpecimenEntity {
     public void setAcknowledgedBy(String v) { this.acknowledgedBy = v; }
     public String getButanoDocumentRef() { return butanoDocumentRef; }
     public void setButanoDocumentRef(String v) { this.butanoDocumentRef = v; }
+    public String getFhirSpecimenRef() { return fhirSpecimenRef; }
+    public void setFhirSpecimenRef(String v) { this.fhirSpecimenRef = v; }
     public String getIdempotencyKey() { return idempotencyKey; }
     public void setIdempotencyKey(String v) { this.idempotencyKey = v; }
     public String getCollectedBy() { return collectedBy; }
