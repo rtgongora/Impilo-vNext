@@ -30,6 +30,8 @@ import { useLogin } from "@/hooks/queries/useAuth";
 import { INTENT_QUERY_PARAM } from "@/lib/gateway-intent";
 import { safePublicHref } from "@/components/public/ContinueWithoutSignIn";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useConsentStore } from "@/hooks/useConsentStore";
+import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { writeReturnHint } from "@/lib/return-hint";
 
 type EntryIntent = "personal" | "work" | "regulatory";
@@ -82,6 +84,7 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
     setAuth(
       {
         id: user.id,
+        healthId: (user as { healthId?: string }).healthId ?? user.id,
         email: user.email,
         displayName: user.displayName,
         roles: user.roles,
@@ -94,6 +97,11 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
       null,
       expiresAt,
     );
+    // Both of these were in the pre-e1183d6ba login page and were dropped with it.
+    // deriveFromRoles seeds work mode; hydrate() loads an existing consent acceptance so
+    // the consent gate does not fire at /terms on a user who has already accepted.
+    useWorkModeStore.getState().deriveFromRoles(user.roles);
+    useConsentStore.getState().hydrate(user.id);
     if (rememberDevice) writeReturnHint(user.displayName);
     router.push(getTargetDestination());
   };

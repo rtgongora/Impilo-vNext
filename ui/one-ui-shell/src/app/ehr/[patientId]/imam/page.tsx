@@ -43,14 +43,18 @@ export default function ImamPage() {
       ? Math.max(0, Math.floor((Date.now() - new Date(dateOfBirth).getTime()) / 86_400_000))
       : null;
 
+  // The EncounterResource type declares attributes.status on every element, but a real encounter
+  // came back with attributes undefined and the unguarded read crashed the whole page (caught only
+  // by rendering live data — the mock in the test always had a well-formed shape). The type is a
+  // claim about the payload, not a guarantee, so the access is defensive.
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+      encounter?.attributes?.status === "IN_PROGRESS" || encounter?.attributes?.status === "ACTIVE",
   );
 
-  const latest = [...growthRows].sort(
-    (a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime(),
-  )[0];
+  const latest = [...growthRows]
+    .filter((m) => m && typeof m.measuredAt === "string")
+    .sort((a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime())[0];
 
   return (
     <EHRLayout>
