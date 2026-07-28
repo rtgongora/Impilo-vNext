@@ -130,8 +130,10 @@ public class ReferralsController {
         // Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)
         //         .orElseThrow(() -> new ResourceNotFoundException("Referral not found: " + id));
 
+        // Same contract as the list — see listReferrals.
+        List<Map<String, Object>> rows = JsonApiRows.rows(referral, "referral", "referralId", "referral_id");
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", referral);
+        response.put("data", rows.isEmpty() ? Map.of() : rows.get(0));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
