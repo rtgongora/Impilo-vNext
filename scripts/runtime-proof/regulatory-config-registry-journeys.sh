@@ -31,6 +31,11 @@
 #   RC-9  an unset value must be DECLARED unset, and the warning is graded by
 #         whether a journey this release publishes actually depends on it
 #  RC-10  the source pack loads as a DRAFT and a deploy activates NOTHING
+#  RC-12  the reads the read-only UI depends on actually answer — a screen
+#         built on an endpoint nobody exercised is a screen nobody has tested
+#  RC-13  ROUND TRIP: export the activated pack, load the exported files in a
+#         fresh environment, and get byte-identical configuration — an export
+#         that cannot be re-imported is not an export
 #  RC-11  DRIFT: a pack file edited under a fixed version marks the pack
 #         LOAD_FAILED and reports DEGRADED — the service stays up, and the
 #         activated release keeps serving the cases pinned to it
@@ -471,6 +476,97 @@ FEEAMT=$(PSQL "SELECT payload->>'amount' FROM org_registry.regulatory_config_def
 [ -z "$FEEAMT" ] \
     && ok "the edited amount did NOT reach the Registry — the file was distrusted, not obeyed" \
     || bad "a file edit changed a stored version's content (amount=$FEEAMT)"
+
+# ═════ RC-12: the reads behind the read-only UI ═════════════════════════════
+say "RC-12: the endpoints the configuration screen is built on"
+UIDEFS=$(curl -sS $(hdr) "$API/packs/$NCZPACK/definitions")
+UIDEFID=$(echo "$UIDEFS" | python3 -c "import json,sys;print(next((d['id'] for d in json.load(sys.stdin) if d['definitionKey']=='student-index-fee'),''))")
+[ -n "$UIDEFID" ] \
+    && ok "the definition index resolves a key to an id (version history needs it)" \
+    || bad "could not resolve student-index-fee from the definition list"
+
+HIST=$(curl -sS $(hdr) "$API/definitions/$UIDEFID/versions")
+HISTV=$(echo "$HIST" | python3 -c "import json,sys;print(','.join(v['semanticVersion'] for v in json.load(sys.stdin)))")
+case "$HISTV" in *1.0.0*) ok "version history answers for that definition ($HISTV)";; *)
+    bad "version history did not return the authored version: $HISTV";; esac
+
+HISTPOL=$(echo "$HIST" | python3 -c "import json,sys;print(next((v.get('policyDecisionRef') or '' for v in json.load(sys.stdin) if v['semanticVersion']=='1.0.0'),''))")
+[ "$HISTPOL" = "NCZ-DEC-002" ] \
+    && ok "history carries the council decision the value awaits — the screen can name it" \
+    || bad "history lost the policy decision reference (got '$HISTPOL')"
+
+ACTIVEPOL=$(curl -sS $(hdr) "$API/packs/$NCZPACK/active" | python3 -c "import json,sys
+d=[x for x in json.load(sys.stdin) if x['definitionKey']=='student-index-fee']
+print(d[0].get('policyStatus','') if d else '')")
+[ "$ACTIVEPOL" = "PENDING_REGULATOR_APPROVAL" ] \
+    && ok "the active projection reports the value as unset, not as blank" \
+    || bad "active projection policy status is '$ACTIVEPOL'"
+
+# ═════ RC-13: export → promote → re-import, byte for byte ═══════════════════
+say "RC-13: the activated pack exports and re-imports without drifting"
+EXPORT=$RIGLOG/exported
+rm -rf "$EXPORT"; mkdir -p "$EXPORT/regulatory/councils/nurses-council/definitions"
+curl -sS $(hdr) "$API/packs/$NCZPACK/export" > "$RIGLOG/export.json"
+python3 - "$RIGLOG/export.json" "$EXPORT/regulatory/councils/nurses-council" <<'PY'
+import json,sys,os
+files=json.load(open(sys.argv[1])); root=sys.argv[2]
+for path,content in files.items():
+    dest=os.path.join(root,path); os.makedirs(os.path.dirname(dest),exist_ok=True)
+    # Written verbatim: the manifest checksums are over exactly this rendering.
+    open(dest,"w",newline="").write(content)
+print(len(files))
+PY
+[ -f "$EXPORT/regulatory/councils/nurses-council/manifest.json" ] \
+    && ok "the activated pack exported to loadable files" || bad "export produced no manifest"
+EXPORTED_ORG=$(python3 -c "import json;print(json.load(open('$EXPORT/regulatory/councils/nurses-council/manifest.json'))['organizationCode'])")
+[ "$EXPORTED_ORG" = "NCZ" ] && ok "the export names the real regulator code (NCZ)" \
+    || bad "the export names organisation '$EXPORTED_ORG' and would not load anywhere"
+EXPORTED_APPROVERS=$(python3 -c "import json;print(len(json.load(open('$EXPORT/regulatory/councils/nurses-council/manifest.json'))['provenance']['approvedBy']))")
+[ "$EXPORTED_APPROVERS" -ge 2 ] \
+    && ok "the export carries who approved the release it came from ($EXPORTED_APPROVERS approvers)" \
+    || bad "the export lost its approval provenance"
+
+# A fresh database is the honest test of promotion: this is what the target environment sees.
+say "RC-13: loading the exported pack into a FRESH environment"
+docker exec $CT psql -U impilo -d postgres -c "CREATE DATABASE promoted" >/dev/null 2>&1
+PROMO(){ docker exec -i $CT psql -U impilo -d promoted -tAc "$1"; }
+kill "$(cat "$RIGLOG/svc.pid")" >/dev/null 2>&1; sleep 3
+env DB_HOST=localhost DB_PORT=$PGPORT DB_NAME=promoted \
+    POSTGRES_USER=impilo POSTGRES_PASSWORD=impilo \
+    IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true SERVER_PORT=$PORT \
+    SPRING_KAFKA_LISTENER_AUTO_STARTUP=false \
+    MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always \
+    IMPILO_REGULATORY_CONFIG_PACKS_LOCATION="file:$EXPORT/regulatory/councils/*/manifest.json" \
+    nohup java -jar "$(jar)" > "$RIGLOG/org-registry-promoted.log" 2>&1 & echo $! > "$RIGLOG/svc.pid"
+c=000
+for i in $(seq 1 60); do
+    c=$(curl -s -o /dev/null -w '%{http_code}' $ORG/actuator/health 2>/dev/null)
+    [ "$c" = 200 ] && break; sleep 3
+done
+[ "$c" = 200 ] && ok "the target environment booted on the exported pack" \
+    || { bad "the target environment did not boot"; tail -20 "$RIGLOG/org-registry-promoted.log"; }
+
+PROMO_STATE=$(PROMO "SELECT load_state FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
+[ "$PROMO_STATE" = "LOADED" ] \
+    && ok "the exported pack loaded cleanly — checksums survive the round trip" \
+    || bad "the exported pack loaded as '$PROMO_STATE'; export and import disagree"
+
+PROMO_COUNT=$(PROMO "SELECT count(*) FROM org_registry.regulatory_config_definition_version")
+[ "$PROMO_COUNT" = 4 ] && ok "all 4 definitions arrived ($PROMO_COUNT)" \
+    || bad "expected 4 definitions in the target environment, found $PROMO_COUNT"
+
+PROMO_REL=$(PROMO "SELECT lifecycle_state FROM org_registry.regulatory_config_release
+   WHERE release_key='ncz-v1'")
+[ "$PROMO_REL" = "DRAFT" ] \
+    && ok "approval did NOT travel with the files — the target must approve for itself" \
+    || bad "the promoted release is '$PROMO_REL'; approval must not cross environments"
+
+PROMO_PENDING=$(PROMO "SELECT policy_decision_ref FROM org_registry.regulatory_config_definition_version v
+   JOIN org_registry.regulatory_config_definition d ON d.id = v.definition_id
+  WHERE d.definition_key='student-index-fee'")
+[ "$PROMO_PENDING" = "NCZ-DEC-002" ] \
+    && ok "the undecided value stayed undecided across promotion (NCZ-DEC-002)" \
+    || bad "the pending decision was lost in promotion (got '$PROMO_PENDING')"
 
 echo
 echo "PASS=$PASS FAIL=$FAIL   evidence: $EV"
