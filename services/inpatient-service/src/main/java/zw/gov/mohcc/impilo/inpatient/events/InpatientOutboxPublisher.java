@@ -87,6 +87,7 @@ public class InpatientOutboxPublisher extends CompanionOutboxPublisher {
             case "SAFETY" -> "inpatient.safety";
             case "MEDICATION" -> "inpatient.medication";
             case "DISCHARGE_SUMMARY" -> "inpatient.discharge";
+            case "EMERGENCY_ACTIVATION" -> "inpatient.emergency";
             default -> "inpatient.events";
         };
     }

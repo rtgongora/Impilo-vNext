@@ -27,6 +27,8 @@ public class ResuscitationEventEntity {
     @Column(name = "recorded_at", nullable = false) private OffsetDateTime recordedAt;
     @Column(name = "actor_id", length = 128) private String actorId;
     @Column(name = "notes", columnDefinition = "TEXT") private String notes;
+    /** Idempotent-retry token (V201, W6b) — a device retrying a blind write must never double-count. */
+    @Column(name = "client_event_id", length = 128) private String clientEventId;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;
 
     @PrePersist void onCreate() {
@@ -62,5 +64,7 @@ public class ResuscitationEventEntity {
     public void setActorId(String v) { this.actorId = v; }
     public String getNotes() { return notes; }
     public void setNotes(String v) { this.notes = v; }
+    public String getClientEventId() { return clientEventId; }
+    public void setClientEventId(String v) { this.clientEventId = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
 }

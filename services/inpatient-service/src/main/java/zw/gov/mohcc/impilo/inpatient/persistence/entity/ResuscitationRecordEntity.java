@@ -27,18 +27,23 @@ public class ResuscitationRecordEntity {
     @Column(name = "trauma_episode_id")
     private UUID traumaEpisodeId;
 
+    /** DERIVED since W6b — recomputed from resuscitation_event, never client-set. See V201. */
     @Column(name = "cpr_cycles")
     private Integer cprCycles;
 
+    /** DERIVED since W6b — recomputed from resuscitation_event, never client-set. See V201. */
     @Column(name = "defibrillations")
     private Integer defibrillations;
 
+    /** DERIVED since W6b — the first RHYTHM event's value. See V201. */
     @Column(name = "initial_rhythm")
     private String initialRhythm;
 
+    /** Stamped only at stand-down, from the latest RHYTHM event at that time. See V201. */
     @Column(name = "final_rhythm")
     private String finalRhythm;
 
+    /** DERIVED since W6b — recomputed from resuscitation_event, never client-set. See V201. */
     @Column(name = "rosc_achieved")
     private Boolean roscAchieved;
 
@@ -47,6 +52,32 @@ public class ResuscitationRecordEntity {
 
     @Column(name = "medications_json")
     private String medicationsJson;
+
+    // ── Header scalars (V201, W6b) — the ones @Version actually protects. ──────────────────────
+
+    @Column(name = "team_leader")
+    private String teamLeader;
+
+    /** The latest known rhythm — distinct from initial_rhythm/final_rhythm, both derived/stamped. */
+    @Column(name = "current_rhythm")
+    private String currentRhythm;
+
+    @Column(name = "airway_status")
+    private String airwayStatus;
+
+    @Column(name = "access_status")
+    private String accessStatus;
+
+    @Column(name = "outcome")
+    private String outcome;
+
+    @Column(name = "stand_down_reason")
+    private String standDownReason;
+
+    /** The header-only optimistic lock. Never applied to the append-only event time-series. */
+    @jakarta.persistence.Version
+    @Column(name = "record_version", nullable = false)
+    private Long recordVersion;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
@@ -79,6 +110,20 @@ public class ResuscitationRecordEntity {
     public void setRoscTime(OffsetDateTime roscTime) { this.roscTime = roscTime; }
     public String getMedicationsJson() { return medicationsJson; }
     public void setMedicationsJson(String medicationsJson) { this.medicationsJson = medicationsJson; }
+    public String getTeamLeader() { return teamLeader; }
+    public void setTeamLeader(String teamLeader) { this.teamLeader = teamLeader; }
+    public String getCurrentRhythm() { return currentRhythm; }
+    public void setCurrentRhythm(String currentRhythm) { this.currentRhythm = currentRhythm; }
+    public String getAirwayStatus() { return airwayStatus; }
+    public void setAirwayStatus(String airwayStatus) { this.airwayStatus = airwayStatus; }
+    public String getAccessStatus() { return accessStatus; }
+    public void setAccessStatus(String accessStatus) { this.accessStatus = accessStatus; }
+    public String getOutcome() { return outcome; }
+    public void setOutcome(String outcome) { this.outcome = outcome; }
+    public String getStandDownReason() { return standDownReason; }
+    public void setStandDownReason(String standDownReason) { this.standDownReason = standDownReason; }
+    public Long getRecordVersion() { return recordVersion; }
+    public void setRecordVersion(Long recordVersion) { this.recordVersion = recordVersion; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 }
