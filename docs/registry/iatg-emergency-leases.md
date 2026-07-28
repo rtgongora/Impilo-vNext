@@ -782,8 +782,28 @@ pct enums (priority/tool/entry-route/class/state), real-DB verified, state codes
 to pct chk_ee_state, EmergencyValueSetValidationTest 2/2. ·
 **Still W4d:** BFF/UI triage capture surface (surface iitt_priority + requires_clinician_review; map the
 pct 422 instead of swallowing it to 502) — live proving waits for the pct redeploy + experience-bff
-rebuild. · W5 alerts ·
-W6 resus hardening · W7 diagnostics + order sets · W8 medicines + blood · W9 observation +
-disposition + acceptance handshake · W10 command view + capacity · W11 MCI · W12 identity proof ·
-W13 `mental-health-service` · W14 content tranches 4–12 · W15 experience · W16a TeaVM spike / W16b
-offline · W17 indicators · W18 journeys + report · W19 realtime phase 2.
+rebuild.
+
+**2026-07-28 status update — everything through the episode/handshake BFF+UI pass is done and pushed:**
+W5 alerts (**done**, pct V203 + `EmergencyAlertSweepJob`) · W5b (**done**: alert ack/respond/close,
+`EmergencyReconciliationJob`, `RitoSafetyClient` wired into both the alert sweep and handover expiry)
+· W6 resus hardening (**done**, inpatient V200 W6a: tenant backfill + `resuscitation_medication` +
+`origin`/`emergency_episode_id`/`protocol_type` CHECK) · W6b (**done**, inpatient V201:
+`client_event_id` idempotency, `record_version` header-only optimistic lock, derived
+cpr_cycles/defibrillations/rosc_achieved, the batch endpoint, `EMERGENCY_ACTIVATION_RAISED` +
+`InFacilityDeteriorationConsumer` minting on the admission's existing journey, the
+`link-episode` write-back) · W7 diagnostics + order sets (**done**, pct V205/V206 + ckp V202) · W8
+medicines + blood (**done**, pct V207 + madi V200) · W9 observation + disposition + acceptance
+handshake (**done**, pct V204/V208/V209 — the handshake itself, 15 dispositions with the R12
+mandatory-content gate, observation stays, and the handover auto-expiry sweep) · **BFF + UI for the
+episode spine and handshake (done)** — `EmergencyEpisodeController` on both pct and the BFF, plus
+`/clinical/emergency/board` and `/clinical/emergency/spine/[episodeId]`.
+
+**Not started, genuinely large remaining scope**: W10 command view + capacity · W11 MCI · W12
+identity proof · W13 `mental-health-service` (a NEW service — full onboarding checklist, §4/§7 of this
+lease) · W14 content tranches 4–12 (~140 syndromes) · W15 the rest of the experience layer (resus
+timer, acuity board, serial-reassessment timeline primitives) · W16a TeaVM spike (gates W16b offline)
+· W17 indicators · W18 journeys + implementation report · W19 realtime phase 2. Each of these is
+independently substantial (W13 alone stands up a 124th service module; W14 alone is ~140 pieces of
+governed clinical content across 10 named ratifying authorities) — the standing execution plan always
+treated them as a genuine PO-level continue/pause decision point, not a default continuation.
