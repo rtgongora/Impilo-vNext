@@ -11,9 +11,25 @@ in the appendix, mapped to the tests that now carry it.
 ## Status, stated plainly
 
 **None of the ten is runnable end to end today.** Listing them is not proving them, and this file
-must not be read as evidence that any passes. The "blocked on" column names what is missing, so the
-list doubles as the pack's remaining-work register. Journeys 1, 2 and 8 become reachable once the
-multimorbidity engine and chronic registers exist; the rest depend on breadth not yet built.
+must not be read as evidence that any passes.
+
+A journey has three layers: the **record** can carry it, the **services** can execute it, and a
+**clinician** can walk it in the product. `scripts/runtime-proof/medicine-demonstrations.sh` proves
+the first layer only, on real Postgres, on a clean database, in migration order — and it is written
+to make that limit impossible to overstate. Its current result:
+
+```
+record layer: PASS=23 FAIL=0
+10 stated gaps — the record cannot yet carry these parts, and no service or UI work changes that.
+This is NOT ten passing demonstrations and must not be reported as such.
+```
+
+The `CANNOT` lines in that script are the authority for what is missing, because they are produced
+by running the thing rather than maintained by hand beside it. A journey the record cannot carry is
+a journey no amount of service or UI work will make possible, so each one is a real, ordered
+dependency — which is why the record layer is worth proving on its own.
+
+The "blocked on" column below is the human-readable form of the same register.
 
 ## The ten
 
