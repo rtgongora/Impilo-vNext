@@ -362,6 +362,17 @@ class EmergencyEpisodeServiceTest {
             return out;
         }
 
+        /** Cross-tenant open-episode scan — the alert sweep's input (W5). */
+        @Override public List<EmergencyEpisodeEntity> findByStateIn(List<String> states) {
+            List<EmergencyEpisodeEntity> out = new ArrayList<>();
+            for (EmergencyEpisodeEntity e : store.values()) {
+                if (states.contains(e.getState())) {
+                    out.add(e);
+                }
+            }
+            return out;
+        }
+
         @Override public int repointSubjectCpid(UUID tenant, String provisional, String confirmed) {
             int n = 0;
             for (EmergencyEpisodeEntity e : store.values()) {
