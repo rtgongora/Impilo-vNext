@@ -1,0 +1,23 @@
+{
+  "typeCode": "APPLICATION_TYPE",
+  "definitionKey": "student-registration",
+  "label": "Student registration",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/apply/student",
+  "dependencies": [
+    { "typeCode": "FEE_SCHEDULE", "definitionKey": "student-index-fee", "optional": false },
+    { "typeCode": "NUMBERING_POLICY", "definitionKey": "student-index", "optional": false }
+  ],
+  "payload": {
+    "name": "Student registration",
+    "appliesTo": "A student nurse enrolled at a recognised training institution.",
+    "register": "STUDENT",
+    "contributor": {
+      "role": "TRAINING_INSTITUTION",
+      "scope": "CONFIRM_ENROLMENT",
+      "seesWholeCase": false
+    },
+    "sourceAuthority": "PRODUCT_OWNER_IMPLEMENTATION_BRIEF.md",
+    "sourceClassification": "BRD_DERIVED_PO_APPROVED"
+  }
+}

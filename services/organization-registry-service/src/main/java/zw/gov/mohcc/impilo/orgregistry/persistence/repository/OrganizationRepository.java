@@ -13,6 +13,9 @@ public interface OrganizationRepository extends JpaRepository<OrganizationEntity
 
     Optional<OrganizationEntity> findByCode(String code);
 
+    /** Tenant-scoped lookup: a code is unique within a tenant, not across the estate. */
+    Optional<OrganizationEntity> findByTenantIdAndCode(UUID tenantId, String code);
+
     /** Read-only inventory sweep over mirrored rows (source = WGV_MIRROR), paginated. */
     Page<OrganizationEntity> findBySourceOrderByCreatedAtAsc(String source, Pageable pageable);
 

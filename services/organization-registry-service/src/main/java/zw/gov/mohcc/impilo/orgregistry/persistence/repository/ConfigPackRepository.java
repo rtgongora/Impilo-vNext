@@ -15,4 +15,6 @@ public interface ConfigPackRepository extends JpaRepository<ConfigPackEntity, UU
             UUID tenantId, UUID organizationId, String packKey);
 
     List<ConfigPackEntity> findByTenantIdAndOrganizationId(UUID tenantId, UUID organizationId);
+
+    List<ConfigPackEntity> findByLoadState(String loadState);
 }
