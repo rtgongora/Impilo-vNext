@@ -300,7 +300,10 @@ always the reassuring one.
 in the system of record, **not** a reporting-service definition: reporting holds a separate database
 and cannot see `pct.*`, so a seeded SQL template would be registered, ACTIVE and unrunnable. (Five
 existing regulatory definitions are already in exactly that state — proven live against preview and
-routed to the ROM lane.) Counts enrolments, not people, and says so.
+routed to the ROM lane.) Counts enrolments, not people, and says so. The query is **executed** by `ProgrammeCohortQueryTest`
+— a context test that could not exist until the pct Spring context was made bootable under H2
+(all six `@SpringBootTest` classes here are named `*IT`, which surefire skips, so the context could
+not boot and nothing was trying to boot it; the two facts protected each other).
 
 **Offline — NOT built, and the reason is structural rather than "not got to yet."** Three independent
 blockers, each verified and each in a service this pack does not own:
