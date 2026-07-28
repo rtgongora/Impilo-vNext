@@ -36,11 +36,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class MvumoService {
+
+    // Pipeline §28 demonstration 3: assent is a separate act from consent, so its own vocabulary
+    // (V300's chk_consent_assent_outcome) is checked here too, not left solely to the database —
+    // a caller gets a coded 400, not an opaque 500 from a CHECK violation.
+    private static final Set<String> ASSENT_OUTCOMES = Set.of("GIVEN", "REFUSED", "NOT_APPLICABLE", "UNABLE");
 
     private final ConsentTemplateRepository templateRepository;
     private final ConsentRequestRepository requestRepository;
@@ -241,6 +247,47 @@ public class MvumoService {
         summary.put("patientRef", patientRef);
         summary.put("generatedAt", Instant.now().toString());
         return summary;
+    }
+
+    /**
+     * Records the decision-maker context and/or child assent for a consent request (pipeline
+     * §6, demonstration 3) — a separate act from granting or refusing consent itself, so this is
+     * deliberately NOT a state transition through {@link #transition}. A guardian's GRANTED
+     * consent and a child's REFUSED assent must be able to coexist on the same request; routing
+     * assent through the grant/refuse state machine would make one overwrite the other.
+     */
+    @Transactional
+    public Map<String, Object> recordAssent(UUID tenantId, UUID id, Map<String, Object> body) {
+        ConsentRequestEntity e = requestRepository
+                .findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Consent request not found"));
+        if (body != null) {
+            if (body.get("decisionMakerType") != null) {
+                e.setDecisionMakerType(body.get("decisionMakerType").toString());
+            }
+            if (body.get("decisionMakerRef") != null) {
+                e.setDecisionMakerRef(body.get("decisionMakerRef").toString());
+            }
+            if (body.get("decisionMakerBasis") != null) {
+                e.setDecisionMakerBasis(body.get("decisionMakerBasis").toString());
+            }
+            if (body.get("assentSought") != null) {
+                e.setAssentSought(Boolean.parseBoolean(body.get("assentSought").toString()));
+            }
+            if (body.get("assentOutcome") != null) {
+                String outcome = body.get("assentOutcome").toString();
+                if (!ASSENT_OUTCOMES.contains(outcome)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "assentOutcome must be one of " + ASSENT_OUTCOMES);
+                }
+                e.setAssentOutcome(outcome);
+            }
+            if (body.get("assentNotes") != null) {
+                e.setAssentNotes(body.get("assentNotes").toString());
+            }
+        }
+        e = requestRepository.save(e);
+        return toRequestView(e);
     }
 
     @Transactional(readOnly = true)
@@ -684,7 +731,14 @@ public class MvumoService {
                         Map.entry("refusedReason", e.getRefusedReason() != null ? e.getRefusedReason() : ""),
                         Map.entry("expiresAt", e.getExpiresAt() != null ? e.getExpiresAt().toString() : ""),
                         Map.entry("createdAt", e.getCreatedAt().toString()),
-                        Map.entry("updatedAt", e.getUpdatedAt() != null ? e.getUpdatedAt().toString() : "")));
+                        Map.entry("updatedAt", e.getUpdatedAt() != null ? e.getUpdatedAt().toString() : ""),
+                        // §28 demonstration 3 — assent surfaced distinctly from consent state above.
+                        Map.entry("decisionMakerType", e.getDecisionMakerType() != null ? e.getDecisionMakerType() : ""),
+                        Map.entry("decisionMakerRef", e.getDecisionMakerRef() != null ? e.getDecisionMakerRef() : ""),
+                        Map.entry("decisionMakerBasis", e.getDecisionMakerBasis() != null ? e.getDecisionMakerBasis() : ""),
+                        Map.entry("assentSought", e.getAssentSought() != null ? e.getAssentSought() : false),
+                        Map.entry("assentOutcome", e.getAssentOutcome() != null ? e.getAssentOutcome() : ""),
+                        Map.entry("assentNotes", e.getAssentNotes() != null ? e.getAssentNotes() : "")));
     }
 
     private static String sha256Hex(String s) {
