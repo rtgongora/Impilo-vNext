@@ -291,7 +291,8 @@ Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7
 **Phase P pipeline COMPLETE (P0–P15, see §10–§19)** — P13/P14/P15 all partial by design (§17–§19),
 with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
 not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
-(S0–S3 done — see §20–§23; S4–S18 remaining). Full plan in
+(S0–S3 done — see §20–§23; **replaced from S4 onward by backlog-clearing batches SB-1–SB-6,
+SB-1 done — see §24, SB-2/3/4 in progress, SB-5 gated, SB-6 remaining**). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -930,3 +931,47 @@ proposed decision), the closed `final_decision` vocabulary, refine-not-duplicate
 `surgery-decision-journeys.sh` (12/12, real Postgres) — the CHECKs themselves and a CC-2
 regression guard confirming no diagnosis/certainty column exists on this table. Full
 surgery-service module regression: 36/36.
+
+## 24. Wave SB-1 — histology closure gate + complication pathways + prehab (§16/§15/§10, done)
+
+First batch of the 2026-07-28 backlog-clearing strategy (see the programme plan document —
+S4–S18 replaced by six consolidated batches SB-1–SB-6 across three lanes after the ten-theatre-
+rigs debt repeated across four consecutive S-waves without closing).
+
+**§16 histology closure gate.** New `InpatientSpecimenClient` reads inpatient-service's real
+specimen list/status (`procedure_specimen`, V022: PARSED..ACKNOWLEDGED/REJECTED) and blocks a
+`surgical_episode` CLOSED transition while any linked specimen is unreviewed. Deliberately
+**fail-safe** — the opposite posture to `PctProblemContributionClient`'s fail-open: an
+unreachable specimen list blocks closure rather than clearing it, because this sits on a gate
+path (NFR1), not a best-effort record. An episode with no linked operation has nothing to gate
+on and closes freely. Consequence #3 of the surgical-pack audit called this "close to free once
+S1 lands" — it was.
+
+**§15 complication pathway instances.** `surgical_complication_pathway` (V005) is the EXECUTION
+record procedures-service's own P10 explicitly left out of scope (its `complication_class`/
+`clavien_dindo_grade` are content — what to monitor for and how to grade it, never an actual
+occurrence). Shares P10's vocabularies rather than inventing a second registry. Enforces R8's
+full order — recognised → graded → owned → investigated → treated → disclosed → closed — at the
+schema layer: `chk_complication_pathway_closure` refuses CLOSED unless graded, owned, disclosed
+AND given an outcome, so a pathway cannot be closed by skipping a stage. On close, the resulting
+complication is CONTRIBUTED to `pct_problems` via S1's existing `PctProblemContributionClient`
+(CC-2: contribute, never copy) — best-effort, matching that client's own posture exactly.
+
+**§10 prehabilitation/optimisation execution.** `surgical_prehab_item` (V005) — the ADR's
+explicit "prehabilitation and optimisation execution" MAY-own grant. The 16-domain vocabulary is
+ENGINEERING-derived: the source spec (§1–25) is not vendored in this repository, so the domain
+list is recorded as content a future ratification pass can amend, the same honesty posture every
+other invented vocabulary in this programme carries. One row per (episode, domain), refined not
+duplicated (`uq_prehab_item_domain`) — the underlying clinical fact an item optimises (smoking/
+alcohol status, weight, etc.) stays in its own registry (`pct_social_history` and siblings),
+referenced only via an opaque `registry_ref`, never copied.
+
+Proof: `SurgicalEpisodeServiceTest` +4 (the histology gate, including the fail-safe UNKNOWN
+case). `ComplicationPathwayServiceTest` (10 tests, the full closure-order refusal chain).
+`PrehabItemServiceTest` (5 tests). `surgery-complication-prehab-journeys.sh` (17/17, real
+Postgres). Full surgery-service module regression: 55/55.
+
+Batches SB-3 (consolidated reachability) and SB-4 (37 maps + 15-specialty deep content) are
+running in parallel lanes as of this wave; SB-2 (longitudinal objects, follow-up, specialty
+dimension) follows next in this lane; SB-5 (operative record depth) stays gated on the
+ten-theatre-rigs background task.
