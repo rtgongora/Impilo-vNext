@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 
 import java.util.*;
 
@@ -42,7 +43,8 @@ public class AuditController {
             String subjectRefFilter = (aggregateId == null || aggregateId.isBlank()) ? null : aggregateId;
             JsonNode data = auditClient.queryEvents(null, subjectRefFilter, eventTypeFilter, null, null, page, size);
             return ResponseEntity.ok(Map.of(
-                    "data", data != null ? data : List.of(),
+                    // useAudit declares attributes on audit events; the ledger returns its own rows.
+                    "data", JsonApiRows.rows(data, "audit_event", "eventId", "event_id", "id"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
                             "page", page, "size", size,
                             "aggregate_type", aggregateType == null ? "" : aggregateType,

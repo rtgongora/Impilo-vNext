@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
 import java.time.OffsetDateTime;
@@ -40,8 +41,9 @@ public class ShiftController {
 
         try {
             var shift = tusoClient.getCurrentShift(userId);
+            // useShifts declares attributes on the current shift; tuso returns its own entity.
             Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", shift);
+            response.put("data", JsonApiRows.row(shift, "shift", "id", "shiftId"));
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.ok(response);
         } catch (Exception e) {

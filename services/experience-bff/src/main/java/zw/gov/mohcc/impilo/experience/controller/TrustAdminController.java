@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuthzServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
 import zw.gov.mohcc.impilo.experience.trust.TrustBreakGlassResourceMapper;
@@ -64,8 +65,9 @@ public class TrustAdminController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = authzClient.listPolicyRules();
+            // useTrustAdmin declares attributes on policy rules; TSHEPO returns its own entities.
             return ResponseEntity.ok(Map.of(
-                    "data", data != null ? data : new Object[0],
+                    "data", JsonApiRows.rows(data, "policy_rule", "ruleId", "rule_id", "id"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             // An empty 200 reads as "no policy rules are configured", which on an authorization
@@ -112,6 +114,7 @@ public class TrustAdminController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = authzClient.getPendingBreakGlassReviews();
+            // Break-glass reviews are read through a hook that declares attributes.
             List<Map<String, Object>> resources = TrustBreakGlassResourceMapper.toReviewResources(data);
             return ResponseEntity.ok(Map.of(
                     "data", resources,
@@ -300,8 +303,9 @@ public class TrustAdminController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = auditClient.queryEvents(actorId, subjectRef, eventType, fromTime, toTime, page, size);
+            // useTrustAdmin declares attributes on audit events; the ledger returns its own rows.
             return ResponseEntity.ok(Map.of(
-                    "data", data != null ? data : new Object[0],
+                    "data", JsonApiRows.rows(data, "audit_event", "eventId", "event_id", "id"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
                             "page", page, "size", size)));
         } catch (Exception e) {

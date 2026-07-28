@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
+import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
@@ -105,7 +106,8 @@ class MobileProviderExtendedControllerTest {
         MobileProviderExtendedController controller = new MobileProviderExtendedController(
                 new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(),
                 new StubCostaClient(), new StubOrosClient(),
-                new StubPacsClient(), new StubInpatientClient(), new UnreachableClinicalClient());
+                new StubPacsClient(), new StubInpatientClient(), new UnreachableClinicalClient(),
+                new StubNotificationClient());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.evaluateCDS(Map.of("context", "CHEST_PAIN"));
@@ -114,6 +116,13 @@ class MobileProviderExtendedControllerTest {
         assertNotNull(response.getBody());
         assertEquals("cds_engine_unavailable", response.getBody().get("error"));
         assertNull(response.getBody().get("data"), "a failure must not carry a data key");
+    }
+
+    /** Notification stub — paging dispatch is not what these tests exercise. */
+    private static final class StubNotificationClient extends NotificationServiceClient {
+        StubNotificationClient() {
+            super(new org.springframework.web.client.RestTemplate(), endpoints());
+        }
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
@@ -128,7 +137,8 @@ class MobileProviderExtendedControllerTest {
             OrosServiceClient orosClient) {
         return new MobileProviderExtendedController(
                 pctClient, vitoClient, pharmacyClient, costaClient, orosClient,
-                new StubPacsClient(), new StubInpatientClient(), new StubClinicalClient());
+                new StubPacsClient(), new StubInpatientClient(), new StubClinicalClient(),
+                new StubNotificationClient());
     }
 
     /**
