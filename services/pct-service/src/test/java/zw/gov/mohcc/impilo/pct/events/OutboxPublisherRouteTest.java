@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.events;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class OutboxPublisherRouteTest {
 
@@ -22,6 +23,20 @@ class OutboxPublisherRouteTest {
     @Test
     void unknown_event_falls_back_to_default_topic() {
         assertEquals("pct.events", OutboxPublisher.routeTopic("SOMETHING_NEW"));
+    }
+
+    @Test
+    void problem_events_route_to_the_shr_topic_not_the_catch_all() {
+        // The problem list is the clinical record's spine. Before this route existed every problem
+        // event fell to the pct.events catch-all, which BUTANO does not subscribe to — so a
+        // diagnosis recorded in PCT never reached the shared health record, the IPS bundle, or the
+        // cross-facility timeline. This asserts the route, because the defect was invisible: the
+        // events published successfully the whole time and simply arrived nowhere.
+        assertEquals("pct.problem.recorded", OutboxPublisher.routeTopic("PROBLEM_ADDED"));
+        assertEquals("pct.problem.recorded", OutboxPublisher.routeTopic("PROBLEM_RESOLVED"));
+        assertEquals("pct.problem.recorded", OutboxPublisher.routeTopic("PROBLEM_STATUS_CHANGED"));
+        // Guards the regression directly: if the arm is ever removed these fall back here.
+        assertNotEquals("pct.events", OutboxPublisher.routeTopic("PROBLEM_ADDED"));
     }
 
     @Test

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.Enumerations;
@@ -34,6 +35,7 @@ import zw.gov.mohcc.impilo.butano.persistence.entity.ReconciliationMappingEntity
 import zw.gov.mohcc.impilo.butano.persistence.repository.ReconciliationMappingRepository;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -60,6 +62,7 @@ public class ButanoEventConsumer {
     private static final String REQUESTED_BY_KAFKA = "kafka:butano-shr";
     /** The originating PCT observation id, used as the business identifier for idempotent archival. */
     private static final String OBSERVATION_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pct/observation-id";
+    private static final String PROBLEM_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pct/problem-id";
 
     private final ObjectMapper objectMapper;
     private final DaoRegistry daoRegistry;
@@ -542,6 +545,189 @@ public class ButanoEventConsumer {
         obs.setDataAbsentReason(new CodeableConcept().addCoding(new Coding(
                 "http://terminology.hl7.org/CodeSystem/data-absent-reason",
                 absent.toLowerCase().replace('_', '-'), null)));
+    }
+
+    /**
+     * Archives the PCT problem list into the shared health record as FHIR Conditions.
+     *
+     * <p>Until this listener existed the problem list reached nobody. PCT emitted
+     * PROBLEM_ADDED/_RESOLVED/_STATUS_CHANGED, but with no route case those events fell to the
+     * {@code pct.events} catch-all and no consumer subscribed — so a diagnosis recorded at one
+     * facility was absent from the SHR, from the IPS bundle a clinician reads at the next facility,
+     * and from the cross-facility timeline. {@code Condition} was already listed in
+     * TIMELINE_RESOURCES, RECONCILABLE_RESOURCES, STAT_RESOURCE_TYPES and IpsBundleGenerator, which
+     * is what made the gap so easy to miss: the resource was readable everywhere and written
+     * nowhere.</p>
+     */
+    @KafkaListener(topics = "pct.problem.recorded", groupId = "butano-shr")
+    public void consumePctProblem(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String correlationId = extractCorrelationId(root);
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull()) {
+                log.warn("BUTANO SHR: problem event missing payload, skipping correlationId={}", correlationId);
+                return;
+            }
+
+            String problemId = firstNonBlank(text(payload, "problem_id"), text(payload, "problemId"));
+            String patientCpid = firstNonBlank(
+                    text(payload, "subject_cpid"), text(payload, "subjectCpid"), text(payload, "cpid"));
+            String code = firstNonBlank(text(payload, "code"));
+
+            if (problemId == null || patientCpid == null) {
+                log.warn("BUTANO SHR: problem event missing problem_id or subject_cpid — skipping "
+                        + "correlationId={}", correlationId);
+                return;
+            }
+            if (code == null) {
+                // A Condition with no coded value cannot be queried, mapped or reconciled — it would
+                // occupy the record while answering no clinical question. Refused loudly rather than
+                // archived as a text-only stub that looks like a diagnosis.
+                log.warn("BUTANO SHR: problem {} has no code — not archived, because an uncoded "
+                        + "Condition is not a queryable diagnosis. correlationId={}", problemId, correlationId);
+                return;
+            }
+
+            UUID tenantId = resolveTenantId(root, payload, patientCpid);
+            if (tenantId == null) {
+                log.warn("BUTANO SHR: problem event missing tenant_id, skipping problem_id={} "
+                        + "correlationId={}", problemId, correlationId);
+                return;
+            }
+
+            archiveProblem(tenantId, patientCpid, problemId, code, payload, correlationId);
+
+        } catch (JsonProcessingException e) {
+            log.error("BUTANO SHR: unreadable problem event: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("BUTANO SHR: failed to archive problem: {}", e.getMessage(), e);
+        }
+    }
+
+    private void archiveProblem(UUID tenantId, String patientCpid, String problemId,
+                                String code, JsonNode payload, String correlationId) {
+        IFhirResourceDao<Patient> patientDao = daoRegistry.getResourceDao(Patient.class);
+        Optional<String> patientPid = findPatientId(patientDao, tenantId, patientCpid);
+        if (patientPid.isEmpty()) {
+            log.warn("BUTANO SHR: no FHIR Patient for CPID — cannot archive Condition {} tenant={} "
+                    + "correlationId={}", problemId, tenantId, correlationId);
+            return;
+        }
+
+        IFhirResourceDao<Condition> dao = daoRegistry.getResourceDao(Condition.class);
+        Optional<String> existing = findConditionIdBySource(dao, tenantId, problemId);
+
+        Condition condition = buildCondition(tenantTagSystem, tenantId, patientPid.get(),
+                problemId, code, payload);
+        if (existing.isPresent()) {
+            // A status change is an update to the same diagnosis, never a second one. Keyed on the
+            // PCT problem id so a resolve does not create a rival Condition alongside the active row.
+            condition.setId(new IdType("Condition", existing.get()));
+            dao.update(condition, (RequestDetails) null);
+            log.info("BUTANO SHR: updated Condition code={} problem_id={} patient_cpid={} tenant={} "
+                    + "correlationId={}", code, problemId, patientCpid, tenantId, correlationId);
+            return;
+        }
+        dao.create(condition, (RequestDetails) null);
+        log.info("BUTANO SHR: archived Condition code={} problem_id={} patient_cpid={} tenant={} "
+                + "correlationId={}", code, problemId, patientCpid, tenantId, correlationId);
+    }
+
+    /**
+     * Builds the FHIR Condition from the event payload.
+     *
+     * <p>Package-private and static for the same reason as {@link #buildObservation}: this method is
+     * the only thing that decides what crosses into the shared health record, and it copies an
+     * explicit list of coded fields. The PCT problem row carries free-text {@code notes}, which is
+     * the one field that can hold PII — it is not on the event and nothing here reads it, so it
+     * cannot cross even if a future producer started sending it. Enforced by construction rather
+     * than trusted of the caller.</p>
+     */
+    static Condition buildCondition(String tenantTagSystem, UUID tenantId, String patientPid,
+                                    String problemId, String code, JsonNode payload) {
+        Condition condition = new Condition();
+        condition.setMeta(new Meta().addTag(new Coding(tenantTagSystem, tenantId.toString(), null)));
+        condition.setSubject(new Reference("Patient/" + patientPid));
+        condition.addIdentifier().setSystem(PROBLEM_IDENTIFIER_SYSTEM).setValue(problemId);
+
+        String system = firstNonBlank(text(payload, "code_system"), text(payload, "codeSystem"));
+        String display = firstNonBlank(text(payload, "display"));
+        condition.setCode(new CodeableConcept().addCoding(new Coding(system, code, display)));
+
+        // PCT's clinical_status vocabulary is wider than FHIR's: RECURRENCE and RELAPSE are distinct
+        // there and both map to FHIR "recurrence"/"relapse"; INACTIVE and RESOLVED are separate
+        // states and must not be collapsed, because "no longer being treated" and "gone" are
+        // different clinical claims. An unrecognised value is left unset rather than guessed —
+        // a Condition with no clinical status is honest; one with the wrong one is not.
+        String clinicalStatus = firstNonBlank(
+                text(payload, "clinical_status"), text(payload, "clinicalStatus"));
+        String fhirStatus = mapClinicalStatus(clinicalStatus);
+        if (fhirStatus != null) {
+            condition.setClinicalStatus(new CodeableConcept().addCoding(new Coding(
+                    "http://terminology.hl7.org/CodeSystem/condition-clinical", fhirStatus, null)));
+        }
+
+        // Diagnostic certainty is the verification status. PCT deliberately allows it to be null
+        // (never stated), and a null certainty must not become "confirmed" on the way to the SHR —
+        // that would promote a suspicion into a diagnosis nobody made.
+        String certainty = firstNonBlank(
+                text(payload, "diagnostic_certainty"), text(payload, "diagnosticCertainty"));
+        String verification = mapVerificationStatus(certainty);
+        if (verification != null) {
+            condition.setVerificationStatus(new CodeableConcept().addCoding(new Coding(
+                    "http://terminology.hl7.org/CodeSystem/condition-ver-status", verification, null)));
+        }
+
+        String onset = firstNonBlank(text(payload, "onset_date"), text(payload, "onsetDate"));
+        if (onset != null) {
+            condition.setOnset(new DateTimeType(onset));
+        }
+        return condition;
+    }
+
+    /** PCT clinical status -> FHIR condition-clinical. Unknown values return null (left unset). */
+    static String mapClinicalStatus(String pctStatus) {
+        if (pctStatus == null) {
+            return null;
+        }
+        return switch (pctStatus.toUpperCase(Locale.ROOT)) {
+            case "ACTIVE" -> "active";
+            case "RECURRENCE" -> "recurrence";
+            case "RELAPSE" -> "relapse";
+            case "REMISSION" -> "remission";
+            case "INACTIVE" -> "inactive";
+            case "RESOLVED" -> "resolved";
+            default -> null;
+        };
+    }
+
+    /** PCT diagnostic certainty -> FHIR condition-ver-status. Null/unknown stay unset, never confirmed. */
+    static String mapVerificationStatus(String certainty) {
+        if (certainty == null) {
+            return null;
+        }
+        return switch (certainty.toUpperCase(Locale.ROOT)) {
+            case "SUSPECTED" -> "unconfirmed";
+            case "DIFFERENTIAL" -> "differential";
+            case "WORKING" -> "provisional";
+            case "CONFIRMED" -> "confirmed";
+            case "REFUTED" -> "refuted";
+            default -> null;
+        };
+    }
+
+    private Optional<String> findConditionIdBySource(IFhirResourceDao<Condition> dao, UUID tenantId,
+                                                     String problemId) {
+        SearchParameterMap map = new SearchParameterMap();
+        map.add(Condition.SP_IDENTIFIER, new TokenParam(PROBLEM_IDENTIFIER_SYSTEM, problemId));
+        map.add("_tag", new TokenParam(tenantTagSystem, tenantId.toString()));
+        IBundleProvider results = dao.search(map);
+        List<?> resources = results.getResources(0, 1);
+        if (resources.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(((Condition) resources.get(0)).getIdElement().getIdPart());
     }
 
     private Optional<String> findObservationIdBySource(IFhirResourceDao<Observation> dao, UUID tenantId,
