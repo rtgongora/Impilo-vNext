@@ -817,11 +817,29 @@ query-honesty-guard-caught fix distinguishing a failed read from a genuinely emp
 into either file, so this pack does not invent a requirement neither precedent honours; flagged for
 the coordinator to confirm rather than assumed.
 
-**Not started, genuinely large remaining scope**: W14 content tranches 4–12 (~140 syndromes) · W15
-the rest of the experience layer (resus timer, acuity board, serial-reassessment timeline
-primitives, plus mental-health's own fuller clinical-record UI — assessment, safety plan,
-involuntary episode, restraint review, admission requests, follow-up) · W16a TeaVM spike (gates
-W16b offline) · W17 indicators · W18 journeys + implementation report · W19 realtime phase 2. Each
-of these is independently substantial (W14 alone is ~140 pieces of governed clinical content across
-10 named ratifying authorities) — the standing execution plan always treated them as a genuine
-PO-level continue/pause decision point, not a default continuation.
+**W14 SKIPPED — PO decision 2026-07-28, blocked on sourcing, not on scope.** Content tranches 4–12
+(~140 syndromes across 10 named ratifying authorities: WHO/ICRC/MSF for IITT, MoHCC + named
+specialty societies per body-system tranche, a named clinical toxicologist for tranche 10, MoHCC
+Mental Health Services + a national safeguarding lead for tranche 11) require transcribing real
+external clinical source documents — the WHO Emergency Care Toolkit, IITT charts, Basic Emergency
+Care 2018, EDLIZ 2025, the Data Set for Emergency Care — each meant to be committed to
+`docs/reference/who-emergency-care-toolkit/` with a retrieval date + SHA-256 per file (the
+`content_hash`-is-the-version discipline this pack has used since W1). None of those source
+documents were available in this session to hash and cite. Per this pack's own R9 rule — never
+invent a classification or clinical fact that is not verified against a real citable source,
+already applied at W4 (qSOFA retirement), W10 (declined a fabricated "trauma centre level"
+classification), and W13 (free-text `legal_basis`, not an invented Mental Health Act picklist) —
+fabricating ~140 syndromes of governed clinical content from memory was refused rather than
+attempted. **This is an honest gap, not a silent drop**: engines, content schema (ckp V010's
+`time_target_basis`/`contraindications_json`/etc.), and the guard/traceability machinery all still
+exist ready to receive real tranche content the moment source documents are available: only the
+content itself is missing. Must be carried into the W18 honest-gap register by name, with the
+sourcing blocker stated explicitly, not omitted.
+
+**Not started, genuinely large remaining scope**: W15 the rest of the experience layer (resus timer,
+acuity board, serial-reassessment timeline primitives, plus mental-health's own fuller
+clinical-record UI — assessment, safety plan, involuntary episode, restraint review, admission
+requests, follow-up) · W16a TeaVM spike (gates W16b offline) · W17 indicators · W18 journeys +
+implementation report · W19 realtime phase 2. Each of these is independently substantial — the
+standing execution plan always treated them as a genuine PO-level continue/pause decision point, not
+a default continuation.
