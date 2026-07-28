@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,7 @@ import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 /** Shared envelope, request-context and type coercion helpers for native Fundo controllers. */
 final class FundoApiSupport {
 
+    private static final Logger log = LoggerFactory.getLogger(FundoApiSupport.class);
     private static final UUID DEFAULT_TENANT = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final String SYSTEM_ACTOR = "system";
 
@@ -62,14 +65,36 @@ final class FundoApiSupport {
     static Set<String> currentRoles() {
         Set<String> roles = new HashSet<>();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return roles;
-        for (GrantedAuthority authority : auth.getAuthorities()) {
-            addRole(roles, authority.getAuthority());
+        if (auth == null) {
+            log.info("FundoApiSupport.currentRoles(): auth is null");
+            return roles;
         }
+        log.info("FundoApiSupport.currentRoles(): auth type = {}, isAuthenticated = {}, class = {}",
+                 auth.getClass().getSimpleName(), auth.isAuthenticated(), auth.getClass().getName());
+
+        // Extract from GrantedAuthority objects
+        int grantedCount = 0;
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            log.info("  - GrantedAuthority: {}", authority.getAuthority());
+            addRole(roles, authority.getAuthority());
+            grantedCount++;
+        }
+        log.info("  Total GrantedAuthorities: {}", grantedCount);
+
+        // Extract from JWT claims
         Object principal = auth.getPrincipal();
         if (principal instanceof Jwt jwt) {
+            log.info("  Principal is Jwt, subject = {}, issuer = {}", jwt.getSubject(), jwt.getIssuer());
+            log.info("  JWT claims keys: {}", jwt.getClaims().keySet());
             addRoleClaims(roles, jwt);
+        } else {
+            log.info("  Principal is not Jwt: {}", principal == null ? "null" : principal.getClass().getSimpleName());
+            if (principal != null) {
+                log.info("  Principal details: {}", principal);
+            }
         }
+
+        log.info("FundoApiSupport.currentRoles() final result: {}", roles);
         return roles;
     }
 
@@ -89,11 +114,18 @@ final class FundoApiSupport {
     }
 
     static boolean hasRole(String role) {
-        return currentRoles().contains(normalizeRole(role));
+        Set<String> roles = currentRoles();
+        String normalizedRole = normalizeRole(role);
+        boolean contains = roles.contains(normalizedRole);
+        log.info("FundoApiSupport.hasRole('{}') -> normalized='{}', currentRoles={}, contains={}",
+                 role, normalizedRole, roles, contains);
+        return contains;
     }
 
     static boolean isSystemAdmin() {
-        return hasRole("SYSTEM_ADMIN");
+        boolean result = hasRole("SYSTEM_ADMIN");
+        log.info("FundoApiSupport.isSystemAdmin() called: result = {}", result);
+        return result;
     }
 
     static boolean isLearnerAllowed() {
