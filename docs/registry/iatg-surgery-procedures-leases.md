@@ -1035,7 +1035,9 @@ deliberately NOT extended to the new maps, since forcing genuinely partial cover
 test that asserts full coverage would be dishonest; the register files carry that signal
 instead.
 
-**One named debt, not silently dropped**: the accompanying ~145 six-layer CDS rules
+**One named debt, not silently dropped** (counted exactly at close-out: **147** rules, now
+preserved in-repo at `docs/clinical/surgical-domain-pack/rule-fragments/` with the four
+verified integration blockers written up in its README): the accompanying six-layer CDS rules
 (DANGER_SIGN/THERAPY/MONITORING/FOLLOW_UP/CLASSIFICATION/DATA_VALIDATION per specialty) Lane C
 also produced are NOT integrated — `clinical-knowledge-platform-service`'s `rule_definitions`
 schema was not reviewed before V007 was written, and mapping rule content into a co-edited
