@@ -49,7 +49,8 @@ docker exec "$PG_NAME" psql -U impilo -d surgery -tAc "select 1" >/dev/null 2>&1
   || { echo "FAIL: postgres never reachable"; exit 1; }
 
 for f in V001__init V002__surgical_episode V003__surgical_assessment V004__surgical_decision \
-         V005__complication_pathway_and_prehab V006__longitudinal_objects_followup_specialty; do
+         V005__complication_pathway_and_prehab V006__longitudinal_objects_followup_specialty \
+         V007__specialty_content_seed; do
   out=$(docker exec -i "$PG_NAME" psql -U impilo -d surgery -v ON_ERROR_STOP=1 < "$MIG/$f.sql" 2>&1)
   echo "$out" > "$EVIDENCE/$f.txt"
   chk "J-SB2-0 $f applies" "$(echo "$out" | grep -ci error || true)" "^0$"
@@ -155,9 +156,16 @@ chk "J-SB2-15 an invalid wound_classification on a template row is REFUSED" \
         VALUES ('$TENANT','GENERAL_SURGERY','TPL-X-01','x','SUPER_DIRTY')")" \
   "chk_operative_template_wound_class"
 
-chk "J-SB2-16 the specialty content tables are EMPTY before this wave's own integration step" \
-  "$(q "SELECT (SELECT count(*) FROM surgery.surgical_specialty_indication)
-             + (SELECT count(*) FROM surgery.surgical_operative_template)")" \
+# SB-4's content fan-out landed as V007 in this same migration chain: 118 indications + 75
+# operative templates across all fifteen specialties (see V007's own header for the content
+# rationale and the one honest gap it names — CKP rule integration, deferred).
+chk "J-SB2-16 all fifteen specialties have at least one seeded indication" \
+  "$(q "SELECT count(DISTINCT specialty) FROM surgery.surgical_specialty_indication")" \
+  "^15$"
+
+chk "J-SB2-16b every seeded indication and template is honestly flagged ENGINEERING_SEED" \
+  "$(q "SELECT (SELECT count(*) FROM surgery.surgical_specialty_indication WHERE content_maturity <> 'ENGINEERING_SEED')
+             + (SELECT count(*) FROM surgery.surgical_operative_template WHERE content_maturity <> 'ENGINEERING_SEED')")" \
   "^0$"
 
 # ── CC-2 regression guard: implants stay federated, never copied here ──
