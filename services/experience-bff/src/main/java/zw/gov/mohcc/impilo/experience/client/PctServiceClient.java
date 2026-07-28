@@ -1571,6 +1571,48 @@ public class PctServiceClient {
                 baseUrl + "/v1/examinations", body, JsonNode.class));
     }
 
+    // ── Consultation and MDT (brief.md §14) ─────────────────────
+    //
+    // Every consultation response carries owning_service and a sentence saying what it means. The
+    // BFF must forward both: the failure this record prevents is a reader assuming the answering
+    // team took the patient, and stripping the note to tidy the payload reintroduces it.
+
+    public JsonNode listConsultations(String subjectCpid) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/consultations?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode consultationWorklist(String service) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/consultations/worklist?service="
+                + java.net.URLEncoder.encode(service, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode requestConsultation(Object body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/consultations", body, JsonNode.class));
+    }
+
+    public JsonNode answerConsultation(String consultationId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/consultations/" + consultationId + "/answer", body, JsonNode.class));
+    }
+
+    public JsonNode declineConsultation(String consultationId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/consultations/" + consultationId + "/decline", body, JsonNode.class));
+    }
+
+    public JsonNode listMdtDecisions(String subjectCpid) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/consultations/mdt?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode recordMdtDecision(Object body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/consultations/mdt", body, JsonNode.class));
+    }
+
     public JsonNode getProgrammeEnrolment(String enrolmentId) {
         return extractData(restTemplate.getForEntity(
                 baseUrl + "/v1/programme-enrolments/" + enrolmentId, JsonNode.class));

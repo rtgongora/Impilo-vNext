@@ -197,7 +197,14 @@ chk "the ascites finding can be recorded as an abdominal examination that MUST s
           SELECT gen_random_uuid(),'$TENANT', examination_id,'ABDOMEN','ABNORMAL','shifting dullness, tense ascites'
             FROM pct.pct_examinations WHERE subject_cpid='$CPID' LIMIT 1
           RETURNING state;")" "ABNORMAL"
-cannot "the procedure and its RESULT RETURNING to the problem list is the untested half — §25's 'results are reviewed and actioned' has no record here"
+chk "a result can now record what it CAUSED, not only that it was seen (V115)" \
+    "$(q "INSERT INTO pct.pct_result_actions
+          (action_id, tenant_id, subject_cpid, journey_id, result_ref, action, rationale, actioned_by)
+          VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','oros-ascitic-1','TREATMENT_STARTED',
+                  'SBP on ascitic tap; antibiotics started','clin-1')
+          RETURNING action;")" \
+    "TREATMENT_STARTED"
+cannot "the procedure itself executes in procedures-service, which this rig does not cover — what is proven here is that its result can be actioned, not that the procedure ran"
 
 # ───────────────────────────────────────────────────────────────────────────────────────────────
 journey 7 "Suspected cancer through diagnosis, MDT, oncology and palliative care"
@@ -266,7 +273,36 @@ chk "answering does not move ownership — surgery advises, medicine keeps the p
 
 # ───────────────────────────────────────────────────────────────────────────────────────────────
 echo
-q "DELETE FROM pct.pct_mdt_decision_problems WHERE tenant_id='$TENANT';
+# ── V115 result action: the second half of §25's "reviewed AND actioned" ───────────────────────
+#
+# OROS already records that a result was SEEN, and that half is not retested here. Nothing recorded
+# what it CAUSED, so a potassium of 6.8 could be acknowledged, ticked, and change nothing.
+ACT="66666666-6666-4666-8666-666666666667"
+chk "NO_ACTION_NEEDED with no reason is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_result_actions
+          (action_id, tenant_id, subject_cpid, journey_id, result_ref, action, actioned_by)
+          VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','oros-r-1','NO_ACTION_NEEDED','clin-1');")" \
+    "violates check constraint"
+chk "NO_ACTION_NEEDED with a reason is accepted (positive control)" \
+    "$(q "INSERT INTO pct.pct_result_actions
+          (action_id, tenant_id, subject_cpid, journey_id, result_ref, action, rationale, actioned_by)
+          VALUES ('$ACT','$TENANT','$CPID','$JOURNEY_ID','oros-r-1','NO_ACTION_NEEDED',
+                  'Haemolysed sample; repeat already normal','clin-1')
+          RETURNING action;")" \
+    "NO_ACTION_NEEDED"
+chk "PROBLEM_ADDED with no problem named is refused (negative control)" \
+    "$(q "INSERT INTO pct.pct_result_actions
+          (action_id, tenant_id, subject_cpid, journey_id, result_ref, action, actioned_by)
+          VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','oros-r-2','PROBLEM_ADDED','clin-1');")" \
+    "violates check constraint"
+chk "one action per result per actor (negative control)" \
+    "$(q "INSERT INTO pct.pct_result_actions
+          (action_id, tenant_id, subject_cpid, journey_id, result_ref, action, actioned_by)
+          VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','oros-r-1','TREATMENT_STARTED','clin-1');")" \
+    "duplicate key value"
+
+q "DELETE FROM pct.pct_result_actions WHERE subject_cpid='$CPID';
+   DELETE FROM pct.pct_mdt_decision_problems WHERE tenant_id='$TENANT';
    DELETE FROM pct.pct_mdt_decisions WHERE subject_cpid='$CPID';
    DELETE FROM pct.pct_consultations WHERE subject_cpid='$CPID';
    DELETE FROM pct.pct_examination_findings WHERE tenant_id='$TENANT';

@@ -1,11 +1,15 @@
 package zw.gov.mohcc.impilo.pct.core.clinical;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ExaminationEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ExaminationFindingEntity;
+import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.ExaminationFindingRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.ExaminationRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -34,16 +38,25 @@ public class ExaminationService {
 
     private static final Logger log = LoggerFactory.getLogger(ExaminationService.class);
 
+    /** Event type routed to {@code pct.examination.recorded} by {@code OutboxPublisher.routeTopic}. */
+    static final String EVENT_EXAMINATION_RECORDED = "EXAMINATION_RECORDED";
+
     private final ExaminationRepository examinationRepository;
     private final ExaminationFindingRepository findingRepository;
     private final ClinicalAccessGuard accessGuard;
+    private final EventOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     public ExaminationService(ExaminationRepository examinationRepository,
                               ExaminationFindingRepository findingRepository,
-                              ClinicalAccessGuard accessGuard) {
+                              ClinicalAccessGuard accessGuard,
+                              EventOutboxRepository outboxRepository,
+                              ObjectMapper objectMapper) {
         this.examinationRepository = examinationRepository;
         this.findingRepository = findingRepository;
         this.accessGuard = accessGuard;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -109,6 +122,8 @@ public class ExaminationService {
         }
         findingRepository.saveAll(findings);
 
+        emit(ctx, e, findings);
+
         log.info("pct.examination.recorded id={} subject={} regions={} unexamined={} by={} correlationId={}",
                 e.getExaminationId(), subjectCpid, findings.size(),
                 findings.stream().filter(x -> !ExaminationVocabulary.wasExamined(x.getState())).count(),
@@ -160,6 +175,79 @@ public class ExaminationService {
         entity.setSite(site);
         entity.setLaterality(laterality);
         return entity;
+    }
+
+    /**
+     * Writes the examination onto the outbox so BUTANO can archive it as a FHIR ClinicalImpression
+     * (brief.md §19).
+     *
+     * <p>Until this existed an examination was visible only inside PCT. A clinician at the next
+     * facility reading the shared record saw the diagnosis (Condition) and the vitals (Observation)
+     * but no trace of the examination that produced them — including, critically, no trace of the
+     * regions that were never looked at.</p>
+     *
+     * <p>Mirrors {@code ProblemService.emit}: same table, same outbox pattern, same transaction as
+     * the domain write. No second event spine.</p>
+     */
+    private void emit(TrustContext ctx, ExaminationEntity e, List<ExaminationFindingEntity> findings) {
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType("EXAMINATION");
+        outbox.setAggregateId(e.getExaminationId().toString());
+        outbox.setEventType(EVENT_EXAMINATION_RECORDED);
+        outbox.setPayload(toJson(shrPayload(e, findings, ctx.actorId())));
+        outbox.setTenantId(ctx.tenantId());
+        outboxRepository.save(outbox);
+    }
+
+    /**
+     * The exact set of fields that crosses into the shared health record.
+     *
+     * <p><strong>Free text is deliberately absent.</strong> {@code detail} is the one field on a
+     * finding that a clinician types in prose — "coarse crackles, husband says she collapsed at the
+     * Mbare bus rank" — so it is the field that can carry a name, a phone number or an address into a
+     * record whose whole contract is that identifying data stays in VITO. {@code context_note} and
+     * {@code site} are prose for the same reason. Only the closed-vocabulary region, the closed-
+     * vocabulary state and the coded finding travel. The same rule the Condition producer applies to
+     * {@code notes}, applied to the field that holds prose here.</p>
+     *
+     * <p><strong>The state travels verbatim, per region.</strong> Collapsing the six states into a
+     * two-state normal/abnormal shape at this boundary would undo the whole point of §7: a region
+     * nobody looked at would arrive in the SHR indistinguishable from one that was examined and found
+     * normal, and the SHR is precisely where the next clinician decides whether to look again.</p>
+     *
+     * <p>Package-private and static so the boundary can be asserted without a running service.</p>
+     */
+    static Map<String, Object> shrPayload(ExaminationEntity e, List<ExaminationFindingEntity> findings,
+                                          String actorId) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (ExaminationFindingEntity f : findings) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("region", f.getRegion());
+            row.put("state", f.getState());
+            row.put("findingCode", f.getFindingCode());
+            rows.add(row);
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("examinationId", e.getExaminationId().toString());
+        payload.put("subjectCpid", e.getSubjectCpid());
+        payload.put("journeyId", e.getJourneyId() == null ? null : e.getJourneyId().toString());
+        payload.put("encounterId", e.getEncounterId() == null ? null : e.getEncounterId().toString());
+        payload.put("examinedAt", e.getExaminedAt() == null ? null : e.getExaminedAt().toString());
+        payload.put("actorId", actorId);
+        payload.put("findings", rows);
+        return payload;
+    }
+
+    private String toJson(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException ex) {
+            // Never a silent "{}": an empty payload would publish successfully and archive an
+            // examination with no findings at all, which reads as a look that found nothing.
+            log.error("Failed to serialise examination payload; the SHR event is not emitted: {}",
+                    ex.getMessage());
+            throw new IllegalStateException("Could not serialise the examination for the shared record", ex);
+        }
     }
 
     @Transactional(readOnly = true)
