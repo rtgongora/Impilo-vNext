@@ -292,7 +292,7 @@ Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7
 with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
 not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
 (S0–S3 done — see §20–§23; **replaced from S4 onward by backlog-clearing batches SB-1–SB-6,
-SB-1/2/4 done — see §24–§26, SB-3 in progress (Lane B), SB-5 gated, SB-6 remaining**). Full plan in
+SB-1/2/3/4 done — see §24–§27, SB-5 gated, SB-6 remaining**). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -1041,6 +1041,53 @@ also produced are NOT integrated — `clinical-knowledge-platform-service`'s `ru
 schema was not reviewed before V007 was written, and mapping rule content into a co-edited
 service's table needs that review first rather than guessing a column mapping. The fragments
 are preserved for that follow-up integration.
+
+## 27. Wave SB-3 — consolidated reachability for S1-S3, SB-1/SB-2 and P8/P14 (done)
+
+The Lane B batch: everything the surgery pipeline had built up to this point (episodes,
+assessment, decision, complication pathways, prehab, longitudinal objects, follow-up,
+waiting-list revalidation, specialty content reads) plus P8 specimen-custody/implant routes
+and P14 analytics endpoints, made reachable end-to-end. Delivered on a separate worktree
+(`worktree-surgery-sb3-reachability`) as six commits, independently verified by Lane A before
+integration rather than accepted on the agent's own report (per the estate's trust-but-verify
+discipline) — every claim was re-run, not just re-read.
+
+**Authz** (`tshepo-authz-service V302__surgery_reachability_policy_rules.sql`): policy rows for
+the full surgery/analytics/custody/implant route set. Both known PDP defects designed around
+correctly: negatives modeled as correct-cadre-only ALLOW → `NO_ALLOW_RULE` rather than a
+path-pinned DENY, and every path pin omits the trailing slash. `SurgeryReachabilityRouteShapeTest`
+(8 tests) + `PathContainsSegmentTest` (5 tests) prove the route-shape derivation and the
+trailing-slash defect directly, in Java, not just via the shell rig. Independently re-ran:
+224/224 tshepo-authz-service tests, 23/23 `surgery-authz-journeys.sh` rig (re-run again after
+rebase, still 23/23).
+
+**BFF** (`experience-bff`): `SurgeryServiceClient`/`SurgeryController` following the established
+`TelemonitoringServiceClient`/`RitoController` idiom; `SURGERY_BASE_URL` env wired into the
+full-preview Helm values. Independently re-ran: 77/77 across the six touched test classes
+(`SurgeryServiceClientTest`, `SurgeryControllerTest`, `ProceduresServiceClientTest`,
+`ProceduresControllerTest`, `InventoryControllerTest`, `TheatreControllerTest`).
+
+**UI** (`ui/one-ui-shell`): new `/work/clinical/surgery` workspace (`page.tsx` +
+`useSurgeryEpisodes.ts`) registered in `routes.ts`, and — the orphan-page check's own finding —
+the pre-existing `/work/clinical/procedures` page had shipped unregistered since P-R and is now
+registered alongside it. Client honesty: `useSurgeryEpisodes` distinguishes a 404
+("not recorded yet", real absence) from a genuine fetch failure via an `isNotRecorded(error)`
+helper, rather than collapsing both to an empty state; the procedures analytics panel now
+renders a malformed-but-200 indicators payload (missing its `indicators` array) as unavailable
+rather than as a false empty/zero-count success — a real defect Lane B found and fixed via its
+own integration test. Independently re-ran: `npx tsc --noEmit` clean, `routes.test.ts` 32/32,
+procedures page tests 17/17.
+
+**Integration note**: SB-3's branch point predated SB-1/SB-2/SB-4 by several commits; rebasing
+onto the post-SB-4 tip produced one real conflict in `routes.ts` — trunk had independently added
+one unrelated route (W15b MCI casualty tagging, 826→827) while SB-3 added two more from its own
+826 baseline (→828). Resolved by keeping both route-array additions and recomputing
+`EXPECTED_ROUTE_COUNT` to 829 (827 + 2), not by discarding either side. Every rig/test/typecheck
+re-run clean after the rebase, not assumed clean from the pre-rebase run. Pushed as `6f188c46b`.
+
+Filed separately, not this wave's responsibility: `task_aff0c53a`, four pre-existing
+`ShiftControllerTest` failures (stale `/v1/shifts` URL expectations vs `TusoServiceClient`'s
+actual `/v1/internal/shifts`) predating this diff, flagged by the SB-3 agent itself.
 
 Proof: full `ui/one-ui-shell` typecheck (exit 0). `body-map.test.tsx`: 28/28 unchanged.
 `surgery-longitudinal-followup-specialty-journeys.sh` extended to 25/25 (all fifteen
