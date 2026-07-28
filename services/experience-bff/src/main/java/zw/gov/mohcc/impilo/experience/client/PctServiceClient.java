@@ -543,6 +543,18 @@ public class PctServiceClient {
     /**
      * Get a single referral by ID.
      */
+    /**
+     * Records that a teleconsultation has actually begun. Idempotent in PCT — a reconnect or a
+     * second participant joining must not move the start time forward.
+     */
+    public JsonNode markTeleconsultSessionStarted(String referralId) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/session-started";
+        log.info("PCT: marking teleconsult session started referral={}", referralId);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, java.util.Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode getReferral(String referralId) {
         String url = baseUrl + "/v1/referrals/" + referralId;
         log.info("PCT: Getting referral id={}", referralId);

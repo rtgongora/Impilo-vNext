@@ -189,6 +189,34 @@ public class ReferralPackageService {
         return referralRepository.save(entity);
     }
 
+    /**
+     * Records that the consultation has actually begun.
+     *
+     * <p>Called on the first waiting-room admission. It is idempotent by design — a consult starts
+     * once, and later admissions (a second participant joining, a reconnect after a dropped line)
+     * must not move the start time forward. Without this the referral model knew only when the
+     * paperwork was submitted and when it was closed, so the telemedicine list could not say
+     * whether a consult was under way.
+     */
+    @Transactional
+    public ReferralPackageEntity markSessionStarted(UUID referralId, OffsetDateTime startedAt) {
+        ReferralPackageEntity entity = getOwned(referralId);
+        if (entity.getSessionStartedAt() == null) {
+            entity.setSessionStartedAt(startedAt == null ? OffsetDateTime.now() : startedAt);
+            return referralRepository.save(entity);
+        }
+        return entity;
+    }
+
+    /** Sets or clears the appointment time for a scheduled consult. */
+    @Transactional
+    public ReferralPackageEntity setSessionSchedule(UUID referralId, OffsetDateTime scheduledAt) {
+        ReferralPackageEntity entity = getOwned(referralId);
+        ensureMutable(entity);
+        entity.setSessionScheduledAt(scheduledAt);
+        return referralRepository.save(entity);
+    }
+
     @Transactional
     public ReferralPackageEntity accept(UUID referralId, Map<String, Object> request) {
         ReferralPackageEntity entity = getOwned(referralId);

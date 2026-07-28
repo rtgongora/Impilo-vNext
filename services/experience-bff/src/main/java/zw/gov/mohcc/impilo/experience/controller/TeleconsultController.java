@@ -668,6 +668,16 @@ public class TeleconsultController {
                         "identity is required", requestId, correlationId);
             }
             JsonNode admitted = rtcClient.admitParticipant(id, identity.trim(), Map.of());
+            // The consultation has now actually begun. PCT is where a session's lifecycle is
+            // recorded; without this the referral knew only when its paperwork was submitted, so
+            // the telemedicine list could not tell a consult under way from one merely referred.
+            // Admission is the join, so it is the start. A failure here must not deny an admitted
+            // participant entry to the consultation — the clinical act has already happened.
+            try {
+                pctClient.markTeleconsultSessionStarted(id);
+            } catch (Exception e) {
+                log.warn("Could not record teleconsult session start for referral={}: {}", id, e.getMessage());
+            }
             sendSessionNotification("rtc.telemedicine.session-ready", identity.trim(), id,
                     "Session ready", "Your teleconsultation is ready — you have been admitted to the session.");
             telemedicineGovernanceService.audit(
@@ -2953,13 +2963,13 @@ public class TeleconsultController {
      * payload would hand every reader of the list a way into the consultation, so its absence here
      * is a property to keep rather than a gap to fill.
      *
-     * <p>{@code scheduled_at} and {@code started_at} have no source: the referral model records
-     * when a referral was submitted and completed, which is not when a consultation was scheduled
-     * or when the parties actually joined. They are left null rather than filled from
-     * {@code submittedAt}, which would report the referral's paperwork time as the consultation's
-     * start. Giving them real values means adding session lifecycle timestamps to PCT and setting
-     * them where a session actually begins and ends — the waiting-room admit and the session
-     * close. That is a schema change to a clinical system of record and is tracked as such.
+     * <p>{@code scheduled_at} and {@code started_at} come from PCT's session lifecycle columns
+     * (V500), set on the waiting-room admission. They used to have no source at all, and were left
+     * null rather than filled from {@code submittedAt} — which would have reported the referral's
+     * paperwork time as the consultation's start, on a screen a clinician reads to know whether a
+     * consult is under way. {@code duration_seconds} is derived and stays null until both ends are
+     * known, because a duration for an unstarted consult is a number where "it has not happened"
+     * is the honest answer.
      */
     private Object sessionRows(Object payload) {
         if (!(payload instanceof JsonNode node)) {
@@ -2976,6 +2986,8 @@ public class TeleconsultController {
             sessionAlias(attributes, referral, "facilityId", "facility_id");
             sessionAlias(attributes, referral, "referralPackageStatus", "status");
             sessionAlias(attributes, referral, "completedAt", "ended_at");
+            sessionAlias(attributes, referral, "sessionStartedAt", "started_at");
+            sessionAlias(attributes, referral, "sessionScheduledAt", "scheduled_at");
             sessionAlias(attributes, referral, "referralId", "referral_id");
             sessionAlias(attributes, referral, "createdAt", "created_at");
             sessionAlias(attributes, referral, "updatedAt", "updated_at");
@@ -2991,7 +3003,7 @@ public class TeleconsultController {
             attributes.putIfAbsent("room_url", null);
             attributes.putIfAbsent("scheduled_at", null);
             attributes.putIfAbsent("started_at", null);
-            attributes.putIfAbsent("duration_seconds", null);
+            attributes.put("duration_seconds", durationSeconds(referral));
 
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("id", zw.gov.mohcc.impilo.experience.support.JsonApiRows.text(referral, "referralId"));
@@ -3000,6 +3012,26 @@ public class TeleconsultController {
             rows.add(row);
         }
         return rows;
+    }
+
+    /**
+     * Elapsed consultation time, or null while it is still running or was never joined. A duration
+     * is only meaningful once both ends are known — reporting one for an unstarted consult would
+     * put a number where the honest answer is "it has not happened".
+     */
+    private static Long durationSeconds(JsonNode referral) {
+        String started = zw.gov.mohcc.impilo.experience.support.JsonApiRows.text(referral, "sessionStartedAt");
+        String ended = zw.gov.mohcc.impilo.experience.support.JsonApiRows.text(referral, "completedAt");
+        if (started == null || ended == null) {
+            return null;
+        }
+        try {
+            return java.time.Duration.between(
+                    java.time.OffsetDateTime.parse(started),
+                    java.time.OffsetDateTime.parse(ended)).getSeconds();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static void sessionAlias(Map<String, Object> attributes, JsonNode source,
