@@ -69,7 +69,7 @@ export default function MedicationsPage() {
   const { isPrescriber } = useRoleGroup();
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
-    (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
+    (e) => e.attributes.isOpen
   );
 
   const { data: prescriptionsData, isLoading } = usePatientPrescriptions(patientId);

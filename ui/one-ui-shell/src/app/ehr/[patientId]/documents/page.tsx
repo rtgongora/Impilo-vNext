@@ -77,7 +77,7 @@ export default function DocumentsPage() {
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
 
   const { data: documentsData, isLoading, isError: documentsUnavailable } = useClinicalDocuments(patientId);

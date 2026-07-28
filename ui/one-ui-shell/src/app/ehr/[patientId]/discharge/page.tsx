@@ -75,7 +75,7 @@ export default function VisitOutcomePage() {
   const { data: encountersData, isLoading } = useEncounters(patientId);
 
   const activeEncounter = encountersData?.data?.find(
-    (e: EncounterResource) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS"
+    (e: EncounterResource) => e.attributes.isOpen
   );
   const targetEncounter =
     encountersData?.data?.find((encounter: EncounterResource) => encounter.id === requestedEncounterId) ??

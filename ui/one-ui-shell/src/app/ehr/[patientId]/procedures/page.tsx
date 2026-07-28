@@ -34,7 +34,7 @@ export default function ProceduresPage() {
   const procedures: PatientProcedure[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const scheduledCount = procedures.filter((procedure) => procedure.status === "Scheduled").length;
   const completedCount = procedures.filter((procedure) => procedure.status === "Completed").length;

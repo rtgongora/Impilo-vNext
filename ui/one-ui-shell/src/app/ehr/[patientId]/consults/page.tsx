@@ -167,7 +167,7 @@ export default function ConsultsPage() {
   const patientDob = maskDob((patient?.attributes as Record<string, unknown>)?.dateOfBirth as string | undefined, privacyLevel);
   const encounters = encountersData?.data ?? [];
   const activeEncounter = encounters.find(
-    (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
+    (e) => e.attributes.isOpen
   );
   const allReferrals = referralsData?.data ?? [];
   const allSessions: TelemedicineSession[] = teleData?.data ?? [];

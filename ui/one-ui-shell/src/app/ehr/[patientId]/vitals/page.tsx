@@ -56,7 +56,7 @@ export default function VitalsPage() {
   const { isClinical } = useRoleGroup();
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
-    (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
+    (e) => e.attributes.isOpen
   );
   const encounterId = activeEncounter?.id ?? "";
   const { data: vitalsData, isLoading, isError: vitalsUnavailable } = useVitals(patientId);

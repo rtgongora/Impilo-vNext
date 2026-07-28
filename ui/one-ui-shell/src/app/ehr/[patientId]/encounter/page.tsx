@@ -27,7 +27,7 @@ export default function EncounterIndexRedirect() {
     if (!patientId || isPending) return;
     const encounters = data?.data ?? [];
     const active = encounters.find(
-      (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
+      (e) => e.attributes.isOpen,
     );
     if (active) {
       router.replace(`/ehr/${patientId}/encounter/${active.id}`);

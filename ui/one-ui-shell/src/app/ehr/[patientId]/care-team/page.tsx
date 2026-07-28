@@ -23,7 +23,7 @@ export default function CareTeamPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const activeMembers = members.filter((member) => member.status === "active");
   const inactiveMembers = members.filter((member) => member.status === "inactive");

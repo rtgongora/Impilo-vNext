@@ -55,7 +55,7 @@ export default function AdvanceDirectivesPage() {
   const directives: AdvanceDirective[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const dnr = directives.find((directive) => directive.type === "DNR" && directive.status === "Active");
   const needsReview = directives.filter((directive) => directive.status === "Pending Review" || directive.status === "Expired");

@@ -18,7 +18,7 @@ export default function MaternityMonitoringPage() {
   const { isClinical } = useRoleGroup();
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
-    (encounter) => encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+    (encounter) => encounter.attributes.isOpen,
   );
   const encounterId = activeEncounter?.id ?? "";
 

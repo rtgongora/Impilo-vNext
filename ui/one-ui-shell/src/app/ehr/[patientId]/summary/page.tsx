@@ -100,7 +100,7 @@ export default function PatientSummaryPage() {
   const medications = (medsData?.data ?? []);
   const vitals = (vitalsData?.data ?? []);
   const activeEncounter = encounters.find(
-    (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS"
+    (e) => e.attributes.isOpen
   );
   const activeConditions = conditions.filter(
     (c) => c.attributes.clinical_status === "ACTIVE" || c.attributes.clinicalStatus === "ACTIVE"
@@ -627,7 +627,7 @@ export default function PatientSummaryPage() {
                           <p className="text-xs text-muted-foreground">{new Date(e.attributes.startedAt).toLocaleDateString()}</p>
                         </div>
                         <span className={`px-2 py-0.5 text-xs rounded-full ${
-                          e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
+                          e.attributes.isOpen
                             ? "bg-green-100 text-green-700"
                             : "bg-neutral-100 text-muted-foreground"
                         }`}>{e.attributes.status}</span>

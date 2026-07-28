@@ -88,7 +88,7 @@ export default function PatientChartPage() {
   const clinicalNotes = useMemo(() => notesData?.data ?? [], [notesData?.data]);
   const telemedicineSessions = useMemo(() => telemedicineData?.data ?? [], [telemedicineData?.data]);
   const activeEncounter = encounters.find(
-    (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
+    (e) => e.attributes.isOpen,
   );
   const queueEntry = searchParams.get("entry") === "queue";
   const searchEntry = searchParams.get("entry") === "search";
@@ -417,7 +417,7 @@ export default function PatientChartPage() {
                       </div>
                       <span
                         className={`px-2 py-0.5 text-xs rounded-full ${
-                          enc.attributes.status === "ACTIVE" || enc.attributes.status === "IN_PROGRESS"
+                          enc.attributes.isOpen
                             ? "bg-green-100 text-green-700"
                             : "bg-neutral-100 text-muted-foreground"
                         }`}

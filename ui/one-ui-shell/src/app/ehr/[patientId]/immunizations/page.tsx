@@ -46,7 +46,7 @@ export default function ImmunizationsPage() {
   const immunizations: ImmunizationResource[] = immunizationsData?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const completedCount = immunizations.filter((immunization) => immunization.attributes.status === "COMPLETED").length;
   const uniqueVaccines = new Set(immunizations.map((immunization) => immunization.attributes.vaccineName)).size;

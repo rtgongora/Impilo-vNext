@@ -81,7 +81,7 @@ export default function ClinicalHistoryPage() {
   const immunizations = (immunData?.data ?? []);
 
   const activeEncounter = encounters.find(
-    (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
+    (e) => e.attributes.isOpen
   );
   const activeConditions = conditions.filter(
     (c) => c.attributes.clinical_status === "ACTIVE" || c.attributes.clinicalStatus === "ACTIVE"

@@ -68,7 +68,7 @@ export default function AssessmentsPage() {
   const isLoading = false;
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const attentionTools = tools.filter((tool) => {
     const severity = tool.latestResult?.severity;

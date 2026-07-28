@@ -67,7 +67,7 @@ export default function ConditionsPage() {
   const conditions: ConditionResource[] = conditionsData?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+      encounter.attributes.isOpen,
   );
   const activeConditions = conditions.filter((condition) => condition.attributes.clinicalStatus === "ACTIVE");
   const resolvedConditions = conditions.filter((condition) => condition.attributes.clinicalStatus === "RESOLVED");

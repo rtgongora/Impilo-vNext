@@ -65,7 +65,7 @@ export function PatientJourneyContextPanel({
 
   const encounters = encountersData?.data ?? [];
   const activeEncounter = encounters.find(
-    (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
+    (e) => e.attributes.isOpen,
   );
 
   const referrals = referralsData?.data ?? [];
