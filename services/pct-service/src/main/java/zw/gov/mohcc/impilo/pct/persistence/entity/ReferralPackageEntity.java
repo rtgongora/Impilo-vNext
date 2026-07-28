@@ -102,6 +102,20 @@ public class ReferralPackageEntity {
     @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;
 
+    /**
+     * When the consultation is scheduled to happen. Null for on-demand consults — the absence means
+     * "no appointment", not "unknown".
+     */
+    @Column(name = "session_scheduled_at")
+    private OffsetDateTime sessionScheduledAt;
+
+    /**
+     * When the consultation actually began, set once on the first waiting-room admission. Distinct
+     * from {@link #submittedAt}: that is when the referral was sent, which can be days earlier.
+     */
+    @Column(name = "session_started_at")
+    private OffsetDateTime sessionStartedAt;
+
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
@@ -182,4 +196,12 @@ public class ReferralPackageEntity {
     public void setCompletedAt(OffsetDateTime completedAt) { this.completedAt = completedAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
+
+    public OffsetDateTime getSessionScheduledAt() { return sessionScheduledAt; }
+
+    public void setSessionScheduledAt(OffsetDateTime sessionScheduledAt) { this.sessionScheduledAt = sessionScheduledAt; }
+
+    public OffsetDateTime getSessionStartedAt() { return sessionStartedAt; }
+
+    public void setSessionStartedAt(OffsetDateTime sessionStartedAt) { this.sessionStartedAt = sessionStartedAt; }
 }

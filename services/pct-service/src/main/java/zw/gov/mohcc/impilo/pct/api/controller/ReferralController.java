@@ -90,6 +90,21 @@ public class ReferralController {
         return execute(() -> referralService.respond(id, request));
     }
 
+    /**
+     * Marks the consultation as begun. Called when the first participant is admitted from the
+     * waiting room; idempotent, so a reconnect does not reset the start time.
+     */
+    @PostMapping("/{id}/session-started")
+    public ResponseEntity<ApiResponse<ReferralPackageEntity>> markSessionStarted(
+            @PathVariable UUID id, @RequestBody(required = false) Map<String, Object> request) {
+        Object at = request == null ? null : request.get("started_at");
+        java.time.OffsetDateTime startedAt = at == null || at.toString().isBlank()
+                ? null : java.time.OffsetDateTime.parse(at.toString());
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(
+                referralService.markSessionStarted(id, startedAt), correlationId));
+    }
+
     @PostMapping("/{id}/complete")
     public ResponseEntity<ApiResponse<ReferralPackageEntity>> complete(
             @PathVariable UUID id,
