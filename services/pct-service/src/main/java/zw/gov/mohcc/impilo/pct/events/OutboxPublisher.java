@@ -244,6 +244,12 @@ public class OutboxPublisher {
                  "EMERGENCY_HANDOVER_DECLINED",
                  "EMERGENCY_HANDOVER_EXPIRED" -> "pct.emergency.handover.updated";
 
+            // W12 identity proof: a clinical resolution of an emergency episode's identity.
+            // reporting derives time-to-identification; a downstream identity-repoint consumer
+            // (none exists yet — see docs/registry/iatg-emergency-leases.md) would subscribe here
+            // rather than filtering the whole pct.events catch-all.
+            case "EMERGENCY_IDENTITY_LINKED" -> "pct.emergency.identity.linked";
+
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             // Nutrition programme lifecycle. Tracing gets its own topic because it is acted on by a

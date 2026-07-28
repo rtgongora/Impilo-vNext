@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.daidzai.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,4 +21,12 @@ public interface MciCasualtyRepository extends JpaRepository<MciCasualtyEntity, 
     @Query("select c from MciCasualtyEntity c where c.tenantId = :tenantId and c.incidentId = :incidentId "
             + "and c.emergencyEpisodeId is null order by c.taggedAt asc")
     List<MciCasualtyEntity> findUnminted(@Param("tenantId") UUID tenantId, @Param("incidentId") UUID incidentId);
+
+    /** VITO identity repoint (see MciCasualtyIdentityRepointHook). Idempotent: a replay matches nothing. */
+    @Modifying
+    @Query("update MciCasualtyEntity c set c.subjectCpid = :confirmed "
+            + "where c.tenantId = :tenantId and c.subjectCpid = :provisional")
+    int repointSubjectCpid(@Param("tenantId") UUID tenantId,
+                           @Param("provisional") String provisionalCpid,
+                           @Param("confirmed") String confirmedCpid);
 }

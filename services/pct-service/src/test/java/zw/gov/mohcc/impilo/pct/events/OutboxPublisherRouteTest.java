@@ -107,4 +107,12 @@ class OutboxPublisherRouteTest {
     void anUnroutedEventTypeStillLandsOnTheCatchAllRatherThanBeingDropped() {
         assertEquals("pct.events", OutboxPublisher.routeTopic("something.nobody.routed"));
     }
+
+    @org.junit.jupiter.api.Test
+    void identityLinkEventRoutesOffTheCatchAll() {
+        // W12: emitted by EmergencyIdentityLinkService in the same commit as this route, per this
+        // pack's own rule that a table carrying a cpid ships its repoint AND its route together.
+        assertEquals("pct.emergency.identity.linked", OutboxPublisher.routeTopic("EMERGENCY_IDENTITY_LINKED"));
+        assertNotEquals("pct.events", OutboxPublisher.routeTopic("EMERGENCY_IDENTITY_LINKED"));
+    }
 }
