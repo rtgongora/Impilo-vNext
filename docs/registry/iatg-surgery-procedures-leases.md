@@ -291,7 +291,7 @@ Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7
 **Phase P pipeline COMPLETE (P0–P15, see §10–§19)** — P13/P14/P15 all partial by design (§17–§19),
 with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
 not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
-(S0–S1 done — see §20–§21; S2–S18 remaining). Full plan in
+(S0–S2 done — see §20–§22; S3–S18 remaining). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -844,3 +844,50 @@ locally). `PctProblemContributionClientTest` (4 tests, captured-payload lambda p
 `surgery-episode-journeys.sh` (10/10, real Postgres) — the CC-5 anchor CHECK and a second CC-2
 regression guard, now at the table-column level. Full surgery-service module regression: 17/17
 (3 prior from S0 + 10 service + 4 client, all new this wave).
+
+## 22. Wave S2 — general surgical assessment (done)
+
+Closes the surgical domain pack's own §5 (`docs/clinical/surgical-domain-pack/audit.md`), ~27
+assessment elements marked ABSENT everywhere. Research first, element by element, rather than
+trusting the ADR/audit's descriptions or adding a column per named element by default — most of
+the 27 already have a canonical home elsewhere in the estate:
+
+| Element | Home | Why not duplicated here |
+|---|---|---|
+| Allergies | `pct.pct_allergies` (V052) | The table's own comment names it the estate's designated fix for the `ALLERGIES_UNVERIFIED` gap |
+| Current medications / anticoagulants | OROS's prescription list | `pct_medication_reconciliations`' own comment: "the current list stays OROS's" — reconciliation is a comparison event, not a second list |
+| Tobacco / alcohol | `pct_social_history` (V106) | One row per category per subject, already governed |
+| Functional status | `pct_functional_assessments` (V106) | BARTHEL/LAWTON/KATZ/ECOG, already scored |
+| Pregnancy status | `pct_pregnancy_episodes` (V059) | A true current-fact registry — "one ONGOING episode per person" |
+| Previous surgery | `pct_past_procedures` (V106) | Its own comment: "history... NOT a procedure record" |
+| Imaging / pathology findings | `pacs.imaging_study` / OROS histopath (V014) | Existing results SoRs |
+
+`surgical_assessment` (V003) therefore carries, for every one of the above, only a REVIEWED flag
+plus a short clinical note plus an opaque reference id — never the underlying value — with a
+CHECK requiring the flag whenever a reference id is set (`chk_surgical_assessment_functional_ref`
+and three siblings), so a reference can never fabricate a review that never happened. The
+application layer (`SurgicalAssessmentService`) enforces the identical pairing before the CHECK
+ever fires, giving a coded 400 instead of an opaque constraint-violation 500.
+
+**Genuinely new content** (confirmed absent everywhere by the research above, and explicitly
+listed under ADR §5a's "structured surgical assessment content" MAY-own grant): presenting
+problem, symptom timeline, wound-healing/bleeding-thrombosis/infection history, nutrition,
+frailty notes, social support, transport, work/livelihood impact, patient goals, examination
+findings, differential-diagnosis working notes, surgical risk assessment.
+
+**One named debt**: anaesthetic history (a longitudinal "has this patient had an anaesthetic
+complication before" fact) has no home anywhere, including `pct_past_procedures`. Recorded here
+as free text (`anaesthetic_history_notes`) rather than inventing a new PCT category unilaterally
+— the same restraint S1 already applied to the `pct_care_plans` attribution gap. Both debts are
+pct-service's own schema to extend, not this programme's to force.
+
+**One row per episode, refined not versioned** (`uq_surgical_assessment_episode`) — the same
+mutable-conversation-record idiom mvumo's V300 informed-consent-content migration uses: an
+assessment gets more complete over repeated review, it does not accumulate snapshots.
+
+Proof: `SurgicalAssessmentServiceTest` (11 tests) — every reference-requires-review refusal, the
+refine-not-duplicate behaviour, the not-found paths. `surgery-assessment-journeys.sh` (12/12,
+real Postgres) — the CHECKs themselves, the UNIQUE constraint, the FK to a real episode, and a
+CC-2 regression guard confirming no column holds a registry value directly (no `allergies`,
+`medications`, `functional_status`, `pregnancy_status`, `tobacco`/`alcohol` column exists). Full
+surgery-service module regression: 28/28.
