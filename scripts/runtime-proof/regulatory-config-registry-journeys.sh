@@ -417,7 +417,12 @@ ACTV=$(code $(hdr registrar-b) -X POST "$API/releases/$SEEDED_RELID/activate")
     || bad "could not activate the seeded release (approve=$APPR activate=$ACTV)"
 
 NCZPACK=$(PSQL "SELECT id FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
+# Derived, not hardcoded: the pack grows wave by wave, and a hardcoded count would quietly stop
+# testing the thing it was written for.
+PACKSIZE=$(ls "$REPO/services/organization-registry-service/src/main/resources/regulatory/councils/nurses-council/definitions" | wc -l | tr -d ' ')
 BEFORE=$(curl -sS $(hdr) "$API/packs/$NCZPACK/active" | python3 -c "import json,sys;print(len(json.load(sys.stdin)))")
+[ "$BEFORE" = "$PACKSIZE" ] && ok "the activated pack carries every definition in the source pack ($PACKSIZE)" \
+    || bad "activated pack has $BEFORE definitions, source pack has $PACKSIZE"
 
 # Restart the service against the SAME database with a tampered pack: the fee file says a real
 # amount while the manifest still carries the checksum of the unset one. This is the exact shape
@@ -552,8 +557,8 @@ PROMO_STATE=$(PROMO "SELECT load_state FROM org_registry.regulatory_config_pack 
     || bad "the exported pack loaded as '$PROMO_STATE'; export and import disagree"
 
 PROMO_COUNT=$(PROMO "SELECT count(*) FROM org_registry.regulatory_config_definition_version")
-[ "$PROMO_COUNT" = 4 ] && ok "all 4 definitions arrived ($PROMO_COUNT)" \
-    || bad "expected 4 definitions in the target environment, found $PROMO_COUNT"
+[ "$PROMO_COUNT" = "$PACKSIZE" ] && ok "every definition arrived in the target environment ($PROMO_COUNT)" \
+    || bad "expected $PACKSIZE definitions in the target environment, found $PROMO_COUNT"
 
 PROMO_REL=$(PROMO "SELECT lifecycle_state FROM org_registry.regulatory_config_release
    WHERE release_key='ncz-v1'")

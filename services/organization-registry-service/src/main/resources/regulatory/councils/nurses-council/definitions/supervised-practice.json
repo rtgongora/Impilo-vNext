@@ -1,0 +1,18 @@
+{
+  "typeCode": "SUPERVISED_PRACTICE",
+  "definitionKey": "supervised-practice",
+  "label": "Supervised practice",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/supervised-practice",
+  "policyStatus": "PENDING_REGULATOR_APPROVAL",
+  "policyDecisionRef": "NCZ-DEC-006",
+  "payload": {
+    "durationBasis": null,
+    "interruptionHandling": null,
+    "partTimeFactor": null,
+    "supervisorApprovalRequired": null,
+    "recordsPlacements": true,
+    "recordsSupervisors": true,
+    "recordsAccumulatedDuration": true
+  }
+}

@@ -2,11 +2,29 @@
   "typeCode": "APPLICATION_TYPE",
   "definitionKey": "student-registration",
   "label": "Student registration",
-  "semanticVersion": "1.0.0",
+  "semanticVersion": "1.1.0",
   "selfServiceRoute": "/professional/regulatory/apply/student",
   "dependencies": [
-    { "typeCode": "FEE_SCHEDULE", "definitionKey": "student-index-fee", "optional": false },
-    { "typeCode": "NUMBERING_POLICY", "definitionKey": "student-index", "optional": false }
+    {
+      "typeCode": "FEE_SCHEDULE",
+      "definitionKey": "student-index-fee",
+      "optional": false
+    },
+    {
+      "typeCode": "NUMBERING_POLICY",
+      "definitionKey": "student-index",
+      "optional": false
+    },
+    {
+      "typeCode": "REGISTER",
+      "definitionKey": "student-register",
+      "optional": false
+    },
+    {
+      "typeCode": "REGISTER_ENTRY_RULE",
+      "definitionKey": "student-admission",
+      "optional": false
+    }
   ],
   "payload": {
     "name": "Student registration",

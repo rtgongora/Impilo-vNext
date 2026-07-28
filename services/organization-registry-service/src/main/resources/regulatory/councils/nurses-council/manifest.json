@@ -2,7 +2,7 @@
   "packKey": "nurses-council",
   "organizationCode": "NCZ",
   "label": "Nurses Council of Zimbabwe",
-  "description": "The first council configuration pack on the shared regulatory platform. It is a configuration pack, not a fork: nothing here is NCZ-specific code.",
+  "description": "The first council configuration pack on the shared regulatory platform. It is a configuration pack, not a fork: nothing here is NCZ-specific code. All four registers the Council maintains are declared, including those whose lifecycle is a later wave \u2014 stating three would imply the Council has three.",
   "sourceAuthority": "docs/requirements/regulators/nurses-council/PRODUCT_OWNER_IMPLEMENTATION_BRIEF.md",
   "sourceClassification": "BRD_DERIVED_PO_APPROVED",
   "release": {
@@ -12,12 +12,54 @@
   },
   "pendingCouncilDecisions": [
     "NCZ-DEC-001",
-    "NCZ-DEC-002"
+    "NCZ-DEC-002",
+    "NCZ-DEC-006",
+    "NCZ-DEC-013"
   ],
   "definitions": [
     {
       "file": "council-identity.json",
       "sha256": "5f00b46dd42d198b5ee55a2c0905dc09ce6cf76683acafa1888b75f6fb771a0e"
+    },
+    {
+      "file": "entry-rule-provisional-to-main.json",
+      "sha256": "cb790510e71d55034fb3a20a8a3b9528cd32e4c1256671a402c061c6cc4764d8"
+    },
+    {
+      "file": "entry-rule-student-admission.json",
+      "sha256": "107d41b61dce29e21341d1fed13a3f188cbe5567b73eb655a4079bca558775dc"
+    },
+    {
+      "file": "register-main.json",
+      "sha256": "a628ea3d2d626a687866bc26624628dd5715cbab03f34140184a96886bef5a10"
+    },
+    {
+      "file": "register-nurse-led-institutions.json",
+      "sha256": "0c7f1e1f8327ee7062457a366b503f569bfae25dd42a4de148edb09473d93358"
+    },
+    {
+      "file": "register-provisional.json",
+      "sha256": "b234c1c09eff8e3fa0c2283c69bfa1e336d86b348e8496d5e3a5a41b2be3d18a"
+    },
+    {
+      "file": "register-student.json",
+      "sha256": "12f21b76606bf18c79a120ea20e80749073a005c54618f0b2f20f99afce0013d"
+    },
+    {
+      "file": "role-examination-officer.json",
+      "sha256": "62e4538bf85b6490104112facfa225bdcac98a32e9d3bcf11a017ed310ebaf55"
+    },
+    {
+      "file": "role-finance-officer.json",
+      "sha256": "ad062276f49e4a2ac9b678ed50d9c9545613ce20553898cdf113610f6fb356ae"
+    },
+    {
+      "file": "role-registrar.json",
+      "sha256": "a604e68c076f44d7ea6d1ed51b47c9427354ab4a107b2b31d7c8581839fec193"
+    },
+    {
+      "file": "role-registration-officer.json",
+      "sha256": "320187198f4fafd55296e8bc3843c22d7e72d475ae15a8242bd3f8b2ae108d17"
     },
     {
       "file": "student-index-fee.json",
@@ -29,7 +71,11 @@
     },
     {
       "file": "student-registration.json",
-      "sha256": "c55f22532d237747fbfa9f4d36e1b49e409f2c37becb58fffa3392c3dcd6b82e"
+      "sha256": "8ef966b4f1cfea5e20ea99d20296e322a974cd99681bccd565791eba9948908b"
+    },
+    {
+      "file": "supervised-practice.json",
+      "sha256": "d4e8f4e6d408868f171404ea41d8cd979bf84963d6d113b20248212a90cb1f02"
     }
   ]
 }
