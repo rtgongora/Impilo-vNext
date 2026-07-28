@@ -28,13 +28,34 @@ public class TerminationService {
     private final TopProcedureRepository procedures;
 
     private final ConfidentialCarePolicyProvider confidentiality;
+    private final ConfidentialRecordGuard confidentialRecords;
 
     public TerminationService(TopAuthorisationRepository authorisations,
                               TopProcedureRepository procedures,
-                              ConfidentialCarePolicyProvider confidentiality) {
+                              ConfidentialCarePolicyProvider confidentiality,
+                              ConfidentialRecordGuard confidentialRecords) {
         this.authorisations = authorisations;
         this.procedures = procedures;
         this.confidentiality = confidentiality;
+        this.confidentialRecords = confidentialRecords;
+    }
+
+    /**
+     * A subject's termination procedures, guarded.
+     *
+     * <p>Added guarded FROM BIRTH rather than left for the first reader to write. An unguarded read
+     * of this table is the single most sensitive leak in the pack, and the safe version has to exist
+     * before anyone needs it — otherwise the person who needs it writes the unguarded one.
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<TopProcedureEntity> proceduresForSubject(java.util.UUID tenantId, String subjectCpid) {
+        if (tenantId == null || subjectCpid == null || subjectCpid.isBlank()) {
+            return java.util.List.of();
+        }
+        return confidentialRecords.filter(
+                procedures.findByTenantIdAndSubjectCpidOrderByPerformedOnDesc(tenantId, subjectCpid),
+                TopProcedureEntity::getSensitivityClass,
+                TopProcedureEntity::getConfidentialityCategory);
     }
 
     /**

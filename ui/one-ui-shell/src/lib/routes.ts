@@ -896,6 +896,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },
   { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
   { path: "/feedback/visit/[encounterRef]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Rate your visit", navLabel: "Rate your visit", navZone: "life" },
+  // Work Home (Phase F1/F3) — guard is "auth", not "facility": oversight, programme,
+  // regulatory and support contexts have no facility anchor and must still land here.
+  { path: "/work", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Work", navLabel: "Work", navZone: "work" },
   { path: "/work/rito/my-reputation", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Reputation", navLabel: "My Reputation", navZone: "professional" },
   { path: "/work/facility/rito/reputation", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Reputation & Moderation", navLabel: "Reputation", navZone: "work" },
   { path: "/work/facility/rito", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Facility Quality & Safety", navLabel: "Quality & Safety", navZone: "work" },
@@ -1047,7 +1050,10 @@ export const ROUTES: RouteDefinition[] = [
 // unguarded — resus/[activationId], episode/[episodeId], [visitId]. Total 803.
 // IMAM nutrition treatment (Jul 2026): +2 — the child's treatment episode and the facility's
 // defaulter tracing worklist, which are different jobs done by different people. Total 805.
-export const EXPECTED_ROUTE_COUNT = 810;
+// Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
+// Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
+// workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
+export const EXPECTED_ROUTE_COUNT = 811;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

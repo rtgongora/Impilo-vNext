@@ -393,6 +393,32 @@ describe("three-tab session experience contract", () => {
     expect(sessionContractAllowsRoute(citizen, "/clinical")).toBe(false);
   });
 
+  it("blocks citizens from /work (Work Home, Phase F) exactly like the other work prefixes", () => {
+    const citizen = resolveSessionExperienceContract({ authenticated: true, healthId: "H5" });
+    expect(sessionContractAllowsRoute(citizen, "/work")).toBe(false);
+    expect(sessionContractAllowsRoute(citizen, "/work/vashandi")).toBe(false);
+  });
+
+  it("allows /work for a provider with an active work assignment", () => {
+    const provider = resolveSessionExperienceContract({
+      authenticated: true,
+      providerWorkerId: "P9",
+      professionalTruth: { providerWorkerStatus: "active" },
+      workAssignments: [
+        {
+          assignmentId: "A9",
+          subjectId: "P9",
+          subjectType: "provider_worker",
+          contextType: "facility_clinical",
+          assignmentType: "facility_assignment",
+          assignmentStatus: "active",
+          facilityId: "FAC9",
+        },
+      ],
+    });
+    expect(sessionContractAllowsRoute(provider, "/work")).toBe(true);
+  });
+
   it("marketplace actor with sandbox pipeline gets sandbox friendly state", () => {
     const c = resolveSessionExperienceContract({
       authenticated: true,

@@ -1,0 +1,17 @@
+{
+  "typeCode": "NUMBERING_POLICY",
+  "definitionKey": "student-index",
+  "label": "Student index number",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory/registration",
+  "policyStatus": "PENDING_REGULATOR_APPROVAL",
+  "policyDecisionRef": "NCZ-DEC-001",
+  "payload": {
+    "issuedFor": "STUDENT_REGISTER_ENTRY",
+    "format": null,
+    "reserveThenIssue": true,
+    "uniqueUnderConcurrency": true,
+    "reuseOfRetiredNumbers": false,
+    "note": "A registration identifier is a statutory artefact. Reservation, uniqueness, no-reuse and audit are built and testable; the format is a parameter the Council sets, because a guessed format would be issued to real people and then be unchangeable."
+  }
+}
