@@ -7,9 +7,11 @@ import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert 
 import { Screen, Header, Button, Badge, LoadingSpinner, DictationAssistButton, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  applyOrderSet,
   checkDrugInteractions, fetchOrderSets, fetchCarePlans, createCarePlan,
   fetchMAR, administerMedication, evaluateCDS,
   fetchPages, sendPage,
+  saveSoapNote,
 } from "../../services/queueService";
 import { useEncounterStore } from "../../stores/encounterStore";
 import { SPECIALTY_WORKSPACES, getSpecialtyById } from "../../data/specialtyWorkspaces";
@@ -247,7 +249,34 @@ function DischargePanel({ onBackToInpatient }: { onBackToInpatient: () => void }
 }
 
 function SOAPPanel() {
+  const { activeEncounter } = useEncounterStore();
   const [soap, setSOAP] = useState({ subjective: "", objective: "", assessment: "", plan: "" });
+
+  // This button used to fire Alert.alert("Saved", "SOAP note recorded") over local component
+  // state. Nothing was written anywhere — and this is the DEFAULT tab of Clinical Tools, beside a
+  // dictation button, so a clinician could dictate a full encounter note, see "Saved", navigate
+  // away, and lose all of it with no indication anything was wrong.
+  const mutation = useMutation({
+    mutationFn: () =>
+      saveSoapNote({
+        patientId: activeEncounter?.patientId ?? "",
+        encounterId: activeEncounter?.id ?? "",
+        ...soap,
+      }),
+    onSuccess: () => {
+      setSOAP({ subjective: "", objective: "", assessment: "", plan: "" });
+      Alert.alert("Saved", "SOAP note recorded against this encounter.");
+    },
+    onError: (error: unknown) => {
+      const detail = error instanceof Error ? error.message : "The note was not saved.";
+      // The form is deliberately NOT cleared — the text is the only copy that exists.
+      Alert.alert("NOT saved", `${detail}\n\nYour note is still on screen. Do not navigate away.`);
+    },
+  });
+
+  const hasContent = Object.values(soap).some((v) => v.trim().length > 0);
+  const canSave = hasContent && Boolean(activeEncounter?.id) && !mutation.isPending;
+
   return (
     <View style={styles.section}>
       <View style={styles.soapHeaderRow}>
@@ -260,20 +289,62 @@ function SOAPPanel() {
           <TextInput style={styles.textArea} value={soap[field]} onChangeText={(v) => setSOAP({ ...soap, [field]: v })} placeholder={`Enter ${field}...`} multiline />
         </View>
       ))}
-      <Button title="Save SOAP Note" onPress={() => Alert.alert("Saved", "SOAP note recorded")} />
+      {!activeEncounter?.id && (
+        <Text style={styles.result}>A note is written against an encounter. Open one to save.</Text>
+      )}
+      <Button
+        testID="soap-save"
+        title={mutation.isPending ? "Saving..." : "Save SOAP Note"}
+        onPress={() => mutation.mutate()}
+        disabled={!canSave}
+      />
     </View>
   );
 }
 
 function DrugInteractionPanel() {
+  const { activeEncounter } = useEncounterStore();
   const [meds, setMeds] = useState("");
-  const mutation = useMutation({ mutationFn: () => checkDrugInteractions(meds.split(",").map((m) => m.trim()).filter(Boolean)) });
+
+  // This panel used to render "No significant interactions found for N medications" on ANY
+  // successful response, ignoring what came back — and the endpoint behind it returned that same
+  // reassurance without calling anything. Two independent fabrications of the same false all-clear.
+  const mutation = useMutation({
+    mutationFn: () =>
+      checkDrugInteractions(
+        meds.split(",").map((m) => m.trim()).filter(Boolean),
+        { patientId: activeEncounter?.patientId, encounterId: activeEncounter?.id },
+      ),
+  });
+
+  const alerts = mutation.data ?? [];
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Drug Interaction Check</Text>
       <TextInput style={styles.input} value={meds} onChangeText={setMeds} placeholder="Enter medications (comma-separated)" />
       <Button title="Check Interactions" onPress={() => mutation.mutate()} disabled={!meds || mutation.isPending} />
-      {mutation.isSuccess && <Text style={styles.result}>No significant interactions found for {meds.split(",").length} medications</Text>}
+
+      {mutation.isError && (
+        <Text testID="interaction-error" style={styles.result}>
+          {"The interaction check did NOT run. This is not a finding of no interactions — "}
+          {"do not prescribe on the basis of this screen."}
+        </Text>
+      )}
+
+      {mutation.isSuccess && alerts.length === 0 && (
+        <Text testID="interaction-none" style={styles.result}>
+          No interactions returned by the clinical knowledge engine for these medications.
+        </Text>
+      )}
+
+      {mutation.isSuccess &&
+        alerts.map((alert, index) => (
+          <View key={`${alert.rule_id ?? "alert"}-${index}`} style={styles.card}>
+            <Badge label={alert.severity} variant={alert.severity === "INFO" ? "info" : "warning"} />
+            <Text style={styles.cardMeta}>{alert.message}</Text>
+            {alert.source ? <Text style={styles.cardMeta}>Source: {alert.source}</Text> : null}
+          </View>
+        ))}
     </View>
   );
 }
@@ -289,7 +360,7 @@ function OrderSetsPanel() {
           <Text style={styles.cardTitle}>{String(s.name)}</Text>
           <Badge label={String(s.category)} variant="info" />
           <Text style={styles.cardMeta}>Items: {((s.items as string[]) ?? []).join(", ")}</Text>
-          <Button title="Apply Protocol" size="sm" onPress={() => Alert.alert("Applied", `${s.name} protocol applied to encounter`)} />
+          <ApplyProtocolButton pathwayId={String(s.id)} name={String(s.name)} />
         </View>
       ))}
     </View>
@@ -439,3 +510,37 @@ const styles = StyleSheet.create({
   scannerText: { color: colors.gray[400], fontSize: 14 },
   scannerHint: { color: colors.gray[500], fontSize: 12 },
 });
+
+/**
+ * Applies a protocol by starting a governed pathway session bound to the encounter.
+ *
+ * <p>The button used to fire Alert.alert("Applied", …) and do nothing else. The clinician moved on
+ * believing a protocol was running on the patient.
+ */
+function ApplyProtocolButton({ pathwayId, name }: { pathwayId: string; name: string }) {
+  const { activeEncounter } = useEncounterStore();
+  const mutation = useMutation({
+    mutationFn: () =>
+      applyOrderSet(pathwayId, {
+        patientId: activeEncounter?.patientId,
+        encounterId: activeEncounter?.id ?? "",
+      }),
+    onSuccess: () => Alert.alert("Protocol applied", `${name} is now running on this encounter.`),
+    onError: (error: unknown) => {
+      const detail = error instanceof Error ? error.message : "The protocol was not applied.";
+      Alert.alert("NOT applied", `${detail}\n\n${name} is not running on this encounter.`);
+    },
+  });
+
+  if (!activeEncounter?.id) {
+    return <Text style={styles.cardMeta}>Open an encounter to apply this protocol.</Text>;
+  }
+  return (
+    <Button
+      title={mutation.isPending ? "Applying..." : "Apply Protocol"}
+      size="sm"
+      onPress={() => mutation.mutate()}
+      disabled={mutation.isPending}
+    />
+  );
+}

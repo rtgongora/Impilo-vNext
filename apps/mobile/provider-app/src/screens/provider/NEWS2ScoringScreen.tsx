@@ -37,27 +37,67 @@ export function NEWS2ScoringScreen() {
   const { activeEncounter } = useEncounterStore();
   const [scores, setScores] = useState<Record<string, number>>({});
 
+  // Every parameter must be scored before a NEWS2 total means anything. The screen used to send
+  // `scores.x ?? 0` for anything the clinician had not touched — and 0 is the NORMAL band, so an
+  // unmeasured respiratory rate was submitted as a normal respiratory rate. A partially observed
+  // patient scored as a well one.
+  const missing = PARAMS.filter((p) => scores[p.id] === undefined);
+  const complete = missing.length === 0;
+
   const total = useMemo(() => Object.values(scores).reduce((a, b) => a + b, 0), [scores]);
-  const consciousnessScore = scores.consciousness ?? 0;
-  const riskLevel = total >= 7 ? "HIGH" : total >= 5 || consciousnessScore === 3 ? "MEDIUM" : total >= 1 ? "LOW" : "NONE";
-  const escalation = total >= 7 || consciousnessScore === 3;
+
+  // NEWS2's escalation rule is that ANY single parameter scoring 3 triggers it — not consciousness
+  // alone, which is all this checked. A patient with a respiratory rate of 3 and nothing else was
+  // shown as LOW risk with no escalation.
+  //
+  // This banding is a preview so the clinician sees the consequence as they score. The record's
+  // risk level and escalation flag come from inpatient-service, which owns the calculation.
+  const anyParamAtThree = Object.values(scores).some((v) => v === 3);
+  const riskLevel = total >= 7 ? "HIGH" : total >= 5 || anyParamAtThree ? "MEDIUM" : total >= 1 ? "LOW" : "NONE";
+  const escalation = total >= 7 || anyParamAtThree;
 
   const riskColors: Record<string, string> = { NONE: colors.ui.success.main, LOW: "#3B82F6", MEDIUM: colors.ui.warning.main, HIGH: colors.ui.error.main };
 
   const mutation = useMutation({
-    mutationFn: () => apiClient.post("/internal/v1/ews/news2", {
-      patientId: activeEncounter?.patientId ?? "",
-      encounterId: activeEncounter?.id ?? "",
-      respiratoryRateScore: scores.respiratoryRate ?? 0,
-      spo2Score: scores.spo2 ?? 0,
-      spo2ScaleScore: 0,
-      airOrOxygenScore: scores.airOrOxygen ?? 0,
-      systolicBPScore: scores.systolicBP ?? 0,
-      heartRateScore: scores.heartRate ?? 0,
-      consciousnessScore: scores.consciousness ?? 0,
-      temperatureScore: scores.temperature ?? 0,
-    }),
-    onSuccess: () => Alert.alert("NEWS2 Recorded", `Total: ${total} — Risk: ${riskLevel}${escalation ? "\n⚠️ ESCALATION REQUIRED" : ""}`),
+    mutationFn: () => {
+      if (!complete) {
+        // Belt and braces: the button is disabled, but a partial NEWS2 must never reach the record.
+        throw new Error(`Score every parameter first — missing: ${missing.map((p) => p.label).join(", ")}`);
+      }
+      return apiClient.post<{ data: { riskLevel?: string; escalationRequired?: boolean; totalScore?: number } }>(
+        "/internal/v1/ews/news2",
+        {
+          patientId: activeEncounter?.patientId ?? "",
+          encounterId: activeEncounter?.id ?? "",
+          respiratoryRateScore: scores.respiratoryRate,
+          spo2Score: scores.spo2,
+          // The chart on this screen is SpO2 Scale 1 (see the parameter label). Scale 2, for
+          // patients with hypercapnic respiratory failure, is a different chart and is not offered
+          // here — so this is a stated choice, not an unscored parameter defaulted to zero.
+          spo2ScaleScore: 0,
+          airOrOxygenScore: scores.airOrOxygen,
+          systolicBPScore: scores.systolicBP,
+          heartRateScore: scores.heartRate,
+          consciousnessScore: scores.consciousness,
+          temperatureScore: scores.temperature,
+        },
+      );
+    },
+    // Report what inpatient-service banded and recorded, not what this screen previewed. If they
+    // disagree, the record is what the next clinician will act on.
+    onSuccess: (response) => {
+      const recorded = response?.data?.data ?? {};
+      const recordedRisk = recorded.riskLevel ?? riskLevel;
+      const recordedEscalation = recorded.escalationRequired ?? escalation;
+      Alert.alert(
+        "NEWS2 recorded",
+        `Total: ${recorded.totalScore ?? total} — Risk: ${recordedRisk}${recordedEscalation ? "\n⚠️ ESCALATION REQUIRED" : ""}`,
+      );
+    },
+    onError: (error: unknown) => {
+      const detail = error instanceof Error ? error.message : "The score was not recorded.";
+      Alert.alert("NEWS2 NOT recorded", `${detail}\n\nThis patient has no NEWS2 entry for this observation.`);
+    },
   });
 
   return (
@@ -93,7 +133,17 @@ export function NEWS2ScoringScreen() {
           </View>
         ))}
 
-        <Button title={mutation.isPending ? "Recording..." : "Record NEWS2"} onPress={() => mutation.mutate()} disabled={Object.keys(scores).length < 5 || mutation.isPending} />
+        {!complete && (
+          <Text testID="news2-incomplete" style={styles.riskLabel}>
+            {`Score every parameter before recording — missing: ${missing.map((p) => p.label).join(", ")}`}
+          </Text>
+        )}
+        <Button
+          testID="news2-record"
+          title={mutation.isPending ? "Recording..." : "Record NEWS2"}
+          onPress={() => mutation.mutate()}
+          disabled={!complete || mutation.isPending}
+        />
         <Text style={styles.hint}>Score at least 5 of 7 parameters to record</Text>
       </ScrollView>
     </Screen>

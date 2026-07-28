@@ -175,12 +175,76 @@ export async function sendPage(body: Record<string, string>): Promise<{ id: stri
   const r = await apiClient.post<{ data: { id: string } }>(`${V1}/paging/send`, body);
   return r.data.data;
 }
-export async function checkDrugInteractions(medications: string[]): Promise<unknown[]> {
-  const r = await apiClient.post<{ data: unknown[] }>(`${V1}/clinical/drug-interactions`, { medications });
+export interface DrugInteractionAlert {
+  severity: string;
+  message: string;
+  rule_id?: string | null;
+  source?: string | null;
+}
+
+/**
+ * Checks the proposed medications against the governed rules engine.
+ *
+ * <p>An error from this call means the check did NOT run. It must never be presented as a finding
+ * of no interactions — the caller has to distinguish the two.
+ */
+export async function checkDrugInteractions(
+  medications: string[],
+  context?: { patientId?: string; encounterId?: string; activeMedications?: string[] },
+): Promise<DrugInteractionAlert[]> {
+  const r = await apiClient.post<{ data: DrugInteractionAlert[] }>(`${V1}/clinical/drug-interactions`, {
+    medications,
+    patientId: context?.patientId,
+    encounterId: context?.encounterId,
+    activeMedications: context?.activeMedications ?? [],
+  });
   return r.data.data;
 }
 export async function fetchOrderSets(): Promise<unknown[]> {
   const r = await apiClient.get<{ data: unknown[] }>(`${V1}/clinical/order-sets`);
+  return r.data.data;
+}
+
+/** Applies a protocol to an encounter by starting a governed pathway session. */
+export async function applyOrderSet(
+  pathwayId: string,
+  body: { patientId?: string; encounterId: string },
+): Promise<Record<string, unknown>> {
+  const r = await apiClient.post<{ data: Record<string, unknown> }>(
+    `${V1}/clinical/order-sets/${pathwayId}/apply`,
+    body,
+  );
+  return r.data.data;
+}
+
+/**
+ * Saves a SOAP note against the encounter.
+ *
+ * <p>The endpoint has always accepted the four SOAP sections as distinct fields — PCT stores them
+ * as columns — and it fails loudly rather than reporting a fake 201. Nothing called it: the mobile
+ * screen kept the note in local component state and showed a "Saved" alert.
+ */
+export async function saveSoapNote(body: {
+  patientId: string;
+  encounterId: string;
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+  authorId?: string;
+  authorName?: string;
+}): Promise<{ id: string }> {
+  const r = await apiClient.post<{ data: { id: string } }>(`/internal/v1/clinical-notes`, {
+    patient_id: body.patientId,
+    encounter_id: body.encounterId,
+    note_type: "SOAP",
+    subjective: body.subjective,
+    objective: body.objective,
+    assessment: body.assessment,
+    plan: body.plan,
+    author_id: body.authorId,
+    author_name: body.authorName,
+  });
   return r.data.data;
 }
 export async function fetchCarePlans(patientId: string): Promise<unknown[]> {
