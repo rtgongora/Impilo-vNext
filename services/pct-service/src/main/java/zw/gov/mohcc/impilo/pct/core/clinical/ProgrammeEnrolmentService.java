@@ -187,6 +187,249 @@ public class ProgrammeEnrolmentService {
         return out;
     }
 
+    // ── §21 analytics: control, outcomes, regimen change ────────────────────────
+    //
+    // Aggregates, not registers. A patient-level listing of a confidential programme is refused by
+    // {@link #register}; a count of how many people are in HIV care is programme reporting and is
+    // served for every programme, because the alternative is a national HIV programme that cannot
+    // say how many people it is treating.
+
+    /**
+     * §21 "Control and target attainment" — how the open cohort is running against its targets.
+     *
+     * <p>A NULL {@code control_status} means <strong>never assessed</strong> and is reported as its
+     * own number. It is not NOT_CONTROLLED and it is not CONTROLLED: nobody has looked. It is kept out
+     * of the control rate's denominator entirely, because putting it in the numerator flatters the
+     * service and putting it in the denominator alone punishes a clinic for patients it has not yet
+     * seen — while the honest answer, "we have not assessed 400 of these people", is a number in its
+     * own right and the one a district health team should act on first.</p>
+     *
+     * <p>TARGET_NOT_SET is likewise excluded from the rate. The patient has been seen and no target
+     * was agreed, so there is nothing to attain; counting them as uncontrolled would report a
+     * missing care plan as a clinical failure.</p>
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> controlAttainment(String programme, String facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
+        String normalised = programme == null ? null : ProblemVocabulary.require(
+                "programme", programme, ProgrammeVocabulary.PROGRAMMES, true);
+
+        List<Object[]> rows = enrolmentRepository.controlAttainment(
+                ctx.tenantId(), normalised, facilityId, ProgrammeVocabulary.OPEN_ENROLMENT_STATUSES);
+
+        Map<String, Map<String, Long>> byProgramme = new LinkedHashMap<>();
+        for (Object[] r : rows) {
+            String prog = (String) r[0];
+            String control = r[1] == null ? "NEVER_ASSESSED" : (String) r[1];
+            byProgramme.computeIfAbsent(prog, p -> new LinkedHashMap<>())
+                    .merge(control, ((Number) r[2]).longValue(), Long::sum);
+        }
+
+        List<Map<String, Object>> entries = new java.util.ArrayList<>();
+        for (Map.Entry<String, Map<String, Long>> e : byProgramme.entrySet()) {
+            Map<String, Long> counts = e.getValue();
+            long controlled = counts.getOrDefault("CONTROLLED", 0L);
+            long partially = counts.getOrDefault("PARTIALLY_CONTROLLED", 0L);
+            long not = counts.getOrDefault("NOT_CONTROLLED", 0L);
+            long neverAssessed = counts.getOrDefault("NEVER_ASSESSED", 0L);
+            long targetNotSet = counts.getOrDefault("TARGET_NOT_SET", 0L);
+            long assessedAgainstTarget = controlled + partially + not;
+            long open = assessedAgainstTarget + neverAssessed + targetNotSet;
+
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("programme", e.getKey());
+            row.put("open_enrolments", open);
+            row.put("counts", counts);
+            row.put("never_assessed", neverAssessed);
+            row.put("target_not_set", targetNotSet);
+            row.put("controlled", IndicatorRate.of(controlled, assessedAgainstTarget,
+                    "open enrolments assessed against a target (CONTROLLED, PARTIALLY_CONTROLLED or "
+                    + "NOT_CONTROLLED); the " + neverAssessed + " never assessed and the " + targetNotSet
+                    + " with no target set are excluded from this denominator and reported separately"));
+            row.put("assessment_coverage", IndicatorRate.of(assessedAgainstTarget + targetNotSet, open,
+                    "all open enrolments in this programme — the share anybody has assessed at all"));
+            entries.add(row);
+        }
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("indicator", "control_and_target_attainment");
+        out.put("programme", normalised);
+        out.put("facility_id", facilityId);
+        out.put("entries", entries);
+        out.put("counts_enrolments_not_people",
+                "Counts ENROLMENTS. A person on both a hypertension and a diabetes register is counted "
+                + "under each and may be controlled on one and not the other. Do not total these rows "
+                + "into a patient count.");
+        out.put("never_assessed_is_not_uncontrolled",
+                "A null control_status means nobody has assessed control for that person. It is not a "
+                + "claim that they are doing badly and not a claim that they are doing well, so it is "
+                + "reported as its own number and excluded from the control rate rather than being "
+                + "quietly counted as either.");
+        out.put("point_in_time_not_a_cohort",
+                "This is the cohort as it stands now, not a cohort followed from enrolment. People who "
+                + "have exited are not here, so a register that loses its uncontrolled patients to "
+                + "follow-up will show its control rate rise.");
+        return out;
+    }
+
+    /**
+     * §21 "Programme indicators" and the programme half of "Mortality" — who is in care, who joined,
+     * and how those who left ended.
+     *
+     * <p>Every exit reason is reported separately because they are not interchangeable: cured,
+     * completed, transferred out, lost to follow-up, died, stopped by the patient, and diagnosis
+     * refuted are seven different outcomes that all leave the status EXITED. This read is the reason
+     * the write path refuses to default the reason.</p>
+     *
+     * <p><strong>This is an exit-period indicator, not a treatment cohort.</strong> A DAK treatment
+     * success rate follows the people who <em>started</em> treatment in a period through to their
+     * outcome; this counts the people who <em>ended</em> in the period, whenever they started. The two
+     * differ, and the response says so rather than borrowing the DAK's name for a number computed a
+     * different way.</p>
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> programmeOutcomes(String programme, String facilityId,
+                                                 LocalDate from, LocalDate to) {
+        TrustContext ctx = TrustContextHolder.require();
+        String normalised = programme == null ? null : ProblemVocabulary.require(
+                "programme", programme, ProgrammeVocabulary.PROGRAMMES, true);
+        LocalDate end = to == null ? LocalDate.now() : to;
+        LocalDate start = from == null ? end.minusDays(MedicineAnalyticsService.DEFAULT_WINDOW_DAYS) : from;
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Window starts (" + start + ") after it ends (" + end + ").");
+        }
+
+        List<Map<String, Object>> open = new java.util.ArrayList<>();
+        long openTotal = 0;
+        for (Object[] r : enrolmentRepository.openEnrolmentCounts(ctx.tenantId(), normalised, facilityId,
+                ProgrammeVocabulary.OPEN_ENROLMENT_STATUSES)) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("programme", r[0]);
+            row.put("status", r[1]);
+            long n = ((Number) r[2]).longValue();
+            row.put("enrolments", n);
+            openTotal += n;
+            open.add(row);
+        }
+
+        List<Map<String, Object>> started = new java.util.ArrayList<>();
+        for (Object[] r : enrolmentRepository.newEnrolmentCounts(
+                ctx.tenantId(), normalised, facilityId, start, end)) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("programme", r[0]);
+            row.put("enrolments", ((Number) r[1]).longValue());
+            started.add(row);
+        }
+
+        List<Map<String, Object>> exits = new java.util.ArrayList<>();
+        Map<String, Long> exitTotals = new LinkedHashMap<>();
+        long exitTotal = 0;
+        for (Object[] r : enrolmentRepository.exitReasonCounts(
+                ctx.tenantId(), normalised, facilityId, start, end)) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("programme", r[0]);
+            row.put("exit_reason", r[1]);
+            long n = ((Number) r[2]).longValue();
+            row.put("enrolments", n);
+            exits.add(row);
+            exitTotals.merge(String.valueOf(r[1]), n, Long::sum);
+            exitTotal += n;
+        }
+
+        long favourable = exitTotals.getOrDefault("CURED", 0L)
+                + exitTotals.getOrDefault("TREATMENT_COMPLETED", 0L);
+        long died = exitTotals.getOrDefault("DIED", 0L);
+        long lost = exitTotals.getOrDefault("LOST_TO_FOLLOW_UP", 0L);
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("indicator", "programme_outcomes");
+        out.put("programme", normalised);
+        out.put("facility_id", facilityId);
+        out.put("window", Map.of("from", start.toString(), "to", end.toString()));
+        out.put("open_now", open);
+        out.put("open_now_total", openTotal);
+        out.put("started_in_window", started);
+        out.put("exits_in_window", exits);
+        out.put("exits_in_window_total", exitTotal);
+        out.put("favourable_outcome", IndicatorRate.of(favourable, exitTotal,
+                "enrolments that exited in the window for any reason; CURED and TREATMENT_COMPLETED "
+                + "count as favourable"));
+        out.put("died_among_exits", IndicatorRate.of(died, exitTotal,
+                "enrolments that exited in the window for any reason"));
+        out.put("lost_to_follow_up_among_exits", IndicatorRate.of(lost, exitTotal,
+                "enrolments that exited in the window for any reason"));
+        out.put("counts_enrolments_not_people",
+                "Counts ENROLMENTS. Someone on both HIV care and TB treatment appears under each, and "
+                + "someone who exited and re-enrolled appears twice. Do not total these rows into a "
+                + "patient count.");
+        out.put("exit_period_not_a_start_cohort",
+                "The denominator is enrolments that ENDED in this window, whenever they began. A DAK "
+                + "treatment-success rate is computed over the people who STARTED treatment in a "
+                + "period and followed to outcome; that is a different number and this one must not be "
+                + "reported under its name.");
+        out.put("open_now_is_as_at_today",
+                "open_now is the cohort at the moment of the query, not as at the end of the window.");
+        out.put("mortality_is_programme_exit_only",
+                "DIED counts programme exits recorded as a death. Deaths of people never enrolled, or "
+                + "after they exited, are not visible here, and civil death registration is not held "
+                + "by PCT.");
+        return out;
+    }
+
+    /**
+     * §21 "Stockouts" as far as the clinical record can see them — regimen changes and why.
+     *
+     * <p>STOCK_OUT among the change reasons counts the times a shortage was severe enough to change a
+     * patient's treatment. That is a real and serious signal, and it is <strong>not</strong> a stockout
+     * rate: it cannot see a shortage that was absorbed, substituted at the counter or that sent the
+     * patient away empty-handed, and it has no denominator of facility-days at risk. Stock levels are
+     * inventory's, not the clinical record's.</p>
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> regimenChangeReasons(String programme, LocalDate from, LocalDate to) {
+        TrustContext ctx = TrustContextHolder.require();
+        String normalised = programme == null ? null : ProblemVocabulary.require(
+                "programme", programme, ProgrammeVocabulary.PROGRAMMES, true);
+        LocalDate end = to == null ? LocalDate.now() : to;
+        LocalDate start = from == null ? end.minusDays(MedicineAnalyticsService.DEFAULT_WINDOW_DAYS) : from;
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Window starts (" + start + ") after it ends (" + end + ").");
+        }
+
+        List<Map<String, Object>> counts = new java.util.ArrayList<>();
+        long total = 0;
+        long stockOut = 0;
+        for (Object[] r : regimenRepository.changeReasonCounts(ctx.tenantId(), normalised, start, end)) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("programme", r[0]);
+            row.put("change_reason", r[1]);
+            long n = ((Number) r[2]).longValue();
+            row.put("regimen_changes", n);
+            total += n;
+            if ("STOCK_OUT".equals(r[1])) {
+                stockOut += n;
+            }
+            counts.add(row);
+        }
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("indicator", "regimen_change_reasons");
+        out.put("programme", normalised);
+        out.put("window", Map.of("from", start.toString(), "to", end.toString()));
+        out.put("counts", counts);
+        out.put("regimen_changes_total", total);
+        out.put("stock_out_among_changes", IndicatorRate.of(stockOut, total,
+                "regimens that ended in the window for any reason"));
+        out.put("counts_regimen_changes_not_people",
+                "Counts REGIMEN CHANGES. One patient switched three times contributes three.");
+        out.put("not_a_stockout_rate",
+                "STOCK_OUT here means a shortage changed a patient's treatment. A shortage that was "
+                + "absorbed, substituted or that simply sent someone home with nothing leaves no trace "
+                + "in this table, and there is no denominator of facility-days at risk. Stock "
+                + "availability is owned by inventory and pharmacy, not by the clinical record.");
+        return out;
+    }
+
     @Transactional(readOnly = true)
     public List<TreatmentRegimenEntity> regimensOf(UUID enrolmentId) {
         TrustContext ctx = TrustContextHolder.require();

@@ -72,6 +72,9 @@ libraries:
   - id: emergency-domain
     maven_module: emergency-domain
     path: libs/emergency-domain
+  - id: medicine-domain
+    maven_module: medicine-domain
+    path: libs/medicine-domain
   - id: tech-companion-mock
     maven_module: tech-companion-mock
     path: libs/tech-companion-mock

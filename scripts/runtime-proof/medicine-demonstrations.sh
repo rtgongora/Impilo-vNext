@@ -48,6 +48,14 @@ uuid_of() { echo "$1" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4
 
 chk() {
   local name="$1" out="$2" expect="$3"
+  # An error message contains digits ("LINE 1:", "psql:<stdin>:2:"), so a numeric expectation could
+  # match inside a failure and report PASS. Any output carrying an ERROR is a failure regardless of
+  # what it happens to contain — except where the expectation IS the error, which is how the
+  # negative controls assert.
+  if echo "$out" | grep -qi "ERROR:" && ! echo "$expect" | grep -qi "violates\|does not exist\|duplicate key"; then
+    echo "  FAIL    $name"; echo "          errored: $(echo "$out" | tr '\n' ' ' | cut -c1-200)"
+    FAIL=$((FAIL+1)); return
+  fi
   if echo "$out" | grep -qi -- "$expect"; then
     echo "  PASS    $name"; PASS=$((PASS+1))
   else
@@ -87,12 +95,18 @@ docker run -d --name "$PG_NAME" \
   -e POSTGRES_USER=impilo -e POSTGRES_PASSWORD=impilo -e POSTGRES_DB=pct \
   -p "$PG_PORT":5432 postgres:16-alpine >/dev/null
 
+# pg_isready is NOT sufficient: the postgres entrypoint runs a TEMPORARY server during
+# initialisation, and pg_isready answers for it. Migrations applied then can land against a server
+# that is about to be replaced, and the symptom is "applied cleanly" followed by "relation does not
+# exist" — which reads as a schema bug and is not one. Wait on a real query, as the programme rig does.
 printf 'waiting for postgres'
-for _ in $(seq 1 60); do
-  docker exec "$PG_NAME" pg_isready -U impilo -d pct >/dev/null 2>&1 && break
+for _ in $(seq 1 90); do
+  docker exec "$PG_NAME" psql -U impilo -d pct -tAc "select 1" >/dev/null 2>&1 && break
   printf '.'; sleep 1
 done
 echo
+docker exec "$PG_NAME" psql -U impilo -d pct -tAc "select 1" >/dev/null 2>&1 \
+  || { echo "postgres never became queryable"; exit 1; }
 
 q "CREATE SCHEMA IF NOT EXISTS pct; CREATE EXTENSION IF NOT EXISTS pgcrypto;" >/dev/null
 q "SET search_path TO pct;" >/dev/null
@@ -121,8 +135,8 @@ chk "each enters its own register, anchored to its own diagnosis" \
 EPISODE="$(uuid_of "$(q "INSERT INTO pct.pct_medical_episodes (episode_id, tenant_id, subject_cpid, episode_type, status, title, started_on, created_by)
    VALUES (gen_random_uuid(),'$TENANT','$CPID','MULTIMORBIDITY','ACTIVE','Consolidated plan: hypertension and diabetes', now(),'clin-1') RETURNING episode_id;")")"
 chk "ONE consolidated plan spans both, rather than two parallel plans" \
-    "$(q "INSERT INTO pct.pct_medical_episode_problems (episode_id, problem_id, role)
-          VALUES ('$EPISODE','$HTN','PRIMARY'), ('$EPISODE','$DM','PRIMARY');
+    "$(q "INSERT INTO pct.pct_medical_episode_problems (episode_id, problem_id, tenant_id, role)
+          VALUES ('$EPISODE','$HTN','$TENANT','PRIMARY'), ('$EPISODE','$DM','$TENANT','PRIMARY');
           SELECT count(*) FROM pct.pct_medical_episode_problems WHERE episode_id='$EPISODE';")" "2"
 
 # ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -193,7 +207,18 @@ chk "a suspicion is recordable AS a suspicion, not as a diagnosis" \
     "$(q "SELECT diagnostic_certainty FROM pct.pct_problems WHERE problem_id='$CA';")" "SUSPECTED"
 chk "it can be promoted to CONFIRMED without losing that it began as a suspicion" \
     "$(q "UPDATE pct.pct_problems SET diagnostic_certainty='CONFIRMED' WHERE problem_id='$CA' RETURNING diagnostic_certainty;")" "CONFIRMED"
-cannot "MDT has NO record at all (§14 is not built), so the decision that sets treatment intent has no author, no date and no attribution"
+MDT="$(uuid_of "$(q "INSERT INTO pct.pct_mdt_decisions (decision_id, tenant_id, subject_cpid, journey_id, meeting_type, met_on, participants, chaired_by, decision, treatment_intent, recorded_by)
+   VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','ONCOLOGY', now(),'Oncology, respiratory, radiology, palliative','Dr M','Proceed to staging CT then systemic therapy','LIFE_PROLONGING','clin-1') RETURNING decision_id;")")"
+chk "the MDT decision carries its chair, participants and date (V114)" \
+    "$(q "SELECT chaired_by FROM pct.pct_mdt_decisions WHERE decision_id='$MDT';")" "Dr M"
+chk "an MDT decision with no participants is REFUSED (negative control)" \
+    "$(q "INSERT INTO pct.pct_mdt_decisions (decision_id, tenant_id, subject_cpid, journey_id, meeting_type, met_on, participants, chaired_by, decision, recorded_by)
+          VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','ONCOLOGY', now(),'   ','Dr M','Proceed','clin-1');")" \
+    "violates check constraint"
+chk "the decision is linked to the PROBLEM it was about, not described in prose" \
+    "$(q "INSERT INTO pct.pct_mdt_decision_problems (decision_id, problem_id, tenant_id)
+          VALUES ('$MDT','$CA','$TENANT');
+          SELECT count(*) FROM pct.pct_mdt_decision_problems WHERE decision_id='$MDT';")" "1"
 cannot "staging, systemic therapy, cycle planning, toxicity and response have no record"
 
 # ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -223,11 +248,28 @@ chk "the medical episode stays open and keeps its own owner" \
     "$(q "SELECT status FROM pct.pct_medical_episodes WHERE episode_id='$EPISODE';")" "ACTIVE"
 chk "the clerking already recorded is not re-entered — one problem list, read by both teams" \
     "$(q "SELECT count(DISTINCT subject_cpid) FROM pct.pct_problems WHERE subject_cpid='$CPID';")" "1"
-cannot "consultation itself has NO record (§14) — there is no request, no response and no statement of who retains the patient, which is exactly the loss of ownership §23.10 asks us to demonstrate against"
+CONSULT="$(uuid_of "$(q "INSERT INTO pct.pct_consultations (consultation_id, tenant_id, subject_cpid, journey_id, requesting_service, requesting_actor, asked_of_service, question, owning_service)
+   VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','MEDICINE','clin-1','SURGERY','Is this abdomen surgical?','MEDICINE') RETURNING consultation_id;")")"
+chk "a consultation records WHO STILL HOLDS the patient (V114)" \
+    "$(q "SELECT owning_service FROM pct.pct_consultations WHERE consultation_id='$CONSULT';")" "MEDICINE"
+chk "a consultation with no question is REFUSED — that shape is a referral of the patient (negative control)" \
+    "$(q "INSERT INTO pct.pct_consultations (consultation_id, tenant_id, subject_cpid, journey_id, requesting_service, requesting_actor, asked_of_service, question, owning_service)
+          VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','MEDICINE','clin-1','SURGERY','   ','MEDICINE');")" \
+    "violates check constraint"
+chk "an ANSWERED consultation with no advice is REFUSED (negative control)" \
+    "$(q "UPDATE pct.pct_consultations SET status='ANSWERED' WHERE consultation_id='$CONSULT';")" \
+    "violates check constraint"
+chk "answering does not move ownership — surgery advises, medicine keeps the patient" \
+    "$(q "UPDATE pct.pct_consultations SET status='ANSWERED', advice='Not surgical; treat medically',
+             responded_by='surg-1', responded_at=now() WHERE consultation_id='$CONSULT';
+          SELECT owning_service FROM pct.pct_consultations WHERE consultation_id='$CONSULT';")" "MEDICINE"
 
 # ───────────────────────────────────────────────────────────────────────────────────────────────
 echo
-q "DELETE FROM pct.pct_examination_findings WHERE tenant_id='$TENANT';
+q "DELETE FROM pct.pct_mdt_decision_problems WHERE tenant_id='$TENANT';
+   DELETE FROM pct.pct_mdt_decisions WHERE subject_cpid='$CPID';
+   DELETE FROM pct.pct_consultations WHERE subject_cpid='$CPID';
+   DELETE FROM pct.pct_examination_findings WHERE tenant_id='$TENANT';
    DELETE FROM pct.pct_examinations WHERE subject_cpid='$CPID';
    DELETE FROM pct.pct_medical_episode_problems WHERE episode_id='$EPISODE';
    DELETE FROM pct.pct_medical_episodes WHERE subject_cpid='$CPID';
