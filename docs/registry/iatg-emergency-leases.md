@@ -173,21 +173,53 @@ that has adopted a band, not just this pair — Adult Medicine V100s, Emergency 
 means **surgery can reference anything, this pack can reference Adult Medicine's tables, and neither
 of the lower bands can reference upward.**
 
-Heads re-verified at `b9579561d`, **including untracked files** (§1).
+#### The trap got MORE dangerous when out-of-order was enabled (2026-07-28)
 
-| Service | Head today (incl. untracked) | Peer claims | **Emergency block** | Sub-ranges |
+`29234046d` set `out-of-order: true` on every band-claimed service — correctly, because a band means
+a lane routinely merges a number below one already applied and Flyway's default silently skips those.
+But out-of-order **only relaxes ordering on a database where the higher number already applied.** A
+fresh database still applies strictly ascending. So after that change:
+
+> A V2xx migration that depends on a V3xx/V4xx/V43x/V5xx object **merges clean, passes CI, and passes
+> on every existing environment — and fails only on a fresh boot.** Out-of-order removed the loud
+> failure and left the quiet one.
+
+**Concretely, for the waves still ahead of this pack:** `inpatient-service` and `oros-service` now
+carry Surgery's **V300**. So a W6 (`inpatient` V200–V229) or W7 (`oros` V200–V219) migration:
+
+- **MAY** add this pack's own columns to `procedure_episode` (e.g. `emergency_episode_id`);
+- **MUST NOT** put a CHECK, FK, index or seed lookup on Surgery's `laterality` /
+  `site_side_confirmed_by` / `site_side_confirmed_at` / `setting` columns — those are V300 objects and
+  a V2xx file referencing them is a fresh-boot bomb;
+- **MAY** read and write those same columns freely **from Java**, because application code runs after
+  every migration has applied. The distinction is DDL-vs-code, not read-vs-write.
+
+Whenever a constraint genuinely must span the two, it belongs in a migration numbered **above** V300 —
+i.e. this pack requests a slot in the owner's band, exactly as Adult Medicine's V108 became V201.
+
+**Verification that catches it:** applying the service's full chain in version order to a throwaway
+`postgres:16-alpine` is the *only* check that reproduces a fresh boot. `mvn test` cannot
+([[jvm-tests-do-not-apply-migrations]]) and neither can any deployed environment.
+
+**Heads re-verified against disk 2026-07-28** (`ls … | sort -V` + `git status --porcelain`, per §1).
+The previous re-verification at `b9579561d` had gone stale in **8 of 12 rows** — `pct` was recorded
+as V100 when it is **V500** — and the sub-range map had drifted behind what this pack itself landed.
+Sub-ranges marked **✅landed** are consumed; do not re-issue them.
+
+| Service | Head on disk (2026-07-28) | Peer claims | **Emergency block** | Sub-ranges |
 |---|---|---|---|---|
-| `pct-service` | **V100** · V059 untracked · V058 absent | trauma V035–V069 · RMNP V058/V059/V061–V069 · problem-list V060 **and V100** · surgery: none | **V200–V239** | episode V200–02 · triage V203–04 · alerts V205 · diagnostics/order-sets V206–07 · medicines V208 · obs-stay/disposition/handover V209–11 · identity ledger V212 · board V213–15 · reserve V216–39 |
-| `inpatient-service` | V066 (**V037–V064 dead — §3a**) | surgery V067–V080 (their P4) | **V200–V229** | resus tenant/anchor V200 · concurrency V201 · `resuscitation_medication` V202 · activation origin/CHECK V203 · reserve V204–29 |
-| `clinical-knowledge-platform-service` | V006 | surgery V007–V020 · RMNP V007–V009 | **V200–V229** | rules framework V200 · IITT V201 · pathway repair V202 · order sets V203 · tranches V204–15 |
-| `daidzai-service` | V016 | trauma V010–V049 | **V200–V229** | generalise + PCT back-link V200–02 · merge/adopt V203 · MCI casualty V204–06 |
-| `madi-service` | V015 | trauma V015–V044 (MTP sub-range **never built**, superseded — §3b) | **V200–V229** | MHP V200–03 · emergency release V204–05 · ratio content V206 |
-| `zibo-service` | V007 | surgery V008–V014 | **V200–V219** | emergency value sets V200–03 |
-| `tuso-service` | V043 | surgery **V044–V049** (moved off V042–V048 — V042/V043 had already landed from the facility-readiness lane) | **V200–V219** | `space_type` widen V200 · ED capacity V201 · trauma-centre capability V202–03 |
-| `oros-service` | V017 | trauma V015–V024 · surgery V018–V024 | **V200–V219** | `results.acted_at` V200 |
-| `inventory-service` (Dura) | V014 | surgery V015–V020 | **V200–V219** | emergency kit V200–02 |
+| `pct-service` | **V500** | adult medicine V100–V129 · surgery V300–V329 · paeds/IMAM V400–V429 · RMNP V430–V459 · telemedicine V500–V529 · trauma V035–V069 · problem-list V060 (exception, §3c) | **V200–V239** | ✅landed: episode **V200**, medical-episode FK **V201**, triage IITT **V202** · next: alerts **V203** · obs-stay/disposition/handover **V204–06** · diagnostics/order-sets **V207–08** · medicines **V209** · identity ledger **V210** · board **V211–13** · reserve V214–39 |
+| `inpatient-service` | **V300** (surgery P4) — V2xx band empty (**V037–V064 dead — §3a**) | surgery V067–V080 **and V300–V329** · adult medicine V111–V130 | **V200–V229** | resus tenant/anchor V200 · concurrency V201 · `resuscitation_medication` V202 · activation origin/CHECK V203 · reserve V204–29. **⚠ Surgery's V300 sits ABOVE this band — see the DDL rule below.** |
+| `clinical-knowledge-platform-service` | **V201** | surgery V007–V020 **and V300–V329** · RMNP V007–V009, later V041–V050 · adult medicine V051–V080 | **V200–V229** | ✅landed: void stepless completions **V200**, ED pathway repair **V201** · next: rules framework **V202** · order sets **V203** · tranches **V204–15** |
+| `daidzai-service` | **V201** | trauma V010–V049 | **V200–V229** | ✅landed: generalise + PCT back-link **V200**, defer anchor enforcement **V201** · merge/adopt needed no migration (status is free VARCHAR) · next: MCI casualty **V202–04** |
+| `madi-service` | V015 | trauma V015–V044 (MTP sub-range **never built**, superseded — §3b) | **V200–V229** | **Contradiction resolved 2026-07-28: use the V200–V229 band, NOT §3b's "V045+".** MHP V200–03 · emergency release V204–05 · ratio content V206 |
+| `zibo-service` | **V200** | surgery V008–V014 **and V300–V329** · adult medicine V035–V049 | **V200–V219** | ✅landed: emergency value sets **V200** · reserve V201–19 |
+| `tuso-service` | **V052** | surgery **V044–V049** — **overrun on disk**: the facility-readiness lane landed V050/V051/V052 above that ceiling with no lease covering them (flagged to coordinator 2026-07-28) | **V200–V219** | `space_type` widen V200 · ED capacity V201 · trauma-centre capability V202–03 |
+| `oros-service` | **V300** (surgery) | trauma V015–V024 · surgery V018–V024 **and V300–V329** | **V200–V219** | `results.acted_at` V200. **⚠ Surgery's V300 sits ABOVE this band — see the DDL rule below.** |
+| `inventory-service` (Dura) | V014 | surgery V015–V020 **and V300–V329** | **V200–V219** | emergency kit V200–02 |
+| `reporting-service` | V003 | surgery V300–V329 | **V200–V219** | W17 indicators/DSEC mapping V200–02 (band claimed 2026-07-28; §3 previously omitted this service) |
 | `rito-quality-safety-service` | V007 | trauma V010–V019 | **V200–V219** | after-action linkage V200 |
-| `notification-service` | V017 | surgery V018–V020 | **V200–V219** | emergency templates V200 |
+| `notification-service` | **V018** | surgery V018–V020 **and V300–V329** | **V200–V219** | emergency templates V200 |
 | `vashandi-workforce-service` | V008 | trauma V015–V024 (pre-convention anomaly — migrates to a hundred band at trauma's next wave) · surgery V300–V329 (surgery's own lease is authoritative; the V009–V012 previously recorded here was a stale pre-band draft — corrected by coordinator 2026-07-26) · core workforce keeps the low sequential band V001–V0xx (V009 on-call/swaps landed 2026-07-26) | **V200–V219** | emergency roster view V200 |
 | `vito-service` | V048 | trauma V035–V044 | **V200–V219** | provisional-identity hardening V200 |
 | `mental-health-service` | — | — | **V001–V030** | new service — no contention, so ordinary numbering |
@@ -218,18 +250,32 @@ out of the jar, and out of the schema).
 ### 3a. `inpatient-service` V037–V064 is dead space
 
 Migration files jump **V036 → V065**. The trauma lease reserved V035–V064 but only V035 and V036
-landed; theatre took V065–V066. Flyway `out-of-order` is not enabled anywhere, and `pct` setting
-`validate-on-migrate: false` hides a *validate* failure without making a lower-versioned migration
-**apply** in an environment already at V066. So V037–V064 can never be used. The surgery lease reached
-the same conclusion independently and leaves them unclaimed to preserve the historical record; this
-pack does the same. **The trauma lease §3 row for inpatient is stale and should be annotated.**
+landed; theatre took V065–V066. The surgery lease reached the same conclusion independently and
+leaves them unclaimed to preserve the historical record; this pack does the same. **The trauma lease
+§3 row for inpatient is stale and should be annotated.**
+
+**⚠ CORRECTION 2026-07-28 — this section's original reasoning is now false.** It argued the range was
+unusable because "Flyway `out-of-order` is not enabled anywhere". That premise was overturned by
+`29234046d`, which set `out-of-order: true` on **every** band-claimed service (26 estate-wide,
+including all 12 this pack touches). A lower-versioned migration merged today **does** apply on an
+environment already past it. So V037–V064 is *mechanically usable* now — the range stays unclaimed by
+choice, to preserve the historical record and avoid re-litigating a settled boundary, **not** because
+Flyway would refuse it. Anyone reasoning from the old sentence would draw the wrong conclusion about
+their own band, which is why this is corrected in place rather than deleted. The dependency-direction
+trap above is unaffected and, if anything, sharper — see "The trap got MORE dangerous" in §3.
 
 ### 3b. `madi-service` trauma MTP sub-range is superseded
 
 The trauma lease reserved madi V019–V034 for "MTP/O-neg/ratio/transport". None of it was built —
 madi's head is V015 and there is no massive-transfusion, uncrossmatched-release or ratio model in the
-service. This pack builds it once, at V045+. The trauma sub-range should be marked superseded rather
-than left looking like existing work.
+service. This pack builds it once. The trauma sub-range should be marked superseded rather than left
+looking like existing work.
+
+**⚠ CONTRADICTION RESOLVED 2026-07-28.** This section previously said "at V045+" while the §3 table
+assigned madi **V200–V229** — two different answers in one document, undecided until a migration was
+actually written. **The band wins: W8 writes madi at V200–V229**, consistent with every other service
+in §3 and with the reserve-by-distance rule. "V045+" was pre-band drafting and is withdrawn. madi's
+head is still V015, so nothing has been written either way and the correction costs nothing.
 
 ## 4. Port allocation
 
@@ -243,12 +289,34 @@ The plan originally allocated 8395. The surgery/procedures programme claimed **8
 `procedures-service`** and **8396 `surgery-service`** in `c7ceec827` while this pack's W0 was in
 flight — a live illustration of why §1 exists. 8398 remains free; 8399 is `referral-service`.
 
-**Onboarding a new service is not just a port** (and note the recorded hazard: a service absent from
-`config/full-boot-service-classification.yml` regenerates to `enabled: false` and silently
-undeploys): `services/pom.xml` modules · the seven `docs/registry/` companion files ·
-`docs/runbooks/port-allocation.md` · `docker-compose.runtime.yml` · Helm values ·
-full-boot classification · envoy route · BFF client and controller · UI route registered in
+**Onboarding a new service is not just a port**: `services/pom.xml` modules · the seven
+`docs/registry/` companion files · `docs/runbooks/port-allocation.md` (**done 2026-07-28** — 8397 row
+landed early, deliberately, because that file is what other lanes read and this pack already lost
+8395/8396 to a peer mid-flight) · `docker-compose.runtime.yml` · Helm values · full-boot
+classification · envoy route (`infra/envoy/envoy.yaml` **and** `envoy-runtime.yaml`, two edit sites
+each: a route match and a cluster) · BFF client and controller · UI route registered in
 `ui/one-ui-shell/src/lib/routes.ts`.
+
+**⚠ THE `enabled: false` HAZARD — corrected 2026-07-28, this section previously named the wrong
+file.** It said a service absent from `config/full-boot-service-classification.yml` regenerates to
+`enabled: false`. That is misleading: the classification file is itself **generated from
+`docs/registry/services-registry.yaml`**, so a registered service always gets a classification entry
+and cannot be "absent" from it independently. Traced to source:
+
+- `scripts/full-boot/generate-full-preview-runtime-values.mjs:285` — `const enabled = waveEnabled.has(entry.id);`
+- `waveEnabled` is built (line 249) from **`config/full-boot-waves.yml`**.
+
+**So the real rule is: missing from `config/full-boot-waves.yml` ⇒ `enabled: false` in
+`values-full-preview-runtime.generated.yaml` ⇒ silently undeployed.** The umbrella generator does
+fail loudly (`validateFullBootWaves` throws before the runtime regen), but two paths bypass it:
+running `generate-full-preview-runtime-values.mjs` standalone, and `check-full-boot-waves.sh`, which
+invokes the umbrella as `… >/dev/null 2>&1 || true` and swallows the throw.
+
+**Second hazard, previously unrecorded** (same file, lines 276–281): if no port resolves from the
+registry or the service's `application.yml`, it falls back to `port = 8310 + hash(id)` with only a
+`console.warn`. A service with incomplete port plumbing gets a silent garbage port instead of a
+failure. **W13 must put 8397 in BOTH the registry entry (`default_http_port`) and
+`services/mental-health-service/src/main/resources/application.yml`.**
 
 ## 5. Cross-pack contracts frozen by this pack
 
