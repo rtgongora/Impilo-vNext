@@ -21,6 +21,7 @@ CHECKS=(
   check-route-inventory.sh
   check-api-contracts.sh
   check-typed-hook-passthrough.sh
+  check-cross-tree-node-modules.sh
   check-backend-frontend-parity.sh
   check-mobile-parity.sh
   check-madi-surfacing.sh
