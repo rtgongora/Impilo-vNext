@@ -125,7 +125,7 @@ export function PatientBanner() {
 
   const activeEncounter = encounters.find(
     (e) =>
-      e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
+      e.attributes.isOpen
   );
 
   const highBannerConsentFlags = (patientSummaryRes?.data?.consentSummary?.criticalFlags ?? []).filter(
@@ -547,8 +547,7 @@ export function PatientBanner() {
                       </span>
                       <span
                         className={`px-1.5 py-0.5 text-xs rounded-full ${
-                          enc.attributes.status === "IN_PROGRESS" ||
-                          enc.attributes.status === "ACTIVE"
+                          enc.attributes.isOpen
                             ? "bg-green-100 text-green-700"
                             : "bg-neutral-100 text-muted-foreground"
                         }`}

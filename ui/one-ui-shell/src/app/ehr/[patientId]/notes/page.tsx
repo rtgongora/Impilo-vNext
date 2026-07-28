@@ -73,7 +73,7 @@ export default function ClinicalNotesPage() {
 
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "ACTIVE" || encounter.attributes.status === "IN_PROGRESS",
+      encounter.attributes.isOpen,
   );
 
   const [showForm, setShowForm] = useState(false);

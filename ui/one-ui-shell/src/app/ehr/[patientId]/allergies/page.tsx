@@ -62,7 +62,7 @@ export default function AllergiesPage() {
   const allergies: AllergyResource[] = allergiesData?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+      encounter.attributes.isOpen,
   );
   const severeAlerts = allergies.filter((allergy) => allergy.attributes.severity === "SEVERE").length;
 

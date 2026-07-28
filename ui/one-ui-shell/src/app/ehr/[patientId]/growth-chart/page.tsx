@@ -72,7 +72,7 @@ export default function GrowthChartPage() {
   const dob = patient?.attributes.dateOfBirth;
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+      encounter.attributes.isOpen,
   );
 
   const legacyVitalsRows = useMemo(() => {

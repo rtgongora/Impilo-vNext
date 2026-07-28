@@ -51,7 +51,7 @@ export default function EmergencyPatientViewPage() {
   const cs = summary?.consentSummary;
   const encounters = encountersData?.data ?? [];
   const activeEncounter = encounters.find(
-    (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS"
+    (e) => e.attributes.isOpen
   );
   const allergies = allergiesData?.data ?? [];
   const activeAllergies = allergies.filter((a) => a.attributes.status === "ACTIVE");

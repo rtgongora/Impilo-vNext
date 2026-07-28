@@ -90,7 +90,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
   const activeEncounter = useMemo(
     () =>
       (encountersData?.data ?? []).find(
-        (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
+        (e) => e.attributes.isOpen,
       ),
     [encountersData?.data],
   );

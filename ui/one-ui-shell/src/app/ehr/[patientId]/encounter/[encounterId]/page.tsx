@@ -244,8 +244,7 @@ export default function EncounterPage() {
   const [tvRR, setTvRR] = useState("");
 
   const isActive =
-    encounter?.attributes.status === "ACTIVE" ||
-    encounter?.attributes.status === "IN_PROGRESS";
+    encounter?.attributes.isOpen;
   const closureStep = !existingTriage
     ? "Complete triage"
     : respondedReferrals.length > 0

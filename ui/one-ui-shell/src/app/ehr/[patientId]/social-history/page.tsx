@@ -28,7 +28,7 @@ export default function SocialHistoryPage() {
   const sections: SocialHistoryEntry[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState("");

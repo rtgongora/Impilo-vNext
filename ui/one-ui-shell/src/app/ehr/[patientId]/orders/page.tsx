@@ -171,7 +171,7 @@ export default function OrdersPage() {
       : undefined) ??
     (encountersData?.data ?? []).find(
       (encounter) =>
-        encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+        encounter.attributes.isOpen,
     );
 
   const queryClient = useQueryClient();

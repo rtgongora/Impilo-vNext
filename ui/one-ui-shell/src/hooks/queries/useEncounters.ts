@@ -12,7 +12,18 @@ export interface EncounterResource {
     patientId: string;
     providerId: string;
     facilityId: string;
+    /**
+     * PCT's own encounter state — STARTED, ON_HOLD or COMPLETED. It is the system of record's
+     * vocabulary and is passed through untouched; do not compare it against "ACTIVE" or
+     * "IN_PROGRESS", which PCT has never set.
+     */
     status: string;
+    /**
+     * Whether the encounter is still open — derived by the BFF as "not COMPLETED", which includes
+     * ON_HOLD. Use this instead of comparing `status`: the screens used to ask for "IN_PROGRESS"
+     * or "ACTIVE" and therefore never found an open encounter for any patient.
+     */
+    isOpen: boolean;
     startedAt: string;
     closedAt: string | null;
     encounterType: string;

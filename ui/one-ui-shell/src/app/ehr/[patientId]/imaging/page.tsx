@@ -139,7 +139,7 @@ export default function ImagingPage() {
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const { data: studies = [], isLoading, error } = useStudies(patientId);
   const { data: imagingStudiesData } = useImagingStudies(patientId);

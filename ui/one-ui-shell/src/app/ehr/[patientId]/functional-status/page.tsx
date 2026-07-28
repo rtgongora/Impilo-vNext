@@ -62,7 +62,7 @@ export default function FunctionalStatusPage() {
   const trendHistory = buildTrendHistory(assessments);
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const [activeTab, setActiveTab] = useState<AssessmentType>("barthel");
   const current = assessments.find((assessment) => assessment.type === activeTab);

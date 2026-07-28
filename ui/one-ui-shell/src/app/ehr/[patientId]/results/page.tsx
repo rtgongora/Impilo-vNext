@@ -105,7 +105,7 @@ export default function ResultsPage() {
 
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const resultOrders = [...(ordersData?.data ?? [])]
     .filter((order) => order.attributes.status === "RESULTED" || order.attributes.status === "REVIEWED")

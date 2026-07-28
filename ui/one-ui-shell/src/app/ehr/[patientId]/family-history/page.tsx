@@ -29,7 +29,7 @@ export default function FamilyHistoryPage() {
   const members: FamilyMember[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const allConditions = members.flatMap((member) => member.conditions.map((condition) => condition.condition));
   const conditionCounts: Record<string, number> = {};

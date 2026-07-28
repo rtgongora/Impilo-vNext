@@ -277,7 +277,7 @@ export function EncounterMenu() {
   const activeSegment = getActiveSegment(pathname, patientId ?? "");
   const patient = patientData?.data;
   const activeEncounter = (encountersData?.data ?? []).find(
-    (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
+    (e) => e.attributes.isOpen,
   );
 
   const phases = useMemo(() => getFlowForRole(user?.roles ?? []), [user?.roles]);

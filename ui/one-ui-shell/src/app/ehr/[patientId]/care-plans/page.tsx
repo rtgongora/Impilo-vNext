@@ -41,7 +41,7 @@ export default function CarePlansPage() {
   const carePlans: CarePlanUi[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const activePlans = carePlans.filter((plan) => plan.status === "Active");
   const draftPlans = carePlans.filter((plan) => plan.status === "Draft");

@@ -45,7 +45,7 @@ export default function GoalsPage() {
   const goals: PatientGoal[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+      encounter.attributes.isOpen
   );
   const linkedPlans = new Set(goals.filter((goal) => goal.linkedCarePlan).map((goal) => goal.linkedCarePlan)).size;
   const attentionGoals = goals.filter((goal) => goal.status === "At Risk" || goal.status === "Behind").length;

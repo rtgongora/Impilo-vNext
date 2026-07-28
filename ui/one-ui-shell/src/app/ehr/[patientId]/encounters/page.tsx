@@ -90,7 +90,7 @@ export default function EncountersPage() {
   const clinicalNotes = useMemo(() => notesData?.data ?? [], [notesData?.data]);
   const telemedicineSessions = useMemo(() => telemedicineData?.data ?? [], [telemedicineData?.data]);
   const activeEncounter = encounters.find(
-    (encounter) => encounter.attributes.status === "ACTIVE" || encounter.attributes.status === "IN_PROGRESS",
+    (encounter) => encounter.attributes.isOpen,
   );
   const coordinationPulse = useMemo(() => {
     const openReferrals = referrals.filter(
