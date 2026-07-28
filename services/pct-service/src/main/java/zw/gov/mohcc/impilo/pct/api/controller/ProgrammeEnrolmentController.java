@@ -50,6 +50,19 @@ public class ProgrammeEnrolmentController {
         return ResponseEntity.ok(ApiResponse.ok(out, correlationId()));
     }
 
+    /**
+     * Programme cohort counts — the medicine analytics read.
+     *
+     * <p>Served from the system of record because reporting-service holds a separate database and
+     * cannot see {@code pct.*}; a report definition naming these tables would be ACTIVE and
+     * unrunnable. Counts enrolments rather than people, and says so on the response.</p>
+     */
+    @GetMapping("/cohort-counts")
+    public ResponseEntity<Map<String, Object>> cohortCounts(
+            @RequestParam(value = "facility_id", required = false) String facilityId) {
+        return ResponseEntity.ok(Map.of("data", service.cohortCounts(facilityId)));
+    }
+
     @GetMapping("/{enrolmentId}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> get(@PathVariable UUID enrolmentId) {
         return ResponseEntity.ok(ApiResponse.ok(toMap(service.get(enrolmentId)), correlationId()));
