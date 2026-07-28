@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
 public class OrderController {
 
     private final zw.gov.mohcc.impilo.oros.core.OrderSummaryProjection orderSummaryProjection;
+    private final zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository orderRepository;
 
     private static final Logger log = LoggerFactory.getLogger(OrderController.class);
 
@@ -78,8 +79,10 @@ public class OrderController {
                            WorkstepEngine workstepEngine,
                            SlaService slaService,
                            OrderLifecycleService lifecycleService,
-                           zw.gov.mohcc.impilo.oros.core.OrderSummaryProjection orderSummaryProjection) {
+                           zw.gov.mohcc.impilo.oros.core.OrderSummaryProjection orderSummaryProjection,
+                           zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository orderRepository) {
         this.orderSummaryProjection = orderSummaryProjection;
+        this.orderRepository = orderRepository;
         this.stateMachine = stateMachine;
         this.submissionService = submissionService;
         this.imagingWorkflowService = imagingWorkflowService;
@@ -380,6 +383,25 @@ public class OrderController {
     /**
      * Get all orders for a patient by CPID.
      */
+    /**
+     * How many orders of a type this tenant has placed since {@code since} (default: midnight).
+     *
+     * <p>Exists because the provider dashboard's daily counts were hardcoded zeros in the BFF.
+     */
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> countOrders(
+            @RequestParam(name = "type") zw.gov.mohcc.impilo.oros.domain.OrderType type,
+            @RequestParam(required = false) String since) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        java.time.OffsetDateTime from = since == null || since.isBlank()
+                ? java.time.OffsetDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.DAYS)
+                : java.time.OffsetDateTime.parse(since);
+        long count = orderRepository.countByTenantIdAndOrderTypeAndPlacedAtGreaterThanEqual(
+                TrustContextHolder.require().tenantId(), type, from);
+        return ResponseEntity.ok(ApiResponse.ok(
+                java.util.Map.of("count", count, "type", type.name(), "since", from.toString()), correlationId));
+    }
+
     @GetMapping("/patient/{cpid}")
     public ResponseEntity<ApiResponse<List<OrderSummaryDto>>> getPatientOrders(
             @PathVariable String cpid) {

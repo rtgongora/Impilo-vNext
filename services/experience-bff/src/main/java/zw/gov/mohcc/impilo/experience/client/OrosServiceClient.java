@@ -336,6 +336,16 @@ public class OrosServiceClient {
     /**
      * List orders linked to a specific encounter (backs the encounter Orders &amp; Results panel).
      */
+    /** Orders of a type placed by this tenant since midnight (or {@code since}). */
+    public JsonNode countOrders(String type, String since) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders/count")
+                .queryParam("type", type);
+        if (since != null && !since.isBlank()) {
+            b.queryParam("since", since);
+        }
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
     public JsonNode listOrdersByEncounter(String encounterId) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders")
                 .queryParam("encounter", encounterId);

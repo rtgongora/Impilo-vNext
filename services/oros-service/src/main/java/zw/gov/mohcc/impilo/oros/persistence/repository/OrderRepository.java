@@ -20,6 +20,13 @@ import java.util.UUID;
 @Repository
 public interface OrderRepository extends JpaRepository<OrderEntity, String> {
 
+    /** Orders of a given type placed since a moment — the provider dashboard's daily counts. */
+    long countByTenantIdAndOrderTypeAndPlacedAtGreaterThanEqual(
+            java.util.UUID tenantId,
+            zw.gov.mohcc.impilo.oros.domain.OrderType orderType,
+            java.time.OffsetDateTime since);
+
+
     Optional<OrderEntity> findByOrderId(String orderId);
 
     /**

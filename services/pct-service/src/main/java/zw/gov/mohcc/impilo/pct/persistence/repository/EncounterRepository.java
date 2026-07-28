@@ -42,6 +42,9 @@ public interface EncounterRepository extends JpaRepository<EncounterEntity, Long
      */
     List<EncounterEntity> findByTenantIdAndStatus(UUID tenantId, String status);
 
+    /** Encounters started since a moment — the provider dashboard's "seen today". */
+    long countByTenantIdAndStartedAtGreaterThanEqual(UUID tenantId, java.time.OffsetDateTime since);
+
     /**
      * Finds encounters for a specific workspace and status within a tenant.
      * Useful for finding active encounters at a workspace.

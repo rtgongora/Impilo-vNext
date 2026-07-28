@@ -150,6 +150,24 @@ public class EncounterController {
      * @param cpid the patient's Common Patient Identifier
      * @return list of timeline entries (journeys with nested encounters)
      */
+    /**
+     * How many encounters this tenant has started since {@code since} (default: midnight today).
+     *
+     * <p>Exists because the provider dashboard's daily counts were hardcoded zeros in the BFF. A
+     * zero on that screen is not "no data loaded" — it reads as a clinician who has seen nobody.
+     */
+    @GetMapping("/encounters/count")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> countEncounters(
+            @RequestParam(required = false) String since) {
+        var ctx = TrustContextHolder.require();
+        java.time.OffsetDateTime from = since == null || since.isBlank()
+                ? java.time.OffsetDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.DAYS)
+                : java.time.OffsetDateTime.parse(since);
+        long count = encounterRepository.countByTenantIdAndStartedAtGreaterThanEqual(ctx.tenantId(), from);
+        return ResponseEntity.ok(ApiResponse.ok(
+                Map.of("count", count, "since", from.toString()), ctx.correlationId().toString()));
+    }
+
     @GetMapping("/patient/{cpid}/timeline")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getTimeline(@PathVariable String cpid) {
         TrustContext ctx = TrustContextHolder.require();

@@ -555,6 +555,15 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** Encounters started by this tenant since midnight (or {@code since}). */
+    public JsonNode countEncounters(String since) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/encounters/count");
+        if (since != null && !since.isBlank()) {
+            b.queryParam("since", since);
+        }
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
     public JsonNode getReferral(String referralId) {
         String url = baseUrl + "/v1/referrals/" + referralId;
         log.info("PCT: Getting referral id={}", referralId);

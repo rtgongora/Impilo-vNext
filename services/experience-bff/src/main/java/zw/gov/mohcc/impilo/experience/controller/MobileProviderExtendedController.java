@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
+import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -43,6 +45,7 @@ public class MobileProviderExtendedController {
     private final PacsServiceClient pacsServiceClient;
     private final InpatientServiceClient inpatientClient;
     private final ClinicalKnowledgePlatformClient clinicalClient;
+    private final NotificationServiceClient notificationClient;
 
     public MobileProviderExtendedController(PctServiceClient pctClient,
                                             VitoServiceClient vitoClient,
@@ -51,7 +54,8 @@ public class MobileProviderExtendedController {
                                             OrosServiceClient orosClient,
                                             PacsServiceClient pacsServiceClient,
                                             InpatientServiceClient inpatientClient,
-                                            ClinicalKnowledgePlatformClient clinicalClient) {
+                                            ClinicalKnowledgePlatformClient clinicalClient,
+                                            NotificationServiceClient notificationClient) {
         this.pctClient = pctClient;
         this.vitoClient = vitoClient;
         this.pharmacyClient = pharmacyClient;
@@ -60,6 +64,7 @@ public class MobileProviderExtendedController {
         this.pacsServiceClient = pacsServiceClient;
         this.inpatientClient = inpatientClient;
         this.clinicalClient = clinicalClient;
+        this.notificationClient = notificationClient;
     }
 
     // ── Queue Management ────────────────────────────────────────────
@@ -356,52 +361,297 @@ public class MobileProviderExtendedController {
 
     // ── Reports ─────────────────────────────────────────────────────
 
+    /**
+     * The provider's own numbers for today.
+     *
+     * <p>These were hardcoded zeros. On a dashboard a zero is not "nothing loaded" — it reads as a
+     * clinician who has seen nobody, ordered nothing and prescribed nothing, which is a claim about
+     * their day. The counts now come from the services that own the records: encounters from PCT,
+     * lab and medication orders from OROS.
+     *
+     * <p>A count that could not be fetched comes back null, not zero, and the response says which
+     * ones failed. Null renders as "unavailable"; zero renders as a fact.
+     */
     @GetMapping("/reports/summary")
     public ResponseEntity<Map<String, Object>> getReportSummary(@RequestHeader("X-Tenant-ID") String tenantId) {
-        // Previously: jdbc.queryForObject counting encounters, prescriptions, lab_orders
-        return ResponseEntity.ok(Map.of("data", Map.of("encountersToday", 0L, "prescriptionsToday", 0L, "labOrdersToday", 0L)));
+        Map<String, Object> data = new LinkedHashMap<>();
+        List<String> unavailable = new ArrayList<>();
+
+        data.put("encountersToday", countOrNull(() -> pctClient.countEncounters(null), "encountersToday", unavailable));
+        data.put("labOrdersToday", countOrNull(() -> orosClient.countOrders("LAB", null), "labOrdersToday", unavailable));
+        data.put("prescriptionsToday", countOrNull(() -> orosClient.countOrders("MEDICATION", null), "prescriptionsToday", unavailable));
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        if (!unavailable.isEmpty()) {
+            response.put("unavailable", unavailable);
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    private Long countOrNull(java.util.function.Supplier<JsonNode> call, String field, List<String> unavailable) {
+        try {
+            JsonNode node = call.get();
+            if (node != null && node.hasNonNull("count")) {
+                return node.get("count").asLong();
+            }
+        } catch (Exception e) {
+            log.warn("Provider summary count {} unavailable: {}", field, e.getMessage());
+        }
+        unavailable.add(field);
+        return null;
     }
 
     // ── Clinical Paging ─────────────────────────────────────────────
 
+    /**
+     * Pages sent to this clinician.
+     *
+     * <p>This used to return an empty list unconditionally, which on a paging screen does not read
+     * as "nothing loaded" — it reads as "you have no outstanding pages". Dispatch and delivery live
+     * in notification-service, and that is where pages actually are.
+     */
     @GetMapping("/paging")
-    public ResponseEntity<Map<String, Object>> getPages(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String recipientId) {
-        // Previously: jdbc.queryForList on clinical_pages table
-        return ResponseEntity.ok(Map.of("data", List.of()));
+    public ResponseEntity<Map<String, Object>> getPages(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String recipientId) {
+        try {
+            JsonNode pages = notificationClient.listNotifications(recipientId);
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonApiRows.rows(pages, "clinical_page", "id", "notificationId")));
+        } catch (Exception e) {
+            // "No outstanding pages" is an affirmative clinical claim. If we could not ask, say so.
+            log.error("Clinical page list failed for recipient={}: {}", recipientId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "paging_unavailable",
+                    "message", "Pages could not be retrieved. Do not treat this as an absence of "
+                               + "outstanding pages."));
+        }
     }
 
+    /**
+     * Sends a clinical page.
+     *
+     * <p>This used to mint a random UUID and answer {@code SENT} without dispatching anything. A
+     * page is an escalation — the sender stops looking for another way to reach the recipient once
+     * it says sent — so a fabricated acknowledgement is a patient-safety defect, not a cosmetic one.
+     *
+     * <p>The templates already existed (notification-service V008: ED_CODE_BLUE, ED_TRAUMA_TEAM,
+     * ED_STAT_CONSULT, ED_TEAM_PAGE); nothing called them.
+     */
     @PostMapping("/paging/send")
-    public ResponseEntity<Map<String, Object>> sendPage(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // Previously: jdbc.update INSERT INTO clinical_pages
-        UUID id = UUID.randomUUID();
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id, "status", "SENT")));
+    public ResponseEntity<Map<String, Object>> sendPage(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody Map<String, Object> body) {
+        String recipientId = str(body.get("recipientId"), str(body.get("recipient_id"), null));
+        if (recipientId == null || recipientId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "missing_recipient",
+                    "message", "A page needs a recipient."));
+        }
+
+        Map<String, String> variables = new LinkedHashMap<>();
+        variables.put("message", str(body.get("message"), ""));
+        variables.put("patientId", str(body.get("patientId"), str(body.get("patient_id"), "")));
+        variables.put("location", str(body.get("location"), ""));
+        variables.put("teamLeader", str(body.get("senderName"), ""));
+
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("templateKey", str(body.get("templateKey"), "ED_TEAM_PAGE"));
+        request.put("channel", "PUSH");
+        request.put("to", recipientId);
+        request.put("variables", variables);
+
+        try {
+            JsonNode sent = notificationClient.sendNotification(request);
+            if (sent == null) {
+                return pageNotSent("Notification service returned no acknowledgement");
+            }
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", sent.path("id").asText(sent.path("notificationId").asText(null)));
+            data.put("status", sent.path("status").asText("QUEUED"));
+            data.put("recipientId", recipientId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", data));
+        } catch (Exception e) {
+            log.error("Clinical page dispatch failed for recipient={}: {}", recipientId, e.getMessage());
+            return pageNotSent(e.getMessage());
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> pageNotSent(String detail) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", "page_not_sent",
+                "message", "The page was NOT sent. Reach the recipient another way.",
+                "detail", detail == null ? "" : detail));
+    }
+
+    private static String str(Object value, String fallback) {
+        return value == null || value.toString().isBlank() ? fallback : value.toString();
     }
 
     // ── Drug Interaction Checking ───────────────────────────────────
 
+    /**
+     * Drug interaction check, against the real engine.
+     *
+     * <p>This used to fabricate its own answer: with two or more medications it returned a single
+     * INFO row reading "No known interactions found for the checked medications", having called
+     * nothing. That is the most dangerous possible lie for this endpoint — a prescriber asks it
+     * precisely to be told when not to proceed, and it always said proceed.
+     *
+     * <p>It now calls {@code prescribing/evaluate} on the Clinical Knowledge Platform, which runs
+     * the governed rules engine over the proposed medications and returns severity-graded alerts
+     * with source provenance and an audit trace.
+     *
+     * <p>If the engine cannot be reached the answer is an error, never an empty list. "No
+     * interactions found" and "the interaction checker did not run" must never share a response:
+     * one is a clinical finding, the other is a system failure, and only the first is safe to
+     * prescribe on.
+     */
     @PostMapping("/clinical/drug-interactions")
-    public ResponseEntity<Map<String, Object>> checkDrugInteractions(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<Map<String, Object>> checkDrugInteractions(
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestBody Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         List<String> medications = (List<String>) body.getOrDefault("medications", List.of());
-        List<Map<String, Object>> interactions = new ArrayList<>();
-        if (medications.size() >= 2) {
-            interactions.add(Map.of("severity", "INFO", "message", "No known interactions found for the checked medications", "medications", medications));
+        if (medications.isEmpty()) {
+            return ResponseEntity.ok(Map.of("data", List.of(), "checkedCount", 0));
         }
-        return ResponseEntity.ok(Map.of("data", interactions, "checkedCount", medications.size()));
+
+        List<Map<String, Object>> proposed = medications.stream()
+                .map(name -> Map.<String, Object>of("generic_name", name, "name", name))
+                .toList();
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("proposedMedications", proposed);
+        request.put("activeMedications", body.getOrDefault("activeMedications", List.of()));
+        request.put("diagnoses", body.getOrDefault("diagnoses", List.of()));
+        request.put("patient_id", body.get("patientId"));
+        request.put("encounter_id", body.get("encounterId"));
+        request.put("record_trace", Boolean.TRUE);
+
+        try {
+            JsonNode evaluation = clinicalClient.prescribingEvaluate(request);
+            if (evaluation == null) {
+                return drugInteractionsUnavailable("No evaluation returned", requestId, correlationId);
+            }
+            List<Map<String, Object>> interactions = new ArrayList<>();
+            for (JsonNode alert : evaluation.path("alerts")) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("severity", alert.path("severity").asText("INFO"));
+                row.put("message", alert.path("message").asText(alert.path("title").asText("")));
+                row.put("rule_id", alert.path("rule_id").asText(null));
+                row.put("source", alert.path("source").asText(null));
+                row.put("medications", medications);
+                interactions.add(row);
+            }
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", interactions);
+            response.put("checkedCount", medications.size());
+            response.put("therapy_evaluation", evaluation.path("therapy_evaluation"));
+            response.put("engine", "clinical-knowledge-platform");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Drug interaction evaluation failed for {} medications: {}",
+                    medications.size(), e.getMessage());
+            return drugInteractionsUnavailable(e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> drugInteractionsUnavailable(
+            String detail, String requestId, String correlationId) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", "drug_interaction_check_unavailable",
+                "message", "The interaction checker could not be reached. This is NOT a finding of "
+                           + "no interactions — do not prescribe on the basis of this response.",
+                "detail", detail == null ? "" : detail,
+                "meta", meta));
     }
 
     // ── Order Sets / Protocols ──────────────────────────────────────
 
+    /**
+     * Clinical protocols available to apply.
+     *
+     * <p>These used to be five hardcoded lists in this method, carrying drug names and doses —
+     * "Metformin 500mg", "Amlodipine 5mg" — that no one had governed, versioned or reviewed, and
+     * that could not be updated without a redeploy. Prescribing content presented to a clinician
+     * has to come from the governed source.
+     *
+     * <p>They now come from the Clinical Knowledge Platform's pathway definitions, which are
+     * versioned, carry a publication status, and are traceable to their source document.
+     */
     @GetMapping("/clinical/order-sets")
     public ResponseEntity<Map<String, Object>> getOrderSets(@RequestHeader("X-Tenant-ID") String tenantId) {
-        List<Map<String, Object>> orderSets = List.of(
-                Map.of("id", "os-malaria", "name", "Malaria Treatment Protocol", "category", "INFECTIOUS", "items", List.of("Artemether-Lumefantrine", "Paracetamol", "ORS", "CBC", "Malaria RDT")),
-                Map.of("id", "os-pneumonia", "name", "Community-Acquired Pneumonia", "category", "RESPIRATORY", "items", List.of("Amoxicillin", "Paracetamol", "Chest X-ray", "CBC", "CRP")),
-                Map.of("id", "os-diabetes-new", "name", "New Diabetes Workup", "category", "ENDOCRINE", "items", List.of("Metformin 500mg", "HbA1c", "FBS", "Lipid Panel", "Renal Function", "Eye Exam Referral")),
-                Map.of("id", "os-hypertension", "name", "Hypertension First-Line", "category", "CARDIOVASCULAR", "items", List.of("Amlodipine 5mg", "BP Monitoring", "U&E", "ECG", "Lipid Panel")),
-                Map.of("id", "os-antenatal", "name", "Antenatal First Visit", "category", "MATERNAL", "items", List.of("FBC", "Blood Group", "Rh Factor", "HIV Test", "Urinalysis", "Folic Acid", "Iron Supplement"))
-        );
-        return ResponseEntity.ok(Map.of("data", orderSets));
+        try {
+            JsonNode pathways = clinicalClient.listPathways();
+            if (pathways == null) {
+                return orderSetsUnavailable("No pathway payload returned");
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonApiRows.rows(pathways, "order_set", "id", "pathway_id"),
+                    "source", "clinical-knowledge-platform"));
+        } catch (Exception e) {
+            log.error("Order set list failed: {}", e.getMessage());
+            return orderSetsUnavailable(e.getMessage());
+        }
+    }
+
+    /**
+     * Applies a protocol to the encounter by starting a governed pathway session.
+     *
+     * <p>The mobile app's "Apply Protocol" button used to show an alert saying the protocol had
+     * been applied to the encounter. Nothing was applied — no session, no orders, no record. The
+     * clinician moved on believing a protocol was running.
+     *
+     * <p>Starting a pathway session binds the protocol to this patient and encounter, so it can be
+     * advanced, audited and seen by anyone else looking at the record.
+     */
+    @PostMapping("/clinical/order-sets/{pathwayId}/apply")
+    public ResponseEntity<Map<String, Object>> applyOrderSet(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String pathwayId,
+            @RequestBody Map<String, Object> body) {
+        String patientId = str(body.get("patientId"), str(body.get("patient_id"), null));
+        String encounterId = str(body.get("encounterId"), str(body.get("encounter_id"), null));
+        if (encounterId == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "missing_encounter",
+                    "message", "A protocol is applied to an encounter — none was supplied."));
+        }
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("pathway_id", pathwayId);
+        request.put("patient_id", patientId);
+        request.put("encounter_id", encounterId);
+        try {
+            JsonNode session = clinicalClient.startPathwaySession(request);
+            if (session == null) {
+                return protocolNotApplied("No session payload returned");
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", session));
+        } catch (Exception e) {
+            log.error("Protocol apply failed for pathway={} encounter={}: {}",
+                    pathwayId, encounterId, e.getMessage());
+            return protocolNotApplied(e.getMessage());
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> orderSetsUnavailable(String detail) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", "order_sets_unavailable",
+                "message", "Clinical protocols could not be retrieved. Do not treat this as an "
+                           + "absence of applicable protocols.",
+                "detail", detail == null ? "" : detail));
+    }
+
+    private ResponseEntity<Map<String, Object>> protocolNotApplied(String detail) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", "protocol_not_applied",
+                "message", "The protocol was NOT applied to this encounter.",
+                "detail", detail == null ? "" : detail));
     }
 
     // ── Care Planning ───────────────────────────────────────────────
