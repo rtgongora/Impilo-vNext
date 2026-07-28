@@ -605,7 +605,8 @@ class PolicyEngineTest {
 
     private static DutyContext regulatoryDuty(String jurisdiction) {
         return new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
-                null, null, null, null, null, "org-1", null, "INSPECTOR", null, jurisdiction);
+                null, null, null, null, null, "org-1", null, "INSPECTOR", null, jurisdiction,
+                "REGULATORY_OPERATIONS", "NONE", null, null);
     }
 
     @Test
@@ -729,12 +730,134 @@ class PolicyEngineTest {
         // The Keycloak claim carries NO CLINICIAN role; the duty token proves NURSE_ONCOLOGY_SNR,
         // which the catalog maps to CLINICIAN. Facility/actor match so the token is trusted.
         DutyContext duty = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
-                FACILITY_ID.toString(), null, null, null, null, null, null, "NURSE_ONCOLOGY_SNR", null, null);
+                FACILITY_ID.toString(), null, null, null, null, null, null, "NURSE_ONCOLOGY_SNR", null, null,
+                "CLINICAL_CARE", "IDENTIFIED", null, null);
         AuthzResponse resp = policyEngine.evaluate(dimRequest("/x/note", "note", "POST:/x/note",
                 List.of(), null, null, null, duty));
 
         assertEquals(Verdict.ALLOW, resp.verdict(),
                 "duty role NURSE_ONCOLOGY_SNR → canonical CLINICIAN → matches the rule");
+    }
+
+    // ── WorkMode-gated role folding (Phase B) ──────────────────────────────
+    // The property that makes "management/support/regulatory mode grants no
+    // patient access" true: the canonical CLINICIAN role is folded from a
+    // matched duty token only when the mode's clinicalDataAccess is
+    // IDENTIFIED. A management-mode session still proves WARD_CHARGE_NURSE
+    // (the raw duty fact), but never CLINICIAN (the canonical grant every
+    // clinical policy_rule matches on).
+
+    @Test
+    @DisplayName("WorkMode: DEPARTMENT_MANAGEMENT does NOT fold the canonical CLINICIAN role")
+    void evaluate_managementMode_doesNotFoldClinicianRole() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(roleTemplateCatalog.resolve(TENANT_ID, "WARD_CHARGE_NURSE"))
+                .thenReturn(List.of("CLINICIAN"));
+        PolicyRuleEntity rule = buildAllowRule("note", null, "CLINICIAN", null, null);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        DutyContext duty = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                FACILITY_ID.toString(), null, null, null, null, null, null, "WARD_CHARGE_NURSE", null, null,
+                "DEPARTMENT_MANAGEMENT", "AGGREGATE", null, null);
+        AuthzResponse resp = policyEngine.evaluate(dimRequest("/x/note", "note", "POST:/x/note",
+                List.of(), null, null, null, duty));
+
+        assertEquals(Verdict.DENY, resp.verdict(),
+                "DEPARTMENT_MANAGEMENT mode (AGGREGATE clinical access) must not fold CLINICIAN, "
+                        + "so a rule keyed on CLINICIAN must not match");
+    }
+
+    @Test
+    @DisplayName("WorkMode: CLINICAL_CARE (IDENTIFIED) still folds the canonical CLINICIAN role")
+    void evaluate_clinicalMode_stillFoldsClinicianRole() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(roleTemplateCatalog.resolve(TENANT_ID, "WARD_CHARGE_NURSE"))
+                .thenReturn(List.of("CLINICIAN"));
+        PolicyRuleEntity rule = buildAllowRule("note", null, "CLINICIAN", null, null);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        DutyContext duty = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                FACILITY_ID.toString(), null, null, null, null, null, null, "WARD_CHARGE_NURSE", null, null,
+                "CLINICAL_CARE", "IDENTIFIED", null, null);
+        AuthzResponse resp = policyEngine.evaluate(dimRequest("/x/note", "note", "POST:/x/note",
+                List.of(), null, null, null, duty));
+
+        assertEquals(Verdict.ALLOW, resp.verdict(), "CLINICAL_CARE mode still folds CLINICIAN");
+    }
+
+    @Test
+    @DisplayName("WorkMode: allowed_modes gates to the duty's mode")
+    void evaluate_allowedModes_gate() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("mode-gate", null, "POST",
+                "{\"path_contains\": \"/x/mode-gate\", \"allowed_modes\": [\"FACILITY_MANAGEMENT\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        DutyContext facilityMgmt = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                FACILITY_ID.toString(), null, null, null, null, null, null, "FACILITY_ADMINISTRATOR", null, null,
+                "FACILITY_MANAGEMENT", "AGGREGATE", null, null);
+        AuthzResponse allowed = policyEngine.evaluate(dimRequest("/x/mode-gate", "mode-gate", "POST:/x/mode-gate",
+                List.of(), null, null, null, facilityMgmt));
+        assertEquals(Verdict.ALLOW, allowed.verdict(), "matching mode is allowed");
+
+        DutyContext clinical = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                FACILITY_ID.toString(), null, null, null, null, null, null, "MEDICAL_OFFICER", null, null,
+                "CLINICAL_CARE", "IDENTIFIED", null, null);
+        AuthzResponse denied = policyEngine.evaluate(dimRequest("/x/mode-gate", "mode-gate", "POST:/x/mode-gate",
+                List.of(), null, null, null, clinical));
+        assertEquals(Verdict.DENY, denied.verdict(), "a different mode does not match allowed_modes");
+
+        AuthzResponse noToken = policyEngine.evaluate(dimRequest("/x/mode-gate", "mode-gate", "POST:/x/mode-gate",
+                List.of(), null, null, null, DutyContext.absent()));
+        assertEquals(Verdict.DENY, noToken.verdict(), "no usable duty token fails closed on allowed_modes");
+    }
+
+    @Test
+    @DisplayName("WorkMode: blocked_modes denies the listed mode, never denies an absent mode")
+    void evaluate_blockedModes_gate() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("mode-block", null, "POST",
+                "{\"path_contains\": \"/x/mode-block\", \"blocked_modes\": [\"TECHNICAL_SUPPORT\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        DutyContext support = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                null, null, null, null, null, "org-1", null, "SUPPORT_OFFICER", null, null,
+                "TECHNICAL_SUPPORT", "NONE", null, null);
+        AuthzResponse denied = policyEngine.evaluate(dimRequest("/x/mode-block", "mode-block", "POST:/x/mode-block",
+                List.of(), null, null, null, support));
+        assertEquals(Verdict.DENY, denied.verdict(), "the blocked mode does not match");
+
+        AuthzResponse noToken = policyEngine.evaluate(dimRequest("/x/mode-block", "mode-block", "POST:/x/mode-block",
+                List.of(), null, null, null, DutyContext.absent()));
+        assertEquals(Verdict.ALLOW, noToken.verdict(), "an absent mode is NOT treated as blocked (non-duty traffic unaffected)");
+    }
+
+    @Test
+    @DisplayName("WorkMode: requires_identified_clinical_access rejects AGGREGATE/NONE duty modes")
+    void evaluate_requiresIdentifiedClinicalAccess_gate() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("needs-clinical", null, "GET",
+                "{\"path_contains\": \"/x/needs-clinical\", \"requires_identified_clinical_access\": true}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        DutyContext clinical = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                FACILITY_ID.toString(), null, null, null, null, null, null, "MEDICAL_OFFICER", null, null,
+                "CLINICAL_CARE", "IDENTIFIED", null, null);
+        AuthzResponse allowed = policyEngine.evaluate(dimRequest("/x/needs-clinical", "needs-clinical",
+                "GET:/x/needs-clinical", List.of(), null, null, null, clinical));
+        assertEquals(Verdict.ALLOW, allowed.verdict());
+
+        DutyContext management = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                FACILITY_ID.toString(), null, null, null, null, null, null, "FACILITY_ADMINISTRATOR", null, null,
+                "FACILITY_MANAGEMENT", "AGGREGATE", null, null);
+        AuthzResponse denied = policyEngine.evaluate(dimRequest("/x/needs-clinical", "needs-clinical",
+                "GET:/x/needs-clinical", List.of(), null, null, null, management));
+        assertEquals(Verdict.DENY, denied.verdict(), "AGGREGATE clinical access does not satisfy the requirement");
     }
 
     @Test

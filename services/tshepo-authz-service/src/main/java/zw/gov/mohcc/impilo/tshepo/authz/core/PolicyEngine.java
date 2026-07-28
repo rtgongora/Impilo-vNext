@@ -111,7 +111,23 @@ public class PolicyEngine {
             "allowed_organisations",
             "allowed_jurisdictions",
             "requires_provider_id",
-            "visibility"
+            "visibility",
+            "allowed_modes",
+            "blocked_modes",
+            "requires_identified_clinical_access"
+    );
+
+    /**
+     * Canonical roles folded into the effective role set ONLY when the duty mode's
+     * clinical-data envelope is IDENTIFIED (Phase B). A management/support/regulatory
+     * session's raw roleTemplateId (e.g. WARD_CHARGE_NURSE in DEPARTMENT_MANAGEMENT
+     * mode) is still folded — duty facts are never hidden — but the canonical
+     * clinical role every clinical policy_rule matches on is not, which is what makes
+     * "management mode grants no patient access" structurally true rather than a
+     * UI-only promise.
+     */
+    private static final Set<String> CLINICAL_CANONICAL_ROLES = Set.of(
+            "CLINICIAN", "DOCTOR", "NURSE", "PHARMACIST", "SURGEON", "ANAESTHETIST"
     );
 
     private final DeviceRiskScoreEvaluator riskScoring;
@@ -723,6 +739,35 @@ public class PolicyEngine {
                 String provider = effectiveProviderId(request);
                 if (provider == null || provider.isBlank()) {
                     log.debug("Condition failed: requires_provider_id but none present for actor {}", request.actorId());
+                    return false;
+                }
+            }
+
+            // Mode (Phase B): fail-closed on a null mode — a rule that gates on
+            // allowed_modes must not match a request with no usable duty context.
+            if (conditions.containsKey("allowed_modes")) {
+                List<String> allowed = (List<String>) conditions.get("allowed_modes");
+                String workMode = effectiveWorkMode(request);
+                if (workMode == null || allowed.stream().noneMatch(workMode::equalsIgnoreCase)) {
+                    log.debug("Condition failed: work mode '{}' not in allowed {}", workMode, allowed);
+                    return false;
+                }
+            }
+            // blocked_modes is the DENY-side complement: a null mode is NOT blocked
+            // (a non-duty S2S/citizen call carries no mode and must be unaffected).
+            if (conditions.containsKey("blocked_modes")) {
+                List<String> blocked = (List<String>) conditions.get("blocked_modes");
+                String workMode = effectiveWorkMode(request);
+                if (workMode != null && blocked.stream().anyMatch(workMode::equalsIgnoreCase)) {
+                    log.debug("Condition failed: work mode '{}' is in blocked {}", workMode, blocked);
+                    return false;
+                }
+            }
+            if (Boolean.TRUE.equals(conditions.get("requires_identified_clinical_access"))) {
+                DutyContext dc = request.dutyContext();
+                if (dc == null || !dc.allowsIdentifiedClinicalRead()) {
+                    log.debug("Condition failed: requires_identified_clinical_access but duty mode is {}",
+                            dc != null ? dc.clinicalDataAccess() : "absent");
                     return false;
                 }
             }
@@ -1510,12 +1555,29 @@ public class PolicyEngine {
         // Matched. Fold the duty role — the raw roleTemplateId AND any canonical role(s) it maps
         // to via the role-template catalog — into the effective role set (additive; never removes
         // a Keycloak-claim role) so policy rules authored against either also match.
+        //
+        // Phase B: canonical CLINICAL roles (CLINIAN/DOCTOR/NURSE/PHARMACIST/SURGEON/
+        // ANAESTHETIST) are folded ONLY when the duty mode grants IDENTIFIED clinical
+        // access. This is the change that makes "management/support/regulatory mode
+        // grants no patient access" structurally true: it removes the role every
+        // clinical policy_rule matches on, rather than leaving the boundary to a UI
+        // promise. The raw roleTemplateId is still folded regardless — it is a duty
+        // fact, not a grant.
         AuthzInternalRequest effective = request;
+        List<String> removedForMode = new ArrayList<>();
         if (dc.role() != null && !dc.role().isBlank()) {
             List<String> roles = new ArrayList<>(request.roles() != null ? request.roles() : List.of());
             List<String> toAdd = new ArrayList<>();
             toAdd.add(dc.role());
-            toAdd.addAll(roleTemplateCatalog.resolve(request.tenantId(), dc.role()));
+            List<String> canonical = roleTemplateCatalog.resolve(request.tenantId(), dc.role());
+            boolean identifiedClinical = dc.allowsIdentifiedClinicalRead();
+            for (String c : canonical) {
+                if (!identifiedClinical && c != null && CLINICAL_CANONICAL_ROLES.contains(c.toUpperCase())) {
+                    removedForMode.add(c);
+                    continue;
+                }
+                toAdd.add(c);
+            }
             boolean changed = false;
             for (String candidate : toAdd) {
                 if (candidate != null && !candidate.isBlank()
@@ -1527,6 +1589,11 @@ public class PolicyEngine {
             if (changed) {
                 effective = request.withRoles(roles);
             }
+        }
+        if (!removedForMode.isEmpty()) {
+            signalWorkContext(request, "WORK_CONTEXT_MODE_NARROWED", Map.of(
+                    "workMode", String.valueOf(dc.workMode()),
+                    "removedRoles", String.join(",", removedForMode)));
         }
         signalWorkContext(request, "WORK_CONTEXT_MATCHED", Map.of(
                 "facility", String.valueOf(dc.facilityId()),
@@ -1543,12 +1610,15 @@ public class PolicyEngine {
             payload.put("tenantId", request.tenantId() != null ? request.tenantId().toString() : null);
             payload.put("path", request.path());
             payload.put("method", request.method());
-            payload.put("mode", properties.getWorkContextMode());
+            // "bindingMode" (SHADOW/ENFORCE) and the duty's "workMode" (Phase B, e.g.
+            // CLINICAL_CARE) are two different things — they must not share a payload
+            // key, or the governance event stream can't tell them apart.
+            payload.put("bindingMode", properties.getWorkContextMode());
             auditPublisher.queueGovernanceEvent(eventType, request.actorId(), payload);
         } catch (Exception e) {
             log.warn("Failed to emit work-context signal {}: {}", eventType, e.getMessage());
         }
-        log.info("WORK_CONTEXT binding: {} actor={} path={} mode={}",
+        log.info("WORK_CONTEXT binding: {} actor={} path={} bindingMode={}",
                 eventType, request.actorId(), request.path(), properties.getWorkContextMode());
     }
 
@@ -1589,6 +1659,18 @@ public class PolicyEngine {
     private static String effectiveJurisdiction(AuthzInternalRequest request) {
         DutyContext dc = request.dutyContext();
         if (dc != null && dc.usable() && dc.jurisdictionCode() != null) return dc.jurisdictionCode();
+        return null;
+    }
+
+    /**
+     * The duty's WorkMode (Phase B), read ONLY from a usable WORK_CONTEXT token — never
+     * a header, for the same reason {@link #effectiveJurisdiction} never trusts one: a
+     * header-supplied mode would let a caller widen their own authority by asserting it.
+     * Null when there is no usable duty token (S2S / citizen / non-duty traffic).
+     */
+    private static String effectiveWorkMode(AuthzInternalRequest request) {
+        DutyContext dc = request.dutyContext();
+        if (dc != null && dc.usable() && dc.workMode() != null) return dc.workMode();
         return null;
     }
 

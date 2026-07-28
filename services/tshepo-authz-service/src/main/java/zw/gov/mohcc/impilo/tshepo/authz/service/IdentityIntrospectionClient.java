@@ -84,7 +84,11 @@ public class IdentityIntrospectionClient {
                     text(claims, "provider_id"),
                     text(claims, "role"),
                     text(claims, "assignment_id"),
-                    text(claims, "jurisdiction_code"));
+                    text(claims, "jurisdiction_code"),
+                    text(claims, "work_mode"),
+                    text(claims, "clinical_data_access"),
+                    text(claims, "context_id"),
+                    text(claims, "service_point_id"));
         } catch (Exception e) {
             // Fail-open: identity outage must never become an authorization outage.
             log.warn("Work-context introspection failed (fail-open, treated as absent): {}", e.getMessage());
