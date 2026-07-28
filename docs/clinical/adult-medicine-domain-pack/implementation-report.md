@@ -311,17 +311,18 @@ blockers, each verified and each in a service this pack does not own:
 | Blocker | Evidence | Owner |
 |---|---|---|
 | The offline action vocabulary has no read for problems or programmes | `READ_PROBLEM` / `READ_PROGRAMME` / `READ_CONDITION`: **0 occurrences** in `tshepo-offline-service`; `READ_ACTIONS` is a hardcoded `Set.of(READ_PATIENT, READ_MEDICATION, READ_ENCOUNTER, READ_OBSERVATION)` | trust plane |
-| No offline collection is registered in production | `createCollection` in `apps/mobile/packages/mobile-offline`: **0 production callers** (test-only) | mobile |
+| ~~No offline collection is registered in production~~ — **CORRECTED, this was wrong** | The mobile seam **exists and works**: `useOfflineStore<Household>("households")` is live in `HouseholdListScreen.tsx` and `ScreeningScreen.tsx`. My original claim came from grepping the *factory* (`createCollection`, whose only references are intra-package) instead of the *hook* that wraps it. Grep the consumer-facing API, not the internal one. | — (no blocker) |
 | The edge replay surface carries one resource | `offline-edge-service` `ButanoFhirClient` posts `/fhir/Observation` **only** | offline-edge |
 
 So an HIV/TB clinician offline cannot see whether a patient is on ART or which regimen — the single
-most valuable offline fact in this domain. Building a medicine-specific offline path on top of this
-would be a vertical over a foundation that does not exist, which is the exact anti-pattern
-`usePaediatricContext` documents. **The minimal change that would unblock it** is additive and
-read-only: add `READ_PROBLEM` and `READ_PROGRAMME` to `OfflineRulesEngine.READ_ACTIONS`, then
-register a medicine collection against the existing mobile factory. This pack is ready to consume
-that seam the moment the owning lanes want it; it is not something to build unilaterally into three
-services it does not own.
+most valuable offline fact in this domain.
+
+**Two genuine blockers, not three.** Both are read-authorization and replay breadth in services this
+pack does not own; the mobile side is ready and has a working exemplar to copy. **The minimal change
+that would unblock it** is additive and read-only: add `READ_PROBLEM` and `READ_PROGRAMME` to
+`OfflineRulesEngine.READ_ACTIONS`, and extend the edge replay beyond `Observation`. This pack would
+then be **consuming an existing seam rather than building one** — a materially better position than
+first reported, and the reason the correction was worth making rather than quietly leaving.
 
 **Remaining:** the ten §23 demonstrations. The brief is **not in this repository** — no version was
 ever committed — so the list is not recoverable from it, and the proposals in
