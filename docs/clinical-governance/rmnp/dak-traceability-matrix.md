@@ -18,8 +18,8 @@ matrix exists to make visible.
 
 | Status | Count |
 |---|---|
-| `COVERED_ELSEWHERE` | 8 |
-| `DEFERRED` | 120 |
+| `COVERED_ELSEWHERE` | 12 |
+| `DEFERRED` | 116 |
 | `SHIPPED` | 21 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
@@ -102,10 +102,10 @@ matrix exists to make visible.
 | `HIV.TESTING` | WHO_DAK | DECISION_LOGIC | — | HIV testing services algorithm and diagnosis | `SHIPPED` | `HIV_TEST_NONREACTIVE`, `HIV_TEST_DISCREPANT`, `HIV_TEST_POSITIVE_VERIFIED`, `HIV_INFANT_VIROLOGICAL_REQUIRED` | ADOPTED_VERBATIM |  |
 | `HIV.TREATMENT_FAILURE` | WHO_DAK | DECISION_LOGIC | — | Recognition of treatment failure and the enhanced-adherence-then-switch sequence | `SHIPPED` | `HIV_VL_UNSUPPRESSED`, `HIV_CONFIRMED_FAILURE` | ADOPTED_VERBATIM |  |
 | `HIV.VL.MONITORING` | WHO_DAK | DECISION_LOGIC | — | Routine viral-load monitoring and interpretation (suppressed, low-level viraemia | `SHIPPED` | `HIV_VL_SUPPRESSED`, `HIV_VL_LOW_LEVEL_VIRAEMIA` | ADOPTED_VERBATIM |  |
-| `IPC.CORE.ASEPTIC_TECHNIQUE` | WHO_IPC | GUIDELINE_SECTION | — | Aseptic technique, sterile field and skin preparation for invasive procedures | `DEFERRED` | — | — | Skin preparation, sterile field and aseptic technique are not captured anywhere. Skin preparation is also a WHO surgical |
-| `IPC.CORE.HAND_HYGIENE` | WHO_IPC | GUIDELINE_SECTION | — | Hand hygiene at the WHO Five Moments, as a precondition of any invasive procedur | `DEFERRED` | — | — | Not modelled. The specification is explicit that a generic sterile checkbox is not acceptable where the risk warrants tr |
-| `IPC.CORE.INJECTION_SAFETY` | WHO_IPC | GUIDELINE_SECTION | — | Injection and sharps safety, single-use device discipline, exposure incident han | `DEFERRED` | — | — | Sharps safety, exposure incidents and clinical waste are not modelled. Exposure incident is the notable one: it is a sta |
-| `IPC.CORE.STERILE_PROCESSING` | WHO_IPC | GUIDELINE_SECTION | — | Decontamination and sterilisation of medical devices, with traceable cycle or lo | `DEFERRED` | — | — | Partially real, and deferred rather than claimed for that reason. tuso.instrument_set_cssd_cycle and inpatient.procedure |
+| `IPC.CORE.ASEPTIC_TECHNIQUE` | WHO_IPC | GUIDELINE_SECTION | — | Aseptic technique, sterile field and skin preparation for invasive procedures | `COVERED_ELSEWHERE` | — | — | P11 broadened V003's two-procedure IPC-ASEPTIC seed to all 66 catalogue entries, and added IPC-PPE and IPC-SKIN_PREP as  |
+| `IPC.CORE.HAND_HYGIENE` | WHO_IPC | GUIDELINE_SECTION | — | Hand hygiene at the WHO Five Moments, as a precondition of any invasive procedur | `COVERED_ELSEWHERE` | — | — | P11 seeded IPC-HAND_HYGIENE as a real procedure_requirement row (kind IPC) across all 66 published catalogue entries — e |
+| `IPC.CORE.INJECTION_SAFETY` | WHO_IPC | GUIDELINE_SECTION | — | Injection and sharps safety, single-use device discipline, exposure incident han | `COVERED_ELSEWHERE` | — | — | P11 seeded IPC-INJECTION_SAFETY (kind IPC, all 66 procedures) declaring single-use device discipline, immediate exposure |
+| `IPC.CORE.STERILE_PROCESSING` | WHO_IPC | GUIDELINE_SECTION | — | Decontamination and sterilisation of medical devices, with traceable cycle or lo | `COVERED_ELSEWHERE` | — | — | P11 closed the specific gap the previous DEFERRED entry named — declared reprocessing limits — with CSSD-REPROCESSING_LI |
 | `LCOGS.BELLWETHER.CAESAREAN` | LCOGS | CAPABILITY | — | Bellwether procedure — caesarean delivery | `DEFERRED` | — | — | Caesarean section is seeded in ZIBO and the obstetric caesarean journey is live-proven including maternal, fetal and neo |
 | `LCOGS.BELLWETHER.LAPAROTOMY` | LCOGS | CAPABILITY | — | Bellwether procedure — laparotomy | `DEFERRED` | — | — | Exploratory laparotomy is one of the ten procedure codes ZIBO seeds, and the theatre stream has proven an emergency lapa |
 | `LCOGS.BELLWETHER.OPEN_FRACTURE` | LCOGS | CAPABILITY | — | Bellwether procedure — open fracture care | `DEFERRED` | — | — | The weakest of the three today. Open reduction with internal fixation is a seeded ZIBO code, but open fracture care spec |
