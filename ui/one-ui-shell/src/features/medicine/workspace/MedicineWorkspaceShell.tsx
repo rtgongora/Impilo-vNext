@@ -58,6 +58,24 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
       </div>
 
       <AllergiesStrip context={context} />
+
+      <div className="rounded-lg border border-border bg-card p-5" data-testid="panel-cds">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
+          Decision support
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Governed guidance for this patient — cardiovascular risk, medication review, geriatrics,
+          mental health, antimicrobial stewardship, palliative care, cancer early diagnosis and
+          bedside-procedure appropriateness.
+        </p>
+        <Link
+          href={`/ehr/${patientId}/medicine/cds`}
+          className="mt-2 inline-block text-sm text-primary hover:underline"
+          data-testid="link-medicine-cds"
+        >
+          Open decision support →
+        </Link>
+      </div>
     </div>
   );
 }
