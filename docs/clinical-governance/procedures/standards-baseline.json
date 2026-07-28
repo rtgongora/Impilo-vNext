@@ -99,6 +99,13 @@
       "kind": "SAFETY_SOLUTION",
       "title": "Communication of critical results — a result is not complete until it has reached a clinician who can act on it, and the acknowledgement is recorded",
       "sourceCitation": "WHO Patient Safety Solutions volume 1, solution 3, Communication During Patient Hand-Overs, 2007; WHO Global Patient Safety Action Plan 2021-2030, strategic objective 4."
+    },
+    {
+      "standardId": "SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING",
+      "family": "INTERNATIONAL_SPECIALTY",
+      "kind": "STANDARD",
+      "title": "Surgical/procedural complications are graded by the therapy required to treat them, not by their apparent clinical severity alone — a reproducible severity scale (Grade I through V) rather than free-text description.",
+      "sourceCitation": "Dindo D, Demartines N, Clavien PA. Classification of surgical complications: a new proposal with evaluation in a cohort of 6336 patients and results of a survey. Ann Surg. 2004;240(2):205-213. https://doi.org/10.1097/01.sla.0000133083.54934.ae"
     }
   ]
 }
