@@ -30,6 +30,10 @@
 #         error rather than silently falling back to what is active today
 #   RC-9  an unset value must be DECLARED unset, and the warning is graded by
 #         whether a journey this release publishes actually depends on it
+#  RC-10  the source pack loads as a DRAFT and a deploy activates NOTHING
+#  RC-11  DRIFT: a pack file edited under a fixed version marks the pack
+#         LOAD_FAILED and reports DEGRADED — the service stays up, and the
+#         activated release keeps serving the cases pinned to it
 #
 # Usage:  scripts/runtime-proof/regulatory-config-registry-journeys.sh
 #         KEEP_RIG=1 to leave Postgres + the service running for inspection.
@@ -42,7 +46,9 @@ mkdir -p "$EV" "$RIGLOG"
 PGPORT=${PGPORT:-15698}; PORT=${PORT:-28153}; ORG=http://localhost:$PORT
 CT=rcfgj-rig-pg
 TEN=00000000-0000-0000-0000-000000000001
-NCZ=a5000000-0000-4000-8000-000000000004   # a council seeded by V007
+# The rig authors into its OWN pack on a council that is NOT the one the source pack seeds, so the
+# journeys and the seeder can never entangle. RC-10/RC-11 then assert about the seeded pack alone.
+NCZ=a5000000-0000-4000-8000-000000000004   # a council seeded by V007 (not NCZ; the rig's scratch org)
 PASS=0; FAIL=0
 ok(){  echo "   PASS: $1" | tee -a "$EV/journal.txt"; PASS=$((PASS+1)); }
 bad(){ echo "   FAIL: $1" | tee -a "$EV/journal.txt"; FAIL=$((FAIL+1)); }
@@ -81,6 +87,7 @@ env DB_HOST=localhost DB_PORT=$PGPORT DB_NAME=org_registry \
     POSTGRES_USER=impilo POSTGRES_PASSWORD=impilo \
     IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true SERVER_PORT=$PORT \
     SPRING_KAFKA_LISTENER_AUTO_STARTUP=false \
+    MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always \
     nohup java -jar "$(jar)" > "$RIGLOG/org-registry.log" 2>&1 & echo $! > "$RIGLOG/svc.pid"
 
 cleanup(){ if [ -z "${KEEP_RIG:-}" ]; then
@@ -117,7 +124,7 @@ API=$ORG/v1/regulatory/config
 # ═════ RC-1: author a pack and its definitions ══════════════════════════════
 say "RC-1: author a pack, a fee with an unset amount, and a form"
 PACK=$(curl -sS $(hdr) -X POST "$API/organizations/$NCZ/packs" \
-    -d '{"packKey":"nurses-council","label":"Nurses Council of Zimbabwe"}' | jq_ "['id']")
+    -d '{"packKey":"rig-scratch","label":"Rig scratch pack"}' | jq_ "['id']")
 [ -n "$PACK" ] && ok "pack created ($PACK)" || { bad "pack creation failed"; exit 1; }
 
 # NCZ-DEC-002: the Council has not set the student index fee. The seam ships built
@@ -132,7 +139,11 @@ FORM1=$(curl -sS $(hdr) -X POST "$API/packs/$PACK/versions" -d '{
   "semanticVersion":"1.0.0","payload":{"sections":["identity","programme","documents"]},
   "selfServiceRoute":"/professional/regulatory/apply/student"}' | jq_ "['id']")
 [ -n "$FEE1" ] && [ -n "$FORM1" ] && ok "fee + form authored as DRAFT versions" || bad "authoring failed"
-[ "$(PSQL "SELECT count(*) FROM org_registry.regulatory_config_definition_version WHERE lifecycle_state='DRAFT'")" = 2 ] \
+# Scoped to the rig's own pack: the source-pack seeder authors drafts of its own, and a global
+# count would silently change meaning the moment the seeded pack grows.
+[ "$(PSQL "SELECT count(*) FROM org_registry.regulatory_config_definition_version v
+   JOIN org_registry.regulatory_config_definition d ON d.id = v.definition_id
+  WHERE d.pack_id = '$PACK' AND v.lifecycle_state='DRAFT'")" = 2 ] \
     && ok "both versions land DRAFT (nothing is live by authoring alone)" || bad "unexpected version states"
 
 # ═════ RC-2: checksum immutability ══════════════════════════════════════════
@@ -351,6 +362,115 @@ PSQL "SELECT case_ref, release_id FROM org_registry.regulatory_case_config_bindi
     > "$EV/case-bindings.txt"
 PSQL "SELECT definition_id, semantic_version, lifecycle_state FROM org_registry.regulatory_config_definition_version ORDER BY created_at" \
     > "$EV/versions.txt"
+
+# ═════ RC-10: the source pack seeds a DRAFT, and only a DRAFT ═══════════════
+say "RC-10: the NCZ source pack loaded, and a deploy activated nothing"
+SEEDED=$(PSQL "SELECT load_state FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
+[ "$SEEDED" = "LOADED" ] && ok "the nurses-council pack loaded from the classpath source pack" \
+    || bad "pack load_state is '$SEEDED', expected LOADED"
+
+SEEDED_REL=$(PSQL "SELECT lifecycle_state FROM org_registry.regulatory_config_release r
+   JOIN org_registry.regulatory_config_pack p ON p.id = r.pack_id
+  WHERE p.pack_key='nurses-council' AND r.release_key='ncz-v1'")
+[ "$SEEDED_REL" = "DRAFT" ] \
+    && ok "the seeded release is DRAFT — a deploy is not a sole approver of fee changes" \
+    || bad "the seeded release is '$SEEDED_REL'; a deployment must never activate"
+
+SEEDED_ACT=$(PSQL "SELECT count(*) FROM org_registry.regulatory_config_activation a
+   JOIN org_registry.regulatory_config_pack p ON p.id = a.pack_id
+  WHERE p.pack_key='nurses-council'")
+[ "$SEEDED_ACT" = 0 ] && ok "no activation record exists for the seeded pack" \
+    || bad "the seeder produced $SEEDED_ACT activation(s)"
+
+SEEDED_PENDING=$(PSQL "SELECT count(*) FROM org_registry.regulatory_config_definition_version
+  WHERE policy_status='PENDING_REGULATOR_APPROVAL' AND policy_decision_ref LIKE 'NCZ-DEC-%'")
+[ "$SEEDED_PENDING" -ge 2 ] \
+    && ok "the pack declares its unset values against council decisions ($SEEDED_PENDING)" \
+    || bad "expected the pack to declare pending council decisions, found $SEEDED_PENDING"
+
+HEALTH=$(curl -s $ORG/actuator/health | python3 -c "import json,sys
+try:
+  d=json.load(sys.stdin).get('components',{}).get('regulatoryConfigPacks',{})
+  print(d.get('status',''))
+except Exception: print('')")
+[ "$HEALTH" = "UP" ] && ok "health reports the configuration packs UP" || bad "pack health is '$HEALTH'"
+
+# ═════ RC-11: drift degrades, it does not take the estate down ══════════════
+say "RC-11: a pack file changed under a fixed version — degrade, never outage"
+# Approve and activate the seeded release first, so there is something live to protect. The
+# question drift raises is whether an already-approved release survives a bad file, and a test
+# where nothing is live could not tell.
+SEEDED_RELID=$(PSQL "SELECT r.id FROM org_registry.regulatory_config_release r
+   JOIN org_registry.regulatory_config_pack p ON p.id = r.pack_id
+  WHERE p.pack_key='nurses-council' AND r.release_key='ncz-v1'")
+curl -sS $(hdr registrar-a) -X POST "$API/releases/$SEEDED_RELID/submit" >/dev/null
+curl -sS $(hdr registrar-b) -X POST "$API/releases/$SEEDED_RELID/approvals" -d '{"decision":"APPROVE"}' >/dev/null
+curl -sS $(hdr registrar-c) -X POST "$API/releases/$SEEDED_RELID/approvals" -d '{"decision":"APPROVE"}' >/dev/null
+APPR=$(code $(hdr registrar-b) -X POST "$API/releases/$SEEDED_RELID/approve")
+ACTV=$(code $(hdr registrar-b) -X POST "$API/releases/$SEEDED_RELID/activate")
+[ "$ACTV" = 200 ] && ok "two registrars approved and activated the seeded pack (approve=$APPR)" \
+    || bad "could not activate the seeded release (approve=$APPR activate=$ACTV)"
+
+NCZPACK=$(PSQL "SELECT id FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
+BEFORE=$(curl -sS $(hdr) "$API/packs/$NCZPACK/active" | python3 -c "import json,sys;print(len(json.load(sys.stdin)))")
+
+# Restart the service against the SAME database with a tampered pack: the fee file says a real
+# amount while the manifest still carries the checksum of the unset one. This is the exact shape
+# of the mistake — a value edited in place, without a new version.
+say "RC-11: restarting with a tampered pack file"
+kill "$(cat "$RIGLOG/svc.pid")" >/dev/null 2>&1; sleep 3
+TAMPER=$RIGLOG/tampered
+rm -rf "$TAMPER"; mkdir -p "$TAMPER/regulatory/councils/nurses-council/definitions"
+SRC=$REPO/services/organization-registry-service/src/main/resources/regulatory/councils/nurses-council
+cp "$SRC/manifest.json" "$TAMPER/regulatory/councils/nurses-council/manifest.json"
+cp "$SRC"/definitions/*.json "$TAMPER/regulatory/councils/nurses-council/definitions/"
+python3 - "$TAMPER/regulatory/councils/nurses-council/definitions/student-index-fee.json" <<'PY'
+import json,sys
+p=sys.argv[1]; d=json.load(open(p)); d["payload"]["amount"]=25; json.dump(d,open(p,"w"),indent=2)
+PY
+env DB_HOST=localhost DB_PORT=$PGPORT DB_NAME=org_registry \
+    POSTGRES_USER=impilo POSTGRES_PASSWORD=impilo \
+    IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true SERVER_PORT=$PORT \
+    SPRING_KAFKA_LISTENER_AUTO_STARTUP=false \
+    MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always \
+    IMPILO_REGULATORY_CONFIG_PACKS_LOCATION="file:$TAMPER/regulatory/councils/*/manifest.json" \
+    nohup java -jar "$(jar)" > "$RIGLOG/org-registry-tampered.log" 2>&1 & echo $! > "$RIGLOG/svc.pid"
+c=000
+for i in $(seq 1 60); do
+    c=$(curl -s -o /dev/null -w '%{http_code}' $ORG/actuator/health 2>/dev/null)
+    [ "$c" = 200 ] && break; sleep 3
+done
+[ "$c" = 200 ] \
+    && ok "the service still BOOTS with a drifted pack (a config typo is not a login outage)" \
+    || { bad "the service died on pack drift"; tail -20 "$RIGLOG/org-registry-tampered.log"; }
+
+DRIFT=$(PSQL "SELECT load_state FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
+[ "$DRIFT" = "LOAD_FAILED" ] && ok "the drifted pack is marked LOAD_FAILED" \
+    || bad "pack load_state is '$DRIFT', expected LOAD_FAILED"
+REASON=$(PSQL "SELECT load_failure_reason FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
+case "$REASON" in *"student-index-fee.json"*) ok "the failure names the file that drifted";; *)
+    bad "the failure reason does not name the file: $REASON";; esac
+
+DSTATUS=$(curl -s $ORG/actuator/health | python3 -c "import json,sys
+try: print(json.load(sys.stdin).get('components',{}).get('regulatoryConfigPacks',{}).get('status',''))
+except Exception: print('')")
+[ "$DSTATUS" = "DEGRADED" ] && ok "health reports DEGRADED, not DOWN (no restart loop)" \
+    || bad "pack health is '$DSTATUS', expected DEGRADED"
+HCODE=$(code $ORG/actuator/health)
+[ "$HCODE" = 200 ] && ok "the health endpoint still answers 200 — readiness is not tripped" \
+    || bad "health returned $HCODE; a drifted pack must not read as 'restart me'"
+
+AFTER=$(curl -sS $(hdr) "$API/packs/$NCZPACK/active" | python3 -c "import json,sys;print(len(json.load(sys.stdin)))")
+[ -n "$BEFORE" ] && [ "$AFTER" = "$BEFORE" ] \
+    && ok "the activated release is untouched and still serves ($AFTER definitions)" \
+    || bad "the activated configuration changed on drift ($BEFORE -> $AFTER)"
+
+FEEAMT=$(PSQL "SELECT payload->>'amount' FROM org_registry.regulatory_config_definition_version v
+   JOIN org_registry.regulatory_config_definition d ON d.id = v.definition_id
+  WHERE d.definition_key='student-index-fee' AND v.semantic_version='1.0.0'")
+[ -z "$FEEAMT" ] \
+    && ok "the edited amount did NOT reach the Registry — the file was distrusted, not obeyed" \
+    || bad "a file edit changed a stored version's content (amount=$FEEAMT)"
 
 echo
 echo "PASS=$PASS FAIL=$FAIL   evidence: $EV"

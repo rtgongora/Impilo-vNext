@@ -1,0 +1,18 @@
+{
+  "typeCode": "COUNCIL_IDENTITY",
+  "definitionKey": "ncz-identity",
+  "label": "Nurses Council of Zimbabwe",
+  "semanticVersion": "1.0.0",
+  "selfServiceRoute": "/professional/regulatory",
+  "payload": {
+    "shortName": "NCZ",
+    "legalName": "Nurses Council of Zimbabwe",
+    "applicantTerms": {
+      "registrant": "nurse",
+      "applicant": "applicant",
+      "register": "register"
+    },
+    "sourceAuthority": "PRODUCT_OWNER_IMPLEMENTATION_BRIEF.md",
+    "sourceClassification": "BRD_DERIVED_PO_APPROVED"
+  }
+}
