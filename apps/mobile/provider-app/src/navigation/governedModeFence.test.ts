@@ -57,11 +57,11 @@ describe("governed-mode fence", () => {
   });
 
   it("applies identical entry behaviour through both setters", () => {
-    // Entering provider resets to worklist-first; entering anything else leaves
+    // Entering provider resets to Work-Home-first; entering anything else leaves
     // the tab alone. The fence must not have changed that for either path.
     appStore.getState().setProviderTab("messaging");
     appStore.getState().setGrantedMode("provider");
-    expect(appStore.getState().providerTab).toBe("dashboard");
+    expect(appStore.getState().providerTab).toBe("workhome");
 
     appStore.getState().setProviderTab("messaging");
     appStore.getState().setGrantedMode("supervisor");

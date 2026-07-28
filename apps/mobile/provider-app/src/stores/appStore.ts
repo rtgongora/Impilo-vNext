@@ -88,8 +88,12 @@ export interface AppState {
 function applyMode(state: AppState, mode: AppMode): Partial<AppState> {
   return {
     mode,
-    // Enforce worklist-first entry whenever the clinician returns to Provider mode.
-    providerTab: mode === "provider" ? "dashboard" : state.providerTab,
+    // Work-Home-first entry whenever the clinician returns to Provider mode —
+    // the mobile counterpart of web's F6 flip from /provider-workspace to /work.
+    // Work Home is the role- and context-aware composition (worklist included,
+    // alongside professional alerts and the other governed sections); the
+    // Worklist tab remains one tap away for anyone who wants only that.
+    providerTab: mode === "provider" ? "workhome" : state.providerTab,
   };
 }
 
@@ -102,7 +106,7 @@ export const appStore = createStore<AppState>((set) => ({
   workspaceId: null,
   workspaceName: null,
   shiftId: null,
-  providerTab: "dashboard",
+  providerTab: "workhome",
   unreadNotifications: 0,
   pendingSyncCount: 0,
   globalError: null,
