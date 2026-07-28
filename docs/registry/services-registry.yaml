@@ -2477,6 +2477,47 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: mental-health-service
+    maven_module: mental-health-service
+    primary_plane: clinical
+    plane: clinical
+    domain: care-delivery
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
+    primary_protocol: rest
+    default_http_port: 8397
+    product_names:
+      - Mental Health
+    owner_team: TBD
+    system_of_record_for:
+      - mh_referral — the accepting side of a psychiatric emergency handover (target_type=MENTAL_HEALTH)
+      - mh_assessment / mh_risk_formulation / mh_safety_plan — psychiatric assessment and risk-formulation truth
+      - mh_involuntary_episode — statutory detention/observation with a legal-basis field
+      - mh_restraint_event — a restraint-REDUCTION register, not a restraint log
+      - mh_admission_request — the ASK to PCT, never the admission decision itself
+      - mh_followup
+    consumes_from:
+      - tshepo-authz-service
+      - pct-service           # reads/writes pct's emergency_handover for the acceptance handshake
+    exposes_to:
+      - experience-bff
+      - pct-service           # accept/decline write-back
+    forbidden_responsibilities:
+      - must-not-own-the-admission-decision       # PCT's own admission-handshake decides; this service only raises the request
+      - must-not-own-person-level-longitudinal-registries   # PCT's
+      - must-not-fork-wellness-continuum
+      - must-not-own-care-continuum                # component of pct-service's continuum, not a peer continuum
+      - must-not-own-clinical-encounter-lifecycle
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: not-wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: rtc-gateway-service
     maven_module: rtc-gateway-service
     primary_plane: integration

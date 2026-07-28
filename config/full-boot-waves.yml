@@ -47,6 +47,7 @@ waves:
       - guidance-service
       - inpatient-service
       - madi-service
+      - mental-health-service
       - inventory-elmis-adapter
       - inventory-service
       - oros-service

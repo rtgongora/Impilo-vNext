@@ -42,10 +42,13 @@ for f in $(ls services/tshepo-authz-service/src/main/resources/db/migration/*.sq
 done
 chk "J-PR4-0 whole tshepo-authz chain applies with V300+V301" "$cf" "^0$"
 
+# V302 (SB-3, 2026-07-28) added 10 'procedures-analytics-%' rows to the same chain; excluded
+# here so this count stays a V300-only assertion (surgery-authz-journeys.sh owns the V302 counts).
 chk "J-PR4-1 exactly 18 V300 rows land" \
   "$(q "SELECT count(*) FROM tshepo_authz.policy_rule WHERE name LIKE 'procedures-%'
         AND name NOT LIKE 'procedures-safety-pause%' AND name NOT LIKE 'procedures-sedation%'
-        AND name NOT LIKE 'procedures-recovery%' AND name NOT LIKE 'procedures-aftercare%'")" "^18$"
+        AND name NOT LIKE 'procedures-recovery%' AND name NOT LIKE 'procedures-aftercare%'
+        AND name NOT LIKE 'procedures-analytics%'")" "^18$"
 
 chk "J-PR2-1 exactly 30 V301 rows land (P7 safety-pause/sedation + P9 recovery/aftercare)" \
   "$(q "SELECT count(*) FROM tshepo_authz.policy_rule WHERE

@@ -783,6 +783,25 @@ public class InpatientServiceClient {
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
     }
 
+    // specimen custody chain (Wave P8 §13: collection → label confirmation → receipt → adequacy;
+    // SpecimenCustodyService is the inpatient-side recorder, OROS stays the specimen SoR)
+    public JsonNode recordTheatreSpecimenCollection(String caseId, String specimenId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/specimens/" + specimenId + "/collect";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+    public JsonNode confirmTheatreSpecimenLabel(String caseId, String specimenId) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/specimens/" + specimenId + "/confirm-label";
+        return restTemplate.postForEntity(url, Map.of(), JsonNode.class).getBody();
+    }
+    public JsonNode recordTheatreSpecimenReceipt(String caseId, String specimenId) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/specimens/" + specimenId + "/receive";
+        return restTemplate.postForEntity(url, Map.of(), JsonNode.class).getBody();
+    }
+    public JsonNode assessTheatreSpecimenAdequacy(String caseId, String specimenId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/specimens/" + specimenId + "/adequacy";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
     // surgical counts (RITO-backed on discrepancy)
     public JsonNode listTheatreCounts(String caseId) {
         return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/counts", JsonNode.class).getBody();

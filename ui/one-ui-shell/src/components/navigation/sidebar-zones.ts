@@ -5,6 +5,7 @@ import {
   Bell,
   BookMarked,
   Boxes,
+  Brain,
   BriefcaseBusiness,
   Building2,
   Calendar,
@@ -96,6 +97,7 @@ export const ZONES: SidebarZone[] = [
       // Absorbed sidecars: oros-web → /lab
       { href: "/lab", label: "Laboratory", icon: FlaskConical, requiredRoles: CLINICAL_ROLES },
       { href: "/madi", label: "Madi", icon: Droplet, requiredRoles: CLINICAL_ROLES },
+      { href: "/work/mental-health", label: "Mental Health", icon: Brain, requiredRoles: CLINICAL_ROLES },
       { href: "/live", label: "Impilo Live", icon: Radio, requiredRoles: CLINICAL_ROLES },
     ],
   },

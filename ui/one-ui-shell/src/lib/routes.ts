@@ -910,6 +910,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/rito/audits/[auditId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Audit Detail", navLabel: "Audit", navZone: "professional" },
   { path: "/rito/improvement", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Improvement — CAPA & QI", navLabel: "Improvement", navZone: "professional" },
   { path: "/rito/surveys", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Experience Surveys", navLabel: "Surveys", navZone: "professional" },
+  { path: "/my-life", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Life", navLabel: "My Life", navZone: "life" },
   { path: "/my-life/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Feedback", navLabel: "Feedback & Safety", navZone: "life" },
   { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },
   { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
@@ -926,6 +927,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/regulatory/[orgId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory Workspace", navLabel: "Regulatory Org", navZone: "work" },
   { path: "/work/dura", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Dura — Stock & Supply", navLabel: "Dura Stock", navZone: "work" },
   { path: "/work/patient-safety", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Patient Safety — Pharmacovigilance", navLabel: "Patient Safety", navZone: "work" },
+  { path: "/work/mental-health", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mental Health — Referral Queue", navLabel: "Mental Health", navZone: "work" },
   { path: "/work/patient-safety/new", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Safety Report", navLabel: "New Report", navZone: "work" },
   { path: "/work/patient-safety/reports/[reportId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Report", navLabel: "Report", navZone: "work" },
   { path: "/work/patient-safety/cases/[caseId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Case", navLabel: "Case", navZone: "work" },
@@ -943,6 +945,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/daidzai/verify-callbacks", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Callback Verification", navLabel: "Callbacks", navZone: "work" },
   { path: "/work/daidzai/missions", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mission Tracking", navLabel: "Missions", navZone: "work" },
   { path: "/work/daidzai/disasters", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Disaster Command", navLabel: "Disasters", navZone: "work" },
+  { path: "/work/daidzai/disasters/[id]/casualties", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "MCI Casualty Tracking", navLabel: "Casualties", navZone: "work" },
   // OF-B28/OF-B23 — remote-monitoring command workspace (§14.8 clinical desk) + CHW monitoring view.
   { path: "/work/telemonitoring", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Remote Monitoring Command", navLabel: "Remote Monitoring", navZone: "work" },
   { path: "/work/telemonitoring/chw", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "CHW Monitoring", navLabel: "CHW Monitoring", navZone: "work" },
@@ -958,6 +961,12 @@ export const ROUTES: RouteDefinition[] = [
   // WS#6 — Theatre & Perioperative Depth (provider theatre surfaces).
   { path: "/work/clinical/theatre", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre", navLabel: "Theatre", navZone: "work" },
   { path: "/work/clinical/theatre/[id]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre Case", navLabel: "Theatre Case", navZone: "work" },
+
+  // Surgery + Procedures pipeline (SB-3 reachability wave). The procedures catalogue page
+  // shipped unregistered (orphan-page check was red on it); registered here alongside the
+  // new surgical-episode workspace so both are guarded and navigable.
+  { path: "/work/clinical/procedures", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Procedure Catalogue", navLabel: "Procedure Catalogue", navZone: "work" },
+  { path: "/work/clinical/surgery", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Surgical Episodes", navLabel: "Surgical Episodes", navZone: "work" },
 ];
 
 // Total route count assertion.
@@ -1071,7 +1080,10 @@ export const ROUTES: RouteDefinition[] = [
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
 // Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
 // workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
-export const EXPECTED_ROUTE_COUNT = 824;
+// MCI casualty tagging (W15b, 28 Jul 2026): +1 — /work/daidzai/disasters/[id]/casualties. Total 827.
+// Surgery SB-3 reachability (28 Jul 2026): +2 — /work/clinical/procedures (existed but was
+// unregistered/orphaned) and /work/clinical/surgery (S1-S3 surgical episode workspace). Total 829.
+export const EXPECTED_ROUTE_COUNT = 829;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

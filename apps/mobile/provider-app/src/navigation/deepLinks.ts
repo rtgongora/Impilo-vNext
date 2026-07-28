@@ -18,9 +18,10 @@
  * clinical context is loaded behind auth once the surface opens.
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import * as Linking from "expo-linking";
 import { appStore } from "../stores/appStore";
+import { useSwitchAppMode } from "../hooks/useSwitchAppMode";
 import type { AppMode, ProviderTabKey } from "../types";
 
 export const WEB_ORIGIN = "https://impilo.mohcc.gov.zw";
@@ -107,31 +108,55 @@ export function resolveProviderDeepLink(url: string): ProviderDeepLinkIntent | n
   return match.resolve(subPath);
 }
 
-export function applyProviderDeepLink(intent: ProviderDeepLinkIntent): void {
-  const store = appStore.getState();
-  store.setMode(intent.mode);
-  store.setProviderTab(intent.tab);
+/**
+ * Applies a resolved deep-link intent.
+ *
+ * `enterMode` must be `useSwitchAppMode`'s switcher: every route here resolves
+ * to `provider`, a governed mode, so following an inbound link has to mint a
+ * clinical duty token rather than silently dropping the person into the
+ * clinical workspace under whatever token they happened to be holding. The tab
+ * is applied regardless — it is pure navigation and carries no authority — so a
+ * link still lands somewhere sensible if the mint is refused.
+ */
+export function applyProviderDeepLink(
+  intent: ProviderDeepLinkIntent,
+  enterMode: (mode: AppMode) => void
+): void {
+  appStore.getState().setProviderTab(intent.tab);
+  enterMode(intent.mode);
 }
 
 /** Route a URL if it is a recognized deep link. Returns true if handled. */
-export function handleProviderDeepLink(url: string | null | undefined): boolean {
+export function handleProviderDeepLink(
+  url: string | null | undefined,
+  enterMode: (mode: AppMode) => void
+): boolean {
   if (!url) return false;
   const intent = resolveProviderDeepLink(url);
   if (!intent) return false;
-  applyProviderDeepLink(intent);
+  applyProviderDeepLink(intent, enterMode);
   return true;
 }
 
 /** Wire the cold-start URL plus warm foreground events. Mount once near root. */
 export function useDeepLinkRouting(): void {
+  const { switchAppMode } = useSwitchAppMode();
+  // Held in a ref so the listener effect stays mount-once: switchAppMode is
+  // rebuilt whenever resolved contexts or the active context change, and
+  // re-subscribing to Linking on every such change would drop the cold-start
+  // URL handling and double-register the warm listener.
+  const enterModeRef = useRef<(mode: AppMode) => void>(() => {});
+  enterModeRef.current = (mode: AppMode) => void switchAppMode(mode);
+
   useEffect(() => {
+    const enterMode = (mode: AppMode) => enterModeRef.current(mode);
     Linking.getInitialURL()
-      .then((url) => handleProviderDeepLink(url))
+      .then((url) => handleProviderDeepLink(url, enterMode))
       .catch(() => {
         /* no initial URL — normal launch */
       });
     const subscription = Linking.addEventListener("url", ({ url }) => {
-      handleProviderDeepLink(url);
+      handleProviderDeepLink(url, enterMode);
     });
     return () => subscription.remove();
   }, []);

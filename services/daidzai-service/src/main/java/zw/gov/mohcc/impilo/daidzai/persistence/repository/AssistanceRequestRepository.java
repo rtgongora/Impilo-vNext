@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.daidzai.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import zw.gov.mohcc.impilo.daidzai.persistence.entity.AssistanceRequestEntity;
 
 import java.util.List;
@@ -20,4 +23,12 @@ public interface AssistanceRequestRepository extends JpaRepository<AssistanceReq
     Optional<AssistanceRequestEntity> findByContributionRequestId(UUID contributionRequestId);
 
     boolean existsByTenantIdAndAssistanceReference(UUID tenantId, String assistanceReference);
+
+    /** VITO identity repoint (see DaidzaiIntakeRepointHook). Idempotent: a replay matches nothing. */
+    @Modifying
+    @Query("update AssistanceRequestEntity a set a.subjectCpid = :confirmed "
+            + "where a.tenantId = :tenantId and a.subjectCpid = :provisional")
+    int repointSubjectCpid(@Param("tenantId") UUID tenantId,
+                           @Param("provisional") String provisionalCpid,
+                           @Param("confirmed") String confirmedCpid);
 }

@@ -56,6 +56,10 @@ surgery:
       # S1: best-effort contribution into pct_problems (responsible_service=surgery). A PCT
       # outage never blocks recording a surgical episode locally.
       base-url: ${PCT_SERVICE_URL:http://pct-service:8088}
+    inpatient:
+      # SB-1: §16 histology closure gate — FAIL-SAFE (opposite posture to the pct client
+      # above). An unreachable specimen list blocks episode closure rather than clearing it.
+      base-url: ${INPATIENT_SERVICE_URL:http://inpatient-service:8121}
 
 management:
   endpoints:

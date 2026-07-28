@@ -218,6 +218,53 @@ class ProceduresControllerTest {
                 () -> controller.aftercareTemplate("AFTERCARE-THEATRE"));
     }
 
+    // ── Wave SB-3 — P14 analytics indicator catalogue routes ──
+
+    @Test
+    void analyticsIndicatorsReturnsTheDownstreamResponseVerbatim() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> analyticsIndicators() {
+                return ResponseEntity.ok("{\"total\":33,\"computed\":0,\"indicators\":[]}");
+            }
+        });
+
+        var response = controller.analyticsIndicators();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("{\"total\":33,\"computed\":0,\"indicators\":[]}", response.getBody());
+    }
+
+    @Test
+    void analyticsIndicatorForwardsTheCodeFromTheQueryParameter() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> analyticsIndicator(String indicatorCode) {
+                assertEquals("IND-PROC-001", indicatorCode);
+                return ResponseEntity.ok("{\"indicatorCode\":\"IND-PROC-001\"}");
+            }
+        });
+
+        var response = controller.analyticsIndicator("IND-PROC-001");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    /** The propagation control again, on the analytics surface this wave adds. */
+    @Test
+    void aDownstreamFailureOnTheAnalyticsSurfaceAlsoPropagates() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> analyticsIndicators() {
+                throw new org.springframework.web.client.ResourceAccessException(
+                        "procedures-service unreachable");
+            }
+        });
+
+        assertThrows(org.springframework.web.client.ResourceAccessException.class,
+                controller::analyticsIndicators);
+    }
+
     /** Overridable stub so each test only implements the one method it exercises. */
     private static class StubClient extends ProceduresServiceClient {
         StubClient() {

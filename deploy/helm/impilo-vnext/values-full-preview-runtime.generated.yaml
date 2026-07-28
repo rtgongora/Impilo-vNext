@@ -1,7 +1,8 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
 #
-# HAND-EDITED 2026-07-28 to add procedures-service and surgery-service, NOT regenerated. Running the generator
+# HAND-EDITED 2026-07-28 to add mental-health-service (W13, port 8397) and, earlier the same day,
+# procedures-service and surgery-service, NOT regenerated. Running the generator
 # here dropped pct-service's hand-authored secretEnv block (KEYCLOAK_BACKEND_SECRET,
 # PCT_INTEGRATION_CLINICAL_KNOWLEDGE_BASE_URL, KEYCLOAK_BACKEND_CLIENT_ID — its explained
 # service-to-service OAuth2 token for calling the clinical knowledge platform from Kafka
@@ -9,7 +10,7 @@
 # config/full-boot-service-classification.yml and cannot see hand-added secretEnv content, so
 # it silently regressed a live capability. Diff any future regeneration against this file
 # before trusting it — the same law already recorded for scripts/registry/seed-registry.mjs.
-# Microservices: 98 | enabled: 98 (all waves)
+# Microservices: 99 | enabled: 99 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -206,6 +207,10 @@ fullBootServices:
     enabled: true
     port: 8300
     database: madi
+  mental-health-service:
+    enabled: true
+    port: 8397
+    database: mental_health
   msika-apps-service:
     enabled: true
     port: 8181

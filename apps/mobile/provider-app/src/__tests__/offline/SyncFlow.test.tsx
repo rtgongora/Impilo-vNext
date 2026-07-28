@@ -42,16 +42,23 @@ describe("App Store — Offline Sync", () => {
   });
 
   it("manages mode switching", () => {
+    // Ungoverned workspaces — free local navigation, no duty token involved.
     appStore.getState().setMode("outreach");
     expect(appStore.getState().mode).toBe("outreach");
-
-    appStore.getState().setMode("supervisor");
-    expect(appStore.getState().mode).toBe("supervisor");
 
     appStore.getState().setMode("offline");
     expect(appStore.getState().mode).toBe("offline");
 
-    appStore.getState().setMode("provider");
+    appStore.getState().setMode("courier");
+    expect(appStore.getState().mode).toBe("courier");
+
+    // Governed workspaces go through setGrantedMode, which useSwitchAppMode
+    // only reaches after a successful mint. `setMode("supervisor")` is now a
+    // compile error — that is the guard, not a convention.
+    appStore.getState().setGrantedMode("supervisor");
+    expect(appStore.getState().mode).toBe("supervisor");
+
+    appStore.getState().setGrantedMode("provider");
     expect(appStore.getState().mode).toBe("provider");
   });
 

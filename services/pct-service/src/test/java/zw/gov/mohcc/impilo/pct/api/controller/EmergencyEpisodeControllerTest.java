@@ -54,7 +54,12 @@ class EmergencyEpisodeControllerTest {
         EmergencyObservationStayService observationStayService = new EmergencyObservationStayService(
                 repo, new EmergencyObservationStayServiceTest.InMemoryStayRepo());
         EmergencyAlertService alertService = new EmergencyAlertService(new EmergencyAlertServiceTest.InMemoryAlertRepo());
-        controller = new EmergencyEpisodeController(service, dispositionService, observationStayService, alertService);
+        var mciBulkMintService = new zw.gov.mohcc.impilo.pct.core.MciBulkMintService(
+                service, new zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient(null, "http://unused"));
+        var identityLinkService = new zw.gov.mohcc.impilo.pct.core.EmergencyIdentityLinkService(
+                repo, new zw.gov.mohcc.impilo.pct.core.EmergencyIdentityLinkServiceTest.InMemoryIdentityLinkRepo(),
+                outbox, new ObjectMapper());
+        controller = new EmergencyEpisodeController(service, dispositionService, observationStayService, alertService, mciBulkMintService, identityLinkService);
         TrustContextHolder.set(new TrustContext(TENANT, "nurse-A", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
     }
@@ -213,5 +218,25 @@ class EmergencyEpisodeControllerTest {
                 null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
         var board = controller.board(FACILITY);
         assertEquals(1, board.getBody().data().size());
+    }
+
+    @Test
+    @DisplayName("identity-link is reachable over HTTP: link, then read the full history back")
+    void identityLinkOverHttp() {
+        var opened = controller.open(Map.of("entryRoute", "WALK_IN", "facilityId", FACILITY.toString()));
+        String episodeId = (String) opened.getBody().data().get("episode_id");
+
+        var linked = controller.linkIdentity(UUID.fromString(episodeId), Map.of(
+                "resolvedSubjectCpid", "CPID-HTTP-1",
+                "resolutionMethod", "SMART_CARD",
+                "resolvedBy", "nurse-A"));
+        assertEquals("CPID-HTTP-1", linked.getBody().data().get("resolved_subject_cpid"));
+
+        var history = controller.identityLinkHistory(UUID.fromString(episodeId));
+        assertEquals(1, history.getBody().data().size());
+
+        var refetched = controller.get(UUID.fromString(episodeId));
+        assertEquals("CPID-HTTP-1", refetched.getBody().data().get("subject_cpid"));
+        assertEquals("KNOWN", refetched.getBody().data().get("identity_mode"));
     }
 }

@@ -440,6 +440,44 @@ const DOCTRINE_OVERRIDES = new Map(
       },
     ],
     [
+      "mental-health-service",
+      {
+        // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use
+        // spread semantics, so every array here must be COMPLETE, not a delta. This
+        // mirror exists so a future regeneration cannot destroy the hand-edited YAML.
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "care-delivery",
+        secondary_planes: [],
+        continuum: "care",
+        continuum_role: "component",
+        continuum_parent: "pct-service",
+        system_of_record_for: [
+          "mh_referral — the accepting side of a psychiatric emergency handover (target_type=MENTAL_HEALTH)",
+          "mh_assessment / mh_risk_formulation / mh_safety_plan — psychiatric assessment and risk-formulation truth",
+          "mh_involuntary_episode — statutory detention/observation with a legal-basis field",
+          "mh_restraint_event — a restraint-REDUCTION register, not a restraint log",
+          "mh_admission_request — the ASK to PCT, never the admission decision itself",
+          "mh_followup",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+          "pct-service",
+        ],
+        exposes_to: [
+          "experience-bff",
+          "pct-service",
+        ],
+        forbidden_responsibilities: [
+          "must-not-own-the-admission-decision",
+          "must-not-own-person-level-longitudinal-registries",
+          "must-not-fork-wellness-continuum",
+          "must-not-own-care-continuum",
+          "must-not-own-clinical-encounter-lifecycle",
+        ],
+      },
+    ],
+    [
       "referral-service",
       {
         // Care Continuum doctrine (CC-8) + full hand-curated arrays: overrides use

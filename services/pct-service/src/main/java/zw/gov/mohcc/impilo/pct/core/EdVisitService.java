@@ -2,6 +2,8 @@ package zw.gov.mohcc.impilo.pct.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,8 @@ import java.util.*;
 @Service
 public class EdVisitService {
 
+    private static final Logger log = LoggerFactory.getLogger(EdVisitService.class);
+
     private final JourneyStateMachine journeyStateMachine;
     private final TriageService triageService;
     private final EncounterService encounterService;
@@ -33,6 +37,8 @@ public class EdVisitService {
     private final ObjectMapper objectMapper;
     private final zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient daidzaiEpisodes;
     private final EdTraumaTeamService traumaTeamService;
+    private final EmergencyEpisodeService emergencyEpisodeService;
+    private final EmergencyDispositionService emergencyDispositionService;
 
     public EdVisitService(JourneyStateMachine journeyStateMachine,
                           TriageService triageService,
@@ -48,7 +54,9 @@ public class EdVisitService {
                           JourneyRepository journeyRepository,
                           ObjectMapper objectMapper,
                           zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient daidzaiEpisodes,
-                          EdTraumaTeamService traumaTeamService) {
+                          EdTraumaTeamService traumaTeamService,
+                          EmergencyEpisodeService emergencyEpisodeService,
+                          EmergencyDispositionService emergencyDispositionService) {
         this.journeyStateMachine = journeyStateMachine;
         this.triageService = triageService;
         this.encounterService = encounterService;
@@ -64,6 +72,23 @@ public class EdVisitService {
         this.objectMapper = objectMapper;
         this.daidzaiEpisodes = daidzaiEpisodes;
         this.traumaTeamService = traumaTeamService;
+        this.emergencyEpisodeService = emergencyEpisodeService;
+        this.emergencyDispositionService = emergencyDispositionService;
+    }
+
+    /**
+     * ed_visit's free-text arrival mode -> emergency_episode's closed entry_route vocabulary.
+     * WALK_IN and AMBULANCE both already agree between the two systems; anything else recorded on
+     * an ED visit predates a defined mapping and is honestly logged as UNKNOWN_OR_UNRESPONSIVE
+     * rather than guessed at, matching this pack's care-first-but-honest identity discipline.
+     */
+    private static String toEpisodeEntryRoute(String arrivalMode) {
+        if (arrivalMode == null) return "WALK_IN";
+        return switch (arrivalMode) {
+            case "WALK_IN", "AMBULANCE", "STATUTORY_SERVICE", "INTERFACILITY_REFERRAL", "CHW_REFERRAL",
+                 "PRIVATE_VEHICLE", "WORKPLACE_OR_SCHOOL" -> arrivalMode;
+            default -> "UNKNOWN_OR_UNRESPONSIVE";
+        };
     }
 
     @Transactional
@@ -97,6 +122,30 @@ public class EdVisitService {
         visit.setTraumaEpisodeId(traumaEpisodeId);
         visit.setStatus("REGISTERED");
         visit = visitRepository.save(visit);
+
+        // W15: mint the pct.emergency_episode spine alongside the visit. Idempotent on
+        // (entry_route, entrySourceRef=visit_id) — a replayed registration finds the same episode,
+        // never a duplicate. journeyId is already known at this point, so the episode is
+        // CC-5-anchored from creation rather than starting PRE_ARRIVAL.
+        var episodeResult = emergencyEpisodeService.open(new EmergencyEpisodeService.OpenEpisodeCommand(
+                ctx.tenantId(),
+                facilityId,
+                toEpisodeEntryRoute(arrivalMode),
+                "pct-service",
+                visit.getVisitId().toString(),
+                null,
+                "UNDIFFERENTIATED",
+                patientCpid,
+                visit.getJourneyId(),
+                null,
+                traumaEpisodeId,
+                visit.getEmergencyCaseId(),
+                false,
+                OffsetDateTime.now(),
+                ctx.actorId()));
+        visit.setEmergencyEpisodeId(episodeResult.episode().getEpisodeId());
+        visit = visitRepository.save(visit);
+
         if (traumaEpisodeId != null) {
             daidzaiEpisodes.registerPhase(ctx.tenantId(), traumaEpisodeId, "ED", visit.getVisitId().toString(),
                     "ARRIVED", "pct.ed.visit_opened");
@@ -709,7 +758,73 @@ public class EdVisitService {
             daidzaiEpisodes.close(TrustContextHolder.require().tenantId(), visit.getTraumaEpisodeId(),
                     "ED disposition: " + dispositionType);
         }
+
+        // W15: close the real emergency_episode disposition (15-type, R12 mandatory-content) with
+        // this same ed_visit disposition record — the episode-spine reachability fix (see V211's
+        // rationale) means every ED visit now has a live episode, and it must not go on being closed
+        // by ed_visit's own disposition alone while the episode stays open forever.
+        if (visit.getEmergencyEpisodeId() != null) {
+            recordEpisodeDispositionBestEffort(visit.getEmergencyEpisodeId(), ctx.tenantId(), dispositionType, d);
+        }
         return visitDetail(visitId);
+    }
+
+    /**
+     * Maps ed_visit's 7-value disposition onto the episode's 15-type vocabulary and records it via
+     * {@link EmergencyDispositionService}. Best-effort: the episode's mandatory-content gate is
+     * stricter than ed_visit's own form ever collected (a destination or last-seen time this legacy
+     * flow never asked for), so a mapping that cannot satisfy the gate is logged and skipped rather
+     * than fabricating a value to force it through — the episode stays open until that gap is filled
+     * by a real write, which is the honest state, not a silently-forced closure.
+     */
+    private void recordEpisodeDispositionBestEffort(UUID episodeId, UUID tenantId, String edDispositionType,
+                                                     EdDispositionEntity d) {
+        String episodeType = switch (edDispositionType) {
+            case "DISCHARGE" -> "DISCHARGED_HOME";
+            case "ADMIT" -> "ADMITTED_WARD";
+            case "TRANSFER" -> "TRANSFERRED_OUT";
+            case "REFER" -> "REFERRED_OUTPATIENT";
+            case "LAMA" -> "LEFT_AGAINST_ADVICE";
+            case "LWBS" -> "LEFT_BEFORE_ASSESSMENT";
+            case "DEATH" -> "DIED";
+            default -> null;
+        };
+        if (episodeType == null) {
+            log.warn("ed_visit disposition type {} has no episode-disposition mapping; episode {} stays open",
+                    edDispositionType, episodeId);
+            return;
+        }
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("dispositionType", episodeType);
+        body.put("disposedBy", d.getDispositionBy());
+        String reason = firstNonBlank(d.getDischargeSummary(), d.getPrimaryDiagnosisDisplay());
+        body.put("dispositionReason", reason != null ? reason
+                : "Recorded via ED visit disposition (see ed_visit " + d.getVisitId() + ")");
+        String destination = firstNonBlank(d.getDestinationFacility(), d.getDestinationWard());
+        if (destination != null) body.put("destination", destination);
+        if ("DIED".equals(episodeType)) {
+            body.put("causeOrCircumstances", firstNonBlank(d.getExternalCauseDisplay(), d.getDischargeSummary(),
+                    "Cause not further specified at ED disposition"));
+        }
+        if ("LEFT_BEFORE_ASSESSMENT".equals(episodeType) || "LEFT_AGAINST_ADVICE".equals(episodeType)) {
+            // The moment this disposition is recorded IS the last-observed moment for a patient who
+            // has left — a real fact, not a placeholder, for exactly these two types.
+            body.put("lastSeenAt", OffsetDateTime.now().toString());
+        }
+        try {
+            emergencyDispositionService.record(episodeId, tenantId, body);
+        } catch (ResponseStatusException e) {
+            log.warn("Episode disposition for episode {} could not be recorded from ed_visit disposition "
+                    + "(mapped type {}): {} — episode stays open until completed with the missing field",
+                    episodeId, episodeType, e.getReason());
+        }
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) return v;
+        }
+        return null;
     }
 
     private static String mapDispositionToDischarge(String dispositionType) {
@@ -758,6 +873,7 @@ public class EdVisitService {
         m.put("presenting_problem_code", v.getPresentingProblemCode());
         m.put("ambulance_call_sign", v.getAmbulanceCallSign());
         m.put("trauma_episode_id", v.getTraumaEpisodeId() != null ? v.getTraumaEpisodeId().toString() : null);
+        m.put("emergency_episode_id", v.getEmergencyEpisodeId() != null ? v.getEmergencyEpisodeId().toString() : null);
         m.put("ems_mission_ref", v.getEmsMissionRef());
         m.put("pre_arrival", v.getPreArrivalJson());
         m.put("pre_arrival_at", v.getPreArrivalAt() != null ? v.getPreArrivalAt().toString() : null);

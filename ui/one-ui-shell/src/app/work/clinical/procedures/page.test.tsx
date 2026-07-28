@@ -20,6 +20,7 @@ const safetyPauseState = vi.fn();
 const sedationLevelState = vi.fn();
 const recoverySettingState = vi.fn();
 const aftercareTemplateState = vi.fn();
+const analyticsIndicatorsState = vi.fn();
 
 const IDLE = { isLoading: false, isError: false, data: undefined };
 
@@ -34,6 +35,9 @@ vi.mock("@/hooks/queries/useProceduresCatalogue", () => ({
   // answer per-argument, the same reason searchState/detailState answer per-hook rather than
   // sharing one canned value.
   useAftercareTemplate: (code: string | null) => aftercareTemplateState(code),
+  // SB-3: the analytics indicators panel renders on every page mount; default IDLE below.
+  useAnalyticsIndicators: () => analyticsIndicatorsState(),
+  useAnalyticsIndicator: () => IDLE,
 }));
 
 beforeEach(() => {
@@ -43,6 +47,7 @@ beforeEach(() => {
   sedationLevelState.mockReturnValue(IDLE);
   recoverySettingState.mockReturnValue(IDLE);
   aftercareTemplateState.mockReturnValue(IDLE);
+  analyticsIndicatorsState.mockReturnValue(IDLE);
 });
 
 function renderPage() {

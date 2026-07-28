@@ -415,6 +415,44 @@ public class TheatreController {
                 requestId, correlationId);
     }
 
+    // ── specimen custody chain (Wave P8 §13: collect → confirm-label → receive → adequacy).
+    // Writes: no try/catch, deliberately — a failed custody attestation must surface as a real
+    // non-2xx (BffGlobalExceptionHandler), never a fabricated success envelope. ──
+    @PostMapping("/cases/{id}/specimens/{specimenId}/collect")
+    public ResponseEntity<Map<String, Object>> recordSpecimenCollection(
+            @PathVariable String id, @PathVariable String specimenId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ok(inpatientClient.recordTheatreSpecimenCollection(id, specimenId, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/specimens/{specimenId}/confirm-label")
+    public ResponseEntity<Map<String, Object>> confirmSpecimenLabel(
+            @PathVariable String id, @PathVariable String specimenId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ok(inpatientClient.confirmTheatreSpecimenLabel(id, specimenId), requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/specimens/{specimenId}/receive")
+    public ResponseEntity<Map<String, Object>> recordSpecimenReceipt(
+            @PathVariable String id, @PathVariable String specimenId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ok(inpatientClient.recordTheatreSpecimenReceipt(id, specimenId), requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/specimens/{specimenId}/adequacy")
+    public ResponseEntity<Map<String, Object>> assessSpecimenAdequacy(
+            @PathVariable String id, @PathVariable String specimenId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return ok(inpatientClient.assessTheatreSpecimenAdequacy(id, specimenId, body), requestId, correlationId);
+    }
+
     @PostMapping("/cases/{id}/transport/specimen")
     public ResponseEntity<Map<String, Object>> dispatchSpecimen(
             @PathVariable String id,

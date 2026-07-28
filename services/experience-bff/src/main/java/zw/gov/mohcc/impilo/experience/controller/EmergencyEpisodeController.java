@@ -139,6 +139,12 @@ public class EmergencyEpisodeController {
         return proxyGet(() -> pctClient.emergencyCommandSummary(facilityId), "PCT emergencyCommandSummary");
     }
 
+    /** MCI bulk-mint (W11): mint one emergency_episode per not-yet-minted casualty on an incident. */
+    @PostMapping("/mci/{incidentId}/bulk-mint")
+    public ResponseEntity<Map<String, Object>> mciBulkMint(@PathVariable UUID incidentId, @RequestParam UUID facilityId) {
+        return proxyPost(() -> pctClient.mciBulkMint(incidentId, facilityId), "PCT mciBulkMint", HttpStatus.OK);
+    }
+
     // ── Proxy plumbing ────────────────────────────────────────────────────────────────────────
 
     private static JsonNode requirePayload(JsonNode node, String operation) {

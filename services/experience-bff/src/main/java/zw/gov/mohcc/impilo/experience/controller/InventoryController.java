@@ -260,6 +260,73 @@ public class InventoryController {
         }
     }
 
+    // ── implant lifecycle (Wave P8 §14; inventory-service ImplantController is the SoR).
+    // remove/revise/recall-trace had no reachable path before SB-3: inpatient's theatre proxy
+    // only covers record/list + a case-side recall projection. tshepo-authz V302 gates these
+    // routes (resource types remove/revise/recall pinned to /inventory/implants). ──
+
+    @PostMapping("/implants/{patientImplantId}/remove")
+    public ResponseEntity<Map<String, Object>> removeImplant(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable UUID patientImplantId,
+            @RequestBody(required = false) JsonNode body) {
+        try {
+            JsonNode result = inventoryClient.removeImplant(patientImplantId.toString(),
+                    body != null ? body : objectMapper.createObjectNode());
+            return ResponseEntity.ok(response(result, requestId, correlationId));
+        } catch (Exception e) {
+            log.error("Implant removal record failed for link={}: {}", patientImplantId, e.getMessage());
+            return implantUnavailable("implant_removal_unavailable",
+                    "The removal could not be recorded against the implant register. It has NOT been saved.",
+                    requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/implants/{patientImplantId}/revise")
+    public ResponseEntity<Map<String, Object>> reviseImplant(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable UUID patientImplantId,
+            @RequestBody JsonNode body) {
+        try {
+            JsonNode result = inventoryClient.reviseImplant(patientImplantId.toString(), body);
+            return ResponseEntity.ok(response(result, requestId, correlationId));
+        } catch (Exception e) {
+            log.error("Implant revision record failed for link={}: {}", patientImplantId, e.getMessage());
+            return implantUnavailable("implant_revision_unavailable",
+                    "The revision could not be recorded against the implant register. It has NOT been saved.",
+                    requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/implants/recall")
+    public ResponseEntity<Map<String, Object>> traceImplantRecall(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(required = false) String udi,
+            @RequestParam(required = false) String lot) {
+        try {
+            JsonNode result = inventoryClient.traceImplantRecall(udi, lot);
+            return ResponseEntity.ok(response(result != null ? result : List.of(), requestId, correlationId));
+        } catch (Exception e) {
+            // An empty trace reads as "no patient carries this recalled device" — the one thing a
+            // failed lookup must never claim. 502, never an empty list.
+            log.error("Implant recall trace failed (udi={}, lot={}): {}", udi, lot, e.getMessage());
+            return implantUnavailable("implant_recall_trace_unavailable",
+                    "The recall trace could not be run. Do not treat this as no affected patients.",
+                    requestId, correlationId);
+        }
+    }
+
+    private static ResponseEntity<Map<String, Object>> implantUnavailable(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", code,
+                "message", message,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
     private static UUID resolveFacilityId(String facilityId) {
         if (facilityId == null || facilityId.isBlank()) {
             return null;

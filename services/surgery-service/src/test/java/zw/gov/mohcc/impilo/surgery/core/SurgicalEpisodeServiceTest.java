@@ -11,6 +11,8 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.OpenEpisodeRequest;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.SurgicalEpisodeView;
+import zw.gov.mohcc.impilo.surgery.integration.InpatientSpecimenClient;
+import zw.gov.mohcc.impilo.surgery.integration.InpatientSpecimenClient.SpecimenGateView;
 import zw.gov.mohcc.impilo.surgery.integration.PctProblemContributionClient;
 import zw.gov.mohcc.impilo.surgery.integration.PctProblemContributionClient.ContributionResult;
 import zw.gov.mohcc.impilo.surgery.persistence.entity.SurgicalEpisodeEntity;
@@ -38,6 +40,7 @@ class SurgicalEpisodeServiceTest {
 
     @Mock SurgicalEpisodeRepository repository;
     @Mock PctProblemContributionClient pctClient;
+    @Mock InpatientSpecimenClient specimenClient;
 
     private SurgicalEpisodeService service;
     private final UUID tenant = UUID.randomUUID();
@@ -45,7 +48,7 @@ class SurgicalEpisodeServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SurgicalEpisodeService(repository, pctClient);
+        service = new SurgicalEpisodeService(repository, pctClient, specimenClient);
         TrustContextHolder.set(new TrustContext(tenant, "actor-surgeon", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
         org.mockito.Mockito.lenient().when(repository.save(any())).thenAnswer(i -> {
@@ -159,6 +162,59 @@ class SurgicalEpisodeServiceTest {
         SurgicalEpisodeView v = service.transition(episodeId, "LISTED_FOR_SURGERY");
 
         assertEquals("LISTED_FOR_SURGERY", v.status());
+    }
+
+    /** §16 histology closure gate: no linked operation at all means nothing to gate on. */
+    @Test
+    void closingAnEpisodeWithNoLinkedOperationNeedsNoSpecimenCheck() {
+        SurgicalEpisodeEntity e = entity();
+        when(repository.findByIdAndTenantId(episodeId, tenant)).thenReturn(Optional.of(e));
+
+        SurgicalEpisodeView v = service.transition(episodeId, "CLOSED");
+
+        assertEquals("CLOSED", v.status());
+        verify(specimenClient, never()).specimenGate(any());
+    }
+
+    @Test
+    void closingAnEpisodeWithAllSpecimensReviewedSucceeds() {
+        SurgicalEpisodeEntity e = entity();
+        UUID procRef = UUID.randomUUID();
+        e.setProcedureEpisodeRef(procRef);
+        when(repository.findByIdAndTenantId(episodeId, tenant)).thenReturn(Optional.of(e));
+        when(specimenClient.specimenGate(procRef)).thenReturn(new SpecimenGateView(true, 2, 0));
+
+        SurgicalEpisodeView v = service.transition(episodeId, "CLOSED");
+
+        assertEquals("CLOSED", v.status());
+    }
+
+    @Test
+    void closingAnEpisodeWithUnreviewedHistologyIsRefused() {
+        SurgicalEpisodeEntity e = entity();
+        UUID procRef = UUID.randomUUID();
+        e.setProcedureEpisodeRef(procRef);
+        when(repository.findByIdAndTenantId(episodeId, tenant)).thenReturn(Optional.of(e));
+        when(specimenClient.specimenGate(procRef)).thenReturn(new SpecimenGateView(true, 2, 1));
+
+        SurgeryDomainException ex = assertThrows(SurgeryDomainException.class,
+                () -> service.transition(episodeId, "CLOSED"));
+        assertEquals("HISTOLOGY_UNREVIEWED", ex.getCode());
+    }
+
+    /** Fail-SAFE: an unanswerable specimen question blocks closure, opposite to the PCT client's own posture. */
+    @Test
+    void closingAnEpisodeWhenSpecimenStateIsUnknownIsRefused() {
+        SurgicalEpisodeEntity e = entity();
+        UUID procRef = UUID.randomUUID();
+        e.setProcedureEpisodeRef(procRef);
+        when(repository.findByIdAndTenantId(episodeId, tenant)).thenReturn(Optional.of(e));
+        when(specimenClient.specimenGate(procRef)).thenReturn(SpecimenGateView.UNKNOWN);
+
+        SurgeryDomainException ex = assertThrows(SurgeryDomainException.class,
+                () -> service.transition(episodeId, "CLOSED"));
+        assertEquals("SPECIMEN_STATE_UNKNOWN", ex.getCode());
+        assertEquals(503, ex.getStatus());
     }
 
     @Test

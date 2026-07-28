@@ -6,11 +6,14 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.pct.core.EmergencyAlertService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyDispositionService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeService;
+import zw.gov.mohcc.impilo.pct.core.EmergencyIdentityLinkService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyObservationStayService;
+import zw.gov.mohcc.impilo.pct.core.MciBulkMintService;
 import zw.gov.mohcc.impilo.pct.domain.EmergencyEpisodeState;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyDispositionEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyEpisodeEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyIdentityLinkEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyObservationStayEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -43,15 +46,21 @@ public class EmergencyEpisodeController {
     private final EmergencyDispositionService dispositionService;
     private final EmergencyObservationStayService observationStayService;
     private final EmergencyAlertService alertService;
+    private final MciBulkMintService mciBulkMintService;
+    private final EmergencyIdentityLinkService identityLinkService;
 
     public EmergencyEpisodeController(EmergencyEpisodeService episodeService,
                                       EmergencyDispositionService dispositionService,
                                       EmergencyObservationStayService observationStayService,
-                                      EmergencyAlertService alertService) {
+                                      EmergencyAlertService alertService,
+                                      MciBulkMintService mciBulkMintService,
+                                      EmergencyIdentityLinkService identityLinkService) {
         this.episodeService = episodeService;
         this.dispositionService = dispositionService;
         this.observationStayService = observationStayService;
         this.alertService = alertService;
+        this.mciBulkMintService = mciBulkMintService;
+        this.identityLinkService = identityLinkService;
     }
 
     @PostMapping("/episodes")
@@ -258,6 +267,47 @@ public class EmergencyEpisodeController {
         return ResponseEntity.ok(ApiResponse.ok(out, ctx.correlationId().toString()));
     }
 
+    // ── MCI bulk-mint (W11) ──────────────────────────────────────────────────────────────────
+
+    /** Mint one emergency_episode per not-yet-minted casualty on a daidzai MCI incident. */
+    @PostMapping("/mci/{incidentId}/bulk-mint")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> mciBulkMint(
+            @PathVariable UUID incidentId, @RequestParam UUID facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var results = mciBulkMintService.bulkMint(ctx.tenantId(), facilityId, incidentId);
+        return ResponseEntity.ok(ApiResponse.ok(results, ctx.correlationId().toString()));
+    }
+
+    // ── Identity link (W12) ──────────────────────────────────────────────────────────────────
+
+    /** Record how emergency now knows who this episode's patient is. See V210 for the full rationale. */
+    @PostMapping("/episodes/{episodeId}/identity-link")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> linkIdentity(@PathVariable UUID episodeId,
+                                                                          @RequestBody Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        String resolvedBy = str(body, "resolvedBy", "resolved_by");
+        var link = identityLinkService.linkIdentity(
+                ctx.tenantId(),
+                episodeId,
+                str(body, "resolvedSubjectCpid", "resolved_subject_cpid"),
+                str(body, "resolutionMethod", "resolution_method"),
+                str(body, "evidenceRef", "evidence_ref"),
+                str(body, "vitoMergeId", "vito_merge_id"),
+                resolvedBy != null ? resolvedBy : ctx.actorId());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(identityLinkRow(link), ctx.correlationId().toString()));
+    }
+
+    /** Full resolution history for an episode, most recent first — nothing is ever deleted. */
+    @GetMapping("/episodes/{episodeId}/identity-link")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> identityLinkHistory(
+            @PathVariable UUID episodeId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var history = identityLinkService.history(ctx.tenantId(), episodeId);
+        return ResponseEntity.ok(ApiResponse.ok(
+                history.stream().map(this::identityLinkRow).toList(), ctx.correlationId().toString()));
+    }
+
     // ── Mapping + parsing ────────────────────────────────────────────────────────────────────
 
     private EmergencyEpisodeService.OpenEpisodeCommand toOpenCommand(Map<String, Object> body, TrustContext ctx) {
@@ -352,6 +402,22 @@ public class EmergencyEpisodeController {
         m.put("ended_by", s.getEndedBy());
         m.put("outcome", s.getOutcome());
         m.put("notes", s.getNotes());
+        return m;
+    }
+
+    private Map<String, Object> identityLinkRow(EmergencyIdentityLinkEntity l) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("link_id", l.getLinkId().toString());
+        m.put("episode_id", l.getEpisodeId().toString());
+        m.put("previous_identity_mode", l.getPreviousIdentityMode());
+        m.put("previous_subject_cpid", l.getPreviousSubjectCpid());
+        m.put("resolved_subject_cpid", l.getResolvedSubjectCpid());
+        m.put("resolution_method", l.getResolutionMethod());
+        m.put("evidence_ref", l.getEvidenceRef());
+        m.put("vito_merge_id", l.getVitoMergeId());
+        m.put("resolved_by", l.getResolvedBy());
+        m.put("resolved_at", l.getResolvedAt() != null ? l.getResolvedAt().toString() : null);
+        m.put("superseded_by", l.getSupersededBy() != null ? l.getSupersededBy().toString() : null);
         return m;
     }
 

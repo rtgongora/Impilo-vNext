@@ -186,6 +186,46 @@ class TheatreControllerTest {
         assertEquals("shr-doc-1", data.get("butano_document_ref").asText());
     }
 
+    // ── specimen custody chain (Wave P8 §13, wired by SB-3) ──
+
+    @Test
+    void specimenCollect_wrapsCustodyRow() {
+        ResponseEntity<Map<String, Object>> r = controller().recordSpecimenCollection("c1", "sp1",
+                "req-sc", "corr-sc", Map.of("containerType", "FORMALIN_POT", "fixative", "FORMALIN"));
+        assertEquals(200, r.getStatusCode().value());
+        assertEquals("COLLECTED", ((JsonNode) r.getBody().get("data")).get("custody_status").asText());
+    }
+
+    @Test
+    void specimenConfirmLabel_passesThrough() {
+        ResponseEntity<Map<String, Object>> r = controller().confirmSpecimenLabel("c1", "sp1", "req-cl", "corr-cl");
+        assertEquals("LABEL_CONFIRMED", ((JsonNode) r.getBody().get("data")).get("custody_status").asText());
+    }
+
+    @Test
+    void specimenReceive_passesThrough() {
+        ResponseEntity<Map<String, Object>> r = controller().recordSpecimenReceipt("c1", "sp1", "req-rc", "corr-rc");
+        assertEquals("RECEIVED", ((JsonNode) r.getBody().get("data")).get("custody_status").asText());
+    }
+
+    @Test
+    void specimenAdequacy_forwardsTheAssessment() {
+        ResponseEntity<Map<String, Object>> r = controller().assessSpecimenAdequacy("c1", "sp1",
+                "req-ad", "corr-ad", Map.of("adequacy", "ADEQUATE"));
+        assertEquals("ADEQUATE", ((JsonNode) r.getBody().get("data")).get("adequacy").asText());
+    }
+
+    /**
+     * Custody writes must never fake success: a downstream failure propagates (to
+     * BffGlobalExceptionHandler in production) rather than being caught and wrapped in a 200 —
+     * the failure mode the read-side soft-falls above are already known to risk.
+     */
+    @Test
+    void specimenCustodyWriteFailure_propagates() {
+        assertThrows(RuntimeException.class,
+                () -> controller().recordSpecimenReceipt("boom", "sp1", "req-x", "corr-x"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -278,6 +318,25 @@ class TheatreControllerTest {
 
         @Override public JsonNode completeTheatreDischarge(String caseId, Map<String, Object> body) {
             return mapper.createObjectNode().put("status", "COMPLETED").put("butano_document_ref", "shr-doc-1");
+        }
+
+        @Override public JsonNode recordTheatreSpecimenCollection(String caseId, String specimenId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("specimen_id", specimenId).put("custody_status", "COLLECTED")
+                    .put("container_type", String.valueOf(body.get("containerType")));
+        }
+
+        @Override public JsonNode confirmTheatreSpecimenLabel(String caseId, String specimenId) {
+            return mapper.createObjectNode().put("specimen_id", specimenId).put("custody_status", "LABEL_CONFIRMED");
+        }
+
+        @Override public JsonNode recordTheatreSpecimenReceipt(String caseId, String specimenId) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode().put("specimen_id", specimenId).put("custody_status", "RECEIVED");
+        }
+
+        @Override public JsonNode assessTheatreSpecimenAdequacy(String caseId, String specimenId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("specimen_id", specimenId)
+                    .put("adequacy", String.valueOf(body.get("adequacy")));
         }
     }
 }
