@@ -40,7 +40,7 @@ class TerminationServiceTest {
     void setUp() {
         authorisations = mock(TopAuthorisationRepository.class);
         procedures = mock(TopProcedureRepository.class);
-        service = new TerminationService(authorisations, procedures, inertConfidentiality());
+        service = new TerminationService(authorisations, procedures, inertConfidentiality(), new ConfidentialRecordGuard());
         when(authorisations.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(procedures.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }

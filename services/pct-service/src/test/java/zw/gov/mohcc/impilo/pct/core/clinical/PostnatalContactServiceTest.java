@@ -34,7 +34,7 @@ class PostnatalContactServiceTest {
     @BeforeEach
     void setUp() {
         repo = mock(PostnatalContactRepository.class);
-        service = new PostnatalContactService(repo, inertConfidentiality());
+        service = new PostnatalContactService(repo, inertConfidentiality(), new ConfidentialRecordGuard());
         when(repo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(repo.findByTenantIdAndClientOfflineId(any(), any())).thenReturn(Optional.empty());
     }

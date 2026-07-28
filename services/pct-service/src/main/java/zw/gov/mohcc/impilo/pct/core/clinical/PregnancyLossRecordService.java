@@ -33,11 +33,14 @@ public class PregnancyLossRecordService {
     private final PregnancyLossRecordRepository losses;
 
     private final ConfidentialCarePolicyProvider confidentiality;
+    private final ConfidentialRecordGuard confidentialRecords;
 
     public PregnancyLossRecordService(PregnancyLossRecordRepository losses,
-                                      ConfidentialCarePolicyProvider confidentiality) {
+                                      ConfidentialCarePolicyProvider confidentiality,
+                                      ConfidentialRecordGuard confidentialRecords) {
         this.losses = losses;
         this.confidentiality = confidentiality;
+        this.confidentialRecords = confidentialRecords;
     }
 
     /**
@@ -73,7 +76,9 @@ public class PregnancyLossRecordService {
         if (tenantId == null || motherCpid == null || motherCpid.isBlank()) {
             return List.of();
         }
-        return losses.findByMother(tenantId, motherCpid);
+        return confidentialRecords.filter(losses.findByMother(tenantId, motherCpid),
+                PregnancyLossRecordEntity::getSensitivityClass,
+                PregnancyLossRecordEntity::getConfidentialityCategory);
     }
 
     @Transactional

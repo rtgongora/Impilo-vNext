@@ -35,7 +35,7 @@ class PregnancyLossRecordServiceTest {
     @BeforeEach
     void setUp() {
         repo = mock(PregnancyLossRecordRepository.class);
-        service = new PregnancyLossRecordService(repo, inertConfidentiality());
+        service = new PregnancyLossRecordService(repo, inertConfidentiality(), new ConfidentialRecordGuard());
         when(repo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(repo.findByTenantIdAndClientOfflineId(any(), any())).thenReturn(Optional.empty());
     }

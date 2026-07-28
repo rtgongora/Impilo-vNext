@@ -27,11 +27,14 @@ public class PostnatalContactService {
     private final PostnatalContactRepository contacts;
 
     private final ConfidentialCarePolicyProvider confidentiality;
+    private final ConfidentialRecordGuard confidentialRecords;
 
     public PostnatalContactService(PostnatalContactRepository contacts,
-                                   ConfidentialCarePolicyProvider confidentiality) {
+                                   ConfidentialCarePolicyProvider confidentiality,
+                                   ConfidentialRecordGuard confidentialRecords) {
         this.contacts = contacts;
         this.confidentiality = confidentiality;
+        this.confidentialRecords = confidentialRecords;
     }
 
     /**
@@ -64,7 +67,9 @@ public class PostnatalContactService {
         if (tenantId == null || motherCpid == null || motherCpid.isBlank()) {
             return List.of();
         }
-        return contacts.findByMother(tenantId, motherCpid);
+        return confidentialRecords.filter(contacts.findByMother(tenantId, motherCpid),
+                PostnatalContactEntity::getSensitivityClass,
+                PostnatalContactEntity::getConfidentialityCategory);
     }
 
     @Transactional
