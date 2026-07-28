@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.pct.core.EmergencyAlertService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyDispositionService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyObservationStayService;
@@ -41,13 +42,16 @@ public class EmergencyEpisodeController {
     private final EmergencyEpisodeService episodeService;
     private final EmergencyDispositionService dispositionService;
     private final EmergencyObservationStayService observationStayService;
+    private final EmergencyAlertService alertService;
 
     public EmergencyEpisodeController(EmergencyEpisodeService episodeService,
                                       EmergencyDispositionService dispositionService,
-                                      EmergencyObservationStayService observationStayService) {
+                                      EmergencyObservationStayService observationStayService,
+                                      EmergencyAlertService alertService) {
         this.episodeService = episodeService;
         this.dispositionService = dispositionService;
         this.observationStayService = observationStayService;
+        this.alertService = alertService;
     }
 
     @PostMapping("/episodes")
@@ -223,6 +227,35 @@ public class EmergencyEpisodeController {
         TrustContext ctx = TrustContextHolder.require();
         var stay = observationStayService.end(stayId, ctx.tenantId(), body);
         return ResponseEntity.ok(ApiResponse.ok(observationStayRow(stay), ctx.correlationId().toString()));
+    }
+
+    // ── Command view (W10) ───────────────────────────────────────────────────────────────────
+
+    /**
+     * The command-view summary: episode counts by FSM state + open-alert counts by severity, for one
+     * facility. Composes {@link EmergencyEpisodeService#board} and {@link EmergencyAlertService#board}
+     * — no new pct system of record, per this wave's own scope (capacity lives in tuso, this is a
+     * read composition only).
+     */
+    @GetMapping("/command-summary")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> commandSummary(@RequestParam UUID facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var episodes = episodeService.board(ctx.tenantId(), facilityId);
+        var alerts = alertService.board(ctx.tenantId(), facilityId);
+
+        Map<String, Long> byState = episodes.stream()
+                .collect(java.util.stream.Collectors.groupingBy(EmergencyEpisodeEntity::getState, java.util.LinkedHashMap::new, java.util.stream.Collectors.counting()));
+        Map<String, Long> alertsBySeverity = alerts.stream()
+                .collect(java.util.stream.Collectors.groupingBy(a -> a.getSeverity() == null ? "UNKNOWN" : a.getSeverity(),
+                        java.util.LinkedHashMap::new, java.util.stream.Collectors.counting()));
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("facility_id", facilityId.toString());
+        out.put("open_episode_count", episodes.size());
+        out.put("episodes_by_state", byState);
+        out.put("open_alert_count", alerts.size());
+        out.put("alerts_by_severity", alertsBySeverity);
+        return ResponseEntity.ok(ApiResponse.ok(out, ctx.correlationId().toString()));
     }
 
     // ── Mapping + parsing ────────────────────────────────────────────────────────────────────

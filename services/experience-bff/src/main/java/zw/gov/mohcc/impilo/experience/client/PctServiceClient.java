@@ -1215,6 +1215,15 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** Episode-by-state + alert-by-severity counts for one facility (W10 command view). */
+    public JsonNode emergencyCommandSummary(UUID facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/emergency/command-summary")
+                .queryParam("facilityId", facilityId)
+                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Clinical Depth — Care Plans (strangler migration) ───────
 
     public JsonNode addCarePlanGoal(String planId, Map<String, Object> body) {

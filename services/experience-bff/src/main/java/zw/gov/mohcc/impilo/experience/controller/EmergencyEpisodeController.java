@@ -133,6 +133,12 @@ public class EmergencyEpisodeController {
         return proxyPost(() -> pctClient.respondEmergencyAlert(alertId, body), "PCT respondEmergencyAlert", HttpStatus.OK);
     }
 
+    /** Episode-by-state + alert-by-severity counts for one facility (W10 command view). */
+    @GetMapping("/command-summary")
+    public ResponseEntity<Map<String, Object>> commandSummary(@RequestParam UUID facilityId) {
+        return proxyGet(() -> pctClient.emergencyCommandSummary(facilityId), "PCT emergencyCommandSummary");
+    }
+
     // ── Proxy plumbing ────────────────────────────────────────────────────────────────────────
 
     private static JsonNode requirePayload(JsonNode node, String operation) {

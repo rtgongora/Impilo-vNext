@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import zw.gov.mohcc.impilo.pct.core.EmergencyAlertService;
+import zw.gov.mohcc.impilo.pct.core.EmergencyAlertServiceTest;
 import zw.gov.mohcc.impilo.pct.core.EmergencyDispositionService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyDispositionServiceTest;
 import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeService;
@@ -51,7 +53,8 @@ class EmergencyEpisodeControllerTest {
                 repo, new EmergencyDispositionServiceTest.InMemoryDispositionRepo(), service);
         EmergencyObservationStayService observationStayService = new EmergencyObservationStayService(
                 repo, new EmergencyObservationStayServiceTest.InMemoryStayRepo());
-        controller = new EmergencyEpisodeController(service, dispositionService, observationStayService);
+        EmergencyAlertService alertService = new EmergencyAlertService(new EmergencyAlertServiceTest.InMemoryAlertRepo());
+        controller = new EmergencyEpisodeController(service, dispositionService, observationStayService, alertService);
         TrustContextHolder.set(new TrustContext(TENANT, "nurse-A", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
     }
@@ -138,6 +141,22 @@ class EmergencyEpisodeControllerTest {
         var declined = controller.declineHandover(handoverId, Map.of(
                 "declinedBy", "surgeon-C", "reason", "no theatre slot"));
         assertEquals("OPEN_IN_CARE", declined.getBody().data().get("state"));
+    }
+
+    @Test
+    @DisplayName("command-summary composes episode-by-state and alert-by-severity counts for a facility")
+    void commandSummaryComposesCounts() {
+        controller.open(Map.of("entryRoute", "WALK_IN", "facilityId", FACILITY.toString()));
+        controller.open(Map.of("entryRoute", "AMBULANCE", "facilityId", FACILITY.toString()));
+
+        var response = controller.commandSummary(FACILITY);
+        assertEquals(200, response.getStatusCode().value());
+        var data = response.getBody().data();
+        assertEquals(2, data.get("open_episode_count"));
+        assertEquals(0, data.get("open_alert_count"));
+        @SuppressWarnings("unchecked")
+        var byState = (Map<String, Long>) data.get("episodes_by_state");
+        assertEquals(2L, byState.get("PRE_ARRIVAL"));
     }
 
     @Test
