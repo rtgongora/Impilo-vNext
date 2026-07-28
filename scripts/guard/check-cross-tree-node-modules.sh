@@ -67,13 +67,6 @@ for link in "${LINKS[@]}"; do
   VIOLATIONS+=("$link -> $target")
 done
 
-# Self-reach: a tree with no node_modules at all has not been installed, and this guard has
-# inspected nothing. Say so rather than reporting a clean pass.
-if [[ ! -d "$TREE/node_modules" && ! -d "$TREE/ui/node_modules" && ! -d "$TREE/apps/mobile/node_modules" ]]; then
-  echo "GUARD PASS  $GUARD_NAME  (no node_modules present in $TREE — nothing installed to check)"
-  exit 0
-fi
-
 if (( ${#VIOLATIONS[@]} > 0 )); then
   echo "GUARD FAIL  $GUARD_NAME: ${#VIOLATIONS[@]} node_modules symlink(s) point outside this checkout."
   for v in "${VIOLATIONS[@]}"; do
@@ -90,6 +83,16 @@ if (( ${#VIOLATIONS[@]} > 0 )); then
   done
   echo "    cd ui && npm ci --ignore-scripts -w one-ui-shell"
   exit 1
+fi
+
+# Self-reach, reported only once violations have been ruled out. This check used to sit ABOVE the
+# violation report, which made it an early return that could mask a real finding: a tree whose
+# node_modules had been removed but which still held a cross-tree link inside build output
+# (.next-build/standalone/one-ui-shell/node_modules) reported a clean pass. An early return that
+# skips the thing the guard exists to find is the same defect this guard is chasing.
+if [[ ! -d "$TREE/node_modules" && ! -d "$TREE/ui/node_modules" && ! -d "$TREE/apps/mobile/node_modules" ]]; then
+  echo "GUARD PASS  $GUARD_NAME  (no cross-tree links; note: nothing installed in $TREE)"
+  exit 0
 fi
 
 echo "GUARD PASS  $GUARD_NAME  (checked $SCANNED node_modules path(s) in $TREE)"
