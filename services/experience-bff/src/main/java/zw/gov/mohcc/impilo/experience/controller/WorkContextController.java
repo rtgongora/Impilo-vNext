@@ -273,6 +273,99 @@ public class WorkContextController {
     }
 
     /**
+     * Switch mode WITHIN an already-resolved work context (Phase C, first use of
+     * {@link WorkContextResolutionService#proveContext}) — e.g. a ward charge
+     * nurse moving CLINICAL_CARE → DEPARTMENT_MANAGEMENT at the same facility.
+     * A mode change is never a token mutation, for the same reason a context
+     * switch never is: the mode IS the access envelope. Always mints a fresh
+     * token and revokes {@code previousJti}.
+     *
+     * <p>{@code contextId} is a value the caller must already hold from
+     * {@code GET /work-context/resolved} — it is re-proven against source here,
+     * never trusted as a bearer credential.</p>
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/session/mode")
+    public ResponseEntity<Map<String, Object>> switchWorkMode(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @org.springframework.web.bind.annotation.RequestBody Map<String, Object> body) {
+
+        String contextId = str(body.get("contextId"));
+        String requestedMode = str(body.get("workMode"));
+        String previousJti = str(body.get("previousJti"));
+
+        if (contextId == null || requestedMode == null) {
+            return errorBody(org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "INVALID_REQUEST", "contextId and workMode are required.", requestId, correlationId);
+        }
+
+        zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext proven =
+                resolutionService.proveContext(actorId, null, contextId);
+        if (proven == null) {
+            // Generic denial — never discloses whether the contextId is unknown,
+            // expired, or belongs to someone else.
+            return errorBody(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "WORK_SESSION_UNAVAILABLE",
+                    "Work access is currently unavailable for the selected context.",
+                    requestId, correlationId);
+        }
+        if (!proven.availableModes().contains(requestedMode)) {
+            // Generic denial — never enumerates which modes ARE available.
+            return errorBody(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "WORK_MODE_UNAVAILABLE",
+                    "The requested mode is currently unavailable for this context.",
+                    requestId, correlationId);
+        }
+
+        Map<String, Object> issueRequest = new LinkedHashMap<>();
+        issueRequest.put("tenantId", tenantId);
+        issueRequest.put("actorId", actorId);
+        issueRequest.put("workMode", requestedMode);
+        issueRequest.put("contextId", proven.contextId());
+        issueRequest.put("contextKind", proven.contextKind());
+        putIfPresent(issueRequest, "facilityId", proven.facilityId());
+        putIfPresent(issueRequest, "organisationId", proven.organisationId());
+        putIfPresent(issueRequest, "jurisdictionCode", proven.jurisdictionCode());
+        putIfPresent(issueRequest, "programmeId", proven.programmeId());
+        putIfPresent(issueRequest, "departmentId", proven.departmentId());
+        putIfPresent(issueRequest, "wardId", proven.wardId());
+        putIfPresent(issueRequest, "workspaceId", proven.workspaceId());
+        putIfPresent(issueRequest, "servicePointId", proven.servicePointId());
+        putIfPresent(issueRequest, "roleTemplateId", proven.roleTemplateId());
+        if (previousJti != null) {
+            issueRequest.put("previousJti", previousJti);
+        }
+
+        JsonNode issued = tshepoIdentityClient.issueWorkContextToken(issueRequest);
+        JsonNode data = issued != null ? issued.path("data") : null;
+        if (data == null || data.isMissingNode() || data.isNull()) {
+            return errorBody(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                    "WORK_TOKEN_UNAVAILABLE", "The mode switch could not be completed. Try again.",
+                    requestId, correlationId);
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("token", text(data, "token"));
+        attributes.put("jti", text(data, "jti"));
+        attributes.put("expiresAt", text(data, "expiresAt"));
+        attributes.put("contextId", proven.contextId());
+        attributes.put("workMode", requestedMode);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", actorId, "type", "work-mode-session", "attributes", attributes));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    private static void putIfPresent(Map<String, Object> target, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            target.put(key, value);
+        }
+    }
+
+    /**
      * The signed-in person's regulatory appointments (ROM-W2) — drives the regulatory workspace
      * picker. Composition only; org-registry is the SoR. Degrades to an empty list.
      */

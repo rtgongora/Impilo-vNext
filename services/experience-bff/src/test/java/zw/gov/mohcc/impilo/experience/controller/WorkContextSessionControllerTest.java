@@ -167,4 +167,73 @@ class WorkContextSessionControllerTest {
         assertThat(attrs.get("linked")).isEqualTo(false);
         assertThat((String) attrs.get("remediation")).contains("Request Provider Access");
     }
+
+    // ── POST /session/mode (Phase C — in-context mode switching) ────────────
+
+    private zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext provenContext(java.util.List<String> availableModes) {
+        return new zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext(
+                "ctx-1", "facility", "VASHANDI", "assignment-1",
+                facilityId, null, null, null,
+                "WARD_CHARGE_NURSE", java.util.List.of(), availableModes, availableModes.isEmpty() ? null : availableModes.get(0),
+                "CATALOG", "dep-1", "dep-1", null, null, workspaceId,
+                null, java.util.List.of(), "label", "regular", 0);
+    }
+
+    @Test
+    void switchWorkMode_provenContextAndAvailableMode_mintsFreshToken() throws Exception {
+        when(resolutionService.proveContext(actorId, null, "ctx-1"))
+                .thenReturn(provenContext(java.util.List.of("CLINICAL_CARE", "DEPARTMENT_MANAGEMENT")));
+        when(tshepoIdentityClient.issueWorkContextToken(any())).thenReturn(MAPPER.readTree(
+                "{\"data\":{\"token\":\"jws2\",\"jti\":\"jti-2\",\"expiresAt\":\"2026-07-19T12:00:00Z\"}}"));
+
+        ResponseEntity<Map<String, Object>> response = controller.switchWorkMode(
+                tenantId, "req-1", "corr-1", actorId,
+                Map.of("contextId", "ctx-1", "workMode", "DEPARTMENT_MANAGEMENT", "previousJti", "old-jti"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> attrs = (Map<String, Object>) data.get("attributes");
+        assertThat(attrs.get("jti")).isEqualTo("jti-2");
+        assertThat(attrs.get("workMode")).isEqualTo("DEPARTMENT_MANAGEMENT");
+
+        var captor = org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(tshepoIdentityClient).issueWorkContextToken(captor.capture());
+        assertThat(captor.getValue().get("workMode")).isEqualTo("DEPARTMENT_MANAGEMENT");
+        assertThat(captor.getValue().get("previousJti")).isEqualTo("old-jti");
+        assertThat(captor.getValue().get("departmentId")).isEqualTo("dep-1");
+    }
+
+    @Test
+    void switchWorkMode_unprovenContext_genericDenial() {
+        when(resolutionService.proveContext(actorId, null, "unknown-ctx")).thenReturn(null);
+
+        ResponseEntity<Map<String, Object>> response = controller.switchWorkMode(
+                tenantId, "req-1", "corr-1", actorId,
+                Map.of("contextId", "unknown-ctx", "workMode", "CLINICAL_CARE"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
+        assertThat(error.get("code")).isEqualTo("WORK_SESSION_UNAVAILABLE");
+        verify(tshepoIdentityClient, never()).issueWorkContextToken(any());
+    }
+
+    @Test
+    void switchWorkMode_modeNotAvailableForContext_genericDenialNeverEnumerates() {
+        when(resolutionService.proveContext(actorId, null, "ctx-1"))
+                .thenReturn(provenContext(java.util.List.of("CLINICAL_CARE")));
+
+        ResponseEntity<Map<String, Object>> response = controller.switchWorkMode(
+                tenantId, "req-1", "corr-1", actorId,
+                Map.of("contextId", "ctx-1", "workMode", "FACILITY_MANAGEMENT"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
+        assertThat(error.get("code")).isEqualTo("WORK_MODE_UNAVAILABLE");
+        assertThat(error.get("message").toString()).doesNotContain("CLINICAL_CARE");
+        verify(tshepoIdentityClient, never()).issueWorkContextToken(any());
+    }
 }
