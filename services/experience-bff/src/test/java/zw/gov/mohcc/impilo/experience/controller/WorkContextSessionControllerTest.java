@@ -40,6 +40,9 @@ class WorkContextSessionControllerTest {
     // Cross-lane completion (TM-B20 unblock): the ROM/org-registry work added a 4th ctor dependency
     // but did not update this test — supply the mock so the whole bff test suite compiles.
     @Mock private zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient orgRegistryClient;
+    // Phase C: the resolver is a 5th ctor dependency (GET /work-context/resolved), unused by the
+    // session-mint tests below — supplied only so the constructor call compiles.
+    @Mock private zw.gov.mohcc.impilo.experience.workcontext.WorkContextResolutionService resolutionService;
 
     private WorkContextController controller;
 
@@ -50,7 +53,7 @@ class WorkContextSessionControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new WorkContextController(vashandiClient, varapiClient, tshepoIdentityClient, orgRegistryClient);
+        controller = new WorkContextController(vashandiClient, varapiClient, tshepoIdentityClient, orgRegistryClient, resolutionService);
     }
 
     private JsonNode provider() throws Exception {

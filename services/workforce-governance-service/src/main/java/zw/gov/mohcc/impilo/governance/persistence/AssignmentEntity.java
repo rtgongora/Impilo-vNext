@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -79,6 +80,22 @@ public class AssignmentEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /**
+     * Enrichment fields (Phase C — the work-context resolver), populated by
+     * {@link zw.gov.mohcc.impilo.governance.core.AssignmentService#search} after
+     * fetch, NOT persisted. roleDefinitionId/jurisdictionId are opaque FKs on
+     * the wire otherwise — a resolver consuming /assignments/search cannot
+     * derive a WorkMode or a human jurisdiction code without them.
+     */
+    @Transient
+    private String roleCode;
+    @Transient
+    private String roleCategory;
+    @Transient
+    private String roleLevel;
+    @Transient
+    private String jurisdictionCode;
+
     protected AssignmentEntity() {}
 
     public AssignmentEntity(UUID id, UUID tenantId, String subjectType, String subjectId, UUID roleDefinitionId,
@@ -131,4 +148,13 @@ public class AssignmentEntity {
     public void setExtensionJson(String extensionJson) { this.extensionJson = extensionJson; touch(); }
 
     private void touch() { this.updatedAt = Instant.now(); }
+
+    public String getRoleCode() { return roleCode; }
+    public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
+    public String getRoleCategory() { return roleCategory; }
+    public void setRoleCategory(String roleCategory) { this.roleCategory = roleCategory; }
+    public String getRoleLevel() { return roleLevel; }
+    public void setRoleLevel(String roleLevel) { this.roleLevel = roleLevel; }
+    public String getJurisdictionCode() { return jurisdictionCode; }
+    public void setJurisdictionCode(String jurisdictionCode) { this.jurisdictionCode = jurisdictionCode; }
 }

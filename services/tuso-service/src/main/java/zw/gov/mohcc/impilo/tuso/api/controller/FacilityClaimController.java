@@ -82,6 +82,19 @@ public class FacilityClaimController {
                 claimService.listByState(state), ctx.correlationId().toString()));
     }
 
+    /**
+     * Every facility-management appointment a person holds, across facilities
+     * (Phase C — feeds the experience-bff work-context resolver). Defaults to ACTIVE.
+     */
+    @GetMapping("/v1/internal/facility-admin-appointments/by-person/{personHealthId}")
+    public ResponseEntity<ApiResponse<List<FacilityClaimDtos.AppointmentView>>> appointmentsByPerson(
+            @PathVariable String personHealthId,
+            @RequestParam(name = "state", required = false) String state) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(
+                claimService.listByPerson(personHealthId, state), ctx.correlationId().toString()));
+    }
+
     /** Approve a PENDING appointment → ACTIVE. */
     @PostMapping("/v1/internal/facility-admin-appointments/{appointmentId}/approve")
     public ResponseEntity<ApiResponse<FacilityClaimDtos.AppointmentView>> approve(

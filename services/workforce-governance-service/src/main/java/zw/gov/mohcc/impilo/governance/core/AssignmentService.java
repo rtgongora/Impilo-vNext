@@ -21,6 +21,7 @@ public class AssignmentService {
     private final AssignmentStatusHistoryRepository historyRepository;
     private final RoleDefinitionRepository roleDefinitionRepository;
     private final ProgrammeRepository programmeRepository;
+    private final JurisdictionRepository jurisdictionRepository;
     private final GovernanceEventService governanceEventService;
     private final ObjectMapper objectMapper;
 
@@ -28,12 +29,14 @@ public class AssignmentService {
                              AssignmentStatusHistoryRepository historyRepository,
                              RoleDefinitionRepository roleDefinitionRepository,
                              ProgrammeRepository programmeRepository,
+                             JurisdictionRepository jurisdictionRepository,
                              GovernanceEventService governanceEventService,
                              ObjectMapper objectMapper) {
         this.assignmentRepository = assignmentRepository;
         this.historyRepository = historyRepository;
         this.roleDefinitionRepository = roleDefinitionRepository;
         this.programmeRepository = programmeRepository;
+        this.jurisdictionRepository = jurisdictionRepository;
         this.governanceEventService = governanceEventService;
         this.objectMapper = objectMapper;
     }
@@ -179,23 +182,49 @@ public class AssignmentService {
                                          String subjectType,
                                          String subjectId,
                                          String status) {
+        List<AssignmentEntity> result;
         if (subjectType != null && subjectId != null) {
             List<AssignmentEntity> rows = assignmentRepository
                     .findByTenantIdAndSubjectTypeAndSubjectIdOrderByCreatedAtDesc(tenantId, subjectType, subjectId);
             if (status == null) {
-                return rows;
-            }
-            List<AssignmentEntity> out = new ArrayList<>();
-            for (AssignmentEntity r : rows) {
-                if (status.equals(r.getStatus())) {
-                    out.add(r);
+                result = rows;
+            } else {
+                List<AssignmentEntity> out = new ArrayList<>();
+                for (AssignmentEntity r : rows) {
+                    if (status.equals(r.getStatus())) {
+                        out.add(r);
+                    }
                 }
+                result = out;
             }
-            return out;
+        } else if (status != null) {
+            result = assignmentRepository.findByTenantIdAndStatus(tenantId, status);
+        } else {
+            result = assignmentRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
         }
-        if (status != null) {
-            return assignmentRepository.findByTenantIdAndStatus(tenantId, status);
+        enrich(result);
+        return result;
+    }
+
+    /**
+     * Populate the transient roleCode/roleCategory/roleLevel/jurisdictionCode
+     * fields (Phase C) so a resolver consuming /assignments/search can derive
+     * a WorkMode without a second round-trip per assignment. Best-effort: a
+     * lookup miss leaves the field null, never fabricated.
+     */
+    private void enrich(List<AssignmentEntity> assignments) {
+        for (AssignmentEntity a : assignments) {
+            if (a.getRoleDefinitionId() != null) {
+                roleDefinitionRepository.findById(a.getRoleDefinitionId()).ifPresent(role -> {
+                    a.setRoleCode(role.getRoleCode());
+                    a.setRoleCategory(role.getRoleCategory());
+                    a.setRoleLevel(role.getRoleLevel());
+                });
+            }
+            if (a.getJurisdictionId() != null) {
+                jurisdictionRepository.findById(a.getJurisdictionId())
+                        .ifPresent(j -> a.setJurisdictionCode(j.getJurisdictionCode()));
+            }
         }
-        return assignmentRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
     }
 }

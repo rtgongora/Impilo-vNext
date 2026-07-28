@@ -56,6 +56,17 @@ public class SupportContextController {
         }
     }
 
+    @GetMapping("/teams/{teamId}")
+    public ResponseEntity<?> getTeam(@PathVariable UUID teamId) {
+        RequestContext ctx = RequestContextHolder.require();
+        try {
+            return ResponseEntity.ok(toTeamResponse(service.getTeam(teamId)));
+        } catch (SupportContextService.NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorEnvelope.of("NOT_FOUND", e.getMessage(), ctx.requestId(), ctx.correlationId()));
+        }
+    }
+
     @GetMapping("/teams")
     public ResponseEntity<?> listTeams() {
         RequestContext ctx = RequestContextHolder.require();

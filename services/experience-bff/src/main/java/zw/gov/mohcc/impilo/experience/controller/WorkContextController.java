@@ -10,7 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
+import zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext;
+import zw.gov.mohcc.impilo.experience.workcontext.WorkContextResolutionService;
+import zw.gov.mohcc.impilo.experience.workcontext.WorkContextSourceStatus;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,15 +40,81 @@ public class WorkContextController {
     private final zw.gov.mohcc.impilo.experience.client.VarapiServiceClient varapiClient;
     private final zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityClient;
     private final zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient orgRegistryClient;
+    private final WorkContextResolutionService resolutionService;
 
     public WorkContextController(VashandiServiceClient vashandiClient,
                                  zw.gov.mohcc.impilo.experience.client.VarapiServiceClient varapiClient,
                                  zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityClient,
-                                 zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient orgRegistryClient) {
+                                 zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient orgRegistryClient,
+                                 WorkContextResolutionService resolutionService) {
         this.vashandiClient = vashandiClient;
         this.varapiClient = varapiClient;
         this.tshepoIdentityClient = tshepoIdentityClient;
         this.orgRegistryClient = orgRegistryClient;
+        this.resolutionService = resolutionService;
+    }
+
+    /**
+     * Typed lane for the context chooser (Phase C): unions all six work-context
+     * families (facility clinical, department/facility/jurisdiction/programme
+     * management, virtual, technical/facility support, regulatory) into one
+     * ranked, deduplicated list, instead of the caller having to separately
+     * poll the facility-clinical-only {@code GET /work-context} above.
+     */
+    @GetMapping("/resolved")
+    public ResponseEntity<Map<String, Object>> getResolvedWorkContexts(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String entryRoute) {
+
+        WorkContextResolutionService.ResolutionOutcome outcome = resolutionService.resolve(actorId, entryRoute);
+
+        List<Map<String, Object>> contexts = new ArrayList<>();
+        for (ResolvedWorkContext c : outcome.contexts()) {
+            contexts.add(toContextView(c));
+        }
+        List<Map<String, Object>> statuses = new ArrayList<>();
+        for (WorkContextSourceStatus s : outcome.sourceStatuses()) {
+            Map<String, Object> sv = new LinkedHashMap<>();
+            sv.put("system", s.system());
+            sv.put("state", s.state().name());
+            if (s.message() != null) sv.put("message", s.message());
+            statuses.add(sv);
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("contexts", contexts);
+        attributes.put("sourceStatuses", statuses);
+        attributes.put("recommendedContextId", outcome.recommendedContextId());
+        attributes.put("requiresContextChooser", outcome.requiresContextChooser());
+        attributes.put("friendlyResolutionState", outcome.friendlyResolutionState() != null ? outcome.friendlyResolutionState() : "");
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", actorId, "type", "work-context-resolved", "attributes", attributes));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    private static Map<String, Object> toContextView(ResolvedWorkContext c) {
+        Map<String, Object> v = new LinkedHashMap<>();
+        v.put("contextId", c.contextId());
+        v.put("contextKind", c.contextKind());
+        v.put("sourceSystem", c.sourceSystem());
+        v.put("facilityId", c.facilityId());
+        v.put("organisationId", c.organisationId());
+        v.put("jurisdictionCode", c.jurisdictionCode());
+        v.put("programmeId", c.programmeId());
+        v.put("departmentId", c.departmentId());
+        v.put("roleTemplateId", c.roleTemplateId());
+        v.put("availableModes", c.availableModes());
+        v.put("defaultMode", c.defaultMode());
+        v.put("modeSource", c.modeSource());
+        v.put("restrictions", c.restrictions());
+        v.put("label", c.label());
+        v.put("groupHint", c.groupHint());
+        v.put("rankScore", c.rankScore());
+        return v;
     }
 
     @GetMapping

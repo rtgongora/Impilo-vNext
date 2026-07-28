@@ -73,6 +73,21 @@ public class TusoFacilityClaimClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    /**
+     * Every facility-management appointment a person holds, across facilities
+     * (Phase C — feeds the experience-bff work-context resolver's
+     * FacilityAdminContextSource). Defaults to ACTIVE; degrades to null on error.
+     */
+    public JsonNode appointmentsByPerson(String personHealthId) {
+        String url = baseUrl + "/v1/internal/facility-admin-appointments/by-person/" + enc(personHealthId);
+        try {
+            return extractData(restTemplate.getForEntity(url, JsonNode.class));
+        } catch (Exception e) {
+            log.warn("TUSO: facility-admin appointments by-person failed for {}: {}", personHealthId, e.getMessage());
+            return null;
+        }
+    }
+
     /** Approve a PENDING appointment → ACTIVE. */
     public JsonNode approve(String appointmentId, Map<String, Object> body) {
         String url = baseUrl + "/v1/internal/facility-admin-appointments/" + enc(appointmentId) + "/approve";

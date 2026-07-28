@@ -106,6 +106,29 @@ public class SupportServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    // ── Support context (A3 / Phase C resolver) ────────────────────────────
+
+    /** Every ACTIVE scoped support-team posting a person holds (support-context, not tickets). */
+    public JsonNode listSupportAssignmentsForPerson(String personHealthId) {
+        String url = baseUrl + "/internal/v1/support/context/assignments/by-person/" + personHealthId;
+        try {
+            return restTemplate.getForObject(url, JsonNode.class);
+        } catch (Exception e) {
+            log.warn("Support: listSupportAssignmentsForPerson failed for {}: {}", personHealthId, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode getSupportTeam(String teamId) {
+        String url = baseUrl + "/internal/v1/support/context/teams/" + teamId;
+        try {
+            return restTemplate.getForObject(url, JsonNode.class);
+        } catch (Exception e) {
+            log.warn("Support: getSupportTeam failed for {}: {}", teamId, e.getMessage());
+            return null;
+        }
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         JsonNode body = response.getBody();
         if (body != null && body.has("data")) {

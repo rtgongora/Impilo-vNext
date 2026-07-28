@@ -28,4 +28,12 @@ public interface FacilityAdminAppointmentRepository
     /** Expiry sweep feed (V030): ACTIVE appointments whose validity window has passed. */
     List<FacilityAdminAppointmentEntity> findByApprovalStateAndValidToBefore(
             String approvalState, java.time.LocalDate validTo);
+
+    /**
+     * Cross-facility "which facility-management appointments does this person hold"
+     * (V052) — the read the experience-bff work-context resolver's
+     * FacilityAdminContextSource needs and that no other query here provides.
+     */
+    List<FacilityAdminAppointmentEntity> findByPersonHealthIdAndApprovalStateOrderByCreatedAtDesc(
+            String personHealthId, String approvalState);
 }

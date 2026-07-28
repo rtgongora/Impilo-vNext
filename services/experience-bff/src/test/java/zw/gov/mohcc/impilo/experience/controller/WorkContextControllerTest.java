@@ -38,6 +38,9 @@ class WorkContextControllerTest {
     @MockBean
     private StringRedisTemplate stringRedisTemplate;
 
+    @MockBean
+    private zw.gov.mohcc.impilo.experience.workcontext.WorkContextResolutionService resolutionService;
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test

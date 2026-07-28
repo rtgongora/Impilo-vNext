@@ -364,6 +364,30 @@ public class FacilityClaimService {
                 .toList();
     }
 
+    /**
+     * Every facility-management appointment a person holds, across facilities, newest
+     * first, restricted to facilities of the caller's tenant (V052) — feeds the
+     * experience-bff work-context resolver's FacilityAdminContextSource (Phase C).
+     * Defaults to ACTIVE; callers that need the full lifecycle (e.g. a "my pending
+     * appointments" view) pass an explicit state.
+     */
+    @Transactional(readOnly = true)
+    public List<FacilityClaimDtos.AppointmentView> listByPerson(String personHealthId, String state) {
+        TrustContext ctx = TrustContextHolder.require();
+        String normalized = state == null || state.isBlank()
+                ? FacilityAdminAppointmentEntity.STATE_ACTIVE
+                : state.trim().toUpperCase();
+        Map<UUID, Boolean> tenantOwned = new LinkedHashMap<>();
+        return appointmentRepository.findByPersonHealthIdAndApprovalStateOrderByCreatedAtDesc(
+                        personHealthId, normalized).stream()
+                .filter(a -> tenantOwned.computeIfAbsent(a.getFacilityUuid(),
+                        uuid -> facilityRepository.findByFacilityUuid(uuid)
+                                .map(f -> ctx.tenantId().equals(f.getTenantId()))
+                                .orElse(false)))
+                .map(FacilityClaimService::toView)
+                .toList();
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────────────
 
     /**
