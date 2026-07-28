@@ -288,7 +288,7 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P7 done, P8–P15 remaining — see §10) · Phase S surgery (S0–S18, not
+Phase P pipeline (P0–P8 done, P9–P15 remaining — see §10, §11) · Phase S surgery (S0–S18, not
 started). Full plan in the programme plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
 
@@ -365,3 +365,38 @@ Proof: `SafetyPauseAndSedationServiceTest` (9 tests, H2 — service read/resolve
 `procedures-safety-pause-journeys.sh` (22/22, real Postgres — CHECK constraints, the composite
 rescue-capability FK, the depth_rank non-uniqueness, both seed defects above). Module regression:
 36/36.
+
+## 11. Wave P8 — specimen chain of custody and implant removal/revision lifecycle (done)
+
+Closes §13 (specimens) and §14 (devices/implants), both rated THIN/absent by the Phase 0 audit.
+Unlike every prior P-wave, `procedures-service` itself is untouched — the gap was in the two
+services that already own these SoRs, so the fix landed there: `inpatient-service` V301
+(`procedure_specimen` custody/label-confirmation/adequacy, new `SpecimenCustodyService`) and
+`inventory-service` V300 (`inv_patient_implant` patient-facing fields + removal/revision,
+extending `ImplantTraceabilityService`) — inventory's first migration in this programme, joining
+the V300-V329 band rather than starting a new one. Built in worktree
+`procedures-p8-specimens-devices` (kept on disk).
+
+**Honest scope, stated in the migration and service javadoc, not left implicit**: inpatient's
+`TheatreService.processSpecimensFromNote` auto-collects and dispatches a specimen from the
+operative note in one transaction, with no human confirmation point. This wave adds the
+capability for a real person to RECORD collection, label confirmation, receipt and adequacy — it
+does **not** wire a blocking gate into that automatic path, because doing so would either
+auto-stamp a fake confirmation nobody made, or require redesigning theatre's dispatch flow, which
+is theatre/emergency-lane workflow, not a unilateral change from this programme. Declared PARTIAL,
+the same way P5 declared adolescent confidentiality PARTIAL rather than silently leaving it.
+
+**Rig caught a constraint-evaluation-order surprise, not a schema bug**: Postgres validates every
+CHECK on a row on every write, not just the one a test means to isolate. An UPDATE touching only
+the field under test could trip a *different*, also-violated CHECK first (e.g. setting an invented
+`status` alone tripped the removal/status-consistency CHECK before the vocabulary CHECK ever got a
+chance to fire). Fixed by satisfying the other CHECKs in the same UPDATE so only the intended one
+is left to fail — worth remembering for any future multi-CHECK table in this programme.
+
+Two new REST surfaces (`TheatreController` specimen-custody routes, `ImplantController`
+remove/revise routes) are backend-internal only, same as P7's `SafetyPauseController` — no new
+authz/BFF/UI wiring this wave; both are queued for the next reachability pass.
+
+Proof: `SpecimenCustodyServiceTest` (11 tests) + `ImplantTraceabilityServiceTest` extended (+5).
+`procedures-p8-specimen-device-journeys.sh` (19/19, real Postgres, whole migration chain applied
+to both services). Module regression: inpatient 154/154, inventory 115/115.
