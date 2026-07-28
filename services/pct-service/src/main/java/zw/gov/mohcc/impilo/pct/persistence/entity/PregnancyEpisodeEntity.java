@@ -461,4 +461,26 @@ public class PregnancyEpisodeEntity {
     public boolean ongoing() {
         return STATUS_ONGOING.equals(status);
     }
+
+    // The DataSensitivityClass name. Stays FULL_CLINICAL until the governance flip — stamping
+    // SPECIALLY_PROTECTED while the PDP runs in SHADOW would hide this record from the clinician who
+    // wrote it, because SpeciallyProtectedVisibilityGuard fails closed and no categories are granted.
+    @Column(name = "sensitivity_class") private String sensitivityClass;
+
+    // Confidentiality stamp (V437). Three values travel with the class above: the governed CATEGORY a
+    // grant is matched against, WHY the stamp was applied, and WHICH policy version decided it.
+    @Column(name = "confidentiality_category") private String confidentialityCategory;
+    @Column(name = "confidentiality_basis") private String confidentialityBasis;
+    @Column(name = "confidentiality_policy_version") private String confidentialityPolicyVersion;
+
+    public String getSensitivityClass() { return sensitivityClass; }
+    public void setSensitivityClass(String v) { this.sensitivityClass = v; }
+
+    public String getConfidentialityCategory() { return confidentialityCategory; }
+    public void setConfidentialityCategory(String v) { this.confidentialityCategory = v; }
+    public String getConfidentialityBasis() { return confidentialityBasis; }
+    public void setConfidentialityBasis(String v) { this.confidentialityBasis = v; }
+    public String getConfidentialityPolicyVersion() { return confidentialityPolicyVersion; }
+    public void setConfidentialityPolicyVersion(String v) { this.confidentialityPolicyVersion = v; }
+
 }

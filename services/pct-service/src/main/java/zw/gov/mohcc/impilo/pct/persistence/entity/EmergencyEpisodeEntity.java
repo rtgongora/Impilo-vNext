@@ -89,6 +89,10 @@ public class EmergencyEpisodeEntity {
     @Column(name = "current_location")
     private String currentLocation;
 
+    /** Set on entering OPEN_AWAITING_ACCEPTANCE, cleared on leaving. Not updated_at — see V203. */
+    @Column(name = "awaiting_acceptance_since")
+    private OffsetDateTime awaitingAcceptanceSince;
+
     @Column(name = "location_confirmed_at")
     private OffsetDateTime locationConfirmedAt;
 
@@ -194,6 +198,8 @@ public class EmergencyEpisodeEntity {
     public void setMergedIntoId(UUID v) { this.mergedIntoId = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime v) { this.createdAt = v; }
+    public OffsetDateTime getAwaitingAcceptanceSince() { return awaitingAcceptanceSince; }
+    public void setAwaitingAcceptanceSince(OffsetDateTime v) { this.awaitingAcceptanceSince = v; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime v) { this.updatedAt = v; }
     public String getCreatedBy() { return createdBy; }

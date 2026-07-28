@@ -207,6 +207,17 @@ public class OutboxPublisher {
                  "EMERGENCY_EPISODE_ANCHOR_RESOLVED",
                  "EMERGENCY_EPISODE_MERGED" -> "pct.emergency.episode.state_changed";
 
+            // Emergency safety alerts (W5). Routed in the same commit as the emitter, for the reason
+            // stated just above: this estate has already shipped an event with no route, which
+            // publishes successfully, lands on the catch-all, and reaches nobody. notification pages
+            // the responder and rito opens a safety case on an overdue acceptance, so a silent
+            // alert here is a patient nobody is told about.
+            case "EMERGENCY_ALERT_RAISED",
+                 "EMERGENCY_ALERT_OVERDUE",
+                 "EMERGENCY_ALERT_ACKNOWLEDGED",
+                 "EMERGENCY_ALERT_RESPONDED",
+                 "EMERGENCY_ALERT_CLOSED" -> "pct.emergency.alert.raised";
+
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             // Nutrition programme lifecycle. Tracing gets its own topic because it is acted on by a
