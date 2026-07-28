@@ -51,6 +51,11 @@ spring:
 surgery:
   outbox:
     poll-interval-ms: 2000
+  integration:
+    pct:
+      # S1: best-effort contribution into pct_problems (responsible_service=surgery). A PCT
+      # outage never blocks recording a surgical episode locally.
+      base-url: ${PCT_SERVICE_URL:http://pct-service:8088}
 
 management:
   endpoints:
