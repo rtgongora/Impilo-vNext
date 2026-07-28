@@ -18,6 +18,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +112,78 @@ public class ProgrammeEnrolmentService {
         out.put("counts_enrolments_not_people",
                 "A person enrolled in more than one programme is counted in each. Do not total "
                 + "these rows into a patient count.");
+        return out;
+    }
+
+    /**
+     * The register for one programme at one facility — who is on it and how they are running.
+     *
+     * <p>The first cohort read in this estate: every other problem and enrolment query is
+     * subject-scoped and answers "what does this patient have". A register asks the other question,
+     * and the answer is a recall worklist rather than a report.</p>
+     *
+     * <p><strong>Refused for confidential programmes.</strong> A register listing names every person
+     * on it as having the condition. For hypertension that is a worklist; for HIV care it is a list
+     * of people's HIV status. The classification that would restrict it is built but not enforcing,
+     * so serving it would attach a protection label that protects nothing — see
+     * {@link ConfidentialRegisterException}. Aggregate counts stay available, because how many people
+     * are in HIV care is programme reporting and who they are is disclosure.</p>
+     *
+     * @param statuses null or empty means the open statuses only; pass explicit statuses to include
+     *                 those who have left, which is a real clinical question for the ones lost to
+     *                 follow-up
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> register(String programme, String facilityId, Collection<String> statuses) {
+        TrustContext ctx = TrustContextHolder.require();
+        // Same validator the write path uses, so a register cannot be asked for a programme that
+        // could never be enrolled into — an unrecognised name must 400 naming the allowed set, not
+        // return an empty register that reads as "nobody is on it".
+        String normalised = ProblemVocabulary.require("programme", programme,
+                ProgrammeVocabulary.PROGRAMMES, true);
+        if (ProgrammeVocabulary.isConfidential(normalised)) {
+            throw new ConfidentialRegisterException(normalised);
+        }
+        Collection<String> effective = (statuses == null || statuses.isEmpty())
+                ? ProgrammeVocabulary.OPEN_ENROLMENT_STATUSES
+                : statuses;
+
+        List<ProgrammeEnrolmentEntity> rows =
+                enrolmentRepository.register(ctx.tenantId(), normalised, facilityId, effective);
+
+        List<Map<String, Object>> entries = new java.util.ArrayList<>();
+        long neverAssessed = 0;
+        for (ProgrammeEnrolmentEntity e : rows) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("enrolment_id", e.getEnrolmentId());
+            row.put("subject_cpid", e.getSubjectCpid());
+            row.put("programme_number", e.getProgrammeNumber());
+            row.put("status", e.getStatus());
+            row.put("enrolled_on", e.getEnrolledOn());
+            row.put("managing_facility_id", e.getManagingFacilityId());
+            // Null rather than a stand-in string: a consumer must be able to tell "never assessed"
+            // from any assessed value, and a placeholder like "UNKNOWN" invites being rendered as
+            // though it were one.
+            row.put("control_status", e.getControlStatus());
+            row.put("control_assessed_on", e.getControlAssessedOn());
+            row.put("individualised_target", e.getIndividualisedTarget());
+            entries.add(row);
+            if (e.getControlStatus() == null) {
+                neverAssessed++;
+            }
+        }
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("programme", normalised);
+        out.put("facility_id", facilityId);
+        out.put("entries", entries);
+        out.put("total", (long) entries.size());
+        out.put("never_assessed", neverAssessed);
+        out.put("control_status_null_means_never_assessed",
+                "A null control_status means nobody has assessed control for this person — it is not "
+                + "a claim that they are doing badly, and it is not a claim that they are doing well. "
+                + neverAssessed + " of " + entries.size() + " entries are in this state and are "
+                + "listed first, because they are who a recall list exists to find.");
         return out;
     }
 

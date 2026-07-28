@@ -103,6 +103,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/clinical-tools", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Clinical Tools", navLabel: "Tools", navZone: "work" },
   { path: "/clinical-tools/rules", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Rules Engine", navLabel: "Rules Engine", navZone: "work" },
   { path: "/clinical-tools/forms", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Form Builder", navLabel: "Form Builder", navZone: "work" },
+  { path: "/clinical/chronic-registers", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Chronic disease registers", navLabel: "Chronic registers", navZone: "work" },
   { path: "/clinical/control-tower", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Control Tower", navLabel: "Control Tower", navZone: "work" },
   { path: "/clinical/dictation", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Voice Dictation", navLabel: "Dictation", navZone: "work" },
   { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
@@ -1057,7 +1058,7 @@ export const ROUTES: RouteDefinition[] = [
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
 // Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
 // workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
-export const EXPECTED_ROUTE_COUNT = 815;
+export const EXPECTED_ROUTE_COUNT = 816;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

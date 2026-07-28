@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.pct.core.clinical.ConfidentialRegisterException;
 import zw.gov.mohcc.impilo.pct.core.clinical.DuplicateEnrolmentException;
 import zw.gov.mohcc.impilo.pct.core.clinical.ProgrammeEnrolmentService;
 import zw.gov.mohcc.impilo.pct.core.clinical.ProgrammeVocabulary;
@@ -61,6 +62,31 @@ public class ProgrammeEnrolmentController {
     public ResponseEntity<Map<String, Object>> cohortCounts(
             @RequestParam(value = "facility_id", required = false) String facilityId) {
         return ResponseEntity.ok(Map.of("data", service.cohortCounts(facilityId)));
+    }
+
+    /**
+     * The register for one programme at one facility — a recall worklist, not a report.
+     *
+     * <p>Declared before {@code /{enrolmentId}} so "register" is not parsed as a UUID.</p>
+     *
+     * <p>Refused with 403 for programmes on the confidential lane: a patient-level listing names
+     * everyone on it as having the condition, and the classification that would restrict such a list
+     * is built but not enforcing. The refusal names the missing control rather than returning an
+     * empty list, because an empty list would read as "nobody is on this register".</p>
+     */
+    @GetMapping("/register")
+    public ResponseEntity<Map<String, Object>> register(
+            @RequestParam("programme") String programme,
+            @RequestParam(value = "facility_id", required = false) String facilityId,
+            @RequestParam(value = "status", required = false) List<String> statuses) {
+        try {
+            return ResponseEntity.ok(Map.of("data", service.register(programme, facilityId, statuses)));
+        } catch (ConfidentialRegisterException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", "confidential_register_not_served",
+                    "message", e.getMessage(),
+                    "programme", e.getProgramme()));
+        }
     }
 
     @GetMapping("/{enrolmentId}")
