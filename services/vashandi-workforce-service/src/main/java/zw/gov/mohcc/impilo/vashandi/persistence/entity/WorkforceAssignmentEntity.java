@@ -39,6 +39,17 @@ public class WorkforceAssignmentEntity {
     private String roleTemplateId;
     private UUID supervisorProfileId;
 
+    /**
+     * Cross-service reference to support-service sup_support_team.team_id (A3).
+     * Set only when assignmentType="support"; the support authority itself
+     * (tier, scope, permitted actions, elevated access) lives in
+     * support-service, not here — Vashandi records only the posting fact.
+     */
+    private UUID supportTeamId;
+
+    /** Cross-service reference to support-service sup_support_assignment.assignment_id. */
+    private UUID supportAssignmentId;
+
     @Column(nullable = false, length = 32)
     private String status = "draft";
 
