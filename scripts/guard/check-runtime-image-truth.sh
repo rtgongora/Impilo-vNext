@@ -19,7 +19,7 @@
 #
 # Exit codes: 0 aligned (or all non-aligned are exempt) | 1 stale non-exempt service(s) found
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 # shellcheck source=scripts/guard/_guard-common.sh
 source "scripts/guard/_guard-common.sh"

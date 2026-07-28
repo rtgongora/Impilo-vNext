@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Abort full boot deploy if Helm chart is truncated or cannot render required workloads.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 CHART_DIR="$REPO_PATH/deploy/helm/impilo-vnext"
 VALUES_FILE="$CHART_DIR/values-full-preview.yaml"
 RUNTIME_VALUES="$CHART_DIR/values-full-preview-runtime.generated.yaml"

@@ -6,7 +6,7 @@
 # Lower-count generations (e.g. the legacy 4-service impilo-preview slice) may keep
 # running as a rollback fallback but MUST NOT serve public traffic (no ingress).
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 FULL_NS="${FULL_BOOT_NAMESPACE:-impilo-full-preview}"

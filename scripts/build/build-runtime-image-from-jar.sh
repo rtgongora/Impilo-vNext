@@ -3,7 +3,7 @@
 set -euo pipefail
 SERVICE_ID="${1:?service id}"
 TAG_EXTRA="${2:-}"
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 source "$(dirname "$0")/../full-boot/_full-boot-common.sh"
 

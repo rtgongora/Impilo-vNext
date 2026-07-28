@@ -15,7 +15,7 @@
 # Run standalone any time, or wired into the fullboot deploy tail.
 set -uo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 NS="${NAMESPACE:-impilo-full-preview}"
 TLS_DIR="$REPO_PATH/deploy/tls/mohcc-gov"
 SECRET_NAME="impilo-mohcc-gov-zw-tls"

@@ -10,7 +10,7 @@ fi
 
 REPO_URL="${REPO_URL:-https://github.com/rtgongora/Impilo-vNext.git}"
 REPO_BRANCH="${REPO_BRANCH:-claude/staging-ux-orchestration-remediation-Yypyl}"
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 SSH_PORT="${SSH_PORT:-2276}"
 
 log() { echo "[$(date '+%H:%M:%S')] $*"; }

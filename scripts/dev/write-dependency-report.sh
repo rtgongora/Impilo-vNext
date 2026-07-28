@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Impilo vNext — dependency installation results (update after running install-dependencies.sh on VM)
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 REPORT="$REPO_PATH/docs/environment/DEPENDENCY_INSTALLATION_REPORT.md"
 
 {

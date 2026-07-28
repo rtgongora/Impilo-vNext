@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Dry-run: explain blast radius — which services rebuild, which tests run, full boot required?
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 source scripts/preview/_preview-common.sh
 

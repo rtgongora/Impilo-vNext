@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+_GUARD_CALLER_PWD="$PWD"   # captured before the cd; see guard_assert_repo_path
+export _GUARD_CALLER_PWD
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 source "$REPO_PATH/scripts/guard/_guard-common.sh"
+
+# Before any gate runs: prove we are inspecting the tree the caller is standing in. A gate that
+# passes cleanly about somebody else's checkout is worse than no gate — it is the one result nobody
+# goes back and questions.
+guard_assert_repo_path || exit 1
 
 CHECKS=(
   check-deprecated-surfaces.sh

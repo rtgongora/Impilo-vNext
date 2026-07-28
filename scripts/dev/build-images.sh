@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 TAG="${TAG:-preview-$(git -C "$REPO_PATH" rev-parse --short HEAD 2>/dev/null || echo local)}"
 cd "$REPO_PATH"
 

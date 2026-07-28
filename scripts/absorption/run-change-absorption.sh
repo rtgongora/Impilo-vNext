@@ -3,7 +3,7 @@
 # Intake decision authority; VM gates remain post-absorption quality authority.
 set -euo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=scripts/absorption/_absorption-common.sh
 source "$SCRIPT_DIR/_absorption-common.sh"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Summarize GitHub Actions CI + VM local pipeline evidence for deploy decisions.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 BRANCH="${1:-$(git branch --show-current)}"
 REPO_SLUG="${GITHUB_REPOSITORY:-rtgongora/Impilo-vNext}"

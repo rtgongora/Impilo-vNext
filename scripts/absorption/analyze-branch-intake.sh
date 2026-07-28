@@ -2,7 +2,7 @@
 # Read-only branch intake analysis vs fixed Product Truth branch.
 set -euo pipefail
 
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=scripts/absorption/_absorption-common.sh
 source "$SCRIPT_DIR/_absorption-common.sh"

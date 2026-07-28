@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # User-authorized manual preview deploy. Accepts GitHub CI and/or VM local pipeline evidence.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 BRANCH="${DEPLOY_BRANCH:-$(git branch --show-current)}"

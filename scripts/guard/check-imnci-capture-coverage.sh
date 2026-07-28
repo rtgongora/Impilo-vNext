@@ -10,7 +10,7 @@
 # This asserts every requiredInput of every danger-sign rule has a matching linkId in the IMNCI
 # form. It caught two real gaps when first written (convulsingNow and movesOnlyWhenStimulated).
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 FORM=services/forms-service/src/main/resources/seed-forms/08-imci-child-assessment.json

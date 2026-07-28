@@ -7,7 +7,7 @@
 #
 # Usage: bash scripts/full-boot/resolve-image-digests.sh [--tag preview] [--registry 127.0.0.1:5000] [--only id1,id2]
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 TAG="${FULL_BOOT_IMAGE_TAG:-preview}"

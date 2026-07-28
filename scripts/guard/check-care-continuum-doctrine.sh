@@ -10,7 +10,7 @@
 # Anchoring violations V-1..V-3 (CC-5) are WARN-only until the closing code wave lands;
 # flip them to FAIL when it does.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 FAIL=0
