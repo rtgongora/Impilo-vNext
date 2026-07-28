@@ -1,6 +1,15 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 97 | enabled: 97 (all waves)
+#
+# HAND-EDITED 2026-07-28 to add procedures-service, NOT regenerated. Running the generator
+# here dropped pct-service's hand-authored secretEnv block (KEYCLOAK_BACKEND_SECRET,
+# PCT_INTEGRATION_CLINICAL_KNOWLEDGE_BASE_URL, KEYCLOAK_BACKEND_CLIENT_ID — its explained
+# service-to-service OAuth2 token for calling the clinical knowledge platform from Kafka
+# consumers and scheduled jobs with no user present). The generator reconstructs entries from
+# config/full-boot-service-classification.yml and cannot see hand-added secretEnv content, so
+# it silently regressed a live capability. Diff any future regeneration against this file
+# before trusting it — the same law already recorded for scripts/registry/seed-registry.mjs.
+# Microservices: 98 | enabled: 98 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -330,6 +339,10 @@ fullBootServices:
     enabled: true
     port: 8096
     database: pharmacy
+  procedures-service:
+    enabled: true
+    port: 8395
+    database: procedures
   procurement-service:
     enabled: true
     port: 8283
@@ -551,6 +564,7 @@ postgres:
     - pct
     - pharmacy
     - pharmacy_elmis_adapter
+    - procedures
     - procurement
     - product_registry
     - referral
