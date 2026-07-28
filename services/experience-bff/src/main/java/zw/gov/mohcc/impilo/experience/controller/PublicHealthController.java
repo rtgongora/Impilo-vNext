@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.DataGovernanceServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 import zw.gov.mohcc.impilo.experience.publichealth.PublicHealthGovernanceService;
@@ -62,6 +63,104 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> listSignals(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
         governance.assertGovernedRead();
         return proxy(surveillanceUrl + "/internal/v1/signals", requestId);
+    }
+
+    // ── Case investigation: update, contacts, line list ──────────────────────────────────────────
+    // These back three controls that sat on the surveillance panel with no handler and nowhere for
+    // their data to go. A public-health officer could click "Link Contacts" mid-outbreak, get no
+    // error, and conclude tracing had started.
+
+    @PostMapping("/cases/{caseId}/updates")
+    public ResponseEntity<Map<String, Object>> recordCaseUpdate(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable long caseId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            governance.assertGovernedMutate();
+            JsonNode saved = restTemplate.postForEntity(
+                    surveillanceUrl + "/internal/v1/cases/" + caseId + "/updates", body, JsonNode.class).getBody();
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", saved == null ? Map.of() : saved,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Case investigation update failed for case={}: {}", caseId, e.getMessage());
+            return surveillanceUnavailable("case_update_not_saved",
+                    "The investigation update was NOT saved.", requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{caseId}/contacts")
+    public ResponseEntity<Map<String, Object>> linkCaseContact(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable long caseId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            governance.assertGovernedMutate();
+            JsonNode saved = restTemplate.postForEntity(
+                    surveillanceUrl + "/internal/v1/cases/" + caseId + "/contacts", body, JsonNode.class).getBody();
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", saved == null ? Map.of() : saved,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Contact link failed for case={}: {}", caseId, e.getMessage());
+            // "Contact not linked" must never read as "contact linked" — the officer stops tracing.
+            return surveillanceUnavailable("contact_not_linked",
+                    "The contact was NOT linked. This person is not being traced.",
+                    requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/cases/{caseId}/contacts")
+    public ResponseEntity<Map<String, Object>> listCaseContacts(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable long caseId) {
+        try {
+            governance.assertGovernedRead();
+            JsonNode contacts = restTemplate.getForEntity(
+                    java.net.URI.create(surveillanceUrl + "/internal/v1/cases/" + caseId + "/contacts"), JsonNode.class).getBody();
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonApiRows.rows(contacts, "case_contact", "id"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Contact list failed for case={}: {}", caseId, e.getMessage());
+            // An empty list here reads as "no contacts traced", which is a finding.
+            return surveillanceUnavailable("contacts_unavailable",
+                    "Contacts could not be retrieved. Do not treat this as an absence of contacts.",
+                    requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/cases/line-list")
+    public ResponseEntity<Map<String, Object>> lineList(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(required = false) String caseType) {
+        try {
+            governance.assertGovernedRead();
+            String llUrl = surveillanceUrl + "/internal/v1/cases/line-list";
+            if (caseType != null && !caseType.isBlank()) {
+                llUrl += "?caseType=" + URLEncoder.encode(caseType, StandardCharsets.UTF_8);
+            }
+            JsonNode rows = restTemplate.getForEntity(java.net.URI.create(llUrl), JsonNode.class).getBody();
+            return ResponseEntity.ok(Map.of(
+                    "data", rows == null ? Map.of() : rows,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Line list failed: {}", e.getMessage());
+            return surveillanceUnavailable("line_list_unavailable",
+                    "The line list could not be generated.", requestId, correlationId);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> surveillanceUnavailable(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", code,
+                "message", message,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @GetMapping("/cases")
