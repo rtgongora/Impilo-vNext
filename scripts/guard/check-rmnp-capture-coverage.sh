@@ -33,6 +33,10 @@ forms_dir = pathlib.Path(sys.argv[2])
 # Which rule packs are checked against which forms. A pack with no paired form would be checked
 # against nothing and would pass vacuously, so pairing is declared rather than inferred.
 PAIRINGS = {
+    # WHO near-miss criteria are genuinely clinician-observed (gasping, cyanosis, shock) and measured
+    # (creatinine, platelets, lactate). Declaring this NO_CAPTURE would have been the dishonest option:
+    # it reads no derived fact, it reads a bedside assessment somebody has to record.
+    "rmnp-maternal-near-miss.json": ["21-maternal-near-miss.json"],
     "rmnp-anc-danger-signs.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
     "rmnp-anc-classification-tables.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
     "rmnp-anc-routine-actions.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
@@ -157,6 +161,11 @@ if not rmnp_packs:
 # happened, which is a record of care rather than a form field. Adding a form to satisfy the guard
 # would invent a capture surface that does not and should not exist.
 NO_CAPTURE_PACKS = {
+    "rmnp-respectful-maternity-care.json":
+        "a measure SET, not a rule pack — it computes no verdict and evaluates nothing. It is a "
+        "citizen-facing instrument submitted through Rito's EXISTING rating and anonymous public-case "
+        "lanes (rit_rating_domain_score carries a free-form measure), so it pairs with no "
+        "forms-service form by design, not by omission",
     "rmnp-anc-schedule.json": "a contact schedule — driven by gestational age (derived) and the "
                               "record of completed contacts, neither of which is a form field",
     "rmnp-eclampsia-bundle.json": "an emergency treatment bundle — recorded step completions + injected temporal facts, no form findings",

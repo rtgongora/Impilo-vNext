@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import zw.gov.mohcc.impilo.pct.domain.EmergencyEpisodeState;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyEpisodeEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EmergencyEpisodeRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.EmergencyHandoverRepository;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -29,14 +30,29 @@ class EmergencyEpisodeServiceTest {
     private static final UUID FACILITY = UUID.fromString("00000000-0000-4000-8000-000000000002");
 
     private InMemoryRepo repo;
+    private InMemoryHandoverRepo handoverRepo;
     private CountingOutbox outbox;
     private EmergencyEpisodeService service;
 
     @BeforeEach
     void setUp() {
         repo = new InMemoryRepo();
+        handoverRepo = new InMemoryHandoverRepo();
         outbox = new CountingOutbox();
-        service = new EmergencyEpisodeService(repo, outbox, new com.fasterxml.jackson.databind.ObjectMapper());
+        service = new EmergencyEpisodeService(repo, handoverRepo, outbox, new com.fasterxml.jackson.databind.ObjectMapper());
+    }
+
+    /** An episode in OPEN_IN_CARE, ready to have a handover requested against it. */
+    private EmergencyEpisodeEntity episodeInCare() {
+        EmergencyEpisodeEntity e = new EmergencyEpisodeEntity();
+        e.setEpisodeId(UUID.randomUUID());
+        e.setTenantId(TENANT);
+        e.setFacilityId(FACILITY);
+        e.setEpisodeReference("EM-TEST");
+        e.setEntryRoute("WALK_IN");
+        e.setArrivedAt(OffsetDateTime.now());
+        e.setState(EmergencyEpisodeState.OPEN_IN_CARE.name());
+        return repo.save(e);
     }
 
     /**
@@ -420,5 +436,201 @@ class EmergencyEpisodeServiceTest {
         @Override public <S extends EmergencyEpisodeEntity> long count(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
         @Override public <S extends EmergencyEpisodeEntity> boolean exists(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
         @Override public <S extends EmergencyEpisodeEntity, R> R findBy(org.springframework.data.domain.Example<S> ex, java.util.function.Function<org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery<S>, R> f) { throw new UnsupportedOperationException(); }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────────────
+    // The acceptance handshake (W9). V200's chk_ee_handover_required has been unsatisfiable since
+    // the day it was written — nothing set handover_id. These tests prove requestHandover /
+    // acceptHandover / declineHandover / expireHandover actually close that gap end to end.
+    // ─────────────────────────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Requesting a handover moves the episode to OPEN_AWAITING_ACCEPTANCE without touching handover_id")
+    void requestHandoverMovesEpisodeWithoutClosingIt() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        var h = service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null,
+                "nurse-A", "needs a bed");
+
+        assertEquals("PENDING", h.getStatus());
+        EmergencyEpisodeEntity reloaded = repo.findByEpisodeIdAndTenantId(e.getEpisodeId(), TENANT).orElseThrow();
+        assertEquals(EmergencyEpisodeState.OPEN_AWAITING_ACCEPTANCE.name(), reloaded.getState());
+        assertNull(reloaded.getHandoverId(), "a request is not a handover — handover_id must stay unset");
+    }
+
+    @Test
+    @DisplayName("A second pending request for the same episode is refused")
+    void secondPendingRequestRefused() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null, "nurse-A", "r1");
+        assertThrows(IllegalStateException.class, () ->
+                service.requestHandover(e.getEpisodeId(), TENANT, "THEATRE", "theatre", null, "doctor-B", "r2"));
+    }
+
+    @Test
+    @DisplayName("Requesting a handover from a state that cannot reach OPEN_AWAITING_ACCEPTANCE is refused by the FSM")
+    void requestHandoverFromWrongStateRefused() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        e.setState(EmergencyEpisodeState.OPEN_UNTRIAGED.name());
+        repo.save(e);
+        assertThrows(IllegalStateException.class, () ->
+                service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null, "nurse-A", "r"));
+    }
+
+    @Test
+    @DisplayName("Accepting requires the accepting party's own record id, and rejects a blank one")
+    void acceptRequiresAcceptingRef() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        var h = service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null, "nurse-A", "r");
+        assertThrows(IllegalArgumentException.class, () ->
+                service.acceptHandover(h.getHandoverId(), TENANT, "clerk", "  ", "inpatient-service"));
+        assertThrows(IllegalArgumentException.class, () ->
+                service.acceptHandover(h.getHandoverId(), TENANT, "clerk", null, "inpatient-service"));
+    }
+
+    @Test
+    @DisplayName("Accepting closes the episode CLOSED_HANDED_OVER and stamps handover_id — the invariant satisfied end to end")
+    void acceptClosesEpisodeWithHandoverId() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        var h = service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null, "nurse-A", "r");
+
+        EmergencyEpisodeEntity closed = service.acceptHandover(h.getHandoverId(), TENANT, "clerk", "ADM-4471", "inpatient-service");
+
+        assertEquals(EmergencyEpisodeState.CLOSED_HANDED_OVER.name(), closed.getState());
+        assertEquals(h.getHandoverId(), closed.getHandoverId());
+        assertEquals("ADMITTED", closed.getOutcome());
+        assertNotNull(closed.getClosedAt());
+        assertEquals("ACCEPTED", handoverRepo.findByHandoverIdAndTenantId(h.getHandoverId(), TENANT).orElseThrow().getStatus());
+    }
+
+    @Test
+    @DisplayName("A handover that is already resolved cannot be accepted again")
+    void cannotAcceptAlreadyResolvedHandover() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        var h = service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null, "nurse-A", "r");
+        service.acceptHandover(h.getHandoverId(), TENANT, "clerk", "ADM-1", "inpatient-service");
+        assertThrows(IllegalArgumentException.class, () ->
+                service.acceptHandover(h.getHandoverId(), TENANT, "clerk2", "ADM-2", "inpatient-service"));
+    }
+
+    @Test
+    @DisplayName("Declining returns the episode to OPEN_IN_CARE, never to a closed state, and requires a reason")
+    void declineReturnsToOpenInCareAndRequiresReason() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        var h = service.requestHandover(e.getEpisodeId(), TENANT, "THEATRE", "theatre", null, "doctor-B", "r");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                service.declineHandover(h.getHandoverId(), TENANT, "surgeon-C", ""));
+
+        EmergencyEpisodeEntity back = service.declineHandover(h.getHandoverId(), TENANT, "surgeon-C", "no slot");
+        assertEquals(EmergencyEpisodeState.OPEN_IN_CARE.name(), back.getState());
+        assertNull(back.getClosedAt(), "a decline must never close the episode");
+        assertEquals("DECLINED", handoverRepo.findByHandoverIdAndTenantId(h.getHandoverId(), TENANT).orElseThrow().getStatus());
+    }
+
+    @Test
+    @DisplayName("After a decline, a new handover request is allowed — the slot is freed, not abandoned")
+    void declineFreesTheSlotForANewRequest() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        var h1 = service.requestHandover(e.getEpisodeId(), TENANT, "THEATRE", "theatre", null, "doctor-B", "r1");
+        service.declineHandover(h1.getHandoverId(), TENANT, "surgeon-C", "no slot");
+
+        var h2 = service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null, "nurse-A", "r2");
+        assertEquals("PENDING", h2.getStatus());
+    }
+
+    @Test
+    @DisplayName("Expiring returns the episode to OPEN_IN_CARE and can link a rito case — no timeout ever closes the episode itself")
+    void expireReturnsToOpenInCareAndLinksRito() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        var h = service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null, "nurse-A", "r");
+
+        EmergencyEpisodeEntity back = service.expireHandover(h.getHandoverId(), TENANT, "system:sla-monitor", "RITO-9001");
+        assertEquals(EmergencyEpisodeState.OPEN_IN_CARE.name(), back.getState());
+        var reloadedHandover = handoverRepo.findByHandoverIdAndTenantId(h.getHandoverId(), TENANT).orElseThrow();
+        assertEquals("EXPIRED", reloadedHandover.getStatus());
+        assertEquals("RITO-9001", reloadedHandover.getRitoCaseRef());
+    }
+
+    @Test
+    @DisplayName("Every handover state transition emits an outbox event that routes, not the catch-all")
+    void handoverTransitionsEmitOutboxEvents() {
+        EmergencyEpisodeEntity e = episodeInCare();
+        var h = service.requestHandover(e.getEpisodeId(), TENANT, "ADMISSION", "inpatient-service", null, "nurse-A", "r");
+        service.acceptHandover(h.getHandoverId(), TENANT, "clerk", "ADM-1", "inpatient-service");
+
+        List<String> types = outbox.findAll().stream()
+                .map(zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity::getEventType).toList();
+        assertTrue(types.contains("EMERGENCY_HANDOVER_REQUESTED"));
+        assertTrue(types.contains("EMERGENCY_HANDOVER_ACCEPTED"));
+        assertTrue(types.contains("EMERGENCY_EPISODE_STATE_CHANGED"));
+    }
+
+    /** Hand-written in-memory handover repository, same rationale as InMemoryRepo above. */
+    private static final class InMemoryHandoverRepo implements EmergencyHandoverRepository {
+        private final Map<UUID, zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> store = new java.util.LinkedHashMap<>();
+
+        @Override public Optional<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity>
+        findByHandoverIdAndTenantId(UUID handoverId, UUID tenantId) {
+            var h = store.get(handoverId);
+            return (h != null && h.getTenantId().equals(tenantId)) ? Optional.of(h) : Optional.empty();
+        }
+
+        @Override public Optional<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity>
+        findPending(UUID tenantId, UUID episodeId) {
+            return store.values().stream()
+                    .filter(h -> h.getTenantId().equals(tenantId) && h.getEpisodeId().equals(episodeId)
+                            && "PENDING".equals(h.getStatus()))
+                    .findFirst();
+        }
+
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity>
+        findByTenantIdAndEpisodeIdOrderByRequestedAtDesc(UUID tenantId, UUID episodeId) {
+            return store.values().stream()
+                    .filter(h -> h.getTenantId().equals(tenantId) && h.getEpisodeId().equals(episodeId))
+                    .sorted((a, b) -> b.getRequestedAt().compareTo(a.getRequestedAt())).toList();
+        }
+
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity>
+        findPendingByTarget(UUID tenantId, String targetType) {
+            return store.values().stream()
+                    .filter(h -> h.getTenantId().equals(tenantId) && targetType.equals(h.getTargetType())
+                            && "PENDING".equals(h.getStatus()))
+                    .sorted((a, b) -> a.getRequestedAt().compareTo(b.getRequestedAt())).toList();
+        }
+
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> S save(S h) {
+            if (h.getHandoverId() == null) h.setHandoverId(UUID.randomUUID());
+            store.put(h.getHandoverId(), h);
+            return h;
+        }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> S saveAndFlush(S h) { return save(h); }
+        @Override public void flush() { }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> List<S> saveAllAndFlush(Iterable<S> hs) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAllInBatch(Iterable<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> hs) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAllByIdInBatch(Iterable<UUID> ids) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAllInBatch() { throw new UnsupportedOperationException(); }
+        @Override public zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity getOne(UUID id) { throw new UnsupportedOperationException(); }
+        @Override public zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity getById(UUID id) { throw new UnsupportedOperationException(); }
+        @Override public zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity getReferenceById(UUID id) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> List<S> findAll(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> List<S> findAll(org.springframework.data.domain.Example<S> ex, org.springframework.data.domain.Sort s) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> List<S> saveAll(Iterable<S> hs) { throw new UnsupportedOperationException(); }
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> findAll() { return new ArrayList<>(store.values()); }
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> findAllById(Iterable<UUID> ids) { throw new UnsupportedOperationException(); }
+        @Override public Optional<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> findById(UUID id) { return Optional.ofNullable(store.get(id)); }
+        @Override public boolean existsById(UUID id) { return store.containsKey(id); }
+        @Override public long count() { return store.size(); }
+        @Override public void deleteById(UUID id) { store.remove(id); }
+        @Override public void delete(zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity h) { store.remove(h.getHandoverId()); }
+        @Override public void deleteAllById(Iterable<? extends UUID> ids) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAll(Iterable<? extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> hs) { throw new UnsupportedOperationException(); }
+        @Override public void deleteAll() { store.clear(); }
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> findAll(org.springframework.data.domain.Sort s) { throw new UnsupportedOperationException(); }
+        @Override public org.springframework.data.domain.Page<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> findAll(org.springframework.data.domain.Pageable p) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> Optional<S> findOne(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> org.springframework.data.domain.Page<S> findAll(org.springframework.data.domain.Example<S> ex, org.springframework.data.domain.Pageable p) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> long count(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> boolean exists(org.springframework.data.domain.Example<S> ex) { throw new UnsupportedOperationException(); }
+        @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity, R> R findBy(org.springframework.data.domain.Example<S> ex, java.util.function.Function<org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery<S>, R> f) { throw new UnsupportedOperationException(); }
     }
 }

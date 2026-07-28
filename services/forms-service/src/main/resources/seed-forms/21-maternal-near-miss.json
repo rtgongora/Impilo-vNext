@@ -1,0 +1,513 @@
+{
+  "formKey": "impilo.maternal.nearmiss.assessment.v1",
+  "name": "Maternal near-miss \u2014 organ dysfunction assessment",
+  "description": "The WHO near-miss criteria a clinician observes or measures. A blank is 'not assessed', never 'absent': a near-miss missed because nobody recorded a creatinine is a woman who nearly died counted as a normal birth, and the near-miss-to-death ratio improving for the wrong reason.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": [
+    "INPATIENT",
+    "EMERGENCY",
+    "THEATRE"
+  ],
+  "careStages": [
+    "ASSESSMENT"
+  ],
+  "specialties": [
+    "MIDWIFERY",
+    "OBSTETRICS",
+    "CRITICAL_CARE",
+    "NURSING"
+  ],
+  "encounterTypes": [
+    "MATERNITY",
+    "INPATIENT",
+    "EMERGENCY"
+  ],
+  "encounterContexts": [
+    "inpatient",
+    "emergency"
+  ],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "OPTIONAL",
+  "permittedCadres": [
+    "MIDWIFE",
+    "NURSE",
+    "PHYSICIAN",
+    "CLINICAL_OFFICER"
+  ],
+  "sexApplicability": "FEMALE",
+  "requirePregnant": false,
+  "programmeApplicability": [
+    "MATERNAL_HEALTH"
+  ],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO, Evaluating the quality of care for severe pregnancy complications: the WHO near-miss approach for maternal health (2011)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": []
+  },
+  "indicators": {
+    "indicators": [
+      {
+        "programmeIndicatorCode": "MATERNAL_NEAR_MISS"
+      }
+    ]
+  },
+  "definition": {
+    "id": "maternal-near-miss-v1",
+    "version": "1.0.0",
+    "title": "Maternal near-miss \u2014 organ dysfunction assessment",
+    "description": "Applies during pregnancy, childbirth, or within 42 days of the end of a pregnancy. Identification only \u2014 the review is a separate, confidential instrument.",
+    "dakReference": "No SMART DAK exists; transcribed from WHO near-miss approach (2011)",
+    "healthDomain": "MATERNAL_HEALTH",
+    "programme": "MATERNAL_HEALTH",
+    "encounterTypes": [
+      "MATERNITY",
+      "INPATIENT",
+      "EMERGENCY"
+    ],
+    "sexApplicability": "FEMALE",
+    "providerRoles": [
+      "MIDWIFE",
+      "NURSE",
+      "PHYSICIAN"
+    ],
+    "offlineCapable": true,
+    "audit": {
+      "dataCustodian": "MOHCC",
+      "sensitivity": "SENSITIVE"
+    },
+    "sections": [
+      {
+        "id": "cardiovascular",
+        "title": "Cardiovascular",
+        "description": "Shock, arrest, and the metabolic markers of failing perfusion.",
+        "fields": [
+          {
+            "id": "nearMiss.shock",
+            "linkId": "nearMiss.shock",
+            "label": "Shock",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            },
+            "description": "Persistent severe hypotension despite fluid resuscitation."
+          },
+          {
+            "id": "nearMiss.cardiacArrest",
+            "linkId": "nearMiss.cardiacArrest",
+            "label": "Cardiac arrest",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.continuousVasoactiveDrugs",
+            "linkId": "nearMiss.continuousVasoactiveDrugs",
+            "label": "Continuous vasoactive drug use",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.cardiopulmonaryResuscitation",
+            "linkId": "nearMiss.cardiopulmonaryResuscitation",
+            "label": "Cardiopulmonary resuscitation performed",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.lactateMmolL",
+            "linkId": "nearMiss.lactateMmolL",
+            "label": "Lactate",
+            "kind": "decimal",
+            "validation": {
+              "required": false
+            },
+            "unit": "mmol/L"
+          },
+          {
+            "id": "nearMiss.phArterial",
+            "linkId": "nearMiss.phArterial",
+            "label": "Arterial pH",
+            "kind": "decimal",
+            "validation": {
+              "required": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "respiratory",
+        "title": "Respiratory",
+        "description": "Note that the respiratory-rate criterion has TWO bounds: above 40 and below 6. A collapsing patient breathes too slowly, not too fast.",
+        "fields": [
+          {
+            "id": "nearMiss.acuteCyanosis",
+            "linkId": "nearMiss.acuteCyanosis",
+            "label": "Acute cyanosis",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.gasping",
+            "linkId": "nearMiss.gasping",
+            "label": "Gasping",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.respiratoryRate",
+            "linkId": "nearMiss.respiratoryRate",
+            "label": "Respiratory rate",
+            "kind": "decimal",
+            "validation": {
+              "required": false
+            },
+            "unit": "breaths/min"
+          },
+          {
+            "id": "nearMiss.intubationNotForAnaesthesiaMinutes",
+            "linkId": "nearMiss.intubationNotForAnaesthesiaMinutes",
+            "label": "Intubation and ventilation not for anaesthesia",
+            "kind": "decimal",
+            "validation": {
+              "required": false
+            },
+            "unit": "minutes"
+          },
+          {
+            "id": "nearMiss.oxygenSaturationBelow90ForOverAnHour",
+            "linkId": "nearMiss.oxygenSaturationBelow90ForOverAnHour",
+            "label": "Oxygen saturation below 90% for 60 minutes or more",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "renal",
+        "title": "Renal",
+        "fields": [
+          {
+            "id": "nearMiss.oliguriaNonResponsiveToFluids",
+            "linkId": "nearMiss.oliguriaNonResponsiveToFluids",
+            "label": "Oliguria not responsive to fluids or diuretics",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.creatinineUmolL",
+            "linkId": "nearMiss.creatinineUmolL",
+            "label": "Creatinine",
+            "kind": "decimal",
+            "validation": {
+              "required": false
+            },
+            "unit": "umol/L"
+          },
+          {
+            "id": "nearMiss.dialysisForAcuteRenalFailure",
+            "linkId": "nearMiss.dialysisForAcuteRenalFailure",
+            "label": "Dialysis for acute renal failure",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "coagulation",
+        "title": "Coagulation / haematological",
+        "fields": [
+          {
+            "id": "nearMiss.clottingFailure",
+            "linkId": "nearMiss.clottingFailure",
+            "label": "Failure to form clots",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.plateletsPerUl",
+            "linkId": "nearMiss.plateletsPerUl",
+            "label": "Platelet count",
+            "kind": "decimal",
+            "validation": {
+              "required": false
+            },
+            "unit": "per uL"
+          },
+          {
+            "id": "nearMiss.unitsTransfused",
+            "linkId": "nearMiss.unitsTransfused",
+            "label": "Units of blood or red cells transfused",
+            "kind": "decimal",
+            "validation": {
+              "required": false
+            },
+            "unit": "units"
+          }
+        ]
+      },
+      {
+        "id": "hepatic",
+        "title": "Hepatic",
+        "fields": [
+          {
+            "id": "nearMiss.jaundiceWithPreEclampsia",
+            "linkId": "nearMiss.jaundiceWithPreEclampsia",
+            "label": "Jaundice in the presence of pre-eclampsia",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.bilirubinUmolL",
+            "linkId": "nearMiss.bilirubinUmolL",
+            "label": "Bilirubin",
+            "kind": "decimal",
+            "validation": {
+              "required": false
+            },
+            "unit": "umol/L"
+          }
+        ]
+      },
+      {
+        "id": "neurological",
+        "title": "Neurological",
+        "fields": [
+          {
+            "id": "nearMiss.prolongedUnconsciousness",
+            "linkId": "nearMiss.prolongedUnconsciousness",
+            "label": "Unconsciousness lasting 12 hours or more",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.stroke",
+            "linkId": "nearMiss.stroke",
+            "label": "Stroke",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.uncontrollableFits",
+            "linkId": "nearMiss.uncontrollableFits",
+            "label": "Uncontrollable fits / status epilepticus",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          },
+          {
+            "id": "nearMiss.totalParalysis",
+            "linkId": "nearMiss.totalParalysis",
+            "label": "Total paralysis",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "uterine",
+        "title": "Uterine",
+        "fields": [
+          {
+            "id": "nearMiss.hysterectomyForInfectionOrHaemorrhage",
+            "linkId": "nearMiss.hysterectomyForInfectionOrHaemorrhage",
+            "label": "Hysterectomy for infection or haemorrhage",
+            "kind": "coded_single",
+            "options": [
+              {
+                "code": "PRESENT",
+                "display": "Yes"
+              },
+              {
+                "code": "ABSENT",
+                "display": "No"
+              }
+            ],
+            "validation": {
+              "required": false
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
