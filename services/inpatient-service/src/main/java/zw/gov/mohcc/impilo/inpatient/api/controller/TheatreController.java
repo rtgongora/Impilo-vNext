@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.inpatient.core.SpecimenCustodyService;
 import zw.gov.mohcc.impilo.inpatient.core.SurgicalDischargeService;
 import zw.gov.mohcc.impilo.inpatient.core.TheatreService;
 
@@ -23,11 +24,14 @@ public class TheatreController {
 
     private final TheatreService theatreService;
     private final SurgicalDischargeService surgicalDischargeService;
+    private final SpecimenCustodyService specimenCustodyService;
 
     public TheatreController(TheatreService theatreService,
-                             SurgicalDischargeService surgicalDischargeService) {
+                             SurgicalDischargeService surgicalDischargeService,
+                             SpecimenCustodyService specimenCustodyService) {
         this.theatreService = theatreService;
         this.surgicalDischargeService = surgicalDischargeService;
+        this.specimenCustodyService = specimenCustodyService;
     }
 
     // ── Wave 4 §14 — surgery-specialised discharge summary ──
@@ -294,6 +298,32 @@ public class TheatreController {
     public Map<String, Object> acknowledgeCritical(@PathVariable UUID id, @PathVariable UUID specimenId,
                                                    @RequestBody(required = false) Map<String, Object> body) {
         return theatreService.acknowledgeCritical(id, specimenId, body != null ? body : Map.of());
+    }
+
+    // ── Wave P8 (pipeline §13): chain of custody, label confirmation, adequacy ──
+    @PostMapping("/cases/{id}/specimens/{specimenId}/collect")
+    public Map<String, Object> recordSpecimenCollection(@PathVariable UUID id, @PathVariable UUID specimenId,
+                                                         @RequestBody(required = false) Map<String, Object> body) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        return specimenCustodyService.custodyRow(specimenCustodyService.recordCollection(id, specimenId,
+                (String) b.get("containerType"), (String) b.get("fixative")));
+    }
+
+    @PostMapping("/cases/{id}/specimens/{specimenId}/confirm-label")
+    public Map<String, Object> confirmSpecimenLabel(@PathVariable UUID id, @PathVariable UUID specimenId) {
+        return specimenCustodyService.custodyRow(specimenCustodyService.confirmLabel(id, specimenId));
+    }
+
+    @PostMapping("/cases/{id}/specimens/{specimenId}/receive")
+    public Map<String, Object> recordSpecimenReceipt(@PathVariable UUID id, @PathVariable UUID specimenId) {
+        return specimenCustodyService.custodyRow(specimenCustodyService.recordReceipt(id, specimenId));
+    }
+
+    @PostMapping("/cases/{id}/specimens/{specimenId}/adequacy")
+    public Map<String, Object> assessSpecimenAdequacy(@PathVariable UUID id, @PathVariable UUID specimenId,
+                                                       @RequestBody Map<String, Object> body) {
+        return specimenCustodyService.custodyRow(
+                specimenCustodyService.assessAdequacy(id, specimenId, (String) body.get("adequacy")));
     }
 
     // ── Wave 1 clinical-safety: surgical counts (RITO-backed on discrepancy) ──
