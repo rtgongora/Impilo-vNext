@@ -197,6 +197,6 @@ public class ConfigReleaseValidator {
     }
 
     private static String key(String typeCode, String definitionKey) {
-        return typeCode + " " + definitionKey;
+        return typeCode + "\0" + definitionKey;
     }
 }
