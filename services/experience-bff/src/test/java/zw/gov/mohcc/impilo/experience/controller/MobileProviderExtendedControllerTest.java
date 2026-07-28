@@ -125,6 +125,33 @@ class MobileProviderExtendedControllerTest {
         }
     }
 
+    /**
+     * The interaction checker's failure path is the one that matters.
+     *
+     * <p>It used to answer "No known interactions found for the checked medications" having called
+     * nothing at all. A prescriber asks this endpoint precisely to be told when not to proceed, so
+     * an unreachable engine must never be able to produce an all-clear. "No interactions found" and
+     * "the check did not run" are different claims and only one is safe to prescribe on.
+     */
+    @Test
+    void drugInteractionCheckFailsLoudlyWhenTheEngineIsUnreachable() {
+        MobileProviderExtendedController controller = new MobileProviderExtendedController(
+                new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(),
+                new StubCostaClient(), new StubOrosClient(),
+                new StubPacsClient(), new StubInpatientClient(), new UnreachableClinicalClient(),
+                new StubNotificationClient());
+
+        ResponseEntity<Map<String, Object>> response = controller.checkDrugInteractions(
+                "req-1", "corr-1", Map.of("medications", java.util.List.of("Warfarin", "Aspirin")));
+
+        assertEquals(502, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("drug_interaction_check_unavailable", response.getBody().get("error"));
+        assertNull(response.getBody().get("data"),
+                "an unreachable engine must not return an empty interaction list — that reads as a "
+                + "finding of no interactions");
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
