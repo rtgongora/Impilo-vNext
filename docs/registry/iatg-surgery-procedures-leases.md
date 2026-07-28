@@ -288,9 +288,9 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P6 done, P7–P15 remaining) · Phase S surgery (S0–S18, not started).
-Full plan in the programme plan document; per-wave status is tracked in the pack completion
-reports and in programme memory (`surgery-procedures-program-state.md`).
+Phase P pipeline (P0–P7 done, P8–P15 remaining — see §10) · Phase S surgery (S0–S18, not
+started). Full plan in the programme plan document; per-wave status is tracked in the pack
+completion reports and in programme memory (`surgery-procedures-program-state.md`).
 
 ## 9. Wave P-R — reachability (done)
 
@@ -328,3 +328,40 @@ pushed individually as it went green.
   `worktrees-need-node-modules-symlinked`) can be silently clobbered by `git stash -u` or a
   rebase mid-session. If a typecheck or test run in a worktree looks suspiciously fast or
   trivially clean, verify the symlink still resolves to real content before trusting the result.
+
+## 10. Wave P7 — safety-pause templates and sedation continuum (done)
+
+§9 (ten class-specific safety-pause templates, rows-not-columns confirmation items) and §10
+(eight-level sedation continuum with the rescue-capability chain) landed as a read-only layer on
+`procedures-service`, following the same worktree cycle as Wave P-R
+(`procedures-p7-safety-pauses`, kept on disk). No reachability wiring was needed — this is
+backend-internal content resolution with no new BFF/UI surface yet; it will be picked up whenever
+a caller (the aftercare or readiness engine, or a future clinician surface) needs it, at which
+point the P-R.4/P-R.5 route-shape and authz pattern below applies unchanged.
+
+**Two real seed defects caught by the new runtime-proof rig, not by review:**
+`scripts/runtime-proof/procedures-safety-pause-journeys.sh` asserts the migration's own stated
+invariant — every template carries PATIENT, PROCEDURE and CONSENT as its irreducible minimum —
+against actual seeded rows rather than trusting the comment that states it.
+`SAFETY-PAUSE-TRANSFUSION` was missing PROCEDURE and `SAFETY-PAUSE-DIALYSIS` was missing CONSENT;
+both fixed in the V005 seed before the commit that carries this section. Neither H2-based module
+test would have caught this — the module tests exercise the service's read logic against
+hand-inserted fixtures, not the shipped seed content itself.
+
+**The route-shape trap from P-R.4 was applied pre-emptively, not rediscovered.** The initial
+`SafetyPauseController` draft used `{templateCode}`/`{levelCode}` REST path variables — exactly
+the shape `AuthzInternalRequest.deriveResourceType` (§7 above) mis-derives a resource type from.
+Rewritten to query-param shape (`?code=`) before the controller was ever wired to authz, so
+whichever wave next proxies these routes through the BFF inherits routes that are already safe
+to pin, rather than a second instance of the same defect reaching a migration.
+
+**depth_rank is deliberately not unique.** `NO_SEDATION`/`NON_PHARMACOLOGICAL` both rank 0 and
+`GENERAL_ANAESTHESIA`/`REGIONAL_ANAESTHESIA` both rank 5 — parallel techniques measured on
+different axes (drug depth vs. block extent), not points on one strict scale. An earlier draft of
+the migration declared `UNIQUE (tenant_id, depth_rank)`, caught and removed in self-review before
+the migration was ever run against Postgres.
+
+Proof: `SafetyPauseAndSedationServiceTest` (9 tests, H2 — service read/resolve logic) +
+`procedures-safety-pause-journeys.sh` (22/22, real Postgres — CHECK constraints, the composite
+rescue-capability FK, the depth_rank non-uniqueness, both seed defects above). Module regression:
+36/36.
