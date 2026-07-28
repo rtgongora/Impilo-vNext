@@ -18,13 +18,16 @@ public class WorkforceAssignmentService {
 
     private final WorkforceAssignmentRepository assignmentRepository;
     private final WorkforceEligibilityService eligibilityService;
+    private final ReferenceValidationService referenceValidationService;
     private final VashandiOutboxWriter outboxWriter;
 
     public WorkforceAssignmentService(WorkforceAssignmentRepository assignmentRepository,
                                       WorkforceEligibilityService eligibilityService,
+                                      ReferenceValidationService referenceValidationService,
                                       VashandiOutboxWriter outboxWriter) {
         this.assignmentRepository = assignmentRepository;
         this.eligibilityService = eligibilityService;
+        this.referenceValidationService = referenceValidationService;
         this.outboxWriter = outboxWriter;
     }
 
@@ -71,6 +74,15 @@ public class WorkforceAssignmentService {
         assignment.setOpaDecisionId(opaDecisionId);
         assignment.setStatus("prechecked");
         assignmentRepository.save(assignment);
+        // A5: best-effort reference validation — never affects eligibility or
+        // blocks precheck; records VALIDATED/UNVALIDATED/UNVERIFIABLE and
+        // quarantines a definite non-match for later remediation.
+        try {
+            referenceValidationService.validate(assignment);
+        } catch (Exception e) {
+            // referenceValidationService already logs internally; this guard
+            // exists so a reference-validation defect can never fail precheck.
+        }
         emit(tenantId, assignment, "prechecked", "vashandi:assignment:prechecked:" + assignmentId);
         return actionResponse(assignment, eligibility.overallStatus(), eligibility);
     }

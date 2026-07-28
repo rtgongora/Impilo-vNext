@@ -27,13 +27,15 @@ class WorkforceAssignmentServiceTest {
     @Mock
     WorkforceEligibilityService eligibilityService;
     @Mock
+    ReferenceValidationService referenceValidationService;
+    @Mock
     VashandiOutboxWriter outboxWriter;
 
     WorkforceAssignmentService service;
 
     @BeforeEach
     void setUp() {
-        service = new WorkforceAssignmentService(assignmentRepository, eligibilityService, outboxWriter);
+        service = new WorkforceAssignmentService(assignmentRepository, eligibilityService, referenceValidationService, outboxWriter);
     }
 
     @Test

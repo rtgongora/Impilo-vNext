@@ -73,6 +73,19 @@ public class WorkforceAssignmentEntity {
     @Column(columnDefinition = "jsonb")
     private String coverScopeJson;
 
+    /**
+     * Soft validation outcome of departmentId/programmeId against the
+     * canonical registries (A5): NOT_APPLICABLE | UNVERIFIED | VALIDATED |
+     * UNVALIDATED | UNVERIFIABLE. Never blocks the assignment — an
+     * UNVALIDATED department means DEPARTMENT_MANAGEMENT mode is not offered
+     * for it, not that the assignment itself is denied.
+     */
+    @Column(nullable = false, length = 32)
+    private String departmentRefStatus = "NOT_APPLICABLE";
+
+    @Column(nullable = false, length = 32)
+    private String programmeRefStatus = "NOT_APPLICABLE";
+
     @Column(nullable = false, length = 32)
     private String status = "draft";
 
