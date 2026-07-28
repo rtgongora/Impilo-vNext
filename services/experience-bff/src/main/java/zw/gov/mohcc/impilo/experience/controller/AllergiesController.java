@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -59,8 +60,12 @@ public class AllergiesController {
         }
         try {
             JsonNode pctData = pctClient.listAllergies(patientId);
+            // PCT emits flat snake_case rows (`allergen`, `severity`, `clinical_status`). The
+            // shell's useAllergies declares `attributes.severity`, and PatientBanner — which
+            // renders on every EHR screen — reads it unguarded. Passing PCT's shape through
+            // crashed the banner precisely on the patients who have a severe allergy recorded.
             return ResponseEntity.ok(Map.of(
-                    "data", pctData != null ? pctData : List.of(),
+                    "data", JsonApiRows.rows(pctData, "allergy", "allergy_id"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             // An empty 200 here reads as "no known allergies", which is the single most dangerous

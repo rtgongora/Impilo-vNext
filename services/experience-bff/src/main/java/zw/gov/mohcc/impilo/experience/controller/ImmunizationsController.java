@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -63,9 +64,18 @@ public class ImmunizationsController {
         }
         try {
             JsonNode pctData = pctClient.listImmunizations(patientId, page, size);
-            return ResponseEntity.ok(Map.of(
-                    "data", pctData != null ? pctData : List.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            // PCT returns an object — {items, page, size, total} — where useImmunizations declares
+            // a flat array. `?? []` could not rescue that (the object is non-nullish), so
+            // `.filter is not a function` fired on every load of the immunizations tab. Unwrap the
+            // container and normalise the rows; carry the paging counters in meta where they belong.
+            List<Map<String, Object>> rows = JsonApiRows.rows(pctData, "immunization", "immunization_id");
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            meta.put("page", pctData != null && pctData.hasNonNull("page") ? pctData.get("page").asInt() : page);
+            meta.put("size", pctData != null && pctData.hasNonNull("size") ? pctData.get("size").asInt() : size);
+            meta.put("total", pctData != null && pctData.hasNonNull("total") ? pctData.get("total").asLong() : rows.size());
+            return ResponseEntity.ok(Map.of("data", rows, "meta", meta));
         } catch (Exception e) {
             // An empty 200 here reads as "this patient is unvaccinated", which invites a repeat
             // dose of a vaccine already given. Fail loudly rather than fabricate the absence.
