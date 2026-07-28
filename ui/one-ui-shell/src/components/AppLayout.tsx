@@ -16,6 +16,7 @@ import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
 import { ActingForBanner } from "./citizen/ActingForBanner";
 import { ShellTopAccountActions } from "./shell/ShellTopAccountActions";
 import { SkipToContent } from "./public/SkipToContent";
+import { ActiveWorkContextBar } from "./work-home/ActiveWorkContextBar";
 import { useLayoutPrefsStore } from "@/hooks/useLayoutPrefsStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -114,6 +115,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <ActingForBanner />
+        <ActiveWorkContextBar />
         {/* Bottom inset differs by device: the mobile tab bar (~4.5rem + safe area) under `lg`,
             the desktop floating dock (var) at `lg`+. */}
         <main id="main-content" data-shell-scroll="main" className="impilo-canvas flex-1 overflow-auto px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] pt-0 md:px-4 lg:pb-[var(--shell-taskbar-height,0px)]">{children}</main>

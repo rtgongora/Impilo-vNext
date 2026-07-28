@@ -1,0 +1,13 @@
+{
+  "typeCode": "ROLE_WORKSPACE",
+  "definitionKey": "registrar",
+  "label": "Registrar workspace",
+  "semanticVersion": "1.0.0",
+  "payload": {
+    "roleCode": "REGISTRAR",
+    "requiresFacilityAssignment": false,
+    "sees": ["APPLICATION_QUEUE", "REGISTER_ENTRIES", "DECISIONS", "CORRESPONDENCE", "OPERATIONAL_DASHBOARD", "CONFIGURATION_READ"],
+    "neverSees": ["EXAMINATION_MARKS"],
+    "note": "The registrar approves decisions but does not mark examinations; breadth of authority is not the same as breadth of visibility."
+  }
+}

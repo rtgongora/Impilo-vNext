@@ -152,6 +152,7 @@ public class SessionExperienceService {
                 v.put("organisationId", c.organisationId());
                 v.put("jurisdictionCode", c.jurisdictionCode());
                 v.put("programmeId", c.programmeId());
+                v.put("departmentId", c.departmentId());
                 v.put("roleTemplateId", c.roleTemplateId());
                 v.put("availableModes", c.availableModes());
                 v.put("defaultMode", c.defaultMode());
