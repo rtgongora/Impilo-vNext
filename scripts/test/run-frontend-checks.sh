@@ -14,6 +14,9 @@ gate_run "frontend-typecheck-e2e" bash -c 'cd ui/one-ui-shell && npm run test:ty
 # The reverse of route-parity: a page that exists but is in no registry is reachable by nothing.
 # route-parity-check only walks registry -> filesystem and is structurally blind to this.
 gate_run "frontend-orphan-pages" bash -c 'cd ui/one-ui-shell && npm run test:orphan-pages' || FAIL=1
+# no-stub-guard catches an EMPTY onClick; this catches a <button> with no handler at all, which is
+# the commoner shape and looks like finished markup rather than a decision someone made.
+gate_run "frontend-decorative-controls" bash -c 'cd ui/one-ui-shell && npm run test:decorative-controls' || FAIL=1
 gate_run "frontend-unit-tests" bash -c 'cd ui/one-ui-shell && npm test' || FAIL=1
 gate_run "frontend-build" bash -c 'cd ui/one-ui-shell && npm run build' || FAIL=1
 
