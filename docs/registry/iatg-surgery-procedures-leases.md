@@ -292,7 +292,7 @@ Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7
 with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
 not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
 (S0–S3 done — see §20–§23; **replaced from S4 onward by backlog-clearing batches SB-1–SB-6,
-SB-1 done — see §24, SB-2/3/4 in progress, SB-5 gated, SB-6 remaining**). Full plan in
+SB-1/2/4 done — see §24–§26, SB-3 in progress (Lane B), SB-5 gated, SB-6 remaining**). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -971,7 +971,77 @@ case). `ComplicationPathwayServiceTest` (10 tests, the full closure-order refusa
 `PrehabItemServiceTest` (5 tests). `surgery-complication-prehab-journeys.sh` (17/17, real
 Postgres). Full surgery-service module regression: 55/55.
 
-Batches SB-3 (consolidated reachability) and SB-4 (37 maps + 15-specialty deep content) are
-running in parallel lanes as of this wave; SB-2 (longitudinal objects, follow-up, specialty
-dimension) follows next in this lane; SB-5 (operative record depth) stays gated on the
-ten-theatre-rigs background task.
+Batches SB-3 (consolidated reachability) and SB-4 (37 maps + 15-specialty deep content) ran in
+parallel lanes as of this wave; SB-5 (operative record depth) stays gated on the ten-theatre-
+rigs background task.
+
+## 25. Wave SB-2 — longitudinal objects, follow-up, waiting-list revalidation, specialty dimension (done)
+
+Course spine B. §17 `surgical_longitudinal_object` (drains/stomas/wounds, implants still
+federated to inventory-service P8), §18 `surgical_followup` (restrictions/fit-note/transport/
+future-surgery intent — surveillance stays `pct_care_plans`, referenced only), §9
+`surgical_waitlist_revalidation` (surgery's ONLY slice of the 19-field waiting-list model —
+the rest is `scheduling.surgical_waitlist_entry`, untouched), and the §6 specialty dimension:
+`surgical_episode.specialty` hardened from free text to the 15-value vocabulary now that ZIBO
+has coded all fifteen, plus two empty content tables (`surgical_specialty_indication`,
+`surgical_operative_template`) for the "content over shared infrastructure" spine.
+
+`zibo-service` V300 (co-edited, additive-only): publishes CodeSystem/ValueSet version 1.1.0 —
+the original 21 concepts (V006) plus the ten surgical specialties the pack's own audit named
+missing. A NEW version, never a mutation of 1.0.0 — verified against the full 11-migration
+zibo-service chain on real Postgres: 1.0.0 keeps its original 21 concepts, 1.1.0 carries 31.
+
+One real defect the rig caught before commit: the fit-note pairing CHECK originally tied only
+`fit_note_issued_at`/`fit_note_issued_by` to each other, not to `fit_note_notes` — a direct-DB
+write could have created fit-note CONTENT with no recorded issuer. Fixed to a proper three-way
+pair before push, the same idiom `surgical_decision`'s own `final_decision` pairing (S3) uses.
+
+Proof: `LongitudinalObjectServiceTest` (6), `SurgicalFollowupServiceTest` (5),
+`WaitlistRevalidationServiceTest` (4), `SpecialtyContentServiceTest` (3).
+`surgery-longitudinal-followup-specialty-journeys.sh` (23/23 at this point, extended to 25/25
+once SB-4's content landed — see §26). Full surgery-service module regression: 73/73.
+
+## 26. Wave SB-4 — 118 specialty indications + 75 operative templates + 37 body maps (done, one named debt)
+
+The Lane C content fan-out, integrated into SB-2's empty tables and the estate's shared
+body-map primitive.
+
+**Specialty content** (`V007__specialty_content_seed.sql`): 118 indications (7-8 per
+specialty) and 75 operative templates (5 per specialty) across all fifteen surgical
+specialties, Zimbabwe-service-aware throughout (open-first with laparoscopy noted only where
+realistic at central hospitals; SIGN nailing alongside plating, MMF arch bars where plates are
+scarce, MSICS over phaco named explicitly as resource-aware alternatives). Every row
+`ENGINEERING_SEED`/`PENDING_MOHCC_RATIFICATION` (the table's own defaults). Validated in a
+throwaway schema before writing the real migration — all 193 rows parse and insert cleanly,
+zero duplicate-key collisions across specialties, every specialty/wound-classification value
+checked against the real CHECK vocabularies — then re-verified against the full V001-V007
+chain on real Postgres. Each specialty's own authoring pass named specific, deliberate
+omissions (Whipple/liver resection, valve replacement, TME) where a seeded district-level
+template would misrepresent capability that does not exist at the levels this pack targets —
+those indications are still present, routed to MDT/central level, without a false template.
+
+**Body maps** (`ui/one-ui-shell`): 37 new region maps / 617 regions across six files, closing
+the pipeline's own §12 (20 maps) and the surgical pack's §7 (17 maps) together — "built once as
+one feature" per the pipeline audit's own consequence #5, rather than the second deferral the
+programme originally planned (Wave S7). Genuinely additive RegionMapDef data matching the
+existing body-map primitive's shape exactly — no bespoke component work. SNOMED coverage is
+honestly partial (roughly 200/617 regions fully coded; the rest bound to an explicit
+unmapped/pending marker per two register files, never a plausible-looking guessed code). Six
+new site-marking instruments (one per anatomical grouping) registered into the shared
+`BODY_MAP_INSTRUMENTS`, scoped to site-marking questions (planned/confirmed/avoid/marked-not-
+confirmed) rather than diagnostic-finding vocabularies — a different clinical question from the
+four pre-existing exam instruments. The pre-existing strict-SNOMED-coverage test is
+deliberately NOT extended to the new maps, since forcing genuinely partial coverage into a
+test that asserts full coverage would be dishonest; the register files carry that signal
+instead.
+
+**One named debt, not silently dropped**: the accompanying ~145 six-layer CDS rules
+(DANGER_SIGN/THERAPY/MONITORING/FOLLOW_UP/CLASSIFICATION/DATA_VALIDATION per specialty) Lane C
+also produced are NOT integrated — `clinical-knowledge-platform-service`'s `rule_definitions`
+schema was not reviewed before V007 was written, and mapping rule content into a co-edited
+service's table needs that review first rather than guessing a column mapping. The fragments
+are preserved for that follow-up integration.
+
+Proof: full `ui/one-ui-shell` typecheck (exit 0). `body-map.test.tsx`: 28/28 unchanged.
+`surgery-longitudinal-followup-specialty-journeys.sh` extended to 25/25 (all fifteen
+specialties have seeded content; every row honestly flagged).
