@@ -945,6 +945,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/daidzai/verify-callbacks", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Callback Verification", navLabel: "Callbacks", navZone: "work" },
   { path: "/work/daidzai/missions", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mission Tracking", navLabel: "Missions", navZone: "work" },
   { path: "/work/daidzai/disasters", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Disaster Command", navLabel: "Disasters", navZone: "work" },
+  { path: "/work/daidzai/disasters/[id]/casualties", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "MCI Casualty Tracking", navLabel: "Casualties", navZone: "work" },
   // OF-B28/OF-B23 — remote-monitoring command workspace (§14.8 clinical desk) + CHW monitoring view.
   { path: "/work/telemonitoring", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Remote Monitoring Command", navLabel: "Remote Monitoring", navZone: "work" },
   { path: "/work/telemonitoring/chw", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "CHW Monitoring", navLabel: "CHW Monitoring", navZone: "work" },
@@ -1073,7 +1074,7 @@ export const ROUTES: RouteDefinition[] = [
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
 // Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
 // workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
-export const EXPECTED_ROUTE_COUNT = 826;
+export const EXPECTED_ROUTE_COUNT = 827;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
