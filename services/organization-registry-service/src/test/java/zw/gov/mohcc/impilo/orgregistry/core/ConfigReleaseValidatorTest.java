@@ -75,11 +75,17 @@ class ConfigReleaseValidatorTest {
     // ── fixtures ─────────────────────────────────────────────────────────────────────────────
 
     private ConfigDefinitionTypeEntity type(String code, boolean fourEyes, boolean applicantFacing) {
+        return type(code, fourEyes, applicantFacing, false);
+    }
+
+    private ConfigDefinitionTypeEntity type(String code, boolean fourEyes, boolean applicantFacing,
+                                            boolean carriesPolicyValue) {
         ConfigDefinitionTypeEntity type = new ConfigDefinitionTypeEntity();
         type.setTypeCode(code);
         type.setLabel(code);
         type.setRequiresFourEyes(fourEyes);
         type.setApplicantFacing(applicantFacing);
+        type.setCarriesPolicyValue(carriesPolicyValue);
         types.add(type);
         return type;
     }
@@ -214,7 +220,7 @@ class ConfigReleaseValidatorTest {
     void anUnsetPolicyValueIsAWarningAndNeverBlocksActivation() {
         // NCZ-DEC-002: the student index fee amount is a Council decision. The seam ships built and
         // the value absent; the capability surfaces as not configured rather than guessing a number.
-        type("FEE_SCHEDULE", true, true);
+        type("FEE_SCHEDULE", true, true, true);
         ConfigDefinitionVersionEntity fee =
                 item("FEE_SCHEDULE", "student-index-fee", "/professional/regulatory/invoices");
         fee.setPolicyStatus("PENDING_REGULATOR_APPROVAL");
@@ -231,9 +237,145 @@ class ConfigReleaseValidatorTest {
     }
 
     @Test
+    void anUndeclaredPolicyValueIsAnErrorRatherThanSilence() {
+        // The hole this closes: before V014, a fee authored with amount null and NO declared policy
+        // status produced a completely clean report — it read as fully configured. The honest author
+        // who declared PENDING got a warning; the one who declared nothing got a clean bill of
+        // health. The discipline penalised honesty.
+        type("FEE_SCHEDULE", true, true, true);
+        ConfigDefinitionVersionEntity fee =
+                item("FEE_SCHEDULE", "student-index-fee", "/professional/regulatory/invoices");
+        fee.setPolicyStatus(null);
+        approve("HID-ONE");
+        approve("HID-TWO");
+
+        ConfigReleaseValidator.ValidationReport report = validator.validate(release);
+
+        assertThat(report.valid()).isFalse();
+        assertThat(codes(report.errors())).contains("POLICY_STATUS_UNDECLARED");
+    }
+
+    @Test
+    void aTypeThatCarriesNoPolicyValueNeedsNoDeclaration() {
+        // A form does not have a "value the regulator must set" — requiring a declaration there
+        // would be ceremony, and ceremony is what makes people stop reading findings.
+        type("FORM", false, true, false);
+        item("FORM", "student-registration-form", "/professional/regulatory/apply/student");
+        approve("HID-ONE");
+
+        assertThat(validator.validate(release).valid()).isTrue();
+    }
+
+    @Test
+    void pendingWithoutNamingTheDecisionIsAnError() {
+        type("PENALTY_POLICY", true, true, true);
+        ConfigDefinitionVersionEntity penalty =
+                item("PENALTY_POLICY", "renewal-penalty", "/professional/regulatory/renewal");
+        penalty.setPolicyStatus("PENDING_REGULATOR_APPROVAL");
+        penalty.setPolicyDecisionRef(null);
+        approve("HID-ONE");
+        approve("HID-TWO");
+
+        ConfigReleaseValidator.ValidationReport report = validator.validate(release);
+
+        assertThat(report.valid()).isFalse();
+        assertThat(codes(report.errors())).contains("POLICY_DECISION_REF_MISSING");
+    }
+
+    @Test
+    void anUnsetValueNothingDependsOnIsTheQuietWarning() {
+        // NCZ-DEC-012: CPD rules are unset and deliberately inert — nothing is gated on them yet.
+        type("CPD_RULES", false, false, true);
+        ConfigDefinitionVersionEntity cpd = item("CPD_RULES", "cpd-cycle", null);
+        cpd.setPolicyStatus("PENDING_REGULATOR_APPROVAL");
+        cpd.setPolicyDecisionRef("NCZ-DEC-012");
+        approve("HID-ONE");
+
+        ConfigReleaseValidator.ValidationReport report = validator.validate(release);
+
+        assertThat(report.valid()).isTrue();
+        assertThat(codes(report.warnings())).contains("POLICY_VALUE_UNSET");
+        assertThat(codes(report.warnings())).doesNotContain("POLICY_VALUE_UNSET_ON_CRITICAL_PATH");
+    }
+
+    @Test
+    void anUnsetValueOnALiveJourneyIsTheLoudWarningAndNamesTheJourney() {
+        // NCZ-DEC-002: the student index fee is unset AND the registration journey this release
+        // publishes depends on it. Same lifecycle state as the CPD rules above; entirely different
+        // consequence for an applicant, and the regulator should see which one they are approving.
+        type("APPLICATION_TYPE", false, true, false);
+        type("FEE_SCHEDULE", true, true, true);
+        ConfigDefinitionVersionEntity application = item("APPLICATION_TYPE", "student-registration",
+                "/professional/regulatory/apply/student");
+        definitions.getLast().setLabel("Student registration");
+        ConfigDefinitionVersionEntity fee =
+                item("FEE_SCHEDULE", "student-index-fee", "/professional/regulatory/invoices");
+        fee.setPolicyStatus("PENDING_REGULATOR_APPROVAL");
+        fee.setPolicyDecisionRef("NCZ-DEC-002");
+        dependency(application, "FEE_SCHEDULE", "student-index-fee", false);
+        approve("HID-ONE");
+        approve("HID-TWO");
+
+        ConfigReleaseValidator.ValidationReport report = validator.validate(release);
+
+        assertThat(report.valid()).isTrue();
+        assertThat(codes(report.warnings())).contains("POLICY_VALUE_UNSET_ON_CRITICAL_PATH");
+        ConfigReleaseValidator.Finding finding = report.warnings().stream()
+                .filter(f -> "POLICY_VALUE_UNSET_ON_CRITICAL_PATH".equals(f.code())).findFirst()
+                .orElseThrow();
+        assertThat(finding.message()).contains("NCZ-DEC-002").contains("Student registration");
+    }
+
+    @Test
+    void criticalPathReachesThroughAChainOfDependencies() {
+        // application -> workflow -> numbering policy. The applicant never touches the numbering
+        // policy directly, but they cannot finish registration without an index number.
+        type("APPLICATION_TYPE", false, true, false);
+        type("WORKFLOW", true, true, false);
+        type("NUMBERING_POLICY", false, true, true);
+        ConfigDefinitionVersionEntity application = item("APPLICATION_TYPE", "student-registration",
+                "/professional/regulatory/apply/student");
+        definitions.getLast().setLabel("Student registration");
+        ConfigDefinitionVersionEntity workflow =
+                item("WORKFLOW", "student-flow", "/professional/regulatory/apply/student");
+        ConfigDefinitionVersionEntity numbering =
+                item("NUMBERING_POLICY", "student-index", "/professional/regulatory/registration");
+        numbering.setPolicyStatus("PENDING_REGULATOR_APPROVAL");
+        numbering.setPolicyDecisionRef("NCZ-DEC-001");
+        dependency(application, "WORKFLOW", "student-flow", false);
+        dependency(workflow, "NUMBERING_POLICY", "student-index", false);
+        approve("HID-ONE");
+        approve("HID-TWO");
+
+        ConfigReleaseValidator.ValidationReport report = validator.validate(release);
+
+        assertThat(codes(report.warnings())).contains("POLICY_VALUE_UNSET_ON_CRITICAL_PATH");
+    }
+
+    @Test
+    void anOptionalDependencyDoesNotPutAnUnsetValueOnTheCriticalPath() {
+        type("APPLICATION_TYPE", false, true, false);
+        type("PENALTY_POLICY", true, false, true);
+        ConfigDefinitionVersionEntity application = item("APPLICATION_TYPE", "student-registration",
+                "/professional/regulatory/apply/student");
+        ConfigDefinitionVersionEntity penalty = item("PENALTY_POLICY", "renewal-penalty", null);
+        penalty.setPolicyStatus("PENDING_REGULATOR_APPROVAL");
+        penalty.setPolicyDecisionRef("NCZ-DEC-003");
+        dependency(application, "PENALTY_POLICY", "renewal-penalty", true);
+        approve("HID-ONE");
+        approve("HID-TWO");
+
+        ConfigReleaseValidator.ValidationReport report = validator.validate(release);
+
+        assertThat(codes(report.warnings())).contains("POLICY_VALUE_UNSET");
+        assertThat(codes(report.warnings())).doesNotContain("POLICY_VALUE_UNSET_ON_CRITICAL_PATH");
+    }
+
+    @Test
     void aFeeChangeNeedsTwoApprovers() {
-        type("FEE_SCHEDULE", true, true);
-        item("FEE_SCHEDULE", "student-index-fee", "/professional/regulatory/invoices");
+        type("FEE_SCHEDULE", true, true, true);
+        item("FEE_SCHEDULE", "student-index-fee", "/professional/regulatory/invoices")
+                .setPolicyStatus("CONFIRMED");
         approve("HID-ONE");
 
         ConfigReleaseValidator.ValidationReport report = validator.validate(release);

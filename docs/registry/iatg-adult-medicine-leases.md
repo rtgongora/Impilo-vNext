@@ -323,9 +323,22 @@ definitely new".
   and comorbidity burden cannot reach the CDS engines at all, so renal dosing, interaction
   checking, contraindication and deprescribing are unimplementable until it grows. W2. **Any lane
   needing an adult clinical fact should coordinate rather than add a parallel context object.**
-- **BUTANO maps only `Condition` and `CarePlan`** of the resources the medical record needs.
+- ~~**BUTANO maps only `Condition` and `CarePlan`**~~ — **CORRECTED 2026-07-28, and the truth is
+  worse.** Verified against the code: **nothing writes `Condition` or `CarePlan` into BUTANO at all.**
+  Both appear only on the *read* side (`TimelineService`, `ReconciliationService`,
+  `ResourceStatsService`, `IpsBundleGenerator` — each already enumerating 11–12 types). The one
+  `Condition` publisher, `experience-bff`'s `FhirPublisher`, is **dead code that nothing injects.**
+  BUTANO actually ingests `Patient`, `Observation`, `ImagingStudy`, `DiagnosticReport`,
+  `DocumentReference`, `ServiceRequest`.
+  **Consequence any lane writing clinical truth should know: the PCT problem list never reaches the
+  SHR.** `ProblemService` writes an outbox row (`aggregateType = "PROBLEM"`) but
+  `OutboxPublisher.routeTopic()` has no arm for it and no BUTANO listener consumes one — so a
+  recorded diagnosis is absent from the SHR, the IPS bundle and the cross-facility timeline.
   `EpisodeOfCare`, `ClinicalImpression`, `RiskAssessment`, `DetectedIssue`, `GuidanceResponse`,
-  `MedicationStatement`, `Flag` and `Goal` have no mapping.
+  `MedicationStatement`, `Flag` and `Goal` likewise have no producer — but note `butano-service` is
+  an unrestricted HAPI JPA server, so storage/REST for all of them already works: **the missing half
+  is always the producer, never the FHIR store.** A "readable-but-never-written" resource looks
+  mapped and is not; that is how this claim survived unchallenged.
 - **No HIV, TB or NCD model exists anywhere in the repository.** Verified by search: no
   `viral_load`, `art_regimen`, `cd4`, `tb_treatment` or programme-enrolment concept. The two
   deepest requirements of this pack are green field.

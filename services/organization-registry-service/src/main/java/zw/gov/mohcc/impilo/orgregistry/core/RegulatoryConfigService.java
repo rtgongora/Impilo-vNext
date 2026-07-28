@@ -150,11 +150,12 @@ public class RegulatoryConfigService {
                                                        String policyDecisionRef, String sourcePackRef,
                                                        List<DependencySpec> dependencies, String actor) {
         requirePack(tenantId, packId);
-        if (!typeRepository.existsById(typeCode)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Unknown definition type '" + typeCode + "'. Code owns the configuration language: "
-                            + "a type with no engine behind it is configuration nobody executes.");
-        }
+        ConfigDefinitionTypeEntity type = typeRepository.findById(typeCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Unknown definition type '" + typeCode + "'. Code owns the configuration "
+                                + "language: a type with no engine behind it is configuration nobody "
+                                + "executes."));
+
 
         ConfigDefinitionEntity definition = definitionRepository
                 .findByTenantIdAndPackIdAndTypeCodeAndDefinitionKey(tenantId, packId, typeCode, definitionKey)
@@ -181,6 +182,24 @@ public class RegulatoryConfigService {
                                 + "version is a NEW version, never an edit — cases are pinned to this one.");
             }
             return current;
+        }
+
+        // Checked only once we know we are actually authoring something new: attempting to change a
+        // published version is the more fundamental objection, and it must not be masked by this one.
+        // V014 refuses both at the table too; the guards are here so a caller gets a clean 400
+        // naming what to declare, rather than a 500 from a constraint they cannot see.
+        if (type.isCarriesPolicyValue() && (policyStatus == null || policyStatus.isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    typeCode + ":" + definitionKey + " carries a value only the regulator may set, so "
+                            + "it must declare policyStatus — CONFIRMED, or PENDING_REGULATOR_APPROVAL "
+                            + "with a decision reference. An undeclared value is indistinguishable "
+                            + "from a configured one.");
+        }
+        if ("PENDING_REGULATOR_APPROVAL".equals(policyStatus)
+                && (policyDecisionRef == null || policyDecisionRef.isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    typeCode + ":" + definitionKey + " is pending a regulator decision but does not "
+                            + "say which one. Reference the entry in the council decision register.");
         }
 
         ConfigDefinitionVersionEntity version = new ConfigDefinitionVersionEntity();

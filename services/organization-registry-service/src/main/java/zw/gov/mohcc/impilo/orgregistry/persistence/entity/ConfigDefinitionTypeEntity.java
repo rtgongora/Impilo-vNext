@@ -36,6 +36,15 @@ public class ConfigDefinitionTypeEntity {
     @Column(nullable = false)
     private boolean applicantFacing;
 
+    /**
+     * The structure can be complete while a regulator-only value is absent — a fee schedule with
+     * no amount is still a well-formed fee schedule. Such a definition must DECLARE that the value
+     * is unset; silence is refused at write time (V014), because an undeclared value is
+     * indistinguishable from a configured one.
+     */
+    @Column(nullable = false)
+    private boolean carriesPolicyValue;
+
     @Column(nullable = false)
     private int sortOrder = 100;
 }

@@ -119,12 +119,19 @@ public class NompiloGuidanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestHeader(value = "X-Actor-Type", required = false) String actorType,
-            @RequestParam(value = "routePath", defaultValue = "/citizen/wallet") String routePath) {
+            @RequestParam(value = "routePath", required = false) String routePath,
+            @RequestParam(value = "context", defaultValue = "citizen") String context,
+            @RequestParam(value = "context_id", required = false) String workContextId,
+            @RequestParam(value = "mode", required = false) String workMode) {
+        if ("work".equalsIgnoreCase(context)) {
+            return workNextActions(requestId, correlationId, actorId,
+                    routePath != null ? routePath : "/work", workContextId, workMode);
+        }
         try {
             CitizenSignals derived = signalService.citizenSignals(actorId, false);
             Map<String, Object> req = new LinkedHashMap<>();
             req.put("userType", userType(actorType));
-            req.put("routePath", routePath);
+            req.put("routePath", routePath != null ? routePath : "/citizen/wallet");
             req.put("relationship", "SELF");
             req.put("signals", new ArrayList<>(derived.signals()));
             req.put("trustLoa", derived.trustLoa());
@@ -132,6 +139,33 @@ public class NompiloGuidanceController {
             return ok(result, requestId, correlationId);
         } catch (Exception e) {
             log.error("Nompilo next-actions failed: {}", e.getMessage());
+            return partial(requestId, correlationId);
+        }
+    }
+
+    /**
+     * Work-mode next-actions (Phase E6) — {@code context=work}. Reuses the citizen path's
+     * guidance engine and audit posture unchanged; only the signal derivation differs
+     * ({@link NompiloSignalService#workSignals}, built from the same
+     * {@code WorkHomeCompositionService} composition Work Home itself renders).
+     */
+    private ResponseEntity<Map<String, Object>> workNextActions(String requestId, String correlationId, String actorId,
+                                                                  String routePath, String workContextId, String workMode) {
+        if (workContextId == null || workContextId.isBlank()) {
+            return partial(requestId, correlationId);
+        }
+        try {
+            NompiloSignalService.WorkSignals derived = signalService.workSignals(actorId, null, workContextId, workMode);
+            Map<String, Object> req = new LinkedHashMap<>();
+            req.put("userType", "PROVIDER");
+            req.put("routePath", routePath);
+            req.put("relationship", "SELF");
+            req.put("signals", new ArrayList<>(derived.signals()));
+            req.put("trustLoa", 4);
+            JsonNode result = guidanceClient.resolveContext(req);
+            return ok(result, requestId, correlationId);
+        } catch (Exception e) {
+            log.error("Nompilo work next-actions failed: {}", e.getMessage());
             return partial(requestId, correlationId);
         }
     }

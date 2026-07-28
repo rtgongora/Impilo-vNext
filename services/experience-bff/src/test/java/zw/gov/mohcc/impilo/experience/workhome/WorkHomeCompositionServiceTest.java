@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,6 +26,8 @@ class WorkHomeCompositionServiceTest {
 
     @Mock
     private WorkContextResolutionService resolutionService;
+    @Mock
+    private ProfessionalAlertsComposer professionalAlertsComposer;
 
     private final ContextPropagatingFanout fanout = new ContextPropagatingFanout();
     private final AtomicInteger callCount = new AtomicInteger();
@@ -36,7 +39,11 @@ class WorkHomeCompositionServiceTest {
     void setUp() {
         callCount.set(0);
         facilityClinicalAdapter = new FakeAdapter(WorkHomeFamily.FACILITY_CLINICAL, callCount);
-        service = new WorkHomeCompositionService(resolutionService, fanout, List.of(facilityClinicalAdapter));
+        service = new WorkHomeCompositionService(resolutionService, fanout, professionalAlertsComposer,
+                List.of(facilityClinicalAdapter));
+        lenient().when(professionalAlertsComposer.sectionTask(anyString())).thenReturn(
+                FanoutTask.of(ProfessionalAlertsComposer.SECTION_ID,
+                        () -> WorkHomeSection.empty(ProfessionalAlertsComposer.SECTION_ID, "Professional alerts", "no alerts")));
     }
 
     private ResolvedWorkContext contextWithModes(List<String> availableModes, String defaultMode) {
@@ -92,9 +99,12 @@ class WorkHomeCompositionServiceTest {
         assertThat(result.friendlyState()).isNull();
         assertThat(result.family()).isEqualTo("FACILITY_CLINICAL");
         assertThat(result.contextId()).isEqualTo(CONTEXT_ID);
-        assertThat(result.sections()).hasSize(1);
-        assertThat(result.sections().get(0).sectionId()).isEqualTo("fake-section");
-        assertThat(result.sections().get(0).status()).isEqualTo("OK");
+        // The family adapter's section plus the cross-cutting professional-alerts section (E5).
+        assertThat(result.sections()).hasSize(2);
+        assertThat(result.sections()).extracting(WorkHomeSection::sectionId)
+                .containsExactlyInAnyOrder("fake-section", ProfessionalAlertsComposer.SECTION_ID);
+        assertThat(result.sections().stream().filter(s -> s.sectionId().equals("fake-section")).findFirst().orElseThrow().status())
+                .isEqualTo("OK");
     }
 
     @Test
@@ -111,16 +121,17 @@ class WorkHomeCompositionServiceTest {
     @Test
     void compose_adapterSectionThrows_degradesThatSectionInsteadOfFailingTheWholeResponse() {
         FakeAdapter throwingAdapter = FakeAdapter.throwing(WorkHomeFamily.FACILITY_CLINICAL);
-        WorkHomeCompositionService throwingService =
-                new WorkHomeCompositionService(resolutionService, fanout, List.of(throwingAdapter));
+        WorkHomeCompositionService throwingService = new WorkHomeCompositionService(
+                resolutionService, fanout, professionalAlertsComposer, List.of(throwingAdapter));
         ResolvedWorkContext ctx = contextWithModes(List.of("CLINICAL_CARE"), "CLINICAL_CARE");
         when(resolutionService.proveContext(ACTOR_ID, null, CONTEXT_ID)).thenReturn(ctx);
 
         WorkHomeResult result = throwingService.compose(ACTOR_ID, null, CONTEXT_ID, "CLINICAL_CARE");
 
         assertThat(result.friendlyState()).isNull();
-        assertThat(result.sections()).hasSize(1);
-        assertThat(result.sections().get(0).status()).isEqualTo("DEGRADED");
+        WorkHomeSection failing = result.sections().stream()
+                .filter(s -> s.sectionId().equals("fake-section")).findFirst().orElseThrow();
+        assertThat(failing.status()).isEqualTo("DEGRADED");
     }
 
     @Test
@@ -133,6 +144,33 @@ class WorkHomeCompositionServiceTest {
         assertThat(section.sectionId()).isEqualTo("fake-section");
         assertThat(section.status()).isEqualTo("OK");
         assertThat(callCount.get()).isEqualTo(1);
+    }
+
+    @Test
+    void composeSection_professionalAlertsSectionId_dispatchesToTheComposerNotTheFamilyAdapter() {
+        ResolvedWorkContext ctx = contextWithModes(List.of("CLINICAL_CARE"), "CLINICAL_CARE");
+        when(resolutionService.proveContext(ACTOR_ID, null, CONTEXT_ID)).thenReturn(ctx);
+        when(professionalAlertsComposer.sectionTask(ACTOR_ID)).thenReturn(
+                FanoutTask.of(ProfessionalAlertsComposer.SECTION_ID,
+                        () -> WorkHomeSection.ok(ProfessionalAlertsComposer.SECTION_ID, "Professional alerts",
+                                List.of(Map.of("id", "licence:1", "status", "EXPIRING", "priority", "HIGH")), Map.of("total", 1))));
+
+        WorkHomeSection section = service.composeSection(
+                ACTOR_ID, null, CONTEXT_ID, "CLINICAL_CARE", ProfessionalAlertsComposer.SECTION_ID);
+
+        assertThat(section.status()).isEqualTo("OK");
+        assertThat(callCount.get()).isEqualTo(0);
+    }
+
+    @Test
+    void composeSection_professionalAlertsSectionId_stillRequiresAReprovableContext() {
+        when(resolutionService.proveContext(ACTOR_ID, null, CONTEXT_ID)).thenReturn(null);
+
+        WorkHomeSection section = service.composeSection(
+                ACTOR_ID, null, CONTEXT_ID, "CLINICAL_CARE", ProfessionalAlertsComposer.SECTION_ID);
+
+        assertThat(section.status()).isEqualTo("EMPTY");
+        assertThat(section.note()).isEqualTo("work_context_unavailable");
     }
 
     @Test

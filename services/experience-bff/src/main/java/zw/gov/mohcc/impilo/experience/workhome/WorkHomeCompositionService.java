@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext;
 import zw.gov.mohcc.impilo.experience.workcontext.WorkContextResolutionService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,9 @@ import java.util.Map;
  * Composes the Work Home for the caller's active work context (Phase E3): re-proves the
  * context from source exactly like the C3 session mint (never trusts a client-supplied
  * contextId as a bearer credential), selects the single {@link WorkHomeFamilyAdapter} matching
- * the active mode, and fans its sections out via {@link ContextPropagatingFanout}.
+ * the active mode, and fans its sections out — together with the cross-cutting
+ * {@link ProfessionalAlertsComposer} (E5), present regardless of family — via
+ * {@link ContextPropagatingFanout}.
  *
  * <p>Always produces a result. Section-level failure degrades in-band ({@link WorkHomeSection});
  * context/mode failure produces the same generic, non-enumerating {@code friendlyState} values
@@ -24,13 +27,16 @@ public class WorkHomeCompositionService {
 
     private final WorkContextResolutionService resolutionService;
     private final ContextPropagatingFanout fanout;
+    private final ProfessionalAlertsComposer professionalAlertsComposer;
     private final Map<WorkHomeFamily, WorkHomeFamilyAdapter> adaptersByFamily;
 
     public WorkHomeCompositionService(WorkContextResolutionService resolutionService,
                                        ContextPropagatingFanout fanout,
+                                       ProfessionalAlertsComposer professionalAlertsComposer,
                                        List<WorkHomeFamilyAdapter> adapters) {
         this.resolutionService = resolutionService;
         this.fanout = fanout;
+        this.professionalAlertsComposer = professionalAlertsComposer;
         Map<WorkHomeFamily, WorkHomeFamilyAdapter> byFamily = new HashMap<>();
         for (WorkHomeFamilyAdapter adapter : adapters) {
             byFamily.put(adapter.family(), adapter);
@@ -44,7 +50,8 @@ public class WorkHomeCompositionService {
         if (resolved.failure() != null) {
             return resolved.failure();
         }
-        List<FanoutTask<WorkHomeSection>> tasks = resolved.adapter().sectionTasks(resolved.context());
+        List<FanoutTask<WorkHomeSection>> tasks = new ArrayList<>(resolved.adapter().sectionTasks(resolved.context()));
+        tasks.add(professionalAlertsComposer.sectionTask(actorHealthId));
         List<FanoutResult<WorkHomeSection>> results = fanout.run(tasks);
         List<WorkHomeSection> sections = results.stream().map(WorkHomeCompositionService::toSection).toList();
         return new WorkHomeResult(resolved.context().contextId(), resolved.adapter().family().name(),
@@ -54,6 +61,15 @@ public class WorkHomeCompositionService {
     /** {@code GET /internal/v1/work-home/sections/{id}} — retry/differential polling for one section only. */
     public WorkHomeSection composeSection(String actorHealthId, String entryRouteContextKind, String contextId,
                                            String requestedMode, String sectionId) {
+        if (ProfessionalAlertsComposer.SECTION_ID.equals(sectionId)) {
+            // Cross-cutting, not family-gated — still requires a re-provable context so a
+            // revoked/foreign contextId cannot be used to poll this section either.
+            Resolved resolved = resolve(actorHealthId, entryRouteContextKind, contextId, requestedMode);
+            if (resolved.failure() != null) {
+                return WorkHomeSection.empty(sectionId, sectionId, resolved.failure().friendlyState());
+            }
+            return toSection(fanout.run(List.of(professionalAlertsComposer.sectionTask(actorHealthId))).get(0));
+        }
         Resolved resolved = resolve(actorHealthId, entryRouteContextKind, contextId, requestedMode);
         if (resolved.failure() != null) {
             return WorkHomeSection.empty(sectionId, sectionId, resolved.failure().friendlyState());
