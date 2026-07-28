@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pct.domain.EmergencyEpisodeState;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyEpisodeEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EmergencyEpisodeRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.EmergencyHandoverRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 
 import java.time.OffsetDateTime;
@@ -54,18 +56,21 @@ public class EmergencyEpisodeService {
             EmergencyEpisodeState.OPEN_AWAITING_ACCEPTANCE.name());
 
     private final EmergencyEpisodeRepository repository;
+    private final EmergencyHandoverRepository handoverRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
 
     /**
-     * Both collaborators are PCT's own tables. The outbox is a local write in the same transaction —
-     * it is what lets this service tell peers what happened WITHOUT calling them, which is how
-     * care-first and cross-service correlation coexist.
+     * All three collaborators are PCT's own tables. The outbox is a local write in the same
+     * transaction — it is what lets this service tell peers what happened WITHOUT calling them,
+     * which is how care-first and cross-service correlation coexist.
      */
     public EmergencyEpisodeService(EmergencyEpisodeRepository repository,
+                                   EmergencyHandoverRepository handoverRepository,
                                    EventOutboxRepository outboxRepository,
                                    ObjectMapper objectMapper) {
         this.repository = repository;
+        this.handoverRepository = handoverRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
     }
@@ -259,6 +264,190 @@ public class EmergencyEpisodeService {
         e.setLocationConfirmedAt(OffsetDateTime.now());
         e.setUpdatedAt(OffsetDateTime.now());
         return repository.save(e);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────────────
+    // The acceptance handshake (W9). V200 declared the invariant in a CHECK three waves before
+    // there was any way to satisfy it: state <> 'CLOSED_HANDED_OVER' OR handover_id IS NOT NULL.
+    // These four methods are what makes it real. See emergency_handover's V204 header for the
+    // full rationale — the short version: responsibility transfers ONLY on a write by the
+    // accepting party carrying its OWN record id, never on a request, a page, or a timeout.
+    // ─────────────────────────────────────────────────────────────────────────────────────────
+
+    private static final List<String> HANDOVER_TARGET_TYPES =
+            List.of("ADMISSION", "THEATRE", "MENTAL_HEALTH", "INTERFACILITY_TRANSFER", "OTHER_SERVICE");
+
+    /**
+     * Request a handover. Moves the episode OPEN_IN_CARE -> OPEN_AWAITING_ACCEPTANCE — a request is
+     * not a handover, so the episode does not close and {@code handover_id} is not touched.
+     *
+     * <p>The FSM (via {@link #transition}) is the enforcement that this can only happen from
+     * OPEN_IN_CARE: {@code EmergencyEpisodeState.OPEN_IN_CARE.allowedNext()} is the only state whose
+     * transitions include OPEN_AWAITING_ACCEPTANCE.
+     */
+    @Transactional
+    public EmergencyHandoverEntity requestHandover(UUID episodeId, UUID tenantId, String targetType,
+                                                    String targetService, UUID targetFacilityId,
+                                                    String requestedBy, String reason) {
+        require(targetType != null && HANDOVER_TARGET_TYPES.contains(targetType),
+                "target_type must be one of " + HANDOVER_TARGET_TYPES + ", got: " + targetType);
+        require(requestedBy != null && !requestedBy.isBlank(), "requested_by is required");
+        handoverRepository.findPending(tenantId, episodeId).ifPresent(existing -> {
+            throw new IllegalStateException(
+                    "Episode " + episodeId + " already has a pending handover (" + existing.getHandoverId()
+                            + ") to " + existing.getTargetType()
+                            + " — decline or the request must resolve before a new one can be raised");
+        });
+
+        // Moves the episode to OPEN_AWAITING_ACCEPTANCE. Not terminal, so transition() requires no
+        // outcome; this is the same tested state-machine path every other transition uses.
+        transition(episodeId, tenantId, EmergencyEpisodeState.OPEN_AWAITING_ACCEPTANCE, null);
+
+        EmergencyHandoverEntity h = new EmergencyHandoverEntity();
+        h.setTenantId(tenantId);
+        h.setEpisodeId(episodeId);
+        h.setTargetType(targetType);
+        h.setTargetService(targetService);
+        h.setTargetFacilityId(targetFacilityId);
+        h.setRequestedBy(requestedBy);
+        h.setRequestReason(reason);
+        h.setStatus("PENDING");
+        EmergencyHandoverEntity saved = handoverRepository.saveAndFlush(h);
+        emitHandover(saved, "EMERGENCY_HANDOVER_REQUESTED");
+        return saved;
+    }
+
+    /**
+     * Accept a handover. The caller must supply {@code acceptingRef} — the accepting party's OWN
+     * record id (an admission id, a procedure_episode id, an mh_referral id). This is the one write
+     * that closes the episode as CLOSED_HANDED_OVER; nothing else may.
+     *
+     * <p>Deliberately does not reuse {@link #transition}: it must set {@code handover_id} on the
+     * SAME save as the state change, and {@code transition} loads and saves its own copy of the
+     * entity, which would let the two writes race. A handful of duplicated lines here versus a
+     * shared entity reference is the safer trade.
+     */
+    @Transactional
+    public EmergencyEpisodeEntity acceptHandover(UUID handoverId, UUID tenantId, String acceptedBy,
+                                                 String acceptingRef, String acceptingService) {
+        EmergencyHandoverEntity h = loadHandover(handoverId, tenantId);
+        require("PENDING".equals(h.getStatus()),
+                "Handover " + handoverId + " is " + h.getStatus() + ", not PENDING — it cannot be accepted");
+        require(acceptedBy != null && !acceptedBy.isBlank(), "accepted_by is required");
+        require(acceptingRef != null && !acceptingRef.isBlank(),
+                "accepting_ref is required — the accepting party's own record id is the handshake itself");
+
+        OffsetDateTime now = OffsetDateTime.now();
+        h.setStatus("ACCEPTED");
+        h.setAcceptedBy(acceptedBy);
+        h.setAcceptedAt(now);
+        h.setAcceptingRef(acceptingRef);
+        h.setAcceptingService(acceptingService);
+        handoverRepository.save(h);
+        emitHandover(h, "EMERGENCY_HANDOVER_ACCEPTED");
+
+        EmergencyEpisodeEntity e = load(h.getEpisodeId(), tenantId);
+        EmergencyEpisodeState previous = EmergencyEpisodeState.valueOf(e.getState());
+        transitionTo(e, EmergencyEpisodeState.CLOSED_HANDED_OVER, now);
+        e.setHandoverId(h.getHandoverId());
+        e.setOutcome(outcomeForTarget(h.getTargetType()));
+        e.setClosedAt(now);
+        EmergencyEpisodeEntity saved = repository.save(e);
+        emit(saved, "EMERGENCY_EPISODE_STATE_CHANGED", previous.name());
+        return saved;
+    }
+
+    private static String outcomeForTarget(String targetType) {
+        return switch (targetType) {
+            case "ADMISSION" -> "ADMITTED";
+            case "THEATRE" -> "TO_THEATRE";
+            case "MENTAL_HEALTH" -> "TO_MENTAL_HEALTH";
+            case "INTERFACILITY_TRANSFER" -> "TRANSFERRED";
+            default -> "HANDED_OVER";
+        };
+    }
+
+    /**
+     * Decline a handover. Returns the episode to OPEN_IN_CARE — never to a closed state. No timeout
+     * discharges responsibility; a declined request just means this attempt did not succeed.
+     */
+    @Transactional
+    public EmergencyEpisodeEntity declineHandover(UUID handoverId, UUID tenantId, String declinedBy, String reason) {
+        EmergencyHandoverEntity h = loadHandover(handoverId, tenantId);
+        require("PENDING".equals(h.getStatus()),
+                "Handover " + handoverId + " is " + h.getStatus() + ", not PENDING — it cannot be declined");
+        require(declinedBy != null && !declinedBy.isBlank(), "declined_by is required");
+        require(reason != null && !reason.isBlank(), "a decline reason is required");
+
+        h.setStatus("DECLINED");
+        h.setDeclinedBy(declinedBy);
+        h.setDeclinedAt(OffsetDateTime.now());
+        h.setDeclineReason(reason);
+        handoverRepository.save(h);
+        emitHandover(h, "EMERGENCY_HANDOVER_DECLINED");
+
+        return transition(h.getEpisodeId(), tenantId, EmergencyEpisodeState.OPEN_IN_CARE, null);
+    }
+
+    /**
+     * Expire a handover: an explicit decision (by a clinician or a future scheduled job) that this
+     * attempt has gone unanswered too long. Returns the episode to OPEN_IN_CARE — same as a decline —
+     * and optionally links a rito safety case. There is no automatic expiry in this wave; the
+     * {@code ACCEPTANCE_OVERDUE} alert (W5) already nags loudly while a request sits unanswered, and
+     * an automatic-expiry sweep is future work, not silently assumed here.
+     */
+    @Transactional
+    public EmergencyEpisodeEntity expireHandover(UUID handoverId, UUID tenantId, String expiredBy, String ritoCaseRef) {
+        EmergencyHandoverEntity h = loadHandover(handoverId, tenantId);
+        require("PENDING".equals(h.getStatus()),
+                "Handover " + handoverId + " is " + h.getStatus() + ", not PENDING — it cannot expire");
+        require(expiredBy != null && !expiredBy.isBlank(), "expired_by is required");
+
+        h.setStatus("EXPIRED");
+        h.setExpiredAt(OffsetDateTime.now());
+        h.setExpiredBy(expiredBy);
+        h.setRitoCaseRef(ritoCaseRef);
+        handoverRepository.save(h);
+        emitHandover(h, "EMERGENCY_HANDOVER_EXPIRED");
+
+        return transition(h.getEpisodeId(), tenantId, EmergencyEpisodeState.OPEN_IN_CARE, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmergencyHandoverEntity> handoverHistory(UUID episodeId, UUID tenantId) {
+        return handoverRepository.findByTenantIdAndEpisodeIdOrderByRequestedAtDesc(tenantId, episodeId);
+    }
+
+    private EmergencyHandoverEntity loadHandover(UUID handoverId, UUID tenantId) {
+        return handoverRepository.findByHandoverIdAndTenantId(handoverId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Emergency handover not found in this tenant: " + handoverId));
+    }
+
+    private void emitHandover(EmergencyHandoverEntity h, String eventType) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("handoverId", h.getHandoverId() != null ? h.getHandoverId().toString() : null);
+        payload.put("episodeId", h.getEpisodeId().toString());
+        payload.put("tenantId", h.getTenantId().toString());
+        payload.put("targetType", h.getTargetType());
+        payload.put("targetService", h.getTargetService());
+        payload.put("status", h.getStatus());
+        payload.put("acceptingRef", h.getAcceptingRef());
+        payload.put("acceptingService", h.getAcceptingService());
+        payload.put("ritoCaseRef", h.getRitoCaseRef());
+
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType("EMERGENCY_HANDOVER");
+        outbox.setAggregateId(h.getEpisodeId().toString());
+        outbox.setEventType(eventType);
+        outbox.setTenantId(h.getTenantId());
+        try {
+            outbox.setPayload(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException ex) {
+            log.error("Emergency handover payload could not be serialised: {}", ex.getMessage());
+            outbox.setPayload("{\"episodeId\":\"" + h.getEpisodeId() + "\"}");
+        }
+        outboxRepository.save(outbox);
     }
 
     private EmergencyEpisodeEntity load(UUID episodeId, UUID tenantId) {
