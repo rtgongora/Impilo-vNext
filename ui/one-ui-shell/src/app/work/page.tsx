@@ -22,6 +22,7 @@ import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContra
 import { useWorkHome, useWorkHomeSectionRetry } from "@/hooks/queries/useWorkHome";
 import { WorkHomeWorkplacePicker } from "@/components/work-home/WorkHomeWorkplacePicker";
 import { WorkHomeSectionCard } from "@/components/work-home/WorkHomeSectionCard";
+import { WorkOperationsPanel } from "@/components/work-home/WorkOperationsPanel";
 import { WORK_HOME_FAMILY_LABELS } from "@/lib/work-home/section-registry";
 
 export default function WorkHomePage() {
@@ -142,6 +143,15 @@ export default function WorkHomePage() {
         </div>
         {workHome.sections.length === 0 && (
           <p className="text-sm text-muted-foreground">No sections to show for this workplace yet.</p>
+        )}
+
+        {/* Phase F6 — the real feeds /provider-workspace carried that the BFF's family
+            adapters don't produce (core-transaction journey, workflow/dispatch operator
+            telemetry). Facility-clinical only: that was /provider-workspace's actual audience. */}
+        {workHome.family === "FACILITY_CLINICAL" && (
+          <div className="mt-4">
+            <WorkOperationsPanel />
+          </div>
         )}
       </PageShell>
     </AppLayout>

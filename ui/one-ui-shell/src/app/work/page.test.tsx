@@ -26,6 +26,9 @@ vi.mock("@/hooks/queries/useWorkHome", () => ({
   useWorkHome: () => useWorkHomeMock(),
   useWorkHomeSectionRetry: () => retrySection,
 }));
+vi.mock("@/components/work-home/WorkOperationsPanel", () => ({
+  WorkOperationsPanel: () => <div data-testid="work-operations-panel" />,
+}));
 
 afterEach(() => cleanup());
 
@@ -116,6 +119,38 @@ describe("WorkHomePage", () => {
     render(<WorkHomePage />);
     expect(screen.getByText("Clinical worklist")).toBeTruthy();
     expect(screen.getByText("Clinical care")).toBeTruthy(); // WORK_HOME_FAMILY_LABELS subtitle
+  });
+
+  it("shows the migrated provider-workspace operations panel for the facility-clinical family (F6)", () => {
+    useSessionExperienceContractMock.mockReturnValue({
+      contract: { resolvedWorkContexts: [RESOLVED_CONTEXT], recommendedContextId: "ctx-1" },
+      isLoading: false,
+    });
+    useWorkHomeMock.mockReturnValue({
+      workHome: { contextId: "ctx-1", family: "FACILITY_CLINICAL", mode: "CLINICAL_CARE", friendlyState: "", sections: [] },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(<WorkHomePage />);
+
+    expect(screen.getByTestId("work-operations-panel")).toBeTruthy();
+  });
+
+  it("does not show the operations panel for a non-clinical family (e.g. facility management)", () => {
+    useSessionExperienceContractMock.mockReturnValue({
+      contract: { resolvedWorkContexts: [RESOLVED_CONTEXT], recommendedContextId: "ctx-1" },
+      isLoading: false,
+    });
+    useWorkHomeMock.mockReturnValue({
+      workHome: { contextId: "ctx-1", family: "FACILITY_MANAGEMENT", mode: "FACILITY_MANAGEMENT", friendlyState: "", sections: [] },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(<WorkHomePage />);
+
+    expect(screen.queryByTestId("work-operations-panel")).toBeNull();
   });
 
   it("lets the person switch workplace back to the picker when more than one context is resolved", () => {
