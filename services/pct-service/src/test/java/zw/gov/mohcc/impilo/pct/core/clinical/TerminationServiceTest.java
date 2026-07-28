@@ -71,7 +71,7 @@ class TerminationServiceTest {
         assertThat(saved.getRecordedAt()).isNotNull();
         // A null consent never reads as an affirmative; it reads as not-yet-recorded.
         assertThat(saved.getConsentGiven()).isEqualTo("NOT_RECORDED");
-        assertThat(saved.getConfidentialityCategory()).isEqualTo("FULL_CLINICAL");
+        assertThat(saved.getSensitivityClass()).isEqualTo("FULL_CLINICAL");
     }
 
     @Test

@@ -54,6 +54,7 @@ waves:
       - patient-safety-service
       - pharmacy-elmis-adapter
       - pharmacy-service
+      - procedures-service
       - rules-service
       - scheduling-service
       - telemonitoring-service

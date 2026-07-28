@@ -55,8 +55,8 @@ public class PostnatalContactService {
         if (contact.getRecordedAt() == null) {
             contact.setRecordedAt(OffsetDateTime.now());
         }
-        if (contact.getConfidentialityCategory() == null) {
-            contact.setConfidentialityCategory("FULL_CLINICAL");
+        if (contact.getSensitivityClass() == null) {
+            contact.setSensitivityClass("FULL_CLINICAL");
         }
         // Booleans that carry a completed action default to false, so a null never reads as an
         // affirmative. screeningComplete is one of these: absent screening is FALSE, and the schema

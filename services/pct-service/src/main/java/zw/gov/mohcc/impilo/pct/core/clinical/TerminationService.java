@@ -43,8 +43,8 @@ public class TerminationService {
         if (a.getConsentGiven() == null) {
             a.setConsentGiven("NOT_RECORDED");
         }
-        if (a.getConfidentialityCategory() == null) {
-            a.setConfidentialityCategory("FULL_CLINICAL");
+        if (a.getSensitivityClass() == null) {
+            a.setSensitivityClass("FULL_CLINICAL");
         }
         return authorisations.save(a);
     }
@@ -64,8 +64,8 @@ public class TerminationService {
         if (p.getRecordedAt() == null) {
             p.setRecordedAt(OffsetDateTime.now());
         }
-        if (p.getConfidentialityCategory() == null) {
-            p.setConfidentialityCategory("FULL_CLINICAL");
+        if (p.getSensitivityClass() == null) {
+            p.setSensitivityClass("FULL_CLINICAL");
         }
         return procedures.save(p);
     }

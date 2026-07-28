@@ -189,7 +189,7 @@ public class PregnancyEpisodeService {
         episode.setGpDerivationComplete(false);
         episode.setGpUncountableCount(0);
         episode.setGpDiscrepancy(false);
-        episode.setConfidentiality("ROUTINE");
+        episode.setSensitivityClass("FULL_CLINICAL");
         episode.setClientOfflineId(command.clientOfflineId());
         episode.setCapturedAt(command.capturedAt());
         episode.setRecordedBy(command.recordedBy());

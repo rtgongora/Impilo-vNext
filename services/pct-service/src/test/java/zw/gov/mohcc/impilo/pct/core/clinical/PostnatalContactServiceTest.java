@@ -56,7 +56,7 @@ class PostnatalContactServiceTest {
         var saved = service.record(minimalContact());
         assertThat(saved.getPostnatalContactId()).isNotNull();
         assertThat(saved.getStatus()).isEqualTo("RECORDED");
-        assertThat(saved.getConfidentialityCategory()).isEqualTo("FULL_CLINICAL");
+        assertThat(saved.getSensitivityClass()).isEqualTo("FULL_CLINICAL");
         // Completed-action booleans default false, so a null never reads as done.
         assertThat(saved.getScreeningComplete()).isFalse();
         assertThat(saved.getLactationSupportGiven()).isFalse();
