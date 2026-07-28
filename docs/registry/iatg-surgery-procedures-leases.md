@@ -288,9 +288,9 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P13 done — P13 partial by design, see §17 — P14–P15 remaining — see
-§10–§12, §14–§17) · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
-(S0–S18, not started). Full plan in
+Phase P pipeline (P0–P14 done — P13 and P14 both partial by design, see §17–§18 — P15
+remaining — see §10–§12, §14–§18) · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S
+surgery (S0–S18, not started). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -621,3 +621,69 @@ derivation both directions, optional-block omission, custody notes, best-effort 
 `SpecimenCustodyServiceTest` extended (+3). `procedures-fhir-specimen-journeys.sh` (6/6, real
 Postgres). Full inpatient-service regression: 173/173 (164 prior + 9 new), re-run both before
 and after rebase.
+
+## 18. Wave P14 — pipeline analytics indicator catalogue; §12 graphics deliberately deferred (done, partial by design)
+
+Closes §26 as GOVERNED CONTENT, not a second execution engine. Research first found that
+reporting-service already has the one proven-executable projection in this estate:
+`TheatreReportingConsumer` (from a prior, completed programme) projects `theatre.*` events
+(`inpatient.events`/`inpatient.safety`) into `rpt_theatre_case_metric`, and the seeded
+`theatre-utilisation`/`theatre-case-register` report definitions
+(`V002__theatre_report_catalog.sql`) query it directly — confirmed executable (real event
+projection → local table → JDBC query, no cross-database reference, unlike the 5 inert
+`varapi.*`-querying definitions [[registered-is-not-executable]] found elsewhere in the same
+service). Building a SECOND projection table in `procedures-service` consuming the same topics to
+recompute the same facts would have repeated the exact duplicate-system-of-record mistake P8/P9
+already corrected, at architecture scale. Instead, `procedures.analytics_indicator_definition`
+(V010) is a governed catalogue — one row per indicator, declaring its numerator/denominator, its
+REAL computation status today, and (for anything computed) a reference to reporting-service's
+actual query (`executable_via = 'reporting-service:<report_key>'`) rather than a re-derived
+number.
+
+**Honesty on the count**: dak-baseline.md §7 and audit.md both assert "the twenty-four
+indicators", but the checked-in indicator list (dak-baseline.md §7) enumerates only twenty-two
+dot-separated names — a pre-existing inconsistency from an earlier session, not resolved here by
+inventing two more to hit the round number. All twenty-two named indicators are seeded.
+
+**Real distribution, not aspirational**: 5 COMPUTED (procedure volume, cancellation, completion,
+complications, unplanned surgery — all genuinely answered by reporting-service's existing
+projection), 7 PARTIAL (waiting time, delay reason, unplanned admission, result acknowledgement,
+infection, device outcomes, operator/supervision — each has a real signal on some event bus or
+table today, but no consumer aggregates it into a queryable metric yet; `gap_reason` names the
+exact missing consumer), 10 NOT_YET_INSTRUMENTED (indication, specialty, failure, aborted,
+specimen adequacy, result turnaround, sedation safety, equity, cost, stockout impact — nothing
+exists yet; `gap_reason` names what would need to be built and by which service). Two of the ten
+(cost, stockout impact) are flagged `delegated_out_of_scope=true`: the ADR delegates money to
+coverage-service/COSTA and commodities to inventory-service, so these are not debts owed by this
+programme, distinct from the eight genuine gaps. Every non-COMPUTED row is schema-enforced to
+carry a `gap_reason` (`CHECK chk_analytics_indicator_gap_reason`); every COMPUTED row is
+schema-enforced to carry an `executable_via` (`CHECK chk_analytics_indicator_executable_via`) —
+the same "don't skirt incomplete functionality" discipline V006–V009 already held themselves to,
+enforced at the database rather than left to a comment.
+
+Two real findings this wave's own investigation surfaced, named rather than silently used to
+inflate the COMPUTED count: `inventory.implant.recorded`/`.removed`/`.revised` (P8,
+`ImplantTraceabilityService`) and `theatre.trainee.logbook`/`theatre.specimen.acknowledged`
+(prior waves, `TheatreService`) are ALL real events already published today — genuine signal,
+not vapourware — but none has a consumer aggregating it anywhere, so each is PARTIAL, not
+COMPUTED. A fourth instance of the constraint-evaluation-order surprise (P8, P12, P13) recurred
+in the rig itself: an `UPDATE` isolating the `computation_status` CHECK tripped the
+`gap_reason` CHECK first when targeting a COMPUTED row with no `gap_reason`; fixed by targeting a
+row that already satisfies every other constraint.
+
+**§12 graphics — deliberately deferred, not silently dropped.** The pipeline audit's own finding
+14 already names why: "the 20 maps of §12 and the 17 of the surgical pack's §7 overlap heavily
+and must be built once." `features/body-map`
+(`ui/one-ui-shell/src/features/body-map`) is a real, generic, JSON-configured primitive (6 region
+maps today across 2 files, one generic `BodyMapCanvas.tsx` renderer) — extending it with more
+maps is genuinely additive data, not bespoke engineering, but each of the 20 maps needs real
+anatomically-correct SVG paths and SNOMED codes authored and clinically verified, which is
+authoring effort this wave will not fabricate placeholders for. Building any subset now, before
+the surgical pack (S0–S18, not yet started) defines its own 17 overlapping maps, risks doing the
+authoring work twice. Deferred to Wave S7 (surgical pack, when it starts) by explicit decision,
+not by omission.
+
+Proof: `AnalyticsIndicatorServiceTest` (7 tests). `procedures-analytics-journeys.sh` (23/23, real
+Postgres) — proves both the honesty-governance CHECKs and the exact status distribution above (5
+COMPUTED / 7 PARTIAL / 10 NOT_YET_INSTRUMENTED, tenant-isolated). Full procedures-service module
+regression: 60/60 (53 prior + 7 new).
