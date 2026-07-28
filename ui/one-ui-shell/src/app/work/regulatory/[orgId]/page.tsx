@@ -36,6 +36,7 @@ export default function RegulatoryOrgWorkspacePage() {
     { label: "Complaints & discipline", description: "Complaints, investigations and disciplinary proceedings.", href: `/work/regulators/${encodeURIComponent(orgId)}/disciplinary`, wave: "W7" },
     { label: "Restrictions", description: "Conditions, restrictions and interdictions on the register.", href: `/work/regulators/${encodeURIComponent(orgId)}/restrictions`, wave: "W3" },
     { label: "Audit", description: "Who reviewed, changed, approved or accessed each record.", href: `/work/regulators/${encodeURIComponent(orgId)}/audit`, wave: "W9" },
+    { label: "Configuration", description: "The rules currently governing this regulator, and what is still awaiting a Council decision.", href: `/work/regulatory/${encodeURIComponent(orgId)}/configuration`, wave: "NCZ-W1A" },
   ];
 
   return (
