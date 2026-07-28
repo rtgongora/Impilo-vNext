@@ -14,6 +14,11 @@ public interface CaseRepository extends JpaRepository<CaseEntity, Long> {
 
     Page<CaseEntity> findByTenantId(UUID tenantId, Pageable pageable);
 
+    /** Unpaged reads for the line list, which is an export of the whole cohort, not a screen page. */
+    java.util.List<CaseEntity> findByTenantId(UUID tenantId);
+
+    java.util.List<CaseEntity> findByTenantIdAndCaseType(UUID tenantId, String caseType);
+
     List<CaseEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
 
     Page<CaseEntity> findByTenantIdAndStatus(UUID tenantId, CaseStatus status, Pageable pageable);

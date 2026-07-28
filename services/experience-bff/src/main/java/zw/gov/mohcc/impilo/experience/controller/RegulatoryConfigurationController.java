@@ -38,10 +38,63 @@ public class RegulatoryConfigurationController {
 
     private static final Logger log = LoggerFactory.getLogger(RegulatoryConfigurationController.class);
 
-    private final OrganizationRegistryServiceClient orgRegistryClient;
+    /** The org types that are regulators. A clinic is an organisation; it is not a regulator. */
+    private static final java.util.Set<String> REGULATORY_ORG_TYPES = java.util.Set.of(
+            "PROFESSIONAL_COUNCIL", "STATUTORY_REGULATOR", "PUBLIC_HEALTH_AUTHORITY");
 
-    public RegulatoryConfigurationController(OrganizationRegistryServiceClient orgRegistryClient) {
+    private final OrganizationRegistryServiceClient orgRegistryClient;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
+    public RegulatoryConfigurationController(OrganizationRegistryServiceClient orgRegistryClient,
+                                             com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         this.orgRegistryClient = orgRegistryClient;
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * The regulatory organisations, served from org-registry (NCZ-W1B).
+     *
+     * <p>This exists to retire the shell's private copy of the nine councils. That copy was the
+     * third in the estate — after varapi V028 and org-registry V007 — and the only one with no
+     * mechanism to notice when it drifted: a council renamed, added or retired in the registry
+     * would have left the interface confidently displaying the old name.</p>
+     *
+     * <p>{@code kind} is derived from the organisation's type rather than restated, so an
+     * authority cannot be mislabelled as a council by a hand-maintained list.</p>
+     */
+    @GetMapping("/organizations")
+    public ResponseEntity<Map<String, Object>> organizations(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode organizations = orgRegistryClient.listOrganizations("ACTIVE");
+            JsonNode rows = organizations != null && organizations.has("data")
+                    ? organizations.get("data") : organizations;
+            List<Map<String, Object>> composed = new ArrayList<>();
+            if (rows != null && rows.isArray()) {
+                for (JsonNode organization : rows) {
+                    String orgType = organization.path("orgType").asText("");
+                    if (!REGULATORY_ORG_TYPES.contains(orgType)) {
+                        continue;
+                    }
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("id", text(organization, "id"));
+                    row.put("code", text(organization, "code"));
+                    row.put("name", text(organization, "legalName"));
+                    row.put("orgType", orgType);
+                    row.put("kind", "PROFESSIONAL_COUNCIL".equals(orgType) ? "council" : "authority");
+                    composed.add(row);
+                }
+            }
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("organizations", composed);
+            return ResponseEntity.ok(body);
+        } catch (HttpStatusCodeException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).build();
+        } catch (Exception ex) {
+            log.error("Regulatory organisation list failed [{}]", correlationId, ex);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
     }
 
     /** Every configuration pack a regulator holds, with the definitions currently governing it. */
@@ -130,7 +183,7 @@ public class RegulatoryConfigurationController {
 
         composed.put("releases", releases(packId));
 
-        List<Map<String, Object>> definitions = new ArrayList<>();
+        List<com.fasterxml.jackson.databind.node.ObjectNode> definitions = new ArrayList<>();
         boolean activated = true;
         try {
             JsonNode active = orgRegistryClient.activeConfiguration(packId);
@@ -155,8 +208,8 @@ public class RegulatoryConfigurationController {
         return composed;
     }
 
-    private Map<String, Object> composeDefinition(JsonNode definition) {
-        Map<String, Object> row = new LinkedHashMap<>();
+    private com.fasterxml.jackson.databind.node.ObjectNode composeDefinition(JsonNode definition) {
+        com.fasterxml.jackson.databind.node.ObjectNode row = objectMapper.createObjectNode();
         row.put("typeCode", text(definition, "typeCode"));
         row.put("definitionKey", text(definition, "definitionKey"));
         row.put("label", text(definition, "label"));
@@ -164,15 +217,20 @@ public class RegulatoryConfigurationController {
         row.put("selfServiceRoute", text(definition, "selfServiceRoute"));
         row.put("contentHash", text(definition, "contentHash"));
         row.put("pinnedAtMoment", text(definition, "pinnedAtMoment"));
+        // The payload IS the configuration. Withholding it would leave the council able to see
+        // that a rule exists but not what it says, and would leave role-aware navigation with no
+        // source for the capability lists it must honour.
+        row.set("payload", definition.path("payload").isMissingNode()
+                ? null : definition.get("payload"));
 
         // A value the council has not set must read as awaiting a named decision — never as blank,
         // and never as zero. This is the field the whole screen exists to render honestly.
         String policyStatus = definition.path("policyStatus").asText(null);
-        Map<String, Object> policy = new LinkedHashMap<>();
+        com.fasterxml.jackson.databind.node.ObjectNode policy = objectMapper.createObjectNode();
         policy.put("status", policyStatus);
         policy.put("decisionRef", text(definition, "policyDecisionRef"));
         policy.put("valueSet", policyStatus == null || "CONFIRMED".equals(policyStatus));
-        row.put("policy", policy);
+        row.set("policy", policy);
         return row;
     }
 

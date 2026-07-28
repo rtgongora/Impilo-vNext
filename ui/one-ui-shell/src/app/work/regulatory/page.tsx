@@ -17,11 +17,8 @@ import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
-import {
-  type RegulatoryAppointment,
-  regulatoryOrg,
-  roleLabel,
-} from "@/lib/regulatory/organisations";
+import { type RegulatoryAppointment, roleLabel } from "@/lib/regulatory/organisations";
+import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
 
 function unwrapAppointments(payload: unknown): RegulatoryAppointment[] {
   const attrs = (payload as { data?: { attributes?: { appointments?: unknown } } })?.data?.attributes;
@@ -31,6 +28,7 @@ function unwrapAppointments(payload: unknown): RegulatoryAppointment[] {
 
 export default function RegulatoryWorkspacePickerPage() {
   const router = useRouter();
+  const { organisation } = useRegulatoryOrganisations();
   const [appointments, setAppointments] = useState<RegulatoryAppointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +102,7 @@ export default function RegulatoryWorkspacePickerPage() {
             <>
               <section className="grid gap-3 sm:grid-cols-2">
                 {active.map((a) => {
-                  const org = regulatoryOrg(a.organizationId);
+                  const org = organisation(a.organizationId);
                   return (
                     <div key={a.id} className="rounded-2xl border border-border bg-card p-4">
                       <div className="mb-1 flex items-center gap-2">
@@ -145,7 +143,7 @@ export default function RegulatoryWorkspacePickerPage() {
                   {pending.map((a) => (
                     <div key={a.id} className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
                       <span className="font-medium text-foreground">
-                        {regulatoryOrg(a.organizationId)?.name ?? a.organizationId}
+                        {organisation(a.organizationId)?.name ?? a.organizationId}
                       </span>
                       <span className="text-muted-foreground">
                         {" "}

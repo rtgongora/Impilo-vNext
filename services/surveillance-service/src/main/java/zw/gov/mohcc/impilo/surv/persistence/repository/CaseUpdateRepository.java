@@ -1,0 +1,11 @@
+package zw.gov.mohcc.impilo.surv.persistence.repository;
+
+import java.util.List;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import zw.gov.mohcc.impilo.surv.persistence.entity.CaseUpdateEntity;
+
+public interface CaseUpdateRepository extends JpaRepository<CaseUpdateEntity, Long> {
+
+    List<CaseUpdateEntity> findByTenantIdAndCaseIdOrderByRecordedAtDesc(UUID tenantId, Long caseId);
+}

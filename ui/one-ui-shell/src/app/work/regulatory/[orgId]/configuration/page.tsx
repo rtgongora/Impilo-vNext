@@ -23,7 +23,7 @@ import { ArrowLeft, FileWarning, History, Lock, PackageCheck, TriangleAlert } fr
 import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { regulatoryOrg } from "@/lib/regulatory/organisations";
+import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
 import {
   useConfigVersionHistory,
   useRegulatoryConfiguration,
@@ -228,7 +228,8 @@ function PackCard({ pack }: { pack: ConfigPackSummary }) {
 export default function RegulatoryConfigurationPage() {
   const params = useParams<{ orgId: string }>();
   const orgId = decodeURIComponent(String(params?.orgId ?? ""));
-  const org = regulatoryOrg(orgId);
+  const { organisation } = useRegulatoryOrganisations();
+  const org = organisation(orgId);
   const { data, isLoading, isError } = useRegulatoryConfiguration(orgId);
 
   return (
