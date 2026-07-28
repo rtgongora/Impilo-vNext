@@ -205,6 +205,19 @@ function AnalyticsIndicatorsPanel() {
           Could not reach the indicator catalogue. This is not the same as there being no
           indicators — try again, or report if it persists.
         </div>
+      ) : indicatorsQ.data && !Array.isArray(indicatorsQ.data.indicators) ? (
+        // A 200 whose body is not the indicator-summary shape is UNAVAILABLE, not empty — a
+        // malformed upstream must never render as "no indicators" (and must never crash the
+        // page; this branch was added after exactly that crash under a blanket fetch mock).
+        <div
+          className="flex items-center gap-2 p-4 text-sm text-danger"
+          role="alert"
+          data-testid="procedures-analytics-malformed"
+        >
+          <AlertTriangle className="h-5 w-5" />
+          The indicator catalogue answered in an unexpected shape — treating it as unavailable,
+          not as empty.
+        </div>
       ) : indicatorsQ.data ? (
         <div className="mt-2">
           <div className="flex flex-wrap gap-4 text-sm" data-testid="procedures-analytics-summary">
