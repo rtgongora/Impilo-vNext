@@ -11,13 +11,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * The shaping of the programme cohort response.
  *
- * <p><strong>What this does not cover, stated so nobody reads it as more than it is:</strong> the
- * {@code cohortCounts} JPQL itself is <em>not executed</em> by any test. pct-service has no bootable
- * Spring integration test under the H2 profile — a {@code @SpringBootTest} fails during context
- * startup on an unrelated pre-existing repository query — so there is nowhere in this build to run a
- * real query against a real schema. The JPQL is therefore verified only by review and by the live
- * estate. That gap is worth closing; pretending a shaping test covers it would be worse than the
- * gap.</p>
+ * <p><strong>Scope.</strong> This covers the shaping only. The {@code cohortCounts} JPQL itself is
+ * executed by {@link ProgrammeCohortQueryTest} — which could not exist when this file was written,
+ * because the pct Spring context was unbootable under H2. That gap is now closed rather than left
+ * standing as a documented limitation.</p>
  *
  * <p>What it does cover is the part that has actually misled people before: the arithmetic meaning
  * of the numbers.</p>

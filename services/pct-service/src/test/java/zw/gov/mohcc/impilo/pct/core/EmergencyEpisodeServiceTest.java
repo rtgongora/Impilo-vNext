@@ -389,12 +389,17 @@ class EmergencyEpisodeServiceTest {
             return out;
         }
 
-        @Override public int repointSubjectCpid(UUID tenant, String provisional, String confirmed) {
+        @Override public int repointSubjectCpid(UUID tenant, String provisional, String confirmed,
+                                                java.time.OffsetDateTime now) {
             int n = 0;
             for (EmergencyEpisodeEntity e : store.values()) {
                 if (e.getTenantId().equals(tenant) && provisional.equals(e.getSubjectCpid())) {
                     e.setSubjectCpid(confirmed);
                     e.setIdentityMode("KNOWN");
+                    // The real query now binds these; the fake must too, or it would keep passing
+                    // while the resolution timestamp silently stopped being written.
+                    e.setIdentityResolvedAt(now);
+                    e.setUpdatedAt(now);
                     n++;
                 }
             }
