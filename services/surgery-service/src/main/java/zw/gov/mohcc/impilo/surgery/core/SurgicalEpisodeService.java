@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.OpenEpisodeRequest;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.SurgicalEpisodeView;
+import zw.gov.mohcc.impilo.surgery.integration.InpatientSpecimenClient;
+import zw.gov.mohcc.impilo.surgery.integration.InpatientSpecimenClient.SpecimenGateView;
 import zw.gov.mohcc.impilo.surgery.integration.PctProblemContributionClient;
 import zw.gov.mohcc.impilo.surgery.integration.PctProblemContributionClient.ContributionResult;
 import zw.gov.mohcc.impilo.surgery.persistence.entity.SurgicalEpisodeEntity;
@@ -41,10 +43,13 @@ public class SurgicalEpisodeService {
 
     private final SurgicalEpisodeRepository repository;
     private final PctProblemContributionClient pctClient;
+    private final InpatientSpecimenClient specimenClient;
 
-    public SurgicalEpisodeService(SurgicalEpisodeRepository repository, PctProblemContributionClient pctClient) {
+    public SurgicalEpisodeService(SurgicalEpisodeRepository repository, PctProblemContributionClient pctClient,
+                                  InpatientSpecimenClient specimenClient) {
         this.repository = repository;
         this.pctClient = pctClient;
+        this.specimenClient = specimenClient;
     }
 
     private UUID currentTenant() {
@@ -120,8 +125,37 @@ public class SurgicalEpisodeService {
                     "status must be one of " + STATUSES);
         }
         SurgicalEpisodeEntity e = requireEpisode(episodeId);
+        if ("CLOSED".equals(newStatus)) {
+            requireHistologyReviewed(e);
+        }
         e.setStatus(newStatus);
         return toView(repository.save(e));
+    }
+
+    /**
+     * §16 histology closure gate (SB-1): a surgical episode may not CLOSE while any specimen from
+     * its linked operation has histology in flight or a result nobody has reviewed. Fail-SAFE,
+     * deliberately opposite to the PCT contribution's fail-open posture: an unanswerable specimen
+     * question blocks closure — an unreachable specimen list is not an empty one. An episode with
+     * no linked operation (e.g. assessed, decision DO_NOT_PROCEED) has no specimens to gate on and
+     * closes freely.
+     */
+    private void requireHistologyReviewed(SurgicalEpisodeEntity e) {
+        if (e.getProcedureEpisodeRef() == null) {
+            return;
+        }
+        SpecimenGateView gate = specimenClient.specimenGate(e.getProcedureEpisodeRef());
+        if (!gate.known()) {
+            throw new SurgeryDomainException("SPECIMEN_STATE_UNKNOWN", 503,
+                    "Cannot close: the linked operation's specimen state is unavailable — "
+                            + "an unknown histology status blocks closure rather than clearing it");
+        }
+        if (!gate.allReviewed()) {
+            throw new SurgeryDomainException("HISTOLOGY_UNREVIEWED", 409,
+                    "Cannot close: " + gate.unreviewed() + " of " + gate.total()
+                            + " specimen(s) from the linked operation have histology pending or an "
+                            + "unacknowledged result. Review and acknowledge every result first.");
+        }
     }
 
     @Transactional(readOnly = true)
