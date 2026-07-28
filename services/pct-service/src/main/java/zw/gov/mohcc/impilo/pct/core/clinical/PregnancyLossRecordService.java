@@ -58,8 +58,8 @@ public class PregnancyLossRecordService {
         if (loss.getRecordedAt() == null) {
             loss.setRecordedAt(OffsetDateTime.now());
         }
-        if (loss.getConfidentialityCategory() == null) {
-            loss.setConfidentialityCategory("FULL_CLINICAL");
+        if (loss.getSensitivityClass() == null) {
+            loss.setSensitivityClass("FULL_CLINICAL");
         }
         // Defaults for the boolean gates, so a null never reads as an affirmative.
         if (loss.getStillbirthCertifiable() == null) {
