@@ -396,7 +396,7 @@ public class TeleconsultController {
             if (referralIdAlias != null && !referralIdAlias.isBlank()) {
                 list = filterReferralsById(list, referralIdAlias);
             }
-            return ok(normalizeReferralPayload(list), requestId, correlationId, HttpStatus.OK);
+            return ok(sessionRows(normalizeReferralJson(list)), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
@@ -2937,6 +2937,75 @@ public class TeleconsultController {
             return ResponseEntity.status(status).body(Map.of(
                     "error", Map.of("code", code, "message", message),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
+     * Teleconsult referrals → the {@code TelemedicineSession} rows the shell declares.
+     *
+     * <p>A teleconsult session is modelled as a PCT referral — {@code createSession} creates one —
+     * so listing referrals here is the design, not a mix-up. What was wrong is the shape: the rows
+     * went out as raw {@code ReferralPackageEntity} objects while {@code useTelemedicine} declares
+     * {@code attributes.status}, so every consumer that read a session threw.
+     *
+     * <p>{@code room_url} is deliberately null. A joinable room URL is minted per join, with a
+     * token, by {@code /sessions/&#123;id&#125;/media/token}. Putting a durable one in a list
+     * payload would hand every reader of the list a way into the consultation, so its absence here
+     * is a property to keep rather than a gap to fill.
+     *
+     * <p>{@code scheduled_at} and {@code started_at} have no source: the referral model records
+     * when a referral was submitted and completed, which is not when a consultation was scheduled
+     * or when the parties actually joined. They are left null rather than filled from
+     * {@code submittedAt}, which would report the referral's paperwork time as the consultation's
+     * start. Giving them real values means adding session lifecycle timestamps to PCT and setting
+     * them where a session actually begins and ends — the waiting-room admit and the session
+     * close. That is a schema change to a clinical system of record and is tracked as such.
+     */
+    private Object sessionRows(Object payload) {
+        if (!(payload instanceof JsonNode node)) {
+            return payload;
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (JsonNode referral : zw.gov.mohcc.impilo.experience.support.JsonApiRows.items(node)) {
+            Map<String, Object> attributes =
+                    zw.gov.mohcc.impilo.experience.support.JsonApiRows.attributesOf(referral);
+
+            sessionAlias(attributes, referral, "encounterId", "encounter_id");
+            sessionAlias(attributes, referral, "patientCpid", "patient_id");
+            sessionAlias(attributes, referral, "providerId", "provider_id");
+            sessionAlias(attributes, referral, "facilityId", "facility_id");
+            sessionAlias(attributes, referral, "referralPackageStatus", "status");
+            sessionAlias(attributes, referral, "completedAt", "ended_at");
+            sessionAlias(attributes, referral, "referralId", "referral_id");
+            sessionAlias(attributes, referral, "createdAt", "created_at");
+            sessionAlias(attributes, referral, "updatedAt", "updated_at");
+            sessionAlias(attributes, referral, "clinicalQuestion", "notes");
+
+            // A virtual consult's mode is what "session type" means on this screen.
+            String sessionType = referral.hasNonNull("virtualMode")
+                    ? referral.get("virtualMode").asText()
+                    : (referral.hasNonNull("modality") ? referral.get("modality").asText() : null);
+            attributes.put("session_type", sessionType);
+            attributes.put("sessionType", sessionType);
+
+            attributes.putIfAbsent("room_url", null);
+            attributes.putIfAbsent("scheduled_at", null);
+            attributes.putIfAbsent("started_at", null);
+            attributes.putIfAbsent("duration_seconds", null);
+
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", zw.gov.mohcc.impilo.experience.support.JsonApiRows.text(referral, "referralId"));
+            row.put("type", "TelemedicineSession");
+            row.put("attributes", attributes);
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    private static void sessionAlias(Map<String, Object> attributes, JsonNode source,
+                                     String from, String to) {
+        if (source.has(from)) {
+            attributes.putIfAbsent(to, source.get(from));
         }
     }
 }
