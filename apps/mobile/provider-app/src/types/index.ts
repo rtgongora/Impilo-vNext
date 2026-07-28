@@ -7,6 +7,7 @@
 
 export type AppMode = "provider" | "outreach" | "supervisor" | "offline" | "courier";
 export type ProviderTabKey =
+  | "workhome"
   | "dashboard"
   | "patients"
   | "encounter"
