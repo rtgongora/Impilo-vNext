@@ -1,0 +1,196 @@
+{
+  "packId": "rmnp-maternal-near-miss",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "WHO maternal near-miss identification criteria",
+    "primarySource": "WHO, Evaluating the quality of care for severe pregnancy complications: the WHO near-miss approach for maternal health (2011)",
+    "why": "A maternal near-miss is a woman who nearly died but survived a complication during pregnancy, childbirth or within 42 days of termination of pregnancy. Near-misses outnumber deaths by roughly an order of magnitude, so they carry far more learning per unit of time — and unlike a death, the woman is alive to be asked what happened. Identifying them is what makes the near-miss-to-death ratio and the mortality index computable, and those two indicators say something a maternal mortality ratio cannot: whether women who reach severe complications are surviving them.",
+    "scope": "IDENTIFICATION ONLY. This pack answers 'did this woman meet WHO near-miss criteria?' — a clinical classification computed from organ-dysfunction markers. It does NOT conduct a review. The confidential, no-blame REVIEW instrument (MPDSR) is specified separately and is deliberately not built here; see docs/clinical-governance/rmnp/mpdsr-review-contract.md.",
+    "notConfidential": "Near-miss identification is ordinary clinical classification and carries NO confidentiality stamp. Only the review is a governed confidential instrument. Conflating the two would put a survival statistic behind a confidentiality grant and make the indicator uncomputable.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "Transcribed from the WHO near-miss approach (2011), which has no SMART DAK — like MEC, SPR and the Labour Care Guide, it is published guidance encoded and cited, not machine-readable content ingested. Every criterion names the organ system and the published threshold it encodes so ratification is a comparison rather than a rewrite."
+    }
+  },
+  "tables": [
+    {
+      "tableId": "MATERNAL_NEAR_MISS",
+      "name": "WHO maternal near-miss — organ dysfunction criteria",
+      "axis": "NEAR_MISS_STATUS",
+      "requiredInputs": [],
+      "sourceRefs": ["WHO near-miss approach for maternal health (2011), Table 1: identification criteria"],
+      "tiers": [
+        {
+          "code": "NEAR_MISS_CARDIOVASCULAR",
+          "name": "Cardiovascular dysfunction",
+          "colour": "RED",
+          "requiredInputs": [],
+          "logic": {"any": [
+            {"input": "nearMiss.shock", "op": "eq", "value": true},
+            {"input": "nearMiss.cardiacArrest", "op": "eq", "value": true},
+            {"input": "nearMiss.continuousVasoactiveDrugs", "op": "eq", "value": true},
+            {"input": "nearMiss.cardiopulmonaryResuscitation", "op": "eq", "value": true},
+            {"input": "nearMiss.lactateMmolL", "op": "gt", "value": 5},
+            {"input": "nearMiss.phArterial", "op": "lt", "value": 7.1}
+          ]},
+          "action": "Cardiovascular organ dysfunction — WHO near-miss criteria met. Record as a maternal near-miss and raise the review task.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": ["WHO near-miss 2011 — cardiovascular dysfunction"]
+        },
+        {
+          "code": "NEAR_MISS_RESPIRATORY",
+          "name": "Respiratory dysfunction",
+          "colour": "RED",
+          "requiredInputs": [],
+          "logic": {"any": [
+            {"input": "nearMiss.acuteCyanosis", "op": "eq", "value": true},
+            {"input": "nearMiss.gasping", "op": "eq", "value": true},
+            {"input": "nearMiss.respiratoryRate", "op": "gt", "value": 40},
+            {"input": "nearMiss.respiratoryRate", "op": "lt", "value": 6},
+            {"input": "nearMiss.intubationNotForAnaesthesiaMinutes", "op": "gte", "value": 60},
+            {"input": "nearMiss.oxygenSaturationBelow90ForOverAnHour", "op": "eq", "value": true}
+          ]},
+          "action": "Respiratory organ dysfunction — WHO near-miss criteria met.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": ["WHO near-miss 2011 — respiratory dysfunction"]
+        },
+        {
+          "code": "NEAR_MISS_RENAL",
+          "name": "Renal dysfunction",
+          "colour": "RED",
+          "requiredInputs": [],
+          "logic": {"any": [
+            {"input": "nearMiss.oliguriaNonResponsiveToFluids", "op": "eq", "value": true},
+            {"input": "nearMiss.creatinineUmolL", "op": "gte", "value": 300},
+            {"input": "nearMiss.dialysisForAcuteRenalFailure", "op": "eq", "value": true}
+          ]},
+          "action": "Renal organ dysfunction — WHO near-miss criteria met.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": ["WHO near-miss 2011 — renal dysfunction"]
+        },
+        {
+          "code": "NEAR_MISS_COAGULATION",
+          "name": "Coagulation / haematological dysfunction",
+          "colour": "RED",
+          "requiredInputs": [],
+          "logic": {"any": [
+            {"input": "nearMiss.clottingFailure", "op": "eq", "value": true},
+            {"input": "nearMiss.plateletsPerUl", "op": "lt", "value": 50000},
+            {"input": "nearMiss.unitsTransfused", "op": "gte", "value": 5}
+          ]},
+          "action": "Coagulation or haematological dysfunction — WHO near-miss criteria met.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": ["WHO near-miss 2011 — coagulation/haematological dysfunction"]
+        },
+        {
+          "code": "NEAR_MISS_HEPATIC",
+          "name": "Hepatic dysfunction",
+          "colour": "RED",
+          "requiredInputs": [],
+          "logic": {"any": [
+            {"input": "nearMiss.jaundiceWithPreEclampsia", "op": "eq", "value": true},
+            {"input": "nearMiss.bilirubinUmolL", "op": "gt", "value": 100}
+          ]},
+          "action": "Hepatic organ dysfunction — WHO near-miss criteria met.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": ["WHO near-miss 2011 — hepatic dysfunction"]
+        },
+        {
+          "code": "NEAR_MISS_NEUROLOGICAL",
+          "name": "Neurological dysfunction",
+          "colour": "RED",
+          "requiredInputs": [],
+          "logic": {"any": [
+            {"input": "nearMiss.prolongedUnconsciousness", "op": "eq", "value": true},
+            {"input": "nearMiss.stroke", "op": "eq", "value": true},
+            {"input": "nearMiss.uncontrollableFits", "op": "eq", "value": true},
+            {"input": "nearMiss.totalParalysis", "op": "eq", "value": true}
+          ]},
+          "action": "Neurological organ dysfunction — WHO near-miss criteria met.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": ["WHO near-miss 2011 — neurological dysfunction"]
+        },
+        {
+          "code": "NEAR_MISS_UTERINE",
+          "name": "Uterine dysfunction",
+          "colour": "RED",
+          "requiredInputs": [],
+          "logic": {"any": [
+            {"input": "nearMiss.hysterectomyForInfectionOrHaemorrhage", "op": "eq", "value": true}
+          ]},
+          "action": "Uterine dysfunction — hysterectomy for infection or haemorrhage. WHO near-miss criteria met.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": ["WHO near-miss 2011 — uterine dysfunction"]
+        },
+        {
+          "code": "NEAR_MISS_NOT_MET",
+          "name": "WHO near-miss criteria not met",
+          "colour": "NEUTRAL",
+          "requiredInputs": [],
+          "action": "No organ-dysfunction criterion was met on the information recorded. This is NOT a statement that the woman was well — a severe maternal outcome can be present without a recorded criterion, and an unrecorded observation is not a negative one. Where any criterion is unresolved the engine returns INDETERMINATE rather than reaching this row.",
+          "treatments": [],
+          "referralRequired": false,
+          "urgentReferral": false,
+          "sourceRefs": ["WHO near-miss 2011"]
+        }
+      ],
+      "testCases": [
+        {
+          "name": "creatinine at the published renal threshold is a near-miss",
+          "inputs": {"nearMiss.creatinineUmolL": 300},
+          "expect": "NEAR_MISS_RENAL"
+        },
+        {
+          "name": "five units transfused is a near-miss; the threshold is inclusive",
+          "inputs": {"nearMiss.unitsTransfused": 5},
+          "expect": "NEAR_MISS_COAGULATION"
+        },
+        {
+          "name": "four units transfused alone is not, so the threshold is real and not a rubber stamp",
+          "inputs": {"nearMiss.unitsTransfused": 4, "nearMiss.shock": false, "nearMiss.cardiacArrest": false,
+                     "nearMiss.continuousVasoactiveDrugs": false, "nearMiss.cardiopulmonaryResuscitation": false,
+                     "nearMiss.acuteCyanosis": false, "nearMiss.gasping": false,
+                     "nearMiss.intubationNotForAnaesthesiaMinutes": 0,
+                     "nearMiss.oxygenSaturationBelow90ForOverAnHour": false,
+                     "nearMiss.oliguriaNonResponsiveToFluids": false,
+                     "nearMiss.dialysisForAcuteRenalFailure": false, "nearMiss.clottingFailure": false,
+                     "nearMiss.jaundiceWithPreEclampsia": false, "nearMiss.prolongedUnconsciousness": false,
+                     "nearMiss.stroke": false, "nearMiss.uncontrollableFits": false,
+                     "nearMiss.totalParalysis": false,
+                     "nearMiss.hysterectomyForInfectionOrHaemorrhage": false,
+                     "nearMiss.respiratoryRate": 18, "nearMiss.creatinineUmolL": 70,
+                     "nearMiss.plateletsPerUl": 250000, "nearMiss.bilirubinUmolL": 12,
+                     "nearMiss.lactateMmolL": 1.2, "nearMiss.phArterial": 7.38},
+          "expect": "NEAR_MISS_NOT_MET"
+        },
+        {
+          "name": "a respiratory rate of 4 is a near-miss — the low bound is not forgotten",
+          "inputs": {"nearMiss.respiratoryRate": 4},
+          "expect": "NEAR_MISS_RESPIRATORY"
+        },
+        {
+          "name": "gasping alone is a near-miss, and it is a clinician's observation not a number",
+          "inputs": {"nearMiss.gasping": true},
+          "expect": "NEAR_MISS_RESPIRATORY"
+        }
+      ]
+    }
+  ]
+}

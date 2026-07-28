@@ -33,6 +33,10 @@ forms_dir = pathlib.Path(sys.argv[2])
 # Which rule packs are checked against which forms. A pack with no paired form would be checked
 # against nothing and would pass vacuously, so pairing is declared rather than inferred.
 PAIRINGS = {
+    # WHO near-miss criteria are genuinely clinician-observed (gasping, cyanosis, shock) and measured
+    # (creatinine, platelets, lactate). Declaring this NO_CAPTURE would have been the dishonest option:
+    # it reads no derived fact, it reads a bedside assessment somebody has to record.
+    "rmnp-maternal-near-miss.json": ["21-maternal-near-miss.json"],
     "rmnp-anc-danger-signs.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
     "rmnp-anc-classification-tables.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
     "rmnp-anc-routine-actions.json": ["07-anc-first-contact.json", "13-anc-contact-followup.json"],
