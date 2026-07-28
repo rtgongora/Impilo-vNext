@@ -22,6 +22,45 @@ being wrong.
 
 ---
 
+## 1b. Security status — consolidated
+
+Four separate things get called "the security issue". Their states differ.
+
+| item | state |
+|---|---|
+| **S2S internal service tokens** (the original ask) | ✅ **FIXED, deployed, live-proven with a negative control** |
+| **A2 batch — 6 merged-but-unshipped fixes** | ✅ **SHIPPED** (tuso, org-registry, document-service, experience-bff); both migration sequences verified applied |
+| **The parked auth wave (Phase D)** | ❌ **OPEN — see §3.3.** Investigated, nothing changed |
+| **`check-committed-secrets.sh` RED on canonical** | ⚠️ baseline drift, **not a leak** — see §3.6 |
+
+**The S2S issue** was the sprint's opening request: internal service-to-service calls were not
+carrying their own credentials. Fixed, merged, deployed, and proven live — including a negative
+control confirming the check discriminates, which matters because on preview the global auth bypass
+means most "authorization proofs" prove nothing (§3.3).
+
+**The A2 batch** shipped six live fixes that were merged but never imaged: an ungated endpoint
+letting any authenticated internal caller mark a facility operational; verification decisions gated
+on a caller-supplied `X-Actor-Type` header; cross-tenant read/mutate of facility data-gap tasks;
+**cross-tenant document reads including signed-URL minting**; plaintext invitation tokens; and an
+ended appointment revoking nothing. *Merged ≠ landed applies to security work.*
+
+**What remains open is §3.3**, and it is the largest standing risk on the estate: 98 deployments
+running with authentication disabled on the single public HTTP stack, and the safety interlock that
+would make that state unreachable present in only 2 services of 74.
+
+## 1c. Companion handover documents
+
+- **`docs/handover/2026-07-28-rmnp-lane-handover.md`** — the RMNP lane's own brief. Carries the live
+  digests, next free migration numbers (pct V438, CKP V042), the ordered confidentiality flip list
+  with its two non-engineering blockers, and the **`/confidential/` path trap**: the routing guard
+  gates the lane on a path substring, so an endpoint mounted elsewhere would post-flip withhold every
+  stamped record from every requester *including its author*. It also records the design decisions a
+  successor will be tempted to "fix" — stamp-fails-open vs read-fails-closed chief among them.
+
+  **Two items it flags as having no owner:** Surgery's stale lease (also §3.6 here), and the
+  RMNP-owned BFF endpoints for the citizen SMBP and CHW postnatal surfaces — both of which must mount
+  under `/confidential/`.
+
 ## 2. What landed this sprint
 
 ### 2.1 The payload-shape class (the biggest product-integrity find)
