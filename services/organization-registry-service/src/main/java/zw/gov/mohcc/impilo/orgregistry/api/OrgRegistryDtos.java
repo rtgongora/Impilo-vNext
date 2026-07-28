@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 public final class OrgRegistryDtos {
 
     private OrgRegistryDtos() {
@@ -156,5 +158,58 @@ public final class OrgRegistryDtos {
             long totalElements,
             int totalPages,
             List<MirrorInventoryItem> items) {
+    }
+
+    // ── Regulatory Configuration Registry (NCZ-W1A) ──────────────────────────────────────────
+
+    /** Create a regulator's configuration pack. */
+    public record CreateConfigPackRequest(String packKey, String label, String description) {
+    }
+
+    /** One reference a definition version makes to another definition. */
+    public record ConfigDependencyRequest(String typeCode, String definitionKey, boolean optional) {
+    }
+
+    /**
+     * Author a DRAFT definition version. {@code policyStatus} is how a council says "the seam is
+     * built, the value is not set": PENDING_REGULATOR_APPROVAL plus the decision reference, never a
+     * guessed amount, formula or format.
+     */
+    public record AuthorConfigVersionRequest(
+            String typeCode,
+            String definitionKey,
+            String label,
+            String semanticVersion,
+            JsonNode payload,
+            String selfServiceRoute,
+            String policyStatus,
+            String policyDecisionRef,
+            String sourcePackRef,
+            List<ConfigDependencyRequest> dependencies) {
+    }
+
+    /**
+     * Create a release. {@code cloneActive} starts from the currently active release, which is the
+     * ordinary way to make a small change: a release is a complete statement of the pack's
+     * configuration, not a patch.
+     */
+    public record CreateConfigReleaseRequest(String releaseKey, String label, String notes,
+                                             Boolean cloneActive) {
+    }
+
+    public record AddReleaseItemRequest(UUID definitionVersionId) {
+    }
+
+    /** The approver is the authenticated actor — it is never taken from the request body. */
+    public record RecordConfigApprovalRequest(String approverRole, String decision, String note) {
+    }
+
+    /** Pin a case to the configuration active at the moment the case is opened. */
+    public record BindCaseConfigRequest(String caseSystem, String caseType, String caseRef,
+                                        UUID organizationId) {
+    }
+
+    /** Pin one definition at a later named moment (liability assessment, certificate issuance). */
+    public record PinCaseConfigRequest(String typeCode, String definitionKey, String moment) {
     }
 }
