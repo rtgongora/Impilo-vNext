@@ -81,6 +81,38 @@ class AppropriatenessEngineTest {
         assertThat(v.outcome()).isEqualTo("PROCEED_WITH_CLARIFICATION");
     }
 
+    /**
+     * §27's own gap, closed here: {@code DUPLICATE_OPEN_REQUEST} has been real code since P2 but
+     * had zero test coverage anywhere in the estate (confirmed by grep, Wave P15) — the flag is
+     * set by the CALLER (OROS), not computed by this engine, so this proves the engine reacts to
+     * it correctly rather than proving OROS's own open-request lookup.
+     */
+    @Test
+    void anOpenRequestAssertedByTheCallerIsFlaggedAsADuplicate() {
+        define("PROC-OPENDUP", "NOT_APPLICABLE", null, "NO_CONSTRAINT", null, null);
+        AppropriatenessRequest r = new AppropriatenessRequest("PROC-OPENDUP", null, null, null,
+                LocalDate.now(), null, null, null, null, true, null,
+                null, null, null, null, null);
+
+        AppropriatenessVerdict v = engine.evaluate(TENANT, r);
+
+        assertThat(v.detections()).extracting("code").contains("DUPLICATE_OPEN_REQUEST");
+        assertThat(v.outcome()).isEqualTo("PROCEED_WITH_CLARIFICATION");
+    }
+
+    /** The absence of the flag must not be read as an open request — null is "not asserted". */
+    @Test
+    void noOpenRequestAssertedMeansNoDuplicateDetection() {
+        define("PROC-NODUP", "NOT_APPLICABLE", null, "NO_CONSTRAINT", null, null);
+        AppropriatenessRequest r = new AppropriatenessRequest("PROC-NODUP", null, null, null,
+                LocalDate.now(), null, null, null, null, false, null,
+                null, null, null, null, null);
+
+        AppropriatenessVerdict v = engine.evaluate(TENANT, r);
+
+        assertThat(v.detections()).extracting("code").doesNotContain("DUPLICATE_OPEN_REQUEST");
+    }
+
     @Test
     void anUndeclaredRepeatWindowIsReportedAsUnknownRatherThanAssumed() {
         define("PROC-NOWINDOW", "MIDLINE", null, "NO_CONSTRAINT", null, null);

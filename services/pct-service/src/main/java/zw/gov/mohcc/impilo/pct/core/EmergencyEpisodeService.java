@@ -278,6 +278,20 @@ public class EmergencyEpisodeService {
             List.of("ADMISSION", "THEATRE", "MENTAL_HEALTH", "INTERFACILITY_TRANSFER", "OTHER_SERVICE");
 
     /**
+     * Per-target-type response window feeding {@code response_due_at} (V209) — the deadline the
+     * auto-expiry sweep ({@link HandoverExpirySweepJob}) reads. THEATRE gets the tightest window: a
+     * patient awaiting an emergency operating slot cannot wait as long as an interfacility transfer
+     * negotiation reasonably can. These are seeds, like every other Zimbabwe time target in this
+     * pack (R9's "every Zimbabwe time target in this pack is a seed") — not yet ratified.
+     */
+    private static final Map<String, Integer> HANDOVER_RESPONSE_WINDOW_MINUTES = Map.of(
+            "THEATRE", 15,
+            "ADMISSION", 30,
+            "MENTAL_HEALTH", 30,
+            "OTHER_SERVICE", 30,
+            "INTERFACILITY_TRANSFER", 60);
+
+    /**
      * Request a handover. Moves the episode OPEN_IN_CARE -> OPEN_AWAITING_ACCEPTANCE — a request is
      * not a handover, so the episode does not close and {@code handover_id} is not touched.
      *
@@ -312,6 +326,10 @@ public class EmergencyEpisodeService {
         h.setRequestedBy(requestedBy);
         h.setRequestReason(reason);
         h.setStatus("PENDING");
+        Integer windowMinutes = HANDOVER_RESPONSE_WINDOW_MINUTES.get(targetType);
+        if (windowMinutes != null) {
+            h.setResponseDueAt(OffsetDateTime.now().plusMinutes(windowMinutes));
+        }
         EmergencyHandoverEntity saved = handoverRepository.saveAndFlush(h);
         emitHandover(saved, "EMERGENCY_HANDOVER_REQUESTED");
         return saved;
@@ -390,11 +408,13 @@ public class EmergencyEpisodeService {
     }
 
     /**
-     * Expire a handover: an explicit decision (by a clinician or a future scheduled job) that this
-     * attempt has gone unanswered too long. Returns the episode to OPEN_IN_CARE — same as a decline —
-     * and optionally links a rito safety case. There is no automatic expiry in this wave; the
-     * {@code ACCEPTANCE_OVERDUE} alert (W5) already nags loudly while a request sits unanswered, and
-     * an automatic-expiry sweep is future work, not silently assumed here.
+     * Expire a handover: a decision (by a clinician, or {@link HandoverExpirySweepJob} once
+     * {@code response_due_at} has passed) that this attempt has gone unanswered too long. Returns the
+     * episode to OPEN_IN_CARE — same as a decline. {@code ritoCaseRef} is a link only, supplied by the
+     * caller — this method never calls rito itself. {@link HandoverExpirySweepJob} opens the case
+     * synchronously (via {@code RitoSafetyClient}, matching inpatient-theatre's own pattern) BEFORE
+     * calling this method and passes the resulting ref straight through; a manual clinician-driven
+     * expiry over HTTP may likewise supply an already-opened case's ref, or leave it absent.
      */
     @Transactional
     public EmergencyEpisodeEntity expireHandover(UUID handoverId, UUID tenantId, String expiredBy, String ritoCaseRef) {

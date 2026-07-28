@@ -105,6 +105,29 @@ public class DaidzaiEpisodeClient {
         }
     }
 
+    /**
+     * Read DAIDZAI's current view of a trauma episode — the {@code EmergencyReconciliationJob}'s one
+     * genuine cross-service call (the alert sweep itself never does this; see that job's own class
+     * comment on why a peer-dependent read must never be inline in the fires-every-minute path).
+     *
+     * @return the episode view ({@code pctEmergencyEpisodeId}, {@code mergedIntoId}, etc. as returned
+     *         by {@code TraumaEpisodeService.episodeView}), or {@code null} if DAIDZAI is unreachable
+     *         or the episode is gone — either way, "no answer" and never treated as "no divergence".
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getTraumaEpisode(UUID tenantId, UUID traumaEpisodeId) {
+        try {
+            ResponseEntity<Map> resp = restTemplate.exchange(
+                    baseUrl + "/internal/v1/daidzai/trauma-episodes/" + traumaEpisodeId,
+                    HttpMethod.GET, new HttpEntity<>(headers(tenantId)), Map.class);
+            return resp.getBody();
+        } catch (RestClientException e) {
+            log.warn("DAIDZAI trauma-episode read for {} failed: {} — reconciliation cannot conclude "
+                    + "for this episode this round", traumaEpisodeId, e.getMessage());
+            return null;
+        }
+    }
+
     /** Best-effort timeline registration; never throws (a clinical write must not roll back on this). */
     public void registerPhase(UUID tenantId, UUID episodeId, String phase, String ownerRef,
                               String status, String eventType) {

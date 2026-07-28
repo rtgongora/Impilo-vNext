@@ -81,6 +81,30 @@ public class ConsentRequestEntity {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
+    // ── Wave P15 (pipeline §28 demonstration 3) — child assent, distinct from guardian consent.
+    // Columns added by V300 (Wave P5) but never mapped onto this entity — the same
+    // "a column with nothing resolving it" state V005/V007 each found and fixed for a different
+    // service. GUARDIAN/decision-maker fields were already unmapped for the same reason; both
+    // are added together here since demonstration 3 needs guardian consent AND child assent
+    // recorded as two distinct, coexisting facts.
+    @Column(name = "decision_maker_type", length = 32)
+    private String decisionMakerType;
+
+    @Column(name = "decision_maker_ref")
+    private String decisionMakerRef;
+
+    @Column(name = "decision_maker_basis", columnDefinition = "text")
+    private String decisionMakerBasis;
+
+    @Column(name = "assent_sought")
+    private Boolean assentSought;
+
+    @Column(name = "assent_outcome", length = 24)
+    private String assentOutcome;
+
+    @Column(name = "assent_notes", columnDefinition = "text")
+    private String assentNotes;
+
     @PrePersist
     void onCreate() {
         if (createdAt == null) {
@@ -251,5 +275,53 @@ public class ConsentRequestEntity {
 
     public void setExpiresAt(Instant expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public String getDecisionMakerType() {
+        return decisionMakerType;
+    }
+
+    public void setDecisionMakerType(String decisionMakerType) {
+        this.decisionMakerType = decisionMakerType;
+    }
+
+    public String getDecisionMakerRef() {
+        return decisionMakerRef;
+    }
+
+    public void setDecisionMakerRef(String decisionMakerRef) {
+        this.decisionMakerRef = decisionMakerRef;
+    }
+
+    public String getDecisionMakerBasis() {
+        return decisionMakerBasis;
+    }
+
+    public void setDecisionMakerBasis(String decisionMakerBasis) {
+        this.decisionMakerBasis = decisionMakerBasis;
+    }
+
+    public Boolean getAssentSought() {
+        return assentSought;
+    }
+
+    public void setAssentSought(Boolean assentSought) {
+        this.assentSought = assentSought;
+    }
+
+    public String getAssentOutcome() {
+        return assentOutcome;
+    }
+
+    public void setAssentOutcome(String assentOutcome) {
+        this.assentOutcome = assentOutcome;
+    }
+
+    public String getAssentNotes() {
+        return assentNotes;
+    }
+
+    public void setAssentNotes(String assentNotes) {
+        this.assentNotes = assentNotes;
     }
 }

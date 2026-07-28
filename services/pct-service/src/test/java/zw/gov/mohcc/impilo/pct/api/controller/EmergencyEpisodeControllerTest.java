@@ -6,8 +6,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import zw.gov.mohcc.impilo.pct.core.EmergencyDispositionService;
+import zw.gov.mohcc.impilo.pct.core.EmergencyDispositionServiceTest;
 import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeServiceTest;
+import zw.gov.mohcc.impilo.pct.core.EmergencyObservationStayService;
+import zw.gov.mohcc.impilo.pct.core.EmergencyObservationStayServiceTest;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -43,7 +47,11 @@ class EmergencyEpisodeControllerTest {
         var handoverRepo = new EmergencyEpisodeServiceTest.InMemoryHandoverRepo();
         var outbox = new EmergencyEpisodeServiceTest.CountingOutbox();
         EmergencyEpisodeService service = new EmergencyEpisodeService(repo, handoverRepo, outbox, new ObjectMapper());
-        controller = new EmergencyEpisodeController(service);
+        EmergencyDispositionService dispositionService = new EmergencyDispositionService(
+                repo, new EmergencyDispositionServiceTest.InMemoryDispositionRepo(), service);
+        EmergencyObservationStayService observationStayService = new EmergencyObservationStayService(
+                repo, new EmergencyObservationStayServiceTest.InMemoryStayRepo());
+        controller = new EmergencyEpisodeController(service, dispositionService, observationStayService);
         TrustContextHolder.set(new TrustContext(TENANT, "nurse-A", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
     }
@@ -130,6 +138,47 @@ class EmergencyEpisodeControllerTest {
         var declined = controller.declineHandover(handoverId, Map.of(
                 "declinedBy", "surgeon-C", "reason", "no theatre slot"));
         assertEquals("OPEN_IN_CARE", declined.getBody().data().get("state"));
+    }
+
+    @Test
+    @DisplayName("recording a disposition over HTTP closes the episode and is retrievable")
+    void dispositionOverHttp() {
+        var opened = controller.open(Map.of("entryRoute", "WALK_IN",
+                "facilityId", FACILITY.toString(), "journeyId", "J-HTTP-DISP"));
+        UUID episodeId = UUID.fromString((String) opened.getBody().data().get("episode_id"));
+        controller.arrive(episodeId, Map.of("journeyId", "J-HTTP-DISP"));
+        controller.transition(episodeId, Map.of("state", "OPEN_IN_CARE"));
+
+        var recorded = controller.recordDisposition(episodeId, Map.of(
+                "dispositionType", "DISCHARGED_HOME",
+                "dispositionReason", "stable, safe to go home",
+                "disposedBy", "nurse-A"));
+        assertEquals(201, recorded.getStatusCode().value());
+        assertEquals("DISCHARGED_HOME", recorded.getBody().data().get("disposition_type"));
+
+        var episode = controller.get(episodeId);
+        assertEquals("CLOSED_DISCHARGED", episode.getBody().data().get("state"));
+
+        var fetched = controller.getDisposition(episodeId);
+        assertEquals("DISCHARGED_HOME", fetched.getBody().data().get("disposition_type"));
+    }
+
+    @Test
+    @DisplayName("an observation stay is reachable over HTTP: start, list, end")
+    void observationStayOverHttp() {
+        var opened = controller.open(Map.of("entryRoute", "WALK_IN", "facilityId", FACILITY.toString()));
+        UUID episodeId = UUID.fromString((String) opened.getBody().data().get("episode_id"));
+
+        var started = controller.startObservationStay(episodeId, Map.of("startedBy", "nurse-A"));
+        assertEquals(201, started.getStatusCode().value());
+        UUID stayId = UUID.fromString((String) started.getBody().data().get("stay_id"));
+
+        var list = controller.observationStays(episodeId);
+        assertEquals(1, list.getBody().data().size());
+
+        var ended = controller.endObservationStay(stayId, Map.of("endedBy", "nurse-A", "outcome", "DISCHARGED"));
+        assertNotNull(ended.getBody().data().get("ended_at"));
+        assertEquals("DISCHARGED", ended.getBody().data().get("outcome"));
     }
 
     @Test
