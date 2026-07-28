@@ -13,11 +13,15 @@
  * when no context resolves or the mint fails. On success, every subsequent
  * `apiClient` call carries a real `x-work-context-token`; on failure, mobile
  * simply continues without one, same as it always has.
+ *
+ * Also persists the full resolved-contexts list to `appStore` (independent of
+ * whether the preferred context's mint succeeds) so `ModeSwitcher` (Phase G3)
+ * can unlock a mode button from a real proven assignment.
  */
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@impilo/mobile-auth";
 import type { ResolvedWorkContextsAttributes, ResolvedWorkContextView } from "@impilo/mobile-trust";
-import { useAppStore } from "../stores/appStore";
+import { appStore, useAppStore } from "../stores/appStore";
 import { listResolvedWorkContexts, mintWorkContextSession } from "../services/workContextService";
 
 export type WorkContextResolutionStatus = "idle" | "resolving" | "resolved" | "unavailable" | "failed";
@@ -63,6 +67,11 @@ export function useAutoResolveWorkContext(): WorkContextResolutionStatus {
       try {
         const resolved = await listResolvedWorkContexts();
         if (cancelled) return;
+
+        // Persisted regardless of whether a mint follows — ModeSwitcher (Phase G3)
+        // reads this to unlock mode buttons backed by a real proven assignment,
+        // independent of whether the preferred context's mint succeeds below.
+        appStore.getState().setResolvedWorkContexts(resolved.contexts ?? []);
 
         const preferred = selectPreferredWorkContext(resolved, facilityId);
 

@@ -10,6 +10,7 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
 import { Button, colors } from "@impilo/mobile-design-system";
 import { appStore, useAppStore } from "../stores/appStore";
+import { deriveAvailableAppModes } from "./modeAvailability";
 import type { AppMode } from "../types";
 
 const MODE_LABELS: Record<AppMode, string> = {
@@ -43,9 +44,13 @@ function getAvailableModes(roles: string[]): AppMode[] {
 
 export function ModeSwitcher() {
   const auth = useAuth();
-  const { mode } = useAppStore();
+  const { mode, resolvedWorkContexts } = useAppStore();
   const userRoles = auth.user?.realm_access?.roles ?? [];
-  const availableModes = getAvailableModes(userRoles);
+  const roleBasedModes = getAvailableModes(userRoles);
+  // Phase G3 — a real resolved work context can additionally unlock a mode
+  // button the raw Keycloak role string hasn't caught up to yet; it never
+  // removes one. See modeAvailability.ts for why this is additive-only.
+  const availableModes = deriveAvailableAppModes(roleBasedModes, resolvedWorkContexts);
 
   const handleModeChange = useCallback((newMode: AppMode) => {
     appStore.getState().setMode(newMode);

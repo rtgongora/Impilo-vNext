@@ -10,11 +10,23 @@
  */
 
 import { createStore } from "zustand/vanilla";
+import type { ResolvedWorkContextView } from "@impilo/mobile-trust";
 import type { AppMode, ProviderTabKey } from "../types";
 
 export interface AppState {
   mode: AppMode;
   isOnline: boolean;
+  /**
+   * Phase G3 — the real resolved work contexts from
+   * GET /internal/v1/work-context/resolved (populated best-effort by
+   * useAutoResolveWorkContext once facility+workspace are set). Null until
+   * the first resolution attempt completes; empty array is a real "resolved
+   * to nothing yet" result, not the same as null/not-yet-tried. Feeds
+   * ModeSwitcher's deriveAvailableAppModes so a real backend-proven
+   * assignment can unlock a mode button even when the Keycloak role string
+   * hasn't caught up — see modeAvailability.ts for why this is additive-only.
+   */
+  resolvedWorkContexts: ResolvedWorkContextView[] | null;
   facilityId: string | null;
   facilityName: string | null;
   workspaceId: string | null;
@@ -47,12 +59,14 @@ export interface AppState {
   setSupervisorEntryTab: (tab: AppState["supervisorEntryTab"]) => void;
   setAppsFocus: (focus: AppState["appsFocus"]) => void;
   setLearningSubject: (subjectType: string | null, subjectId: string | null) => void;
+  setResolvedWorkContexts: (contexts: ResolvedWorkContextView[]) => void;
   clearContext: () => void;
 }
 
 export const appStore = createStore<AppState>((set) => ({
   mode: "provider",
   isOnline: true,
+  resolvedWorkContexts: null,
   facilityId: null,
   facilityName: null,
   workspaceId: null,
@@ -86,6 +100,7 @@ export const appStore = createStore<AppState>((set) => ({
   setSupervisorEntryTab: (supervisorEntryTab) => set({ supervisorEntryTab }),
   setAppsFocus: (appsFocus) => set({ appsFocus }),
   setLearningSubject: (learningSubjectType, learningSubjectId) => set({ learningSubjectType, learningSubjectId }),
+  setResolvedWorkContexts: (resolvedWorkContexts) => set({ resolvedWorkContexts }),
   clearContext: () =>
     set({
       facilityId: null,
