@@ -67,6 +67,9 @@ function getDoctorFlow(): WizardPhase[] {
         { label: "Orders", segment: "orders", icon: ClipboardList, hint: "Lab & procedure orders" },
         { label: "Procedures", segment: "procedures", icon: Scissors, hint: "Procedures done" },
         { label: "Care Plans", segment: "care-plans", icon: Target, hint: "Goals & interventions" },
+        // HIV/TB enrolment, regimens and governed guidance — longitudinal treatment, so it sits
+        // with the other treatment steps rather than in Assess.
+        { label: "Programmes", segment: "programmes", icon: Activity, hint: "HIV/TB care & regimens" },
       ],
     },
     {

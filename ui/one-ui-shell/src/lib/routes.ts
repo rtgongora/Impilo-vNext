@@ -344,6 +344,11 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/imaging", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Imaging", navLabel: "Imaging", navZone: "work" },
   { path: "/ehr/[patientId]/investigations", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Investigations", navLabel: "Investigations", navZone: "work" },
   { path: "/ehr/[patientId]/imaging/viewer", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "DICOM Viewer", navLabel: "Viewer", navZone: "work" },
+  // Both pages existed on canonical without a registry entry, so nothing could navigate to them:
+  // route-parity-check only validates registry -> filesystem, never the reverse, so an unregistered
+  // page is invisible to it. Registering them is the fix, not a new capability.
+  { path: "/ehr/[patientId]/programmes", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Care programmes", navLabel: "Programmes", navZone: "work" },
+  { path: "/ehr/[patientId]/workspace/[specialty]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Specialty Workspace", navLabel: "Specialty", navZone: "work" },
 
   // â”€â”€ Zone: Admin / TSHEPO Governance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Administration", navLabel: "Admin", navZone: "professional" },
@@ -1041,7 +1046,7 @@ export const ROUTES: RouteDefinition[] = [
 // unguarded — resus/[activationId], episode/[episodeId], [visitId]. Total 803.
 // IMAM nutrition treatment (Jul 2026): +2 — the child's treatment episode and the facility's
 // defaulter tracing worklist, which are different jobs done by different people. Total 805.
-export const EXPECTED_ROUTE_COUNT = 807;
+export const EXPECTED_ROUTE_COUNT = 809;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
