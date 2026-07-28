@@ -24,6 +24,22 @@ export const SHELL_APPS: AppDefinition[] = [
     weight: 0,
   },
   {
+    id: "app-work",
+    appCode: "work",
+    name: "Work",
+    description: "Your role/mode-aware operational Work Home — clinical, management, oversight, support and regulatory contexts",
+    icon: "Briefcase",
+    category: "operations",
+    href: "/work",
+    activeFlag: true,
+    requiredRole: "OPERATIONS_AGGREGATE",
+    systemAppFlag: false,
+    weight: 1,
+    // Real (Phase F1-F3/F8/F9), but /provider-workspace still carries some feeds this hasn't
+    // absorbed yet (Phase F6) and the post-login default route doesn't point here yet.
+    maturity: "partial",
+  },
+  {
     id: "app-command-centre",
     appCode: "command_centre",
     name: "Production Command Centre",
