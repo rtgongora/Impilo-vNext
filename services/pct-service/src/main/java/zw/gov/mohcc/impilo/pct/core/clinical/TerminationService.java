@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.pct.core.clinical;
 
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.reproductive.confidentiality.ConfidentialityCategory;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pct.persistence.entity.TopAuthorisationEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.TopProcedureEntity;
@@ -26,10 +27,59 @@ public class TerminationService {
     private final TopAuthorisationRepository authorisations;
     private final TopProcedureRepository procedures;
 
+    private final ConfidentialCarePolicyProvider confidentiality;
+    private final ConfidentialRecordGuard confidentialRecords;
+
     public TerminationService(TopAuthorisationRepository authorisations,
-                              TopProcedureRepository procedures) {
+                              TopProcedureRepository procedures,
+                              ConfidentialCarePolicyProvider confidentiality,
+                              ConfidentialRecordGuard confidentialRecords) {
         this.authorisations = authorisations;
         this.procedures = procedures;
+        this.confidentiality = confidentiality;
+        this.confidentialRecords = confidentialRecords;
+    }
+
+    /**
+     * A subject's termination procedures, guarded.
+     *
+     * <p>Added guarded FROM BIRTH rather than left for the first reader to write. An unguarded read
+     * of this table is the single most sensitive leak in the pack, and the safe version has to exist
+     * before anyone needs it — otherwise the person who needs it writes the unguarded one.
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<TopProcedureEntity> proceduresForSubject(java.util.UUID tenantId, String subjectCpid) {
+        if (tenantId == null || subjectCpid == null || subjectCpid.isBlank()) {
+            return java.util.List.of();
+        }
+        return confidentialRecords.filter(
+                procedures.findByTenantIdAndSubjectCpidOrderByPerformedOnDesc(tenantId, subjectCpid),
+                TopProcedureEntity::getSensitivityClass,
+                TopProcedureEntity::getConfidentialityCategory);
+    }
+
+    /**
+     * A termination record is confidential at any age. The guardian question is not what makes it
+     * sensitive — the aggregate-only, no-record-level-emit ruling in V435 is — so the stamp is
+     * age-independent and needs no demographics.
+     */
+    private ConfidentialityStamper.Stamp stampFor(java.util.UUID tenantId) {
+        var policy = confidentiality.policyAsOf(tenantId, java.time.LocalDate.now());
+        return ConfidentialityStamper.gated(
+                ConfidentialityStamper.alwaysConfidential(
+                        ConfidentialityCategory.SEXUAL_REPRODUCTIVE_HEALTH, policy),
+                confidentiality.classStampingEnabled());
+    }
+
+    private static void apply(ConfidentialityStamper.Stamp stamp,
+                              java.util.function.Consumer<String> setClass,
+                              java.util.function.Consumer<String> setCategory,
+                              java.util.function.Consumer<String> setBasis,
+                              java.util.function.Consumer<String> setVersion) {
+        setClass.accept(stamp.sensitivityClass());
+        setCategory.accept(stamp.category());
+        setBasis.accept(stamp.basis());
+        setVersion.accept(stamp.policyVersion());
     }
 
     @Transactional
@@ -43,9 +93,8 @@ public class TerminationService {
         if (a.getConsentGiven() == null) {
             a.setConsentGiven("NOT_RECORDED");
         }
-        if (a.getSensitivityClass() == null) {
-            a.setSensitivityClass("FULL_CLINICAL");
-        }
+        apply(stampFor(a.getTenantId()), a::setSensitivityClass, a::setConfidentialityCategory,
+                a::setConfidentialityBasis, a::setConfidentialityPolicyVersion);
         return authorisations.save(a);
     }
 
@@ -64,9 +113,8 @@ public class TerminationService {
         if (p.getRecordedAt() == null) {
             p.setRecordedAt(OffsetDateTime.now());
         }
-        if (p.getSensitivityClass() == null) {
-            p.setSensitivityClass("FULL_CLINICAL");
-        }
+        apply(stampFor(p.getTenantId()), p::setSensitivityClass, p::setConfidentialityCategory,
+                p::setConfidentialityBasis, p::setConfidentialityPolicyVersion);
         return procedures.save(p);
     }
 }

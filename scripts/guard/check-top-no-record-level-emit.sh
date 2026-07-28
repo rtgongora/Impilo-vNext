@@ -23,7 +23,7 @@ TOP_TOKENS='pct_top_procedures|pct_top_authorisations|TopProcedure|TopAuthorisat
 # Files that publish record-level events: outbox writers, Kafka producers, event publishers. We scan
 # these for any mention of a TOP token. A match means a TOP record is being put on a path that leaves
 # the service with row-level content — exactly what the ruling forbids.
-EMIT_FILES=$(git ls-files -- 'services/pct-service/**/*.java' \
+EMIT_FILES=$(git ls-files --cached --others --exclude-standard -- 'services/pct-service/**/*.java' \
   | xargs -r grep -lE 'Outbox|KafkaTemplate|event_outbox|EventPublisher|\.send\(|publishEvent' 2>/dev/null || true)
 
 # Strip Java comments (line //, and javadoc/block lines beginning with * or /*) before matching, so a
@@ -59,7 +59,7 @@ fi
 # event/outbox path exists"); those are prose, not columns, so strip -- line comments and COMMENT ON
 # statements before matching. A real column declaration (`event_type ...`) survives the strip.
 SCHEMA_OFFEND=""
-for f in $(git ls-files -- 'services/pct-service/**/V435__*.sql'); do
+for f in $(git ls-files --cached --others --exclude-standard -- 'services/pct-service/**/V435__*.sql'); do
     hit=$(sed -E 's/--.*$//' "$f" | sed -E '/COMMENT[[:space:]]+ON/,/;/d' \
           | grep -niE 'event_type|outbox|event_id|emit' 2>/dev/null || true)
     if [[ -n "$hit" ]]; then

@@ -40,7 +40,7 @@ class TerminationServiceTest {
     void setUp() {
         authorisations = mock(TopAuthorisationRepository.class);
         procedures = mock(TopProcedureRepository.class);
-        service = new TerminationService(authorisations, procedures);
+        service = new TerminationService(authorisations, procedures, inertConfidentiality(), new ConfidentialRecordGuard());
         when(authorisations.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(procedures.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
@@ -107,4 +107,29 @@ class TerminationServiceTest {
             }
         }
     }
+
+    /**
+     * A confidentiality provider that resolves nothing: no policy, no demographics. The stamper then
+     * records POLICY_UNAVAILABLE and leaves the class at FULL_CLINICAL — which is exactly the
+     * stamp-fails-open behaviour these tests should see by default.
+     */
+    private static ConfidentialCarePolicyProvider inertConfidentiality() {
+        ConfidentialCarePolicyProvider p = mock(ConfidentialCarePolicyProvider.class);
+        when(p.classStampingEnabled()).thenReturn(false);
+        when(p.policyAsOf(any(), any())).thenReturn(new zw.gov.mohcc.impilo.reproductive.confidentiality.ConfidentialCarePolicy() {
+            public java.util.Optional<Integer> confidentialFromGuardianAgeYears(
+                    zw.gov.mohcc.impilo.reproductive.confidentiality.ConfidentialityCategory c) {
+                return java.util.Optional.empty();
+            }
+            public java.util.Optional<Boolean> nonTerminationLossConfidentialFromGuardian() {
+                return java.util.Optional.empty();
+            }
+            public String contentVersion() { return null; }
+            public boolean ratified() { return false; }
+        });
+        when(p.subjectAt(any(), any(), any(), any()))
+                .thenReturn(new ConfidentialityStamper.SubjectContext(null, false));
+        return p;
+    }
+
 }

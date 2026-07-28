@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.pct.core.clinical;
 
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.reproductive.confidentiality.ConfidentialityCategory;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pct.persistence.entity.PostnatalContactEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.PostnatalContactRepository;
@@ -25,8 +26,40 @@ public class PostnatalContactService {
 
     private final PostnatalContactRepository contacts;
 
-    public PostnatalContactService(PostnatalContactRepository contacts) {
+    private final ConfidentialCarePolicyProvider confidentiality;
+    private final ConfidentialRecordGuard confidentialRecords;
+
+    public PostnatalContactService(PostnatalContactRepository contacts,
+                                   ConfidentialCarePolicyProvider confidentiality,
+                                   ConfidentialRecordGuard confidentialRecords) {
         this.contacts = contacts;
+        this.confidentiality = confidentiality;
+        this.confidentialRecords = confidentialRecords;
+    }
+
+    /**
+     * A postnatal contact is SRH content only when it actually carries contraception content. A
+     * routine PNC visit is ordinary maternity care and is deliberately left unstamped — over-marking
+     * would put half the postnatal register behind a confidentiality grant nobody holds.
+     *
+     * <p>Deliberately NOT stamped as MENTAL_HEALTH off {@code mood_screen}: that column has no
+     * vocabulary and no CHECK, so a trigger from it would be guesswork. Raised as a schema gap
+     * instead of invented here.
+     */
+    private ConfidentialityStamper.Stamp stampFor(PostnatalContactEntity contact) {
+        boolean carriesContraception = Boolean.TRUE.equals(contact.getContraceptionDiscussed())
+                || contact.getPostpartumContraceptionEpisodeId() != null;
+        if (!carriesContraception) {
+            return null;
+        }
+        var actDate = contact.getContactedAt() == null
+                ? java.time.LocalDate.now() : contact.getContactedAt().toLocalDate();
+        var category = ConfidentialityCategory.SEXUAL_REPRODUCTIVE_HEALTH;
+        var policy = confidentiality.policyAsOf(contact.getTenantId(), actDate);
+        var subject = confidentiality.subjectAt(contact.getTenantId(), contact.getMotherCpid(), category, actDate);
+        return ConfidentialityStamper.gated(
+                ConfidentialityStamper.ageGated(category, subject, actDate, policy),
+                confidentiality.classStampingEnabled());
     }
 
     @Transactional(readOnly = true)
@@ -34,7 +67,9 @@ public class PostnatalContactService {
         if (tenantId == null || motherCpid == null || motherCpid.isBlank()) {
             return List.of();
         }
-        return contacts.findByMother(tenantId, motherCpid);
+        return confidentialRecords.filter(contacts.findByMother(tenantId, motherCpid),
+                PostnatalContactEntity::getSensitivityClass,
+                PostnatalContactEntity::getConfidentialityCategory);
     }
 
     @Transactional
@@ -55,8 +90,15 @@ public class PostnatalContactService {
         if (contact.getRecordedAt() == null) {
             contact.setRecordedAt(OffsetDateTime.now());
         }
-        if (contact.getSensitivityClass() == null) {
-            contact.setSensitivityClass("FULL_CLINICAL");
+        var stamp = stampFor(contact);
+        if (stamp == null) {
+            // Not SRH content: ordinary maternity care, no category, no protection claimed.
+            contact.setSensitivityClass(ConfidentialityStamper.CLASS_FULL_CLINICAL);
+        } else {
+            contact.setSensitivityClass(stamp.sensitivityClass());
+            contact.setConfidentialityCategory(stamp.category());
+            contact.setConfidentialityBasis(stamp.basis());
+            contact.setConfidentialityPolicyVersion(stamp.policyVersion());
         }
         // Booleans that carry a completed action default to false, so a null never reads as an
         // affirmative. screeningComplete is one of these: absent screening is FALSE, and the schema
