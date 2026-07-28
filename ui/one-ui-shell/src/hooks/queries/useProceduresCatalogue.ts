@@ -329,3 +329,50 @@ export function useAftercareTemplate(templateCode: string | null) {
     retry: false,
   });
 }
+
+// ── Wave SB-3 — P14 analytics indicator catalogue. Indicator DEFINITIONS and their
+// computation status, not computed numbers — computationStatus/gapReason are the honest
+// "this number does not exist yet" fields and must be rendered, not hidden. Same
+// empty/unknown/unavailable discipline as everything above. ──
+
+export interface IndicatorView {
+  indicatorCode: string;
+  indicatorName: string;
+  numeratorDescription: string;
+  denominatorDescription: string;
+  /** COMPUTED | PARTIAL | NOT_YET_INSTRUMENTED — render honestly; PARTIAL/NOT_YET are not failures. */
+  computationStatus: string;
+  executableVia: string | null;
+  /** Why this indicator cannot be computed yet — the named gap, shown verbatim. */
+  gapReason: string | null;
+  owningService: string | null;
+  delegatedOutOfScope: boolean;
+  sourceCitation: string | null;
+}
+
+export interface IndicatorSummary {
+  total: number;
+  computed: number;
+  partial: number;
+  notYetInstrumented: number;
+  indicators: IndicatorView[];
+}
+
+export function useAnalyticsIndicators() {
+  return useQuery<IndicatorSummary>({
+    queryKey: ["procedures", "analytics-indicators"],
+    queryFn: () =>
+      apiClient.get<IndicatorSummary>("/internal/v1/procedures/analytics/indicators"),
+  });
+}
+
+export function useAnalyticsIndicator(indicatorCode: string | null) {
+  return useQuery<IndicatorView>({
+    queryKey: ["procedures", "analytics-indicator", indicatorCode],
+    queryFn: () =>
+      apiClient.get<IndicatorView>(
+        `/internal/v1/procedures/analytics/indicator${buildQuery({ code: indicatorCode ?? undefined })}`,
+      ),
+    enabled: !!indicatorCode,
+  });
+}

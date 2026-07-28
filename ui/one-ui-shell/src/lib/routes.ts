@@ -961,6 +961,12 @@ export const ROUTES: RouteDefinition[] = [
   // WS#6 — Theatre & Perioperative Depth (provider theatre surfaces).
   { path: "/work/clinical/theatre", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre", navLabel: "Theatre", navZone: "work" },
   { path: "/work/clinical/theatre/[id]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre Case", navLabel: "Theatre Case", navZone: "work" },
+
+  // Surgery + Procedures pipeline (SB-3 reachability wave). The procedures catalogue page
+  // shipped unregistered (orphan-page check was red on it); registered here alongside the
+  // new surgical-episode workspace so both are guarded and navigable.
+  { path: "/work/clinical/procedures", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Procedure Catalogue", navLabel: "Procedure Catalogue", navZone: "work" },
+  { path: "/work/clinical/surgery", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Surgical Episodes", navLabel: "Surgical Episodes", navZone: "work" },
 ];
 
 // Total route count assertion.
@@ -1074,7 +1080,10 @@ export const ROUTES: RouteDefinition[] = [
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
 // Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
 // workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
-export const EXPECTED_ROUTE_COUNT = 827;
+// MCI casualty tagging (W15b, 28 Jul 2026): +1 — /work/daidzai/disasters/[id]/casualties. Total 827.
+// Surgery SB-3 reachability (28 Jul 2026): +2 — /work/clinical/procedures (existed but was
+// unregistered/orphaned) and /work/clinical/surgery (S1-S3 surgical episode workspace). Total 829.
+export const EXPECTED_ROUTE_COUNT = 829;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
