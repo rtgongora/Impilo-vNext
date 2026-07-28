@@ -126,6 +126,20 @@ must(){ local want=$1; shift
   cat "$RIGLOG/last.json"; }
 API=$ORG/v1/regulatory/config
 
+# Spring starts the web server BEFORE ApplicationRunners finish, so /health turns 200 while the
+# pack seeder is still working. A query fired the moment health answers can therefore read the
+# database before the seeder has written to it — which is how RC-13 failed with NEVER_LOADED while
+# the log said the pack had loaded. Wait for the seeder's OWN evidence, not for the port.
+await_seed(){ # $1 = psql helper function name, $2 = pack key
+  local v
+  for i in $(seq 1 40); do
+    v=$("$1" "SELECT load_checked_at FROM org_registry.regulatory_config_pack WHERE pack_key='$2'")
+    [ -n "$v" ] && return 0
+    sleep 2
+  done
+  return 1
+}
+
 # ═════ RC-1: author a pack and its definitions ══════════════════════════════
 say "RC-1: author a pack, a fee with an unset amount, and a form"
 PACK=$(curl -sS $(hdr) -X POST "$API/organizations/$NCZ/packs" \
@@ -370,6 +384,7 @@ PSQL "SELECT definition_id, semantic_version, lifecycle_state FROM org_registry.
 
 # ═════ RC-10: the source pack seeds a DRAFT, and only a DRAFT ═══════════════
 say "RC-10: the NCZ source pack loaded, and a deploy activated nothing"
+await_seed PSQL nurses-council || bad "the seeder never recorded a result for nurses-council"
 SEEDED=$(PSQL "SELECT load_state FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
 [ "$SEEDED" = "LOADED" ] && ok "the nurses-council pack loaded from the classpath source pack" \
     || bad "pack load_state is '$SEEDED', expected LOADED"
@@ -454,6 +469,7 @@ done
     && ok "the service still BOOTS with a drifted pack (a config typo is not a login outage)" \
     || { bad "the service died on pack drift"; tail -20 "$RIGLOG/org-registry-tampered.log"; }
 
+await_seed PSQL nurses-council || bad "the seeder never recorded a result after the tamper"
 DRIFT=$(PSQL "SELECT load_state FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
 [ "$DRIFT" = "LOAD_FAILED" ] && ok "the drifted pack is marked LOAD_FAILED" \
     || bad "pack load_state is '$DRIFT', expected LOAD_FAILED"
@@ -551,6 +567,7 @@ done
 [ "$c" = 200 ] && ok "the target environment booted on the exported pack" \
     || { bad "the target environment did not boot"; tail -20 "$RIGLOG/org-registry-promoted.log"; }
 
+await_seed PROMO nurses-council || bad "the seeder never recorded a result in the target environment"
 PROMO_STATE=$(PROMO "SELECT load_state FROM org_registry.regulatory_config_pack WHERE pack_key='nurses-council'")
 [ "$PROMO_STATE" = "LOADED" ] \
     && ok "the exported pack loaded cleanly — checksums survive the round trip" \

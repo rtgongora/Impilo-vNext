@@ -16,27 +16,38 @@ import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { regulatoryOrg } from "@/lib/regulatory/organisations";
+import { useRegulatoryConfiguration } from "@/hooks/queries/useRegulatoryConfiguration";
+import { capabilityVerdict, roleWorkspaceFor } from "@/lib/regulatory/roleWorkspace";
+import { useWorkSessionStore } from "@/hooks/useWorkSessionStore";
 
 interface SurfaceLink {
   label: string;
   description: string;
   href: string;
   wave: string;
+  /**
+   * The capability token this surface represents, drawn from the council's own ROLE_WORKSPACE
+   * vocabulary. A surface with no token is offered to every appointed role.
+   */
+  capability?: string;
 }
 
 export default function RegulatoryOrgWorkspacePage() {
   const params = useParams<{ orgId: string }>();
   const orgId = decodeURIComponent(String(params?.orgId ?? ""));
   const org = regulatoryOrg(orgId);
+  const roleCode = useWorkSessionStore((state) => state.session?.roleTemplateId ?? null);
+  const { data: configuration } = useRegulatoryConfiguration(orgId);
+  const workspace = roleWorkspaceFor(configuration, roleCode);
 
   const surfaces: SurfaceLink[] = [
-    { label: "Registers", description: "Professional registers, entries, restrictions and good standing.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W3" },
-    { label: "Applications", description: "Registration, renewal and scope applications + correspondence.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W4" },
-    { label: "CPD", description: "Continuing professional development adjudication.", href: `/work/regulators/${encodeURIComponent(orgId)}/cpd-review`, wave: "W5" },
-    { label: "Complaints & discipline", description: "Complaints, investigations and disciplinary proceedings.", href: `/work/regulators/${encodeURIComponent(orgId)}/disciplinary`, wave: "W7" },
-    { label: "Restrictions", description: "Conditions, restrictions and interdictions on the register.", href: `/work/regulators/${encodeURIComponent(orgId)}/restrictions`, wave: "W3" },
-    { label: "Audit", description: "Who reviewed, changed, approved or accessed each record.", href: `/work/regulators/${encodeURIComponent(orgId)}/audit`, wave: "W9" },
-    { label: "Configuration", description: "The rules currently governing this regulator, and what is still awaiting a Council decision.", href: `/work/regulatory/${encodeURIComponent(orgId)}/configuration`, wave: "NCZ-W1A" },
+    { capability: "REGISTER_ENTRIES", label: "Registers", description: "Professional registers, entries, restrictions and good standing.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W3" },
+    { capability: "APPLICATION_QUEUE", label: "Applications", description: "Registration, renewal and scope applications + correspondence.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W4" },
+    { capability: "CPD_REVIEW", label: "CPD", description: "Continuing professional development adjudication.", href: `/work/regulators/${encodeURIComponent(orgId)}/cpd-review`, wave: "W5" },
+    { capability: "DISCIPLINARY_CASES", label: "Complaints & discipline", description: "Complaints, investigations and disciplinary proceedings.", href: `/work/regulators/${encodeURIComponent(orgId)}/disciplinary`, wave: "W7" },
+    { capability: "RESTRICTIONS", label: "Restrictions", description: "Conditions, restrictions and interdictions on the register.", href: `/work/regulators/${encodeURIComponent(orgId)}/restrictions`, wave: "W3" },
+    { capability: "AUDIT", label: "Audit", description: "Who reviewed, changed, approved or accessed each record.", href: `/work/regulators/${encodeURIComponent(orgId)}/audit`, wave: "W9" },
+    { capability: "CONFIGURATION_READ", label: "Configuration", description: "The rules currently governing this regulator, and what is still awaiting a Council decision.", href: `/work/regulatory/${encodeURIComponent(orgId)}/configuration`, wave: "NCZ-W1A" },
   ];
 
   return (
@@ -67,22 +78,66 @@ export default function RegulatoryOrgWorkspacePage() {
           </div>
 
           <section className="grid gap-3 sm:grid-cols-2">
-            {surfaces.map((s) => (
-              <Link
-                key={s.label}
-                href={s.href}
-                className="rounded-2xl border border-border bg-card p-4 transition hover:border-teal-300"
-              >
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-foreground">{s.label}</span>
-                  <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                    {s.wave}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">{s.description}</p>
-              </Link>
-            ))}
+            {surfaces.map((s) => {
+              const verdict = s.capability
+                ? capabilityVerdict(workspace, s.capability)
+                : "OFFER";
+
+              // Withheld surfaces are absent, not greyed out. A disabled tile still tells a finance
+              // officer that examination marks exist here and invites them to ask for access; the
+              // council's separation of duties is better served by the work simply not appearing.
+              if (verdict === "WITHHOLD") return null;
+
+              // A capability the platform has not built yet is stated, not linked. An empty page
+              // reached through a working link reads as a broken system; "not built yet" reads as
+              // an honest one.
+              if (verdict === "AWAITING_IMPLEMENTATION") {
+                return (
+                  <div
+                    key={s.label}
+                    className="rounded-2xl border border-dashed border-border bg-muted/30 p-4"
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-muted-foreground">{s.label}</span>
+                      <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        Not yet available
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{s.description}</p>
+                    {workspace?.capabilityNote ? (
+                      <p className="mt-1 text-xs text-muted-foreground/80">
+                        {workspace.capabilityNote}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={s.label}
+                  href={s.href}
+                  className="rounded-2xl border border-border bg-card p-4 transition hover:border-teal-300"
+                >
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-foreground">{s.label}</span>
+                    <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                      {s.wave}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{s.description}</p>
+                </Link>
+              );
+            })}
           </section>
+
+          {workspace ? (
+            <p className="text-xs text-muted-foreground">
+              This workspace is shaped by the {workspace.roleCode.toLowerCase().replace(/_/g, " ")}{" "}
+              role your council has defined. What you can actually do is decided per action by the
+              trust layer, not by what is shown here.
+            </p>
+          ) : null}
         </LuminousStage>
       </PageShell>
     </AppLayout>

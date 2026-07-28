@@ -2,14 +2,29 @@
   "typeCode": "ROLE_WORKSPACE",
   "definitionKey": "examination-officer",
   "label": "Examination Officer workspace",
-  "semanticVersion": "1.0.0",
+  "semanticVersion": "1.1.0",
   "payload": {
     "roleCode": "CPD_OFFICER",
     "requiresFacilityAssignment": false,
-    "sees": ["EXAMINATION_SESSIONS", "CANDIDATES", "MARKS", "MODERATION", "RESULTS"],
-    "neverSees": ["REFUNDS", "INVOICES", "RECONCILIATION"],
+    "sees": [
+      "EXAMINATION_SESSIONS",
+      "EXAMINATION_CANDIDATES",
+      "EXAMINATION_MARKS",
+      "EXAMINATION_MODERATION",
+      "EXAMINATION_RESULTS"
+    ],
+    "neverSees": [
+      "REFUNDS",
+      "INVOICES",
+      "RECONCILIATION",
+      "DISCIPLINARY_CASES"
+    ],
     "capabilityStatus": "AWAITING_IMPLEMENTATION",
     "capabilityNote": "Examinations are a deferred wave. This workspace is declared so the pack states the role honestly; its surfaces are marked unavailable rather than shown as empty pages.",
-    "capabilityDecisionRefs": ["NCZ-DEC-004", "NCZ-DEC-005"]
+    "capabilityDecisionRefs": [
+      "NCZ-DEC-004",
+      "NCZ-DEC-005"
+    ],
+    "vocabularyNote": "sees and neverSees draw on ONE capability vocabulary. Two spellings for the same capability would make the separation unenforceable while reading as if it held."
   }
 }

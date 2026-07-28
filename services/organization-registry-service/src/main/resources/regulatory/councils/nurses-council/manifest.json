@@ -47,19 +47,19 @@
     },
     {
       "file": "role-examination-officer.json",
-      "sha256": "62e4538bf85b6490104112facfa225bdcac98a32e9d3bcf11a017ed310ebaf55"
+      "sha256": "d67a2a0a05abdc060f64a5d8e5971be1993f4ec9ee640af13dc8a4e519a7da9d"
     },
     {
       "file": "role-finance-officer.json",
-      "sha256": "ad062276f49e4a2ac9b678ed50d9c9545613ce20553898cdf113610f6fb356ae"
+      "sha256": "a2aa120dd1d8c2cefae1e9b6e2edaaf8d647bf7f65d89407b0897484350a6d9b"
     },
     {
       "file": "role-registrar.json",
-      "sha256": "a604e68c076f44d7ea6d1ed51b47c9427354ab4a107b2b31d7c8581839fec193"
+      "sha256": "525578ea538c0e78e399b5541bb81e274a3d7c2d2c7f8c985b359d587146775b"
     },
     {
       "file": "role-registration-officer.json",
-      "sha256": "320187198f4fafd55296e8bc3843c22d7e72d475ae15a8242bd3f8b2ae108d17"
+      "sha256": "3d97e69ac69da74fc482967e4741b58d4daf8487faea97e876f86e94e3bd1f31"
     },
     {
       "file": "student-index-fee.json",
