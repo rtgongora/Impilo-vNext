@@ -70,6 +70,19 @@ export interface SessionContext {
   deviceFingerprint?: string;
   /** Identity assurance level for this session. */
   assuranceLevel?: "UNVERIFIED" | "TEMPORARY" | "VERIFIED";
+  /**
+   * Minted duty-scoped work-context token (Ed25519, 15-min TTL) from
+   * `POST /internal/v1/work-context/session/mode`. Carried as the sole
+   * `x-work-context-token` header — never trust `workContextId`/`workMode` alone,
+   * the server re-derives authority by decoding this token.
+   */
+  workContextToken?: string;
+  workContextJti?: string;
+  workContextExpiresAt?: number;
+  /** Informational only (not sent as a header) — the resolved context this token was minted for. */
+  workContextId?: string;
+  /** Informational only (not sent as a header) — mirrors contracts/trust WorkMode values. */
+  workMode?: string;
 }
 
 export interface AuthzVerdict {

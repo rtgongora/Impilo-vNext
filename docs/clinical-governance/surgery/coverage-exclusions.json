@@ -39,10 +39,10 @@
     },
     {
       "standardId": "ECO.WHA76-2.FINANCING",
-      "decision": "DEFERRED",
+      "decision": "COVERED_ELSEWHERE",
       "plannedWave": "P12",
-      "reason": "COSTA posts a surgical case bundle over seeded AHFOZ tariffs, so cost is computed. Financial protection is not modelled: there is no estimate, authorisation, denial or appeal path, and the invariant that financial state must never delay emergency surgery is asserted in prose and proven nowhere.",
-      "revisitCondition": "P12 ships the financial path with an explicit rig assertion that an emergency procedure proceeds with authorisation absent, and that payment state cannot present as clinical cancellation."
+      "reason": "P12 (procedures pipeline programme) shipped exactly what this entry's own revisitCondition asked for: ProcedureEpisodeService.requireFinancialClearance (inpatient-service) gates theatre start against COSTA's existing ServiceAccessDecision, with the emergency-rules invariant now ENFORCED rather than asserted — an EMERGENCY/IMMEDIATE triage_priority episode bypasses the gate before COSTA is even queried (proven: ProcedureFinancialClearanceTest.anEmergencyEpisodeNeverQueriesCostaAndIsRecordedAsEmergencyOverride), and a financial block never transitions the episode to CANCELLED (proven: aFinancialBlockNeverCancelsTheEpisode — it only refuses the start attempt, leaving the episode retryable). Not visible to this generator because it is Java/SQL (inpatient V302 + ProcedureEpisodeService), not CKP content. STILL ABSENT, and not claimed: estimate/authorisation/denial/appeal as an originating WORKFLOW (a patient-facing cost estimate before booking, a formal prior-authorisation request triggered from theatre booking) — coverage-service and COSTA already have that machinery generically (AuthorisationService, EstimateService, AppealController), but nothing in the surgical/theatre booking path calls it proactively. P12 built the GATE that consults an existing decision, not the origination of one.",
+      "revisitCondition": "A future wave wires theatre/surgical booking to actually REQUEST an estimate and authorisation from coverage-service/COSTA at booking time, rather than only consulting whatever decision already exists (or doesn't) at start time."
     },
     {
       "standardId": "SSC.2009.SIGN_IN",

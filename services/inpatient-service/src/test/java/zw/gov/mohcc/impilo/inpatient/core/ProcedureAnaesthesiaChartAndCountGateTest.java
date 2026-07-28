@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.inpatient.integration.CostaServiceAccessClient;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.*;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.*;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
@@ -43,6 +44,7 @@ class ProcedureAnaesthesiaChartAndCountGateTest {
     @Mock ProcedureBloodLinkRepository bloodLinkRepository;
     @Mock EventOutboxRepository outboxRepository;
     @Mock ProcedureConsentRepository procedureConsentRepository;
+    @Mock CostaServiceAccessClient costaServiceAccessClient;
 
     private ProcedureEpisodeService service;
     private final UUID tenant = UUID.randomUUID();
@@ -53,7 +55,7 @@ class ProcedureAnaesthesiaChartAndCountGateTest {
         service = new ProcedureEpisodeService(episodeRepository, preopRepository, checklistRepository,
                 intraopRepository, postopRepository, pacuObservationRepository, documentRepository, consumableRepository,
                 implantRepository, anaesthesiaScoreRepository, countRepository, chartRepository, bloodLinkRepository,
-                outboxRepository, procedureConsentRepository, new ObjectMapper());
+                outboxRepository, procedureConsentRepository, new ObjectMapper(), costaServiceAccessClient);
         TrustContextHolder.set(new TrustContext(tenant, "actor-anaesthetist", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
         ProcedureEpisodeEntity e = new ProcedureEpisodeEntity();

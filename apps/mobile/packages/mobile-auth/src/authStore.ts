@@ -39,6 +39,15 @@ export interface AuthState {
   setShift: (shiftId: string) => void;
   setPurposeOfUse: (purpose: PurposeOfUse) => void;
   setDeviceFingerprint: (fp: string) => void;
+  /**
+   * Stores a freshly minted work-context token (Phase G1,
+   * `POST /internal/v1/work-context/session/mode`). Deliberately NOT persisted to secure
+   * storage — the token is a 15-min-TTL duty proof, not a durable credential; every cold
+   * start re-resolves and re-mints rather than trusting a stale token across restarts.
+   */
+  setWorkContext: (params: { token: string; jti: string; expiresAt: number; contextId: string; workMode: string }) => void;
+  /** Clears the work-context token (e.g. before re-resolving after a facility/workspace change). */
+  clearWorkContext: () => void;
 
   // Health OS §6: Provider ID activation
   /** Activate a Provider ID for regulated professional work. */
@@ -350,6 +359,31 @@ export const authStore = createStore<AuthState>((set, get) => ({
   hasActiveProvider: () => {
     const session = get().session;
     return !!(session as SessionContext & { providerId?: string })?.providerId;
+  },
+
+  setWorkContext: ({ token, jti, expiresAt, contextId, workMode }) => {
+    const current = get().session;
+    if (current) {
+      set({
+        session: {
+          ...current,
+          workContextToken: token,
+          workContextJti: jti,
+          workContextExpiresAt: expiresAt,
+          workContextId: contextId,
+          workMode,
+        },
+      });
+    }
+  },
+
+  clearWorkContext: () => {
+    const current = get().session;
+    if (current) {
+      const { workContextToken: _t, workContextJti: _j, workContextExpiresAt: _e, workContextId: _c, workMode: _m, ...rest } =
+        current as SessionContext;
+      set({ session: rest as SessionContext });
+    }
   },
 }));
 
