@@ -161,6 +161,11 @@ if not rmnp_packs:
 # happened, which is a record of care rather than a form field. Adding a form to satisfy the guard
 # would invent a capture surface that does not and should not exist.
 NO_CAPTURE_PACKS = {
+    "rmnp-respectful-maternity-care.json":
+        "a measure SET, not a rule pack — it computes no verdict and evaluates nothing. It is a "
+        "citizen-facing instrument submitted through Rito's EXISTING rating and anonymous public-case "
+        "lanes (rit_rating_domain_score carries a free-form measure), so it pairs with no "
+        "forms-service form by design, not by omission",
     "rmnp-anc-schedule.json": "a contact schedule — driven by gestational age (derived) and the "
                               "record of completed contacts, neither of which is a form field",
     "rmnp-eclampsia-bundle.json": "an emergency treatment bundle — recorded step completions + injected temporal facts, no form findings",

@@ -1,0 +1,100 @@
+{
+  "packId": "rmnp-respectful-maternity-care",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Respectful maternity care \u2014 governed measure set",
+    "primarySource": "WHO recommendations: intrapartum care for a positive childbirth experience (2018); WHO statement on the prevention and elimination of disrespect and abuse during facility-based childbirth (2014); Bowser & Hill typology of disrespect and abuse in facility-based childbirth",
+    "why": "Disrespect and abuse in childbirth is a documented, measurable driver of women avoiding facility birth \u2014 which kills them. A woman who was shouted at, slapped, left alone in second stage, or detained for an unpaid bill does not come back, and does not tell her sister to come either. Measuring it is the only way it enters a quality conversation instead of staying an open secret.",
+    "instrumentNotEngine": "This is a MEASURE SET, not a rule pack. It defines what is asked and where each answer lands; it computes no verdict and drives no clinical decision. Nothing here evaluates against PredicateEvaluator.",
+    "submissionLanes": "Submitted through Rito's EXISTING surfaces with no schema change: rit_rating_domain_score carries (domain, measure, score) with measure a free-form VARCHAR(64), and the anonymous public case lane (POST /v1/public/rito/cases, claim-code returning) carries narrative reports. Rito already ships the DISCRIMINATION_DIGNITY sensitive category and lists respect_dignity as a measure in its own V005 comment.",
+    "anonymousByDefault": "The anonymous lane is the DEFAULT for maternity feedback. A woman still in the ward, or who will return for her next birth, cannot safely attribute a complaint about the staff caring for her. An instrument that only works when signed measures the women least at risk.",
+    "regulationFirewall": "Rito's rule, inherited unchanged: a rating NEVER mutates a licence, scope, employment or access. Patterns become governed referrals to the appropriate authority, and a case becomes a disciplinary proceeding only via an appointed officer's recorded decision \u2014 never automatically.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "Transcribed from WHO intrapartum-care recommendations and the WHO 2014 statement, neither of which ships a SMART DAK \u2014 like MEC, SPR, the Labour Care Guide and the near-miss criteria, this is published guidance encoded and cited. The seven mistreatment categories follow the Bowser & Hill typology as adopted by WHO."
+    }
+  },
+  "instrument": {
+    "instrumentId": "RESPECTFUL_MATERNITY_CARE",
+    "name": "Respectful maternity care experience",
+    "appliesTo": "Any woman who received intrapartum or immediate postnatal care at a facility.",
+    "ratingDomain": "CLIENT_EXPERIENCE",
+    "scale": {
+      "type": "LIKERT_5",
+      "low": 1,
+      "high": 5,
+      "lowMeans": "never",
+      "highMeans": "always",
+      "note": "A blank is NOT_ASKED and must never be scored as neutral. An unanswered item silently averaged as 3 turns a woman who was not asked into a woman who was ambivalent."
+    },
+    "measures": [
+      {
+        "measure": "respect_dignity",
+        "prompt": "Were you treated with respect and dignity?",
+        "mistreatmentCategory": "NON_DIGNIFIED_CARE",
+        "note": "Rito already names this measure in V005; reused rather than renamed."
+      },
+      {
+        "measure": "physical_abuse_free",
+        "prompt": "Were you free from being slapped, hit, or physically restrained?",
+        "mistreatmentCategory": "PHYSICAL_ABUSE",
+        "reverseScored": true,
+        "note": "Asked in the positive so a low score always means worse care, consistent with the rest of the set."
+      },
+      {
+        "measure": "consent_before_procedures",
+        "prompt": "Were procedures explained and your permission asked before they were done?",
+        "mistreatmentCategory": "NON_CONSENTED_CARE"
+      },
+      {
+        "measure": "privacy_confidentiality",
+        "prompt": "Was your privacy protected during examinations and birth?",
+        "mistreatmentCategory": "NON_CONFIDENTIAL_CARE"
+      },
+      {
+        "measure": "free_from_discrimination",
+        "prompt": "Were you treated the same as other women, regardless of who you are?",
+        "mistreatmentCategory": "DISCRIMINATION",
+        "note": "Maps to Rito's existing DISCRIMINATION_DIGNITY sensitive category when a narrative accompanies it."
+      },
+      {
+        "measure": "never_left_alone",
+        "prompt": "Were you left alone when you needed someone?",
+        "mistreatmentCategory": "ABANDONMENT",
+        "reverseScored": true,
+        "note": "Abandonment during second stage is the category most often invisible to a facility, because nobody was there to record it."
+      },
+      {
+        "measure": "free_to_leave",
+        "prompt": "Were you free to leave once you were medically ready?",
+        "mistreatmentCategory": "DETENTION_IN_FACILITY",
+        "note": "Detention for an unpaid bill. Rarely self-reported unless asked directly and anonymously."
+      },
+      {
+        "measure": "companion_of_choice",
+        "prompt": "Were you allowed a companion of your choice with you during labour?",
+        "mistreatmentCategory": "NON_DIGNIFIED_CARE",
+        "note": "A WHO 2018 positive-childbirth-experience recommendation, not a mistreatment category in the original typology."
+      },
+      {
+        "measure": "communication_understood",
+        "prompt": "Did staff explain things in a way you could understand?",
+        "mistreatmentCategory": "POOR_RAPPORT"
+      },
+      {
+        "measure": "pain_addressed",
+        "prompt": "Was your pain taken seriously and addressed?",
+        "mistreatmentCategory": "POOR_RAPPORT"
+      }
+    ],
+    "reportingRules": [
+      "Domain scores are stored SEPARATELY and never blended into a single respectfulness number \u2014 Rito's four domains are non-blendable, and an average hides the one item that mattered.",
+      "A reverse-scored item is stored already normalised, so that low always means worse care wherever it is read.",
+      "An unanswered item is EXCLUDED from any aggregate; it is never imputed. A facility with few answers reports low CONFIDENCE, not a good score.",
+      "A single report never names a provider in an aggregate view. Patterns, not incidents, become governed referrals \u2014 the regulation firewall."
+    ]
+  }
+}
