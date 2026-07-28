@@ -78,6 +78,41 @@ chk "J-P12-7 both explicit BLOCKED_* statuses are valid values (the ones that ac
 chk "J-P12-8 P4's site_side_confirmed pairing constraint still holds after V302 stacks on the same table" \
   "$(ep_update "laterality = 'LEFT', site_side_confirmed_at = now()")" "chk_procedure_episode_site_side_confirmation_pair"
 
+# S14 obligation (iatg-surgery-procedures-leases.md §6): "financial state must never delay
+# emergency surgery" needed a RIG ASSERTION, not prose. J-P12-1..8 above prove the SCHEMA shape;
+# ProcedureFinancialClearanceTest (7 tests, inpatient-service module suite) proves the SERVICE
+# never even calls CostaServiceAccessClient for an EMERGENCY/IMMEDIATE triage_priority episode —
+# together these are the full invariant. Still missing until now: nothing tied triage_priority
+# itself to a financial_clearance_status value in THIS rig, so the exact row shape
+# requireFinancialClearance() produces (V018's triage_priority column, V302's clearance columns,
+# on the SAME row) had never been proven against real Postgres. This closes that gap.
+EMERGENCY_EP=$(q "INSERT INTO inpatient.procedure_episode (tenant_id, subject_cpid, procedure_name, triage_priority)
+                   VALUES ('$TENANT', 'CPID-FIN-EMERGENCY', 'Emergency laparotomy', 'EMERGENCY') RETURNING episode_id" | head -1)
+
+chk "J-P12-9 an EMERGENCY-triage episode can record EMERGENCY_OVERRIDE with a full audit pair — the exact positive state requireFinancialClearance() produces" \
+  "$(q "UPDATE inpatient.procedure_episode
+        SET financial_clearance_status='EMERGENCY_OVERRIDE', financial_clearance_checked_by='actor-1', financial_clearance_checked_at=now()
+        WHERE episode_id = '$EMERGENCY_EP'")" \
+  "UPDATE 1"
+
+chk "J-P12-10 that EMERGENCY episode's clearance value is exactly EMERGENCY_OVERRIDE, never a BLOCKED_* value" \
+  "$(q "SELECT financial_clearance_status FROM inpatient.procedure_episode WHERE episode_id = '$EMERGENCY_EP'")" \
+  "^EMERGENCY_OVERRIDE$"
+
+ELECTIVE_BLOCKED_EP=$(q "INSERT INTO inpatient.procedure_episode (tenant_id, subject_cpid, procedure_name, triage_priority)
+                         VALUES ('$TENANT', 'CPID-FIN-ELECTIVE', 'Elective hernia repair', 'ELECTIVE') RETURNING episode_id" | head -1)
+
+chk "J-P12-11 the contrast case — an ELECTIVE episode CAN record a genuine BLOCKED_* status — is equally representable, proving EMERGENCY_OVERRIDE isn't just 'anything goes'" \
+  "$(q "UPDATE inpatient.procedure_episode
+        SET financial_clearance_status='BLOCKED_PENDING_PAYMENT', financial_clearance_checked_by='actor-1', financial_clearance_checked_at=now()
+        WHERE episode_id = '$ELECTIVE_BLOCKED_EP'")" \
+  "UPDATE 1"
+
+chk "J-P12-12 the two episodes' triage_priority values are exactly EMERGENCY and ELECTIVE — the rig exercised the real discriminating column, not a stand-in" \
+  "$(q "SELECT string_agg(triage_priority, ',' ORDER BY subject_cpid)
+        FROM inpatient.procedure_episode WHERE episode_id IN ('$EMERGENCY_EP','$ELECTIVE_BLOCKED_EP')")" \
+  "ELECTIVE,EMERGENCY"
+
 { echo "procedures P12 financial-clearance schema proof"; echo "generated: $(date -Is)"; echo "PASS=$PASS FAIL=$FAIL"; } > "$EVIDENCE/summary.txt"
 echo; echo "P12 financial-clearance proof: PASS=$PASS FAIL=$FAIL   evidence: $EVIDENCE"
 [[ $FAIL -eq 0 ]] || exit 1

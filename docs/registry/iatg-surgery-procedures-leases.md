@@ -292,7 +292,7 @@ Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7
 with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
 not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
 (S0–S3 done — see §20–§23; **replaced from S4 onward by backlog-clearing batches SB-1–SB-6,
-SB-1/2/3/4 done — see §24–§27, SB-5 gated, SB-6 remaining**). Full plan in
+SB-1/2/3/4/6 done — see §24–§28, SB-5 remains gated on the ten theatre rigs**). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -1042,6 +1042,10 @@ schema was not reviewed before V007 was written, and mapping rule content into a
 service's table needs that review first rather than guessing a column mapping. The fragments
 are preserved for that follow-up integration.
 
+Proof: full `ui/one-ui-shell` typecheck (exit 0). `body-map.test.tsx`: 28/28 unchanged.
+`surgery-longitudinal-followup-specialty-journeys.sh` extended to 25/25 (all fifteen
+specialties have seeded content; every row honestly flagged).
+
 ## 27. Wave SB-3 — consolidated reachability for S1-S3, SB-1/SB-2 and P8/P14 (done)
 
 The Lane B batch: everything the surgery pipeline had built up to this point (episodes,
@@ -1089,6 +1093,76 @@ Filed separately, not this wave's responsibility: `task_aff0c53a`, four pre-exis
 `ShiftControllerTest` failures (stale `/v1/shifts` URL expectations vs `TusoServiceClient`'s
 actual `/v1/internal/shifts`) predating this diff, flagged by the SB-3 agent itself.
 
-Proof: full `ui/one-ui-shell` typecheck (exit 0). `body-map.test.tsx`: 28/28 unchanged.
-`surgery-longitudinal-followup-specialty-journeys.sh` extended to 25/25 (all fifteen
-specialties have seeded content; every row honestly flagged).
+## 28. Wave SB-6 — close-out: analytics, S14 rig, offline deferral, S18 traceability (done)
+
+The final backlog-clearing batch. Four independent pieces, each closing a specific named debt
+rather than a generic "polish" pass.
+
+**§23 analytics** (`surgery-service V008__analytics_indicator_catalogue.sql`): the surgical
+pack's own twenty named indicators, seeded as governed content mirroring procedures-service's
+own P14/V010 pattern exactly — a reference to reporting-service's real `rpt_theatre_case_metric`
+projection where one exists, never a second computation path. **Reconciled a three-way count
+disagreement rather than picking the most flattering number**: `audit.md` says "2 of 20";
+`dak-baseline.md`'s own prose says "the four with a real projection today", but its own indicator
+list two lines later carries only three `Y` tags. Checked the actual projection
+(`V002__theatre_report_catalog.sql`) column by column: the true answer is **four** COMPUTED
+(surgical volume, cancellation, complications, unplanned return to theatre) — dak-baseline's
+count is right, its SET is wrong. It tags `emergency versus elective` as real; that projection has
+**no triage/urgency column at all**, confirmed by reading the `CREATE TABLE` directly — recorded
+here as a correction, not silently reproduced. FR18's facility-level stratification is also not
+met by the current projection (`facility_id` is a raw UUID with no level join and no `GROUP BY`
+in either seeded report query) — named on the EQUITY row rather than claimed closed because a
+column happens to exist. 7 new tests (`AnalyticsIndicatorServiceTest`), 23/23
+`surgery-analytics-journeys.sh` on real Postgres, 80/80 full surgery-service module regression.
+
+**S14 obligation** (`iatg-surgery-procedures-leases.md` §6's own recorded debt: "needs a rig
+assertion, not prose"): extended `procedures-financial-clearance-journeys.sh` (P12's own rig,
+inpatient-service) with four new assertions (J-P12-9..12) that insert a real
+`triage_priority='EMERGENCY'` episode and a real `triage_priority='ELECTIVE'` episode and prove,
+against real Postgres, the exact row shape `ProcedureEpisodeService.requireFinancialClearance`
+produces for each — `EMERGENCY_OVERRIDE` with no `BLOCKED_*` value ever recorded for the
+emergency case, a genuine `BLOCKED_PENDING_PAYMENT` for the elective contrast case. This closes
+the gap between the mocked unit-level proof (`ProcedureFinancialClearanceTest`, 7 tests,
+`verify(costaServiceAccessClient, never())` — already comprehensive at the Java-logic level) and
+a genuine real-Postgres proof that ties `triage_priority` to `financial_clearance_status` on the
+SAME row, which no existing rig assertion did before this wave despite V302's own migration
+comment already claiming the rig proved it. 13/13 rig (was 9/9).
+
+**§22 offline** (honest deferral, mirroring P13's own approach for FHIR scope rather than a new
+document): FR17's "nine required offline surfaces" is asserted but never itemised anywhere in
+this repo — the "nine DAK components" `dak-baseline.md` §0 refers to are this document's own nine
+sections (recommendations/actors/scenarios/workflows/core-data/decision-support/scheduling/
+indicators/requirements), a different "nine" entirely; conflating them would fabricate a
+specification that does not exist in-repo. No surgical offline scope is built — confirmed still
+true (audit.md finding 13). Per the ADR, offline capability is a mechanism owned by
+offline-sync-service/offline-edge-service/tshepo-offline-service; extending it for surgical
+content is that owner's work, not a schema or API this programme builds. Named scope, not
+silently dropped, same shape as P13's own FHIR-resource deferrals.
+
+**S18 demonstrations traceability**: `docs/clinical/surgical-domain-pack/
+demonstrations-traceability.md`, mirroring `docs/clinical/procedures-pipeline/
+demonstrations-traceability.md` (P15) exactly for this pack's own ten named demonstrations. Six
+closeable today (1, 2, 5\*, 6, 7\*, 8\* — three with an unconfirmed cross-pack/cross-service leg,
+same shape P15 already named for its own demonstrations 4/8/9), one partial (10 — the histology
+gate blocks closure but does not actively "reopen" planning), **two genuinely not closed**:
+demonstration 4 (diabetic foot shared care across two specialties — `surgical_episode.specialty`
+is a single column, no structural way to represent two specialties sharing one episode) and
+demonstration 9 (reoperation joining the same episode — no `REOPENED` state or
+`parent_episode_id`/`reoperation_of` column exists on either `surgery.surgical_episode` or
+`inpatient.procedure_episode`). Demonstration 9 and demonstration 3's MDT-representation gap are
+both smaller instances of the SAME structural absence P10/P15 already named as the single largest
+remaining gap in the whole programme.
+
+**The ten pre-existing theatre rigs still have not been run since P4** — confirmed again this
+wave, the fifth consecutive Phase-S wave to make and repeat this same finding. This has now been
+running as background task `task_697c66e2` for the duration of the whole backlog-clearing batch
+(SB-1 through SB-6); its result was not available in this session by the time SB-6 closed. **SB-5
+(operative record depth, §13) remains gated on that task's outcome** — it is the one part of the
+original backlog-clearing plan not attempted this wave, deliberately, per the plan's own
+PO-level-decision-point rule. Whoever picks this programme back up next should check that task's
+result FIRST, before touching either schema's shared lifecycle for SB-5 or for the REOPENED-state
+work demonstrations 4/9 above would need.
+
+Proof: `AnalyticsIndicatorServiceTest` (7 tests, surgery-service), full surgery-service module
+regression (80/80), `surgery-analytics-journeys.sh` (23/23), extended
+`procedures-financial-clearance-journeys.sh` (13/13, inpatient-service, real Postgres).
