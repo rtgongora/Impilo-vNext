@@ -910,6 +910,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/rito/audits/[auditId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Audit Detail", navLabel: "Audit", navZone: "professional" },
   { path: "/rito/improvement", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Improvement — CAPA & QI", navLabel: "Improvement", navZone: "professional" },
   { path: "/rito/surveys", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Experience Surveys", navLabel: "Surveys", navZone: "professional" },
+  { path: "/my-life", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Life", navLabel: "My Life", navZone: "life" },
   { path: "/my-life/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Feedback", navLabel: "Feedback & Safety", navZone: "life" },
   { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },
   { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
@@ -1071,7 +1072,7 @@ export const ROUTES: RouteDefinition[] = [
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
 // Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
 // workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
-export const EXPECTED_ROUTE_COUNT = 824;
+export const EXPECTED_ROUTE_COUNT = 825;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

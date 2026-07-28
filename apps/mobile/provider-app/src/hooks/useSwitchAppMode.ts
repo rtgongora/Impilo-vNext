@@ -33,6 +33,8 @@ export function useSwitchAppMode() {
       setModeError(null);
 
       // No governed WorkMode describes this mode — local navigation only.
+      // The predicate narrows appMode to UngovernedAppMode here, which is the
+      // only thing setMode accepts.
       if (!requiresWorkContextMint(appMode)) {
         appStore.getState().setMode(appMode);
         return true;
@@ -44,11 +46,13 @@ export function useSwitchAppMode() {
         return false;
       }
 
-      // Mint FIRST; the visible mode only follows a granted token.
+      // Mint FIRST; the visible mode only follows a granted token. setGrantedMode
+      // is the only setter that accepts a governed mode, so this ordering is
+      // structural rather than conventional.
       const ok = await switchWorkContext(selection.context, selection.workMode);
       if (!ok) return false;
 
-      appStore.getState().setMode(appMode);
+      appStore.getState().setGrantedMode(appMode);
       return true;
     },
     [auth.session?.workContextId, resolvedWorkContexts, switchWorkContext]

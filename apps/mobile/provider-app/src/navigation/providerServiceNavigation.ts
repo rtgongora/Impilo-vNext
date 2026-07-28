@@ -5,7 +5,7 @@ import {
   type CanonicalServiceSlug,
 } from "@impilo/mobile-registry";
 import type { ServiceWiringBadgeStatus } from "@impilo/mobile-design-system";
-import type { ProviderTabKey } from "../types";
+import type { AppMode, ProviderTabKey } from "../types";
 
 const PREVIEW_WEB = process.env.EXPO_PUBLIC_WEB_BASE_URL ?? "https://impilo.mohcc.gov.zw";
 
@@ -21,7 +21,14 @@ export interface ProviderServiceNavAction {
 
 type NavHandlers = {
   setProviderTab: (tab: ProviderTabKey) => void;
-  setMode?: (mode: "provider" | "outreach" | "supervisor" | "offline" | "courier") => void;
+  /**
+   * Enters a workspace. Callers MUST supply `useSwitchAppMode`'s switcher, not
+   * the store's raw setter — `simba` below enters supervisor, a governed mode
+   * that has to mint a supervisory duty token first. Named `enterMode` rather
+   * than `setMode` precisely so it cannot be satisfied by the store setter,
+   * which no longer accepts governed modes at all.
+   */
+  enterMode?: (mode: AppMode) => void;
   openClinicalTool?: (toolId: string) => void;
   openNompilo?: () => void;
 };
@@ -68,7 +75,7 @@ function resolveProviderAction(slug: CanonicalServiceSlug, handlers: NavHandlers
         handlers.openClinicalTool?.("madi_orders");
       };
     case "simba":
-      return () => handlers.setMode?.("supervisor");
+      return () => handlers.enterMode?.("supervisor");
     case "fundo":
       return () => handlers.setProviderTab("apps");
     case "live":
@@ -81,7 +88,7 @@ function resolveProviderAction(slug: CanonicalServiceSlug, handlers: NavHandlers
     case "tuso":
       return () => handlers.setProviderTab("professional");
     case "nhume":
-      return () => handlers.setMode?.("courier");
+      return () => handlers.enterMode?.("courier");
     case "nompilo":
       return handlers.openNompilo;
     default:
