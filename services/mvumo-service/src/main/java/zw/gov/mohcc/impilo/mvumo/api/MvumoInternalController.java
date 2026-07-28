@@ -162,6 +162,18 @@ public class MvumoInternalController {
         return ok(mvumoService.transition(parseTenant(tenant), id, ConsentRequestState.EXPLANATION_PROVIDED, body));
     }
 
+    /**
+     * Records the decision-maker context and/or child assent for a consent request (§28
+     * demonstration 3) — deliberately not a state transition; see {@code MvumoService.recordAssent}.
+     */
+    @PostMapping("/consent-requests/{id}/assent")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> assent(
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ok(mvumoService.recordAssent(parseTenant(tenant), id, body));
+    }
+
     @PostMapping("/consent-requests/{id}/verify-identity")
     public ResponseEntity<ApiResponse<Map<String, Object>>> verify(
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,

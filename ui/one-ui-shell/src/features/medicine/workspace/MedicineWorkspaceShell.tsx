@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AlertTriangle, Activity, Lock, ShieldAlert, Stethoscope } from "lucide-react";
 import { useMedicineContext } from "./useMedicineContext";
 import { isConfidential, programmeLabel } from "./medicine-summary";
+import { MEDICINE_SPECIALTIES } from "@/features/medicine/specialties/specialty-config";
 
 /**
  * The adult medicine workspace.
@@ -59,6 +60,27 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
 
       <AllergiesStrip context={context} />
 
+      {/* brief.md §8's thirteen specialties. Each is a view onto this same record, which is the
+          point — thirteen separate screens would be the folder of specialist forms the brief
+          forbids. Every one states what §8 asked for that is not built. */}
+      <div className="rounded-lg border border-border bg-card p-5" data-testid="panel-specialties">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
+          Specialty views
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {MEDICINE_SPECIALTIES.map((s) => (
+            <Link
+              key={s.key}
+              href={`/ehr/${patientId}/medicine/specialty/${s.key}`}
+              className="rounded border border-border px-2 py-1 text-sm hover:bg-muted"
+              data-testid={`link-specialty-${s.key}`}
+            >
+              {s.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <div className="rounded-lg border border-border bg-card p-5" data-testid="panel-cds">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
           Decision support
@@ -74,6 +96,20 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
           data-testid="link-medicine-cds"
         >
           Open decision support →
+        </Link>
+        <Link
+          href={`/ehr/${patientId}/examination`}
+          className="mt-2 ml-4 inline-block text-sm text-primary hover:underline"
+          data-testid="link-examination"
+        >
+          Record an examination →
+        </Link>
+        <Link
+          href={`/ehr/${patientId}/consultations`}
+          className="mt-2 ml-4 inline-block text-sm text-primary hover:underline"
+          data-testid="link-consultations"
+        >
+          Consultations and MDT →
         </Link>
         <Link
           href={`/ehr/${patientId}/multimorbidity`}

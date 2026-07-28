@@ -16,7 +16,13 @@ public final class ClinicalKafkaTopics {
             Map.entry("GUIDANCE_OVERRIDE_RECORDED", "impilo.clinical.guidance.override.recorded"),
             Map.entry("PATHWAY_SESSION_COMPLETED", "impilo.clinical.pathway.session.completed"),
             Map.entry("CITIZEN_NUDGE_GENERATED", "impilo.clinical.citizen.nudge.generated"),
-            Map.entry("KNOWLEDGE_ITEM_APPROVED", "impilo.clinical.knowledge.version.published")
+            Map.entry("KNOWLEDGE_ITEM_APPROVED", "impilo.clinical.knowledge.version.published"),
+            // brief.md §19. BUTANO archives these as FHIR DetectedIssue so a duplicate anticoagulant
+            // or an unsafe combination is visible to the next facility, not only to the clinician who
+            // happened to open the multimorbidity view. Routed in the same change as the emitter: an
+            // event type absent from this map falls to the impilo.clinical.events catch-all, which
+            // publishes successfully and reaches nobody.
+            Map.entry("MULTIMORBIDITY_ISSUE_DETECTED", "impilo.clinical.multimorbidity.issue.detected")
     );
 
     private ClinicalKafkaTopics() {

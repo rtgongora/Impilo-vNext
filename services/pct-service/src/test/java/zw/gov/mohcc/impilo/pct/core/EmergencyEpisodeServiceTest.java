@@ -603,6 +603,14 @@ public class EmergencyEpisodeServiceTest {
                     .sorted((a, b) -> a.getRequestedAt().compareTo(b.getRequestedAt())).toList();
         }
 
+        @Override public List<zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity>
+        findExpiredPending(java.time.OffsetDateTime now) {
+            return store.values().stream()
+                    .filter(h -> "PENDING".equals(h.getStatus())
+                            && h.getResponseDueAt() != null && h.getResponseDueAt().isBefore(now))
+                    .toList();
+        }
+
         @Override public <S extends zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyHandoverEntity> S save(S h) {
             if (h.getHandoverId() == null) h.setHandoverId(UUID.randomUUID());
             store.put(h.getHandoverId(), h);

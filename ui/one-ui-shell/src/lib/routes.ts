@@ -119,6 +119,13 @@ export const ROUTES: RouteDefinition[] = [
   // match wins, so every literal child must be registered ABOVE the [visitId] entry.
   { path: "/clinical/emergency/resus/[activationId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Resuscitation", navLabel: "Resuscitation", navZone: "work" },
   { path: "/clinical/emergency/episode/[episodeId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Episode", navLabel: "Emergency Episode", navZone: "work" },
+  // pct.emergency_episode (R2's continuum-side canonical episode) — distinct from the two entries
+  // above: "resus/[activationId]" is inpatient's resuscitation activation, "episode/[episodeId]" is
+  // DAIDZAI's cross-facility trauma episode. "board" is a literal 3-segment sibling of [visitId]
+  // below and MUST stay above it (same first-match-wins rule the comment above already states).
+  // "spine/[episodeId]" does not collide regardless of order — it is a 4-segment path.
+  { path: "/clinical/emergency/board", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Board", navLabel: "Emergency Board", navZone: "work" },
+  { path: "/clinical/emergency/spine/[episodeId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Episode Spine", navLabel: "Episode Spine", navZone: "work" },
   { path: "/clinical/emergency/[visitId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED Visit", navLabel: "ED Visit", navZone: "work" },
 
   // Inpatient workspace (Wave 20 production readiness)
@@ -353,8 +360,11 @@ export const ROUTES: RouteDefinition[] = [
   // route-parity-check only validates registry -> filesystem, never the reverse, so an unregistered
   // page is invisible to it. Registering them is the fix, not a new capability.
   { path: "/ehr/[patientId]/programmes", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Care programmes", navLabel: "Programmes", navZone: "work" },
+  { path: "/ehr/[patientId]/consultations", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Consultations and MDT", navLabel: "Consultations", navZone: "work" },
+  { path: "/ehr/[patientId]/examination", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Examination", navLabel: "Examination", navZone: "work" },
   { path: "/ehr/[patientId]/medicine", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Medicine workspace", navLabel: "Medicine", navZone: "work" },
   { path: "/ehr/[patientId]/medicine/cds", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Decision support", navLabel: "Decision support", navZone: "work" },
+  { path: "/ehr/[patientId]/medicine/specialty/[specialty]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Specialty workspace", navLabel: "Specialty", navZone: "work" },
   { path: "/ehr/[patientId]/multimorbidity", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Multimorbidity", navLabel: "Multimorbidity", navZone: "work" },
   { path: "/ehr/[patientId]/ward-round", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Ward round", navLabel: "Ward round", navZone: "work" },
   { path: "/ehr/[patientId]/workspace/[specialty]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Specialty Workspace", navLabel: "Specialty", navZone: "work" },
@@ -1061,7 +1071,7 @@ export const ROUTES: RouteDefinition[] = [
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
 // Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
 // workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
-export const EXPECTED_ROUTE_COUNT = 819;
+export const EXPECTED_ROUTE_COUNT = 824;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

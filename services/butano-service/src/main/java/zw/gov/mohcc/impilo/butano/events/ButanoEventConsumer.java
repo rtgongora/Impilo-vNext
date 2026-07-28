@@ -9,9 +9,11 @@ import ca.uhn.fhir.rest.param.TokenParam;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hl7.fhir.r4.model.ClinicalImpression;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.DetectedIssue;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.Enumerations;
@@ -63,6 +65,16 @@ public class ButanoEventConsumer {
     /** The originating PCT observation id, used as the business identifier for idempotent archival. */
     private static final String OBSERVATION_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pct/observation-id";
     private static final String PROBLEM_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pct/problem-id";
+    /** The originating PCT examination id — the business key that makes a replay idempotent. */
+    private static final String EXAMINATION_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pct/examination-id";
+    private static final String EXAMINATION_REGION_SYSTEM = "https://impilo.gov.zw/pct/examination-region";
+    private static final String EXAMINATION_STATE_SYSTEM = "https://impilo.gov.zw/pct/examination-state";
+    private static final String EXAMINATION_FINDING_SYSTEM = "https://impilo.gov.zw/pct/examination-finding";
+    private static final String DATA_ABSENT_SYSTEM = "http://terminology.hl7.org/CodeSystem/data-absent-reason";
+    /** Subject-scoped key for one multimorbidity issue: {@code <cpid>|<finding code>}. */
+    private static final String MULTIMORBIDITY_IDENTIFIER_SYSTEM =
+            "https://impilo.gov.zw/clinical/multimorbidity-issue";
+    private static final String MULTIMORBIDITY_CODE_SYSTEM = "https://impilo.gov.zw/clinical/multimorbidity";
 
     private final ObjectMapper objectMapper;
     private final DaoRegistry daoRegistry;
@@ -715,6 +727,396 @@ public class ButanoEventConsumer {
             case "REFUTED" -> "refuted";
             default -> null;
         };
+    }
+
+    // ------------------------------------------------------------------ examination (§19)
+
+    /**
+     * Archives the PCT structured examination into the shared health record as a FHIR
+     * {@link ClinicalImpression}.
+     *
+     * <p>Until this listener existed an examination was visible only inside PCT. A clinician at the
+     * next facility saw the diagnosis (Condition) and the vitals (Observation) but nothing of the
+     * examination that produced them — and, above all, nothing of the regions nobody looked at.</p>
+     *
+     * <p><strong>The six states stay six.</strong> PCT's examination framework exists because a
+     * two-state form turns "nobody looked" into "nothing wrong". Collapsing NOT_EXAMINED,
+     * UNABLE_TO_EXAMINE or DEFERRED into the representation used for NORMAL at this boundary would
+     * reintroduce that defect in the one record a clinician who was not there reads — the record
+     * where they decide whether the abdomen still needs examining.</p>
+     *
+     * <p>Idempotent on the originating examination id, like {@code archiveProblem}. A replayed event
+     * updates the existing impression rather than adding a second one alongside it.</p>
+     */
+    @KafkaListener(topics = "pct.examination.recorded", groupId = "butano-shr")
+    public void consumePctExamination(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String correlationId = extractCorrelationId(root);
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull()) {
+                log.warn("BUTANO SHR: examination event missing payload, skipping correlationId={}",
+                        correlationId);
+                return;
+            }
+
+            String examinationId = firstNonBlank(
+                    text(payload, "examination_id"), text(payload, "examinationId"));
+            String patientCpid = firstNonBlank(
+                    text(payload, "subject_cpid"), text(payload, "subjectCpid"), text(payload, "cpid"));
+            if (examinationId == null || patientCpid == null) {
+                log.warn("BUTANO SHR: examination event missing examination_id or subject_cpid — "
+                        + "skipping correlationId={}", correlationId);
+                return;
+            }
+
+            JsonNode findings = payload.get("findings");
+            if (findings == null || !findings.isArray() || findings.isEmpty()) {
+                // An examination with no findings is a timestamp. PCT refuses to record one; the SHR
+                // refuses to archive one, because in the timeline it implies a look nobody took.
+                log.warn("BUTANO SHR: examination {} carries no findings — not archived, because an "
+                        + "impression with no regions implies a look nobody took. correlationId={}",
+                        examinationId, correlationId);
+                return;
+            }
+
+            UUID tenantId = resolveTenantId(root, payload, patientCpid);
+            if (tenantId == null) {
+                log.warn("BUTANO SHR: examination event missing tenant_id, skipping examination_id={} "
+                        + "correlationId={}", examinationId, correlationId);
+                return;
+            }
+
+            archiveExamination(tenantId, patientCpid, examinationId, payload, correlationId);
+
+        } catch (JsonProcessingException e) {
+            log.error("BUTANO SHR: unreadable examination event: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("BUTANO SHR: failed to archive examination: {}", e.getMessage(), e);
+        }
+    }
+
+    private void archiveExamination(UUID tenantId, String patientCpid, String examinationId,
+                                    JsonNode payload, String correlationId) {
+        IFhirResourceDao<Patient> patientDao = daoRegistry.getResourceDao(Patient.class);
+        Optional<String> patientPid = findPatientId(patientDao, tenantId, patientCpid);
+        if (patientPid.isEmpty()) {
+            log.warn("BUTANO SHR: no FHIR Patient for CPID — cannot archive ClinicalImpression {} "
+                    + "tenant={} correlationId={}", examinationId, tenantId, correlationId);
+            return;
+        }
+
+        IFhirResourceDao<ClinicalImpression> dao = daoRegistry.getResourceDao(ClinicalImpression.class);
+        Optional<String> existing = findResourceIdByIdentifier(
+                dao, ClinicalImpression.SP_IDENTIFIER, EXAMINATION_IDENTIFIER_SYSTEM, examinationId, tenantId);
+
+        ClinicalImpression impression = buildClinicalImpression(
+                tenantTagSystem, tenantId, patientPid.get(), examinationId, payload);
+        if (existing.isPresent()) {
+            impression.setId(new IdType("ClinicalImpression", existing.get()));
+            dao.update(impression, (RequestDetails) null);
+            log.info("BUTANO SHR: updated ClinicalImpression examination_id={} patient_cpid={} tenant={} "
+                    + "correlationId={}", examinationId, patientCpid, tenantId, correlationId);
+            return;
+        }
+        dao.create(impression, (RequestDetails) null);
+        log.info("BUTANO SHR: archived ClinicalImpression examination_id={} patient_cpid={} tenant={} "
+                + "correlationId={}", examinationId, patientCpid, tenantId, correlationId);
+    }
+
+    /**
+     * Builds the FHIR ClinicalImpression from the event payload.
+     *
+     * <p>Package-private and static for the same reason as {@link #buildCondition}: this method is the
+     * only thing that decides what crosses into the shared health record, and it copies an explicit
+     * list of coded fields. The PCT finding row carries free-text {@code detail} — the field a
+     * clinician types prose into, and therefore the field that can hold a name, a phone number or an
+     * address — plus the examination's free-text {@code context_note} and the finding's free-text
+     * {@code site}. None of the three is on the event and nothing here reads them, so none can cross
+     * even if a future producer started sending them.</p>
+     *
+     * <p>The {@code summary} is generated here from the coded states alone and never from a producer
+     * string, so it cannot become a conduit for the prose this method exists to keep out.</p>
+     */
+    static ClinicalImpression buildClinicalImpression(String tenantTagSystem, UUID tenantId,
+                                                      String patientPid, String examinationId,
+                                                      JsonNode payload) {
+        ClinicalImpression impression = new ClinicalImpression();
+        impression.setMeta(new Meta().addTag(new Coding(tenantTagSystem, tenantId.toString(), null)));
+        impression.setSubject(new Reference("Patient/" + patientPid));
+        impression.addIdentifier().setSystem(EXAMINATION_IDENTIFIER_SYSTEM).setValue(examinationId);
+        impression.setStatus(ClinicalImpression.ClinicalImpressionStatus.COMPLETED);
+
+        String examinedAt = firstNonBlank(text(payload, "examined_at"), text(payload, "examinedAt"));
+        if (examinedAt != null) {
+            // Normalised through OffsetDateTime for the reason documented on buildObservation: Java
+            // renders a zero-second timestamp without seconds, which FHIR rejects, and an examination
+            // with no time cannot be ordered against the treatment that followed it.
+            try {
+                java.time.OffsetDateTime parsed = java.time.OffsetDateTime.parse(examinedAt);
+                impression.setEffective(new DateTimeType(java.util.Date.from(parsed.toInstant())));
+            } catch (RuntimeException e) {
+                log.warn("BUTANO SHR: examination {} has an unparseable examined_at '{}'; archived "
+                        + "without a time rather than with a guessed one", examinationId, examinedAt);
+            }
+        }
+
+        int examined = 0;
+        int notExamined = 0;
+        int unmapped = 0;
+        JsonNode findings = payload.get("findings");
+        if (findings != null && findings.isArray()) {
+            for (JsonNode f : findings) {
+                String region = firstNonBlank(text(f, "region"));
+                if (region == null) {
+                    continue;
+                }
+                CodeableConcept item = new CodeableConcept();
+                item.addCoding(new Coding(EXAMINATION_REGION_SYSTEM, region, null));
+
+                String state = firstNonBlank(text(f, "state"));
+                String fhirState = mapExaminationState(state);
+                if (fhirState == null) {
+                    // An unrecognised state is NOT quietly rendered as a normal region. It is marked
+                    // explicitly absent, the same treatment applyObservationValue gives a result with
+                    // no value — because the one reading this cannot tell a guess from a fact.
+                    item.addCoding(new Coding(DATA_ABSENT_SYSTEM, "unknown", null));
+                    unmapped++;
+                } else {
+                    item.addCoding(new Coding(EXAMINATION_STATE_SYSTEM, fhirState, null));
+                    if (isExaminedState(fhirState)) {
+                        examined++;
+                    } else {
+                        notExamined++;
+                    }
+                }
+
+                String findingCode = firstNonBlank(text(f, "finding_code"), text(f, "findingCode"));
+                if (findingCode != null) {
+                    item.addCoding(new Coding(EXAMINATION_FINDING_SYSTEM, findingCode, null));
+                }
+                impression.addFinding().setItemCodeableConcept(item);
+            }
+        }
+
+        // Counts only, computed above from the coded states. This is the read-side half of §7's
+        // purpose carried into the SHR: a reader scanning findings sees what was looked at, never what
+        // was not, because absence has no row. The denominator (PCT's twenty-two regions) deliberately
+        // is not asserted here — that vocabulary lives in PCT and a stale copy would misreport
+        // coverage — so this states what was recorded, not what was possible.
+        StringBuilder summary = new StringBuilder()
+                .append(examined + notExamined + unmapped).append(" region(s) recorded: ")
+                .append(examined).append(" examined, ")
+                .append(notExamined).append(" recorded as not examined, deferred or impossible.");
+        if (unmapped > 0) {
+            summary.append(' ').append(unmapped)
+                    .append(" carried a state this record could not interpret and is marked unknown.");
+        }
+        summary.append(" A region that was not examined is not a normal region, and regions absent "
+                + "from this list were not considered at all.");
+        impression.setSummary(summary.toString());
+
+        return impression;
+    }
+
+    /**
+     * PCT examination state -> the SHR's state code. Unknown values return null (marked data-absent).
+     *
+     * <p>All six of PCT's states have their own code, and that is the whole point. NOT_EXAMINED,
+     * UNABLE_TO_EXAMINE and DEFERRED are three different clinical facts — nobody looked, somebody
+     * tried and could not, somebody chose to look later — and none of them is NORMAL. Mapping any of
+     * them onto the normal code, or onto each other, recreates the two-state form this framework was
+     * built to replace. UNCERTAIN is separate again: the examiner did look, and said so.</p>
+     */
+    static String mapExaminationState(String pctState) {
+        if (pctState == null) {
+            return null;
+        }
+        return switch (pctState.toUpperCase(Locale.ROOT)) {
+            case "NORMAL" -> "normal";
+            case "ABNORMAL" -> "abnormal";
+            case "UNCERTAIN" -> "uncertain";
+            case "NOT_EXAMINED" -> "not-examined";
+            case "UNABLE_TO_EXAMINE" -> "unable-to-examine";
+            case "DEFERRED" -> "deferred";
+            default -> null;
+        };
+    }
+
+    /** Whether an SHR state code means the region was actually examined. Mirrors PCT's EXAMINED_STATES. */
+    static boolean isExaminedState(String fhirState) {
+        return "normal".equals(fhirState) || "abnormal".equals(fhirState) || "uncertain".equals(fhirState);
+    }
+
+    // ------------------------------------------------- multimorbidity issues (§9 -> §19)
+
+    /**
+     * Archives the multimorbidity engine's detected issues into the shared health record as FHIR
+     * {@link DetectedIssue}.
+     *
+     * <p>Produced by clinical-knowledge-platform-service on its existing {@code clinical.event_outbox}
+     * spine (see {@code MultimorbidityShrPublisher}) — a duplicate anticoagulant or an unsafe
+     * combination is a cross-facility safety signal, and it is worth nothing if it is only visible on
+     * the screen of the clinician who happened to open the multimorbidity view.</p>
+     *
+     * <p><strong>Only the coded issue crosses.</strong> The engine's {@code message},
+     * {@code explanation} and {@code requiredAction} are generated prose that interpolates medicine
+     * names, clinic names and the name of whoever ordered a repeated test ("Ordered by Dr Moyo then Dr
+     * Ncube"). None of it is on the event and nothing here reads it. The code and the severity are the
+     * queryable facts; the full text stays in the system that produced it.</p>
+     *
+     * <p>Idempotent on {@code <cpid>|<code>}: the view is recomputed every time a clinician opens the
+     * screen, so a replay must update the one issue rather than pile up a new resource per page load.</p>
+     */
+    @KafkaListener(topics = "impilo.clinical.multimorbidity.issue.detected", groupId = "butano-shr")
+    public void consumeMultimorbidityIssue(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String correlationId = extractCorrelationId(root);
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull()) {
+                log.warn("BUTANO SHR: multimorbidity event missing payload, skipping correlationId={}",
+                        correlationId);
+                return;
+            }
+
+            String patientCpid = firstNonBlank(
+                    text(payload, "subject_cpid"), text(payload, "subjectCpid"), text(payload, "cpid"));
+            String code = firstNonBlank(text(payload, "code"));
+            if (patientCpid == null || code == null) {
+                log.warn("BUTANO SHR: multimorbidity event missing subject_cpid or code — skipping "
+                        + "correlationId={}", correlationId);
+                return;
+            }
+
+            UUID tenantId = resolveTenantId(root, payload, patientCpid);
+            if (tenantId == null) {
+                log.warn("BUTANO SHR: multimorbidity event missing tenant_id, skipping code={} "
+                        + "correlationId={}", code, correlationId);
+                return;
+            }
+
+            archiveDetectedIssue(tenantId, patientCpid, code, payload, correlationId);
+
+        } catch (JsonProcessingException e) {
+            log.error("BUTANO SHR: unreadable multimorbidity event: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("BUTANO SHR: failed to archive multimorbidity issue: {}", e.getMessage(), e);
+        }
+    }
+
+    private void archiveDetectedIssue(UUID tenantId, String patientCpid, String code,
+                                      JsonNode payload, String correlationId) {
+        IFhirResourceDao<Patient> patientDao = daoRegistry.getResourceDao(Patient.class);
+        Optional<String> patientPid = findPatientId(patientDao, tenantId, patientCpid);
+        if (patientPid.isEmpty()) {
+            log.warn("BUTANO SHR: no FHIR Patient for CPID — cannot archive DetectedIssue {} tenant={} "
+                    + "correlationId={}", code, tenantId, correlationId);
+            return;
+        }
+
+        String issueKey = detectedIssueKey(patientCpid, code);
+        IFhirResourceDao<DetectedIssue> dao = daoRegistry.getResourceDao(DetectedIssue.class);
+        Optional<String> existing = findResourceIdByIdentifier(
+                dao, DetectedIssue.SP_IDENTIFIER, MULTIMORBIDITY_IDENTIFIER_SYSTEM, issueKey, tenantId);
+
+        DetectedIssue issue = buildDetectedIssue(
+                tenantTagSystem, tenantId, patientPid.get(), issueKey, code, payload);
+        if (existing.isPresent()) {
+            issue.setId(new IdType("DetectedIssue", existing.get()));
+            dao.update(issue, (RequestDetails) null);
+            log.info("BUTANO SHR: updated DetectedIssue code={} patient_cpid={} tenant={} correlationId={}",
+                    code, patientCpid, tenantId, correlationId);
+            return;
+        }
+        dao.create(issue, (RequestDetails) null);
+        log.info("BUTANO SHR: archived DetectedIssue code={} patient_cpid={} tenant={} correlationId={}",
+                code, patientCpid, tenantId, correlationId);
+    }
+
+    /**
+     * The subject-scoped business key.
+     *
+     * <p>The finding code alone is not unique across patients — every patient with two anticoagulants
+     * produces {@code MM_DUPLICATE_ANTICOAGULANT} — so keying on it alone would make one patient's
+     * issue overwrite another's. The CPID is already the SHR's own key for a person, so scoping the
+     * identifier by it introduces nothing the record does not already hold.</p>
+     */
+    static String detectedIssueKey(String patientCpid, String code) {
+        return patientCpid + "|" + code;
+    }
+
+    /**
+     * Builds the FHIR DetectedIssue from the event payload.
+     *
+     * <p>Package-private and static for the same reason as {@link #buildCondition}. It reads
+     * {@code code} and {@code severity} and nothing else clinical: the engine's prose fields are not
+     * on the event, and nothing here reads them, so they cannot cross even if a future producer
+     * started sending them.</p>
+     */
+    static DetectedIssue buildDetectedIssue(String tenantTagSystem, UUID tenantId, String patientPid,
+                                            String issueKey, String code, JsonNode payload) {
+        DetectedIssue issue = new DetectedIssue();
+        issue.setMeta(new Meta().addTag(new Coding(tenantTagSystem, tenantId.toString(), null)));
+        issue.setPatient(new Reference("Patient/" + patientPid));
+        issue.addIdentifier().setSystem(MULTIMORBIDITY_IDENTIFIER_SYSTEM).setValue(issueKey);
+        issue.setStatus(DetectedIssue.DetectedIssueStatus.FINAL);
+        // No display on the coding: the engine has no fixed label for a finding, only the interpolated
+        // message, and putting that here would smuggle the prose back in through the label.
+        issue.setCode(new CodeableConcept().addCoding(new Coding(MULTIMORBIDITY_CODE_SYSTEM, code, null)));
+
+        String severity = mapDetectedIssueSeverity(firstNonBlank(text(payload, "severity")));
+        if (severity != null) {
+            issue.setSeverity(DetectedIssue.DetectedIssueSeverity.fromCode(severity));
+        }
+
+        String detectedAt = firstNonBlank(text(payload, "detected_at"), text(payload, "detectedAt"));
+        if (detectedAt != null) {
+            try {
+                java.time.OffsetDateTime parsed = java.time.OffsetDateTime.parse(detectedAt);
+                issue.setIdentified(new DateTimeType(java.util.Date.from(parsed.toInstant())));
+            } catch (RuntimeException e) {
+                log.warn("BUTANO SHR: multimorbidity issue {} has an unparseable detected_at '{}'; "
+                        + "archived without a time rather than with a guessed one", issueKey, detectedAt);
+            }
+        }
+        return issue;
+    }
+
+    /**
+     * Engine severity -> FHIR detectedissue-severity. Unknown values return null (left unset).
+     *
+     * <p>Never defaulted. "Moderate" is the value a reader skims past, so a severity nobody stated
+     * arriving as moderate would quietly downgrade an issue the engine may have rated high; and an
+     * unset severity at least makes the reader look at the code.</p>
+     */
+    static String mapDetectedIssueSeverity(String engineSeverity) {
+        if (engineSeverity == null) {
+            return null;
+        }
+        return switch (engineSeverity.toUpperCase(Locale.ROOT)) {
+            case "HIGH" -> "high";
+            case "MODERATE" -> "moderate";
+            case "LOW" -> "low";
+            default -> null;
+        };
+    }
+
+    /** Generic identifier+tenant-tag lookup, the shape every archive method here needs. */
+    private Optional<String> findResourceIdByIdentifier(
+            IFhirResourceDao<? extends org.hl7.fhir.r4.model.Resource> dao,
+            String searchParam, String identifierSystem, String identifierValue, UUID tenantId) {
+        SearchParameterMap map = new SearchParameterMap();
+        map.add(searchParam, new TokenParam(identifierSystem, identifierValue));
+        map.add("_tag", new TokenParam(tenantTagSystem, tenantId.toString()));
+        map.setCount(1);
+        IBundleProvider results = dao.search(map, (RequestDetails) null);
+        List<?> resources = results.getResources(0, 1);
+        if (resources.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(
+                ((org.hl7.fhir.r4.model.Resource) resources.get(0)).getIdElement().getIdPart());
     }
 
     private Optional<String> findConditionIdBySource(IFhirResourceDao<Condition> dao, UUID tenantId,

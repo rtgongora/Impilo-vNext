@@ -57,6 +57,12 @@ public class MultimorbidityController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         ObjectNode body = objectMapper.createObjectNode();
 
+        // The subject the detected issues belong to. Without it CKP evaluates and files nothing to
+        // the shared health record, because an issue with no subject cannot be attached to a
+        // patient — so the §9 findings would exist on this screen and nowhere else. This layer holds
+        // the CPID; sending it is what makes the DetectedIssue producer reachable in production.
+        body.put("subjectCpid", subjectCpid);
+
         addConditions(body, subjectCpid);
         addMedicines(body, subjectCpid);
         // Appointments, investigations, functional status, patient priorities and the care team are

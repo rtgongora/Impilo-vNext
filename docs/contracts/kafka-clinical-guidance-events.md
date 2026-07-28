@@ -15,6 +15,7 @@ All payloads MUST wrap in the platform `EventEnvelope` from `shared-kernel-java`
 | `impilo.clinical.guidance.override.recorded` | 1.0 | After `override_records` insert |
 | `impilo.clinical.pathway.session.completed` | 1.0 | Pathway session status → `COMPLETED` |
 | `impilo.clinical.citizen.nudge.generated` | 1.0 | Citizen-safe nudge pipeline (future) |
+| `impilo.clinical.multimorbidity.issue.detected` | 1.0 | Per DETECTED finding of the §9 multimorbidity assessment; consumed by BUTANO as FHIR `DetectedIssue` (brief.md §19). Payload is coded only — `subjectCpid`, `detectionKey`, `code`, `severity`, `contentVersion`, `detectedAt`. The engine's `message` / `explanation` / `requiredAction` are generated prose that interpolates medicine, clinic and orderer names and deliberately never travel. Idempotency key downstream is `<cpid>\|<code>`. |
 
 ## Payload sketch (`guidance.recommendation.generated`)
 

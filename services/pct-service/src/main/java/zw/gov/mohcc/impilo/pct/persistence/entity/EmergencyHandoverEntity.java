@@ -52,6 +52,10 @@ public class EmergencyHandoverEntity {
     @Column(name = "status", nullable = false)
     private String status = "PENDING";
 
+    /** Stamped at request time from a per-target-type response window (V209). Feeds the auto-expiry sweep. */
+    @Column(name = "response_due_at")
+    private OffsetDateTime responseDueAt;
+
     @Column(name = "accepted_by")
     private String acceptedBy;
 
@@ -123,6 +127,8 @@ public class EmergencyHandoverEntity {
     public void setRequestReason(String requestReason) { this.requestReason = requestReason; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public OffsetDateTime getResponseDueAt() { return responseDueAt; }
+    public void setResponseDueAt(OffsetDateTime responseDueAt) { this.responseDueAt = responseDueAt; }
     public String getAcceptedBy() { return acceptedBy; }
     public void setAcceptedBy(String acceptedBy) { this.acceptedBy = acceptedBy; }
     public OffsetDateTime getAcceptedAt() { return acceptedAt; }

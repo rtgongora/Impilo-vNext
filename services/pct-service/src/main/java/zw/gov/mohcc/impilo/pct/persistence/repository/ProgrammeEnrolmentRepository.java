@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ProgrammeEnrolmentEntity;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -82,4 +83,87 @@ public interface ProgrammeEnrolmentRepository extends JpaRepository<ProgrammeEnr
                                             @Param("programme") String programme,
                                             @Param("facilityId") String facilityId,
                                             @Param("statuses") Collection<String> statuses);
+
+    // ── §21 analytics aggregates ────────────────────────────────────────────────
+
+    /**
+     * Control and target attainment: how the open cohort is running, by programme.
+     *
+     * <p>{@code controlStatus} is grouped, not filtered, and a NULL comes back as its own group. NULL
+     * means <strong>never assessed</strong>, which is not NOT_CONTROLLED and not CONTROLLED. Treating
+     * it as either is the arithmetic that turns "we have not looked at 400 people" into a control
+     * rate, and it is the reason this query does not compute one.</p>
+     *
+     * <p>TARGET_NOT_SET is likewise a distinct answer: the patient has been seen, and no target was
+     * agreed, so they cannot be attaining one.</p>
+     */
+    @Query("""
+           SELECT e.programme, e.controlStatus, COUNT(e)
+             FROM ProgrammeEnrolmentEntity e
+            WHERE e.tenantId = :tenantId
+              AND (:programme IS NULL OR e.programme = :programme)
+              AND (:facilityId IS NULL OR e.managingFacilityId = :facilityId)
+              AND e.status IN :statuses
+            GROUP BY e.programme, e.controlStatus
+           """)
+    List<Object[]> controlAttainment(@Param("tenantId") UUID tenantId,
+                                     @Param("programme") String programme,
+                                     @Param("facilityId") String facilityId,
+                                     @Param("statuses") Collection<String> statuses);
+
+    /** Enrolments opened in the window, by programme — new detection onto a register. */
+    @Query("""
+           SELECT e.programme, COUNT(e)
+             FROM ProgrammeEnrolmentEntity e
+            WHERE e.tenantId = :tenantId
+              AND (:programme IS NULL OR e.programme = :programme)
+              AND (:facilityId IS NULL OR e.managingFacilityId = :facilityId)
+              AND e.enrolledOn >= :from
+              AND e.enrolledOn <= :to
+            GROUP BY e.programme
+           """)
+    List<Object[]> newEnrolmentCounts(@Param("tenantId") UUID tenantId,
+                                      @Param("programme") String programme,
+                                      @Param("facilityId") String facilityId,
+                                      @Param("from") LocalDate from,
+                                      @Param("to") LocalDate to);
+
+    /**
+     * Exits in the window by reason — cured, completed, transferred, lost, died, refuted.
+     *
+     * <p>The whole point of forcing an exit reason at the write is this read. Every one of these
+     * outcomes leaves status EXITED, so an outcome indicator built on status alone would report a
+     * patient who stopped attending and a patient who was cured as the same event.</p>
+     */
+    @Query("""
+           SELECT e.programme, e.exitReason, COUNT(e)
+             FROM ProgrammeEnrolmentEntity e
+            WHERE e.tenantId = :tenantId
+              AND (:programme IS NULL OR e.programme = :programme)
+              AND (:facilityId IS NULL OR e.managingFacilityId = :facilityId)
+              AND e.status = 'EXITED'
+              AND e.exitOn >= :from
+              AND e.exitOn <= :to
+            GROUP BY e.programme, e.exitReason
+           """)
+    List<Object[]> exitReasonCounts(@Param("tenantId") UUID tenantId,
+                                    @Param("programme") String programme,
+                                    @Param("facilityId") String facilityId,
+                                    @Param("from") LocalDate from,
+                                    @Param("to") LocalDate to);
+
+    /** Enrolments still open now, by programme and status — the currently-in-care count. */
+    @Query("""
+           SELECT e.programme, e.status, COUNT(e)
+             FROM ProgrammeEnrolmentEntity e
+            WHERE e.tenantId = :tenantId
+              AND (:programme IS NULL OR e.programme = :programme)
+              AND (:facilityId IS NULL OR e.managingFacilityId = :facilityId)
+              AND e.status IN :statuses
+            GROUP BY e.programme, e.status
+           """)
+    List<Object[]> openEnrolmentCounts(@Param("tenantId") UUID tenantId,
+                                       @Param("programme") String programme,
+                                       @Param("facilityId") String facilityId,
+                                       @Param("statuses") Collection<String> statuses);
 }

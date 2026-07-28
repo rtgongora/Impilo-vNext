@@ -72,6 +72,9 @@ libraries:
   - id: emergency-domain
     maven_module: emergency-domain
     path: libs/emergency-domain
+  - id: medicine-domain
+    maven_module: medicine-domain
+    path: libs/medicine-domain
   - id: tech-companion-mock
     maven_module: tech-companion-mock
     path: libs/tech-companion-mock
@@ -2384,6 +2387,52 @@ services:
       - must-not-own-clinical-decision-logic             # clinical-knowledge-platform-service
       - must-not-own-person-level-longitudinal-clinical-registries  # PCT's (care-continuum-doctrine CC-2)
       - must-not-own-the-clinical-decision-that-opens-or-closes-a-phase-of-care  # PCT's, on the admission-handshake model (CC-2)
+    production_status: scaffold
+    implementation_status: scaffold
+    frontend_wiring_status: not-wired
+    api_contract_status: not-started
+    authz_audit_status: not-started
+    observability_status: partial
+  - id: surgery-service
+    maven_module: surgery-service
+    primary_plane: clinical
+    plane: clinical
+    domain: care-delivery
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    continuum: care
+    continuum_role: component
+    continuum_parent: pct-service
+    primary_protocol: rest
+    default_http_port: 8396
+    product_names:
+      - Surgery
+      - Surgery and Surgical Specialties domain pack
+    owner_team: TBD
+    system_of_record_for:
+      - Surgical episode as a management-course record that ATTACHES TO PCT journeys and never contains them
+      - Structured surgical assessment content
+      - Operative indication and the non-operative options weighed
+      - Prehabilitation and optimisation execution
+      - Planned-versus-performed reconciliation
+      - Complication pathway INSTANCES as workflow — the resulting problem lands in pct_problems, not here
+      - Waiting-list clinical revalidation state
+      - The fifteen specialty extensions — indications, operative content, templates, maps
+    consumes_from:
+      - tshepo-authz-service
+      - inpatient-service     # the procedure EXECUTION record (procedure_episode) — read, never duplicated
+      - procedures-service    # the readiness/competence/catalogue engine
+      - pct-service           # care-continuum anchor (CC-5); writes condition/staging facts with responsible_service=surgery
+    exposes_to:
+      - experience-bff
+    forbidden_responsibilities:
+      - must-not-own-surgical-condition-diagnosis-certainty-severity-staging-recurrence  # pct_problems, responsible_service=surgery (CC-2 amendment)
+      - must-not-own-the-surveillance-plan                # pct_care_plans + pct_care_plan_goals; proposes/executes only
+      - must-not-own-the-clinical-decision-that-opens-or-closes-a-phase-of-care  # PCT decides (admission-handshake model); surgery owns the reasoning and executes
+      - must-not-own-functional-or-patient-reported-outcomes  # PCT person-level; surgery contributes measurements
+      - must-not-own-serial-burn-assessment                # pct.burn_assessment, emergency lane delegation — no parallel acute copy
+      - must-not-be-a-second-theatre-workflow              # inpatient.procedure_episode owns the operation itself
     production_status: scaffold
     implementation_status: scaffold
     frontend_wiring_status: not-wired

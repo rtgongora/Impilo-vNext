@@ -97,4 +97,12 @@ public interface AdmissionRepository extends JpaRepository<AdmissionEntity, UUID
      */
     boolean existsByWardIdAndBedIdAndStatusInAndIdNot(UUID wardId, UUID bedId,
                                                        List<String> statuses, UUID excludeId);
+
+    /**
+     * The admission-handshake back-link (V018): resolves inpatient-service's own admission id to
+     * PCT's admission row, which carries the journey. Used by
+     * {@code InFacilityDeteriorationConsumer} (W6b) to anchor an in-facility emergency episode onto
+     * the admission's EXISTING journey rather than minting a second one.
+     */
+    Optional<AdmissionEntity> findByTenantIdAndInpatientAdmissionRef(UUID tenantId, UUID inpatientAdmissionRef);
 }

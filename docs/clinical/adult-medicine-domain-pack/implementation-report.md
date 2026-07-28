@@ -1,5 +1,14 @@
 # Adult Medicine and Medical Specialties Clinical Domain Pack — Implementation Report
 
+> **START HERE, 2026-07-28.** The per-section truth of this pack now lives in
+> [`completion-register.md`](completion-register.md) — one row per brief section, with PARTIAL never
+> counted as delivered. This report predates it and describes waves rather than sections, so where
+> the two differ the register wins.
+>
+> Summary of the register: **3 sections DONE, 17 PARTIAL, 3 NOT BUILT.** This report's accurate claim
+> that "the clinical decision-support backbone is complete" has twice been read as "the pack is
+> complete". The backbone is a minority of the brief.
+
 **Status as of 2026-07-27.** W0 (vertical repair), W1 (canonical clinical spine), most of W2
 (adult decision-support foundation) and **W3 (HIV and TB as governed DAK-traceable programmes)** are
 implemented, tested and pushed. **W4 (chronic-disease CDS), W5 (medical-procedure indication) and W6

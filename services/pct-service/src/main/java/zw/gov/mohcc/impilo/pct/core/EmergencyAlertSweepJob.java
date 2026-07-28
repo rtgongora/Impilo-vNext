@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import zw.gov.mohcc.impilo.pct.domain.EmergencyAlertType;
+import zw.gov.mohcc.impilo.pct.integration.RitoSafetyClient;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyAlertEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyEpisodeEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
@@ -47,15 +48,18 @@ public class EmergencyAlertSweepJob {
     private final EmergencyAlertRepository alertRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final RitoSafetyClient ritoSafetyClient;
 
     public EmergencyAlertSweepJob(EmergencyEpisodeRepository episodeRepository,
                                   EmergencyAlertRepository alertRepository,
                                   EventOutboxRepository outboxRepository,
-                                  ObjectMapper objectMapper) {
+                                  ObjectMapper objectMapper,
+                                  RitoSafetyClient ritoSafetyClient) {
         this.episodeRepository = episodeRepository;
         this.alertRepository = alertRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.ritoSafetyClient = ritoSafetyClient;
     }
 
     @Scheduled(fixedDelayString = "${pct.emergency.alert.sweep-interval-ms:60000}",
@@ -137,6 +141,18 @@ public class EmergencyAlertSweepJob {
         alert.setRaisedBy(EmergencyAlertType.SYSTEM_ACTOR);
         alert.setResponseDueAt(now.plusMinutes(candidate.type().responseWindowMinutes()));
 
+        if (candidate.type() == EmergencyAlertType.ACCEPTANCE_OVERDUE) {
+            // "Set when an ACCEPTANCE_OVERDUE escalates" (V203's own column comment) — raising IS the
+            // escalation for this type; it does not wait for a responder's ack/respond first. A rito
+            // outage never blocks the alert itself (the case ref is just absent).
+            String caseId = ritoSafetyClient.createCase(episode.getTenantId(),
+                    "SAFETY_CONCERN", "Emergency handover awaiting acceptance too long",
+                    candidate.reason(), "CRITICAL", "EMERGENCY_ACCEPTANCE_DELAY",
+                    episode.getSubjectCpid(), Map.of("episodeId", episode.getEpisodeId().toString()),
+                    "pct-ea-" + episode.getEpisodeId());
+            alert.setRitoCaseRef(caseId);
+        }
+
         try {
             alertRepository.saveAndFlush(alert);
         } catch (DataIntegrityViolationException race) {
@@ -185,6 +201,7 @@ public class EmergencyAlertSweepJob {
         payload.put("reason", a.getReason());
         payload.put("responseDueAt", a.getResponseDueAt() != null ? a.getResponseDueAt().toString() : null);
         payload.put("subjectCpid", a.getSubjectCpid());
+        payload.put("ritoCaseRef", a.getRitoCaseRef());
 
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("EMERGENCY_ALERT");

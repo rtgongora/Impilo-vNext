@@ -89,6 +89,49 @@ public class ProgrammeEnrolmentController {
         }
     }
 
+    /**
+     * §21 control and target attainment.
+     *
+     * <p>Declared before {@code /{enrolmentId}} — Spring matches in declaration order for equally
+     * specific patterns, and a literal segment reaching the UUID handler is a 400 on a path that is
+     * not an identifier.</p>
+     */
+    @GetMapping("/control-attainment")
+    public ResponseEntity<Map<String, Object>> controlAttainment(
+            @RequestParam(value = "programme", required = false) String programme,
+            @RequestParam(value = "facility_id", required = false) String facilityId) {
+        return ResponseEntity.ok(Map.of("data", service.controlAttainment(programme, facilityId)));
+    }
+
+    /**
+     * §21 programme outcomes — in care, newly enrolled, and how those who left ended.
+     *
+     * <p>Declared before {@code /{enrolmentId}} so "programme-outcomes" is not parsed as a UUID.</p>
+     */
+    @GetMapping("/programme-outcomes")
+    public ResponseEntity<Map<String, Object>> programmeOutcomes(
+            @RequestParam(value = "programme", required = false) String programme,
+            @RequestParam(value = "facility_id", required = false) String facilityId,
+            @RequestParam(value = "from", required = false) String from,
+            @RequestParam(value = "to", required = false) String to) {
+        return ResponseEntity.ok(Map.of("data",
+                service.programmeOutcomes(programme, facilityId, date(from), date(to))));
+    }
+
+    /**
+     * §21 stockouts, as far as the clinical record sees them: why regimens changed.
+     *
+     * <p>Declared before {@code /{enrolmentId}} so "regimen-change-reasons" is not parsed as a UUID.</p>
+     */
+    @GetMapping("/regimen-change-reasons")
+    public ResponseEntity<Map<String, Object>> regimenChangeReasons(
+            @RequestParam(value = "programme", required = false) String programme,
+            @RequestParam(value = "from", required = false) String from,
+            @RequestParam(value = "to", required = false) String to) {
+        return ResponseEntity.ok(Map.of("data",
+                service.regimenChangeReasons(programme, date(from), date(to))));
+    }
+
     @GetMapping("/{enrolmentId}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> get(@PathVariable UUID enrolmentId) {
         return ResponseEntity.ok(ApiResponse.ok(toMap(service.get(enrolmentId)), correlationId()));
@@ -192,6 +235,11 @@ public class ProgrammeEnrolmentController {
         m.put("recorded_by", r.getRecordedBy());
         m.put("recorded_at", r.getRecordedAt() != null ? r.getRecordedAt().toString() : null);
         return m;
+    }
+
+    /** ISO date or null — an unparseable value must 400, never silently become "today". */
+    private static java.time.LocalDate date(String value) {
+        return (value == null || value.isBlank()) ? null : java.time.LocalDate.parse(value.trim());
     }
 
     private static String str(Object... candidates) {
