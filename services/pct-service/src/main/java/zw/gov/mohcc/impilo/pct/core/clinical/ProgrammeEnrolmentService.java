@@ -83,6 +83,37 @@ public class ProgrammeEnrolmentService {
         return requireEnrolment(enrolmentId, TrustContextHolder.require());
     }
 
+    /**
+     * Programme cohort counts for the tenant, optionally scoped to a facility.
+     *
+     * <p>Counts ENROLMENTS, not people: someone on both HIV care and TB treatment appears in both
+     * cohorts. That is the correct reading for programme reporting, and the response says so
+     * explicitly, so nobody totals the rows into a patient count.</p>
+     *
+     * <p>Lives here rather than as a reporting-service report definition because reporting holds a
+     * SEPARATE DATABASE and cannot read {@code pct.*} at all — a seeded SQL template naming these
+     * tables would be registered, ACTIVE and unable to run.</p>
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> cohortCounts(String facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<Object[]> rows = enrolmentRepository.cohortCounts(ctx.tenantId(), facilityId);
+        List<Map<String, Object>> counts = new java.util.ArrayList<>();
+        for (Object[] r : rows) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("programme", r[0]);
+            row.put("status", r[1]);
+            row.put("enrolments", ((Number) r[2]).longValue());
+            counts.add(row);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("counts", counts);
+        out.put("counts_enrolments_not_people",
+                "A person enrolled in more than one programme is counted in each. Do not total "
+                + "these rows into a patient count.");
+        return out;
+    }
+
     @Transactional(readOnly = true)
     public List<TreatmentRegimenEntity> regimensOf(UUID enrolmentId) {
         TrustContext ctx = TrustContextHolder.require();
