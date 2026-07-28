@@ -27,5 +27,12 @@ public record RecordImplantRequest(
         String bodySite,
         String laterality,
         String implantedBy,
-        OffsetDateTime implantedAt
+        OffsetDateTime implantedAt,
+        // Pipeline §14: what a patient carrying this device would be told about it, and when it
+        // is next due a review. All optional — a unit recorded without them is still valid; the
+        // recall-trace and removal/revision lifecycle do not depend on these being present.
+        String patientFacingName,
+        String patientFacingDescription,
+        Integer expectedLifespanMonths,
+        OffsetDateTime nextReviewDueAt
 ) {}
