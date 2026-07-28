@@ -291,7 +291,7 @@ Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7
 **Phase P pipeline COMPLETE (P0–P15, see §10–§19)** — P13/P14/P15 all partial by design (§17–§19),
 with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
 not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
-(S0 done, reachability wired from day one — see §20; S1–S18 remaining). Full plan in
+(S0–S1 done — see §20–§21; S2–S18 remaining). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -784,3 +784,63 @@ repeatedly in §5 and again in §19): the ten pre-existing theatre rigs have sti
 by this programme even once since P4. This debt predates Phase S and is not this wave's to
 close, but it is closer now that Phase S has begun — surgical episodes will reference
 `inpatient.procedure_episode`, the exact table those rigs guard.
+
+## 21. Wave S1 — the surgical episode extending PCT, not duplicating it (done)
+
+Adds `surgical_episode` to `surgery-service` — the management-course record the CC-2 amendment
+(§5a) permits, extending `pct_problems` per that amendment rather than the four duplicate
+registries the ADR's original decision 5 would have built.
+
+**Research first, before any schema.** Read `pct-service`'s actual `pct_problems`/
+`pct_care_plans` code before designing anything, rather than assuming the ADR's description was
+still current. Two load-bearing findings:
+- `pct_problems` already has a REAL, callable write API — `POST /v1/problems` accepts a
+  free-text `responsible_service` field with no allow-list (`ProblemService.add`). Surgery-service
+  can genuinely CONTRIBUTE a surgical condition today; no new pct-service surface was needed for
+  this half of the amendment.
+- `pct_care_plans`/`pct_care_plan_goals` has NO equivalent attribution column — there is no way
+  to record who is executing a given surveillance-plan goal. Closing that is pct-service's own
+  migration, not this wave's, and not attempted here.
+
+**What S1 builds.** `surgical_episode` (V002) carries a PCT anchor that is a required PAIR
+(`journey_id` or `encounter_id`, enforced by CHECK) — unlike `inpatient.procedure_episode`'s own
+anchor columns, which care-continuum-doctrine's own compliance table records as an open
+violation (V-1). A fresh table need not repeat a known violation just because the table it
+references does. `procedure_episode_ref` references the operation once one exists — referenced,
+never contained (component question 1). `pct_problem_ref` is the CONTRIBUTION's own reference,
+populated only once `PctProblemContributionClient` actually succeeds (component question 2);
+NULL means "not yet contributed", never "no condition" — the condition itself is never copied
+into this schema. `operative_indication`/`non_operative_options_considered` are the surgical
+REASONING this service may own; `status` tracks only this service's own view of that reasoning's
+progress and makes no claim to open or close a phase of care (component question 3) — an
+operation needing inpatient admission still goes through the unmodified admission-handshake in
+inpatient-service.
+
+`PctProblemContributionClient` mirrors `inpatient-service`'s own `PctTeleconsultClient` exactly:
+best-effort, forwards the CURRENT clinician's trust context rather than a service identity
+(`pct-service`'s `ClinicalAccessGuard.requireCareRelationship` binds the write to an actor with
+an active care relationship, which only the real acting clinician has), fails open so a PCT
+outage never blocks recording the episode locally.
+
+**One gap named, not built: the "decision to open/close a phase of care" for elective surgery.**
+No generic API exists for this beyond the admission-handshake model, which is hard-wired to
+inpatient census admission specifically. Inventing a new decision mechanism unilaterally inside
+surgery-service would itself breach CC-2 in the other direction — claiming a decision authority
+PCT has never delegated. S1 therefore makes NO claim here at all: `surgical_episode.status`
+tracks reasoning progress only, and any operation requiring admission continues through the
+existing, untouched handshake. Closing this properly (a general phase-opening decision API, if
+elective surgery genuinely needs one distinct from admission) is pct-service's own design work,
+flagged here rather than worked around.
+
+Backend-internal only, same shape as P0→P1: this is the first business endpoint in
+`surgery-service`, so authz/BFF/UI wiring is deferred to a dedicated reachability wave rather
+than attempted inline, mirroring P7–P12's own precedent.
+
+Proof: `SurgicalEpisodeServiceTest` (10 tests — the CC-5/indication/status refusals, and the
+demonstration this wave exists for: a PCT outage never blocks the episode being recorded
+locally). `PctProblemContributionClientTest` (4 tests, captured-payload lambda proving
+`responsible_service=surgery` actually reaches the request body, mirroring
+`ButanoProcedureClientTest`'s pattern from the sibling procedures-service programme).
+`surgery-episode-journeys.sh` (10/10, real Postgres) — the CC-5 anchor CHECK and a second CC-2
+regression guard, now at the table-column level. Full surgery-service module regression: 17/17
+(3 prior from S0 + 10 service + 4 client, all new this wave).
