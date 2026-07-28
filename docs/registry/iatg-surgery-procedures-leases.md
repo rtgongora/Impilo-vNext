@@ -288,9 +288,10 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P14 done — P13 and P14 both partial by design, see §17–§18 — P15
-remaining — see §10–§12, §14–§18) · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S
-surgery (S0–S18, not started). Full plan in
+**Phase P pipeline COMPLETE (P0–P15, see §10–§19)** — P13/P14/P15 all partial by design (§17–§19),
+with two named gaps (dialysis recurrence, complication-reopens-episode) carried into Phase S,
+not silently dropped · **Wave P-R2 reachability re-wire (done — see §13)** · Phase S surgery
+(S0–S18, not started). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
@@ -687,3 +688,53 @@ Proof: `AnalyticsIndicatorServiceTest` (7 tests). `procedures-analytics-journeys
 Postgres) — proves both the honesty-governance CHECKs and the exact status distribution above (5
 COMPUTED / 7 PARTIAL / 10 NOT_YET_INSTRUMENTED, tenant-isolated). Full procedures-service module
 regression: 60/60 (53 prior + 7 new).
+
+## 19. Wave P15 — closing §27 tests and §28 demonstrations; two named gaps not closed (done, partial by design)
+
+Final pipeline wave before Phase S. Research first, via a re-verification of the (now partly
+stale) pipeline audit against current source rather than trusting its original text — several of
+its "absent" findings (site/side, trainee/competence, sedation, specimen mismatch, recall,
+non-theatre settings) were already closed by P4/P6/P7/P8's own migrations, confirmed by reading
+each one, not assumed from the audit's wording.
+
+**Closed real gaps, invented nothing:**
+- **Demonstration 3 (paediatric assent)**: `mvumo.consent_request`'s assent/decision-maker
+  columns (V300, Wave P5) had a real schema-level proof (`procedures-consent-depth-journeys.sh`
+  J-P5-9 — a REFUSED child assent coexisting with a GRANTED guardian consent) but **no Java code
+  anywhere read or wrote any of them** — `MvumoService.transition`'s field whitelist and
+  `toRequestView`'s map both predate V300 and were never extended. `ConsentRequestEntity` now maps
+  the six columns; `MvumoService.recordAssent` records them — deliberately NOT routed through
+  `transition()`, because assent is a separate act from granting or refusing consent and must be
+  able to coexist with either. New route: `POST .../consent-requests/{id}/assent`.
+  `MvumoServiceAssentTest` (5 tests) proves the coexistence at the Java layer the SQL rig already
+  proved at the schema layer.
+- **§27 duplication detection**: `AppropriatenessEngine`'s `DUPLICATE_OPEN_REQUEST` branch has
+  been real code since P2 with zero test coverage anywhere in the estate (confirmed by grep) — 2
+  new `AppropriatenessEngineTest` cases close it, including the null-is-not-asserted case (an
+  unchecked open-request flag must not read as "none exists" any more than as "one exists").
+
+**`docs/clinical/procedures-pipeline/demonstrations-traceability.md`** (new): traces all ten named
+demonstrations to the real code and existing proof that makes each executable today — the
+concrete deliverable `audit.md` §29 said had never existed ("this audit is the first"). 7 of 10
+are closeable today (1, 2, 4, 5, 7, 8, 9 — three with one unconfirmed peer-owned leg named rather
+than assumed: reproductive-pack gating for #4, patient-notification-on-recall for #8, rebooking-
+link and cancellation comms for #9).
+
+**Two demonstrations named as NOT closed, not silently dropped:**
+- **#6 (dialysis recurrence)** — no session/series/recurring data model exists anywhere in
+  inpatient-service for any procedure. This is new schema and new domain logic, not a
+  wire-the-existing-pieces task like 1/2/5/7 — sized for its own wave, not folded into a
+  proof-only wave.
+- **#10 (complication reopens the episode)** — confirmed STILL absent since P10's own V008 header
+  named it. Closing it means a `REOPENED` lifecycle state on `ProcedureEpisodeService`/
+  `TheatreService`, whose status vocabulary the ten pre-existing theatre rigs and the emergency
+  lane both depend on. Per §5 of this document, those ten rigs have **never been run by this
+  programme even once**, confirmed still true as of this wave (no commit or lease update since P4
+  shows the debt closed). Recorded here as the single largest remaining gap in the whole
+  programme, with an explicit recommendation: run the ten theatre rigs FIRST, in their own
+  dedicated pass, before any wave touches the shared lifecycle to add REOPENED — closing a gap by
+  stacking an unverified change on an already-unconfirmed regression surface would be exactly the
+  kind of unstated risk this document exists to prevent.
+
+Proof: `MvumoServiceAssentTest` (5 tests, new). `AppropriatenessEngineTest` extended (+2, 12/12).
+Full module regression: mvumo-service 45/45, procedures-service 62/62.
