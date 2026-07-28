@@ -288,8 +288,9 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P8 done, P9–P15 remaining — see §10, §11) · Phase S surgery (S0–S18, not
-started). Full plan in the programme plan document; per-wave status is tracked in the pack
+Phase P pipeline (P0–P9 done, P10–P15 remaining — see §10–§12) · **Wave P-R2 reachability
+re-wire (next — see §13)** · Phase S surgery (S0–S18, not started). Full plan in the programme
+plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
 
 ## 9. Wave P-R — reachability (done)
@@ -400,3 +401,28 @@ authz/BFF/UI wiring this wave; both are queued for the next reachability pass.
 Proof: `SpecimenCustodyServiceTest` (11 tests) + `ImplantTraceabilityServiceTest` extended (+5).
 `procedures-p8-specimen-device-journeys.sh` (19/19, real Postgres, whole migration chain applied
 to both services). Module regression: inpatient 154/154, inventory 115/115.
+
+## 12. Wave P9 — recovery settings and aftercare templates (done)
+
+Closes §15 (recovery, PARTIAL) and §17 (aftercare, ABSENT), both named as `procedures-service`'s
+own responsibility in the boundary ADR. Built in worktree `procedures-p9-recovery-aftercare`
+(kept on disk). procedures V006: `recovery_setting` (5 rows), `aftercare_template` +
+`aftercare_instruction` (rows-not-columns) + `aftercare_template_channel` (a join, not a column).
+
+**Honest sourcing, not fabricated precision**: the audit paraphrases the source spec as declaring
+"twelve outputs and five delivery channels" for aftercare, but the literal enumerated list was
+never vendored into this repository. The five delivery channels reused here come from this
+programme's own prior audit (`audit.md` line 175), not a fabrication; the thirteen instruction
+kinds are an engineering baseline grounded in R15's governing standard
+(`RESULTS.CRITICAL_ACKNOWLEDGEMENT`), NOT a claimed reproduction of the spec's literal list — every
+seeded template is flagged `content_maturity='ENGINEERING_SEED'` and the rig proves that flag
+can't silently read `RATIFIED`. Repeats the P1 SNOMED lesson for a taxonomy instead of a code.
+
+Same route-shape law applied pre-emptively a third time (`?code=`, never a path variable).
+`RecoveryAndAftercareController` (recovery-settings, recovery-setting-detail, aftercare-templates)
+has zero authz/BFF/UI wiring, same as P7's `SafetyPauseController` — both queued for Wave P-R2
+below, which this wave triggers (P7+P8+P9 = three backend waves since Wave P-R, per the plan's own
+"re-wire every third wave" rule).
+
+Proof: `RecoveryAndAftercareServiceTest` (9 tests) + `procedures-recovery-aftercare-journeys.sh`
+(22/22, real Postgres). Module regression: 45/45.
