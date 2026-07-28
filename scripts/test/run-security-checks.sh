@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# `git ls-files` alone lists only TRACKED files, so a guard using it is blind to the new file it
+# exists to catch — the violation arrives untracked, the guard reports clean, and it ships. Found by
+# the RMNP lane, whose routing guard PASSED against a deliberately-planted violation.
+# --cached --others --exclude-standard = staged + untracked, minus anything gitignored.
 set -euo pipefail
 source "$(dirname "$0")/_gate-common.sh"
 cd "$REPO_PATH"
@@ -17,7 +21,7 @@ gate_run "secret-scan-no-ghp-tokens" bash -c '
 '
 
 gate_run "no-committed-env-files" bash -c '
-  test $(git ls-files | grep -iE "^\\.env$|\\.env\\.production|credentials\\.json$" | wc -l) -eq 0
+  test $(git ls-files --cached --others --exclude-standard | grep -iE "^\\.env$|\\.env\\.production|credentials\\.json$" | wc -l) -eq 0
 ' || FAIL=1
 
 gate_run "bff-yml-no-literal-passwords" bash -c '
