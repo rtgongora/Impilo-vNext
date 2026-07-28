@@ -136,6 +136,7 @@ export interface ResolvedWorkContextView {
   organisationId?: string | null;
   jurisdictionCode?: string | null;
   programmeId?: string | null;
+  departmentId?: string | null;
   roleTemplateId?: string | null;
   availableModes: string[];
   defaultMode?: string | null;
