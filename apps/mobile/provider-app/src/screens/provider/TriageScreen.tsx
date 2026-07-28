@@ -25,30 +25,48 @@ export function TriageScreen({ embedded = false }: { embedded?: boolean }) {
   const [spo2, setSpo2] = useState("");
   const [mentalStatus, setMentalStatus] = useState("ALERT");
 
-  const structuredAcuity = (() => {
-    let score = 0;
-    const hr = Number(heartRate || 0);
-    const rr = Number(respRate || 0);
-    const oxygen = Number(spo2 || 0);
-    if (hr > 120 || hr < 40) score += 2;
-    else if (hr > 100 || hr < 50) score += 1;
-    if (rr > 30 || rr < 8) score += 2;
-    else if (rr > 22) score += 1;
-    if (oxygen > 0 && oxygen < 90) score += 2;
-    else if (oxygen > 0 && oxygen < 94) score += 1;
-    if (mentalStatus !== "ALERT") score += 2;
-    return score;
-  })();
+  // There used to be a client-side acuity score here. It combined an ad-hoc points scale (invented
+  // here, matching no published triage instrument) with the clinician's selected level via
+  // Math.max — and the two scales ran in OPPOSITE directions. PCT's acuity is 1=resuscitation …
+  // 5=non-urgent, while the points scale counted upward with severity. So abnormal vitals RAISED
+  // the number and therefore DEMOTED the patient, and a sufficiently sick patient scored above 5,
+  // failed the server's @Max(5), and was rejected with a 400 that this screen never displayed —
+  // leaving no triage record at all for the sickest arrivals.
+  //
+  // Acuity is a clinical judgement. It is the clinician's selected level, sent as-is. The vitals go
+  // to the server as structured data in the field that exists for them, so the server can reason
+  // about them; they are not evidence this screen is entitled to score.
+  const acuity = parseInt(selectedLevel, 10);
 
   const mutation = useMutation({
     mutationFn: () => recordTriage({
-      patientId: activeEncounter?.patientId ?? "", encounterId: activeEncounter?.journeyId || activeEncounter?.id || "",
+      patientId: activeEncounter?.patientId ?? "",
+      encounterId: activeEncounter?.journeyId || activeEncounter?.id || "",
       triageLevel: selectedLevel,
       chiefComplaint,
-      acuityScore: Math.max(parseInt(selectedLevel), structuredAcuity),
-      notes: `HR:${heartRate || "n/a"} RR:${respRate || "n/a"} SpO2:${spo2 || "n/a"} Mental:${mentalStatus}`,
+      acuityScore: acuity,
+      vitals: {
+        heart_rate: heartRate ? Number(heartRate) : null,
+        respiratory_rate: respRate ? Number(respRate) : null,
+        spo2: spo2 ? Number(spo2) : null,
+        mental_status: mentalStatus,
+      },
     }),
-    onSuccess: () => Alert.alert("Triage Saved", "Triage assessment recorded"),
+    onSuccess: (result) => {
+      // Report the acuity the server recorded, not the one this screen sent. If they ever diverge,
+      // the clinician must see the one that is now in the record.
+      const recorded = result?.acuity ?? acuity;
+      Alert.alert("Triage saved", `Triage recorded at acuity ${recorded}.`);
+    },
+    onError: (error: unknown) => {
+      // A silent failure here is the dangerous case: the clinician walks away believing the patient
+      // is in the queue at the acuity they set, and no triage record exists.
+      const detail = error instanceof Error ? error.message : "The triage assessment was not saved.";
+      Alert.alert(
+        "Triage NOT saved",
+        `${detail}\n\nThis patient has no triage record. Record the assessment again or escalate.`,
+      );
+    },
   });
 
   const content = (
@@ -109,7 +127,8 @@ export function TriageScreen({ embedded = false }: { embedded?: boolean }) {
           />
         </View>
         <Text style={styles.helperText}>
-          {`Computed acuity score: ${structuredAcuity} (final score uses max of selected level and structured score).`}
+          {`Recording acuity ${acuity} — ${TRIAGE_LEVELS.find((t) => t.level === selectedLevel)?.label ?? ""}. `}
+          {"Vitals are sent with the assessment; they do not change the acuity you selected."}
         </Text>
         <Button
           testID="triage-record"

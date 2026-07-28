@@ -37,6 +37,48 @@ describe("clinical write journey canonical routes", () => {
     );
   });
 
+  it("sends the clinician's acuity unchanged, on PCT's scale", async () => {
+    // The regression this pins: the screen used to combine the selected level with an ad-hoc
+    // points score via Math.max. PCT's scale is 1=resuscitation … 5=non-urgent, so abnormal
+    // vitals RAISED the number and demoted the patient — and a sick enough patient scored above
+    // 5, failed @Max(5), and was rejected with a 400 the screen never showed. No record at all
+    // for the sickest arrivals.
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { data: { id: "triage-1", acuity: 1 } } } as never);
+    await recordTriage({
+      patientId: "pat-1",
+      encounterId: "enc-1",
+      triageLevel: "1",
+      chiefComplaint: "Unresponsive",
+      acuityScore: 1,
+      vitals: { heart_rate: 132, respiratory_rate: 34, spo2: 86, mental_status: "UNRESPONSIVE" },
+    });
+
+    const [, payload] = vi.mocked(apiClient.post).mock.calls[0] as [string, Record<string, unknown>];
+    expect(payload.acuity).toBe(1);
+    expect(payload.acuity as number).toBeLessThanOrEqual(5);
+    // Vitals travel as structured data, not flattened into free text.
+    expect(payload.vitals).toEqual({
+      heart_rate: 132,
+      respiratory_rate: 34,
+      spo2: 86,
+      mental_status: "UNRESPONSIVE",
+    });
+  });
+
+  it("never derives an acuity outside the server's accepted range from extreme vitals", async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { data: { id: "triage-2", acuity: 2 } } } as never);
+    await recordTriage({
+      patientId: "pat-2",
+      encounterId: "enc-2",
+      triageLevel: "2",
+      chiefComplaint: "Severe respiratory distress",
+      acuityScore: 2,
+      vitals: { heart_rate: 150, respiratory_rate: 40, spo2: 80, mental_status: "PAIN" },
+    });
+    const [, payload] = vi.mocked(apiClient.post).mock.calls[0] as [string, Record<string, unknown>];
+    expect(payload.acuity).toBe(2);
+  });
+
   it("uses canonical clinical write routes for vitals/diagnosis/labs/referrals/prescriptions", async () => {
     vi.mocked(apiClient.post)
       .mockResolvedValueOnce({ data: { data: { id: "v1", type: "Vital", attributes: { encounter_id: "enc-1", vital_type: "HEART_RATE", value: 80, unit: "bpm", measured_at: "2026-01-01T00:00:00Z", measured_by: "prov-1" } } } } as never)

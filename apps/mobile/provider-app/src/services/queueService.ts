@@ -70,21 +70,36 @@ export async function fetchQueueStats(facilityId?: string): Promise<{ waiting: n
     completedToday: Number(r.data.data.completedToday ?? r.data.data.completed ?? 0),
   };
 }
+export interface TriageVitals {
+  heart_rate: number | null;
+  respiratory_rate: number | null;
+  spo2: number | null;
+  mental_status: string;
+}
+
 export async function recordTriage(body: {
   patientId: string;
   encounterId: string;
   triageLevel: string;
   chiefComplaint: string;
+  /** The clinician's acuity on PCT's scale: 1 = resuscitation … 5 = non-urgent. */
   acuityScore: number;
+  /**
+   * Vitals as structured data. The endpoint has always accepted a `vitals` object; this client used
+   * to flatten them into the free-text `notes` field instead, which put measurements the server
+   * could have reasoned about into a string nothing parses.
+   */
+  vitals?: TriageVitals;
   notes?: string;
   triagedBy?: string;
   triagedByName?: string;
-}): Promise<{ id: string }> {
-  const r = await apiClient.post<{ data: { id: string } }>(`${V1}/triage`, {
+}): Promise<{ id: string; acuity?: number }> {
+  const r = await apiClient.post<{ data: { id: string; acuity?: number } }>(`${V1}/triage`, {
     patient_id: body.patientId,
     encounter_id: body.encounterId,
     acuity: body.acuityScore,
     chief_complaint: body.chiefComplaint,
+    vitals: body.vitals,
     notes: body.notes ?? body.chiefComplaint,
     triaged_by: body.triagedBy ?? "provider-app",
     triaged_by_name: body.triagedByName ?? "Provider App",
