@@ -5,6 +5,7 @@ import {
   NEWBORN_EXAM_MAP,
   RESPIRATORY_ZONES_MAP,
 } from "../regions/clinical-maps";
+import { SURGICAL_SITE_MARKING_INSTRUMENTS } from "./surgical-instruments";
 import type { BodyMapInstrument, RegionMapDef } from "../core/types";
 
 /**
@@ -92,6 +93,9 @@ export const BODY_MAP_INSTRUMENTS: Record<string, BodyMapInstrument> = {
   [NEWBORN_EXAM_INSTRUMENT.id]: NEWBORN_EXAM_INSTRUMENT,
   [RESPIRATORY_INSTRUMENT.id]: RESPIRATORY_INSTRUMENT,
   [ABDOMEN_INSTRUMENT.id]: ABDOMEN_INSTRUMENT,
+  // SB-4 (surgical pack §7 / pipeline §12 — built once, one feature): surgical site-marking
+  // instruments over the 37 new region maps, grouped by anatomical area in ./surgical-instruments.
+  ...SURGICAL_SITE_MARKING_INSTRUMENTS,
 };
 
 export function instrumentById(id: string | undefined): BodyMapInstrument | undefined {
