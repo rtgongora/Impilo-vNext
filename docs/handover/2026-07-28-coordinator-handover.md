@@ -320,3 +320,63 @@ deliberately not repointed until the authoritative-tenant work lands, because ai
 
 Do not start Category B's remaining 67 before Phase D unless the PO overrides — a public stack with
 auth disabled outranks any individual dead button.
+
+---
+
+## Addendum — Adult Medicine lane, corrections before handover (2026-07-28, adult-medicine session)
+
+The coordinator asked each lane to correct its own state here, because the successor will read this
+brief as true. Three corrections, one of which corrects a claim of *mine* that this brief has
+already carried forward into fleet law.
+
+**1. The lane state in §3 is substantially out of date.** It records "Waves 0–5 complete plus the
+BUTANO gap; remaining and genuinely not started — inpatient medical-ward workspace, analytics/offline
+surfaces, §23 demonstrations". Since then the pack has been rebuilt against the brief, which **was
+supplied by the PO and is now committed** at `docs/clinical/adult-medicine-domain-pack/brief.md`.
+
+Landed since: §9 multimorbidity engine · chronic-disease registers and the estate's first cohort read
+· §7 examination framework · §8's thirteen specialty workspaces · `libs/medicine-domain` · §21
+analytics · §14 consultation and MDT · §19 `ClinicalImpression` and `DetectedIssue` producers · §11
+result action · the ten §23 demonstrations proven at the record layer (35/35).
+
+**Authoritative status is per-section in
+[`docs/clinical/adult-medicine-domain-pack/completion-register.md`](../clinical/adult-medicine-domain-pack/completion-register.md):
+3 DONE · 18 PARTIAL · 2 NOT BUILT, §25 Definition of Done NOT MET.** Full successor brief:
+[`docs/clinical/adult-medicine-domain-pack/handover.md`](../clinical/adult-medicine-domain-pack/handover.md).
+
+**2. §3.6's §23 line is stale.** "PO-only. Adult Medicine proposed ten" — the PO supplied the brief.
+The real §23 is ten *clinical journeys*; my ten proposals were a different kind of thing (assertions
+about the pack's own safety properties) and are **retired**, preserved in `demonstrations.md`'s
+appendix mapped to the tests that carry them. Do not hand the successor my proposals as the
+requirement.
+
+**3. My own correction, which this brief carries in §3.6, is itself half wrong.** It reads
+*"`useOfflineStore<Household>("households")` is live in the outreach screens"* — plural. **It is live
+in one screen**: `apps/mobile/provider-app/src/screens/outreach/HouseholdListScreen.tsx:27`.
+`ScreeningScreen.tsx:21` *imports* the hook and only ever calls `useSyncEngine()`; the import is
+unused. The two blockers are still real and still correctly attributed — but the read gate is in
+**`tshepo-offline-service`** and is **two-layered** (`OfflineRulesEngine.READ_ACTIONS:51` *and* the
+capability token's `allowed-offline-actions` filter at mint time), and in `offline-edge-service` the
+client is not the constraint — `OfflineEdgeService.replayActions:143` only dispatches to FHIR for two
+vitals action types.
+
+This one matters beyond the fact: I over-corrected an overstated blocker, and the over-correction
+propagated into a fleet document within hours. **A correction is a claim and needs the same evidence
+as the thing it corrects.**
+
+**4. Two defects the successor should see before any planned work** — both verified verbatim:
+- **`/clinical-tools` ships sixteen calculators that compute nothing** (`page.tsx:536`) — MELD,
+  Child-Pugh, eGFR CKD-EPI, SOFA among them — claiming to be "connected to Clinical Knowledge
+  Platform (port 8270)" when they are connected to nothing, under a **"Validated"** badge. This is
+  Category B's shape at its worst, and it is clinical.
+- **A duplicate MDT system of record, which this lane created**: `pct V051__mdt_board_sessions`
+  (telemedicine, TM-B15) predates our `V114 pct_mdt_decisions`. Two tables, two BFF controllers.
+  Consolidation is a joint decision with the telemedicine lane; V051 is not ours to alter.
+
+**On the synthesis credited to this lane in §5** — *every error was a check that couldn't fail or a
+measurement that lied, never a wrong opinion about the code* — it held all day and then found its own
+limit. The errors above are a third kind: **a claim about absence made without a search.** I built
+the duplicate MDT table by treating my own demonstration rig's `CANNOT "MDT has NO record at all"`
+line as evidence. It reads like a finding because running something produced it, but a CANNOT asserts
+absence, and absence is what a search proves and an assumption does not. Worth adding to §5 as the
+third shape.
