@@ -151,7 +151,7 @@ class DownstreamFailureHonestyTest {
     void labOrdersList() {
         ResponseEntity<Map<String, Object>> response =
                 new LabOrdersController(failingOros())
-                        .listLabOrders("t", "req-7", "corr-7", 0, 20, "p-1", null, null);
+                        .listLabOrders("t", "req-7", "corr-7", 0, 20, "p-1", null, null, null);
         assertHonestFailure(response, "lab_orders_unavailable");
         assertHasMeta(response, "req-7");
     }

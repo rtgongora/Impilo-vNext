@@ -132,8 +132,9 @@ public class EncounterController {
             long encId = Long.parseLong(id.trim());
             JsonNode data = pctClient.getEncounter(encId);
             if (data != null) {
+                // Same contract as the list: useEncounter declares ApiResponse<EncounterResource>.
                 return ResponseEntity.ok(Map.of(
-                        "data", data,
+                        "data", PctTimelineRows.encounterRow(data),
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
             return upstreamFailure("PCT_UNAVAILABLE", "No encounter payload returned", requestId, correlationId);

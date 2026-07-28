@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.support.JsonApiRows;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.support.BffDegradedMeta;
 
@@ -324,8 +325,9 @@ public class RegistryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode rows = varapiClient.getReconciliationQueue(status, page, size);
+            // useRegistry declares attributes on these rows; VARAPI returns its own entities.
             return ResponseEntity.ok(Map.of(
-                    "data", rows != null ? rows : JsonNodeFactory.instance.objectNode(),
+                    "data", JsonApiRows.rows(rows, "reconciliation_case", "caseId", "case_id", "id"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("VARAPI getReconciliationQueue failed: {}", e.getMessage());

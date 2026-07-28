@@ -13,6 +13,7 @@ CHECKS=(
   check-feature-inventory.sh
   check-route-inventory.sh
   check-api-contracts.sh
+  check-typed-hook-passthrough.sh
   check-backend-frontend-parity.sh
   check-mobile-parity.sh
   check-madi-surfacing.sh

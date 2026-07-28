@@ -379,7 +379,7 @@ public class MobileProviderExtendedController {
 
         data.put("encountersToday", countOrNull(() -> pctClient.countEncounters(null), "encountersToday", unavailable));
         data.put("labOrdersToday", countOrNull(() -> orosClient.countOrders("LAB", null), "labOrdersToday", unavailable));
-        data.put("prescriptionsToday", countOrNull(() -> orosClient.countOrders("MEDICATION", null), "prescriptionsToday", unavailable));
+        data.put("prescriptionsToday", countOrNull(() -> orosClient.countOrders("PHARMACY", null), "prescriptionsToday", unavailable));
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", data);

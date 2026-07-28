@@ -86,6 +86,36 @@ public final class PctTimelineRows {
     }
 
     /**
+     * One encounter, in the same shape {@link #encounterRows} produces.
+     *
+     * <p>The single-encounter GET is typed {@code ApiResponse<EncounterResource>} by its hook, so
+     * it makes the same {@code attributes} promise the list does — and passing PCT's raw entity
+     * through breaks it the same way. Fixing only the list left the detail view broken.
+     */
+    public static Map<String, Object> encounterRow(JsonNode encounter) {
+        if (encounter == null || !encounter.isObject()) {
+            return Map.of();
+        }
+        Map<String, Object> attributes = JsonApiRows.attributesOf(encounter);
+        alias(attributes, encounter, "subjectCpid", "patientId", "patient_id");
+        alias(attributes, encounter, "assignedProviderId", "providerId", "provider_id");
+        alias(attributes, encounter, "endedAt", "closedAt", "closed_at");
+
+        String status = JsonApiRows.text(encounter, "status");
+        JsonApiRows.putBoth(attributes, "is_open", "isOpen",
+                status != null && !"COMPLETED".equalsIgnoreCase(status));
+
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", firstNonNull(
+                JsonApiRows.text(encounter, "encounterRef"),
+                JsonApiRows.text(encounter, "encounter_ref"),
+                JsonApiRows.text(encounter, "id")));
+        row.put("type", "encounter");
+        row.put("attributes", attributes);
+        return row;
+    }
+
+    /**
      * Derives timeline events from the same payload.
      *
      * <p>Every event here is anchored to something PCT recorded: a journey was opened, a journey

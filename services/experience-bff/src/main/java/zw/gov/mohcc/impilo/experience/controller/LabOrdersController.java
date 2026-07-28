@@ -60,14 +60,15 @@ public class LabOrdersController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(required = false, name = "encounter_id") String encounterId,
-            @RequestParam(required = false, name = "status") String status) {
+            @RequestParam(required = false, name = "status") String status,
+            @RequestParam(required = false, name = "type") String type) {
         // Encounter Orders & Results panel: orders linked to a specific encounter.
         if (encounterId != null && !encounterId.isBlank()) {
             try {
                 JsonNode orosData = orosClient.listOrdersByEncounter(encounterId);
                 if (orosData != null) {
                     Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", labOrderRows(orosData));
+                    response.put("data", labOrderRows(orosData, type));
                     response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
                     return ResponseEntity.ok(response);
                 }
@@ -88,7 +89,7 @@ public class LabOrdersController {
                 JsonNode orosData = orosClient.getPatientOrders(patientId);
                 if (orosData != null) {
                     Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", labOrderRows(orosData));
+                    response.put("data", labOrderRows(orosData, type));
                     response.put("meta", Map.of(
                             "request_id", requestId,
                             "correlation_id", correlationId
@@ -394,9 +395,36 @@ public class LabOrdersController {
      * <p>What is aliased here is only renaming — OROS calls the subject {@code patientCpid} and the
      * clinician {@code placedBy}, where the hook types {@code patientId} and {@code orderedBy}.
      */
+    /**
+     * Order types this endpoint is entitled to return.
+     *
+     * <p>OROS's patient order query returns every order type, and this endpoint passed them all to
+     * the EHR's Results and Orders tabs. A live check found Ramipril and Furosemide rendering as
+     * tests on the Results screen — dispensing records presented as investigations, in a column a
+     * clinician reads to see what was sent to the lab.
+     *
+     * <p>PHARMACY orders are dispensing, and they have their own surface. Everything diagnostic
+     * belongs here: labs, imaging, procedures and blood bank all produce a result a clinician waits
+     * for. Callers can narrow further with {@code type}.
+     */
+    private static final java.util.Set<String> DIAGNOSTIC_ORDER_TYPES =
+            java.util.Set.of("LAB", "IMAGING", "PROCEDURE", "BLOOD_BANK", "OTHER");
+
     private static List<Map<String, Object>> labOrderRows(JsonNode orosData) {
+        return labOrderRows(orosData, null);
+    }
+
+    private static List<Map<String, Object>> labOrderRows(JsonNode orosData, String typeFilter) {
         List<Map<String, Object>> rows = new ArrayList<>();
         for (JsonNode order : JsonApiRows.items(orosData)) {
+            String orderType = JsonApiRows.text(order, "orderType");
+            if (typeFilter != null && !typeFilter.isBlank()) {
+                if (orderType == null || !typeFilter.equalsIgnoreCase(orderType)) {
+                    continue;
+                }
+            } else if (orderType != null && !DIAGNOSTIC_ORDER_TYPES.contains(orderType.toUpperCase())) {
+                continue;
+            }
             Map<String, Object> attributes = JsonApiRows.attributesOf(order);
             aliasIfPresent(attributes, order, "patientCpid", "patientId", "patient_id");
             aliasIfPresent(attributes, order, "encounterRef", "encounterId", "encounter_id");
