@@ -38,13 +38,21 @@ export type MedicineCdsTopic = (typeof MEDICINE_CDS_TOPICS)[number];
 export interface MedicineCdsRequest {
   topic: MedicineCdsTopic | string;
   facts: Record<string, unknown>;
+  /**
+   * The patient the evaluation is about. Sent so the BFF can compose the current medicine list into
+   * the facts server-side — the medication facts the renal-safety rules gate on are derived from it
+   * rather than typed in. Omitting it does not fail the call; it leaves those facts undetermined,
+   * which the response reports rather than hiding.
+   */
+  subjectCpid?: string;
 }
 
 export function useMedicineCds() {
   return useMutation<ApiResponse<ProgrammeGuidance>, unknown, MedicineCdsRequest>({
-    mutationFn: ({ topic, facts }) =>
+    mutationFn: ({ topic, facts, subjectCpid }) =>
       apiClient.post<ApiResponse<ProgrammeGuidance>>(
-        `/internal/v1/medicine/cds/${topic}/evaluate`,
+        `/internal/v1/medicine/cds/${topic}/evaluate` +
+          (subjectCpid ? `?subject_cpid=${encodeURIComponent(subjectCpid)}` : ""),
         facts,
       ),
   });

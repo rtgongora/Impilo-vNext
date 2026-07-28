@@ -55,6 +55,14 @@ export interface ProgrammeGuidance {
   alerts: ProgrammeAlert[];
   not_assessed: string[];
   content_version: string | null;
+  /**
+   * Per fact: DERIVED_FROM_MEDICATION_LIST, CLINICIAN_ASSERTED or UNDETERMINED. A screen that shows
+   * a clinician-asserted fact as if the system had detected it is telling them their own answer back
+   * with the authority of a machine.
+   */
+  fact_provenance?: Record<string, string>;
+  /** What could and could not be derived, in words. Present only when something could not be. */
+  derivation_note?: string;
 }
 
 export function useProgrammeEnrolments(patientId: string, openOnly = false) {

@@ -93,6 +93,18 @@ public class ProcedureEpisodeEntity {
     @Column(name = "consent_verified", nullable = false)
     private boolean consentVerified;
 
+    // ── Wave P12 (pipeline §23) — financial clearance projection. COSTA is asked fresh on
+    // every start attempt (ProcedureEpisodeService.requireFinancialClearance); these columns
+    // are the audit trail, not the source of truth. ──
+    @Column(name = "financial_clearance_status", length = 48)
+    private String financialClearanceStatus;
+
+    @Column(name = "financial_clearance_checked_by", length = 128)
+    private String financialClearanceCheckedBy;
+
+    @Column(name = "financial_clearance_checked_at")
+    private java.time.OffsetDateTime financialClearanceCheckedAt;
+
     @Column(name = "mvumo_consent_request_id")
     private UUID mvumoConsentRequestId;
 
@@ -190,6 +202,12 @@ public class ProcedureEpisodeEntity {
     public void setVersion(long version) { this.version = version; }
     public boolean isConsentVerified() { return consentVerified; }
     public void setConsentVerified(boolean consentVerified) { this.consentVerified = consentVerified; }
+    public String getFinancialClearanceStatus() { return financialClearanceStatus; }
+    public void setFinancialClearanceStatus(String v) { this.financialClearanceStatus = v; }
+    public String getFinancialClearanceCheckedBy() { return financialClearanceCheckedBy; }
+    public void setFinancialClearanceCheckedBy(String v) { this.financialClearanceCheckedBy = v; }
+    public java.time.OffsetDateTime getFinancialClearanceCheckedAt() { return financialClearanceCheckedAt; }
+    public void setFinancialClearanceCheckedAt(java.time.OffsetDateTime v) { this.financialClearanceCheckedAt = v; }
     public UUID getMvumoConsentRequestId() { return mvumoConsentRequestId; }
     public void setMvumoConsentRequestId(UUID mvumoConsentRequestId) { this.mvumoConsentRequestId = mvumoConsentRequestId; }
     public UUID getTshepoConsentId() { return tshepoConsentId; }

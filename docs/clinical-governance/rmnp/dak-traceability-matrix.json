@@ -1120,19 +1120,19 @@
     {
       "adaptationTypes": [],
       "dakId": null,
-      "exclusionReason": "COSTA posts a surgical case bundle over seeded AHFOZ tariffs, so cost is computed. Financial protection is not modelled: there is no estimate, authorisation, denial or appeal path, and the invariant that financial state must never delay emergency surgery is asserted in prose and proven nowhere.",
+      "exclusionReason": "P12 (procedures pipeline programme) shipped exactly what this entry's own revisitCondition asked for: ProcedureEpisodeService.requireFinancialClearance (inpatient-service) gates theatre start against COSTA's existing ServiceAccessDecision, with the emergency-rules invariant now ENFORCED rather than asserted — an EMERGENCY/IMMEDIATE triage_priority episode bypasses the gate before COSTA is even queried (proven: ProcedureFinancialClearanceTest.anEmergencyEpisodeNeverQueriesCostaAndIsRecordedAsEmergencyOverride), and a financial block never transitions the episode to CANCELLED (proven: aFinancialBlockNeverCancelsTheEpisode — it only refuses the start attempt, leaving the episode retryable). Not visible to this generator because it is Java/SQL (inpatient V302 + ProcedureEpisodeService), not CKP content. STILL ABSENT, and not claimed: estimate/authorisation/denial/appeal as an originating WORKFLOW (a patient-facing cost estimate before booking, a formal prior-authorisation request triggered from theatre booking) — coverage-service and COSTA already have that machinery generically (AuthorisationService, EstimateService, AppealController), but nothing in the surgical/theatre booking path calls it proactively. P12 built the GATE that consults an existing decision, not the origination of one.",
       "family": "WHO_ECO",
       "hitPolicy": null,
       "implementations": [],
       "kind": "POLICY_FRAMEWORK",
       "pack": "surgery",
       "publishedRows": null,
-      "revisitCondition": "P12 ships the financial path with an explicit rig assertion that an emergency procedure proceeds with authorisation absent, and that payment state cannot present as clinical cancellation.",
+      "revisitCondition": "A future wave wires theatre/surgical booking to actually REQUEST an estimate and authorisation from coverage-service/COSTA at booking time, rather than only consulting whatever decision already exists (or doesn't) at start time.",
       "sheet": null,
       "sourceCitation": "WHA76.2 operative paragraphs on financing. World Health Assembly, 6 June 2023.",
       "sourceFile": "docs/clinical-governance/surgery/standards-baseline.json",
       "standardId": "ECO.WHA76-2.FINANCING",
-      "status": "DEFERRED",
+      "status": "COVERED_ELSEWHERE",
       "title": "Financing mechanisms sustain integrated emergency, critical and operative care without exposing patients to catastrophic cost",
       "titleIsSheetLevel": false
     },
@@ -3381,8 +3381,8 @@
   ],
   "shippedCitations": 158,
   "statusCounts": {
-    "COVERED_ELSEWHERE": 12,
-    "DEFERRED": 116,
+    "COVERED_ELSEWHERE": 13,
+    "DEFERRED": 115,
     "SHIPPED": 21
   }
 }

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.inpatient.integration.CostaServiceAccessClient;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.*;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -77,6 +78,8 @@ public class ProcedureEpisodeService {
     // ── Wave 2: perioperative consent bundle (references MVUMO, the consent SoR) ──
     private final ProcedureConsentRepository procedureConsentRepository;
     private final ObjectMapper objectMapper;
+    // ── Wave P12 §23: read-only financial-clearance check against COSTA ──
+    private final CostaServiceAccessClient costaServiceAccessClient;
 
     public ProcedureEpisodeService(
             ProcedureEpisodeRepository episodeRepository,
@@ -94,7 +97,8 @@ public class ProcedureEpisodeService {
             ProcedureBloodLinkRepository bloodLinkRepository,
             EventOutboxRepository outboxRepository,
             ProcedureConsentRepository procedureConsentRepository,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            CostaServiceAccessClient costaServiceAccessClient) {
         this.episodeRepository = episodeRepository;
         this.preopRepository = preopRepository;
         this.checklistRepository = checklistRepository;
@@ -111,6 +115,7 @@ public class ProcedureEpisodeService {
         this.outboxRepository = outboxRepository;
         this.procedureConsentRepository = procedureConsentRepository;
         this.objectMapper = objectMapper;
+        this.costaServiceAccessClient = costaServiceAccessClient;
     }
 
     @Transactional
@@ -405,6 +410,46 @@ public class ProcedureEpisodeService {
         }
     }
 
+    /**
+     * Pipeline §23 — the financial-clearance gate, and the concrete enforcement of the
+     * "emergency-rules invariant" the audit found asserted in prose and proven nowhere.
+     *
+     * <p>An EMERGENCY or IMMEDIATE triage_priority episode ALWAYS bypasses this gate — checked
+     * first, before COSTA is even asked, so a downstream COSTA outage cannot delay emergency
+     * surgery either. For every other episode, COSTA is asked fresh (never trusting a stale
+     * projection) and only an EXPLICIT {@code BLOCKED_PENDING_PAYMENT} or
+     * {@code BLOCKED_PENDING_AUTHORISATION} status refuses the start — every other status,
+     * including "no decision recorded" or "COSTA unreachable", passes. The projection columns
+     * are stamped regardless (audit trail), even on the emergency bypass path (denoted
+     * "EMERGENCY_OVERRIDE" without a query being made — recording that the bypass fired is
+     * itself part of the audit).</p>
+     *
+     * <p>Refusing to start NEVER transitions the episode to CANCELLED — it stays exactly where
+     * it was (READY_FOR_THEATRE/PREOP/BOOKED) and can be retried once clearance resolves. That
+     * is the other half of the invariant: payment state can delay a START ATTEMPT, but there is
+     * no code path in this method that could make it masquerade as a clinical cancellation.</p>
+     */
+    private void requireFinancialClearance(ProcedureEpisodeEntity episode) {
+        boolean emergency = "EMERGENCY".equalsIgnoreCase(episode.getTriagePriority())
+                || "IMMEDIATE".equalsIgnoreCase(episode.getTriagePriority());
+        if (emergency) {
+            episode.setFinancialClearanceStatus("EMERGENCY_OVERRIDE");
+            episode.setFinancialClearanceCheckedBy(currentActor());
+            episode.setFinancialClearanceCheckedAt(OffsetDateTime.now());
+            return;
+        }
+        String encounterId = episode.getEncounterId() != null ? episode.getEncounterId().toString() : null;
+        CostaServiceAccessClient.ClearanceResult result = costaServiceAccessClient.checkClearance(encounterId);
+        episode.setFinancialClearanceStatus(result.status());
+        episode.setFinancialClearanceCheckedBy(currentActor());
+        episode.setFinancialClearanceCheckedAt(OffsetDateTime.now());
+        if (result.blocking()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Financial clearance is " + result.status() + " — theatre start blocked. "
+                    + "This does not cancel the episode; retry once clearance resolves.");
+        }
+    }
+
     public Map<String, Object> startProcedure(UUID episodeId, Map<String, Object> body) {
         ProcedureEpisodeEntity episode = requireEpisode(episodeId);
         if (!List.of("READY_FOR_THEATRE", "PREOP", "BOOKED").contains(episode.getStatus())) {
@@ -444,6 +489,11 @@ public class ProcedureEpisodeService {
                 }
             }
         }
+        // Financial clearance runs LAST, after every clinical-safety gate (site/side, consent)
+        // has already passed — the clinical gates this programme built first keep their exact
+        // existing precedence and error ordering; financial clearance is additive behind them,
+        // never ahead of them.
+        requireFinancialClearance(episode);
         episode.setStatus("IN_PROGRESS");
         if (!emergencyException) {
             episode.setConsentVerified(true);

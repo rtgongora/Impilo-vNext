@@ -41,14 +41,17 @@ export const CDS_TOPICS: CdsTopicDefinition[] = [
   {
     topic: "deprescribing",
     title: "Medication review (renal safety)",
-    description: "WHO PEN — eGFR-gated cautions, duplicate therapy and hepatic impairment.",
+    description:
+      "WHO PEN — eGFR-gated cautions, duplicate therapy and hepatic impairment. The medication " +
+      "facts are derived from the patient's current medicine list, not asked for.",
     fields: [
       { key: "egfr", label: "eGFR (mL/min/1.73m²)", type: "number", placeholder: "e.g. 25" },
-      { key: "onMetformin", label: "On metformin", type: "select", options: YES_NO },
-      { key: "onNsaid", label: "On NSAID", type: "select", options: YES_NO },
-      { key: "onNephrotoxin", label: "On nephrotoxin", type: "select", options: YES_NO },
-      { key: "onRenallyClearedDrug", label: "On renally-cleared drug", type: "select", options: YES_NO },
-      { key: "duplicateTherapyDetected", label: "Duplicate therapy", type: "select", options: YES_NO },
+      // onMetformin / onNsaid / onNephrotoxin / onRenallyClearedDrug / duplicateTherapyDetected were
+      // YES/NO dropdowns here. They were the only producers of those facts, which meant
+      // DEPRX_DUPLICATE_THERAPY_REVIEW fired when a clinician had already spotted the duplicate and
+      // said so — the rule reported a finding rather than making one. The server now derives all five
+      // from the medicine list (MedicationFactDeriver), and the response says for each fact whether it
+      // was derived or merely asserted. Asking again here would let a typed answer overwrite evidence.
       {
         key: "hepaticImpairment", label: "Hepatic impairment", type: "select",
         options: [

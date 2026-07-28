@@ -1,0 +1,119 @@
+{
+  "packId": "multimorbidity-rules",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Multimorbidity conflict, burden and duplication detection",
+    "primarySource": "WHO Package of Essential Noncommunicable Disease Interventions (WHO PEN); WHO Integrated Care for Older People (ICOPE); NICE NG56 multimorbidity: clinical assessment and management",
+    "why": "Brief §9: 'Do not force clinicians to manage each disease in isolation.' Single-disease guidelines are each correct and collectively incoherent — the CKD diet contradicts the diabetes diet, the frailty target contradicts the glycaemic target, three clinics each book their own follow-up, and two teams each order the same test. None of these is visible from inside any one disease view, which is precisely why nobody catches them. This pack holds the condition-level conflicts and the burden thresholds; the medicine-level duplication and combination rules live in medicine-classification.json.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "WHO PEN, ICOPE and NICE NG56 are NOT vendored under docs/reference/who-dak/MANIFEST.json. The conflict pairs below are the well-described clinical tensions and the thresholds are the conventional ones (five or more regular medicines for polypharmacy; a 90-day window for visit burden), but both are authored rather than derived from a vendored source and neither has national ratification. The thresholds in particular are placeholders: what counts as an excessive visit schedule in a Zimbabwean district where the patient walks 15 km is a national policy question, not an engineering one."
+    }
+  },
+  "thresholds": {
+    "polypharmacyMedicineCount": {
+      "value": 5,
+      "note": "Five or more regular medicines is the conventional polypharmacy threshold. It is a prompt to review, never a limit — some patients need more and the count alone says nothing about appropriateness."
+    },
+    "visitBurdenWindowDays": {
+      "value": 90,
+      "note": "The window over which separate clinic attendances are counted."
+    },
+    "visitBurdenAppointmentCount": {
+      "value": 4,
+      "note": "Four or more separate attendances in the window suggests appointments that could be aligned. Deliberately conservative: telling a clinician to consolidate care that genuinely needs four visits wastes their attention and teaches them to ignore the next alert."
+    },
+    "treatmentBurdenScoreHigh": {
+      "value": 6,
+      "note": "Composite burden score at which the plan should be consolidated. One point per regular medicine beyond the polypharmacy threshold, one per attendance beyond the visit threshold, one per active long-term condition beyond three."
+    },
+    "conditionCountForMultimorbidity": {
+      "value": 2,
+      "note": "Two or more active long-term conditions is the definition of multimorbidity used here."
+    }
+  },
+  "repeatIntervals": [
+    {"investigation": "HBA1C", "minimumRepeatDays": 84, "note": "Glycated haemoglobin reflects roughly three months of glycaemia; repeating it sooner cannot show a change that has happened."},
+    {"investigation": "LIPID_PROFILE", "minimumRepeatDays": 180},
+    {"investigation": "CREATININE", "minimumRepeatDays": 7, "note": "Short, because a rising creatinine is followed deliberately. This catches two teams each ordering it on the same day, not a clinician tracking an acute kidney injury."},
+    {"investigation": "FULL_BLOOD_COUNT", "minimumRepeatDays": 7},
+    {"investigation": "TSH", "minimumRepeatDays": 42},
+    {"investigation": "VIRAL_LOAD", "minimumRepeatDays": 84},
+    {"investigation": "CHEST_XRAY", "minimumRepeatDays": 30, "note": "Radiation dose, not only cost."}
+  ],
+  "conditionConflicts": [
+    {
+      "code": "MM_DIET_CKD_VS_DIABETES",
+      "kind": "COMPETING_DIETARY_ADVICE",
+      "conditionsA": ["N18", "CKD", "CHRONIC KIDNEY"],
+      "conditionsB": ["E11", "E10", "DIABET"],
+      "severity": "MODERATE",
+      "message": "The kidney diet and the diabetes diet pull in opposite directions.",
+      "explanation": "Chronic kidney disease restricts protein, potassium and phosphate; diabetes advice emphasises protein and low-glycaemic vegetables and fruit, many of which are high in potassium. A patient handed both sheets is being asked to follow two diets that cannot both be followed, and will usually abandon one without telling anyone which.",
+      "requiredAction": "Agree one dietary plan with the patient, ideally with dietetic input, and record which advice takes precedence and why."
+    },
+    {
+      "code": "MM_FLUID_HF_VS_CKD",
+      "kind": "CONTRADICTORY_TARGETS",
+      "conditionsA": ["I50", "HEART FAILURE", "CARDIAC FAILURE"],
+      "conditionsB": ["N18", "CKD", "CHRONIC KIDNEY"],
+      "severity": "HIGH",
+      "message": "Fluid restriction for heart failure conflicts with the fluid needs of the kidney.",
+      "explanation": "Heart failure management restricts fluid to reduce congestion; chronic kidney disease is worsened by the resulting hypoperfusion, and diuresis that protects the heart can precipitate acute-on-chronic kidney injury. Neither team is wrong and the patient sits between them.",
+      "requiredAction": "Set one fluid and diuretic plan across both conditions, with the weight and renal-function monitoring that plan requires, and name who owns it."
+    },
+    {
+      "code": "MM_GLYCAEMIC_TARGET_VS_FRAILTY",
+      "kind": "CONTRADICTORY_TARGETS",
+      "conditionsA": ["E11", "E10", "DIABET"],
+      "conditionsB": ["FRAIL", "R54", "DEMENTIA", "F03", "FALLS", "W19"],
+      "severity": "HIGH",
+      "message": "A tight glycaemic target is unsafe in frailty — hypoglycaemia causes the falls.",
+      "explanation": "The HbA1c target that prevents microvascular complications over fifteen years is the target that causes hypoglycaemia, falls and fractures in a frail older person who may not have fifteen years. WHO ICOPE and multimorbidity guidance both call for relaxed targets here, but the diabetes protocol on its own will keep asking for the tight one.",
+      "requiredAction": "Agree a relaxed, individualised glycaemic target with the patient, document it as the target, and deprescribe agents that cause hypoglycaemia."
+    },
+    {
+      "code": "MM_BP_TARGET_VS_ORTHOSTATIC_FALLS",
+      "kind": "CONTRADICTORY_TARGETS",
+      "conditionsA": ["I10", "HYPERTENS"],
+      "conditionsB": ["FALLS", "W19", "I95", "ORTHOSTATIC", "SYNCOPE", "R55"],
+      "severity": "MODERATE",
+      "message": "The blood-pressure target conflicts with the falls and postural-hypotension risk.",
+      "explanation": "Driving blood pressure down protects against stroke over years and causes the postural drop that fractures a hip this month. The two are managed by different people looking at different numbers.",
+      "requiredAction": "Measure standing as well as sitting blood pressure, set one target that accounts for both risks, and review the agents most likely to cause the postural drop."
+    },
+    {
+      "code": "MM_POTASSIUM_CKD_VS_HF_DIURETIC",
+      "kind": "CONTRADICTORY_TARGETS",
+      "conditionsA": ["N18", "CKD", "CHRONIC KIDNEY"],
+      "conditionsB": ["I50", "HEART FAILURE"],
+      "severity": "MODERATE",
+      "message": "Potassium is being pushed in both directions.",
+      "explanation": "Kidney disease raises potassium and the diet restricts it; heart-failure diuretics lower it and the advice is often to replace it. Without one plan the patient receives both instructions and the potassium is checked by whichever team happens to remember.",
+      "requiredAction": "Agree one potassium plan and one monitoring schedule, and name the team responsible for acting on the result."
+    },
+    {
+      "code": "MM_BLEEDING_ANTICOAG_VS_ULCER",
+      "kind": "CONTRADICTORY_TARGETS",
+      "conditionsA": ["I48", "ATRIAL FIBRILLATION", "I26", "PULMONARY EMBOL", "I82", "DEEP VEIN"],
+      "conditionsB": ["K25", "K26", "K27", "PEPTIC ULCER", "GASTROINTESTINAL BLEED", "K92"],
+      "severity": "HIGH",
+      "message": "Anticoagulation is indicated for one condition and hazardous for the other.",
+      "explanation": "The stroke or embolism the anticoagulant prevents and the bleed it may cause are both real, and the decision belongs to the patient with both risks explained — not to whichever specialty wrote the last letter.",
+      "requiredAction": "Make and record an explicit shared decision on anticoagulation, with gastroprotection where it continues, and name who reviews it."
+    },
+    {
+      "code": "MM_STEROID_VS_DIABETES",
+      "kind": "CONTRADICTORY_TARGETS",
+      "conditionsA": ["J45", "ASTHMA", "J44", "COPD", "M05", "M06", "RHEUMATOID"],
+      "conditionsB": ["E11", "E10", "DIABET"],
+      "severity": "MODERATE",
+      "message": "Systemic steroid courses for the respiratory or inflammatory condition will destabilise the diabetes.",
+      "explanation": "Each steroid course raises glucose for days to weeks. If the diabetes team never learns a course was given, the deterioration is read as treatment failure and the diabetes regimen is escalated permanently for a temporary cause.",
+      "requiredAction": "Plan glucose monitoring and a temporary regimen adjustment around steroid courses, and ensure the diabetes team is told when one is given."
+    }
+  ]
+}

@@ -121,6 +121,82 @@ public class OrosServiceClient {
     }
 
     /**
+     * The codes of the medicines this patient is currently taking.
+     *
+     * <p>Exists so that decision support can DETECT medication facts — duplicate therapy, NSAID use,
+     * nephrotoxin exposure — instead of asking a clinician to assert them. Before this the only
+     * producer of those facts was a YES/NO dropdown, so the renal-safety rules advised on findings
+     * their user had already made.</p>
+     *
+     * <p><strong>Unreachable is not "takes no medicines".</strong> Every failure path returns
+     * {@code null} rather than an empty list. An empty list is an affirmative clinical claim that a
+     * duplicate-therapy checker reads as "nothing to duplicate", and producing one because OROS was
+     * down would give a confident all-clear from a system that could not ask.</p>
+     *
+     * <p>The status and field rules below mirror {@code OrosMedicationIntegration} in pct, which
+     * reads the same endpoint for {@code PatientFacts}. Two readers of one endpoint is a
+     * consolidation candidate; they are kept deliberately identical until then, because the two
+     * drifting apart would mean the same patient had two different medicine lists.</p>
+     *
+     * @param cpid the patient's CPID
+     * @return distinct medicine codes in order, or {@code null} when OROS could not be asked
+     */
+    public List<String> currentMedicationCodes(String cpid) {
+        if (cpid == null || cpid.isBlank()) {
+            return null;
+        }
+        try {
+            String url = baseUrl + "/v1/prescriptions/patient/" + cpid;
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            JsonNode body = response.getBody();
+            if (!response.getStatusCode().is2xxSuccessful() || body == null) {
+                log.warn("OROS returned {} for the medicine list — recorded as unavailable, not as none",
+                        response.getStatusCode());
+                return null;
+            }
+            JsonNode rows = body.path("data");
+            if (!rows.isArray()) {
+                return null;
+            }
+            java.util.LinkedHashSet<String> codes = new java.util.LinkedHashSet<>();
+            for (JsonNode row : rows) {
+                if (!isCurrentPrescription(row.path("status").asText(null))) {
+                    continue;
+                }
+                for (String field : List.of("medication_code", "medicationCode", "atc_code", "atcCode", "code")) {
+                    String code = row.path(field).asText("").trim();
+                    if (!code.isEmpty()) {
+                        codes.add(code);
+                        break;
+                    }
+                }
+            }
+            return List.copyOf(codes);
+        } catch (Exception e) {
+            log.warn("OROS unreachable for the medicine list: {} — recorded as absent so a rule needing "
+                     + "it declines to score, rather than as an empty medicine list", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Whether a prescription still represents something the patient is taking.
+     *
+     * <p>An unknown status counts as current: a medicine whose status nobody recorded is more safely
+     * treated as still being taken than as stopped, because the cost of a spurious duplicate warning
+     * is an explanation and the cost of a missed one is the duplication.</p>
+     */
+    private static boolean isCurrentPrescription(String status) {
+        if (status == null || status.isBlank()) {
+            return true;
+        }
+        return switch (status.toUpperCase(java.util.Locale.ROOT)) {
+            case "CANCELLED", "STOPPED", "COMPLETED", "EXPIRED", "SUPERSEDED" -> false;
+            default -> true;
+        };
+    }
+
+    /**
      * Cancel an order.
      *
      * @param orderId the order ID

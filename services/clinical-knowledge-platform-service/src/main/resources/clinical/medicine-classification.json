@@ -1,0 +1,249 @@
+{
+  "packId": "medicine-classification",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Therapeutic grouping of medicines for multimorbidity safety detection",
+    "primarySource": "WHO ATC classification (http://www.whocc.no/atc); EDLIZ Zimbabwe Essential Medicines List and Standard Treatment Guidelines",
+    "why": "Brief §9 requires the system to DETECT duplicate medicines, unsafe combinations and renal/hepatic constraints. Detection needs to know that lisinopril and enalapril are the same kind of thing — a fact no part of this estate could previously state. The deprescribing pack works around the gap by asking the caller for boolean flags ('onMetformin', 'onNsaid'), and the only producer of those flags was a clinician ticking a dropdown, which means the rule fired on an assertion that duplicate therapy existed rather than on a detection of it. This pack closes that: it groups medicines into the therapeutic classes the safety rules reason about, so the flags can be derived from the patient's actual medicine list.",
+    "notADuplicateRegistry": "This is NOT a parallel medicine registry. zibo owns the national medicine registry over the WHO ATC CodeSystem (MedicineRegistryService, ATC_SYSTEM = http://www.whocc.no/atc, seeded by zibo V007) and remains the system of record for what a medicine IS. This pack owns only the clinical grouping that decision support reasons over — which classes duplicate each other, which combinations are unsafe, which are cleared by the kidney. Keying on ATC prefixes rather than on a private code list is deliberate, so the two stay joined rather than diverging.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "Neither the WHO ATC index nor EDLIZ is vendored under docs/reference/who-dak/MANIFEST.json. The ATC prefixes below are the published hierarchy and the generic-name lists are the medicines in common Zimbabwean use within each class; both are authored rather than machine-derived from a vendored source, so this pack ships ENGINEERING_SEED. The class memberships are the conventional pharmacological groupings and are not expected to be contentious, but they are not ratified and must not be presented as a national standard."
+    }
+  },
+  "matching": {
+    "note": "A medicine is classified by ATC prefix when it carries an ATC code, or by generic-name token otherwise. Codes reaching this pack are heterogeneous — OrosMedicationIntegration takes whichever of medication_code, atc_code or code a prescription row carries — so a code that matches neither is UNCLASSIFIABLE, and that fact is reported rather than absorbed.",
+    "safeDirection": "A negative flag (this patient is NOT on an NSAID) may only be asserted when every medicine in the list was classifiable. If any medicine could not be classified, the flag stays UNKNOWN, because the unclassifiable one might be the NSAID. Asserting NO on a partially-understood list is how a renal-safety rule comes to clear a patient it never checked."
+  },
+  "classes": [
+    {
+      "class": "ACE_INHIBITOR",
+      "display": "ACE inhibitor",
+      "atcPrefixes": ["C09A", "C09B"],
+      "generics": ["lisinopril", "enalapril", "ramipril", "captopril", "perindopril", "quinapril", "fosinopril", "trandolapril"],
+      "renallyCleared": true,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "ARB",
+      "display": "Angiotensin receptor blocker",
+      "atcPrefixes": ["C09C", "C09D"],
+      "generics": ["losartan", "valsartan", "candesartan", "telmisartan", "irbesartan", "olmesartan"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "NSAID",
+      "display": "Non-steroidal anti-inflammatory",
+      "atcPrefixes": ["M01A"],
+      "generics": ["ibuprofen", "diclofenac", "naproxen", "indomethacin", "meloxicam", "piroxicam", "celecoxib", "ketorolac", "mefenamic"],
+      "renallyCleared": false,
+      "nephrotoxic": true,
+      "duplicateWithin": true
+    },
+    {
+      "class": "BETA_BLOCKER",
+      "display": "Beta-blocker",
+      "atcPrefixes": ["C07A", "C07B", "C07C"],
+      "generics": ["propranolol", "atenolol", "bisoprolol", "metoprolol", "carvedilol", "nadolol", "sotalol", "timolol", "labetalol", "nebivolol"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "BIGUANIDE",
+      "display": "Biguanide (metformin)",
+      "atcPrefixes": ["A10BA"],
+      "generics": ["metformin"],
+      "renallyCleared": true,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "SULFONYLUREA",
+      "display": "Sulfonylurea",
+      "atcPrefixes": ["A10BB"],
+      "generics": ["glibenclamide", "glimepiride", "gliclazide", "glipizide", "tolbutamide"],
+      "renallyCleared": true,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "INSULIN",
+      "display": "Insulin",
+      "atcPrefixes": ["A10A"],
+      "generics": ["insulin"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": false,
+      "duplicateNote": "Basal and prandial insulin are legitimately co-prescribed; two insulin lines are not a duplicate."
+    },
+    {
+      "class": "STATIN",
+      "display": "Statin",
+      "atcPrefixes": ["C10AA"],
+      "generics": ["simvastatin", "atorvastatin", "rosuvastatin", "pravastatin", "lovastatin", "fluvastatin"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "LOOP_DIURETIC",
+      "display": "Loop diuretic",
+      "atcPrefixes": ["C03C"],
+      "generics": ["furosemide", "frusemide", "bumetanide", "torasemide"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "THIAZIDE",
+      "display": "Thiazide or thiazide-like diuretic",
+      "atcPrefixes": ["C03A", "C03B"],
+      "generics": ["hydrochlorothiazide", "bendroflumethiazide", "chlortalidone", "chlorthalidone", "indapamide"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "POTASSIUM_SPARING_DIURETIC",
+      "display": "Potassium-sparing diuretic / aldosterone antagonist",
+      "atcPrefixes": ["C03D"],
+      "generics": ["spironolactone", "eplerenone", "amiloride", "triamterene"],
+      "renallyCleared": true,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "ANTICOAGULANT",
+      "display": "Anticoagulant",
+      "atcPrefixes": ["B01AA", "B01AB", "B01AE", "B01AF"],
+      "generics": ["warfarin", "heparin", "enoxaparin", "dalteparin", "rivaroxaban", "apixaban", "dabigatran", "edoxaban"],
+      "renallyCleared": true,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "ANTIPLATELET",
+      "display": "Antiplatelet",
+      "atcPrefixes": ["B01AC"],
+      "generics": ["aspirin", "acetylsalicylic", "clopidogrel", "ticagrelor", "prasugrel", "dipyridamole"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "OPIOID",
+      "display": "Opioid analgesic",
+      "atcPrefixes": ["N02A"],
+      "generics": ["morphine", "codeine", "tramadol", "fentanyl", "oxycodone", "pethidine", "methadone", "buprenorphine", "hydromorphone"],
+      "renallyCleared": true,
+      "nephrotoxic": false,
+      "duplicateWithin": false,
+      "duplicateNote": "A long-acting background opioid plus a short-acting breakthrough opioid is standard palliative practice (brief §8.13) and must not be reported as duplicate therapy."
+    },
+    {
+      "class": "BENZODIAZEPINE",
+      "display": "Benzodiazepine",
+      "atcPrefixes": ["N05BA", "N05CD"],
+      "generics": ["diazepam", "lorazepam", "midazolam", "clonazepam", "alprazolam", "temazepam", "nitrazepam"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "PPI",
+      "display": "Proton-pump inhibitor",
+      "atcPrefixes": ["A02BC"],
+      "generics": ["omeprazole", "esomeprazole", "lansoprazole", "pantoprazole", "rabeprazole"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "SSRI",
+      "display": "Selective serotonin reuptake inhibitor",
+      "atcPrefixes": ["N06AB"],
+      "generics": ["fluoxetine", "sertraline", "citalopram", "escitalopram", "paroxetine", "fluvoxamine"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    },
+    {
+      "class": "AMINOGLYCOSIDE",
+      "display": "Aminoglycoside antibiotic",
+      "atcPrefixes": ["J01G"],
+      "generics": ["gentamicin", "amikacin", "streptomycin", "tobramycin", "kanamycin"],
+      "renallyCleared": true,
+      "nephrotoxic": true,
+      "duplicateWithin": true
+    },
+    {
+      "class": "CALCIUM_CHANNEL_BLOCKER",
+      "display": "Calcium-channel blocker",
+      "atcPrefixes": ["C08"],
+      "generics": ["amlodipine", "nifedipine", "felodipine", "diltiazem", "verapamil"],
+      "renallyCleared": false,
+      "nephrotoxic": false,
+      "duplicateWithin": true
+    }
+  ],
+  "unsafeCombinations": [
+    {
+      "code": "MM_COMBO_ACEI_ARB",
+      "classes": ["ACE_INHIBITOR", "ARB"],
+      "severity": "HIGH",
+      "message": "An ACE inhibitor and an angiotensin receptor blocker are prescribed together.",
+      "explanation": "Dual renin-angiotensin blockade increases hyperkalaemia and acute kidney injury without an outcome benefit for most indications. This combination is commonly the result of two prescribers each treating a different condition — one hypertension, one proteinuria or heart failure — which is exactly the multimorbidity failure this view exists to catch.",
+      "requiredAction": "Review with the patient which agent to retain, stop the other, and check potassium and renal function."
+    },
+    {
+      "code": "MM_COMBO_TRIPLE_WHAMMY",
+      "classes": ["NSAID", "LOOP_DIURETIC", "ACE_INHIBITOR"],
+      "alsoSatisfiedBy": [["NSAID", "LOOP_DIURETIC", "ARB"], ["NSAID", "THIAZIDE", "ACE_INHIBITOR"], ["NSAID", "THIAZIDE", "ARB"]],
+      "severity": "HIGH",
+      "message": "NSAID plus a diuretic plus a renin-angiotensin blocker — the 'triple whammy' combination for acute kidney injury.",
+      "explanation": "Each agent alone is reasonable. Together they remove the three mechanisms by which the kidney defends its own perfusion, and an intercurrent illness with mild dehydration then precipitates acute kidney injury. This is a combination that only appears when nobody is looking at the whole list.",
+      "requiredAction": "Stop the NSAID unless there is a compelling indication, and check renal function."
+    },
+    {
+      "code": "MM_COMBO_ACEI_POTASSIUM_SPARING",
+      "classes": ["ACE_INHIBITOR", "POTASSIUM_SPARING_DIURETIC"],
+      "alsoSatisfiedBy": [["ARB", "POTASSIUM_SPARING_DIURETIC"]],
+      "severity": "MODERATE",
+      "message": "A renin-angiotensin blocker with a potassium-sparing diuretic — hyperkalaemia risk.",
+      "explanation": "This combination is deliberate and evidence-based in heart failure, so it is not an error. It does require potassium monitoring that a single-disease view will not schedule.",
+      "requiredAction": "Confirm the indication and ensure potassium and renal function are being monitored."
+    },
+    {
+      "code": "MM_COMBO_OPIOID_BENZODIAZEPINE",
+      "classes": ["OPIOID", "BENZODIAZEPINE"],
+      "severity": "HIGH",
+      "message": "An opioid and a benzodiazepine are prescribed together — additive respiratory depression.",
+      "explanation": "The combined sedative effect is greater than either alone and is a recognised cause of avoidable respiratory-depression deaths, particularly in older or frail patients.",
+      "requiredAction": "Review whether both are required; if both are, reduce doses and document the monitoring plan."
+    },
+    {
+      "code": "MM_COMBO_DUAL_ANTICOAGULANT",
+      "classes": ["ANTICOAGULANT", "ANTICOAGULANT"],
+      "withinClassCount": 2,
+      "severity": "CRITICAL",
+      "message": "Two anticoagulants are active at the same time — major bleeding risk.",
+      "explanation": "Two anticoagulants together are almost always an unintended overlap, typically a switch that was started without the previous agent being stopped.",
+      "requiredAction": "Establish which agent is intended, stop the other, and assess bleeding risk now."
+    },
+    {
+      "code": "MM_COMBO_NSAID_ANTICOAGULANT",
+      "classes": ["NSAID", "ANTICOAGULANT"],
+      "severity": "HIGH",
+      "message": "An NSAID with an anticoagulant — gastrointestinal bleeding risk.",
+      "explanation": "NSAIDs damage the gastric mucosa and impair platelet function; on an anticoagulant the bleed that results is harder to stop.",
+      "requiredAction": "Stop the NSAID if possible; if it must continue, add gastroprotection and document the decision."
+    }
+  ]
+}

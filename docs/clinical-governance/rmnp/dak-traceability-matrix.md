@@ -18,8 +18,8 @@ matrix exists to make visible.
 
 | Status | Count |
 |---|---|
-| `COVERED_ELSEWHERE` | 12 |
-| `DEFERRED` | 116 |
+| `COVERED_ELSEWHERE` | 13 |
+| `DEFERRED` | 115 |
 | `SHIPPED` | 21 |
 
 | Standard id | Family | Kind | Hit policy | Title | Status | Implemented by | Adaptation | Note |
@@ -84,7 +84,7 @@ matrix exists to make visible.
 | `BLOOD.TRANSFUSION.APPROPRIATE_USE` | WHO_BLOOD | GUIDELINE_SECTION | — | Clinical transfusion practice — indication, consent, pretransfusion compatibilit | `COVERED_ELSEWHERE` | — | — | Implemented across MADI and the theatre blood gate: a procedure's blood requirement is checked against a real MADI reser |
 | `ECO.WHA76-2.CONTINUUM` | WHO_ECO | POLICY_FRAMEWORK | — | Emergency, critical and operative care is one continuum, from community recognit | `DEFERRED` | — | — | The repository has the operative phase of the continuum in real depth and almost nothing on either side of it: six of th |
 | `ECO.WHA76-2.DATA_INDICATORS` | WHO_ECO | INDICATOR_FRAMEWORK | — | Establish data and indicator systems that track emergency and operative care per | `DEFERRED` | — | — | Two report definitions exist — theatre utilisation and a case register — against twenty required surgical indicators. Re |
-| `ECO.WHA76-2.FINANCING` | WHO_ECO | POLICY_FRAMEWORK | — | Financing mechanisms sustain integrated emergency, critical and operative care w | `DEFERRED` | — | — | COSTA posts a surgical case bundle over seeded AHFOZ tariffs, so cost is computed. Financial protection is not modelled: |
+| `ECO.WHA76-2.FINANCING` | WHO_ECO | POLICY_FRAMEWORK | — | Financing mechanisms sustain integrated emergency, critical and operative care w | `COVERED_ELSEWHERE` | — | — | P12 (procedures pipeline programme) shipped exactly what this entry's own revisitCondition asked for: ProcedureEpisodeSe |
 | `ECO.WHA76-2.REFERRAL_NETWORKS` | WHO_ECO | POLICY_FRAMEWORK | — | Functional referral systems connecting primary, secondary and tertiary care | `DEFERRED` | — | — | Surgical referral exists as a record (referral.surgical_referral, with indication, laterality, site, urgency and target  |
 | `ECO.WHA76-2.SAFETY_CHECKLISTS` | WHO_ECO | POLICY_FRAMEWORK | — | Implement safety checklists and standardised protocols for emergency and operati | `DEFERRED` | — | — | One safety checklist exists — the WHO surgical one — and it is real and gated. The standard asks for checklists across e |
 | `ECO.WHA76-2.SURGICAL_ANAESTHESIA_PERIOP` | WHO_ECO | POLICY_FRAMEWORK | — | Member States strengthen surgical, anaesthesia and perioperative care capability | `DEFERRED` | — | — | Surgical, anaesthesia and perioperative care exist as three separately-wired capabilities rather than one integrated ser |

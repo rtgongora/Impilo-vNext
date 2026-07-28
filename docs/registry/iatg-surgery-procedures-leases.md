@@ -288,7 +288,7 @@ Recorded here so they cannot be quietly dropped:
 ## 8. Wave index
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
-Phase P pipeline (P0–P11 done, P12–P15 remaining — see §10–§12, §14–§15) · **Wave P-R2
+Phase P pipeline (P0–P12 done, P13–P15 remaining — see §10–§12, §14–§16) · **Wave P-R2
 reachability re-wire (done — see §13)** · Phase S surgery (S0–S18, not started). Full plan in
 the programme
 plan document; per-wave status is tracked in the pack
@@ -545,3 +545,37 @@ pure content depth into an already-reachable API. Extended `procedures-catalogue
 Proof: 36/36 (7 new P11 assertions, real Postgres). DAK traceability matrix regenerated (149
 artefacts, 12 COVERED_ELSEWHERE, 116 DEFERRED, 0 uncovered). Module regression: 53/53 unchanged
 (H2 tests use hand-inserted fixtures, not the shipped seed).
+
+## 16. Wave P12 — financial clearance gate (done)
+
+Closes §23 (financial). Research before building found the audit's own framing misleading:
+estimate/authorisation/denial/appeal are NOT absent — coverage-service and COSTA already have
+that machinery (`AuthorisationService`, `EstimateService`, `AppealController`,
+`ServiceAccessDecisionEntity`). What was genuinely missing was a CONNECTION:
+`TheatreService`/`ProcedureEpisodeService` never referenced COSTA, payment or authorisation at
+all, so "the emergency-rules invariant" was asserted in prose and enforced nowhere.
+
+Per the ADR (procedures-service/surgery-service must never become "a second payment truth"),
+this landed in **inpatient-service**, the P8 precedent (specimens→inpatient, implants→
+inventory). `ProcedureEpisodeService.requireFinancialClearance`, called LAST in `startProcedure`
+(after site-and-side and the full consent block, so it never reorders any existing gate):
+EMERGENCY/IMMEDIATE triage bypasses before COSTA is even asked; otherwise COSTA is queried FRESH
+via a new read-only `CostaServiceAccessClient` and only an explicit `BLOCKED_PENDING_PAYMENT`/
+`BLOCKED_PENDING_AUTHORISATION` refuses the start. A block never cancels the episode — only
+refuses the start attempt, true by the absence of any code path that could do otherwise.
+
+`ECO.WHA76-2.FINANCING` (surgery's own baseline, `plannedWave: P12`) moved DEFERRED →
+COVERED_ELSEWHERE: this wave shipped exactly what its own `revisitCondition` asked for. Honestly
+scoped: estimate/authorisation as an ORIGINATING workflow (a cost estimate before booking, a
+formal prior-authorisation request) is still not wired — this is the GATE that consults an
+existing decision, not the origination of one.
+
+**Cross-lane care taken**: `ProcedureEpisodeService`'s constructor gained a 17th parameter; the
+two existing test files that directly construct it were updated; the emergency/theatre lane was
+flagged per the plan's own workflow rule (`task_2c0d3f7f`) since this touches their shared,
+heavily-tested `startProcedure` method. Full regression re-run AFTER rebase, not just before, to
+catch anything concurrent lanes landed in the meantime — 164/164 both times.
+
+Proof: `ProcedureFinancialClearanceTest` (10 tests). `procedures-financial-clearance-
+journeys.sh` (9/9, real Postgres, whole inpatient migration chain). DAK matrix regenerated (149
+artefacts, 13 COVERED_ELSEWHERE, 115 DEFERRED, 0 uncovered). Module regression: 164/164.
