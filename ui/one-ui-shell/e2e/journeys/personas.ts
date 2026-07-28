@@ -136,3 +136,20 @@ export const PERSONAS = {
 } satisfies Record<string, JourneyPersona>;
 
 export type PersonaKey = keyof typeof PERSONAS;
+
+/**
+ * The persona's health ID, or a loud failure.
+ *
+ * `healthId` is optional on Persona because not every persona is a patient. Three theatre journeys
+ * filled it straight into a patient field, which TypeScript never checked (the specs were excluded
+ * from every type-check in the repo) — so a persona without one would have submitted an empty
+ * patient identifier and the journey would have "passed" against the wrong record.
+ */
+export function requireHealthId(persona: { username: string; healthId?: string }): string {
+  if (!persona.healthId) {
+    throw new Error(
+      `Persona ${persona.username} has no healthId — it cannot stand in for a patient here.`,
+    );
+  }
+  return persona.healthId;
+}

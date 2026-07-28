@@ -16,6 +16,8 @@ import type { Locator, Page, TestInfo } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 export type AcceptancePoint =
+  // ── The canonical checklist. ALL_POINTS below requires every one of these, and finalize()
+  //    fails a journey that leaves any of them unaddressed.
   | "A1_access"
   | "A2_actionEnabled"
   | "A3_formOpens"
@@ -25,7 +27,29 @@ export type AcceptancePoint =
   | "A7_notification"
   | "A8_audit"
   | "A9_resume"
-  | "A10_logicalEnd";
+  | "A10_logicalEnd"
+  // ── Supplementary points used by the theatre journeys.
+  //
+  // These are DELIBERATELY absent from ALL_POINTS. They are a richer framing the theatre specs
+  // were written against — orientation, key fields, persisted truth, continuity, guidance,
+  // feedback — and they are recorded here so those specs type-check honestly. Adding them to
+  // ALL_POINTS would force every other journey to address them; mapping them onto the canonical
+  // names would change what the theatre specs assert, which is not mine to decide.
+  //
+  // The consequence is intentional and should not be papered over: because these are not in
+  // ALL_POINTS, a theatre journey recording only these still counts as NOT having addressed the
+  // canonical points, and finalize() will fail it. That is the true state of affairs. It has been
+  // invisible until now because the journey specs are excluded from the chromium project
+  // (testIgnore: "journeys/**") and were excluded from every type-check — never compiled, never
+  // run. Owner: the theatre wave.
+  | "A2_orientation"
+  | "A2b_reschedulingGuidance"
+  | "A4_keyFields"
+  | "A5_action"
+  | "A6_persistedTruth"
+  | "A7_continuity"
+  | "A8_guidance"
+  | "A9_feedback";
 
 const ALL_POINTS: AcceptancePoint[] = [
   "A1_access",
