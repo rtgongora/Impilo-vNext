@@ -289,7 +289,7 @@ Recorded here so they cannot be quietly dropped:
 
 Phase 0 audit and baseline (0.1–0.4, done) · **Wave P-R reachability (done, 7/7 — see §9)** ·
 Phase P pipeline (P0–P9 done, P10–P15 remaining — see §10–§12) · **Wave P-R2 reachability
-re-wire (next — see §13)** · Phase S surgery (S0–S18, not started). Full plan in the programme
+re-wire (done — see §13)** · Phase S surgery (S0–S18, not started). Full plan in the programme
 plan document; per-wave status is tracked in the pack
 completion reports and in programme memory (`surgery-procedures-program-state.md`).
 
@@ -426,3 +426,54 @@ below, which this wave triggers (P7+P8+P9 = three backend waves since Wave P-R, 
 
 Proof: `RecoveryAndAftercareServiceTest` (9 tests) + `procedures-recovery-aftercare-journeys.sh`
 (22/22, real Postgres). Module regression: 45/45.
+
+## 13. Wave P-R2 — reachability re-wire for P7+P9, plus a real defect fix (done)
+
+Closed the authz/BFF/UI gap for P7's `SafetyPauseController` and P9's
+`RecoveryAndAftercareController` — six routes total, all already query-param shaped (P7/P9 built
+them that way from the start, so no route-shape workaround was needed here unlike catalogue-detail
+in V300). tshepo-authz V301 (30 ALLOW rows), BFF client+controller extended, UI panels added to
+the EXISTING `/work/clinical/procedures` detail view rather than a new page — `procedure_definition`
+already carries the linkage codes (`default_sedation_level_code`, `default_recovery_setting_code`,
+`default_aftercare_template_code` from P7/P9, plus the pre-existing `safety_pause_template`/
+`aftercare_template` columns from V002) to key off.
+
+**Cross-lane finding, not mine to fix alone but fixed enough to unblock this wave**:
+`scripts/runtime-proof/procedures-authz-journeys.sh` (committed in P-R.4) was MISSING from this
+worktree's fresh checkout. Traced to commit `90e64207f` ("feat(org-registry): source-pack seeder…
+(NCZ-W1A)") — a 65-file diff with no stated reason to touch a procedures-service rig script,
+almost certainly a broad non-path-scoped commit sweeping up another session's local deletion
+(exactly what `shared-index-commit-law` in memory warns against). Recovered the file VERBATIM via
+`git show <origin-commit>:<path>`, not rewritten from memory, then extended it for V301. Flagged
+via `spawn_task` (task_b04ee443) for someone to audit whether that commit dropped anything else;
+not blocking.
+
+**A second real defect, found while wiring the UI and fixed forward** (V006 was already pushed,
+so this is a new migration, not a rewrite): `procedure_definition.aftercare_template` has existed
+since V002/V003 with 34 distinct SPECIFIC per-procedure codes (`AFTERCARE-LAPAROTOMY`,
+`AFTERCARE-CENTRAL-LINE`, `AFTERCARE-LUMBAR-PUNCTURE`, …) — "a code with nothing to resolve to",
+the exact state V005's own header describes for `safety_pause_template` before P7 correctly fixed
+it by resolving that pre-existing column. P9 missed that `aftercare_template` already existed and
+built a SEPARATE, coarser six-value taxonomy (`default_aftercare_template_code`) instead — a
+parallel system, not the fix P7 already modelled. V007 (procedures-service) seeds five specific
+templates for the same demonstration procedures P7/P9 already sedation/recovery-linked
+(`AFTERCARE-LAPAROTOMY`, `AFTERCARE-CAESAREAN`, `AFTERCARE-ARTHROPLASTY`, `AFTERCARE-CENTRAL-LINE`,
+`AFTERCARE-LUMBAR-PUNCTURE`); the remaining ~27 specific codes stay honestly unresolved — named as
+a debt below, not silently closed. `default_aftercare_template_code` is NOT dropped (already
+shipped) but is now documented as a coarse FALLBACK only, and the UI panel does real two-step
+resolution: specific code first, coarse fallback labelled as generic second, "not declared" only
+when both are genuinely absent.
+
+Proof: `procedures-authz-journeys.sh` 11/11 (restored + extended for V301, including a direct
+substring-collision check for the sedation-levels/recovery-settings vs their own -detail routes —
+the same shape V300's catalogue/catalogue-detail pair already proved safe). BFF: 22 new tests +
+full 1445-test regression, same 5 pre-existing TUSO-shift-lane failures verified via stash
+isolation (zero new). `procedures-recovery-aftercare-journeys.sh` extended to 26/26 proving the
+V007 fix at the row level. procedures-service module regression 45/45. UI: 14+3=17/17 (page +
+integration tests), including three tests proving the two-step aftercare resolution (prefers
+specific, falls back and labels generic, both-unavailable renders as unavailable not empty).
+
+**New debt registered, not silently absorbed**: ~27 of `aftercare_template`'s 34 specific V003
+codes remain unresolved (no template row). Same shape as the already-accepted "catalogue depth"
+debt (only 13 of 66 procedures carry full requirement sets) — a content-population task for a
+future wave, not a structural gap.
