@@ -927,6 +927,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/regulatory/[orgId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory Workspace", navLabel: "Regulatory Org", navZone: "work" },
   { path: "/work/dura", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Dura — Stock & Supply", navLabel: "Dura Stock", navZone: "work" },
   { path: "/work/patient-safety", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Patient Safety — Pharmacovigilance", navLabel: "Patient Safety", navZone: "work" },
+  { path: "/work/mental-health", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mental Health — Referral Queue", navLabel: "Mental Health", navZone: "work" },
   { path: "/work/patient-safety/new", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Safety Report", navLabel: "New Report", navZone: "work" },
   { path: "/work/patient-safety/reports/[reportId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Report", navLabel: "Report", navZone: "work" },
   { path: "/work/patient-safety/cases/[caseId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Case", navLabel: "Case", navZone: "work" },
@@ -1072,7 +1073,7 @@ export const ROUTES: RouteDefinition[] = [
 // Work Home (Phase F1/F3, Jul 2026): +1 — /work, the role/mode-aware landing page.
 // Adult medicine (28 Jul 2026): +2 previously-unregistered pages (programmes,
 // workspace/[specialty]) +1 new — /ehr/[patientId]/medicine, the medicine workspace.
-export const EXPECTED_ROUTE_COUNT = 825;
+export const EXPECTED_ROUTE_COUNT = 826;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

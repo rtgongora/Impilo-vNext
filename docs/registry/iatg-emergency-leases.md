@@ -223,7 +223,7 @@ Sub-ranges marked **✅landed** are consumed; do not re-issue them.
 | `notification-service` | **V018** | surgery V018–V020 **and V300–V329** | **V200–V219** | emergency templates V200 |
 | `vashandi-workforce-service` | V008 | trauma V015–V024 (pre-convention anomaly — migrates to a hundred band at trauma's next wave) · surgery V300–V329 (surgery's own lease is authoritative; the V009–V012 previously recorded here was a stale pre-band draft — corrected by coordinator 2026-07-26) · core workforce keeps the low sequential band V001–V0xx (V009 on-call/swaps landed 2026-07-26) | **V200–V219** | emergency roster view V200 |
 | `vito-service` | V048 | trauma V035–V044 | **V200–V219** | provisional-identity hardening V200 |
-| `mental-health-service` | — | — | **V001–V030** | new service — no contention, so ordinary numbering |
+| `mental-health-service` | **V001** | — | **V001–V030** | ✅landed 2026-07-28 (W13): service scaffolded (port **8397**, schema-less DB `mental_health`, package `zw.gov.mohcc.impilo.mentalhealth`) with **V001__init.sql** — `mh_referral` (accepting side of pct's `emergency_handover(target_type=MENTAL_HEALTH)`, idempotent on handover_id, `uq_mhr_handover`), `mh_assessment` (capacity-outcome consistency CHECK), `mh_risk_formulation`, `mh_safety_plan`, `mh_involuntary_episode` (free-text `legal_basis` — no fabricated Zimbabwe Mental Health Act picklist; at-most-one-OPEN-per-referral via `uq_mhie_open_per_referral`), `mh_restraint_event` (restraint-REDUCTION register: NOT NULL `de_escalation_attempted`, all-or-nothing review triple), `mh_admission_request` (raises to PCT via `pct_admission_id` correlation, never decides), `mh_followup`, `mh_event_outbox`. All 18 constraint probes verified on real Postgres. `PctHandoverClient` writes referral decisions back onto pct's handover (mirrors `DaidzaiEpisodeClient`'s trust-header/failure-swallow shape exactly). 31 backend tests green (5 unit suites + 1 full HTTP flow). Reserve V002–30. |
 | `costing-engine-service` (COSTA) | V024 | surgery V025–V028 | **none needed** | emergency override + deferred-charge reconciliation already built (V012/V014) |
 | `mvumo-service` | V008 | surgery V009–V014 | **none needed** | `L4_EMERGENCY_OVERRIDE` consent break-glass already built |
 
@@ -799,11 +799,29 @@ mandatory-content gate, observation stays, and the handover auto-expiry sweep) �
 episode spine and handshake (done)** — `EmergencyEpisodeController` on both pct and the BFF, plus
 `/clinical/emergency/board` and `/clinical/emergency/spine/[episodeId]`.
 
-**Not started, genuinely large remaining scope**: W10 command view + capacity · W11 MCI · W12
-identity proof · W13 `mental-health-service` (a NEW service — full onboarding checklist, §4/§7 of this
-lease) · W14 content tranches 4–12 (~140 syndromes) · W15 the rest of the experience layer (resus
-timer, acuity board, serial-reassessment timeline primitives) · W16a TeaVM spike (gates W16b offline)
-· W17 indicators · W18 journeys + implementation report · W19 realtime phase 2. Each of these is
-independently substantial (W13 alone stands up a 124th service module; W14 alone is ~140 pieces of
-governed clinical content across 10 named ratifying authorities) — the standing execution plan always
-treated them as a genuine PO-level continue/pause decision point, not a default continuation.
+**Done since**: W10 command view + capacity · W11 MCI · W12 identity proof (repoint coverage guard,
+`emergency_identity_link`) · **W13 `mental-health-service`** — the 125th service module, full
+onboarding checklist landed: `services/pom.xml` module, `services-registry.yaml` +
+`seed-registry.mjs` `DOCTRINE_OVERRIDES` mirror (never ran the generator — see the standing rule at
+Phase 0), `port-allocation.md` (already reserved, flipped to landed),
+`full-boot-service-classification.yml` + **`full-boot-waves.yml`** (the actual undeploy-prevention
+gate, wave 3 `optional-clinical`), the three hand-edited Helm generated-values files
+(runtime/bff-env; **digests deliberately omitted — no image has been built yet, and this pack does
+not fabricate a digest**), a minimal BFF client+controller for the referral acceptance surface only
+(`MentalHealthServiceClient`/`MentalHealthController`, self-contained `@Value` base URL per the
+onboarding research's own recommendation over touching the 564-line `ServiceClientConfig`), and a
+real `/work/mental-health` referral queue page (accept/decline, wired to real APIs, with a
+query-honesty-guard-caught fix distinguishing a failed read from a genuinely empty queue). Envoy and
+`docker-compose.runtime.yml` deliberately excluded — the onboarding research found neither
+`patient-safety-service` nor `telemonitoring-service` (the two closest precedent services) wired
+into either file, so this pack does not invent a requirement neither precedent honours; flagged for
+the coordinator to confirm rather than assumed.
+
+**Not started, genuinely large remaining scope**: W14 content tranches 4–12 (~140 syndromes) · W15
+the rest of the experience layer (resus timer, acuity board, serial-reassessment timeline
+primitives, plus mental-health's own fuller clinical-record UI — assessment, safety plan,
+involuntary episode, restraint review, admission requests, follow-up) · W16a TeaVM spike (gates
+W16b offline) · W17 indicators · W18 journeys + implementation report · W19 realtime phase 2. Each
+of these is independently substantial (W14 alone is ~140 pieces of governed clinical content across
+10 named ratifying authorities) — the standing execution plan always treated them as a genuine
+PO-level continue/pause decision point, not a default continuation.

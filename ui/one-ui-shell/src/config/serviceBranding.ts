@@ -13,6 +13,7 @@ export type ServiceBrandingSlug =
   | "indawo"
   | "khuluma"
   | "madi"
+  | "mental-health"
   | "msika"
   | "mushex"
   | "mvumo"
@@ -148,6 +149,24 @@ export const SERVICE_BRANDING: Record<ServiceBrandingSlug, ServiceBrandingEntry>
     domain: "Clinical",
     fallbackIcon: "Droplet",
     aliases: ["madi", "madi-service", "blood", "transfusion", "app-madi", "app-madi-donor"],
+  },
+  "mental-health": {
+    slug: "mental-health",
+    name: "Mental Health",
+    logo: "/brand/services/mental-health-logo.png",
+    description: "Psychiatric emergency referral acceptance, risk formulation, safety planning and the restraint-reduction register",
+    domain: "Clinical",
+    fallbackIcon: "Brain",
+    aliases: [
+      "mental-health",
+      "mental health",
+      "mental-health-service",
+      "psychiatric",
+      "psychiatry",
+      "referral",
+      "involuntary",
+      "restraint",
+    ],
   },
   "patient-safety": {
     slug: "patient-safety",
@@ -449,6 +468,11 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
     status: "surfaced",
     primaryRoutes: ["/coverage/member", "/coverage/enroll", "/coverage"],
     notes: "Health financing — citizen coverage wallet + benefits, enrolment, and the coverage operations console.",
+  },
+  "mental-health": {
+    status: "surfaced",
+    primaryRoutes: ["/work/mental-health"],
+    notes: "Psychiatric emergency referral acceptance queue (accept/decline the pct handover); the fuller clinical-record surface (assessment, safety plan, involuntary episode, restraint review, admission requests, follow-up) lands in W15's experience layer.",
   },
   msika: { status: "surfaced", primaryRoutes: ["/marketplace", "/registry/products"] },
   mushex: { status: "surfaced", primaryRoutes: ["/finance/mushex-platform", "/finance"] },
