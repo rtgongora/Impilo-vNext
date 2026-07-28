@@ -52,7 +52,17 @@ docker run -d --name $CT -e POSTGRES_USER=impilo -e POSTGRES_PASSWORD=impilo \
     -p $PGPORT:5432 postgres:16-alpine >/dev/null || { echo "docker run failed"; exit 2; }
 cleanup(){ [ -z "${KEEP_RIG:-}" ] && docker rm -f $CT >/dev/null 2>&1; }
 trap cleanup EXIT
-for i in $(seq 1 30); do docker exec $CT pg_isready -U impilo >/dev/null 2>&1 && break; sleep 2; done
+# pg_isready returns true during the image's initdb phase, BEFORE Postgres restarts for
+# real — waiting on it produced a "database system is shutting down" flake. Wait on a
+# query that actually succeeds twice in a row instead.
+ready=0
+for i in $(seq 1 45); do
+    if docker exec $CT psql -U impilo -d postgres -tAc "select 1" >/dev/null 2>&1; then
+        ready=$((ready+1)); [ "$ready" -ge 2 ] && break
+    else ready=0; fi
+    sleep 2
+done
+[ "$ready" -ge 2 ] || { echo "postgres never became ready"; exit 2; }
 docker exec $CT psql -U impilo -d postgres -c "CREATE DATABASE organization_registry" >/dev/null 2>&1
 PSQL(){ docker exec -i $CT psql -U impilo -d organization_registry "$@"; }
 

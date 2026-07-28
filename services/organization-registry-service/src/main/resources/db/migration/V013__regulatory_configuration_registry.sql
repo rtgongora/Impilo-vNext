@@ -111,7 +111,9 @@ CREATE TABLE IF NOT EXISTS org_registry.regulatory_config_definition_version (
     semantic_version      VARCHAR(32) NOT NULL,
     schema_version        INT NOT NULL DEFAULT 1,
     payload               JSONB NOT NULL,
-    content_hash          CHAR(64) NOT NULL,
+    -- VARCHAR, not CHAR: Hibernate runs with ddl-auto=validate, and a bpchar column against a
+    -- String field fails the whole service at boot. The CHECK below fixes the length anyway.
+    content_hash          VARCHAR(64) NOT NULL,
     lifecycle_state       VARCHAR(24) NOT NULL DEFAULT 'DRAFT',
     -- Applicant-facing types must name the route an applicant uses. Activation validates it.
     self_service_route    VARCHAR(256),

@@ -266,14 +266,19 @@ public class RegulatoryConfigService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "No definition version " + versionId));
 
-        // Replacing a definition already in this release is the ordinary edit, so do it rather than
-        // making the caller delete first and risk leaving the release incomplete in between.
-        releaseItemRepository.deleteByReleaseIdAndDefinitionId(releaseId, version.getDefinitionId());
-
-        ConfigReleaseItemEntity item = new ConfigReleaseItemEntity();
-        item.setTenantId(tenantId);
-        item.setReleaseId(releaseId);
-        item.setDefinitionId(version.getDefinitionId());
+        // Replacing a definition already in this release is the ordinary edit — swapping the
+        // version on the existing row rather than delete-then-insert, because Hibernate orders
+        // inserts before deletes at flush and the (release, definition) unique index would reject
+        // the pair. Updating in place is both correct and one statement.
+        ConfigReleaseItemEntity item = releaseItemRepository
+                .findByReleaseIdAndDefinitionId(releaseId, version.getDefinitionId())
+                .orElseGet(() -> {
+                    ConfigReleaseItemEntity fresh = new ConfigReleaseItemEntity();
+                    fresh.setTenantId(tenantId);
+                    fresh.setReleaseId(releaseId);
+                    fresh.setDefinitionId(version.getDefinitionId());
+                    return fresh;
+                });
         item.setDefinitionVersionId(versionId);
         return releaseItemRepository.save(item);
     }
