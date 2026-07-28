@@ -26,6 +26,7 @@ describe("TRUST_HEADERS", () => {
     expect(TRUST_HEADERS.CORRELATION_ID).toBe("x-correlation-id");
     expect(TRUST_HEADERS.IDEMPOTENCY_KEY).toBe("idempotency-key");
     expect(TRUST_HEADERS.AUTHORIZATION).toBe("authorization");
+    expect(TRUST_HEADERS.WORK_CONTEXT_TOKEN).toBe("x-work-context-token");
     // Ensure lowercase per HTTP/2
     Object.values(TRUST_HEADERS).forEach((h) => {
       expect(h).toBe(h.toLowerCase());
@@ -125,6 +126,17 @@ describe("buildTrustHeaders", () => {
     expect(headers["x-shift-id"]).toBe("shift-1");
     expect(headers["x-access-mode"]).toBe("ONLINE");
     expect(headers["x-device-fingerprint"]).toBe("fp-abc");
+  });
+
+  it("injects x-work-context-token when a minted work-context token is present", () => {
+    const session: SessionContext = { ...SESSION, workContextToken: "wct-jwt" };
+    const headers = buildTrustHeaders(session);
+    expect(headers["x-work-context-token"]).toBe("wct-jwt");
+  });
+
+  it("omits x-work-context-token when no work-context token has been minted", () => {
+    const headers = buildTrustHeaders(SESSION);
+    expect(headers["x-work-context-token"]).toBeUndefined();
   });
 
   it("accepts custom correlationId", () => {

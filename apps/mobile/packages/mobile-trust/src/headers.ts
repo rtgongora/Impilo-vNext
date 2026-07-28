@@ -29,6 +29,10 @@ export const TRUST_HEADERS = {
   CLIENT_TIMEOUT_MS: "x-client-timeout-ms",
   IDEMPOTENCY_KEY: "idempotency-key",
   AUTHORIZATION: "authorization",
+  /** Duty-scoped work-context token (Ed25519, revocable jti, 15-min TTL) minted by the BFF
+   *  work-context session endpoints. MUST match CompanionHeaders.WORK_CONTEXT_TOKEN /
+   *  TrustHeaders.WORK_CONTEXT_TOKEN (both "x-work-context-token" case-insensitively). */
+  WORK_CONTEXT_TOKEN: "x-work-context-token",
 
   // Response / obligation headers (TSHEPO → Envoy → downstream)
   DECISION: "x-decision",

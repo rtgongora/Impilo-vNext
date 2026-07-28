@@ -91,6 +91,9 @@ export function buildTrustHeaders(
   if (session.assuranceLevel) {
     headers["x-assurance-level"] = session.assuranceLevel;
   }
+  if (session.workContextToken) {
+    headers[TRUST_HEADERS.WORK_CONTEXT_TOKEN] = session.workContextToken;
+  }
   if (options?.clientTimeoutMs) {
     headers[TRUST_HEADERS.CLIENT_TIMEOUT_MS] = String(options.clientTimeoutMs);
   }
