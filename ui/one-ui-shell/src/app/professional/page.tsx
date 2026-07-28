@@ -17,6 +17,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   ArrowRight,
   BadgeCheck,
   Bell,
@@ -36,6 +37,7 @@ import { ProviderCertificatesPanel } from "@/components/registry/ProviderCertifi
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
+import { useProfessionalAlerts } from "@/hooks/queries/useProfessionalAlerts";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 /** Facility affiliation shape from the BFF. */
@@ -70,6 +72,7 @@ export default function ProfessionalProfilePage() {
 
   const { data: affData, isLoading: affLoading, isError: affUnavailable } = useAffiliations();
   const { data: noticeData, isLoading: noticeLoading, isError: noticesUnavailable } = useProviderNotices();
+  const { alerts, isLoading: alertsLoading, isError: alertsUnavailable } = useProfessionalAlerts();
   const affiliations = (affData?.data ?? []).map((a) => ({ id: a.id, name: a.attributes.facilityName, role: a.attributes.role }));
   const notices = (noticeData?.data ?? []).map((n) => ({ id: n.id, text: n.attributes.text, severity: n.attributes.severity, category: n.attributes.category }));
   const linkedAttrs = data?.data?.attributes;
@@ -199,6 +202,65 @@ export default function ProfessionalProfilePage() {
                 </div>
               </div>
             )}
+          </div>
+        </section>
+
+        {/* Professional alerts — licence expiry/suspension, outstanding CPD, assignments
+            awaiting acceptance (Phase F4). Same source (ProfessionalAlertsComposer, E5) the
+            Work Home professional-alerts section renders, standalone here since this page has
+            no active work context. */}
+        <section className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-border bg-background">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-primary" />
+              Professional Alerts
+            </h2>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {alertsLoading ? (
+              <div className="px-6 py-6 animate-pulse space-y-3">
+                <div className="h-4 bg-neutral-100 rounded w-3/4" />
+                <div className="h-4 bg-neutral-100 rounded w-1/2" />
+              </div>
+            ) : alertsUnavailable ? (
+              /* A licence-suspension or outstanding-CPD alert is exactly the kind of claim this
+                 page exists to surface — "no alerts" from a failed read would hide it. */
+              <div className="px-6 py-6 text-sm font-medium text-red-700 text-center bg-red-50">
+                Professional alerts could not be read. This is not an all-clear — a licence,
+                CPD, or assignment alert may be outstanding.
+              </div>
+            ) : alerts.items.length === 0 ? (
+              <div className="px-6 py-6 text-sm text-muted-foreground text-center">
+                No professional alerts at this time.
+              </div>
+            ) : alerts.items.map((item) => (
+              <div key={item.id} className="px-6 py-3 flex items-center gap-3">
+                <div
+                  className={[
+                    "h-8 w-8 rounded-lg flex items-center justify-center",
+                    item.priority === "URGENT" ? "bg-red-100" : "bg-warning-soft",
+                  ].join(" ")}
+                >
+                  <AlertTriangle
+                    className={["h-4 w-4", item.priority === "URGENT" ? "text-brand-red" : "text-amber-600"].join(" ")}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground">{item.title ?? "Professional alert"}</p>
+                  {item.description && (
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                  )}
+                </div>
+                {item.href && (
+                  <Link
+                    href={item.href}
+                    className="text-xs font-medium text-primary hover:text-primary-hover transition-colors shrink-0"
+                  >
+                    Review
+                  </Link>
+                )}
+              </div>
+            ))}
           </div>
         </section>
 

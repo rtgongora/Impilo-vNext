@@ -42,7 +42,18 @@ function renderPage() {
 
 describe("ProfessionalProfilePage honesty", () => {
   beforeEach(() => {
-    get.mockResolvedValue({ data: [] });
+    get.mockImplementation((path: string) => {
+      if (path === "/internal/v1/professional/alerts") {
+        return Promise.resolve({
+          data: {
+            id: "hid-1",
+            type: "professional-alerts",
+            attributes: { status: "EMPTY", items: [], summary: {}, generatedAt: "2026-07-28T00:00:00Z" },
+          },
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
     linkedIds.state = { data: undefined, isLoading: false, isError: false };
   });
 
@@ -72,9 +83,15 @@ describe("ProfessionalProfilePage honesty", () => {
   });
 
   it("does not issue a compliance all-clear when notices could not be read", async () => {
-    get.mockImplementation((url: string) =>
-      url.includes("/notices") ? Promise.reject(new Error("502")) : Promise.resolve({ data: [] }),
-    );
+    get.mockImplementation((url: string) => {
+      if (url.includes("/notices")) return Promise.reject(new Error("502"));
+      if (url === "/internal/v1/professional/alerts") {
+        return Promise.resolve({
+          data: { id: "hid-1", type: "professional-alerts", attributes: { status: "EMPTY", items: [], summary: {}, generatedAt: "" } },
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
 
     renderPage();
 
@@ -85,9 +102,15 @@ describe("ProfessionalProfilePage honesty", () => {
   });
 
   it("does not send an affiliated provider to chase HR when affiliations could not be read", async () => {
-    get.mockImplementation((url: string) =>
-      url.includes("/affiliations") ? Promise.reject(new Error("502")) : Promise.resolve({ data: [] }),
-    );
+    get.mockImplementation((url: string) => {
+      if (url.includes("/affiliations")) return Promise.reject(new Error("502"));
+      if (url === "/internal/v1/professional/alerts") {
+        return Promise.resolve({
+          data: { id: "hid-1", type: "professional-alerts", attributes: { status: "EMPTY", items: [], summary: {}, generatedAt: "" } },
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
 
     renderPage();
 
@@ -95,5 +118,43 @@ describe("ProfessionalProfilePage honesty", () => {
       expect(screen.getByText(/Facility affiliations could not be read/i)).toBeInTheDocument(),
     );
     expect(screen.queryByText(/No facility affiliations yet/i)).not.toBeInTheDocument();
+  });
+
+  it("shows an honest degraded warning (not a fabricated all-clear) when professional alerts could not be read", async () => {
+    get.mockImplementation((url: string) =>
+      url === "/internal/v1/professional/alerts" ? Promise.reject(new Error("502")) : Promise.resolve({ data: [] }),
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByText(/Professional alerts could not be read/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No professional alerts at this time.")).not.toBeInTheDocument();
+  });
+
+  it("renders a real professional alert with a review link", async () => {
+    get.mockImplementation((url: string) => {
+      if (url === "/internal/v1/professional/alerts") {
+        return Promise.resolve({
+          data: {
+            id: "hid-1",
+            type: "professional-alerts",
+            attributes: {
+              status: "OK",
+              items: [{ id: "licence:1", title: "Licence expires soon", priority: "URGENT", href: "/my-professional/licence" }],
+              summary: { total: 1 },
+              generatedAt: "",
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    renderPage();
+
+    expect(await screen.findByText("Licence expires soon")).toBeInTheDocument();
+    expect(screen.getByText("Review")).toBeInTheDocument();
   });
 });
