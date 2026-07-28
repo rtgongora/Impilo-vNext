@@ -17,7 +17,7 @@ import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
-import { regulatoryOrg } from "@/lib/regulatory/organisations";
+import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
 
 type ReportClass =
   | "OPERATIONAL"
@@ -123,7 +123,8 @@ function renderCell(value: unknown): string {
 export default function RegulatoryDashboardPage() {
   const params = useParams<{ orgId: string }>();
   const orgId = decodeURIComponent(String(params?.orgId ?? ""));
-  const org = regulatoryOrg(orgId);
+  const { organisation } = useRegulatoryOrganisations();
+  const org = organisation(orgId);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);

@@ -15,14 +15,12 @@ import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
-import { REGULATORY_ORGS } from "@/lib/regulatory/organisations";
+import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
 
-// The HPA org-registry UUID (org-registry V007 / varapi V028). Sourced from the shared
-// organisations registry so the constant stays single-owned; falls back to the deterministic
-// literal if the export ever changes shape.
-const HPA_ORG_ID =
-  REGULATORY_ORGS.find((o) => o.code === "HPA")?.id ??
-  "a5000000-0000-4000-8000-000000000001";
+// The HPA organisation is resolved from org-registry rather than restated here. The deterministic
+// V007 literal remains only as the pre-load fallback: this page addresses HPA before the registry
+// answers, and a blank id would look like a broken page rather than a loading one.
+const HPA_ORG_ID_FALLBACK = "a5000000-0000-4000-8000-000000000001";
 
 type Row = Record<string, unknown>;
 
@@ -181,7 +179,8 @@ export default function HpaOversightPage() {
   }, [councilId, subjectType, subjectRef, reason, loadGrants]);
 
   const columns = useMemo(() => columnsOf(rows), [rows]);
-  const councils = REGULATORY_ORGS.filter((o) => o.kind === "council");
+  const { councils, authority } = useRegulatoryOrganisations();
+  const HPA_ORG_ID = authority?.id ?? HPA_ORG_ID_FALLBACK;
 
   return (
     <AppLayout>

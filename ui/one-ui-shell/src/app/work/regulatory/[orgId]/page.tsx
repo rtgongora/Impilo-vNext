@@ -15,7 +15,7 @@ import { ArrowLeft, Building2, ShieldCheck } from "lucide-react";
 import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { regulatoryOrg } from "@/lib/regulatory/organisations";
+import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
 import { useRegulatoryConfiguration } from "@/hooks/queries/useRegulatoryConfiguration";
 import { capabilityVerdict, roleWorkspaceFor } from "@/lib/regulatory/roleWorkspace";
 import { useWorkSessionStore } from "@/hooks/useWorkSessionStore";
@@ -35,7 +35,8 @@ interface SurfaceLink {
 export default function RegulatoryOrgWorkspacePage() {
   const params = useParams<{ orgId: string }>();
   const orgId = decodeURIComponent(String(params?.orgId ?? ""));
-  const org = regulatoryOrg(orgId);
+  const { organisation } = useRegulatoryOrganisations();
+  const org = organisation(orgId);
   const roleCode = useWorkSessionStore((state) => state.session?.roleTemplateId ?? null);
   const { data: configuration } = useRegulatoryConfiguration(orgId);
   const workspace = roleWorkspaceFor(configuration, roleCode);
