@@ -351,14 +351,32 @@ reconciliation, CV risk) · W3 HIV and TB DAKs · W4 chronic disease + multimorb
 W5 inpatient medicine + medical procedure integration · W6+ specialty workspaces, geriatrics/ICOPE,
 palliative, oncology, analytics, offline, demonstrations.
 
-## 9. Open question for the coordinator
+## 9. ~~Open question for the coordinator~~ — RESOLVED, and the stale note is the point
 
-**Confidentiality blocks W3.** The HIV/TB requirement is explicitly "one person record with
-appropriate programme views and confidentiality", which rests on `SPECIALLY_PROTECTED`. That class
-is currently decorative: it appears only in its own declaration and in one
-`ResourceSensitivityClassifier` switch arm that maps it to the *same* visibility tier as
-`FULL_CLINICAL`. Nothing assigns it, no policy branches on it. Building HIV care on it would
-manufacture a false assurance for the clinician deciding whether it is safe to write something
-down, and for the patient told their record is confidential. Either the enforcement seam lands
-first, or HIV/TB ships at `FULL_CLINICAL` with the gap stated on the record. Recorded for a
-product-owner ruling; the paediatric pack's Wave 5 is blocked on the same seam.
+> 🔴 **This section previously read "Confidentiality blocks W3" and described `SPECIALLY_PROTECTED`
+> as decorative. Both statements are obsolete.** Corrected 2026-07-28, after the RMNP lane found
+> three lease files still carrying the same stale claim.
+
+**What is actually true now**, re-verified in code rather than taken from the relay that reported it:
+
+- The enforcement seam **exists**: `PolicyEngine.evaluateConfidentiality`,
+  `SpeciallyProtectedVisibilityGuard` (referenced across five files), and zibo's
+  `ConfidentialCategoryService` governed category map.
+- It is **inert by construction**, which is the correct state, not an omission:
+  `CATEGORY_MAP_RATIFIED = false`, the authz confidentiality mode stays SHADOW, and V048 rules stay
+  `active = false`. Flipping it live is a governance act with two genuinely unresolved questions
+  (mandatory reporting vs confidentiality; one SRH age or three), not an engineering one.
+- **W3 shipped regardless, and did not wait for it.** All 13 HIV/TB standards are SHIPPED. HIV is on
+  the confidential lane and TB is `FULL_CLINICAL` — because TB is notifiable, not confidential from
+  the guardian — with the ENFORCE gap **stated on the deliverable rather than claimed as protection**.
+  A record must never carry a protection label that does not protect it.
+
+**Why this note is worth keeping rather than deleting.** It was accurate when written and quietly
+stopped being true, and nothing re-checked it — the seam landed under a lane that registered no lease
+row, so three packs went on believing they were blocked by something that had shipped. That is the
+same failure family as `EXPECTED_ROUTE_COUNT` surviving a merge unchanged while what it counted
+changed underneath, and a registry row that is no evidence of execution.
+
+> **A lease row is a claim about the world at the time it was written, and nothing re-checks it.**
+> Re-verify a blocker before you accept it — and before you cite it as the reason something is not
+> done.

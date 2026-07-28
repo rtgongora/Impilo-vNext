@@ -29,6 +29,10 @@ import {
   useCatalogueSearch,
   useCatalogueDetail,
   useAppropriatenessCheck,
+  useSafetyPauseTemplate,
+  useSedationLevel,
+  useRecoverySetting,
+  useAftercareTemplate,
   type AppropriatenessRequest,
 } from "@/hooks/queries/useProceduresCatalogue";
 
@@ -39,6 +43,134 @@ const DISPOSITION_STYLE: Record<string, string> = {
   PROPOSE_ALTERNATIVE: "border-amber-300 bg-amber-50 text-amber-800",
   CLARIFY: "border-blue-200 bg-blue-50 text-blue-800",
 };
+
+/**
+ * Wave P-R2 — safety-pause, sedation, recovery and aftercare panels for the selected catalogue
+ * entry. A separate component (not inlined into the page body) so the four hooks it calls are
+ * scoped to the current selection and reset cleanly when `selectedCode` changes.
+ *
+ * Each panel renders one of three states, same discipline as the rest of this page:
+ * unavailable (isError, a real fetch failure) vs not-declared (the linkage field itself is
+ * null — an honest gap, not a failure) vs resolved. A panel never renders nothing silently for
+ * an error; only for a genuinely undeclared linkage does it show the quieter "not declared" copy.
+ */
+function PostProcedurePanels({
+  safetyPauseTemplateCode,
+  defaultSedationLevelCode,
+  defaultRecoverySettingCode,
+  aftercareTemplateCode,
+  defaultAftercareTemplateCode,
+}: {
+  safetyPauseTemplateCode: string | null;
+  defaultSedationLevelCode: string | null;
+  defaultRecoverySettingCode: string | null;
+  aftercareTemplateCode: string | null;
+  defaultAftercareTemplateCode: string | null;
+}) {
+  const safetyPauseQ = useSafetyPauseTemplate(safetyPauseTemplateCode);
+  const sedationQ = useSedationLevel(defaultSedationLevelCode);
+  const recoveryQ = useRecoverySetting(defaultRecoverySettingCode);
+
+  // Two-step resolution, done here (not inside the hook) so the caller can see which code
+  // actually answered: try the SPECIFIC per-procedure aftercare code first; only fall back to
+  // the coarse setting-class code if the specific one is absent or fails to resolve (most of
+  // the catalogue's remaining ~27 specific codes have no template row yet — see V007).
+  const specificAftercareQ = useAftercareTemplate(aftercareTemplateCode);
+  const useFallback = !aftercareTemplateCode || specificAftercareQ.isError;
+  const fallbackAftercareQ = useAftercareTemplate(useFallback ? defaultAftercareTemplateCode : null);
+  const aftercareResolved = specificAftercareQ.data ?? fallbackAftercareQ.data;
+  const aftercareIsFromFallback = !specificAftercareQ.data && !!fallbackAftercareQ.data;
+  const aftercareStillUnavailable =
+    useFallback && defaultAftercareTemplateCode && fallbackAftercareQ.isError;
+
+  return (
+    <div className="mt-4 space-y-3" data-testid="procedures-postprocedure-panels">
+      {safetyPauseTemplateCode && (
+        <div className="rounded border border-gray-100 p-2 text-xs" data-testid="procedures-safety-pause-panel">
+          <h5 className="font-semibold uppercase text-muted-foreground">Safety pause</h5>
+          {safetyPauseQ.isLoading ? (
+            <p className="mt-1 text-muted-foreground">Loading…</p>
+          ) : safetyPauseQ.isError ? (
+            <p className="mt-1 text-danger" role="alert">Could not load the safety-pause template.</p>
+          ) : safetyPauseQ.data ? (
+            <ul className="mt-1 space-y-0.5">
+              {safetyPauseQ.data.confirmationItems.map((item) => (
+                <li key={item.confirmationItem}>• {item.promptText}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      )}
+
+      {defaultSedationLevelCode && (
+        <div className="rounded border border-gray-100 p-2 text-xs" data-testid="procedures-sedation-panel">
+          <h5 className="font-semibold uppercase text-muted-foreground">Sedation</h5>
+          {sedationQ.isLoading ? (
+            <p className="mt-1 text-muted-foreground">Loading…</p>
+          ) : sedationQ.isError ? (
+            <p className="mt-1 text-danger" role="alert">Could not load the sedation level.</p>
+          ) : sedationQ.data ? (
+            <div className="mt-1">
+              <p>{sedationQ.data.levelLabel} — {sedationQ.data.monitoringRequired}</p>
+              {sedationQ.data.rescueCapability && (
+                <p className="mt-0.5 text-muted-foreground">
+                  Rescue capability required: {sedationQ.data.rescueCapability.levelLabel}
+                </p>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {defaultRecoverySettingCode && (
+        <div className="rounded border border-gray-100 p-2 text-xs" data-testid="procedures-recovery-panel">
+          <h5 className="font-semibold uppercase text-muted-foreground">Recovery</h5>
+          {recoveryQ.isLoading ? (
+            <p className="mt-1 text-muted-foreground">Loading…</p>
+          ) : recoveryQ.isError ? (
+            <p className="mt-1 text-danger" role="alert">Could not load the recovery setting.</p>
+          ) : recoveryQ.data ? (
+            <p className="mt-1">
+              {recoveryQ.data.settingLabel} — {recoveryQ.data.dischargeReadinessCriteria}
+            </p>
+          ) : null}
+        </div>
+      )}
+
+      {(aftercareTemplateCode || defaultAftercareTemplateCode) && (
+        <div className="rounded border border-gray-100 p-2 text-xs" data-testid="procedures-aftercare-panel">
+          <h5 className="font-semibold uppercase text-muted-foreground">Aftercare</h5>
+          {specificAftercareQ.isLoading || fallbackAftercareQ.isLoading ? (
+            <p className="mt-1 text-muted-foreground">Loading…</p>
+          ) : aftercareStillUnavailable ? (
+            <p className="mt-1 text-danger" role="alert">Could not load an aftercare template.</p>
+          ) : aftercareResolved ? (
+            <div className="mt-1">
+              {aftercareIsFromFallback && (
+                <p className="mb-1 text-[10px] uppercase text-muted-foreground">
+                  Generic {aftercareResolved.applicableSetting ?? ""} guidance — a procedure-specific
+                  template ({aftercareTemplateCode}) has not been authored yet.
+                </p>
+              )}
+              {aftercareResolved.contentMaturity === "ENGINEERING_SEED" && (
+                <p className="mb-1 text-[10px] uppercase text-amber-700">
+                  Engineering seed content — pending MoHCC ratification of the wording.
+                </p>
+              )}
+              <ul className="space-y-0.5">
+                {aftercareResolved.instructions.map((i) => (
+                  <li key={i.instructionKind}>• {i.instructionText}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="mt-1 text-muted-foreground">No aftercare template declared for this procedure yet.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ProceduresCataloguePage() {
   const [specialty, setSpecialty] = useState("");
@@ -197,6 +329,14 @@ export default function ProceduresCataloguePage() {
                     </li>
                   ))}
                 </ul>
+
+                <PostProcedurePanels
+                  safetyPauseTemplateCode={detailQ.data.safetyPauseTemplate}
+                  defaultSedationLevelCode={detailQ.data.defaultSedationLevelCode}
+                  defaultRecoverySettingCode={detailQ.data.defaultRecoverySettingCode}
+                  aftercareTemplateCode={detailQ.data.aftercareTemplate}
+                  defaultAftercareTemplateCode={detailQ.data.defaultAftercareTemplateCode}
+                />
 
                 {/* Site/side capture — mirrors the closed vocabulary inpatient.procedure_episode.laterality
                     enforces server-side, deliberately, so a value this UI could send is never one the

@@ -65,4 +65,38 @@ public class ProceduresController {
             @RequestParam String definitionCode) {
         return procedures.resolveCompetence(providerId, definitionCode);
     }
+
+    // ── Wave P-R2 — P7 safety-pause/sedation and P9 recovery/aftercare routes.
+    // See V301 in tshepo-authz-service for the policy rows. Query-param code shape throughout,
+    // for the same PDP-derivation reason as catalogue-detail above. ──
+
+    @GetMapping("/safety-pause-templates")
+    public ResponseEntity<String> safetyPauseTemplate(@RequestParam String code) {
+        return procedures.safetyPauseTemplate(code);
+    }
+
+    @GetMapping("/sedation-levels")
+    public ResponseEntity<String> sedationLevels() {
+        return procedures.sedationLevels();
+    }
+
+    @GetMapping("/sedation-level-detail")
+    public ResponseEntity<String> sedationLevel(@RequestParam String code) {
+        return procedures.sedationLevel(code);
+    }
+
+    @GetMapping("/recovery-settings")
+    public ResponseEntity<String> recoverySettings() {
+        return procedures.recoverySettings();
+    }
+
+    @GetMapping("/recovery-setting-detail")
+    public ResponseEntity<String> recoverySetting(@RequestParam String code) {
+        return procedures.recoverySetting(code);
+    }
+
+    @GetMapping("/aftercare-templates")
+    public ResponseEntity<String> aftercareTemplate(@RequestParam String code) {
+        return procedures.aftercareTemplate(code);
+    }
 }
