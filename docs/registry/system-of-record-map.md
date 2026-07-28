@@ -94,6 +94,6 @@
 | `vito-service` | registry | Vito canonical records. **SMART Card = identity credential only (G28):** VITO owns the card as an identity artifact (Health ID binding, key/DID, revocation) but NOT its stored value — the card's money wallet is `mushe-wallet-service`. VITO's own `WalletController`/`WalletService` money ledger is `@Deprecated` (a parallel duplicate); secure-handover balance movement is to be repointed to mushe's card-replace/wallet-transfer. |
 | `wellness-service` | enterprise | — |
 | `workflow-service` | integration | Workflow canonical records |
-| `workforce-governance-service` | enterprise | Workforce Governance canonical records |
+| `workforce-governance-service` | enterprise | Workforce Governance canonical records. **Canonical health-programme registry** (`wgv_programme`) — replaces the unvalidated free-text `programme_id` VARCHAR previously carried by experience-bff, vashandi-workforce-service, tshepo-authz-service, tshepo-identity-service, tshepo-service, msika-apps-service, rito-quality-safety-service, simba-service, live-service, telemonitoring-service and integration-hub; programme appointments are `wgv_assignment` rows with `target_type=PROGRAM`, `target_id=wgv_programme.id`, validated by `AssignmentService`. Not to be confused with simba-service's *wellness* programme participation, a distinct concept. |
 | `vashandi-workforce-service` | enterprise | Operational workforce profile, assignment, roster, shift, attendance, leave/availability, access risk |
 | `zibo-service` | registry | Zibo canonical records |
