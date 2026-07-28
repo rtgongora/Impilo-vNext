@@ -7,6 +7,7 @@ import zw.gov.mohcc.impilo.pct.core.EmergencyAlertService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyDispositionService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyEpisodeService;
 import zw.gov.mohcc.impilo.pct.core.EmergencyObservationStayService;
+import zw.gov.mohcc.impilo.pct.core.MciBulkMintService;
 import zw.gov.mohcc.impilo.pct.domain.EmergencyEpisodeState;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyDispositionEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EmergencyEpisodeEntity;
@@ -43,15 +44,18 @@ public class EmergencyEpisodeController {
     private final EmergencyDispositionService dispositionService;
     private final EmergencyObservationStayService observationStayService;
     private final EmergencyAlertService alertService;
+    private final MciBulkMintService mciBulkMintService;
 
     public EmergencyEpisodeController(EmergencyEpisodeService episodeService,
                                       EmergencyDispositionService dispositionService,
                                       EmergencyObservationStayService observationStayService,
-                                      EmergencyAlertService alertService) {
+                                      EmergencyAlertService alertService,
+                                      MciBulkMintService mciBulkMintService) {
         this.episodeService = episodeService;
         this.dispositionService = dispositionService;
         this.observationStayService = observationStayService;
         this.alertService = alertService;
+        this.mciBulkMintService = mciBulkMintService;
     }
 
     @PostMapping("/episodes")
@@ -256,6 +260,17 @@ public class EmergencyEpisodeController {
         out.put("open_alert_count", alerts.size());
         out.put("alerts_by_severity", alertsBySeverity);
         return ResponseEntity.ok(ApiResponse.ok(out, ctx.correlationId().toString()));
+    }
+
+    // ── MCI bulk-mint (W11) ──────────────────────────────────────────────────────────────────
+
+    /** Mint one emergency_episode per not-yet-minted casualty on a daidzai MCI incident. */
+    @PostMapping("/mci/{incidentId}/bulk-mint")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> mciBulkMint(
+            @PathVariable UUID incidentId, @RequestParam UUID facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var results = mciBulkMintService.bulkMint(ctx.tenantId(), facilityId, incidentId);
+        return ResponseEntity.ok(ApiResponse.ok(results, ctx.correlationId().toString()));
     }
 
     // ── Mapping + parsing ────────────────────────────────────────────────────────────────────

@@ -54,7 +54,9 @@ class EmergencyEpisodeControllerTest {
         EmergencyObservationStayService observationStayService = new EmergencyObservationStayService(
                 repo, new EmergencyObservationStayServiceTest.InMemoryStayRepo());
         EmergencyAlertService alertService = new EmergencyAlertService(new EmergencyAlertServiceTest.InMemoryAlertRepo());
-        controller = new EmergencyEpisodeController(service, dispositionService, observationStayService, alertService);
+        var mciBulkMintService = new zw.gov.mohcc.impilo.pct.core.MciBulkMintService(
+                service, new zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient(null, "http://unused"));
+        controller = new EmergencyEpisodeController(service, dispositionService, observationStayService, alertService, mciBulkMintService);
         TrustContextHolder.set(new TrustContext(TENANT, "nurse-A", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
     }

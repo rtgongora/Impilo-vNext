@@ -1215,6 +1215,15 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** MCI bulk-mint (W11): mint one emergency_episode per not-yet-minted casualty on an incident. */
+    public JsonNode mciBulkMint(UUID incidentId, UUID facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/emergency/mci/" + incidentId + "/bulk-mint")
+                .queryParam("facilityId", facilityId)
+                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Episode-by-state + alert-by-severity counts for one facility (W10 command view). */
     public JsonNode emergencyCommandSummary(UUID facilityId) {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/emergency/command-summary")

@@ -128,6 +128,44 @@ public class DaidzaiEpisodeClient {
         }
     }
 
+    /**
+     * MCI bulk-mint (W11): read every casualty on an incident not yet minted onto a pct episode.
+     * Best-effort — an empty list on failure (never a fabricated one), matching {@link #getTraumaEpisode}'s
+     * "no answer, not treated as an empty answer" discipline as closely as an unmintable pass allows:
+     * the caller (MciBulkMintService) treats an empty list from a genuine outage the same as "nothing
+     * left to mint" would look like, which is the correct fail-safe direction for a bulk operation —
+     * it never mints fewer episodes than casualties exist, it simply mints none this round on an outage.
+     */
+    @SuppressWarnings("unchecked")
+    public java.util.List<Map<String, Object>> listUnmintedMciCasualties(UUID tenantId, UUID incidentId) {
+        try {
+            ResponseEntity<java.util.List> resp = restTemplate.exchange(
+                    baseUrl + "/internal/v1/daidzai/disasters/" + incidentId + "/casualties/unminted",
+                    HttpMethod.GET, new HttpEntity<>(headers(tenantId)), java.util.List.class);
+            java.util.List<Map<String, Object>> body = resp.getBody();
+            return body != null ? body : java.util.List.of();
+        } catch (RestClientException e) {
+            log.warn("DAIDZAI unminted-casualties read for incident {} failed: {} — bulk-mint mints "
+                    + "nothing this round rather than guessing", incidentId, e.getMessage());
+            return java.util.List.of();
+        }
+    }
+
+    /** Write the minted episode id back onto a casualty (W11) — the bulk-mint round-trip's other half. */
+    public void linkMciCasualtyEpisode(UUID tenantId, UUID incidentId, UUID casualtyId, UUID episodeId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("emergencyEpisodeId", episodeId.toString());
+        try {
+            restTemplate.exchange(
+                    baseUrl + "/internal/v1/daidzai/disasters/" + incidentId + "/casualties/" + casualtyId + "/link-episode",
+                    HttpMethod.POST, new HttpEntity<>(body, headers(tenantId)), Void.class);
+        } catch (RestClientException e) {
+            log.warn("DAIDZAI casualty link-episode for casualty {} → episode {} failed: {} — the "
+                    + "episode still exists, only the back-link is missing this round",
+                    casualtyId, episodeId, e.getMessage());
+        }
+    }
+
     /** Best-effort timeline registration; never throws (a clinical write must not roll back on this). */
     public void registerPhase(UUID tenantId, UUID episodeId, String phase, String ownerRef,
                               String status, String eventType) {
