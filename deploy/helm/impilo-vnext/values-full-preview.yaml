@@ -125,6 +125,19 @@ envoy:
     limits:
       cpu: 500m
       memory: 256Mi
+  # Work Context Resolution programme, Phase D (D1): the TSHEPO ext_authz gate
+  # on the actual ingress path. Defaults false — nothing changes until this is
+  # deliberately flipped per-environment as one of the staged D7 cutover flips
+  # (alongside TSHEPO_WORK_CONTEXT_MODE=ENFORCE and V055 boundary-rule
+  # activation). Do not flip in any environment carrying real traffic without
+  # first confirming: failure_mode_allow=false is intentional (a PDP outage
+  # denies, it does not fail open), the bypass route list below is complete
+  # for that environment's public surface, and TSHEPO_WORK_CONTEXT_MODE is
+  # already ENFORCE (flipping the gateway gate before the PDP itself enforces
+  # duty-context mismatches achieves nothing extra; flipping it AFTER is the
+  # ordering that matters).
+  extAuthz:
+    enabled: false
 
 minio:
   enabled: true

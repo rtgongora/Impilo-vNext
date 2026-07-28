@@ -28,10 +28,122 @@ data:
                         - name: local_service
                           domains: ["*"]
                           routes:
+                            # ── Narrow ext_authz bypass list (Phase D, D1) ──────────────
+                            # Only these three families skip the PDP gate, mirroring the
+                            # BFF's own SecurityConfig permitAll set: readiness/liveness,
+                            # authentication initiation/callback, and the governed public
+                            # gateway lane (which the BFF's own permitAll list already
+                            # gates — see docs/architecture/gateway-public-lane-security-adr.md).
+                            # No other service or path family is exempted wholesale.
+                            - match: { prefix: "/actuator/health" }
+                              route: { cluster: experience_bff }
+                              {{- if .Values.envoy.extAuthz.enabled }}
+                              typed_per_filter_config:
+                                envoy.filters.http.ext_authz:
+                                  "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                                  disabled: true
+                              {{- end }}
+                            - match: { prefix: "/internal/v1/auth/" }
+                              route: { cluster: experience_bff }
+                              {{- if .Values.envoy.extAuthz.enabled }}
+                              typed_per_filter_config:
+                                envoy.filters.http.ext_authz:
+                                  "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                                  disabled: true
+                              {{- end }}
+                            # Governed public gateway lane (R0, anonymous). Client-supplied
+                            # trust headers are stripped here so an anonymous caller can never
+                            # smuggle authority into the BFF — the BFF's own permitAll list is
+                            # the actual gate for this lane; ext_authz is disabled ONLY here.
+                            - match: { prefix: "/internal/v1/public/" }
+                              route: { cluster: experience_bff }
+                              request_headers_to_remove:
+                                - "x-actor-id"
+                                - "x-actor-type"
+                                - "x-assurance-level"
+                                - "x-purpose-of-use"
+                                - "x-subject-id"
+                                - "x-work-context-token"
+                                - "x-facility-id"
+                                - "x-workspace-id"
+                                - "x-department-id"
+                                - "x-ward-id"
+                                - "x-programme-id"
+                                - "x-provider-id"
+                              {{- if .Values.envoy.extAuthz.enabled }}
+                              typed_per_filter_config:
+                                envoy.filters.http.ext_authz:
+                                  "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                                  disabled: true
+                              {{- end }}
+                            # ── Everything else: PDP-gated when extAuthz.enabled ────────
                             - match: { prefix: "/" }
                               route:
                                 cluster: experience_bff
                     http_filters:
+                      {{- if .Values.envoy.extAuthz.enabled }}
+                      # ---------------------------------------------------------------
+                      # TSHEPO PDP gate (Work Context Resolution programme, Phase D).
+                      # HTTP ext_authz against tshepo-authz-service's existing
+                      # /v1/authorize endpoint (AuthorizeController) — the k8s Service
+                      # for tshepo-authz-service exposes only its HTTP port (8081), not
+                      # the gRPC ext_authz port (9090) the local-dev config uses, so
+                      # HTTP is the deployable choice here, not a lesser fallback: same
+                      # PolicyEngine, same decision.
+                      #
+                      # failure_mode_allow: false is deliberate — a PDP outage DENIES,
+                      # it does not fail the gateway open. This is the load-bearing
+                      # guarantee: "PDP unavailability does not allow access."
+                      # ---------------------------------------------------------------
+                      - name: envoy.filters.http.ext_authz
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                          transport_api_version: V3
+                          failure_mode_allow: false
+                          http_service:
+                            server_uri:
+                              uri: http://tshepo-authz-service:8081
+                              cluster: tshepo_authz_service
+                              timeout: 0.5s
+                            path_prefix: "/v1/authorize"
+                            authorization_request:
+                              allowed_headers:
+                                patterns:
+                                  - exact: "authorization"
+                                  - exact: "x-tenant-id"
+                                  - exact: "x-pod-id"
+                                  - exact: "x-request-id"
+                                  - exact: "x-correlation-id"
+                                  - exact: "x-actor-id"
+                                  - exact: "x-actor-type"
+                                  - exact: "x-purpose-of-use"
+                                  - exact: "x-device-fingerprint"
+                                  - exact: "x-facility-id"
+                                  - exact: "x-workspace-id"
+                                  - exact: "x-shift-id"
+                                  - exact: "x-department-id"
+                                  - exact: "x-ward-id"
+                                  - exact: "x-programme-id"
+                                  - exact: "x-provider-id"
+                                  - exact: "x-work-context-token"
+                                  - exact: "x-assurance-level"
+                            headers_to_add:
+                              - key: ":method"
+                                value: "%REQ(:METHOD)%"
+                              - key: ":path"
+                                value: "%REQ(:PATH)%"
+                          authorization_response:
+                            allowed_upstream_headers:
+                              patterns:
+                                - exact: "x-obligations"
+                                - exact: "x-decision"
+                                - exact: "x-max-scope"
+                                - exact: "x-mask-fields"
+                                - exact: "x-logging-level"
+                          with_request_body:
+                            max_request_bytes: 8192
+                            allow_partial_message: true
+                      {{- end }}
                       - name: envoy.filters.http.router
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
@@ -49,6 +161,21 @@ data:
                         socket_address:
                           address: experience-bff
                           port_value: 8160
+        {{- if .Values.envoy.extAuthz.enabled }}
+        - name: tshepo_authz_service
+          connect_timeout: 1s
+          type: STRICT_DNS
+          lb_policy: ROUND_ROBIN
+          load_assignment:
+            cluster_name: tshepo_authz_service
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: tshepo-authz-service
+                          port_value: 8081
+        {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
