@@ -609,6 +609,9 @@ regressions from this pass. See **F8** for the recommendation on the base-ref sh
 **`scripts/guard/run-change-safety-gates.sh`: PASSED** — with `GUARD_UPSTREAM_REF` set to canonical, per
 F8. Bare, it reports the four merge-base attribution artefacts documented in the section above.
 
+Re-run on the final tip, the Frontend phase passes `lint`, `type-check`, `test:typecheck-e2e`,
+orphan-pages, decorative-controls and `build`, and fails only on the single unit test below.
+
 Every red found on the way to this result was chased to root cause and fixed, or proven inherited:
 
 | Red | Root cause | Outcome |
