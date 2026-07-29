@@ -232,10 +232,74 @@ way.
   placeholders moved between files). Not a leak. **But a security guard sitting red is how people
   learn to ignore one.** Prune the baseline.
 
-### 3.7 Unmerged branches — **39 remote branches are NOT merged into canonical**
+### 3.7 Unmerged branches — **was 39; now 16 after the fortnight merge pass**
 
 Measured with `git branch -r --no-merged origin/claude/staging-ux-orchestration-remediation-Yypyl`.
 This is the authoritative list; a worktree audit is not the same thing and undercounts.
+
+---
+
+#### ✅ MERGE PASS COMPLETED 2026-07-29 — canonical tip `0a5e4c18c`
+
+Ten fortnight branches merged to canonical and **retired** (remote branch deleted):
+
+| pushed as | branches merged |
+|---|---|
+| `b0e80402c` | `adoring-torvalds-f773c8`, `wonderful-elgamal-a3517e`, `zen-goodall-6f6b21`, `strange-cerf-9b2cff` |
+| `e9556f04d` | `gallant-taussig-5f58e7` |
+| `f4667c152` | `gallant-darwin-f9ac27` |
+| `0a5e4c18c` | `post-deploy-bugfix2-Yypyl`, `optimistic-fermat-d43c88`, `upbeat-mccarthy-8a77ac`, `interesting-hermann-5c8077` |
+
+**Two conflicts were resolved, both the same shape — two lanes independently fixed the same defect:**
+- `gallant-taussig-5f58e7`: both lanes fixed the `REPO_PATH` guard defect. Kept git-toplevel
+  derivation **plus** the `_GUARD_CALLER_PWD` capture; dropped the hardcoded fallback.
+- `gallant-darwin-f9ac27`: both lanes fixed shift routing. Took theirs; verified their tests pass
+  against the production code already on canonical.
+
+**Verified before each push:** true net delta `canonical..HEAD` carries **zero deletions** — only two
+legitimate `*IT`→`*Test` renames in coverage-service (the dead-IT resurrection lane's own work).
+
+**Two gate findings investigated and cleared as merge-base attribution artefacts** (canonical alone
+is green, `CANONICAL_GATE_EXIT=0`):
+1. `chronic-registers/page.tsx` "new page without API client/hook" — byte-identical between
+   canonical and the merge branch; came from Adult Medicine's `8e0dc77fb`.
+2. `NeonatalGentamicinDosing.java` "service path deleted" — the file is absent from canonical
+   **by design**: canonical superseded it in `3591f1ffc` ("weight-based paediatric dose calculation
+   with a hard stop on overdose"). Four older branches still carried the pre-supersession version;
+   the merge correctly kept canonical's newer implementation. **No clinical logic was lost.**
+
+⚠️ **Trap hit and worth inheriting:** four merges were made while in **detached HEAD** (a
+`git checkout <ref>` to run the canonical gate baseline), so `merge-fortnight` never advanced and
+`git push` reported `Everything up-to-date` while silently landing nothing. Caught only because a
+post-push `merge-base --is-ancestor` check on each branch returned NOT-ANCESTOR. Recovered from
+reflog (`0a5e4c18c`). **Always re-verify the remote tip moved after a push; `PUSH OK` is not proof.**
+
+#### ⛔ Still unmerged — 9 fortnight branches, all CONFLICTED (successor's queue)
+
+Each was attempted and cleanly aborted; the working tree is unmodified. File counts are conflicting
+files, not commits.
+
+    files  branch                                    notes
+      3    claude/youthful-montalcini-536fee         S2S trust: SERVICE_TO_SERVICE_TRUST_PATTERN.md,
+                                                     ServiceClientConfigTest, StaffingReadServiceTest.
+                                                     Likely the same independent-fix pattern as above.
+      4    claude/affectionate-joliot-aef493
+      3    claude/khuluma-hub-Yypyl
+      3    claude/post-deploy-bugfix-Yypyl
+      2    claude/ruvimbo-product-Yypyl
+      2    claude/trusting-chaplygin-48ca17
+      1    claude/nervous-fermi-22e321
+      5    claude/unruffled-cartwright-a85b36        +91 commits — largest, review carefully
+     11    claude/hungry-mestorf-a5cc9b              +9 commits
+
+**Method that worked** (reuse it): merge in a scratch worktree on a throwaway branch, then before
+every push run `git diff --name-status -M -C origin/<canonical>..HEAD | grep -P "^(D|R\d*)\t"` and
+account for **every** line. Per [[audit-selection-lies-before-the-filter]], a correct filter over the
+wrong commit set is still a wrong audit — prove the selection too.
+
+---
+
+#### Original inventory (pre-merge, retained for reference)
 
 **MY OWN WORK IS FULLY MERGED.** Everything this coordinator session produced is on canonical
 (0 ahead, 0 dirty, verified in both the worktree and the shared checkout).
