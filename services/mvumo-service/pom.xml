@@ -112,4 +112,40 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- Dev-instance smoke IT (needs a live TSHEPO consent instance via MVUMO_IT_TSHEPO_BASE). Opt-in: mvn verify -Pit-runtime-proof -DMVUMO_IT_TSHEPO_BASE=... . Self-skips without the env var. -->
+        <profile>
+            <id>it-runtime-proof</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/TshepoConsentDevInstanceIT.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- PostgreSQL-only integration tests (PG-specific DDL/behaviour: text[]/enum/TIMESTAMPTZ/RETURNING/jsonb). Opt-in: mvn verify -Pit-postgres -Dit.pg.url=... . Self-skips without it.pg.url. -->
+        <profile>
+            <id>it-postgres</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/MvumoCrossServiceFlowIT.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -1,10 +1,13 @@
 package zw.gov.mohcc.impilo.mvumo.integration;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.mvumo.persistence.ConsentEventRepository;
 import zw.gov.mohcc.impilo.mvumo.persistence.ConsentRequestRepository;
@@ -23,9 +26,36 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 
+/**
+ * Cross-service consent flow — a MANUAL integration test that requires a real
+ * PostgreSQL instance, so it keeps the {@code *IT} suffix and is not run by the
+ * surefire ({@code *Test}) pass. It cannot run against the H2 test profile the
+ * unit suites use because mvumo binds {@code org.hibernate.dialect.PostgreSQLDialect}
+ * (application.yml), and the consent-event write path is genuinely PostgreSQL-specific:
+ * <ul>
+ *   <li>{@code INSERT ... RETURNING id} for {@code GenerationType.IDENTITY} — H2 rejects it;</li>
+ *   <li>{@code cast(? as jsonb)} for the {@code detail} column;</li>
+ *   <li>{@code TIMESTAMPTZ} semantics for remote-session expiry (H2's TIMESTAMP skews
+ *       by the JVM offset unless the JVM runs in UTC).</li>
+ * </ul>
+ *
+ * <p>Wired into the {@code it-postgres} Maven profile (Failsafe). Runs against a real
+ * Postgres supplied via {@code -Dit.pg.url} (CLI/CI harness); self-skips without it.
+ * Uses {@code @ActiveProfiles("it")} so it loads only the production application.yml
+ * (real Postgres + Flyway + PostgreSQL dialect), not the H2 unit profile.
+ * Ordinary {@code mvn test}/{@code mvn verify} never runs it.</p>
+ */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("it")
+@EnabledIfSystemProperty(named = "it.pg.url", matches = ".+")
 class MvumoCrossServiceFlowIT {
+
+    @DynamicPropertySource
+    static void datasourceProps(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", () -> System.getProperty("it.pg.url"));
+        registry.add("spring.datasource.username", () -> System.getProperty("it.pg.user"));
+        registry.add("spring.datasource.password", () -> System.getProperty("it.pg.pass"));
+    }
 
     @Autowired
     private MvumoService mvumoService;

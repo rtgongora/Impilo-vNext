@@ -139,4 +139,23 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- PostgreSQL-only integration tests (PG-specific DDL/behaviour: text[]/enum/TIMESTAMPTZ/RETURNING/jsonb). Opt-in: mvn verify -Pit-postgres -Dit.pg.url=... . Self-skips without it.pg.url. -->
+        <profile>
+            <id>it-postgres</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/TshepoAuditGoldenContractIT.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

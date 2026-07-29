@@ -1,0 +1,8 @@
+# Integration-test profile (@ActiveProfiles("it")) for the golden-contract IT, which
+# runs against a REAL Postgres supplied via -Dit.pg.url (datasource in the test's
+# @DynamicPropertySource). Loads the production application.yml (Flyway + PostgreSQL
+# dialect) and only opens the flag-gated test security chain so the v1.1 probe
+# endpoints are reachable without a token issuer.
+impilo:
+  security:
+    disable-oauth-for-tests: true

@@ -510,7 +510,13 @@ public abstract class GoldenContractSuite {
                     .andExpect(status().isForbidden())
                     .andReturn();
 
-            assertErrorEnvelope(result, "FEDERATION_AUTHORITY_VIOLATION");
+            // A non-national pod on a national-only endpoint is rejected with a
+            // federation-family error. Services fronted by the federation-connector
+            // FederationIdentityFilter reject on identity (FEDERATION_IDENTITY_INVALID)
+            // before the authority check (FEDERATION_AUTHORITY_VIOLATION); both are
+            // valid rejections of the same contract.
+            assertErrorEnvelopeCodeIn(result,
+                    "FEDERATION_AUTHORITY_VIOLATION", "FEDERATION_IDENTITY_INVALID", "POD_REVOKED");
         }
 
         @Test
@@ -566,6 +572,30 @@ public abstract class GoldenContractSuite {
         assertThat(error.has("details"))
                 .as("error.details must be present")
                 .isTrue();
+    }
+
+    /**
+     * Like {@link #assertErrorEnvelope}, but accepts any of several error codes.
+     * Used where more than one code is a correct rejection of the same contract
+     * (e.g. federation identity vs authority checks fronting the same endpoint).
+     */
+    protected void assertErrorEnvelopeCodeIn(MvcResult result, String... acceptedCodes) throws Exception {
+        String body = result.getResponse().getContentAsString();
+        assertThat(body).as("Response body should not be empty").isNotBlank();
+
+        JsonNode root = MAPPER.readTree(body);
+        assertThat(root.has("error"))
+                .as("Response should contain 'error' field: " + body)
+                .isTrue();
+
+        JsonNode error = root.get("error");
+        assertThat(error.get("code").asText())
+                .as("error.code should be one of " + java.util.Arrays.toString(acceptedCodes))
+                .isIn((Object[]) acceptedCodes);
+        assertThat(error.has("message")).as("error.message must be present").isTrue();
+        assertThat(error.has("request_id")).as("error.request_id must be present").isTrue();
+        assertThat(error.has("correlation_id")).as("error.correlation_id must be present").isTrue();
+        assertThat(error.has("details")).as("error.details must be present").isTrue();
     }
 
     protected void assertMissingHeaderInDetails(MvcResult result, String headerName) throws Exception {

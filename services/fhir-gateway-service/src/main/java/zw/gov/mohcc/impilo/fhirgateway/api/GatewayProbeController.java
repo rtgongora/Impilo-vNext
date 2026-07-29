@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.companion.federation.FederationAuthority;
 
 @RestController
 @RequestMapping("/internal/v1")
@@ -29,6 +31,19 @@ public class GatewayProbeController {
                 "service", "fhir-gateway",
                 "command", "test-command",
                 "received", body != null ? body : Map.of(),
+                "timestamp", OffsetDateTime.now().toString()
+        ));
+    }
+
+    @PostMapping("/test-federation")
+    public ResponseEntity<Map<String, Object>> testFederation(@RequestBody(required = false) Map<String, Object> body) {
+        var ctx = RequestContextHolder.require();
+        FederationAuthority.requireNational(ctx.podId());
+        return ResponseEntity.ok(Map.of(
+                "status", "ok",
+                "service", "fhir-gateway",
+                "action", "test-federation",
+                "pod_id", ctx.podId(),
                 "timestamp", OffsetDateTime.now().toString()
         ));
     }

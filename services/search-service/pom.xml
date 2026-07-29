@@ -145,4 +145,30 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+            Docker-backed integration tests (Testcontainers). Opt-in only:
+            `mvn verify -Pit-containers`. Activates the Failsafe executions managed in
+            the parent POM, scoped to this module's Testcontainers IT. Ordinary
+            `mvn test` / `mvn verify` never runs it. Skips cleanly without Docker via
+            @Testcontainers(disabledWithoutDocker=true).
+        -->
+        <profile>
+            <id>it-containers</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/SearchPgvectorAnnIT.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

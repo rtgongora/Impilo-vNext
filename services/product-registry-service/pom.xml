@@ -49,6 +49,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        <!-- SecurityConfig calls http.oauth2ResourceServer(...) and the service's
+             application.yml sets an issuer-uri, so the resource-server classes
+             (BearerTokenResolver et al.) must be on the runtime classpath. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
 
         <!-- Validation -->
         <dependency>

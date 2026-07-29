@@ -41,6 +41,8 @@ public class SecurityConfig {
                 // controllers' allow-listed DTO mappers; everything else stays fail-closed.
                 .requestMatchers("/v1/public/facilities/**").permitAll()
                 .requestMatchers(disableOauthForTests ? "/v1/**" : "/__disabled_test_auth_bypass__").permitAll()
+                .requestMatchers(disableOauthForTests ? "/internal/v1/**" : "/__disabled_test_auth_bypass_internal__").permitAll()
+                .requestMatchers(disableOauthForTests ? "/external/v1/**" : "/__disabled_test_auth_bypass_external__").permitAll()
                 .anyRequest().authenticated()
             );
         if (!disableOauthForTests && issuerUri != null && !issuerUri.isBlank()) {

@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * {@code -Dtest=TrustAuthorityRegistryRuntimeProofIT}.</p>
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("it")
 @EnabledIfSystemProperty(named = "it.pg.url", matches = ".+")
 class TrustAuthorityRegistryRuntimeProofIT {
 

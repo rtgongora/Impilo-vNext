@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:butano_fhir_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    url: jdbc:h2:mem:butano_fhir_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS butano_fhir\;SET SCHEMA butano_fhir
     driver-class-name: org.h2.Driver
     username: sa
     password:

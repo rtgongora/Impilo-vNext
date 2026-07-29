@@ -1,0 +1,7 @@
+# Integration-test profile (@ActiveProfiles("it")) for the golden-contract IT — real
+# Postgres via -Dit.pg.url (datasource in @DynamicPropertySource), production Flyway +
+# PostgreSQL dialect (TIMESTAMPTZ columns), and the flag-gated test security chain
+# opened for v1.1 probes.
+impilo:
+  security:
+    disable-oauth-for-tests: true

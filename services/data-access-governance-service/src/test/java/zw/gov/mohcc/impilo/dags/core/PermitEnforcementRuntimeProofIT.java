@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * migration. Harness-driven: see {@code scripts/runtime-proof/dags-permit-enforcement.sh}.</p>
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("it")
 @EnabledIfSystemProperty(named = "it.pg.url", matches = ".+")
 class PermitEnforcementRuntimeProofIT {
 

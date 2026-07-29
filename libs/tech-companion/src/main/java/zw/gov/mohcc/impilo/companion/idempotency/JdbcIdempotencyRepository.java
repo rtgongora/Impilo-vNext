@@ -54,11 +54,14 @@ public class JdbcIdempotencyRepository implements IdempotencyRepository {
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime expiresAt = now.plusHours(ttlHours);
 
+        // ON CONFLICT without a target column list: valid PostgreSQL and portable
+        // to H2 (which rejects the explicit conflict target). Identical semantics
+        // here because the idempotency table has a single primary-key constraint.
         String sql = "INSERT INTO " + tableName +
                 " (tenant_id, pod_id, idempotency_key, request_hash, " +
                 "response_status, response_body, created_at, expires_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (tenant_id, pod_id, idempotency_key) DO NOTHING";
+                "ON CONFLICT DO NOTHING";
 
         jdbc.update(sql, tenantId, podId, idempotencyKey,
                 requestHash, responseStatus, responseBody, now, expiresAt);

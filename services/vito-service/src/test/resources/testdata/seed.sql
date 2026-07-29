@@ -30,11 +30,15 @@ CREATE TABLE IF NOT EXISTS idempotency_keys (
 -- V11MergeFlowIT creates its own clients in @BeforeEach, but these
 -- provide a known-good baseline to verify schema + seed wiring works.
 -- -------------------------------------------------------------------------
-INSERT INTO client (tenant_id, crid, health_id, given_name, family_name, status, date_of_birth, sex, created_at, updated_at)
+INSERT INTO client (tenant_id, crid, health_id, given_name, family_name, status, date_of_birth, sex,
+                    verification_status, identity_assurance_level, active_flag, deceased_flag, golden_record_flag,
+                    created_at, updated_at)
 VALUES
     ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'aaaaaaaa-1111-2222-3333-444444444444',
      'bbbbbbbb-1111-2222-3333-444444444444', 'Seed', 'Survivor', 'ACTIVE',
-     DATE '1990-01-15', 'M', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+     DATE '1990-01-15', 'M', 'UNVERIFIED', 0, TRUE, FALSE, TRUE,
+     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'cccccccc-1111-2222-3333-444444444444',
      'dddddddd-1111-2222-3333-444444444444', 'Seed', 'MergeTarget', 'ACTIVE',
-     DATE '1992-06-20', 'F', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+     DATE '1992-06-20', 'F', 'UNVERIFIED', 0, TRUE, FALSE, TRUE,
+     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
