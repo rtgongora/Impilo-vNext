@@ -87,7 +87,7 @@ export default function EmergencyEpisodeSpinePage({ params }: { params: { episod
                   <div className="space-y-2">
                     <p className="text-sm">
                       Handover requested to <strong>{String(pendingHandover.target_type)}</strong> — awaiting
-                      acceptance. Requesting does not close this episode; only the accepting party's own write does.
+                      acceptance. Requesting does not close this episode; only the accepting party&apos;s own write does.
                     </p>
                     <AcceptDeclineForm handoverId={String(pendingHandover.handover_id)} episodeId={params.episodeId} />
                   </div>
