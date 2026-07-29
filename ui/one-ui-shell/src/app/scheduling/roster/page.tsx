@@ -15,7 +15,12 @@ import { OrganizationPlaneContextBar } from "@/components/experience/Organizatio
 import { PageShell } from "@/components/PageShell";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
-import { useStaffingRosterWeek, type StaffingShiftResource } from "@/hooks/queries/useStaffing";
+import {
+  identityResolutionFailed,
+  staffLabel,
+  useStaffingRosterWeek,
+  type StaffingShiftResource,
+} from "@/hooks/queries/useStaffing";
 
 type CellState = "active" | "worked" | "";
 
@@ -105,20 +110,23 @@ export default function RosterPage() {
   });
 
   const shifts = useMemo(() => data?.data ?? [], [data?.data]);
+  const namesUnavailable = identityResolutionFailed(data?.meta);
 
   const rows: RosterRow[] = useMemo(() => {
     const byUser = new Map<string, { displayName: string; days: Record<string, CellState> }>();
     for (const s of shifts) {
       const attrs = s.attributes;
       // Vashandi is the rostering source of record and holds no names — person identity is
-      // vito's and provider identity varapi's. The worker reference is what staff recognise on a
-      // rota; falling back to the profile id is ugly but true, and beats inventing a name.
+      // vito's and provider identity varapi's. The BFF composes the name from the provider
+      // registry; when it cannot, the worker reference is what staff recognise on a rota, and
+      // falling back to the profile id is ugly but true. Nothing here invents a name.
       const uid = attrs.workforce_profile_id;
+      const label = staffLabel(attrs.display_name, attrs.staff_reference) ?? uid;
       if (!byUser.has(uid)) {
-        byUser.set(uid, { displayName: attrs.staff_reference || uid, days: {} });
+        byUser.set(uid, { displayName: label, days: {} });
       }
       const entry = byUser.get(uid)!;
-      if (attrs.staff_reference) entry.displayName = attrs.staff_reference;
+      entry.displayName = label;
       for (const day of dateColumns) {
         const next = cellStateForShift(attrs, day);
         if (!next) continue;
@@ -159,6 +167,16 @@ export default function RosterPage() {
           <div className="rounded-lg border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
             Select a facility to load the roster. Organization operators can pick a facility from the facility hub before opening
             staffing surfaces.
+          </div>
+        ) : null}
+
+        {namesUnavailable ? (
+          <div
+            role="status"
+            className="mb-4 rounded-lg border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground"
+          >
+            Staff names could not be looked up just now — the roster below shows worker references
+            instead. These are the people rostered; only their names are missing.
           </div>
         ) : null}
 

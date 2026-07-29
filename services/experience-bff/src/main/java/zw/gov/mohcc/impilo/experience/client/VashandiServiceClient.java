@@ -89,6 +89,15 @@ public class VashandiServiceClient {
         return unwrap(patch("/staffing/on-call/swaps/" + swapId, body));
     }
 
+    /**
+     * Profile → person-anchor mapping for a page's worth of rostered people. Vashandi returns the
+     * Health ID and worker reference and nothing else; the display name is resolved against the
+     * identity registries by {@code StaffIdentityResolver}.
+     */
+    public JsonNode getWorkforceIdentityRefs(String profileIdsCsv) {
+        return unwrap(get("/workforce-profiles/identity-refs", Map.of("ids", profileIdsCsv)));
+    }
+
     public JsonNode listWorkforceProfiles(Map<String, String> queryParams) {
         return unwrap(get("/workforce-profiles", queryParams));
     }

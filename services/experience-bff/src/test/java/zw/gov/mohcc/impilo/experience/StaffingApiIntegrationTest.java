@@ -92,7 +92,17 @@ class StaffingApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(greaterThanOrEqualTo(1)))
-                .andExpect(jsonPath("$.data[0].type").value("on-call-assignment"));
+                .andExpect(jsonPath("$.data[0].type").value("on-call-assignment"))
+                // The rota renders a person, not a profile UUID: the BFF composes the name and the
+                // registry phone (vashandi profile -> health id -> varapi display facts), keeps the
+                // worker reference, and reports LIVE because both registries answered.
+                .andExpect(jsonPath("$.data[0].attributes.primary_display_name")
+                        .value(ExperienceBffSovereignWireMockSupport.SEED_DISPLAY_NAME))
+                .andExpect(jsonPath("$.data[0].attributes.primary_phone")
+                        .value(ExperienceBffSovereignWireMockSupport.SEED_PHONE))
+                .andExpect(jsonPath("$.data[0].attributes.primary_phone_source").value("PROVIDER_REGISTRY"))
+                .andExpect(jsonPath("$.data[0].attributes.primary_staff_reference").value("PW-004821"))
+                .andExpect(jsonPath("$.meta.identity_resolution").value("LIVE"));
     }
 
     @Test

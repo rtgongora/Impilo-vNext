@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.scheduling;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 
@@ -14,14 +16,20 @@ import java.util.Set;
 /**
  * Maps appointment provider/facility targets to concrete inbox recipients
  * ({@code actor:}, {@code staff:}, {@code facility-scheduling:}) for notification delivery.
+ *
+ * <p><b>Repointed with the rest of on-call.</b> This asked {@code tuso} who was on call — a path no
+ * service serves — and read fields ({@code primary_staff_id}) that no on-call projection has ever
+ * produced. It therefore resolved nobody and fell through to the facility group on every
+ * appointment, silently. On-call is vashandi's projection over {@code vsh_shift}, and its rows carry
+ * workforce profile ids under {@code attributes}, so that is what is read here.</p>
  */
 @Component
 public class AppointmentProviderRecipientResolver {
 
-    // Repointed from tuso: this resolver read the on-call rota from tuso /v1/staffing/on-call, a
-    // path no service serves, so resolveFacilityStaff has always come back empty and appointment
-    // notifications never reached facility staff. Rostering is vashandi's.
+    private static final Logger log = LoggerFactory.getLogger(AppointmentProviderRecipientResolver.class);
+
     private final VashandiServiceClient vashandiClient;
+
 
     public AppointmentProviderRecipientResolver(VashandiServiceClient vashandiClient) {
         this.vashandiClient = vashandiClient;
@@ -53,15 +61,18 @@ public class AppointmentProviderRecipientResolver {
                     // person reference vashandi holds is the workforce profile id. Reading the old
                     // flat provider_id/staff_id keys would compile, run, and quietly resolve nobody
                     // — which is how this path came to be silently empty in the first place.
-                    JsonNode attributes = row.has("attributes") ? row.get("attributes") : row;
+                    JsonNode attributes = row.has("attributes") ? row.path("attributes") : row;
                     addIfPresent(recipients, attributes,
                             "primary_workforce_profile_id", "primaryWorkforceProfileId", "staff:");
                     addIfPresent(recipients, attributes,
                             "backup_workforce_profile_id", "backupWorkforceProfileId", "staff:");
                 }
             }
-        } catch (Exception ignored) {
-            // upstream unavailable — fall back to facility-scheduling group
+        } catch (Exception e) {
+            // The facility-scheduling group is a real broadcast target, not a stand-in for the
+            // people on call — so a failure here changes who gets told, and says so in the log.
+            log.warn("ON_CALL_RECIPIENTS_UNAVAILABLE facility={} falling back to the scheduling group: {}",
+                    facilityId, e.getMessage());
         }
         return new ArrayList<>(recipients);
     }

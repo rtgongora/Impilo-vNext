@@ -39,7 +39,7 @@ class StaffingReadServiceTest {
 
     @Mock private ShiftRepository shiftRepository;
     @Mock private ShiftSwapRequestRepository swapRepository;
-    @Mock private WorkforceProfileRepository profileRepository;
+    @Mock(strictness = Mock.Strictness.LENIENT) private WorkforceProfileRepository profileRepository;
     @Mock private VashandiOutboxWriter outboxWriter;
 
     private StaffingReadService service;
@@ -50,6 +50,9 @@ class StaffingReadServiceTest {
 
     @BeforeEach
     void setUp() {
+        // A profile lookup that finds nothing is the honest default here: the reference is null and
+        // the row still renders, which is the behaviour the rota depends on.
+        when(profileRepository.findByTenantIdAndId(any(), any())).thenReturn(Optional.empty());
         service = new StaffingReadService(shiftRepository, swapRepository, profileRepository, outboxWriter);
     }
 

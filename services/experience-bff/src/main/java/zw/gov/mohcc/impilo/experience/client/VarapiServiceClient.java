@@ -497,6 +497,20 @@ public class VarapiServiceClient {
     }
 
     /**
+     * Batch display facts (name, profession, registered phone) for people a rota knows only by
+     * reference. Varapi answers every requested id with {@code resolved} true or false, so an
+     * unknown person is reported as unresolved rather than silently dropped. Throws on transport
+     * failure — the caller must be able to tell "nobody is in the registry" from "the registry did
+     * not answer", which is the whole point of this composition.
+     */
+    public JsonNode resolveDisplayFacts(List<String> healthIds) {
+        String url = baseUrl + "/v1/internal/providers/by-health-id/resolve-display";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, new HttpEntity<>(Map.of("healthIds", healthIds)), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * List facility affiliations for a provider identified by Health ID.
      */
     public JsonNode getProviderAffiliations(String healthId) {
