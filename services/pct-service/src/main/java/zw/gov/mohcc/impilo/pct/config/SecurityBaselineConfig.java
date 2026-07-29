@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.pct.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,9 +21,15 @@ import javax.sql.DataSource;
 @Configuration
 public class SecurityBaselineConfig {
 
+    // Capacity and refill are properties so a test profile can widen the bucket: it is
+    // in-memory and keyed by actor, and every MockMvc request in a Spring test context
+    // presents the same actor, so a suite of more than 100 requests throttles itself.
+    // Defaults are this service's own previous values -- runtime behaviour is unchanged.
     @Bean
-    public RateLimitGuard rateLimitGuard() {
-        return new RateLimitGuard(100, 2);
+    public RateLimitGuard rateLimitGuard(
+            @Value("${impilo.security.rate-limit.max-tokens:100}") long maxTokens,
+            @Value("${impilo.security.rate-limit.refill-per-second:2}") long refillPerSecond) {
+        return new RateLimitGuard(maxTokens, refillPerSecond);
     }
 
     @Bean

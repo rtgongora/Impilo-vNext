@@ -18,7 +18,9 @@ class SecurityBaselineConfigTest {
 
     @Test
     void rateLimitFilterGuardsV1ApiSurface() {
-        RateLimitGuard guard = config.rateLimitGuard();
+        // The bean takes the bucket size as parameters now, defaulted from properties in Spring; this
+        // test constructs it directly, so it passes the baseline values explicitly.
+        RateLimitGuard guard = config.rateLimitGuard(100, 2);
         FilterRegistrationBean<RateLimitFilter> registration = config.rateLimitFilter(guard);
 
         assertThat(registration.getUrlPatterns()).contains("/v1/*");
