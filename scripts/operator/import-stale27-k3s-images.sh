@@ -4,7 +4,7 @@
 # Run as root: sudo bash scripts/operator/import-stale27-k3s-images.sh
 set -euo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 TAG="${FULL_BOOT_IMAGE_TAG:-preview-4917def8}"
 
 if [[ "$(id -u)" -ne 0 ]]; then

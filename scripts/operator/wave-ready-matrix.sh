@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Per-service Ready matrix for full-boot namespace (wave expansion / phase 3).
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 NS="${IMPILO_FULLBOOT_NS:-impilo-full-preview}"
 WAVE_N="${1:-}"
 OUT="${REPO}/reports/full-boot/service-ready-matrix.md"

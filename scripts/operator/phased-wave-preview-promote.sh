@@ -5,7 +5,7 @@
 # Defaults: START_WAVE=1 END_WAVE=8
 set -euo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO"
 NS="${IMPILO_FULLBOOT_NS:-impilo-full-preview}"
 START_WAVE="${1:-1}"

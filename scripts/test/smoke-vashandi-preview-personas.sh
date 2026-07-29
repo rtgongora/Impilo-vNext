@@ -2,7 +2,7 @@
 # Smoke-test Vashandi preview personas: session contract workspaces + route existence.
 set -euo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 NS="${IMPILO_PREVIEW_NAMESPACE:-impilo-full-preview}"
 PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 FIXTURES="$REPO/contracts/trust/seeds/preview-vashandi-session-fixtures.json"

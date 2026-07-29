@@ -5,7 +5,7 @@ source "$(dirname "$0")/../full-boot/_full-boot-common.sh"
 
 TAG="${1:-preview}"
 shift 2>/dev/null || shift 1 2>/dev/null || true
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 HELPER_IMPORT="/usr/local/sbin/impilo-k3s-import-images"
 EXTRA_ARGS=()
 while [[ $# -gt 0 ]]; do

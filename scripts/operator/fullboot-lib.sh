@@ -8,7 +8,7 @@ IMPILO_SLICE_NS="${IMPILO_SLICE_NS:-impilo-preview}"
 IMPILO_PROTECTED_NS="$IMPILO_SLICE_NS"
 
 fb_repo() {
-  echo "${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+  echo "${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 }
 
 fb_reports() {

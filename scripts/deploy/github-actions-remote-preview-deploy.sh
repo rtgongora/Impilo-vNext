@@ -3,7 +3,7 @@
 set -euo pipefail
 
 BRANCH="${DEPLOY_BRANCH:?DEPLOY_BRANCH is required}"
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 TARGET_SHA="${DEPLOY_COMMIT_SHA:-}"
 
 cd "$REPO"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Print comma-separated runtime k8s microservice ids (+ experience-bff, one-ui-shell).
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 python3 - "$REPO" <<'PY'
 import sys, yaml
 repo = sys.argv[1]

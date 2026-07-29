@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Start local OCI registry for full-boot image push/pull (no sudo).
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 REGISTRY_NAME="${IMPILO_LOCAL_REGISTRY_NAME:-impilo-local-registry}"
 REGISTRY_PORT="${IMPILO_LOCAL_REGISTRY_PORT:-5000}"
 REGISTRY_HOST="${IMPILO_LOCAL_REGISTRY_HOST:-127.0.0.1}"

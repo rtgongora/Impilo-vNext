@@ -16,10 +16,16 @@
 // Usage: node scripts/e2e/rtc-media-diagnostic.mjs <scratchdir-with-rtc-prov.json,rtc-tokB.json,rtc-tokC.json>
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 
 const S = process.argv[2] || ".";
 const OUT = `${S}/rtc-media-diagnostic`;
-const require = createRequire("/opt/impilo/repos/Impilo-vNext/ui/one-ui-shell/");
+// Resolved from this file, not from the shared checkout: run in a worktree, the old absolute paths
+// loaded another tree's playwright and livekit build, so the diagnostic reported on code that was not
+// under test.
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const require = createRequire(`${REPO}/ui/one-ui-shell/`);
 const { chromium } = require("playwright-core");
 
 const rd = (f) => JSON.parse(readFileSync(`${S}/${f}`, "utf8")).data;
@@ -27,7 +33,7 @@ const host = rd("rtc-prov.json");
 const patientB = rd("rtc-tokB.json");
 const remoteC = rd("rtc-tokC.json");
 const roomUrl = host.roomUrl;
-const lkUmd = readFileSync("/opt/impilo/repos/Impilo-vNext/ui/node_modules/livekit-client/dist/livekit-client.umd.js", "utf8");
+const lkUmd = readFileSync(`${REPO}/ui/node_modules/livekit-client/dist/livekit-client.umd.js`, "utf8");
 
 const report = { roomUrl, when: new Date().toISOString(), peers: {} };
 const log = (...a) => console.log(...a);

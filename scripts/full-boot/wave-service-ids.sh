@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Print comma-separated service ids for cumulative waves 0..MAX (inclusive).
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 MAX="${1:-0}"
 python3 - "$REPO" "$MAX" <<'PY'
 import sys, yaml

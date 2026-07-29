@@ -5,6 +5,10 @@
 _IMPILO_K3S_HELPER_COMMON_LOADED=1
 
 IMPILO_HELPER_VERSION="8"
+# Deliberately absolute, and deliberately NOT script-relative like the rest of scripts/. This file is
+# installed as root-owned under /usr/local/libexec and runs privileged, so the repo path is an
+# allowlist (see impilo_validate_repo): resolving it from the caller's location would let any
+# checkout nominate itself as the source of images to import. Leave it literal.
 IMPILO_DEFAULT_REPO="/opt/impilo/repos/Impilo-vNext"
 IMPILO_HELPER_LOG="/var/log/impilo-k3s-image-helper.log"
 IMPILO_IMPORT_LOCK="/tmp/impilo-k3s-import.lock"

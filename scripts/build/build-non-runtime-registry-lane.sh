@@ -2,7 +2,7 @@
 # Build/validate non-runtime registry entries (internal packages, mobile, bundled UI, clients).
 # Emits run-not-applicable reasons; does not deploy to k3s.
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO"
 source "$REPO/scripts/full-boot/_full-boot-common.sh"
 full_boot_ensure_artifacts

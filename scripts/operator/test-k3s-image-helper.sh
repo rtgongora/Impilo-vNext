@@ -2,7 +2,7 @@
 # Non-destructive checks for narrow k3s image helper installation.
 set -uo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 PASS=0
 FAIL=0
 

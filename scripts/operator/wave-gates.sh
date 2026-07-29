@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Per-wave promotion gates before treating a generation as latest public preview.
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO"
 WAVE_N="${1:-}"
 FULL_BOOT_MAX_WAVE="${FULL_BOOT_MAX_WAVE:-$WAVE_N}"

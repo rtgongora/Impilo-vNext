@@ -3,7 +3,7 @@
 set -euo pipefail
 
 run_k3s_import_preview_images() {
-  local repo="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+  local repo="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
   local installed="/usr/local/sbin/k3s-import-preview-images.sh"
   local repo_script="$repo/scripts/deploy/k3s-import-preview-images.sh"
 

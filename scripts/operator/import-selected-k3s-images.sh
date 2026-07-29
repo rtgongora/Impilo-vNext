@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Import only selected full-boot images into k3s (fast path after partial rebuilds).
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 TAG="${FULL_BOOT_IMAGE_TAG:-preview}"
 IDS="${*:-}"
 if [[ -z "$IDS" ]]; then

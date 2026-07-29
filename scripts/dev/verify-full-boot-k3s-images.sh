@@ -22,7 +22,7 @@ echo ""
 
 # --- A. containerd image list (authoritative) ---
 HELPER_LIST="/usr/local/sbin/impilo-k3s-list-images"
-REPO_ROOT="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO_ROOT="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 CTR_IMAGES=""
 if [[ -x "$HELPER_LIST" ]] && sudo -n -l 2>/dev/null | grep -q 'impilo-k3s-list-images'; then
   set +e

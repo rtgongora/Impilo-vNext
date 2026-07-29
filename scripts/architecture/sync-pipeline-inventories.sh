@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # Regenerate architecture inventory markdown from canonical repo sources.
 set -euo pipefail
-REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+export REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
 
 python3 <<'PY'
-import pathlib, re, json
-root = pathlib.Path("/opt/impilo/repos/Impilo-vNext")
+import os, pathlib, re, json
+# The shell above already resolves REPO_PATH script-relatively and cd's into it; the heredoc is quoted,
+# so it has to read the value at runtime rather than inherit it by expansion. It previously hardcoded
+# the shared checkout and wrote that tree's docs/ no matter which worktree invoked it.
+root = pathlib.Path(os.environ.get("REPO_PATH", os.getcwd()))
 routes = (root / "ui/one-ui-shell/src/lib/routes.ts").read_text()
 paths = sorted(set(re.findall(r'path:\s*"([^"]+)"', routes)))
 svc_md = ["# Service inventory", "", "> Canonical YAML: `docs/registry/services-registry.yaml`. Regenerate: `bash scripts/architecture/sync-pipeline-inventories.sh`", ""]

@@ -3,7 +3,7 @@
 # Closes the gap between "98 pods running" and "personas have domain truth to govern against".
 set -euo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 NS="${IMPILO_PREVIEW_NAMESPACE:-impilo-full-preview}"
 SEED_DIR="$REPO/scripts/seed"
 

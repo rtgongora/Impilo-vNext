@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Staged rollout restart for impilo-full-preview — recycle pods wave-by-wave without exceeding pod limits.
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 NS="${IMPILO_FULLBOOT_NS:-impilo-full-preview}"
 MAX_WAVE="${1:-8}"
 WAIT_TIMEOUT="${STAGED_ROLLOUT_TIMEOUT:-300}"

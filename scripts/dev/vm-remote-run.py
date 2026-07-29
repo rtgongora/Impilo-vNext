@@ -10,7 +10,9 @@ HOST = os.environ.get("SSH_HOST", "impilo.mohcc.gov.zw")
 PORT = int(os.environ.get("SSH_PORT", "2276"))
 USER = os.environ.get("SSH_USER", "robert")
 PASSWORD = os.environ.get("SSH_PASS", "")
-LOCAL_ROOT = Path(os.environ.get("LOCAL_REPO", "/opt/impilo/repos/Impilo-vNext"))
+# LOCAL_ROOT is this checkout, resolved from the script so a worktree syncs its own files. REMOTE_ROOT
+# stays literal: it is the path on the 235 VM, which no local resolution can know.
+LOCAL_ROOT = Path(os.environ.get("LOCAL_REPO", Path(__file__).resolve().parents[2]))
 REMOTE_ROOT = "/opt/impilo/repos/Impilo-vNext"
 
 

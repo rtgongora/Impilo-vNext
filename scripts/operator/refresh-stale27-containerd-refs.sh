@@ -4,7 +4,7 @@
 # Run as root: sudo bash scripts/operator/refresh-stale27-containerd-refs.sh
 set -euo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 TAG="${FULL_BOOT_IMAGE_TAG:-preview-4917def8}"
 ONLY_IDS="ai-model-registry-service,audit-ledger-service,butano-service,community-service,credential-verification-service,document-service,guidance-service,identity-assurance-service,inventory-elmis-adapter,inventory-service,llm-orchestration-service,msika-service,mushe-wallet-service,pharmacy-service,product-registry-service,scheduling-service,search-service,share-slip-service,tshepo-audit-service,tshepo-authz-service,tshepo-consent-service,tshepo-identity-service,tshepo-keys-service,tshepo-offline-service,ubomi-service,varapi-service,zibo-service"
 

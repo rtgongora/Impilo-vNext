@@ -3,7 +3,7 @@
 # Source from preview-deploy.sh; sets PREVIEW_DEPLOY_BRANCH, PREVIEW_DEPLOY_COMMIT, PREVIEW_DEPLOY_BUILD_DATE.
 
 resolve_preview_deploy_metadata() {
-  local repo="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+  local repo="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
   local branch="${DEPLOY_BRANCH:-}"
   local commit="${DEPLOY_COMMIT_SHA:-}"
 

@@ -8,7 +8,7 @@ if [[ "$(id -u)" -ne 0 ]]; then
   exit 1
 fi
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 SBIN_IMPORT="/usr/local/sbin/impilo-k3s-import-images"
 SBIN_LIST="/usr/local/sbin/impilo-k3s-list-images"
 LIB_DIR="/usr/local/libexec/impilo"

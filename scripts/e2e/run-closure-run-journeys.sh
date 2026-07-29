@@ -23,7 +23,7 @@
 # =============================================================================
 set -uo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 RUN_TAG="${RUN_TAG:-$(date +%Y%m%d-%H%M%S)}"
 EVIDENCE_DIR="${EVIDENCE_DIR:-$REPO/reports/journeys/closure-run-$RUN_TAG}"
 BASE_URL="${PLAYWRIGHT_BASE_URL:-https://impilo.mohcc.gov.zw}"

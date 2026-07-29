@@ -2,7 +2,7 @@
 # Run inside tmux session fullboot-import — survives SSH disconnect.
 # Attach first if sudo ticket expired: tmux attach -t fullboot-import
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO"
 mkdir -p reports/full-boot
 IMPORT_LOG="reports/full-boot/k3s-image-import-preview.log"

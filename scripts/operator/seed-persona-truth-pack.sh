@@ -27,7 +27,7 @@
 # =============================================================================
 set -euo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 NS="${FULL_BOOT_NAMESPACE:-impilo-full-preview}"
 PREVIEW_URL="${PREVIEW_URL:-http://127.0.0.1}"
 PERSONA_PASSWORD="${PERSONA_PASSWORD:-ImpiloTest123!}"

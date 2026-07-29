@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Push impilo images to local registry (parallel, missing-only by digest).
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO"
 source "$(dirname "$0")/../full-boot/_full-boot-common.sh"
 

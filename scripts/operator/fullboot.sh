@@ -3,7 +3,7 @@
 # Human sudo checkpoint: one terminal block + password, then "sudo checkpoint completed".
 set -euo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO"
 export REPO_PATH="$REPO"
 
