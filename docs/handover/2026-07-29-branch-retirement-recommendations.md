@@ -1,7 +1,8 @@
 # Branch retirement recommendations — 2026-07-29 canonical catch-up merge
 
 **Canonical branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
-**Canonical tip after this pass:** `5f93dfdbe` (188 commits ahead of the pre-pass tip)
+**Canonical tip after this pass:** `98d4e52ab` (198 commits ahead of the pre-pass tip), with this
+document's own commit on top
 **Canonical tip before this pass:** `9e4599fe6`
 **Work branch used:** `coord/merge-catchup-20260729` in worktree `/opt/impilo/repos/wt-merge-catchup`
 
@@ -411,6 +412,19 @@ Recommend either setting `git config guard.upstreamRef origin/<canonical>` on co
 documenting `GUARD_UPSTREAM_REF` in the merge runbook. The evidence for treating the four reds as
 inherited is in the next section — two-sided, not asserted.
 
+**Made legible in this pass, not silently widened.** `resolve_base_ref` now prints an unconditional
+`GUARD NOTE` when the fork-point base sits behind the checkout's tracking branch, stating how many
+already-published commits are inside the review window and naming the two overrides. In this worktree it
+reads *"base 6dfa1063c predates the tracking branch origin/claude/staging-ux-orchestration-remediation-Yypyl:
+1959 already-published commit(s) from other lanes are inside this review window."* Anyone reading a red
+run now learns the attribution rule from the output instead of from this document.
+
+The exclusion itself was deliberately **left alone**. Git cannot distinguish a shared branch from a lane
+branch pushed under a different name — and this estate does exactly that, local names against
+`origin/claude/*` — so preferring the upstream would have started laundering lanes' own work into
+"already reviewed" to fix a coordinator-worktree annoyance. The note goes to stderr, so callers that
+capture the base on stdout are unaffected, and `tests/base-ref-resolution-test.sh` still passes 15/15.
+
 ### F10 — Five instrument defects found by running the full pipeline, each uncovered by fixing the last
 
 The full local pipeline was the only thing that found these; every one of them had been passing or
@@ -548,6 +562,45 @@ accurate specs over 68 routes is a delivery with domain review, not a tail-end t
 a hurried inaccurate contract would be worse than the honest gap. **The baseline was left at 0 and
 nothing was absorbed into it.**
 
+**Closed after the owner decision** (hand-authored, not generated) —
+[`contracts/openapi/procedures.openapi.yaml`](../../contracts/openapi/procedures.openapi.yaml) (14
+operations), [`surgery.openapi.yaml`](../../contracts/openapi/surgery.openapi.yaml) (29) and
+[`mental-health.openapi.yaml`](../../contracts/openapi/mental-health.openapi.yaml) (25). Every path,
+field name, enumeration and required-ness was read out of the live handlers, the DTO records, the
+core-service validation and the `CHECK` constraints in each service's Flyway migrations. Each spec's
+header records the conventions that differ from the estate norm, because the differences are real:
+procedures and surgery return bare DTOs rather than the `ApiResponse` envelope, surgery accepts free-form
+JSON bodies and ignores unknown keys, and content codes travel as query parameters because a free-text
+final path segment defeats `AuthzInternalRequest.deriveResourceType` in ext_authz.
+
+### F15 — Closing the contract debt exposed three further gaps, all fixed rather than baselined
+
+Each surfaced only once the C gaps stopped masking it, which is the same pattern as F10.
+
+**1. surgery-service had Spring Security on the classpath and no filter chain — the worse of the two
+states.** No `SecurityConfig`, so nothing registered `TrustContextFilter`, so the
+`TrustContextHolder.require()` that opens every core service in the module would have thrown on the first
+real request; and Boot's default chain put generated-password basic auth in front of an entirely internal
+API. Neither fault could show up in the suite, because the unit tests set the holder themselves and the
+test profile disables OAuth. Fixed by mirroring `procedures-service`'s chain rather than inventing a
+second idiom, plus the generator's own `SecurityBaselineConfig` output so the service tracks the estate
+template. This was reported as the Category N gap `surgery-service: auth/policy/audit gaps`.
+
+**2. The product-truth generator did not recognise a client-side redirect shim.** It credited a server
+`redirect()` with `route-delegation` but not a `"use client"` page that resolves a target, calls
+`router.replace()` and renders nothing — so `/my-life` was reported as having no BFF backing when it
+hands off to `/home`, which carries the backing. `/provider-workspace` is the identical shape and was
+quiet only because it sits on the route allowlist. Fixed as a class, not with a second per-route
+exemption: detection requires the no-JSX and `return null` pair together, so a real page that redirects
+on one branch still has to prove its own backing. Across the whole app it matches exactly the three
+shims that exist and nothing else.
+
+**3. The public gateway promised a provider directory the estate has not committed to.** The discovery
+surface's providers tab said "Provider directory is coming soon", which reads as placeholder UX and is a
+date nobody has set. The panel is not a placeholder — it explains a real scope boundary and links to
+practitioner verification, which works today — so it now states the boundary instead. Its test asserted
+on the old string and was updated with it.
+
 ## Change-safety gate result for this pass
 
 Run bare, `bash scripts/guard/run-change-safety-gates.sh` reports BLOCKED on four checks
@@ -602,15 +655,35 @@ regressions from this pass. See **F8** for the recommendation on the base-ref sh
 
 | | Count | |
 |---|---|---|
-| Passed | 24 | includes Backend checks, Change-safety gates, Mobile build checks, all six full-boot phases, Core transaction evidence, both parity gates |
-| Failed | 3 | Frontend checks, Product Truth audit gate, Phase 6 service completion |
+| Passed | 24 | includes Frontend checks, Backend checks, Product Truth audit gate, Phase 6 service completion, Mobile build checks, all six full-boot phases, Core transaction evidence |
+| Failed | 3 | Backend-to-frontend parity, Mobile parity, Change-safety gates — all three the F8 attribution artefact, see below |
 | Advisory | 0 | |
 
-**`scripts/guard/run-change-safety-gates.sh`: PASSED** — with `GUARD_UPSTREAM_REF` set to canonical, per
-F8. Bare, it reports the four merge-base attribution artefacts documented in the section above.
+The three contract reds are closed: Product Truth reports **violations=0 at the unchanged baseline of 0**
+with `Gaps: 0`, Phase 6 reports **104/104 complete**, and the phase6 golden-thread unit test passes with
+the rest of the frontend phase.
 
-Re-run on the final tip, the Frontend phase passes `lint`, `type-check`, `test:typecheck-e2e`,
-orphan-pages, decorative-controls and `build`, and fails only on the single unit test below.
+The three that now read red are the same base-ref artefact as F8, and the proof is the same shape as
+before — re-run with the review window scoped to what this lane actually authored
+(`GUARD_BASE_REF=2929668c2`, the pushed canonical tip):
+
+| Check | Bare run | Scoped to this lane's commits |
+|---|---|---|
+| `check-backend-frontend-parity.sh` | FAIL (blocking 1) | **exit 0**, `VERDICT: PASS` |
+| `check-mobile-parity.sh` | FAIL (blocking 1) | **exit 0**, `VERDICT: PASS WITH ADVISORY WARNINGS` |
+| `run-change-safety-gates.sh` | BLOCKED | **exit 0**, `CHANGE-SAFETY: PASSED` |
+
+Every file the bare run names was traced to the commit that introduced it, and all four are ancestors of
+the **pushed** canonical tip — other lanes' published work, not this pass's:
+`GetAppSurface.tsx` from `3587cc0b8`, `clinical/chronic-registers/page.tsx` from `8e0dc77fb`,
+`specialtyToolRegistry.ts` from `45b3e0ef9`, `landela/page.tsx` from `38d4b8e26`. They are real items for
+their owning lanes and should not be dismissed.
+
+**`scripts/guard/run-change-safety-gates.sh`: PASSED** — with `GUARD_UPSTREAM_REF` set to canonical, per
+F8. Bare, it reports the attribution artefacts documented in the section above.
+
+On the final tip the Frontend phase passes `lint`, `type-check`, `test:typecheck-e2e`, orphan-pages,
+decorative-controls, the unit suite and `build`.
 
 Every red found on the way to this result was chased to root cause and fixed, or proven inherited:
 
@@ -621,33 +694,25 @@ Every red found on the way to this result was chased to root cause and fixed, or
 | `backend-reactor-tests` | rate limiter throttling the suite (F13) | Fixed — capacity is a property |
 | 8 frontend unit tests | mocks left behind by `29e76f7b0`, plus a 25th branding entry | Fixed — 2767/2768 now pass |
 | Full-boot phases | generator could not run at all (F10) | Fixed — dependency provisioned |
-| Change-safety | base-ref attribution (F8) | Explained, not a defect |
+| Product Truth, Phase 6, phase6 golden thread | three services with no OpenAPI contract (F11) | Fixed — contracts hand-authored; three further gaps found and fixed (F15) |
+| Parity gates, Change-safety | base-ref attribution (F8) | Explained and now self-announcing, not a defect |
 
-### The three remaining reds are one item, and it needs your decision
+### The contract debt: how it was closed, and what was refused
 
-All three are the same inherited debt: **procedures-service**, **surgery-service** and
-**mental-health-service** have no OpenAPI contract (F11). That is what fails the Product Truth gate
-(violations=6), the Phase 6 gate (incomplete=3), and the one remaining frontend test (the phase6
-golden thread, which reads the same dataset). Fix the contracts and all three clear together.
+The owner decision was **hand-authored contracts with real schemas**, and that is what was delivered — 68
+operations described from the code, with request and response schemas, enumerations taken from the
+database `CHECK` constraints, and the per-service conventions documented in each spec header.
 
-Proven inherited: the same 6 gaps and same 3 services at pre-merge `9e4599fe6`. **Nothing was absorbed
-into a baseline to make this green** — not the gate baselines, and not the two in-test allowlists
-(`KNOWN_IN_FLIGHT`, whose own comment says keep it empty) that would have silenced the test.
+`scripts/completeness/sync-handler-routes-to-contract.mjs` was available and would have taken minutes: it
+derives paths and methods from the Spring handlers, and 86 existing contracts already carry its output.
+It was **not** used here. It emits `tags: [Generated-From-Handler]` with `200: Success` and no request or
+response schemas, so it would have turned three gates green without describing a single payload — and
+three brand-new clinical services are the worst place to start doing that.
 
-Two ways to close it, and they are not equivalent:
-
-- **Hand-authored contracts with real schemas**, as `patient-safety.openapi.yaml` and
-  `participation.openapi.yaml` were done. 68 routes across 20 controllers. This is what the ratchet log
-  treats as a genuine closure, and it needs domain review.
-- **`scripts/completeness/sync-handler-routes-to-contract.mjs`**, which derives paths and methods from
-  the actual Spring handlers. Minutes, not days, and 86 existing contracts already contain its output.
-  But it emits `tags: [Generated-From-Handler]` with `200: Success` and **no request or response
-  schemas** — so it would turn three gates green without describing a single payload.
-
-Not chosen here on purpose. The second option would have closed this pass's last three reds today, and
-declining it is the reason the pipeline verdict above still reads FAIL. Flipping a gate green with
-path-only stubs is the thing the no-stubs rule exists to prevent, and three brand-new clinical services
-are the worst place to start doing it.
+Nothing was absorbed into a baseline anywhere in this closure: the product-truth baseline stayed at 0 and
+went green on merit, and the two in-test allowlists (`KNOWN_IN_FLIGHT`, whose own comment says keep it
+empty) that would have silenced the golden-thread test were left empty. The three follow-on gaps in F15
+were fixed in the code rather than recorded as accepted debt.
 
 ## Recommendation summary
 
