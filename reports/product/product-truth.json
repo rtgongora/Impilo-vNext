@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T06:32:45.832Z",
+  "generatedAt": "2026-07-29T15:45:26.035Z",
   "branch": "coord/merge-catchup-20260729",
   "registryDrift": {
     "unregisteredModules": [],
@@ -13,27 +13,17 @@
     "contractCount": 110,
     "byProductStatus": {
       "internal-only": 26,
-      "real": 75,
-      "mostly-real": 3
+      "real": 78
     },
     "byMaturity": {
       "INTERNAL_ONLY": 26,
-      "REAL_CODE_NOT_PROBED": 71,
-      "REAL_PROVEN": 4,
-      "PARTIAL": 3
+      "REAL_CODE_NOT_PROBED": 74,
+      "REAL_PROVEN": 4
     },
     "gapCounts": {
-      "byCategory": {
-        "E": 1,
-        "F": 1,
-        "C": 3,
-        "N": 1
-      },
-      "bySeverity": {
-        "high": 2,
-        "medium": 4
-      },
-      "total": 6
+      "byCategory": {},
+      "bySeverity": {},
+      "total": 0
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -45,9 +35,9 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 101,
+      "complete": 104,
       "userFacing": 78,
-      "userFacingReal": 75,
+      "userFacingReal": 78,
       "userFacingRealProven": 4
     },
     "capabilities": {
@@ -8631,7 +8621,7 @@
         "controllers": 7,
         "routes": 21,
         "stubRoutes": 0,
-        "contractOperations": 0,
+        "contractOperations": 14,
         "contractViolations": 0,
         "bffClients": 7,
         "uiReferences": 38,
@@ -8643,15 +8633,15 @@
         "entitiesRepos": "real",
         "serviceLayer": "real",
         "controllers": "real",
-        "contract": "absent",
+        "contract": "real",
         "bffWiring": "real",
         "frontendUi": "real",
         "mobileUi": "n/a",
         "tests": "real",
         "authzAudit": "real"
       },
-      "productStatus": "mostly-real",
-      "contractFile": null,
+      "productStatus": "real",
+      "contractFile": "procedures.openapi.yaml",
       "bffClients": [
         "ProceduresServiceClient",
         "LabOrdersController→inline",
@@ -8706,17 +8696,10 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": false,
+      "phase6Complete": true,
       "probeEvidence": null,
-      "gaps": [
-        {
-          "category": "C",
-          "severity": "medium",
-          "description": "procedures-service: no matched OpenAPI contract",
-          "impactScore": 2
-        }
-      ],
-      "maturity": "PARTIAL"
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "surgery-service",
@@ -8736,26 +8719,23 @@
         "frontendWiring": "not-wired",
         "apiContract": "not-started",
         "authzAudit": "not-started",
-        "authzAuditCode": "partial"
+        "authzAuditCode": "wired"
       },
       "authzReadiness": {
-        "status": "partial",
+        "status": "wired",
         "checks": {
-          "trustContext": false,
+          "trustContext": true,
           "tenantScoping": true,
-          "securityBaseline": false,
-          "adminAudit": false,
-          "rateLimit": false,
+          "securityBaseline": true,
+          "adminAudit": true,
+          "rateLimit": true,
           "outbox": true,
           "outboxCompatible": true,
           "outboxSchema": "surgery",
-          "securityConfig": false,
-          "configPackage": null
+          "securityConfig": true,
+          "configPackage": "zw.gov.mohcc.impilo.surgery.config"
         },
-        "missing": [
-          "trust-context-filter",
-          "security-baseline-config"
-        ],
+        "missing": [],
         "isTrustPlane": false
       },
       "counts": {
@@ -8766,7 +8746,7 @@
         "controllers": 10,
         "routes": 39,
         "stubRoutes": 0,
-        "contractOperations": 0,
+        "contractOperations": 29,
         "contractViolations": 0,
         "bffClients": 6,
         "uiReferences": 31,
@@ -8778,15 +8758,15 @@
         "entitiesRepos": "real",
         "serviceLayer": "real",
         "controllers": "real",
-        "contract": "absent",
+        "contract": "real",
         "bffWiring": "real",
         "frontendUi": "real",
         "mobileUi": "n/a",
         "tests": "real",
-        "authzAudit": "thin"
+        "authzAudit": "real"
       },
-      "productStatus": "mostly-real",
-      "contractFile": null,
+      "productStatus": "real",
+      "contractFile": "surgery.openapi.yaml",
       "bffClients": [
         "SurgeryServiceClient",
         "FacilityController→inline",
@@ -8842,23 +8822,10 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": false,
+      "phase6Complete": true,
       "probeEvidence": null,
-      "gaps": [
-        {
-          "category": "C",
-          "severity": "medium",
-          "description": "surgery-service: no matched OpenAPI contract",
-          "impactScore": 2
-        },
-        {
-          "category": "N",
-          "severity": "medium",
-          "description": "surgery-service: auth/policy/audit gaps (trust-context-filter, security-baseline-config)",
-          "impactScore": 2
-        }
-      ],
-      "maturity": "PARTIAL"
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "telemonitoring-service",
@@ -9011,10 +8978,10 @@
         "controllers": 3,
         "routes": 28,
         "stubRoutes": 0,
-        "contractOperations": 0,
+        "contractOperations": 25,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 20,
+        "uiReferences": 22,
         "mobileReferences": 1,
         "tests": 6
       },
@@ -9023,15 +8990,15 @@
         "entitiesRepos": "real",
         "serviceLayer": "real",
         "controllers": "real",
-        "contract": "absent",
+        "contract": "real",
         "bffWiring": "real",
         "frontendUi": "real",
         "mobileUi": "n/a",
         "tests": "real",
         "authzAudit": "real"
       },
-      "productStatus": "mostly-real",
-      "contractFile": null,
+      "productStatus": "real",
+      "contractFile": "mental-health.openapi.yaml",
       "bffClients": [
         "MentalHealthServiceClient",
         "MentalHealthController→inline"
@@ -9053,10 +9020,10 @@
         "ui/one-ui-shell/src/components/public/PublicHealthInfo.tsx",
         "ui/one-ui-shell/src/components/public/emergency/triage-protocol.test.ts",
         "ui/one-ui-shell/src/components/public/emergency/triage-protocol.ts",
+        "ui/one-ui-shell/src/config/brandAssets.test.ts",
+        "ui/one-ui-shell/src/config/serviceBranding.test.ts",
         "ui/one-ui-shell/src/config/serviceBranding.ts",
-        "ui/one-ui-shell/src/features/production-command-centre/tile-registry.ts",
-        "ui/one-ui-shell/src/lib/routes.ts",
-        "ui/one-ui-shell/src/lib/telemedicine/clinical-groups.ts"
+        "ui/one-ui-shell/src/features/production-command-centre/tile-registry.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/data/specialtyToolRegistry.ts"
@@ -9080,17 +9047,10 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": false,
+      "phase6Complete": true,
       "probeEvidence": null,
-      "gaps": [
-        {
-          "category": "C",
-          "severity": "medium",
-          "description": "mental-health-service: no matched OpenAPI contract",
-          "impactScore": 2
-        }
-      ],
-      "maturity": "PARTIAL"
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "rtc-gateway-service",
@@ -13300,7 +13260,9 @@
       "zone": "auth",
       "pageFile": "ui/one-ui-shell/src/app/auth/login/email/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
@@ -14288,10 +14250,6 @@
         {
           "file": "ui/one-ui-shell/src/lib/gateway-intent.ts",
           "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/public/HeroDiscoverySurface.tsx",
-          "pattern": "placeholder-copy"
         }
       ],
       "hasMutation": false,
@@ -14302,14 +14260,7 @@
       "writesRealData": false,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/: mock/stub data",
-          "impactScore": 3
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/welcome",
@@ -14368,10 +14319,6 @@
         {
           "file": "ui/one-ui-shell/src/lib/gateway-intent.ts",
           "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/public/HeroDiscoverySurface.tsx",
-          "pattern": "placeholder-copy"
         }
       ],
       "hasMutation": false,
@@ -15580,7 +15527,9 @@
       "zone": "queue",
       "pageFile": "ui/one-ui-shell/src/app/provider-workspace/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
@@ -58322,25 +58271,20 @@
       "zone": "home",
       "pageFile": "ui/one-ui-shell/src/app/my-life/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/my-life: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/my-life/feedback",

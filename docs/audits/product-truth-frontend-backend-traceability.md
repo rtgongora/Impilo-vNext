@@ -1,6 +1,6 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-07-29T06:32:45.832Z
+> Generated: 2026-07-29T15:45:26.035Z
 > Web surfaces: **922** | Mobile screens: **214**
 
 ## Web routes (one-ui-shell)
@@ -25,7 +25,7 @@
 | /auth/register/status | Registration Status | auth | yes | no | yes | yes | yes | — |
 | /auth/resolving | Resolving Session | auth | yes | no | yes | no | yes | — |
 | /auth/context-chooser | Choose Work Context | auth | yes | no | yes | no | yes | — |
-| / | Welcome to Impilo | auth | yes | no | yes | no | yes | F |
+| / | Welcome to Impilo | auth | yes | no | yes | no | yes | — |
 | /welcome | Welcome to Impilo | auth | yes | no | yes | no | yes | — |
 | /welcome/find-care | Find Care | auth | yes | no | yes | no | yes | — |
 | /welcome/emergency | Emergency & Public Health | auth | yes | no | yes | no | yes | — |

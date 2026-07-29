@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T06:32:45.823Z",
+  "generatedAt": "2026-07-29T15:45:26.025Z",
   "summary": {
     "totalCapabilities": 5459,
     "byDisposition": {
@@ -49374,7 +49374,7 @@
       "frontendSurfaces": 1,
       "frontendFixtures": 1,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 25,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/surgery/episodes"
@@ -71903,7 +71903,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 17,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/mental-health/referrals"
@@ -91472,7 +91472,7 @@
       "frontendSurfaces": 1,
       "frontendFixtures": 1,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/procedures/appropriateness"
@@ -91495,7 +91495,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/procedures/catalogue"
@@ -91516,7 +91516,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/procedures/competence"
@@ -97776,7 +97776,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/surgery/specialties"

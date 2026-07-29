@@ -1,13 +1,13 @@
 # Contract Implementation Matrix
 
-> Generated: 2026-07-29T06:02:53.814Z
-> OpenAPI operations: **4863** | AsyncAPI channels: **84**
+> Generated: 2026-07-29T15:20:28.102Z
+> OpenAPI operations: **4931** | AsyncAPI channels: **84**
 
 ## Summary
 
 | Status | Count |
 |--------|------:|
-| implemented | 4913 |
+| implemented | 4981 |
 | partial | 0 |
 | missing | 11 |
 | unowned-contract | 23 |

@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-07-29T06:32:45.832Z
+> Generated: 2026-07-29T15:45:26.035Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -1764,12 +1764,12 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 - **Path:** `services/procedures-service`
 - **Domain:** care-delivery (clinical)
-- **Product status:** mostly-real
+- **Product status:** real
 
 | # | Question | Answer |
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (7 controllers, 21 routes) |
-| 2 | Exposed via API/contracts? | Yes (contract: none) |
+| 2 | Exposed via API/contracts? | Yes (contract: procedures.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (7 clients) |
 | 4 | Visible in UI? | Yes (38 refs) |
 | 5 | Visible on mobile? | Yes (2 refs) |
@@ -1786,19 +1786,16 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/procedures/[episodeId]/page.tsx`
 
-**Gaps:**
-- [C] procedures-service: no matched OpenAPI contract (medium)
-
 ## surgery-service
 
 - **Path:** `services/surgery-service`
 - **Domain:** care-delivery (clinical)
-- **Product status:** mostly-real
+- **Product status:** real
 
 | # | Question | Answer |
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (10 controllers, 39 routes) |
-| 2 | Exposed via API/contracts? | Yes (contract: none) |
+| 2 | Exposed via API/contracts? | Yes (contract: surgery.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (6 clients) |
 | 4 | Visible in UI? | Yes (31 refs) |
 | 5 | Visible on mobile? | Yes (4 refs) |
@@ -1814,10 +1811,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/ehr/[patientId]/procedures/page.test.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/procedures/page.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/workspace/[specialty]/page.tsx`
-
-**Gaps:**
-- [C] surgery-service: no matched OpenAPI contract (medium)
-- [N] surgery-service: auth/policy/audit gaps (trust-context-filter, security-baseline-config) (medium)
 
 ## telemonitoring-service
 
@@ -1849,14 +1842,14 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 - **Path:** `services/mental-health-service`
 - **Domain:** care-delivery (clinical)
-- **Product status:** mostly-real
+- **Product status:** real
 
 | # | Question | Answer |
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (3 controllers, 28 routes) |
-| 2 | Exposed via API/contracts? | Yes (contract: none) |
+| 2 | Exposed via API/contracts? | Yes (contract: mental-health.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (2 clients) |
-| 4 | Visible in UI? | Yes (20 refs) |
+| 4 | Visible in UI? | Yes (22 refs) |
 | 5 | Visible on mobile? | Yes (1 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1870,9 +1863,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/discover/virtual-care/page.test.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/advance-directives/page.test.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/advance-directives/page.tsx`
-
-**Gaps:**
-- [C] mental-health-service: no matched OpenAPI contract (medium)
 
 ## rtc-gateway-service
 

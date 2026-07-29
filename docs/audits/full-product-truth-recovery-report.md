@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-29T06:32:45.832Z
+> Generated: 2026-07-29T15:45:26.035Z
 > Branch: `coord/merge-catchup-20260729`
 
 ## Executive summary
@@ -15,17 +15,17 @@
 | BFF route handlers | 3476 |
 | OpenAPI contracts | 110 |
 | Services with DB persistence | 103 |
-| **Phase 6 complete (user-facing + documented internal)** | **101** |
-| User-facing services with `real` code present (file-existence axis) | 75 / 78 |
+| **Phase 6 complete (user-facing + documented internal)** | **104** |
+| User-facing services with `real` code present (file-existence axis) | 78 / 78 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **4** |
 | Services internal-only (documented) | 26 |
-| Services partially complete | 3 |
+| Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 0 |
-| Total classified gaps | 6 |
+| Total classified gaps | 0 |
 | Blocker gaps | 0 |
-| High severity gaps | 2 |
+| High severity gaps | 0 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -37,9 +37,8 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 26 |
-| REAL_CODE_NOT_PROBED | 71 |
+| REAL_CODE_NOT_PROBED | 74 |
 | REAL_PROVEN | 4 |
-| PARTIAL | 3 |
 
 ## Quality gates added
 
@@ -61,8 +60,7 @@
 
 ## Remaining gaps by severity
 
-- **high:** 2
-- **medium:** 4
+_None_
 
 ## Implementation status
 

@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-07-29T06:32:45.832Z
+> Generated: 2026-07-29T15:45:26.035Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -1665,7 +1665,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Procedures, Clinical Procedures Pipeline
 **Plane/domain:** clinical / care-delivery
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for care-delivery plane capabilities
@@ -1694,7 +1694,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Surgery, Surgery and Surgical Specialties domain pack
 **Plane/domain:** clinical / care-delivery
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for care-delivery plane capabilities
@@ -1752,7 +1752,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Mental Health
 **Plane/domain:** clinical / care-delivery
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for care-delivery plane capabilities

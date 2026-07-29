@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-29T06:02:53.814Z",
+  "generatedAt": "2026-07-29T15:20:28.102Z",
   "counts": {
-    "totalOpenApiOperations": 4863,
+    "totalOpenApiOperations": 4931,
     "totalAsyncChannels": 84,
-    "implemented": 4913,
+    "implemented": 4981,
     "partial": 0,
     "missing": 11,
     "unownedContract": 23,
@@ -35067,6 +35067,331 @@
       "stubPattern": null
     },
     {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthReferralIntake",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals",
+      "summary": "Accept a psychiatric emergency handover as a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ReferralController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthReferralList",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/referrals",
+      "summary": "List referrals by status",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ReferralController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthReferralGet",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/referrals/{id}",
+      "summary": "Get a single referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ReferralController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthReferralAccept",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals/{id}/accept",
+      "summary": "Accept a pending referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ReferralController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthReferralDecline",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals/{id}/decline",
+      "summary": "Decline a pending referral, with a reason",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ReferralController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthAssessmentRecord",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/assessments",
+      "summary": "Record a mental-state assessment against a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthAssessmentList",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/assessments",
+      "summary": "List assessments recorded against a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthRiskFormulationRecord",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/assessments/{assessmentId}/risk-formulation",
+      "summary": "Record a risk formulation against an assessment",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthRiskFormulationList",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/assessments/{assessmentId}/risk-formulation",
+      "summary": "List risk formulations for an assessment",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthSafetyPlanRecord",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/safety-plans",
+      "summary": "Record a safety plan against a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthSafetyPlanList",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/safety-plans",
+      "summary": "List safety plans for a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthFollowupSchedule",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/followups",
+      "summary": "Schedule a follow-up against a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthFollowupList",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/followups",
+      "summary": "List follow-ups for a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthFollowupComplete",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/followups/{id}/complete",
+      "summary": "Mark a follow-up complete",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/ClinicalRecordController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthInvoluntaryEpisodeOpen",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/involuntary-episodes",
+      "summary": "Open an involuntary episode under a named legal basis",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthInvoluntaryEpisodeHistory",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/involuntary-episodes",
+      "summary": "Involuntary-episode history for a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthInvoluntaryEpisodeClose",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/involuntary-episodes/{id}/close",
+      "summary": "Close an open involuntary episode",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthRestraintEventRecord",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/restraint-events",
+      "summary": "Record a restraint event",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthRestraintEventHistory",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/restraint-events",
+      "summary": "Restraint-event history for a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthRestraintEventEnd",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/restraint-events/{id}/end",
+      "summary": "Record the end of an ongoing restraint event",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthRestraintEventReview",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/restraint-events/{id}/review",
+      "summary": "Review a restraint event",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthRestraintEventUnreviewed",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/restraint-events/unreviewed",
+      "summary": "Restraint events still awaiting review, across the tenant",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthAdmissionRequestRaise",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/admission-requests",
+      "summary": "Raise an admission request into PCT",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthAdmissionRequestHistory",
+      "method": "GET",
+      "path": "/internal/v1/mental-health/referrals/{referralId}/admission-requests",
+      "summary": "Admission-request history for a referral",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "mental-health.openapi.yaml",
+      "operationId": "mentalHealthAdmissionRequestAcknowledge",
+      "method": "POST",
+      "path": "/internal/v1/mental-health/admission-requests/{id}/acknowledge",
+      "summary": "Acknowledge an admission request with PCT's admission id",
+      "modules": [
+        "mental-health-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/mental-health-service/src/main/java/zw/gov/mohcc/impilo/mentalhealth/api/controller/SafetyController.java",
+      "stubPattern": null
+    },
+    {
       "contract": "mobile-citizen.openapi.yaml",
       "operationId": "citizenFacilitiesList",
       "method": "GET",
@@ -47183,6 +47508,188 @@
       "stubPattern": null
     },
     {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresCatalogueSearch",
+      "method": "GET",
+      "path": "/internal/v1/procedures/catalogue",
+      "summary": "Search the published procedure catalogue",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/ProcedureCatalogueController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresCatalogueByCode",
+      "method": "GET",
+      "path": "/internal/v1/procedures/catalogue/{definitionCode}",
+      "summary": "Get one published definition with its requirement set",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/ProcedureCatalogueController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresAppropriatenessEvaluate",
+      "method": "POST",
+      "path": "/internal/v1/procedures/appropriateness/evaluate",
+      "summary": "Evaluate a procedure request for appropriateness and duplication",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/AppropriatenessController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresCompetenceResolve",
+      "method": "GET",
+      "path": "/internal/v1/procedures/competence",
+      "summary": "Resolve whether a provider may perform a procedure, alone",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/CompetenceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresSafetyPauseTemplate",
+      "method": "GET",
+      "path": "/internal/v1/procedures/safety-pause-templates",
+      "summary": "Get a published safety-pause template with its confirmation items",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/SafetyPauseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresSedationLevels",
+      "method": "GET",
+      "path": "/internal/v1/procedures/sedation-levels",
+      "summary": "List the sedation continuum in depth order",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/SafetyPauseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresSedationLevel",
+      "method": "GET",
+      "path": "/internal/v1/procedures/sedation-level-detail",
+      "summary": "Get one sedation level with its resolved rescue capability",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/SafetyPauseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresRecoverySettings",
+      "method": "GET",
+      "path": "/internal/v1/procedures/recovery-settings",
+      "summary": "List recovery settings",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/RecoveryAndAftercareController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresRecoverySetting",
+      "method": "GET",
+      "path": "/internal/v1/procedures/recovery-setting-detail",
+      "summary": "Get one recovery setting",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/RecoveryAndAftercareController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresAftercareTemplate",
+      "method": "GET",
+      "path": "/internal/v1/procedures/aftercare-templates",
+      "summary": "Get a published aftercare template with its instructions and channels",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/RecoveryAndAftercareController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresClavienDindoGrades",
+      "method": "GET",
+      "path": "/internal/v1/procedures/clavien-dindo-grades",
+      "summary": "List the Clavien-Dindo severity grades",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/ComplicationProfileController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresComplicationProfile",
+      "method": "GET",
+      "path": "/internal/v1/procedures/complication-profiles",
+      "summary": "Get a published complication profile with its complication classes",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/ComplicationProfileController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresAnalyticsIndicatorCatalogue",
+      "method": "GET",
+      "path": "/internal/v1/procedures/analytics/indicators",
+      "summary": "List the pipeline analytics indicators with their computation status",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/AnalyticsIndicatorController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "procedures.openapi.yaml",
+      "operationId": "proceduresAnalyticsIndicator",
+      "method": "GET",
+      "path": "/internal/v1/procedures/analytics/indicator",
+      "summary": "Get one analytics indicator definition",
+      "modules": [
+        "procedures-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/procedures-service/src/main/java/zw/gov/mohcc/impilo/procedures/api/controller/AnalyticsIndicatorController.java",
+      "stubPattern": null
+    },
+    {
       "contract": "procurement.openapi.yaml",
       "operationId": "procSuppliers",
       "method": "GET",
@@ -50946,6 +51453,383 @@
       ],
       "implStatus": "implemented",
       "serviceHandler": "services/support-service/src/main/java/zw/gov/mohcc/impilo/support/api/TicketController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryEpisodeOpen",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes",
+      "summary": "Open a surgical episode",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryEpisodesForSubject",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes",
+      "summary": "List a subject's surgical episodes",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryEpisodeGet",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes/{id}",
+      "summary": "Get a surgical episode",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryEpisodeLinkProcedureEpisode",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{id}/link-procedure-episode",
+      "summary": "Link the episode to its procedure episode",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryEpisodeTransition",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{id}/transition",
+      "summary": "Move the episode to another status",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryAssessmentRecord",
+      "method": "PUT",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/assessment",
+      "summary": "Record or refine the general surgical assessment",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalAssessmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryAssessmentGet",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/assessment",
+      "summary": "Get the general surgical assessment",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalAssessmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryDecisionRecord",
+      "method": "PUT",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/decision",
+      "summary": "Record or refine the surgical decision-making record",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalDecisionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryDecisionGet",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/decision",
+      "summary": "Get the surgical decision-making record",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalDecisionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryPrehabRecordItem",
+      "method": "PUT",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/prehab",
+      "summary": "Record or update an optimisation item for one domain",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/PrehabItemController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryPrehabList",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/prehab",
+      "summary": "List the episode's optimisation items",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/PrehabItemController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryComplicationRecognise",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/complications",
+      "summary": "Recognise a complication, opening a pathway",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/ComplicationPathwayController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryComplicationList",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/complications",
+      "summary": "List the episode's complication pathways",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/ComplicationPathwayController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryComplicationUpdate",
+      "method": "PUT",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/complications/{pathwayId}",
+      "summary": "Record ownership, investigation and treatment",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/ComplicationPathwayController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryComplicationGrade",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/complications/{pathwayId}/grade",
+      "summary": "Grade the complication (Clavien-Dindo)",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/ComplicationPathwayController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryComplicationDisclose",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/complications/{pathwayId}/disclose",
+      "summary": "Record disclosure to the patient or family",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/ComplicationPathwayController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryComplicationClose",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/complications/{pathwayId}/close",
+      "summary": "Close the pathway with an outcome",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/ComplicationPathwayController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryLongitudinalObjectPlace",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/longitudinal-objects",
+      "summary": "Record placement of a drain, stoma or wound",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/LongitudinalObjectController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryLongitudinalObjectList",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/longitudinal-objects",
+      "summary": "List the episode's drains, stomas and wounds",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/LongitudinalObjectController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryLongitudinalObjectRemove",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/longitudinal-objects/{objectId}/remove",
+      "summary": "Record removal of an object",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/LongitudinalObjectController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryLongitudinalObjectRevise",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/longitudinal-objects/{objectId}/revise",
+      "summary": "Replace an object with a new one",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/LongitudinalObjectController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryFollowupRecord",
+      "method": "PUT",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/followup",
+      "summary": "Record or refine discharge and follow-up items",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalFollowupController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryFollowupGet",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/followup",
+      "summary": "Get the discharge and follow-up record",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SurgicalFollowupController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryWaitlistRevalidate",
+      "method": "POST",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/waitlist-revalidation",
+      "summary": "Record a waiting-list clinical revalidation",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/WaitlistRevalidationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryWaitlistRevalidationList",
+      "method": "GET",
+      "path": "/internal/v1/surgery/episodes/{episodeId}/waitlist-revalidation",
+      "summary": "List the episode's revalidations",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/WaitlistRevalidationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgerySpecialtyIndications",
+      "method": "GET",
+      "path": "/internal/v1/surgery/specialties/indications",
+      "summary": "List a specialty's indications",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SpecialtyContentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgerySpecialtyTemplates",
+      "method": "GET",
+      "path": "/internal/v1/surgery/specialties/templates",
+      "summary": "List a specialty's operative templates",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/SpecialtyContentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryAnalyticsIndicatorCatalogue",
+      "method": "GET",
+      "path": "/internal/v1/surgery/analytics/indicators",
+      "summary": "List the surgical-pack analytics indicators with their computation status",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/AnalyticsIndicatorController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "surgery.openapi.yaml",
+      "operationId": "surgeryAnalyticsIndicator",
+      "method": "GET",
+      "path": "/internal/v1/surgery/analytics/indicator",
+      "summary": "Get one surgical analytics indicator definition",
+      "modules": [
+        "surgery-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/surgery-service/src/main/java/zw/gov/mohcc/impilo/surgery/api/controller/AnalyticsIndicatorController.java",
       "stubPattern": null
     },
     {

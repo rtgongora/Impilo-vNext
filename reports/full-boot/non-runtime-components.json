@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T18:11:00.276Z",
+  "generated_at": "2026-07-29T13:06:17.839Z",
   "components": [
     {
       "id": "banking-rails",
@@ -14,6 +14,21 @@
       "image_strategy_status": "not_required",
       "reason": "External or contract-only dependency",
       "classification_confidence": "high",
+      "skip_image_build": true
+    },
+    {
+      "id": "burn-domain",
+      "path": "libs/burn-domain",
+      "component_name": "burn-domain",
+      "type": "library",
+      "plane": "integration",
+      "classification": "internal_package",
+      "build_required": false,
+      "image_required": false,
+      "image_strategy": "not-required-internal-package",
+      "image_strategy_status": "not_required",
+      "reason": "Maven/npm library \u2014 not a K8s workload",
+      "classification_confidence": "certain",
       "skip_image_build": true
     },
     {
@@ -92,6 +107,21 @@
       "skip_image_build": true
     },
     {
+      "id": "emergency-domain",
+      "path": "libs/emergency-domain",
+      "component_name": "emergency-domain",
+      "type": "library",
+      "plane": "integration",
+      "classification": "internal_package",
+      "build_required": false,
+      "image_required": false,
+      "image_strategy": "not-required-internal-package",
+      "image_strategy_status": "not_required",
+      "reason": "Maven/npm library \u2014 not a K8s workload",
+      "classification_confidence": "certain",
+      "skip_image_build": true
+    },
+    {
       "id": "external-elmis",
       "path": "external",
       "component_name": "external-elmis",
@@ -164,6 +194,21 @@
       "image_strategy_status": "not_required",
       "reason": "External or contract-only dependency",
       "classification_confidence": "high",
+      "skip_image_build": true
+    },
+    {
+      "id": "medicine-domain",
+      "path": "libs/medicine-domain",
+      "component_name": "medicine-domain",
+      "type": "library",
+      "plane": "integration",
+      "classification": "internal_package",
+      "build_required": false,
+      "image_required": false,
+      "image_strategy": "not-required-internal-package",
+      "image_strategy_status": "not_required",
+      "reason": "Maven/npm library \u2014 not a K8s workload",
+      "classification_confidence": "certain",
       "skip_image_build": true
     },
     {
@@ -257,6 +302,21 @@
       "skip_image_build": true
     },
     {
+      "id": "paediatric-domain",
+      "path": "libs/paediatric-domain",
+      "component_name": "paediatric-domain",
+      "type": "library",
+      "plane": "integration",
+      "classification": "internal_package",
+      "build_required": false,
+      "image_required": false,
+      "image_strategy": "not-required-internal-package",
+      "image_strategy_status": "not_required",
+      "reason": "Maven/npm library \u2014 not a K8s workload",
+      "classification_confidence": "certain",
+      "skip_image_build": true
+    },
+    {
       "id": "provider-app",
       "path": "apps/mobile/provider-app",
       "component_name": "provider-app",
@@ -268,6 +328,21 @@
       "image_strategy": "not-required-mobile-artifact",
       "image_strategy_status": "not_required",
       "reason": "Expo/mobile artifact \u2014 not K8s service image",
+      "classification_confidence": "certain",
+      "skip_image_build": true
+    },
+    {
+      "id": "reproductive-domain",
+      "path": "libs/reproductive-domain",
+      "component_name": "reproductive-domain",
+      "type": "library",
+      "plane": "integration",
+      "classification": "internal_package",
+      "build_required": false,
+      "image_required": false,
+      "image_strategy": "not-required-internal-package",
+      "image_strategy_status": "not_required",
+      "reason": "Maven/npm library \u2014 not a K8s workload",
       "classification_confidence": "certain",
       "skip_image_build": true
     },

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T18:11:00.276Z",
+  "generated_at": "2026-07-29T13:06:17.839Z",
   "targets": [
     {
       "id": "abis-service",
@@ -730,6 +730,20 @@
       "classification_confidence": "certain"
     },
     {
+      "id": "mental-health-service",
+      "path": "services/mental-health-service",
+      "component_name": "mental-health-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 default shared JRE template after mvn install",
+      "classification_confidence": "certain"
+    },
+    {
       "id": "msika-apps-service",
       "path": "services/msika-apps-service",
       "component_name": "msika-apps-service",
@@ -1052,20 +1066,6 @@
       "classification_confidence": "certain"
     },
     {
-      "id": "mental-health-service",
-      "path": "services/mental-health-service",
-      "component_name": "mental-health-service",
-      "type": "backend_service",
-      "plane": "clinical",
-      "classification": "wave_sequenced_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
-      "image_strategy_status": "valid",
-      "reason": "Java service \u2014 default shared JRE template after mvn install",
-      "classification_confidence": "certain"
-    },
-    {
       "id": "pct-service",
       "path": "services/pct-service",
       "component_name": "pct-service",
@@ -1150,6 +1150,20 @@
       "classification_confidence": "certain"
     },
     {
+      "id": "procedures-service",
+      "path": "services/procedures-service",
+      "component_name": "procedures-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
       "id": "procurement-service",
       "path": "services/procurement-service",
       "component_name": "procurement-service",
@@ -1217,48 +1231,6 @@
       "image_strategy": "shared-dockerfile-template",
       "image_strategy_status": "valid",
       "reason": "Java service \u2014 default shared JRE template after mvn install",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "procedures-service",
-      "path": "services/procedures-service",
-      "component_name": "procedures-service",
-      "type": "backend_service",
-      "plane": "clinical",
-      "classification": "wave_sequenced_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
-      "image_strategy_status": "valid",
-      "reason": "Java service \u2014 thin JAR-copy Dockerfile, equivalent to shared template",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "surgery-service",
-      "path": "services/surgery-service",
-      "component_name": "surgery-service",
-      "type": "backend_service",
-      "plane": "clinical",
-      "classification": "wave_sequenced_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
-      "image_strategy_status": "valid",
-      "reason": "Java service \u2014 thin JAR-copy Dockerfile, equivalent to shared template",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "telemonitoring-service",
-      "path": "services/telemonitoring-service",
-      "component_name": "telemonitoring-service",
-      "type": "backend_service",
-      "plane": "clinical",
-      "classification": "wave_sequenced_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
-      "image_strategy_status": "valid",
-      "reason": "Java service \u2014 thin JAR-copy Dockerfile, equivalent to shared template",
       "classification_confidence": "certain"
     },
     {
@@ -1430,6 +1402,20 @@
       "classification_confidence": "certain"
     },
     {
+      "id": "surgery-service",
+      "path": "services/surgery-service",
+      "component_name": "surgery-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
       "id": "surveillance-service",
       "path": "services/surveillance-service",
       "component_name": "surveillance-service",
@@ -1441,6 +1427,20 @@
       "image_strategy": "jib",
       "image_strategy_status": "valid",
       "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "telemonitoring-service",
+      "path": "services/telemonitoring-service",
+      "component_name": "telemonitoring-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
       "classification_confidence": "certain"
     },
     {

@@ -1,6 +1,6 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-07-29T06:32:45.832Z
+> Generated: 2026-07-29T15:45:26.035Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
 > Total services: **104** | Libraries: **17** | UI workspaces: **20**
 
@@ -9,8 +9,7 @@
 | Status | Count |
 |--------|------:|
 | internal-only | 26 |
-| real | 75 |
-| mostly-real | 3 |
+| real | 78 |
 
 ## Service inventory
 
@@ -86,10 +85,10 @@
 | reporting-service | data | real | real | real | real | real | n/a | real | real |
 | rito-quality-safety-service | experience | real | real | real | real | real | n/a | real | real |
 | participation-service | experience | real | real | real | real | real | n/a | real | real |
-| procedures-service | clinical | real | real | absent | real | real | n/a | real | mostly-real |
-| surgery-service | clinical | real | real | absent | real | real | n/a | real | mostly-real |
+| procedures-service | clinical | real | real | real | real | real | n/a | real | real |
+| surgery-service | clinical | real | real | real | real | real | n/a | real | real |
 | telemonitoring-service | clinical | real | real | real | real | real | n/a | real | real |
-| mental-health-service | clinical | real | real | absent | real | real | n/a | real | mostly-real |
+| mental-health-service | clinical | real | real | real | real | real | n/a | real | real |
 | rtc-gateway-service | integration | real | real | real | real | real | n/a | real | real |
 | rules-service | clinical | real | real | real | real | real | n/a | real | real |
 | scheduling-service | clinical | real | real | real | real | real | n/a | real | real |

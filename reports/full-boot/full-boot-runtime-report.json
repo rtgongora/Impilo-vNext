@@ -1,9 +1,9 @@
 {
-  "total_discovered": 155,
+  "total_discovered": 160,
   "by_plane": {
     "trust": 14,
     "data": 12,
-    "integration": 46,
+    "integration": 51,
     "enterprise": 17,
     "experience": 31,
     "clinical": 24,
@@ -14,17 +14,17 @@
   "by_classification": {
     "wave_sequenced_full_boot": 107,
     "external_dependency": 9,
+    "internal_package": 17,
     "required_full_boot": 22,
-    "internal_package": 12,
     "deprecated_retired": 5
   },
   "by_image_strategy": {
     "jib": 21,
     "shared-dockerfile-template": 82,
     "not-required-generated-client": 9,
+    "not-required-internal-package": 17,
     "buildpacks": 15,
     "not-required-mobile-artifact": 2,
-    "not-required-internal-package": 12,
     "not-required-doctrine-only-component": 5,
     "official-helm-chart": 8,
     "dockerfile": 1
@@ -36,7 +36,7 @@
   "missing_required_image_strategy_count": 0,
   "failing_required_image_builds": [],
   "unknown_needs_review": [],
-  "not_required_components_count": 28,
+  "not_required_components_count": 33,
   "official_image_chart_defined": 8,
   "images_ready": true,
   "helm_deployability_ready": true,
