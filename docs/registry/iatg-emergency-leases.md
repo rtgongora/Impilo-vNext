@@ -481,6 +481,20 @@ Two menus also advertise burns tools and disagree with each other: the BFF offer
 tools, and `apps/mobile/provider-app/src/data/specialtyWorkspaces.ts` offers **18 specialties × 6 =
 108 tool labels**, almost none implemented. Tracked as `task_40846f47` and `task_4d5f394f`.
 
+**Update 2026-07-26 — both menus are now honest, and this lease is respected by both.** The BFF
+route no longer returns bare tool names: each tool declares `available`, a canonical `maturity`,
+the `route` serving it and an `unavailable_reason`, and **`Lund-Browder Chart`, `Fluid Calculator`,
+`Parkland Formula`, `ACLS Protocol`, `Drug Calculator` and `Defib Timer` are marked `Blocked`** —
+deliberately withheld and leased to this pack, not "coming soon". `MobileSpecialtyWorkspaceCatalogTest`
+fails if any of the six flips to available, so **this pack is the only route by which they can
+appear**; when `libs/burn-domain` lands, flip them there and update that test in the same commit.
+Only Partograph, Growth Charts and Immunization Schedule are wired.
+
+The generalised `formKindForTool` defect in §5g is also fixed: the index-3 generic adder is deleted
+rather than exempted for burns, so no workspace fabricates a score, and `NotesForm`'s fake save is
+gone. Nothing in `libs/burn-domain`, `libs/emergency-domain` or the ED surfaces was touched — this
+was a menu-honesty pass only, and no clinical tool was implemented.
+
 ## 5a. Inherited engineering constraints (from the RMNP lane, 2026-07-26)
 
 Two constraints on CKP internals this pack must respect rather than rediscover.
