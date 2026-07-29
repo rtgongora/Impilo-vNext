@@ -142,6 +142,10 @@ function specialEnv(serviceId) {
       // Queue materialisation pulls queue-definitions from TUSO; the code default
       // is localhost:8084, which in-pod means "no queues ever materialise".
       PCT_INTEGRATION_TUSO_BASE_URL: "http://tuso-service:8084",
+      // IMAM admission routing and discharge readiness call the clinical knowledge platform.
+      // Paired with KEYCLOAK_BACKEND_SECRET in specialSecretEnv below.
+      PCT_INTEGRATION_CLINICAL_KNOWLEDGE_BASE_URL: "http://clinical-knowledge-platform-service:8270",
+      KEYCLOAK_BACKEND_CLIENT_ID: "impilo-backend",
     };
   }
   if (serviceId === "oros-service") {
@@ -221,6 +225,17 @@ function specialSecretEnv(serviceId) {
   if (serviceId === "mushex-service") {
     // MUSHEX_HMAC_PEPPER is an HMAC pepper (data-affecting) — preserve, don't rotate.
     return { MUSHEX_HMAC_PEPPER: { name: SECRET, key: "mushex-hmac-pepper" } };
+  }
+  if (serviceId === "pct-service") {
+    // pct-service calls the clinical knowledge platform for IMAM admission routing and discharge
+    // readiness. That service is an OAuth2 resource server and authenticates services as well as
+    // users, so the call needs a service token of its own — the user's cannot be borrowed, since the
+    // same evaluation runs from Kafka consumers and scheduled jobs with no user present.
+    //
+    // This lived only as a hand edit in the generated file, so regenerating silently deleted it and
+    // broke that call. The file even carried a warning saying so. Encoded here instead, which is
+    // what "do not edit by hand" requires of anything the generator must keep.
+    return { KEYCLOAK_BACKEND_SECRET: { name: SECRET, key: "keycloak-backend-secret" } };
   }
   return null;
 }
@@ -319,6 +334,9 @@ function main() {
 
   const header = [
     "# AUTO-GENERATED — do not edit by hand.",
+    "# Per-service overrides belong in specialEnv/specialSecretEnv/specialProbes/specialResources in",
+    "# the generator, never here: a hand edit survives only until the next run. pct-service's",
+    "# KEYCLOAK_BACKEND_SECRET was lost exactly that way.",
     `# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs${maxWave !== null ? ` --max-wave ${maxWave}` : ""}`,
     `# Microservices: ${microEntries.length} | enabled: ${enabledCount}${maxWave !== null ? ` (waves 0–${maxWave})` : " (all waves)"}`,
     "",
