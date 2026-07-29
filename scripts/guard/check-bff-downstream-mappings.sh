@@ -2,7 +2,10 @@
 # Verify every helm-enabled microservice has a BFF downstream URL or documented exclusion.
 set -euo pipefail
 
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+# Script-relative, never a hardcoded checkout: this default sent the guard into
+# /opt/impilo/repos/Impilo-vNext and audited that tree instead of the one under review, so a
+# worktree run reported on somebody else's working copy and called it a pass.
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO"
 
 echo "=== check-bff-downstream-mappings ==="

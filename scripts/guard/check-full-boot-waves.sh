@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Validate config/full-boot-waves.yml covers every runtime image service exactly once.
 set -euo pipefail
-REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+# Script-relative, never a hardcoded checkout: this default sent the guard into
+# /opt/impilo/repos/Impilo-vNext and audited that tree instead of the one under review, so a
+# worktree run reported on somebody else's working copy and called it a pass.
+REPO="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO"
-node scripts/full-boot/generate-full-boot-artifacts.mjs >/dev/null 2>&1 || true
+bash scripts/full-boot/generate-artifacts.sh >/dev/null 2>&1 || true
 python3 <<'PY'
 import sys, yaml
 from pathlib import Path
