@@ -62,9 +62,13 @@ INSERT INTO tshepo_authz.policy_rule (
  'CLINICAL_SUPERVISOR: list PENDING_REVIEW break-glass requests for retrospective review.',
  'PROVIDER', 'CLINICAL_SUPERVISOR', 'review', 'GET', NULL, false, false, 'ALLOW', 40,
  '{"path_contains": "/v1/break-glass/review", "min_loa": 2}', true),
+-- actor_type is NULL (match on ROLE alone), following V026's FACILITY_ADMIN rules. Authored as
+-- 'STAFF', which is not in the runtime ActorType vocabulary [PROVIDER, OPERATOR, CITIZEN, SYSTEM,
+-- CAREGIVER, SERVICE] — so the rule sat in the table and could never match a live request, and the
+-- facility-admin review lane silently did not exist. PolicyRuleSeedVocabularyTest caught it on merge.
 ('00000000-0000-0000-0000-000000000001'::uuid, 'break-glass-review-list-facility-admin',
  'FACILITY_ADMIN: list PENDING_REVIEW break-glass requests for the facility.',
- 'STAFF', 'FACILITY_ADMIN', 'review', 'GET', NULL, false, false, 'ALLOW', 40,
+ NULL, 'FACILITY_ADMIN', 'review', 'GET', NULL, false, false, 'ALLOW', 40,
  '{"path_contains": "/v1/break-glass/review", "min_loa": 2}', true),
 
 -- ── 3. Supervisors DECIDE a review (approve / reject) — segment {id} collapses to `review`; pinned ──
@@ -76,7 +80,8 @@ INSERT INTO tshepo_authz.policy_rule (
  'CLINICAL_SUPERVISOR: approve or reject a break-glass request.',
  'PROVIDER', 'CLINICAL_SUPERVISOR', 'review', 'POST', NULL, false, false, 'ALLOW', 40,
  '{"path_contains": "/v1/break-glass/review/", "min_loa": 2}', true),
+-- actor_type NULL for the same reason as the list rule above.
 ('00000000-0000-0000-0000-000000000001'::uuid, 'break-glass-review-decide-facility-admin',
  'FACILITY_ADMIN: approve or reject a break-glass request for the facility.',
- 'STAFF', 'FACILITY_ADMIN', 'review', 'POST', NULL, false, false, 'ALLOW', 40,
+ NULL, 'FACILITY_ADMIN', 'review', 'POST', NULL, false, false, 'ALLOW', 40,
  '{"path_contains": "/v1/break-glass/review/", "min_loa": 2}', true);
