@@ -10,6 +10,7 @@
 | `asset-registry-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/asset-registry-service` | triage |
 | `audit-ledger-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/audit-ledger-service` | triage |
 | `booking-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/booking-service` | triage |
+| `burn-domain` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/burn-domain` | triage |
 | `butano-fhir` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/butano-fhir` | triage |
 | `butano-service` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | missing | `services/butano-service` | not_deployed_in_preview |
 | `butano-web` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/butano-web` | triage |
@@ -36,6 +37,7 @@
 | `dispatch-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/dispatch-service` | triage |
 | `document-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/document-service` | triage |
 | `ehr` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/ehr` | triage |
+| `emergency-domain` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/emergency-domain` | triage |
 | `envoy` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | missing | `docker-compose.yml` | not_deployed_in_preview |
 | `experience-bff` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | partial | `services/experience-bff` | triage |
 | `federation-connector` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/federation-connector` | triage |
@@ -64,6 +66,8 @@
 | `llm-orchestration-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/llm-orchestration-service` | triage |
 | `madi-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/madi-service` | triage |
 | `matcher-engine` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/matcher-engine` | triage |
+| `medicine-domain` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/medicine-domain` | triage |
+| `mental-health-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | not-wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/mental-health-service` | triage |
 | `minio` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | missing | `docker-compose.yml` | not_deployed_in_preview |
 | `msika-apps-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-apps-service` | triage |
 | `msika-flow-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-flow-service` | triage |
@@ -92,6 +96,7 @@
 | `oros-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/oros-service` | triage |
 | `oros-web` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/oros-web` | triage |
 | `pacs-adapter-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/pacs-adapter-service` | triage |
+| `paediatric-domain` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/paediatric-domain` | triage |
 | `participation-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/participation-service` | triage |
 | `patient-safety-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/patient-safety-service` | triage |
 | `pct-service` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | missing | `services/pct-service` | not_deployed_in_preview |
@@ -101,12 +106,14 @@
 | `pharmacy-web` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/pharmacy-web` | triage |
 | `portal` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/portal` | triage |
 | `postgres` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | partial | `docker-compose.yml` | triage |
+| `procedures-service` | health-os-doctrine, core-transaction (if domain) | as classified | scaffold | not-wired | see MOBILE_PARITY_MATRIX | not-started | unknown | `services/procedures-service` | triage |
 | `procurement-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/procurement-service` | triage |
 | `product-registry-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/product-registry-service` | triage |
 | `provider-app` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | partial | see MOBILE_PARITY_MATRIX | partial | unknown | `apps/mobile/provider-app` | triage |
 | `redis` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | partial | `docker-compose.yml` | triage |
 | `referral-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/referral-service` | triage |
 | `reporting-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/reporting-service` | triage |
+| `reproductive-domain` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/reproductive-domain` | triage |
 | `rito-quality-safety-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/rito-quality-safety-service` | triage |
 | `rtc-gateway-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/rtc-gateway-service` | triage |
 | `rules-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/rules-service` | triage |
@@ -123,10 +130,12 @@
 | `simba-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/simba-service` | triage |
 | `support-console` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/support-console` | triage |
 | `support-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/support-service` | triage |
+| `surgery-service` | health-os-doctrine, core-transaction (if domain) | as classified | scaffold | not-wired | see MOBILE_PARITY_MATRIX | not-started | unknown | `services/surgery-service` | triage |
 | `surveillance-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/surveillance-service` | triage |
 | `tech-companion` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/tech-companion` | triage |
 | `tech-companion-harness` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/tech-companion-harness` | triage |
 | `tech-companion-mock` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/tech-companion-mock` | triage |
+| `telemonitoring-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/telemonitoring-service` | triage |
 | `tshepo-audit-service` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | missing | `services/tshepo-audit-service` | not_deployed_in_preview |
 | `tshepo-authz-service` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | missing | `services/tshepo-authz-service` | not_deployed_in_preview |
 | `tshepo-consent-service` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | missing | `services/tshepo-consent-service` | not_deployed_in_preview |

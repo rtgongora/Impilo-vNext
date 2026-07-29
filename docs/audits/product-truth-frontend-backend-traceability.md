@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-07-25T02:45:36.978Z
-> Web surfaces: **895** | Mobile screens: **212**
+> Generated: 2026-07-29T06:32:45.832Z
+> Web surfaces: **922** | Mobile screens: **214**
 
 ## Web routes (one-ui-shell)
 
@@ -25,6 +25,7 @@
 | /auth/register/status | Registration Status | auth | yes | no | yes | yes | yes | — |
 | /auth/resolving | Resolving Session | auth | yes | no | yes | no | yes | — |
 | /auth/context-chooser | Choose Work Context | auth | yes | no | yes | no | yes | — |
+| / | Welcome to Impilo | auth | yes | no | yes | no | yes | F |
 | /welcome | Welcome to Impilo | auth | yes | no | yes | no | yes | — |
 | /welcome/find-care | Find Care | auth | yes | no | yes | no | yes | — |
 | /welcome/emergency | Emergency & Public Health | auth | yes | no | yes | no | yes | — |
@@ -47,16 +48,23 @@
 | /core-transaction | Core Transaction | queue | yes | no | yes | yes | yes | — |
 | /core-transaction/[transactionId] | Core Transaction Detail | queue | yes | no | yes | yes | yes | — |
 | /client-journey | Client Journey | home | yes | no | yes | yes | yes | — |
-| /provider-workspace | Provider Workspace | queue | yes | no | yes | yes | yes | — |
+| /provider-workspace | Provider Workspace | queue | no | no | yes | no | no | — |
 | /provider-workspace/wellness | Wellness Workbench | wellness | yes | no | yes | yes | yes | — |
 | /provider-workspace/wellness/social | Wellness-Social Workbench | wellness | yes | no | yes | yes | yes | — |
 | /platform-journey | Platform Journey | admin | yes | no | yes | yes | yes | — |
 | /clinical-tools | Clinical Tools | queue | yes | no | yes | yes | yes | — |
 | /clinical-tools/rules | Rules Engine | queue | yes | no | yes | yes | yes | — |
 | /clinical-tools/forms | Form Builder | queue | yes | no | yes | yes | yes | — |
+| /clinical/chronic-registers | Chronic disease registers | queue | yes | no | yes | no | yes | — |
 | /clinical/control-tower | Control Tower | queue | yes | no | yes | yes | yes | — |
 | /clinical/dictation | Voice Dictation | queue | yes | no | yes | no | yes | — |
 | /clinical/emergency | ED / Casualty | queue | yes | no | yes | yes | yes | — |
+| /clinical/nutrition-tracing | Nutrition Defaulter Tracing | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/resus/[activationId] | Resuscitation | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/episode/[episodeId] | Emergency Episode | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/board | Emergency Board | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/spine/[episodeId] | Emergency Episode Spine | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/[visitId] | ED Visit | queue | yes | no | yes | yes | yes | — |
 | /clinical/inpatient | Inpatient Care | queue | yes | no | yes | no | yes | — |
 | /clinical/inpatient/admissions | Inpatient Admissions | queue | yes | no | yes | yes | yes | — |
 | /clinical/inpatient/admissions/[admissionId] | Inpatient Episode | queue | yes | no | yes | yes | yes | — |
@@ -99,7 +107,6 @@
 | /ai-governance/models/[id] | AI Model | admin | yes | no | yes | yes | yes | — |
 | /access | Access Channels | admin | yes | no | yes | yes | yes | — |
 | /kiosk | Self Check-In | auth | yes | no | yes | yes | yes | — |
-| / | Home | home | yes | no | yes | no | yes | — |
 | /home | Home | home | yes | no | yes | yes | yes | — |
 | /home/notifications | Notifications | home | yes | no | yes | yes | yes | — |
 | /home/profile | My Profile | home | yes | no | yes | yes | yes | — |
@@ -142,11 +149,15 @@
 | /professional/pic-nominations | PIC Nominations | professional | yes | no | yes | yes | yes | — |
 | /professional/regulatory | My Regulatory Affairs | professional | yes | no | yes | no | yes | — |
 | /professional/regulatory/applications/[id] | Regulatory Application | professional | yes | no | yes | no | yes | — |
+| /professional/regulatory/apply/student/[applicationId] | Student registration | professional | yes | no | yes | yes | yes | — |
+| /professional/regulatory/contribute/[inviteId] | Confirm a student's enrolment | professional | yes | no | yes | yes | yes | — |
 | /professional/regulatory/complaints | Complaints involving me | professional | yes | no | yes | no | yes | — |
 | /professional/practice-regulation | Practice & Facility Regulation | professional | yes | no | yes | yes | yes | — |
 | /work/regulators/[regulatorId]/committee | Committee & hearings | operations | yes | no | yes | no | yes | — |
 | /work/regulators/[regulatorId]/bulk-import | Bulk import | operations | yes | no | yes | no | yes | — |
 | /work/regulatory/[orgId]/dashboard | Regulatory dashboards | operations | yes | no | yes | no | yes | — |
+| /work/regulatory/[orgId]/configuration | Regulatory configuration | operations | yes | no | yes | no | yes | — |
+| /work/regulatory/[orgId]/student-applications/[applicationId] | Student registration review | operations | yes | no | yes | yes | yes | — |
 | /work/regulatory/hpa/oversight | HPA oversight | operations | yes | no | yes | no | yes | — |
 | /share/claim | Claim Shared Documents | home | yes | no | yes | yes | no | — |
 | /collaboration/access | Provider collaboration access | home | yes | no | yes | yes | yes | — |
@@ -215,7 +226,9 @@
 | /ehr/[patientId]/discharge | Discharge | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/care-plans | Care Plans | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/procedures | Procedures | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/paediatrics | Paediatric Workspace | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/growth-chart | Growth Chart | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/imam | Nutrition Treatment | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/family-history | Family History | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/social-history | Social History | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/functional-status | Functional Status | ehr | yes | no | yes | yes | yes | — |
@@ -228,6 +241,15 @@
 | /ehr/[patientId]/imaging | Imaging | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/investigations | Investigations | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/imaging/viewer | DICOM Viewer | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/programmes | Care programmes | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/consultations | Consultations and MDT | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/examination | Examination | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/medicine | Medicine workspace | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/medicine/cds | Decision support | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/medicine/specialty/[specialty] | Specialty workspace | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/multimorbidity | Multimorbidity | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/ward-round | Ward round | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/workspace/[specialty] | Specialty Workspace | ehr | yes | no | yes | yes | yes | — |
 | /admin | Administration | admin | yes | no | yes | no | yes | — |
 | /admin/users | Worker & Provider Access | admin | yes | no | yes | yes | yes | — |
 | /admin/comms-ops | Comms Operations | admin | yes | no | yes | no | yes | — |
@@ -276,6 +298,7 @@
 | /registry | Registry Hub | registry | yes | no | yes | yes | yes | — |
 | /registry/intake | Registry Intake | registry | yes | no | yes | yes | yes | — |
 | /registry/locality-review | Locality gazetteer review | registry | yes | no | yes | yes | yes | — |
+| /registry/facility-verification | Facility verification | registry | yes | no | yes | yes | yes | — |
 | /registry/facility-lifecycle | Facility regulatory lifecycle | registry | yes | no | yes | yes | yes | — |
 | /registry/facility-lifecycle/[facilityId] | Facility regulatory file | registry | yes | no | yes | yes | yes | — |
 | /registry/providers | Provider Registry | registry | yes | no | yes | yes | yes | — |
@@ -285,6 +308,7 @@
 | /registry/provider-council/council-workspace | Council operations | registry | yes | no | yes | yes | yes | — |
 | /registry/facility-classification | Facility classification reconciliation | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities | Facility Registry | registry | yes | no | yes | yes | yes | — |
+| /registry/facilities/worklist | Registry worklist | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities/[id] | Facility Profile | registry | yes | no | yes | yes | yes | — |
 | /registry/place-governance | Place governance | registry | yes | no | yes | yes | yes | — |
 | /registry/terminology | Terminology Browser | registry | yes | no | yes | no | yes | — |
@@ -483,30 +507,6 @@
 | /lab/catalog | Test Catalog | lab | yes | no | yes | no | yes | — |
 | /lab/reconciliation | Lab Reconciliation | lab | yes | no | yes | yes | yes | — |
 | /operations | Operations | operations | yes | no | yes | no | yes | — |
-| /operations/facility-operations | Facility Operations | operations | yes | no | yes | yes | yes | — |
-| /operations/facility-operations/district-view | District View | operations | yes | no | yes | yes | yes | — |
-| /operations/facility-operations/patient-flow | Patient Flow | operations | yes | no | yes | yes | yes | — |
-| /operations/facility-operations/resources | Resource Operations | operations | yes | no | yes | no | yes | — |
-| /operations/workflows | Workflow Orchestration | operations | yes | no | yes | yes | yes | — |
-| /operations/workflows/[instanceId] | Workflow Instance | operations | yes | no | yes | yes | yes | — |
-| /operations/dispatch | Dispatch Operations | operations | yes | no | yes | yes | yes | — |
-| /operations/dispatch/[taskId] | Dispatch Task | operations | yes | no | yes | yes | yes | — |
-| /operations/vito | Identity Operations | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/registration | Client Registration | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/registration/new | New Registration | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/issuance | Issuance Queue | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/issuance/[requestId] | Issuance Request | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/cards | Smart Cards | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/card-verify | Verify a presented card | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/card-sync | Card-sync pipeline | operations | yes | no | yes | no | yes | — |
-| /operations/vito/cards/pickup | Card Pickup | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/match | Match Review | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/dedup | Deduplication | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/print | Print & Slips | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/patient-shares | Patient Shares | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/internal-search | Internal Search | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/biometrics | Biometrics | operations | yes | no | yes | yes | yes | — |
-| /operations/vito/biometric-enrol | Biometric enrol & verify | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
@@ -674,6 +674,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/LabHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/MaternityWorkspaces.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/MessagingScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/NEWS2ScoringScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/NotesPanel.tsx | 0 | no |
@@ -700,7 +701,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/ResuscitationScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx | 1 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/SpecialtyWorkspacePanel.tsx | 0 | yes |
+| provider-app | apps/mobile/provider-app/src/screens/provider/SpecialtyWorkspacePanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/TelemedicineCallScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/TelemedicineScreen.tsx | 0 | no |
@@ -711,4 +712,3 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/VashandiAvailabilityScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/VashandiFacilityStaffScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/VashandiRosterScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/VashandiWorkforceHubScreen.tsx | 0 | no |

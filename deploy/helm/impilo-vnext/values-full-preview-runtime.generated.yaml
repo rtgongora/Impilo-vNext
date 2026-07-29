@@ -1,16 +1,9 @@
 # AUTO-GENERATED — do not edit by hand.
+# Per-service overrides belong in specialEnv/specialSecretEnv/specialProbes/specialResources in
+# the generator, never here: a hand edit survives only until the next run. pct-service's
+# KEYCLOAK_BACKEND_SECRET was lost exactly that way.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-#
-# HAND-EDITED 2026-07-28 to add mental-health-service (W13, port 8397) and, earlier the same day,
-# procedures-service and surgery-service, NOT regenerated. Running the generator
-# here dropped pct-service's hand-authored secretEnv block (KEYCLOAK_BACKEND_SECRET,
-# PCT_INTEGRATION_CLINICAL_KNOWLEDGE_BASE_URL, KEYCLOAK_BACKEND_CLIENT_ID — its explained
-# service-to-service OAuth2 token for calling the clinical knowledge platform from Kafka
-# consumers and scheduled jobs with no user present). The generator reconstructs entries from
-# config/full-boot-service-classification.yml and cannot see hand-added secretEnv content, so
-# it silently regressed a live capability. Diff any future regeneration against this file
-# before trusting it — the same law already recorded for scripts/registry/seed-registry.mjs.
-# Microservices: 99 | enabled: 99 (all waves)
+# Microservices: 100 | enabled: 100 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -322,20 +315,16 @@ fullBootServices:
     enabled: true
     port: 8088
     database: pct
-    secretEnv:
-      # pct-service calls the clinical knowledge platform for IMAM admission routing and discharge
-      # readiness. That service is an OAuth2 resource server and authenticates services as well as
-      # users, so the call needs a service token of its own — the user's cannot be borrowed, since
-      # the same evaluation runs from Kafka consumers and scheduled jobs with no user present.
-      KEYCLOAK_BACKEND_SECRET:
-        name: impilo-app-secrets
-        key: keycloak-backend-secret
     env:
       KEYCLOAK_ISSUER: ''
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ''
       PCT_INTEGRATION_TUSO_BASE_URL: http://tuso-service:8084
       PCT_INTEGRATION_CLINICAL_KNOWLEDGE_BASE_URL: http://clinical-knowledge-platform-service:8270
       KEYCLOAK_BACKEND_CLIENT_ID: impilo-backend
+    secretEnv:
+      KEYCLOAK_BACKEND_SECRET:
+        name: impilo-app-secrets
+        key: keycloak-backend-secret
   pharmacy-elmis-adapter:
     enabled: true
     port: 8099
@@ -348,10 +337,6 @@ fullBootServices:
     enabled: true
     port: 8395
     database: procedures
-  surgery-service:
-    enabled: true
-    port: 8396
-    database: surgery
   procurement-service:
     enabled: true
     port: 8283
@@ -421,6 +406,10 @@ fullBootServices:
     enabled: true
     port: 8340
     database: support
+  surgery-service:
+    enabled: true
+    port: 8396
+    database: surgery
   surveillance-service:
     enabled: true
     port: 8180
@@ -551,6 +540,7 @@ postgres:
     - live
     - llm_orchestration
     - madi
+    - mental_health
     - msika
     - msika_apps
     - msika_flow
@@ -588,6 +578,7 @@ postgres:
     - share_slip
     - simba
     - support
+    - surgery
     - surveillance
     - telemonitoring
     - tshepo_audit

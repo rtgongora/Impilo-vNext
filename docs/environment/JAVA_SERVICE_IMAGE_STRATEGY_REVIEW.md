@@ -2,7 +2,7 @@
 
 > Prefer **pre-built JAR + shared JRE template** or **Jib**. Avoid Maven inside Alpine runtime Dockerfiles.
 
-**Maven services in catalog:** 100
+**Maven services in catalog:** 104
 
 | Service | Path | Full-boot | JAR after build | Dockerfile | Strategy | Recommended | Reason | Changes |
 |---|---|---|---|---|---|---|---|---|
@@ -53,6 +53,7 @@
 | llm-orchestration-service | services/llm-orchestration-service | optional | no | services/llm-orchestration-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | madi-service | services/madi-service | optional | no | services/madi-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | matcher-engine | services/matcher-engine | optional | no | services/matcher-engine/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
+| mental-health-service | services/mental-health-service | optional | no | — | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Java service — default shared JRE template after mvn install | — |
 | msika-apps-service | services/msika-apps-service | optional | no | services/msika-apps-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | msika-flow-service | services/msika-flow-service | optional | no | services/msika-flow-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | msika-service | services/msika-service | optional | no | services/msika-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
@@ -75,6 +76,7 @@
 | pct-service | services/pct-service | required | no | services/pct-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | Deploy in impilo-full-preview when authorized |
 | pharmacy-elmis-adapter | services/pharmacy-elmis-adapter | optional | no | services/pharmacy-elmis-adapter/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | pharmacy-service | services/pharmacy-service | optional | no | services/pharmacy-service/Dockerfile | jib | prebuilt-jar-runtime-image or jib | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template | — |
+| procedures-service | services/procedures-service | optional | no | services/procedures-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | procurement-service | services/procurement-service | optional | no | services/procurement-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | product-registry-service | services/product-registry-service | optional | no | services/product-registry-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | referral-service | services/referral-service | optional | no | services/referral-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
@@ -89,7 +91,9 @@
 | share-slip-service | services/share-slip-service | optional | no | services/share-slip-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | simba-service | services/simba-service | optional | no | services/simba-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | support-service | services/support-service | optional | no | services/support-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
+| surgery-service | services/surgery-service | optional | no | services/surgery-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | surveillance-service | services/surveillance-service | optional | no | services/surveillance-service/Dockerfile | jib | prebuilt-jar-runtime-image or jib | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template | — |
+| telemonitoring-service | services/telemonitoring-service | optional | no | services/telemonitoring-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | tshepo-audit-service | services/tshepo-audit-service | required | no | services/tshepo-audit-service/Dockerfile | jib | prebuilt-jar-runtime-image or jib | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template | Deploy in impilo-full-preview when authorized |
 | tshepo-authz-service | services/tshepo-authz-service | required | no | services/tshepo-authz-service/Dockerfile | jib | prebuilt-jar-runtime-image or jib | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template | Deploy in impilo-full-preview when authorized |
 | tshepo-consent-service | services/tshepo-consent-service | required | no | services/tshepo-consent-service/Dockerfile | jib | prebuilt-jar-runtime-image or jib | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template | Deploy in impilo-full-preview when authorized |

@@ -1,20 +1,16 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-07-25T02:45:36.978Z
+> Generated: 2026-07-29T06:32:45.832Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
-> Total services: **100** | Libraries: **12** | UI workspaces: **20**
-
-## Registry drift
-
-**Unregistered modules on disk:**
-- `matcher-engine`
+> Total services: **104** | Libraries: **17** | UI workspaces: **20**
 
 ## Summary by product status
 
 | Status | Count |
 |--------|------:|
-| internal-only | 25 |
+| internal-only | 26 |
 | real | 75 |
+| mostly-real | 3 |
 
 ## Service inventory
 
@@ -90,7 +86,10 @@
 | reporting-service | data | real | real | real | real | real | n/a | real | real |
 | rito-quality-safety-service | experience | real | real | real | real | real | n/a | real | real |
 | participation-service | experience | real | real | real | real | real | n/a | real | real |
+| procedures-service | clinical | real | real | absent | real | real | n/a | real | mostly-real |
+| surgery-service | clinical | real | real | absent | real | real | n/a | real | mostly-real |
 | telemonitoring-service | clinical | real | real | real | real | real | n/a | real | real |
+| mental-health-service | clinical | real | real | absent | real | real | n/a | real | mostly-real |
 | rtc-gateway-service | integration | real | real | real | real | real | n/a | real | real |
 | rules-service | clinical | real | real | real | real | real | n/a | real | real |
 | scheduling-service | clinical | real | real | real | real | real | n/a | real | real |
@@ -108,6 +107,7 @@
 | tshepo-keys-service | trust | real | real | real | real | real | n/a | real | real |
 | tshepo-offline-service | trust | real | real | real | real | real | n/a | real | real |
 | abis-service | trust | real | real | real | real | real | n/a | real | real |
+| matcher-engine | trust | absent | real | absent | absent | thin | absent | real | internal-only |
 | tshepo-service | trust | real | real | real | real | real | n/a | real | real |
 | tuso-service | registry | real | real | real | real | real | n/a | real | real |
 | ubomi-service | registry | real | real | real | real | real | n/a | real | real |
@@ -131,6 +131,11 @@
 - **tech-companion** — `libs/tech-companion`
 - **federation-connector** — `libs/federation-connector`
 - **tech-companion-harness** — `libs/tech-companion-harness`
+- **paediatric-domain** — `libs/paediatric-domain`
+- **reproductive-domain** — `libs/reproductive-domain`
+- **burn-domain** — `libs/burn-domain`
+- **emergency-domain** — `libs/emergency-domain`
+- **medicine-domain** — `libs/medicine-domain`
 - **tech-companion-mock** — `libs/tech-companion-mock`
 - **ops-instrumentation** — `libs/ops-instrumentation`
 - **offline-sdk** — `libs/offline-sdk`

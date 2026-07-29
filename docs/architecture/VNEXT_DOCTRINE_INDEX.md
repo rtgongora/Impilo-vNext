@@ -59,6 +59,7 @@
 | `docs/architecture/registry-plane-endpoint-inventory.md` | partial-auto | all planes | yes |
 | `docs/architecture/registry-plane-production-readiness-final-report.md` | partial-auto | all planes | yes |
 | `docs/architecture/registry-system-of-record-boundary-map.md` | partial-auto | all planes | yes |
+| `docs/architecture/rito-experience-reputation-design.md` | human-review | all planes | advisory |
 | `docs/architecture/services-registry.yaml` | partial-auto | all planes | yes |
 | `docs/architecture/three-journey-core-transaction-map.md` | human-review | all planes | advisory |
 | `docs/architecture/transaction-context-panel.md` | human-review | all planes | advisory |
@@ -87,6 +88,7 @@
 | `docs/doctrine/README.md` | human-review | all planes | advisory |
 | `docs/doctrine/THREE_CORE_JOURNEYS.md` | human-review | all planes | advisory |
 | `docs/doctrine/booking-appointment-doctrine.md` | human-review | all planes | advisory |
+| `docs/doctrine/care-continuum-doctrine.md` | human-review | all planes | advisory |
 | `docs/doctrine/costa-mushex-billing-timing.md` | human-review | all planes | advisory |
 | `docs/doctrine/doctrine-gap-matrix.md` | human-review | all planes | advisory |
 | `docs/doctrine/dura-stock-doctrine.md` | human-review | all planes | advisory |
@@ -96,6 +98,9 @@
 | `docs/doctrine/identity-access-trust-governance.md` | human-review | all planes | advisory |
 | `docs/doctrine/khuluma-comms-orchestration.md` | human-review | all planes | advisory |
 | `docs/doctrine/mushex-gateway-neutrality.md` | partial-auto | all planes | yes |
+| `docs/doctrine/provider-reputation-doctrine.md` | human-review | all planes | advisory |
+| `docs/doctrine/regulatory-operating-model-doctrine.md` | human-review | all planes | advisory |
+| `docs/doctrine/service-relationship-doctrine.md` | human-review | all planes | advisory |
 | `docs/environment/BACKEND_FRONTEND_PARITY_GATE.md` | partial-auto | all planes | yes |
 | `docs/environment/BACKEND_FRONTEND_PARITY_GATE_REPORT.md` | partial-auto | all planes | yes |
 | `docs/environment/DOCTRINE_COMPLIANCE_GATE.md` | partial-auto | all planes | yes |

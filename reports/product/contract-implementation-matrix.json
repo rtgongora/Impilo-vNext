@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-07-20T18:15:10.507Z",
+  "generatedAt": "2026-07-29T06:02:53.814Z",
   "counts": {
-    "totalOpenApiOperations": 4829,
+    "totalOpenApiOperations": 4863,
     "totalAsyncChannels": 84,
-    "implemented": 4879,
+    "implemented": 4913,
     "partial": 0,
     "missing": 11,
     "unownedContract": 23,
-    "orphanHandlers": 55,
-    "violations": 66,
+    "orphanHandlers": 65,
+    "violations": 76,
     "contractParseErrors": 0
   },
   "openApiOperations": [
@@ -7425,7 +7425,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FetalMonitoringController.java",
       "stubPattern": null
     },
     {
@@ -7477,7 +7477,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ConsultationsController.java",
       "stubPattern": null
     },
     {
@@ -7594,7 +7594,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FetalMonitoringController.java",
       "stubPattern": null
     },
     {
@@ -8348,7 +8348,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -17097,7 +17097,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FetalMonitoringController.java",
       "stubPattern": null
     },
     {
@@ -19185,19 +19185,6 @@
       "operationId": "experiencebff_post__clinical_cds_evaluate",
       "method": "POST",
       "path": "/clinical/cds/evaluate",
-      "summary": "Documented from experience-bff handler (complete-not-delete sync)",
-      "modules": [
-        "experience-bff"
-      ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedController.java",
-      "stubPattern": null
-    },
-    {
-      "contract": "experience-bff.openapi.yaml",
-      "operationId": "experiencebff_get__workspaces_specialties",
-      "method": "GET",
-      "path": "/workspaces/specialties",
       "summary": "Documented from experience-bff handler (complete-not-delete sync)",
       "modules": [
         "experience-bff"
@@ -21478,7 +21465,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -21491,7 +21478,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabOrdersController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -21569,7 +21556,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MeRegulatoryBffController.java",
       "stubPattern": null
     },
     {
@@ -21595,7 +21582,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -21608,7 +21595,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -21647,7 +21634,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -22401,7 +22388,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ReportJobController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/RegulatoryConsoleBffController.java",
       "stubPattern": null
     },
     {
@@ -23090,7 +23077,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ConsultationsController.java",
       "stubPattern": null
     },
     {
@@ -24494,7 +24481,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WorkflowController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -24806,7 +24793,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -25547,7 +25534,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ConsultationsController.java",
       "stubPattern": null
     },
     {
@@ -25586,7 +25573,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/provider/ProviderDeliveryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -25755,7 +25742,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/provider/ProviderDeliveryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ConsultationsController.java",
       "stubPattern": null
     },
     {
@@ -25794,7 +25781,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/provider/ProviderDeliveryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EmergencyEpisodeController.java",
       "stubPattern": null
     },
     {
@@ -35180,7 +35167,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FetalMonitoringController.java",
       "stubPattern": null
     },
     {
@@ -35362,7 +35349,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FetalMonitoringController.java",
       "stubPattern": null
     },
     {
@@ -36844,7 +36831,7 @@
         "msika-flow-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/msika-flow-service/src/main/java/zw/gov/mohcc/impilo/msikaflow/api/controller/OrderController.java",
+      "serviceHandler": "services/msika-flow-service/src/main/java/zw/gov/mohcc/impilo/msikaflow/api/controller/MarketplaceRequestController.java",
       "stubPattern": null
     },
     {
@@ -37598,7 +37585,7 @@
         "msika-flow-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/msika-flow-service/src/main/java/zw/gov/mohcc/impilo/msikaflow/api/controller/OrderController.java",
+      "serviceHandler": "services/msika-flow-service/src/main/java/zw/gov/mohcc/impilo/msikaflow/api/controller/MarketplaceRequestController.java",
       "stubPattern": null
     },
     {
@@ -45034,7 +45021,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/QueueItemController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ProblemController.java",
       "stubPattern": null
     },
     {
@@ -45424,7 +45411,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ReferralController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ConsultationController.java",
       "stubPattern": null
     },
     {
@@ -45658,7 +45645,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/AllergyController.java",
       "stubPattern": null
     },
     {
@@ -45671,7 +45658,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/AllergyController.java",
       "stubPattern": null
     },
     {
@@ -45996,7 +45983,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/QueueItemController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ProblemController.java",
       "stubPattern": null
     },
     {
@@ -46087,7 +46074,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ReferralController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ConsultationController.java",
       "stubPattern": null
     },
     {
@@ -46100,7 +46087,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ReferralController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/EmergencyAlertController.java",
       "stubPattern": null
     },
     {
@@ -46347,7 +46334,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ReferralController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ConsultationController.java",
       "stubPattern": null
     },
     {
@@ -46880,7 +46867,7 @@
         "pharmacy-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pharmacy-service/src/main/java/zw/gov/mohcc/impilo/pharmacy/api/controller/DispenseController.java",
+      "serviceHandler": "services/pharmacy-service/src/main/java/zw/gov/mohcc/impilo/pharmacy/api/controller/ClarificationController.java",
       "stubPattern": null
     },
     {
@@ -51677,6 +51664,461 @@
       "stubPattern": null
     },
     {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_list_monitoring_plans",
+      "method": "GET",
+      "path": "/v1/monitoring-plans",
+      "summary": "List monitoring plans",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_create_monitoring_plan",
+      "method": "POST",
+      "path": "/v1/monitoring-plans",
+      "summary": "Create a monitoring plan",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_list_monitoring_programmes",
+      "method": "GET",
+      "path": "/v1/monitoring-programmes",
+      "summary": "List monitoring programmes",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringProgrammeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_create_monitoring_programme",
+      "method": "POST",
+      "path": "/v1/monitoring-programmes",
+      "summary": "Create a monitoring programme",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringProgrammeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__v1_alert_episodes",
+      "method": "GET",
+      "path": "/v1/alert-episodes",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/AlertEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__v1_alert_episodes_episodeId_",
+      "method": "GET",
+      "path": "/v1/alert-episodes/{episodeId}",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/AlertEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_alert_episodes_episodeId_acknowledge",
+      "method": "POST",
+      "path": "/v1/alert-episodes/{episodeId}/acknowledge",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/AlertEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_alert_episodes_episodeId_start",
+      "method": "POST",
+      "path": "/v1/alert-episodes/{episodeId}/start",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/AlertEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_alert_episodes_episodeId_ladder_steps",
+      "method": "POST",
+      "path": "/v1/alert-episodes/{episodeId}/ladder-steps",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/AlertEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_alert_episodes_episodeId_assumption_of_care",
+      "method": "POST",
+      "path": "/v1/alert-episodes/{episodeId}/assumption-of-care",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/AlertEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_alert_episodes_episodeId_resolve",
+      "method": "POST",
+      "path": "/v1/alert-episodes/{episodeId}/resolve",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/AlertEpisodeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_device_assignments",
+      "method": "POST",
+      "path": "/v1/device-assignments",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__v1_device_assignments",
+      "method": "GET",
+      "path": "/v1/device-assignments",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__v1_device_assignments_assignmentId_",
+      "method": "GET",
+      "path": "/v1/device-assignments/{assignmentId}",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_device_assignments_assignmentId_activate",
+      "method": "POST",
+      "path": "/v1/device-assignments/{assignmentId}/activate",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_device_assignments_assignmentId_suspend",
+      "method": "POST",
+      "path": "/v1/device-assignments/{assignmentId}/suspend",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_device_assignments_assignmentId_resume",
+      "method": "POST",
+      "path": "/v1/device-assignments/{assignmentId}/resume",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_device_assignments_assignmentId_return",
+      "method": "POST",
+      "path": "/v1/device-assignments/{assignmentId}/return",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__v1_device_assignments_assignmentId_lost",
+      "method": "POST",
+      "path": "/v1/device-assignments/{assignmentId}/lost",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__internal_v1_device_assignments_by_device_deviceRef_",
+      "method": "GET",
+      "path": "/internal/v1/device-assignments/by-device/{deviceRef}",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/DeviceAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__planId_",
+      "method": "GET",
+      "path": "/v1/monitoring-plans/{planId}",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__planId_approve",
+      "method": "POST",
+      "path": "/v1/monitoring-plans/{planId}/approve",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__planId_suspend",
+      "method": "POST",
+      "path": "/v1/monitoring-plans/{planId}/suspend",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__planId_resume",
+      "method": "POST",
+      "path": "/v1/monitoring-plans/{planId}/resume",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__planId_complete",
+      "method": "POST",
+      "path": "/v1/monitoring-plans/{planId}/complete",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__planId_cancel",
+      "method": "POST",
+      "path": "/v1/monitoring-plans/{planId}/cancel",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__planId_consent",
+      "method": "POST",
+      "path": "/v1/monitoring-plans/{planId}/consent",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__planId_reviews",
+      "method": "POST",
+      "path": "/v1/monitoring-plans/{planId}/reviews",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__planId_threshold_profiles",
+      "method": "POST",
+      "path": "/v1/monitoring-plans/{planId}/threshold-profiles",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__planId_threshold_profiles",
+      "method": "GET",
+      "path": "/v1/monitoring-plans/{planId}/threshold-profiles",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__code_",
+      "method": "GET",
+      "path": "/v1/monitoring-programmes/{code}",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_put__code_",
+      "method": "PUT",
+      "path": "/v1/monitoring-programmes/{code}",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringProgrammeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_post__code_retire",
+      "method": "POST",
+      "path": "/v1/monitoring-programmes/{code}/retire",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringProgrammeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__by_plan_planId_",
+      "method": "GET",
+      "path": "/internal/v1/readings/by-plan/{planId}",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "telemonitoring.openapi.yaml",
+      "operationId": "telemonitoring_get__by_device_deviceRef_",
+      "method": "GET",
+      "path": "/internal/v1/readings/by-device/{deviceRef}",
+      "summary": "Documented from telemonitoring-service handler (complete-not-delete sync)",
+      "modules": [
+        "telemonitoring-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/telemonitoring-service/src/main/java/zw/gov/mohcc/impilo/telemonitoring/api/controller/MonitoringPlanController.java",
+      "stubPattern": null
+    },
+    {
       "contract": "tshepo-audit.openapi.yaml",
       "operationId": "tshepoAuditInternalHealth",
       "method": "GET",
@@ -54637,7 +55079,7 @@
         "tuso-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityRegulatoryController.java",
+      "serviceHandler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityDataGapWorklistController.java",
       "stubPattern": null
     },
     {
@@ -57068,7 +57510,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderLifecycleController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/MeRegulatoryController.java",
       "stubPattern": null
     },
     {
@@ -64076,6 +64518,14 @@
     {
       "module": "nhume-service",
       "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/cold-chain/stability-decision",
+      "handler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "nhume-service",
+      "method": "POST",
       "path": "/internal/v1/nhume/deliveries/{id}/links",
       "handler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
       "implStatus": "contract-gap",
@@ -64110,6 +64560,14 @@
       "method": "POST",
       "path": "/v1/orders/external-manual",
       "handler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/IntakeController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "pct-service",
+      "method": "GET",
+      "path": "/v1/patient/{subjectCpid}/records",
+      "handler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalDocumentController.java",
       "implStatus": "contract-gap",
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     },
@@ -64164,6 +64622,22 @@
     {
       "module": "tuso-service",
       "method": "POST",
+      "path": "/v1/internal/facility-admin-appointments/{appointmentId}/reject",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facility-admin-appointments/{appointmentId}/revoke",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
       "path": "/v1/internal/facilities/{facilityUuid}/credentials",
       "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityCredentialController.java",
       "implStatus": "contract-gap",
@@ -64182,6 +64656,54 @@
       "method": "POST",
       "path": "/v1/public/facilities/credential-scan",
       "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityCredentialController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facilities/{facilityUuid}/profile-submission/fields",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityProfileSubmissionController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facilities/{facilityUuid}/profile-submission/submit",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityProfileSubmissionController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facility-profile-submissions/{submissionId}/request-correction",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityProfileSubmissionController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facility-profile-submissions/{submissionId}/accept",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityProfileSubmissionController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facility-profile-submissions/{submissionId}/reject",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityProfileSubmissionController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "GET",
+      "path": "/v1/internal/facility-profile-submissions",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityProfileSubmissionController.java",
       "implStatus": "contract-gap",
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     },

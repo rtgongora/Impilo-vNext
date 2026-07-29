@@ -9,6 +9,7 @@
 | audit-ledger-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | banking-rails | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | booking-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| burn-domain | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | butano-fhir | clinical | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
 | butano-service | clinical | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
 | butano-web | experience | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
@@ -37,6 +38,7 @@
 | dispatch-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | document-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | ehr | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| emergency-domain | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | envoy | trust | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
 | experience-bff | experience | yes | deploy/helm/impilo-vnext | required | partially_deployable | — | add subchart or impilo-vnext template |
 | external-elmis | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
@@ -69,6 +71,8 @@
 | llm-orchestration-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | madi-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | matcher-engine | trust | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| medicine-domain | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| mental-health-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | minio | integration | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
 | mosip | trust_governance | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | msika-apps-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
@@ -98,6 +102,7 @@
 | oros-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | oros-web | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | pacs-adapter-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| paediatric-domain | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | participation-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | patient-safety-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | pct-service | clinical | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
@@ -107,12 +112,14 @@
 | pharmacy-web | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | portal | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | postgres | integration | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
+| procedures-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | procurement-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | product-registry-service | registry | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | provider-app | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | redis | integration | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
 | referral-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | reporting-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| reproductive-domain | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | rito-quality-safety-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | rtc-gateway-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | rules-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
@@ -130,10 +137,12 @@
 | sms-whatsapp-gateway | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | support-console | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | support-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| surgery-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | surveillance-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | tech-companion | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | tech-companion-harness | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | tech-companion-mock | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| telemonitoring-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | tshepo-audit-service | trust | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
 | tshepo-authz-service | trust | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
 | tshepo-consent-service | trust | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |

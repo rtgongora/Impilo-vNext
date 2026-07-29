@@ -51,6 +51,7 @@ live-service		services/live-service	wave_sequenced_full_boot
 llm-orchestration-service		services/llm-orchestration-service	wave_sequenced_full_boot
 madi-service		services/madi-service	wave_sequenced_full_boot
 matcher-engine		services/matcher-engine	wave_sequenced_full_boot
+mental-health-service		services/mental-health-service	wave_sequenced_full_boot
 msika-apps-service		services/msika-apps-service	wave_sequenced_full_boot
 msika-flow-service		services/msika-flow-service	wave_sequenced_full_boot
 msika-service		services/msika-service	wave_sequenced_full_boot
@@ -80,6 +81,7 @@ pharmacy-elmis-adapter		services/pharmacy-elmis-adapter	wave_sequenced_full_boot
 pharmacy-service		services/pharmacy-service	wave_sequenced_full_boot
 pharmacy-web		ui/pharmacy-web	wave_sequenced_full_boot
 portal		ui/portal	wave_sequenced_full_boot
+procedures-service		services/procedures-service	wave_sequenced_full_boot
 procurement-service		services/procurement-service	wave_sequenced_full_boot
 product-registry-service		services/product-registry-service	wave_sequenced_full_boot
 referral-service		services/referral-service	wave_sequenced_full_boot
@@ -97,7 +99,9 @@ shared-ui		ui/shared-ui	wave_sequenced_full_boot
 simba-service		services/simba-service	wave_sequenced_full_boot
 support-console		ui/support-console	wave_sequenced_full_boot
 support-service		services/support-service	wave_sequenced_full_boot
+surgery-service		services/surgery-service	wave_sequenced_full_boot
 surveillance-service		services/surveillance-service	wave_sequenced_full_boot
+telemonitoring-service		services/telemonitoring-service	wave_sequenced_full_boot
 tshepo-audit-service		services/tshepo-audit-service	required_full_boot
 tshepo-authz-service		services/tshepo-authz-service	required_full_boot
 tshepo-consent-service		services/tshepo-consent-service	required_full_boot

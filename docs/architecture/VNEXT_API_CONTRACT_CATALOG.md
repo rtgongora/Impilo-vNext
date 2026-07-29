@@ -2,10 +2,11 @@
 
 > OpenAPI under `contracts/openapi/`. Extend with BFF route map and controller scan.
 
-**OpenAPI files:** 108
+**OpenAPI files:** 110
 
 | Contract | Plane | Path | Provider | Web consumer | Mobile consumer | Tests | Deployed |
 |---|---|---|---|---|---|---|---|
+| `abis.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `admin-governance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `ai-model-registry.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `analytics-pipeline.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
@@ -97,6 +98,7 @@
 | `social.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `support.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `surveillance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `telemonitoring.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `tshepo-audit.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `tshepo-authz.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `tshepo-consent.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |

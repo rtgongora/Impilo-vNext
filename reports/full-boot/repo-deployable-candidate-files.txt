@@ -1,3 +1,4 @@
+contracts/openapi/abis.openapi.yaml
 contracts/openapi/admin-governance.openapi.yaml
 contracts/openapi/ai-model-registry.openapi.yaml
 contracts/openapi/analytics-pipeline.openapi.yaml
@@ -89,6 +90,7 @@ contracts/openapi/simba.openapi.yaml
 contracts/openapi/social.openapi.yaml
 contracts/openapi/support.openapi.yaml
 contracts/openapi/surveillance.openapi.yaml
+contracts/openapi/telemonitoring.openapi.yaml
 contracts/openapi/tshepo-audit.openapi.yaml
 contracts/openapi/tshepo-authz.openapi.yaml
 contracts/openapi/tshepo-consent.openapi.yaml
@@ -199,6 +201,7 @@ services/madi-service/Dockerfile
 services/madi-service/pom.xml
 services/matcher-engine/Dockerfile
 services/matcher-engine/pom.xml
+services/mental-health-service/pom.xml
 services/msika-apps-service/Dockerfile
 services/msika-apps-service/pom.xml
 services/msika-flow-service/Dockerfile
@@ -242,6 +245,8 @@ services/pharmacy-elmis-adapter/Dockerfile
 services/pharmacy-elmis-adapter/pom.xml
 services/pharmacy-service/Dockerfile
 services/pharmacy-service/pom.xml
+services/procedures-service/Dockerfile
+services/procedures-service/pom.xml
 services/procurement-service/Dockerfile
 services/procurement-service/pom.xml
 services/product-registry-service/Dockerfile
@@ -270,8 +275,12 @@ services/simba-service/Dockerfile
 services/simba-service/pom.xml
 services/support-service/Dockerfile
 services/support-service/pom.xml
+services/surgery-service/Dockerfile
+services/surgery-service/pom.xml
 services/surveillance-service/Dockerfile
 services/surveillance-service/pom.xml
+services/telemonitoring-service/Dockerfile
+services/telemonitoring-service/pom.xml
 services/tshepo-audit-service/Dockerfile
 services/tshepo-audit-service/pom.xml
 services/tshepo-authz-service/Dockerfile

@@ -1,8 +1,8 @@
 metadata:
-  generated_at: '2026-07-20T18:11:00.276Z'
+  generated_at: '2026-07-29T07:03:58.987Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
-  total_entries: 155
+  total_entries: 160
 classifications:
   - id: abis-service
     canonical_name: abis-service
@@ -297,6 +297,47 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
+  - id: burn-domain
+    canonical_name: burn-domain
+    plane: integration
+    domain: shared-library
+    component_type: library
+    full_boot_classification: internal_package
+    classification: internal_package
+    estate_role: non_runtime_artifact
+    runtime_kind: library
+    deploy_order_group: n/a
+    build_required: false
+    image_required: false
+    runtime_image_required: false
+    image_strategy: not-required-internal-package
+    image_strategy_reclass: not-required-internal-package
+    image_strategy_status: not_required
+    image_build_command: null
+    image_name: impilo/burn-domain
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: null
+    jib_module: null
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: false
+    frontend_surface_expected: false
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: libs/burn-domain
+    build_tool: maven
+    default_http_port: null
+    priority: P2
+    blocker: null
+    reason: Maven/npm library — not a K8s workload
+    classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: butano-fhir
     canonical_name: butano-fhir
     plane: clinical
@@ -1459,6 +1500,47 @@ classifications:
     deployment_lane: doctrine_only
     run_applicable: false
     run_not_applicable_reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
+  - id: emergency-domain
+    canonical_name: emergency-domain
+    plane: integration
+    domain: shared-library
+    component_type: library
+    full_boot_classification: internal_package
+    classification: internal_package
+    estate_role: non_runtime_artifact
+    runtime_kind: library
+    deploy_order_group: n/a
+    build_required: false
+    image_required: false
+    runtime_image_required: false
+    image_strategy: not-required-internal-package
+    image_strategy_reclass: not-required-internal-package
+    image_strategy_status: not_required
+    image_build_command: null
+    image_name: impilo/emergency-domain
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: null
+    jib_module: null
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: false
+    frontend_surface_expected: false
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: libs/emergency-domain
+    build_tool: maven
+    default_http_port: null
+    priority: P2
+    blocker: null
+    reason: Maven/npm library — not a K8s workload
+    classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: envoy
     canonical_name: envoy
     plane: trust
@@ -2779,6 +2861,88 @@ classifications:
     deployment_lane: runtime_dedicated
     run_applicable: true
     run_not_applicable_reason: null
+  - id: medicine-domain
+    canonical_name: medicine-domain
+    plane: integration
+    domain: shared-library
+    component_type: library
+    full_boot_classification: internal_package
+    classification: internal_package
+    estate_role: non_runtime_artifact
+    runtime_kind: library
+    deploy_order_group: n/a
+    build_required: false
+    image_required: false
+    runtime_image_required: false
+    image_strategy: not-required-internal-package
+    image_strategy_reclass: not-required-internal-package
+    image_strategy_status: not_required
+    image_build_command: null
+    image_name: impilo/medicine-domain
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: null
+    jib_module: null
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: false
+    frontend_surface_expected: false
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: libs/medicine-domain
+    build_tool: maven
+    default_http_port: null
+    priority: P2
+    blocker: null
+    reason: Maven/npm library — not a K8s workload
+    classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
+  - id: mental-health-service
+    canonical_name: mental-health-service
+    plane: clinical
+    domain: care-delivery
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: build-runtime-image-from-jar.sh mental-health-service
+    image_name: impilo/mental-health-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/mental-health-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/mental-health-service
+    build_tool: maven
+    default_http_port: 8397
+    priority: P2
+    blocker: null
+    reason: Java service — default shared JRE template after mvn install
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: minio
     canonical_name: minio
     plane: integration
@@ -3972,6 +4136,47 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
+  - id: paediatric-domain
+    canonical_name: paediatric-domain
+    plane: integration
+    domain: shared-library
+    component_type: library
+    full_boot_classification: internal_package
+    classification: internal_package
+    estate_role: non_runtime_artifact
+    runtime_kind: library
+    deploy_order_group: n/a
+    build_required: false
+    image_required: false
+    runtime_image_required: false
+    image_strategy: not-required-internal-package
+    image_strategy_reclass: not-required-internal-package
+    image_strategy_status: not_required
+    image_build_command: null
+    image_name: impilo/paediatric-domain
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: null
+    jib_module: null
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: false
+    frontend_surface_expected: false
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: libs/paediatric-domain
+    build_tool: maven
+    default_http_port: null
+    priority: P2
+    blocker: null
+    reason: Maven/npm library — not a K8s workload
+    classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: participation-service
     canonical_name: participation-service
     plane: experience
@@ -4047,47 +4252,6 @@ classifications:
     source_path: services/patient-safety-service
     build_tool: maven
     default_http_port: 8202
-    priority: P2
-    blocker: null
-    reason: Java service — default shared JRE template after mvn install
-    classification_confidence: certain
-    deployment_lane: runtime_k8s_microservice
-    run_applicable: true
-    run_not_applicable_reason: null
-  - id: mental-health-service
-    canonical_name: mental-health-service
-    plane: clinical
-    domain: care-delivery
-    component_type: backend_service
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: kubernetes_service
-    deploy_order_group: domain_services
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
-    image_strategy_status: valid
-    image_build_command: build-runtime-image-from-jar.sh mental-health-service
-    image_name: impilo/mental-health-service
-    official_image: null
-    official_chart: null
-    dockerfile_path: null
-    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
-    jib_module: services/mental-health-service
-    buildpack_builder: null
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: true
-    frontend_surface_expected: true
-    mobile_surface_expected: false
-    doctrine_compliance_required: false
-    source_path: services/mental-health-service
-    build_tool: maven
-    default_http_port: 8397
     priority: P2
     blocker: null
     reason: Java service — default shared JRE template after mvn install
@@ -4384,6 +4548,47 @@ classifications:
     deployment_lane: runtime_official
     run_applicable: true
     run_not_applicable_reason: null
+  - id: procedures-service
+    canonical_name: procedures-service
+    plane: clinical
+    domain: care-delivery
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: docker build -f services/procedures-service/Dockerfile OR build-runtime-image-from-jar.sh procedures-service
+    image_name: impilo/procedures-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/procedures-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/procedures-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/procedures-service
+    build_tool: maven
+    default_http_port: 8395
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: procurement-service
     canonical_name: procurement-service
     plane: enterprise
@@ -4632,6 +4837,47 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
+  - id: reproductive-domain
+    canonical_name: reproductive-domain
+    plane: integration
+    domain: shared-library
+    component_type: library
+    full_boot_classification: internal_package
+    classification: internal_package
+    estate_role: non_runtime_artifact
+    runtime_kind: library
+    deploy_order_group: n/a
+    build_required: false
+    image_required: false
+    runtime_image_required: false
+    image_strategy: not-required-internal-package
+    image_strategy_reclass: not-required-internal-package
+    image_strategy_status: not_required
+    image_build_command: null
+    image_name: impilo/reproductive-domain
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: null
+    jib_module: null
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: false
+    frontend_surface_expected: false
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: libs/reproductive-domain
+    build_tool: maven
+    default_http_port: null
+    priority: P2
+    blocker: null
+    reason: Maven/npm library — not a K8s workload
+    classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: rito-quality-safety-service
     canonical_name: rito-quality-safety-service
     plane: experience
@@ -4669,129 +4915,6 @@ classifications:
     priority: P2
     blocker: null
     reason: Java service — default shared JRE template after mvn install
-    classification_confidence: certain
-    deployment_lane: runtime_k8s_microservice
-    run_applicable: true
-    run_not_applicable_reason: null
-  - id: procedures-service
-    canonical_name: procedures-service
-    plane: clinical
-    domain: care-delivery
-    component_type: backend_service
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: kubernetes_service
-    deploy_order_group: domain_services
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
-    image_strategy_status: valid
-    image_build_command: build-runtime-image-from-jar.sh procedures-service
-    image_name: impilo/procedures-service
-    official_image: null
-    official_chart: null
-    dockerfile_path: services/procedures-service/Dockerfile
-    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
-    jib_module: services/procedures-service
-    buildpack_builder: null
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: true
-    frontend_surface_expected: false
-    mobile_surface_expected: false
-    doctrine_compliance_required: true
-    source_path: services/procedures-service
-    build_tool: maven
-    default_http_port: 8395
-    priority: P2
-    blocker: null
-    reason: Java service — thin JAR-copy Dockerfile, equivalent to shared template
-    classification_confidence: certain
-    deployment_lane: runtime_k8s_microservice
-    run_applicable: true
-    run_not_applicable_reason: null
-  - id: surgery-service
-    canonical_name: surgery-service
-    plane: clinical
-    domain: care-delivery
-    component_type: backend_service
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: kubernetes_service
-    deploy_order_group: domain_services
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
-    image_strategy_status: valid
-    image_build_command: build-runtime-image-from-jar.sh surgery-service
-    image_name: impilo/surgery-service
-    official_image: null
-    official_chart: null
-    dockerfile_path: services/surgery-service/Dockerfile
-    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
-    jib_module: services/surgery-service
-    buildpack_builder: null
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: true
-    frontend_surface_expected: false
-    mobile_surface_expected: false
-    doctrine_compliance_required: true
-    source_path: services/surgery-service
-    build_tool: maven
-    default_http_port: 8396
-    priority: P2
-    blocker: null
-    reason: Java service — thin JAR-copy Dockerfile, equivalent to shared template
-    classification_confidence: certain
-    deployment_lane: runtime_k8s_microservice
-    run_applicable: true
-    run_not_applicable_reason: null
-  - id: telemonitoring-service
-    canonical_name: telemonitoring-service
-    plane: clinical
-    domain: care-delivery
-    component_type: backend_service
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: kubernetes_service
-    deploy_order_group: domain_services
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
-    image_strategy_status: valid
-    image_build_command: build-runtime-image-from-jar.sh telemonitoring-service
-    image_name: impilo/telemonitoring-service
-    official_image: null
-    official_chart: null
-    dockerfile_path: services/telemonitoring-service/Dockerfile
-    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
-    jib_module: services/telemonitoring-service
-    buildpack_builder: null
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: true
-    frontend_surface_expected: false
-    mobile_surface_expected: false
-    doctrine_compliance_required: true
-    source_path: services/telemonitoring-service
-    build_tool: maven
-    default_http_port: 8394
-    priority: P2
-    blocker: null
-    reason: Java service — thin JAR-copy Dockerfile, equivalent to shared template
     classification_confidence: certain
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
@@ -5456,6 +5579,47 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
+  - id: surgery-service
+    canonical_name: surgery-service
+    plane: clinical
+    domain: care-delivery
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: docker build -f services/surgery-service/Dockerfile OR build-runtime-image-from-jar.sh surgery-service
+    image_name: impilo/surgery-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/surgery-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/surgery-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/surgery-service
+    build_tool: maven
+    default_http_port: 8396
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: surveillance-service
     canonical_name: surveillance-service
     plane: data
@@ -5620,6 +5784,49 @@ classifications:
     deployment_lane: build_validate_only
     run_applicable: false
     run_not_applicable_reason: Maven/npm library — not a K8s workload
+  - id: telemonitoring-service
+    canonical_name: telemonitoring-service
+    plane: clinical
+    domain: care-delivery
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: >-
+      docker build -f services/telemonitoring-service/Dockerfile OR build-runtime-image-from-jar.sh
+      telemonitoring-service
+    image_name: impilo/telemonitoring-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/telemonitoring-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/telemonitoring-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/telemonitoring-service
+    build_tool: maven
+    default_http_port: 8394
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: tshepo-audit-service
     canonical_name: tshepo-audit-service
     plane: trust

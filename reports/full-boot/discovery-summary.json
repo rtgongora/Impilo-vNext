@@ -1,29 +1,29 @@
 {
-  "total": 151,
+  "total": 160,
   "by_plane": {
     "trust": 14,
     "registry": 8,
-    "clinical": 20,
+    "clinical": 24,
     "data": 12,
-    "integration": 46,
+    "integration": 51,
     "experience": 31,
     "enterprise": 17
   },
   "by_classification": {
-    "wave_sequenced_full_boot": 103,
+    "wave_sequenced_full_boot": 107,
     "external_dependency": 9,
+    "internal_package": 17,
     "required_full_boot": 22,
-    "internal_package": 12,
     "deprecated_retired": 5
   },
   "image_strategy": {
     "dockerfile": 1,
-    "shared-dockerfile-template": 78,
+    "shared-dockerfile-template": 82,
     "jib": 21,
     "buildpacks": 15,
     "official-upstream-image": 0,
     "official-helm-chart": 8,
-    "not-required-internal-package": 12,
+    "not-required-internal-package": 17,
     "not-required-mobile-artifact": 2,
     "not-required-generated-client": 9,
     "not-required-doctrine-only-component": 5,
@@ -32,12 +32,12 @@
   },
   "runtime_image_required_count": 22,
   "dockerfile_count": 1,
-  "shared_template_count": 78,
+  "shared_template_count": 82,
   "jib_count": 21,
   "buildpacks_count": 15,
   "official_image_count": 0,
   "official_chart_count": 8,
-  "not_required_count": 28,
+  "not_required_count": 33,
   "unknown_needs_review_count": 0,
   "missing_required_image_strategy": 0
 }

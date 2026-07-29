@@ -11,9 +11,9 @@
 |---|---|---|---|
 | trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 14 |
 | registry | Registry & Sovereign Identity Spine | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | 8 |
-| clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 20 |
+| clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 24 |
 | data | Data, Intelligence & Public Health | `docs/architecture/planes/04-data-intelligence-public-health.md` | 12 |
-| integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 46 |
+| integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 51 |
 | experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 31 |
 | enterprise | Enterprise Resource & Market Operations | `docs/architecture/planes/07-enterprise-resource-market-operations.md` | 17 |
 
@@ -71,14 +71,18 @@ Evidence: [`docs/architecture/planes/03-clinical-execution-shared-health-record.
 | `inventory-elmis-adapter` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `inventory-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `madi-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `mental-health-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `oros-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `pacs-adapter-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `patient-safety-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `pct-service` | backend_service | required_full_boot | image_strategy_defined | certain |
 | `pharmacy-elmis-adapter` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `pharmacy-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `procedures-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `rules-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `scheduling-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `surgery-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `telemonitoring-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 
 ## Data, Intelligence & Public Health
 
@@ -108,6 +112,7 @@ Evidence: [`docs/architecture/planes/05-integration-interoperability-edge.md`](d
 | `analytics-pipeline-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `asset-registry-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `audit-ledger-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `burn-domain` | library | internal_package | no_runtime_image_required | certain |
 | `card-print-agent` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `channels-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `connector-fhir-adapter` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
@@ -115,6 +120,7 @@ Evidence: [`docs/architecture/planes/05-integration-interoperability-edge.md`](d
 | `developer-portal-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `dhis2` | external_dependency | external_dependency | no_runtime_image_required | high |
 | `dispatch-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `emergency-domain` | library | internal_package | no_runtime_image_required | certain |
 | `external-elmis` | external_dependency | external_dependency | no_runtime_image_required | high |
 | `external-pacs-network` | external_dependency | external_dependency | no_runtime_image_required | high |
 | `federation-connector` | library | internal_package | no_runtime_image_required | certain |
@@ -125,6 +131,7 @@ Evidence: [`docs/architecture/planes/05-integration-interoperability-edge.md`](d
 | `landela-adapter-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `lims` | external_dependency | external_dependency | no_runtime_image_required | high |
 | `llm-orchestration-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `medicine-domain` | library | internal_package | no_runtime_image_required | certain |
 | `minio` | infrastructure | required_full_boot | image_strategy_defined | certain |
 | `ndila-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `nhume-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
@@ -134,9 +141,11 @@ Evidence: [`docs/architecture/planes/05-integration-interoperability-edge.md`](d
 | `offline-sdk` | library | internal_package | no_runtime_image_required | certain |
 | `offline-sync-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `ops-instrumentation` | library | internal_package | no_runtime_image_required | certain |
+| `paediatric-domain` | library | internal_package | no_runtime_image_required | certain |
 | `postgres` | infrastructure | required_full_boot | deployed_and_healthy | certain |
 | `redis` | infrastructure | required_full_boot | deployed_and_healthy | certain |
 | `referral-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `reproductive-domain` | library | internal_package | no_runtime_image_required | certain |
 | `rtc-gateway-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `schema-registry-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `security-baseline` | library | internal_package | no_runtime_image_required | certain |

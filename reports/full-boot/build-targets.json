@@ -1052,6 +1052,20 @@
       "classification_confidence": "certain"
     },
     {
+      "id": "mental-health-service",
+      "path": "services/mental-health-service",
+      "component_name": "mental-health-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 default shared JRE template after mvn install",
+      "classification_confidence": "certain"
+    },
+    {
       "id": "pct-service",
       "path": "services/pct-service",
       "component_name": "pct-service",
@@ -1203,6 +1217,48 @@
       "image_strategy": "shared-dockerfile-template",
       "image_strategy_status": "valid",
       "reason": "Java service \u2014 default shared JRE template after mvn install",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "procedures-service",
+      "path": "services/procedures-service",
+      "component_name": "procedures-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 thin JAR-copy Dockerfile, equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "surgery-service",
+      "path": "services/surgery-service",
+      "component_name": "surgery-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 thin JAR-copy Dockerfile, equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "telemonitoring-service",
+      "path": "services/telemonitoring-service",
+      "component_name": "telemonitoring-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 thin JAR-copy Dockerfile, equivalent to shared template",
       "classification_confidence": "certain"
     },
     {

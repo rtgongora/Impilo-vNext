@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-07-20T18:15:49.575Z
+> Generated: 2026-07-29T06:32:45.832Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -1661,6 +1661,122 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 - BFF: proxy/controller test for each exposed route family
 - UI: vitest hook/page test + Playwright e2e for critical path
 
+## procedures-service
+
+**Product names:** Procedures, Clinical Procedures Pipeline
+**Plane/domain:** clinical / care-delivery
+**Current status:** mostly-real
+
+### Primary personas
+- Operators and domain users for care-delivery plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Procedures records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
+## surgery-service
+
+**Product names:** Surgery, Surgery and Surgical Specialties domain pack
+**Plane/domain:** clinical / care-delivery
+**Current status:** mostly-real
+
+### Primary personas
+- Operators and domain users for care-delivery plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Surgery records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
+## telemonitoring-service
+
+**Product names:** Telemonitoring
+**Plane/domain:** clinical / care-delivery
+**Current status:** real
+
+### Primary personas
+- Operators and domain users for care-delivery plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Telemonitoring records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
+## mental-health-service
+
+**Product names:** Mental Health
+**Plane/domain:** clinical / care-delivery
+**Current status:** mostly-real
+
+### Primary personas
+- Operators and domain users for care-delivery plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Mental Health records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
 ## rtc-gateway-service
 
 **Product names:** Rtc Gateway
@@ -2119,6 +2235,18 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 - Backend: `*IT.java` or controller tests for primary workflows
 - BFF: proxy/controller test for each exposed route family
 - UI: vitest hook/page test + Playwright e2e for critical path
+
+## matcher-engine
+
+**Product names:** ABIS Matcher Engine
+**Plane/domain:** trust / biometric-identity
+**Current status:** internal-only
+
+- **Classification:** Internal-only platform service
+- **Primary users:** Platform operators, integration engineers, SRE
+- **Minimum viable surface:** Admin/ops API + documented internal-only rationale
+- **Production complete:** Contract + implementation + observability + runbook
+- **Tests:** Contract IT + smoke for primary endpoints
 
 ## tshepo-service
 

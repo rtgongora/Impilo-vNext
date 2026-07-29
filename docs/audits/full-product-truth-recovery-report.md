@@ -1,31 +1,31 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-25T02:45:36.978Z
-> Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
+> Generated: 2026-07-29T06:32:45.832Z
+> Branch: `coord/merge-catchup-20260729`
 
 ## Executive summary
 
 | Metric | Count |
 |--------|------:|
-| Total services audited | 100 |
-| Backend services | 100 |
-| Shared libraries | 12 |
-| Frontend surfaces (routes) | 895 |
-| Mobile screens | 212 |
-| BFF route handlers | 3320 |
+| Total services audited | 104 |
+| Backend services | 104 |
+| Shared libraries | 17 |
+| Frontend surfaces (routes) | 922 |
+| Mobile screens | 214 |
+| BFF route handlers | 3476 |
 | OpenAPI contracts | 110 |
-| Services with DB persistence | 100 |
-| **Phase 6 complete (user-facing + documented internal)** | **100** |
-| User-facing services with `real` code present (file-existence axis) | 75 / 75 |
+| Services with DB persistence | 103 |
+| **Phase 6 complete (user-facing + documented internal)** | **101** |
+| User-facing services with `real` code present (file-existence axis) | 75 / 78 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **4** |
-| Services internal-only (documented) | 25 |
-| Services partially complete | 0 |
+| Services internal-only (documented) | 26 |
+| Services partially complete | 3 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 0 |
-| Total classified gaps | 0 |
+| Total classified gaps | 6 |
 | Blocker gaps | 0 |
-| High severity gaps | 0 |
+| High severity gaps | 2 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -36,9 +36,10 @@
 
 | Maturity | Count |
 |----------|------:|
-| INTERNAL_ONLY | 25 |
+| INTERNAL_ONLY | 26 |
 | REAL_CODE_NOT_PROBED | 71 |
 | REAL_PROVEN | 4 |
+| PARTIAL | 3 |
 
 ## Quality gates added
 
@@ -60,7 +61,8 @@
 
 ## Remaining gaps by severity
 
-_None_
+- **high:** 2
+- **medium:** 4
 
 ## Implementation status
 
