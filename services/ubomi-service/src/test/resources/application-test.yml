@@ -1,9 +1,15 @@
 # Auto-generated H2 test profile so the golden-contract @SpringBootTest boots
 # offline (main profile uses PostgreSQL + Flyway with PG-specific migrations).
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+  # Kafka autoconfiguration is KEPT, with the listener stopped — the same shape varapi and the other
+  # golden-contract services use. Excluding KafkaAutoConfiguration removed the KafkaTemplate bean
+  # that UbomiOutboxPublisher (an unconditional @Component, per the mandatory outbox pattern)
+  # requires, so the whole application context failed to load. Creating the template needs no broker;
+  # auto-startup: false keeps the consumer from dialling one.
+  kafka:
+    bootstrap-servers: localhost:9092
+    listener:
+      auto-startup: false
   datasource:
     url: "jdbc:h2:mem:ubomi_service;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;INIT=CREATE SCHEMA IF NOT EXISTS ubomi\\;SET SCHEMA ubomi"
     username: sa
