@@ -18,6 +18,8 @@ being wrong.
 | Site | `/` **200**, `/auth/login` **200** |
 | Change-safety gate | **PASSED** (19 guards + 3 new) |
 | My work | **fully landed**, 0 ahead / 0 dirty |
+| Canonical tip | `14392439c` (2026-07-29, after the fortnight merge pass) |
+| Branch consolidation | 10 merged + retired; ⚠️ **9 conflicted, UNFINISHED — see §3.7** |
 | Estate pinning | ⚠️ **8 services UNPINNED — see §3.1** |
 
 ---
@@ -453,18 +455,77 @@ clinical proof scripts still seed on REGISTRY and their green attests to data no
 deliberately not repointed until the authoritative-tenant work lands, because aiming fixtures at
 "whatever the browser sends today" chases a moving value.
 
+**7.9 `git push` reporting `Everything up-to-date` can mean your work is orphaned, not already there.**
+A merge made while HEAD is **detached** (e.g. after `git checkout <ref>` to get a gate baseline) does
+not advance the branch, so a later `git push origin HEAD:<canonical>` honestly reports nothing to do —
+exit 0 — having landed **nothing**. This bit me on four merges during the §3.7 pass. It surfaced only
+because the retire step independently ran `git merge-base --is-ancestor` and got NOT-ANCESTOR.
+Recovered from reflog. **After every push, `git fetch` and confirm the remote tip actually moved; before
+retiring any branch, prove containment with `merge-base --is-ancestor`.** Prefer `git checkout -` or a
+second worktree over detaching mid-sequence. Full note: `memory/push-ok-is-not-proof-it-landed.md`.
+
 ---
 
 ## 8. Suggested first moves
 
 1. **Ask the PO to lift the helm hold** and repin from the live estate. Everything else is safer after.
 2. **Deploy surveillance** (§4.1) — built, tested, unshipped.
-3. **Route §3.6** — Surgery's lease and W5c need one message each.
-4. **Phase D interlock** (§3.3) in a quiet window, helm + code together.
-5. **Prune the committed-secrets baseline** so a security guard stops sitting red.
+3. **Finish the branch consolidation** (§3.7) — 9 conflicted branches remain. See the sizing and
+   recommended order below; this is bounded, well-specified work and a good warm-up that also
+   removes the risk of a live lane's work being stranded.
+4. **Route §3.6** — Surgery's lease and W5c need one message each.
+5. **Phase D interlock** (§3.3) in a quiet window, helm + code together.
+6. **Prune the committed-secrets baseline** so a security guard stops sitting red.
 
 Do not start Category B's remaining 67 before Phase D unless the PO overrides — a public stack with
 auth disabled outranks any individual dead button.
+
+### 8.1 Finishing §3.7 — the merge queue, in the order I would take it
+
+I stopped on these deliberately: they are substantive test and doctrine changes, and at the budget
+remaining I could not verify a resolution to the standard the other ten received. Landing them
+unverified would have been worse than leaving an accurate queue. **None is blocked — all are simply
+unstarted.** Each was attempted then cleanly aborted; no working tree is left modified.
+
+Recommended order — cheapest and most-likely-mechanical first, so the pattern is established before
+the two large ones:
+
+| # | branch | conflicts | why this position |
+|---|---|---|---|
+| 1 | `nervous-fermi-22e321` | 1 file | smallest possible; use it to shake out the recipe |
+| 2 | `trusting-chaplygin-48ca17` | 2 files | |
+| 3 | `ruvimbo-product-Yypyl` | 2 files | +7 commits, product-front work |
+| 4 | `youthful-montalcini-536fee` | 3 files | S2S trust — `SERVICE_TO_SERVICE_TRUST_PATTERN.md`, `ServiceClientConfigTest`, `StaffingReadServiceTest`. **Strong prior that this is the same both-lanes-fixed-it-independently shape** resolved twice already; verify with `mvn -pl services/experience-bff -Dtest=ServiceClientConfigTest test` |
+| 5 | `khuluma-hub-Yypyl` | 3 files | comms hub; cross-check `memory/khuluma-comms-hub-state.md` |
+| 6 | `post-deploy-bugfix-Yypyl` | 3 files | |
+| 7 | `affectionate-joliot-aef493` | 4 files | |
+| 8 | `unruffled-cartwright-a85b36` | 5 files | **+91 commits** — by far the largest history; read the log before resolving anything |
+| 9 | `hungry-mestorf-a5cc9b` | 11 files | most conflicts; +9 commits |
+
+**The recipe that worked for the ten that landed:**
+
+1. Work in a **scratch worktree** on a throwaway branch — never in the shared checkout (§7.2).
+2. `git merge --no-edit origin/<branch>`; on conflict, read **both sides before choosing**. Twice out
+   of twelve the conflict was two lanes independently fixing the *same* defect — in that case take the
+   union of the fixes, not one side (that is how `_GUARD_CALLER_PWD` survived alongside the
+   git-toplevel derivation).
+3. If the other side brings tests, **run their tests against the production code already on canonical**
+   before accepting theirs. That is what settled `gallant-darwin`.
+4. Before **every** push, account for every line of:
+   `git diff --name-status -M -C origin/<canonical>..HEAD | grep -P "^(D|R\d*)\t"`
+   Renames are fine when they are the branch's own intent (the `*IT`→`*Test` pair was); an unexplained
+   `D` is a stop.
+5. Run `scripts/guard/run-change-safety-gates.sh`. **If it fails, first run it on canonical alone** —
+   `CANONICAL_GATE_EXIT=0` plus a clean net delta means you are looking at a merge-base attribution
+   artefact, not a defect. Both findings in the last pass were exactly this, and one of them
+   (`NeonatalGentamicinDosing.java`) looked alarming until traced: canonical had **superseded** it in
+   `3591f1ffc`. Trace before you either panic or wave it through.
+6. Push, then **re-read the remote tip** (§7.9), then retire only on
+   `merge-base --is-ancestor` returning true.
+
+**On retiring:** `git push origin --delete claude/<name>` is the retire step, and it is safe *only*
+after containment is proven — the branch's commits are then reachable from canonical. Do not delete a
+branch you could not merge; a conflicted branch is the only remaining copy of that lane's work.
 
 ---
 
