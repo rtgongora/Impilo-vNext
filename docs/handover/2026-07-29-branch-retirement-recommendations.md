@@ -1,7 +1,7 @@
 # Branch retirement recommendations — 2026-07-29 canonical catch-up merge
 
 **Canonical branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
-**Canonical tip after this pass:** `ee81409bc`
+**Canonical tip after this pass:** `5f93dfdbe` (188 commits ahead of the pre-pass tip)
 **Canonical tip before this pass:** `9e4599fe6`
 **Work branch used:** `coord/merge-catchup-20260729` in worktree `/opt/impilo/repos/wt-merge-catchup`
 
@@ -595,6 +595,56 @@ The files the wide run names (`NeonatalGentamicinDosing.java`, `GetAppSurface.ts
 `clinical/chronic-registers/page.tsx`, `specialtyToolRegistry.ts`) are canonical's own pre-existing
 debt. They are real items for their owning lanes and should not be dismissed — but they are not
 regressions from this pass. See **F8** for the recommendation on the base-ref shape itself.
+
+## Final gate results on the canonical tip
+
+`bash scripts/pipeline/run-local-quality-gates.sh`, full run on the merged tip:
+
+| | Count | |
+|---|---|---|
+| Passed | 24 | includes Backend checks, Change-safety gates, Mobile build checks, all six full-boot phases, Core transaction evidence, both parity gates |
+| Failed | 3 | Frontend checks, Product Truth audit gate, Phase 6 service completion |
+| Advisory | 0 | |
+
+**`scripts/guard/run-change-safety-gates.sh`: PASSED** — with `GUARD_UPSTREAM_REF` set to canonical, per
+F8. Bare, it reports the four merge-base attribution artefacts documented in the section above.
+
+Every red found on the way to this result was chased to root cause and fixed, or proven inherited:
+
+| Red | Root cause | Outcome |
+|---|---|---|
+| `frontend-build` | `API_GATEWAY_URL`/`BFF_URL` never supplied to the build gate | Fixed — gate exports in-cluster defaults |
+| `next build` type error | `/my-life` exported a non-Page field (F12) | Fixed — resolver made private |
+| `backend-reactor-tests` | rate limiter throttling the suite (F13) | Fixed — capacity is a property |
+| 8 frontend unit tests | mocks left behind by `29e76f7b0`, plus a 25th branding entry | Fixed — 2767/2768 now pass |
+| Full-boot phases | generator could not run at all (F10) | Fixed — dependency provisioned |
+| Change-safety | base-ref attribution (F8) | Explained, not a defect |
+
+### The three remaining reds are one item, and it needs your decision
+
+All three are the same inherited debt: **procedures-service**, **surgery-service** and
+**mental-health-service** have no OpenAPI contract (F11). That is what fails the Product Truth gate
+(violations=6), the Phase 6 gate (incomplete=3), and the one remaining frontend test (the phase6
+golden thread, which reads the same dataset). Fix the contracts and all three clear together.
+
+Proven inherited: the same 6 gaps and same 3 services at pre-merge `9e4599fe6`. **Nothing was absorbed
+into a baseline to make this green** — not the gate baselines, and not the two in-test allowlists
+(`KNOWN_IN_FLIGHT`, whose own comment says keep it empty) that would have silenced the test.
+
+Two ways to close it, and they are not equivalent:
+
+- **Hand-authored contracts with real schemas**, as `patient-safety.openapi.yaml` and
+  `participation.openapi.yaml` were done. 68 routes across 20 controllers. This is what the ratchet log
+  treats as a genuine closure, and it needs domain review.
+- **`scripts/completeness/sync-handler-routes-to-contract.mjs`**, which derives paths and methods from
+  the actual Spring handlers. Minutes, not days, and 86 existing contracts already contain its output.
+  But it emits `tags: [Generated-From-Handler]` with `200: Success` and **no request or response
+  schemas** — so it would turn three gates green without describing a single payload.
+
+Not chosen here on purpose. The second option would have closed this pass's last three reds today, and
+declining it is the reason the pipeline verdict above still reads FAIL. Flipping a gate green with
+path-only stubs is the thing the no-stubs rule exists to prevent, and three brand-new clinical services
+are the worst place to start doing it.
 
 ## Recommendation summary
 
