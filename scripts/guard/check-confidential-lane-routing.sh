@@ -22,11 +22,14 @@
 # V111 one-directional seam agreed with the Adult Medicine lane) without ever handling the episode
 # record. A name-based check would fire on that and teach people to route around this guard.
 set -uo pipefail
-REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+# Resolve absolutely, BEFORE the cd below: a relative $0 (bash check-...sh from this directory)
+# would otherwise resolve against REPO_PATH and fail to find the helper.
+_GUARD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_PATH="${REPO_PATH:-$(cd "$_GUARD_DIR/../.." && pwd)}"
 cd "$REPO_PATH"
 # guard_assert_scanned lives in the shared helper, which sets -e. This guard deliberately does not
 # use -e — it reports every offending controller before exiting — so restore its own error mode.
-source "$(dirname "${BASH_SOURCE[0]}")/_guard-common.sh"
+source "$_GUARD_DIR/_guard-common.sh"
 set +e
 
 echo "=== Confidential-lane routing guard ==="
