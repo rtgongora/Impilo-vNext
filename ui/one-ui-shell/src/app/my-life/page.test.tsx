@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
-import MyLifeShimPage, { resolveMyLifeTarget } from "./page";
+import MyLifeShimPage from "./page";
 
 const replace = vi.fn();
 let searchParams = new URLSearchParams();
@@ -16,19 +16,18 @@ describe("/my-life shim", () => {
     searchParams = new URLSearchParams();
   });
 
+  // Asserted through the render path rather than by importing the resolver: a page module may not
+  // export anything App Router does not recognise, or `next build` rejects it. Going through the
+  // mount also proves the redirect fires, which a direct call to the resolver never did.
   it("resolves to the canonical personal landing", () => {
-    expect(resolveMyLifeTarget(new URLSearchParams())).toBe("/home");
+    render(<MyLifeShimPage />);
+    expect(replace).toHaveBeenCalledWith("/home");
   });
 
   it("preserves intent carried in the query string", () => {
-    expect(resolveMyLifeTarget(new URLSearchParams("tab=wellness&ref=visit"))).toBe(
-      "/home?tab=wellness&ref=visit"
-    );
-  });
-
-  it("redirects on mount", () => {
+    searchParams = new URLSearchParams("tab=wellness&ref=visit");
     render(<MyLifeShimPage />);
-    expect(replace).toHaveBeenCalledWith("/home");
+    expect(replace).toHaveBeenCalledWith("/home?tab=wellness&ref=visit");
   });
 
   it("renders nothing itself", () => {

@@ -24,7 +24,12 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export function resolveMyLifeTarget(searchParams: URLSearchParams): string {
+// Not exported: App Router accepts only the page fields it recognises (`default`, `metadata`,
+// `dynamic`…) and rejects anything else at build time — "resolveMyLifeTarget is not a valid Page
+// export field" fails `next build` while type-check and lint stay green. The sibling
+// /provider-workspace shim keeps its resolver private for the same reason. page.test.tsx covers the
+// mapping through the render path instead, which also proves the redirect actually fires.
+function resolveMyLifeTarget(searchParams: URLSearchParams): string {
   const query = searchParams.toString();
   return query ? `/home?${query}` : "/home";
 }
