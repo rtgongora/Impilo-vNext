@@ -5,7 +5,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.patch;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -32,7 +31,6 @@ public final class ExperienceBffSovereignWireMockSupport {
                 stubMarketplace();
                 stubSupport();
                 stubPct();
-                stubInpatientBeds();
                 stubProviderTier2();
                 started = true;
             }
@@ -50,7 +48,10 @@ public final class ExperienceBffSovereignWireMockSupport {
         // The rota composes display names against varapi; point it here too so the composition legs
         // (vashandi profile -> health id, varapi health id -> display facts) run through the stub.
         registry.add("impilo.services.varapi-base-url", () -> base);
-        registry.add("impilo.services.inpatient-base-url", () -> base);
+        // Deliberately NOT registered: impilo.services.inpatient-base-url. RbacIntegrationTest is the
+        // only test that calls /internal/v1/beds/wards, and it asserts the honest 502
+        // INPATIENT_UNAVAILABLE that proves the request reached the sovereign client. Pointing
+        // inpatient at this stub fakes the service into availability and turns that 502 into a 200.
         registry.add("impilo.services.oros-base-url", () -> base);
         registry.add("impilo.services.reporting-base-url", () -> base);
     }
@@ -195,15 +196,6 @@ public final class ExperienceBffSovereignWireMockSupport {
     }
 
     /**
-     * Inpatient-service bed/ward management. The BFF {@code BedController} proxies
-     * {@code GET /internal/v1/beds/wards?facility_id=…} to inpatient-service via
-     * {@code InpatientServiceClient.listWards}; without this stub the call reaches the
-     * default {@code localhost:8121}, is refused, and the controller correctly surfaces
-     * a 502 {@code INPATIENT_UNAVAILABLE}. The payload mirrors
-     * {@code BedManagementService.listWardResources}: a JSON:API-style
-     * {@code {"data":[{id,type:"ward",attributes:{…}}]}} envelope.
-     */
-    /**
      * Mobile-provider tier-2 verticals used by MobileProviderTier2ResponseShapeIT:
      * OROS lab orders, reporting runs, single-prescription five-rights + dispense, and
      * PCT journey lookup. Concrete matchers only; realistic JSON:API-style payloads. The
@@ -269,22 +261,5 @@ public final class ExperienceBffSovereignWireMockSupport {
         SERVER.stubFor(post(urlPathMatching("/v1/journeys/[^/]+/triage"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{\"acuity\":2,\"status\":\"COMPLETE\",\"triaged_by\":\"provider-1\"}")));
-    }
-
-    private static void stubInpatientBeds() {
-        SERVER.stubFor(get(urlPathEqualTo("/internal/v1/beds/wards"))
-                .withQueryParam("facility_id", matching("[0-9a-fA-F-]{36}"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {"data":[{"id":"11111111-2222-4333-8444-555555555555",\
-                                "type":"ward","attributes":{"name":"General Ward A",\
-                                "facilityId":"00000000-0000-0000-0000-000000000001",\
-                                "wardType":"GENERAL","totalBeds":24,"occupiedBeds":18,\
-                                "availableBeds":5,"maintenanceBeds":1,"genderDesignation":"MIXED",\
-                                "ageGroup":"ADULT","isolationCapable":false,"oxygenAvailable":true,\
-                                "monitoringCapable":true,"icuCapable":false}}]}\
-                                """)));
     }
 }
