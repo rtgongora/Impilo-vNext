@@ -693,7 +693,7 @@ const COMPLETION_EVIDENCE = {
       "/live/replays",
     ],
     tests: [
-      "services/live-service/src/test/java/zw/gov/mohcc/impilo/live/v11/LiveGoldenContractIT.java",
+      "services/live-service/src/test/java/zw/gov/mohcc/impilo/live/v11/LiveGoldenContractTest.java",
       "ui/one-ui-shell/src/lib/__tests__/impilo-live-events-golden-thread.test.ts",
       "ui/one-ui-shell/src/app/live/discover/page.test.tsx",
       "ui/one-ui-shell/src/app/live/page.test.tsx",
