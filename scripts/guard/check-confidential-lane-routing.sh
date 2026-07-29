@@ -24,6 +24,10 @@
 set -uo pipefail
 REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
+# guard_assert_scanned lives in the shared helper, which sets -e. This guard deliberately does not
+# use -e — it reports every offending controller before exiting — so restore its own error mode.
+source "$(dirname "${BASH_SOURCE[0]}")/_guard-common.sh"
+set +e
 
 echo "=== Confidential-lane routing guard ==="
 
@@ -40,6 +44,14 @@ LANE_MARKERS='confidential|safeguarding|protected-disclosure'
 # as check-top-no-record-level-emit.sh, which only saw its target once the migration was committed.
 CONTROLLERS=$(git ls-files --cached --others --exclude-standard -- 'services/pct-service/**/*.java' \
   | xargs -r grep -lE '@RestController|@Controller' 2>/dev/null || true)
+
+# Self-reach, part 1: pct-service always has controllers, so zero means the glob stopped reaching
+# the tree — and this guard would then report "all are mounted on a confidential lane" about nothing.
+guard_assert_scanned "$(printf '%s\n' "$CONTROLLERS" | grep -c .)" \
+  "pct-service controllers" || {
+  echo "Confidential-lane routing guard: FAILED"
+  exit 1
+}
 
 FAIL=0
 CHECKED=0
@@ -81,6 +93,16 @@ Confidential-lane routing guard: FAILED
 EOF
     exit 1
 fi
+
+# Self-reach, part 2: detection is by ENTITY IMPORT, so renaming a stamped entity — exactly what a
+# refactor does — silently empties the checked set while every message above still says OK. Finding
+# controllers but classifying none of them is the failure mode this guard was written to prevent.
+guard_assert_scanned "$CHECKED" "controllers handling a confidentiality-stamped record" || {
+  echo "      Controllers were found, but none imports any of: $STAMPED_ENTITIES"
+  echo "      If a stamped entity was renamed, update STAMPED_ENTITIES to match pct V437."
+  echo "Confidential-lane routing guard: FAILED"
+  exit 1
+}
 
 echo "  $CHECKED controller(s) handle a stamped record; all are mounted on a confidential lane"
 echo "Confidential-lane routing guard: OK"

@@ -82,6 +82,12 @@ files = []
 for g in d.get('scan_surfaces', []):
     files.extend(glob.glob(g, recursive=True))
 print('\n'.join(f for f in files if not f.endswith(('.png','.svg','.ico'))))")
+  # Self-reach: the scan_surfaces globs are declared in a YAML file, so a path change there empties
+  # this scan while the pass message below still reports success — it would print "(0 files scanned)"
+  # as a PASS, which is the one outcome nobody investigates.
+  guard_assert_scanned "$(printf '%s\n' "$SURFACES" | grep -c .)" \
+    "public surface files from $DICT scan_surfaces" || FAILED=1
+
   HITS=""
   if [[ -n "$SURFACES" ]]; then
     # Scan source that can render or become a public URL. Implementation comments,

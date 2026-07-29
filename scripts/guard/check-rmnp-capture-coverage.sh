@@ -148,10 +148,15 @@ def is_derived(fact):
 
 rmnp_packs = sorted(content_dir.glob("rmnp-*.json"))
 if not rmnp_packs:
-    print("  no RMNP rule packs yet — nothing to check.")
-    print("  This guard is wired ahead of the content on purpose: the first pack that lands is")
-    print("  checked on the commit that lands it, not on some later cleanup pass.")
-    raise SystemExit(0)
+    # This exit used to be SystemExit(0), because the guard was deliberately wired before the content
+    # existed. The content has since landed, so "no packs" no longer means "not written yet" — it
+    # means this glob stopped reaching the pack directory, and every rule below went unchecked while
+    # the guard reported success. Self-reach is the whole point: matching nothing is a broken guard,
+    # not a clean tree.
+    print(f"FAIL: no RMNP rule packs found under {content_dir}/rmnp-*.json.")
+    print("      This guard scanned nothing. The RMNP content has landed, so a zero count is a")
+    print("      broken scan — check the content directory path above, not the rule packs.")
+    raise SystemExit(1)
 
 # Packs that capture nothing a clinician types, and so pair with no form — declared here with the
 # reason, NOT left to fall through the "unpaired" branch. The distinction the guard defends is

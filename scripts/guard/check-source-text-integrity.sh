@@ -22,6 +22,10 @@ set -uo pipefail
 
 REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$REPO_PATH"
+# guard_assert_scanned lives in the shared helper, which sets -e. This guard deliberately does not
+# use -e — it lists every offending file before exiting — so restore its own error mode.
+source "$(dirname "${BASH_SOURCE[0]}")/_guard-common.sh"
+set +e
 
 echo "=== Source text integrity guard ==="
 
@@ -50,6 +54,16 @@ OFFENDERS=$(git ls-files -z --cached --others --exclude-standard -- \
 CHECKED=$(git ls-files --cached --others --exclude-standard -- \
   '*.java' '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.sh' '*.sql' '*.yml' '*.yaml' \
   '*.json' '*.md' '*.xml' '*.properties' '*.rego' '*.css' '*.html' 2>/dev/null | wc -l)
+
+# Self-reach. Both bugs described above produced a clean pass; so would a third — an `xargs` or glob
+# change that hands grep no files at all. This estate tracks ~18,000 matching source files, so a
+# count of zero is a broken scan reported as "all readable as text".
+guard_assert_scanned "$CHECKED" "tracked source files matching the text extensions" || {
+  echo "      The extension globs above matched nothing. A NUL byte in any source file would have"
+  echo "      gone unreported. Check the git ls-files invocation, not the tree."
+  echo "Source text integrity guard: FAILED"
+  exit 1
+}
 
 FAIL=0
 if [[ -n "$OFFENDERS" ]]; then

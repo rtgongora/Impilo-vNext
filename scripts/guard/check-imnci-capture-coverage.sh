@@ -85,6 +85,15 @@ DERIVED = {"ageDays", "weightForHeightZ", "weightForAgeZ", "lengthHeightForAgeZ"
 child_form = captured(load(form_path))
 yi_form = captured(load(yi_form_path))
 
+# Self-reach on the FORM side. captured() reads doc["definition"]["sections"][*]["fields"], so a
+# schema change that keeps those keys but moves the fields elsewhere yields an empty set. Every rule
+# input would then look uncapturable — or, paired with an empty rule set, everything would pass.
+for label, fields, path in (("child", child_form, form_path), ("young-infant", yi_form, yi_form_path)):
+    if not fields:
+        print(f"FAIL: parsed 0 capturable fields from the {label} form ({path}).")
+        print("      The form structure this guard reads has changed. It scanned nothing.")
+        raise SystemExit(1)
+
 # The danger-sign pack spans both age groups, so either form may satisfy it.
 checks = [
     ("danger-sign rules", rule_inputs(load(rules_path)), child_form | yi_form),
@@ -95,6 +104,14 @@ checks = [
 failed = False
 total_required = 0
 for label, required, available in checks:
+    # Self-reach on the ENGINE side. rule_inputs and table_inputs both use doc.get("rules"/"tables"),
+    # so renaming either key — or repackaging the content — silently yields an empty requirement set.
+    # Zero facts to check is indistinguishable from every fact being capturable.
+    if not required:
+        print(f"FAIL: parsed 0 engine inputs from the {label} pack.")
+        print("      The rule/table structure this guard reads has changed, so no fact was checked")
+        print("      against any form. Matching nothing is a broken guard, not full coverage.")
+        raise SystemExit(1)
     total_required += len(required)
     missing = {fact: srcs for fact, srcs in required.items()
                if fact not in available and fact not in DERIVED}
