@@ -143,7 +143,10 @@ class FormExtractionTest {
 
         FormExtractedResourceEntity obs = byType(rows, "OBSERVATION");
         assertThat(obs.getRouteTarget()).isEqualTo("BUTANO");
-        assertThat(obs.getStatus()).isEqualTo("PENDING");           // Butano write is the deferred SHR-bridge seam
+        // Was PENDING while the Butano write was still a deferred seam. The observation registry
+        // (659690ed2) closed that seam: the value is recorded and the row carries the observation id.
+        assertThat(obs.getStatus()).isEqualTo("ROUTED");
+        assertThat(obs.getExternalRef()).isNotBlank();
 
         // Every provenance row ties back to the immutable form version.
         assertThat(rows).allMatch(r -> r.getFormSchemaVersionId().equals("ver-consult-1"));
@@ -335,9 +338,14 @@ class FormExtractionTest {
 
     @Test
     void encounterFormExtractions_endpoint_returnsProvenanceForTheCockpit() throws Exception {
+        // A diagnosis no other method in this class uses. @BeforeEach opens a fresh encounter but the
+        // subject CPID is a class constant, and the problem list is patient-scoped — so reusing the
+        // first test's "Malaria" trips the duplicate-problem guard on the same patient. That guard
+        // failing here does not just skip one item: see FormExtractionService.extractAll's per-item
+        // catch, which cannot recover a transaction the inner service already marked rollback-only.
         String createBody = mapper.writeValueAsString(Map.of(
                 "encounterId", encounterId, "formKey", "impilo.test.consult",
-                "answers", Map.of("primaryDiagnosis", "Malaria", "labOrder", "FBC")));
+                "answers", Map.of("primaryDiagnosis", "Typhoid fever", "labOrder", "FBC")));
         MvcResult created = mockMvc.perform(trust(post("/v1/forms/responses"))
                         .contentType(MediaType.APPLICATION_JSON).content(createBody))
                 .andExpect(status().isCreated()).andReturn();
