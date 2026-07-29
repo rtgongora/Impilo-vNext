@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import * as React from "react";
 import {
   Activity,
@@ -15,6 +15,7 @@ import {
   Trash2,
   Users,
   Loader2,
+  X,
 } from "lucide-react";
 import { asArray, asRecord, asText, type ModalKey, type Row } from "@/components/learning/learningUtils";
 import { Panel, CreationCard, CreationTemplate, StatusPill, countOf } from "@/components/learning/SharedComponents";
@@ -23,6 +24,7 @@ import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { ModuleManagementPanel } from "./studio/ModuleManagementPanel";
 import { ModuleDetailPage } from "./ModuleDetailPage";
 import { SearchFilterPagination } from "./SearchFilterPagination";
+import { LearningModal } from "./LearningWorkspace";
 import { apiClient } from "@/lib/api-client";
 
 const FUNDO = "/internal/v1/learning/fundo";
@@ -479,61 +481,42 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
 
         {/* Module Modal */}
         {showModuleModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur">
-            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-              <h2 className="mb-4 text-lg font-bold text-slate-950">{editingModule ? "Edit Module" : "Add Module"}</h2>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Module Title *</label>
-                  <input
-                    type="text"
-                    value={moduleModalTitle}
-                    onChange={(e) => setModuleModalTitle(e.target.value)}
-                    placeholder="e.g., Introduction to Anatomy"
-                    className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Description (optional)</label>
-                  <textarea
-                    value={moduleModalDescription}
-                    onChange={(e) => setModuleModalDescription(e.target.value)}
-                    placeholder="Brief description of the module"
-                    rows={2}
-                    className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setShowModuleModal(false);
-                      setEditingModule(null);
-                      setModuleModalTitle("");
-                      setModuleModalDescription("");
-                    }}
-                    disabled={isSubmittingModule}
-                    className="flex-1 h-9 rounded-md border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveModule}
-                    disabled={isSubmittingModule}
-                    className="flex-1 h-9 rounded-md bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-                  >
-                    {isSubmittingModule ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Save Module"
-                    )}
-                  </button>
-                </div>
-              </div>
+          <LearningModal
+            title={editingModule ? "Edit Module" : "Add Module"}
+            busy={isSubmittingModule}
+            onClose={() => {
+              setShowModuleModal(false);
+              setEditingModule(null);
+              setModuleModalTitle("");
+              setModuleModalDescription("");
+            }}
+            onSubmit={(e: FormEvent<HTMLFormElement>) => {
+              e.preventDefault();
+              handleSaveModule();
+            }}
+          >
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Module Title *</label>
+              <input
+                type="text"
+                value={moduleModalTitle}
+                onChange={(e) => setModuleModalTitle(e.target.value)}
+                placeholder="e.g., Introduction to Anatomy"
+                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+                required
+              />
             </div>
-          </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-slate-600 mb-1">Description (optional)</label>
+              <textarea
+                value={moduleModalDescription}
+                onChange={(e) => setModuleModalDescription(e.target.value)}
+                placeholder="Brief description of the module"
+                rows={4}
+                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              />
+            </div>
+          </LearningModal>
         )}
 
         {/* Delete Module Confirmation */}
@@ -558,31 +541,51 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
 
         {/* Section Form Modal */}
         {showAddSection && selectedModuleForSection && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur overflow-y-auto">
-            <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg my-8">
-              <h2 className="mb-4 text-lg font-bold text-slate-950">{editingSection ? "Edit Section" : "Add Section"}</h2>
-              <SectionFormComponent
-                onCancel={() => {
-                  setShowAddSection(false);
-                  setSelectedModuleForSection(null);
-                  setEditingSection(null);
-                }}
-                onSubmit={handleSectionSubmit}
-                courseId={asText(selectedCourseForSections?.id as string)}
-                sequenceNo={0}
-                initialData={
-                  editingSection
-                    ? (() => {
-                        const module = modules.find((m) => m.id === editingSection.moduleId);
-                        if (module) {
-                          const section = asArray(module.lessons).find((s) => s.id === editingSection.sectionId);
-                          return section;
-                        }
-                        return undefined;
-                      })()
-                    : undefined
-                }
-              />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
+            <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl my-8 flex flex-col">
+              {/* Modal Header */}
+              <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 px-4 py-3 bg-white rounded-t-lg">
+                <h2 className="text-base font-semibold text-slate-950">{editingSection ? "Edit Section" : "Add Section"}</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddSection(false);
+                    setSelectedModuleForSection(null);
+                    setEditingSection(null);
+                  }}
+                  className="rounded-md p-1 text-slate-500 hover:bg-slate-100"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              {/* Modal Content - Remove background styling conflict */}
+              <div className="flex-1 max-h-[70vh] overflow-y-auto">
+                <div className="[&>div]:mb-0 [&>div]:p-0 [&>div]:border-0 [&>div]:bg-white">
+                  <SectionFormComponent
+                    onCancel={() => {
+                      setShowAddSection(false);
+                      setSelectedModuleForSection(null);
+                      setEditingSection(null);
+                    }}
+                    onSubmit={handleSectionSubmit}
+                    courseId={asText(selectedCourseForSections?.id as string)}
+                    sequenceNo={0}
+                    initialData={
+                      editingSection
+                        ? (() => {
+                            const module = modules.find((m) => m.id === editingSection.moduleId);
+                            if (module) {
+                              const section = asArray(module.lessons).find((s) => s.id === editingSection.sectionId);
+                              return section;
+                            }
+                            return undefined;
+                          })()
+                        : undefined
+                    }
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}

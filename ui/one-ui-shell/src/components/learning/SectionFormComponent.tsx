@@ -4,9 +4,6 @@ import { useState } from "react";
 import { AlertCircle, Loader2, X, Plus, ChevronDown } from "lucide-react";
 import { type Row } from "@/components/learning/learningUtils";
 import { FileUploadField } from "./FileUploadField";
-import { apiClient } from "@/lib/api-client";
-
-const FUNDO = "/internal/v1/learning/fundo";
 
 export interface QuizQuestion {
   id: string;
@@ -24,7 +21,7 @@ export function SectionFormComponent({
   initialData,
 }: {
   onCancel: () => void;
-  onSubmit: (section: Row) => void;
+  onSubmit: (section: Row) => void | Promise<void>;
   courseId: string;
   sequenceNo: number;
   initialData?: Row;
@@ -230,15 +227,7 @@ export function SectionFormComponent({
         questions: sectionType === "INTERACTIVE" ? quizQuestions : undefined,
       };
 
-      onSubmit(newSection);
-
-      // Reset form
-      setSectionType("");
-      setSectionTitle("");
-      setSectionContentRef("");
-      setSectionTranscript("");
-      setQuizQuestions([]);
-      setExpandedQuestion(null);
+      await onSubmit(newSection);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to create section";
       setError(errorMessage);
@@ -536,7 +525,7 @@ export function SectionFormComponent({
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-500 italic">No questions yet. Click "+ Add Question" to start.</p>
+                  <p className="text-xs text-slate-500 italic">No questions yet. Use Add Question to start.</p>
                 )}
               </div>
 
@@ -599,8 +588,8 @@ export function SectionFormComponent({
               placeholder="Enter text content or leave empty to add later..."
               value={sectionContentRef}
               onChange={(e) => setSectionContentRef(e.target.value)}
-              rows={3}
-              className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              rows={9}
+              className="min-h-[220px] w-full resize-y rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
             />
           </div>
         )}
