@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.datagovernance.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,9 +15,22 @@ import zw.gov.mohcc.impilo.shared.security.SecurityBaselineExceptionHandler;
 @Configuration
 public class SecurityBaselineConfig {
 
+    /**
+     * Capacity and refill are properties defaulting to the baseline 100 tokens / 2 per second, so
+     * runtime behaviour is unchanged where nothing sets them.
+     *
+     * <p>They have to be settable because the bucket is in-memory and keyed by actor — and MockMvc
+     * gives every request in a Spring test context the same actor. A suite that makes more than 100
+     * requests therefore starts 429ing itself partway through, which is what happened here once
+     * DataGovernanceGoldenContractTest joined DeidPipelineMockMvcTest in the same context. The
+     * failure lands on whichever test runs after the hundredth request, so it reads as an unrelated
+     * assertion failure. The filter stays in the chain under test; only the bucket is widened.
+     */
     @Bean
-    public RateLimitGuard rateLimitGuard() {
-        return new RateLimitGuard(100, 2);
+    public RateLimitGuard rateLimitGuard(
+            @Value("${impilo.security.rate-limit.max-tokens:100}") long maxTokens,
+            @Value("${impilo.security.rate-limit.refill-per-second:2}") long refillPerSecond) {
+        return new RateLimitGuard(maxTokens, refillPerSecond);
     }
 
     @Bean

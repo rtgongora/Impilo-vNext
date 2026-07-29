@@ -104,10 +104,29 @@ function walk(dir, fn) {
   }
 }
 
+/**
+ * Rate-limit guard bean, shared by both templates.
+ *
+ * Capacity and refill are properties defaulting to the baseline 100/2, so runtime behaviour matches
+ * the services scaffolded before this. They must be settable because the bucket is in-memory and
+ * keyed by actor, and MockMvc gives every request in a Spring test context the same actor: a module
+ * whose suite makes more than 100 requests starts 429ing itself, and the failure appears as a bogus
+ * status assertion in whichever test follows the hundredth request. data-governance-service hit this
+ * the moment a second MockMvc class joined its context. The 99 services scaffolded with the literal
+ * are one suite-growth spurt away from the same afternoon — see the 2026-07-29 handover.
+ */
+const RATE_LIMIT_GUARD_BEAN = `    @Bean
+    public RateLimitGuard rateLimitGuard(
+            @Value("\${impilo.security.rate-limit.max-tokens:100}") long maxTokens,
+            @Value("\${impilo.security.rate-limit.refill-per-second:2}") long refillPerSecond) {
+        return new RateLimitGuard(maxTokens, refillPerSecond);
+    }`;
+
 function fullTemplate(pkg, serviceKey, schema, envPrefix) {
   const schemaArg = schema === 'public' ? 'public' : schema;
   return `package ${pkg};
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -126,10 +145,7 @@ import javax.sql.DataSource;
 @Configuration
 public class SecurityBaselineConfig {
 
-    @Bean
-    public RateLimitGuard rateLimitGuard() {
-        return new RateLimitGuard(100, 2);
-    }
+${RATE_LIMIT_GUARD_BEAN}
 
     @Bean
     public FilterRegistrationBean<RateLimitFilter> rateLimitFilter(RateLimitGuard guard) {
@@ -161,6 +177,7 @@ public class SecurityBaselineConfig {
 function rateOnlyTemplate(pkg, envPrefix) {
   return `package ${pkg};
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -175,10 +192,7 @@ import zw.gov.mohcc.impilo.shared.security.SecurityBaselineExceptionHandler;
 @Configuration
 public class SecurityBaselineConfig {
 
-    @Bean
-    public RateLimitGuard rateLimitGuard() {
-        return new RateLimitGuard(100, 2);
-    }
+${RATE_LIMIT_GUARD_BEAN}
 
     @Bean
     public FilterRegistrationBean<RateLimitFilter> rateLimitFilter(RateLimitGuard guard) {

@@ -16,6 +16,12 @@ spring:
 impilo:
   security:
     disable-oauth-for-tests: true
+    # The baseline bucket is 100 tokens, in-memory, keyed by actor — and every MockMvc request in a
+    # test context presents the same actor. This module makes well over 100 requests per context, so
+    # the filter throttles the suite and the 429 surfaces as a bogus status assertion in whichever
+    # test happens to run after the hundredth request. Widened for tests only; the filter still runs.
+    rate-limit:
+      max-tokens: 1000000
   companion:
     enabled: true
   # Test-only de-identification secrets (production custody = tshepo-keys)
