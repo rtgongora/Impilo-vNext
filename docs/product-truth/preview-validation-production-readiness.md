@@ -57,7 +57,7 @@
 - [ ] **MusheX:** `/wallet`, `/finance/mushex-platform` — payment/wallet credit
 - [ ] **Costa:** `/finance/costa/encounter/{id}` — billing trigger
 - [ ] **Fundo:** `/learning/catalog` — enrol, progress, assessment, certificate (`e2e/fundo-learning-flow.spec.ts`)
-- [x] **Coverage:** `/coverage/enroll`, `/coverage/member` — compose e2e + `MemberEnrollmentIT` + smoke Test 6
+- [x] **Coverage:** `/coverage/enroll`, `/coverage/member` — compose e2e + `MemberEnrollmentTest` + smoke Test 6
 - [ ] **Public health:** `/public-health/site-registry` — Ndila map markers
 - [ ] **Enterprise:** `/enterprise` drill-down; `/enterprise/warehousing` inventory KPIs
 - [ ] **Live events:** `/live/discover` — register, join, replays
