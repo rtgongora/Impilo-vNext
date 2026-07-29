@@ -232,13 +232,55 @@ way.
   placeholders moved between files). Not a leak. **But a security guard sitting red is how people
   learn to ignore one.** Prune the baseline.
 
-### 3.7 Unlanded branches (NOT mine — do not merge blind)
+### 3.7 Unmerged branches — **39 remote branches are NOT merged into canonical**
 
-25+ worktrees are ahead of canonical. Most are 2–3 weeks stale (superseded). Recent, belonging to
-sessions that may still be running: `youthful-montalcini-536fee` (+7),
-`affectionate-joliot-aef493` (+3), `zen-goodall-6f6b21` (+2), `Impilo-vNext-bugfix` (+4).
-**Ask each owner before merging.** `unruffled-cartwright-a85b36` is +91 and two weeks old — almost
-certainly abandoned, but verify.
+Measured with `git branch -r --no-merged origin/claude/staging-ux-orchestration-remediation-Yypyl`.
+This is the authoritative list; a worktree audit is not the same thing and undercounts.
+
+**MY OWN WORK IS FULLY MERGED.** Everything this coordinator session produced is on canonical
+(0 ahead, 0 dirty, verified in both the worktree and the shared checkout).
+
+**Recent — likely live sessions. ASK THE OWNER BEFORE MERGING.**
+
+    +1     12 hours ago   claude/adoring-torvalds-f773c8
+    +9     16 hours ago   impilo-learning-staging
+    +1     22 hours ago   claude/gallant-darwin-f9ac27
+    +1     2 days ago     claude/wonderful-elgamal-a3517e
+    +2     2 days ago     claude/gallant-taussig-5f58e7
+    +2     2 days ago     claude/zen-goodall-6f6b21
+    +7     2 days ago     claude/youthful-montalcini-536fee
+    +1     2 days ago     claude/strange-cerf-9b2cff
+    +3     2 days ago     claude/affectionate-joliot-aef493
+
+**Last ~2 weeks — probably wound down, verify before assuming abandoned.**
+
+    +4     7 days ago     claude/khuluma-hub-Yypyl
+    +7     7 days ago     claude/ruvimbo-product-Yypyl
+    +4     8 days ago     claude/post-deploy-bugfix2-Yypyl
+    +2     8 days ago     claude/post-deploy-bugfix-Yypyl
+    +1     8 days ago     claude/trusting-chaplygin-48ca17
+    +1     10 days ago    claude/nervous-fermi-22e321
+    +3     11 days ago    claude/optimistic-fermat-d43c88
+    +1     2 weeks ago    claude/upbeat-mccarthy-8a77ac
+    +91    2 weeks ago    claude/unruffled-cartwright-a85b36
+
+**Older than 2 weeks: 21 more branches**, including `claude/unruffled-cartwright-a85b36` (+91,
+2 weeks) and long-lived lines that are almost certainly not merge candidates at all —
+`production` (+52), `peter/vnext-1.0` (+54), `claude/staging-ux-orchestration-remediation-jb5O0`
+(+64, the previous sprint's branch), `staging`, `ioptime/dev`, and several `split/*` and `local/*`.
+
+**Do not bulk-merge.** Several of these predate architectural decisions that have since landed, and a
+directory-pathspec commit or a blind merge is exactly what produced the `90e64207f` incident (§7.3).
+The right sequence is: ask the owner → merge canonical INTO their branch → let them resolve and push →
+then it merges cleanly. `impilo-learning-staging` (+9, 16h) and `claude/adoring-torvalds-f773c8`
+(+1, 12h) are the two most recent and most likely to matter.
+
+Regenerate this list at any time with:
+
+```
+git fetch origin --prune
+git branch -r --no-merged origin/claude/staging-ux-orchestration-remediation-Yypyl
+```
 
 ---
 
