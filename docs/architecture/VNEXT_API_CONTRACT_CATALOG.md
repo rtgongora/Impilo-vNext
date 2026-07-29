@@ -2,7 +2,7 @@
 
 > OpenAPI under `contracts/openapi/`. Extend with BFF route map and controller scan.
 
-**OpenAPI files:** 110
+**OpenAPI files:** 113
 
 | Contract | Plane | Path | Provider | Web consumer | Mobile consumer | Tests | Deployed |
 |---|---|---|---|---|---|---|---|
@@ -57,6 +57,7 @@
 | `landela-adapter.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `learning.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `madi.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `mental-health.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `mobile-citizen.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `mobile-provider.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `monitoring.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
@@ -82,6 +83,7 @@
 | `pct.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `pharmacy-elmis.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `pharmacy.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `procedures.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `procurement.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `product-registry.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `referral.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
@@ -97,6 +99,7 @@
 | `simba.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `social.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `support.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `surgery.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `surveillance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `telemonitoring.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `tshepo-audit.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |

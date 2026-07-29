@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T15:45:26.035Z",
+  "generatedAt": "2026-07-29T19:29:08.104Z",
   "branch": "coord/merge-catchup-20260729",
   "registryDrift": {
     "unregisteredModules": [],
@@ -10,7 +10,7 @@
     "totalLibraries": 17,
     "totalUiWorkspaces": 20,
     "bffRouteCount": 3476,
-    "contractCount": 110,
+    "contractCount": 113,
     "byProductStatus": {
       "internal-only": 26,
       "real": 78

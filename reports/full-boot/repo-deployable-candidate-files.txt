@@ -49,6 +49,7 @@ contracts/openapi/khuluma.openapi.yaml
 contracts/openapi/landela-adapter.openapi.yaml
 contracts/openapi/learning.openapi.yaml
 contracts/openapi/madi.openapi.yaml
+contracts/openapi/mental-health.openapi.yaml
 contracts/openapi/mobile-citizen.openapi.yaml
 contracts/openapi/mobile-provider.openapi.yaml
 contracts/openapi/monitoring.openapi.yaml
@@ -74,6 +75,7 @@ contracts/openapi/patient-safety.openapi.yaml
 contracts/openapi/pct.openapi.yaml
 contracts/openapi/pharmacy-elmis.openapi.yaml
 contracts/openapi/pharmacy.openapi.yaml
+contracts/openapi/procedures.openapi.yaml
 contracts/openapi/procurement.openapi.yaml
 contracts/openapi/product-registry.openapi.yaml
 contracts/openapi/referral.openapi.yaml
@@ -89,6 +91,7 @@ contracts/openapi/share-slip.openapi.yaml
 contracts/openapi/simba.openapi.yaml
 contracts/openapi/social.openapi.yaml
 contracts/openapi/support.openapi.yaml
+contracts/openapi/surgery.openapi.yaml
 contracts/openapi/surveillance.openapi.yaml
 contracts/openapi/telemonitoring.openapi.yaml
 contracts/openapi/tshepo-audit.openapi.yaml

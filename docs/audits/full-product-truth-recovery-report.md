@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-29T15:45:26.035Z
+> Generated: 2026-07-29T19:29:08.104Z
 > Branch: `coord/merge-catchup-20260729`
 
 ## Executive summary
@@ -13,7 +13,7 @@
 | Frontend surfaces (routes) | 922 |
 | Mobile screens | 214 |
 | BFF route handlers | 3476 |
-| OpenAPI contracts | 110 |
+| OpenAPI contracts | 113 |
 | Services with DB persistence | 103 |
 | **Phase 6 complete (user-facing + documented internal)** | **104** |
 | User-facing services with `real` code present (file-existence axis) | 78 / 78 |

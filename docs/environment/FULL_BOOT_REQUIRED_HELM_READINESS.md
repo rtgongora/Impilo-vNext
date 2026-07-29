@@ -5,7 +5,7 @@ registered service and whether it has a chart at all — is FULL_HELM_DEPLOYABIL
 written by generate-full-boot-artifacts.mjs. Both once wrote that one path, so whichever ran
 last in the pipeline replaced the other's report with an incompatible table.
 
-Generated: 2026-07-29T13:06:19.821931+00:00
+Generated: 2026-07-29T19:36:21.939072+00:00
 
 **Required services:** 22
 
