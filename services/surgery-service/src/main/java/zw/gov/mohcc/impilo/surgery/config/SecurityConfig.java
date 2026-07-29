@@ -1,0 +1,69 @@
+package zw.gov.mohcc.impilo.surgery.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
+
+/**
+ * Trust-context and HTTP security for surgery-service, mirroring the sibling
+ * {@code procedures-service} programme's own {@code SecurityConfig} rather than inventing a
+ * second idiom.
+ *
+ * <p>This was missing, and its absence was not cosmetic. Every core service in this module opens
+ * with {@code TrustContextHolder.require()}, which throws when no {@link TrustContextFilter} has
+ * run — and nothing registered one, so the tenant could never be resolved on a real request.
+ * Spring Boot's default chain also secured every route behind generated-password basic auth, on a
+ * module whose whole API is internal. Unit tests set the holder themselves, so neither fault
+ * could surface there; both would have surfaced the first time a request arrived.</p>
+ */
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http, TrustContextFilter trustContextFilter,
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests) throws Exception {
+
+        http.csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Honour the estate-wide preview/test flag so internal trust-plane calls are permitted in
+        // the sandbox, consistent with procedures/rito/participation/pharmacy. Production keeps oauth2.
+        if (!disableOauthForTests) {
+            http.authorizeHttpRequests(auth -> auth
+                            .requestMatchers(
+                                    "/actuator/health",
+                                    "/actuator/health/**",
+                                    "/actuator/info",
+                                    "/actuator/prometheus",
+                                    "/actuator/metrics",
+                                    "/actuator/metrics/**",
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html",
+                                    "/internal/v1/health"
+                            ).permitAll()
+                            .anyRequest().authenticated())
+                    .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        } else {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        }
+
+        return http.build();
+    }
+}
