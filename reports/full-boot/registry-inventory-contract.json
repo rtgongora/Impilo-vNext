@@ -1,17 +1,17 @@
 {
-  "generated_at": "2026-07-16T10:15:06.631Z",
-  "registry_service_count": 97,
-  "classification_total": 148,
+  "generated_at": "2026-07-20T18:11:00.315Z",
+  "registry_service_count": 100,
+  "classification_total": 151,
   "registry_services_missing_from_classification": [],
   "unclassified_registry_gaps": 0,
-  "runtime_k8s_microservice_count": 95,
-  "wave_runtime_service_count": 112,
+  "runtime_k8s_microservice_count": 96,
+  "wave_runtime_service_count": 115,
   "build_validate_only_count": 29,
   "by_deployment_lane": {
-    "runtime_k8s_microservice": 95,
+    "runtime_dedicated": 4,
+    "runtime_k8s_microservice": 96,
     "doctrine_only": 14,
     "build_validate_only": 29,
-    "runtime_official": 8,
-    "runtime_dedicated": 2
+    "runtime_official": 8
   }
 }

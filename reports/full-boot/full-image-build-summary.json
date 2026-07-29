@@ -1,18 +1,18 @@
 {
-  "generated_at": "2026-07-17T00:15:43.762748+00:00",
-  "tag_sha": "preview-32f2c4fa6",
+  "generated_at": "2026-07-20T18:15:38.250214+00:00",
+  "tag_sha": "preview-8ca062e7d",
   "doctrine": "runtime_image_strategy_required",
   "mode": "only",
   "only_services": [
-    "zibo-service",
-    "workforce-governance-service"
+    "abis-service",
+    "matcher-engine"
   ],
   "selected_target_count": 2,
-  "total_components": 148,
+  "total_components": 151,
   "runtime_image_required_count": 22,
   "dockerfile_count": 1,
-  "shared_template_count": 76,
-  "jib_count": 20,
+  "shared_template_count": 78,
+  "jib_count": 21,
   "buildpacks_count": 15,
   "official_image_count": 0,
   "official_chart_count": 8,
@@ -30,32 +30,32 @@
   "missing_required_image_strategy": 0,
   "required_fail": 0,
   "per_service": {
-    "workforce-governance-service": "pass_shared_template",
-    "zibo-service": "pass_shared_template"
+    "abis-service": "pass_shared_template",
+    "matcher-engine": "pass_shared_template"
   },
   "build_records": {
-    "workforce-governance-service": {
-      "service": "workforce-governance-service",
-      "source_commit": "32f2c4fa6304024503c1131247256f3a2f8cad2a",
+    "abis-service": {
+      "service": "abis-service",
+      "source_commit": "8ca062e7de8d3c2615657f2f2baaa00b566ce362",
       "image_tag": "preview",
-      "image_tag_sha": "preview-32f2c4fa6",
-      "cache_bust": "32f2c4fa6304024503c1131247256f3a2f8cad2a",
-      "local_docker_image_id": "sha256:651e469fb0a09bfd62f4a0218382be93c26d23a72881a6b5ab87aa87ea2ffe3c",
-      "registry_digest": "impilo/workforce-governance-service@sha256:651e469fb0a09bfd62f4a0218382be93c26d23a72881a6b5ab87aa87ea2ffe3c",
-      "build_timestamp": "2026-07-17T00:15:43.397217+00:00",
+      "image_tag_sha": "preview-8ca062e7d",
+      "cache_bust": "8ca062e7de8d3c2615657f2f2baaa00b566ce362",
+      "local_docker_image_id": "sha256:950332b282d0fd246c524649540f247a83dc3a56f435b084274af20c2a9a6fec",
+      "registry_digest": "impilo/abis-service@sha256:950332b282d0fd246c524649540f247a83dc3a56f435b084274af20c2a9a6fec",
+      "build_timestamp": "2026-07-20T18:15:37.823000+00:00",
       "build_status": "pass_shared_template"
     },
-    "zibo-service": {
-      "service": "zibo-service",
-      "source_commit": "32f2c4fa6304024503c1131247256f3a2f8cad2a",
+    "matcher-engine": {
+      "service": "matcher-engine",
+      "source_commit": "8ca062e7de8d3c2615657f2f2baaa00b566ce362",
       "image_tag": "preview",
-      "image_tag_sha": "preview-32f2c4fa6",
-      "cache_bust": "32f2c4fa6304024503c1131247256f3a2f8cad2a",
-      "local_docker_image_id": "sha256:cdc66b1258c8141e420c20c5a717a8d9d5d9a8dc43dc60599e16cd4ddc04164c",
-      "registry_digest": "impilo/zibo-service@sha256:cdc66b1258c8141e420c20c5a717a8d9d5d9a8dc43dc60599e16cd4ddc04164c",
-      "build_timestamp": "2026-07-17T00:15:43.397217+00:00",
+      "image_tag_sha": "preview-8ca062e7d",
+      "cache_bust": "8ca062e7de8d3c2615657f2f2baaa00b566ce362",
+      "local_docker_image_id": "sha256:a1cd92a35deb4f66ea636fe5d7fe2c2bb5a75536fb6de583255bc86ab57ecdea",
+      "registry_digest": "impilo/matcher-engine@sha256:a1cd92a35deb4f66ea636fe5d7fe2c2bb5a75536fb6de583255bc86ab57ecdea",
+      "build_timestamp": "2026-07-20T18:15:37.823000+00:00",
       "build_status": "pass_shared_template"
     }
   },
-  "source_commit": "32f2c4fa6304024503c1131247256f3a2f8cad2a"
+  "source_commit": "8ca062e7de8d3c2615657f2f2baaa00b566ce362"
 }

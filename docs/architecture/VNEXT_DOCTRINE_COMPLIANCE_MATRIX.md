@@ -4,6 +4,7 @@
 
 | Component | Doctrine(s) | Expected | Implementation | Frontend | Mobile | API/contract | Compliance | Evidence | Remediation |
 |---|---|---|---|---|---|---|---|---|---|
+| `abis-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/abis-service` | triage |
 | `ai-model-registry-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/ai-model-registry-service` | triage |
 | `analytics-pipeline-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/analytics-pipeline-service` | triage |
 | `asset-registry-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/asset-registry-service` | triage |
@@ -62,6 +63,7 @@
 | `live-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/live-service` | triage |
 | `llm-orchestration-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/llm-orchestration-service` | triage |
 | `madi-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/madi-service` | triage |
+| `matcher-engine` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/matcher-engine` | triage |
 | `minio` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | missing | `docker-compose.yml` | not_deployed_in_preview |
 | `msika-apps-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-apps-service` | triage |
 | `msika-flow-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-flow-service` | triage |
@@ -90,6 +92,7 @@
 | `oros-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/oros-service` | triage |
 | `oros-web` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/oros-web` | triage |
 | `pacs-adapter-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/pacs-adapter-service` | triage |
+| `participation-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/participation-service` | triage |
 | `patient-safety-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/patient-safety-service` | triage |
 | `pct-service` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | missing | `services/pct-service` | not_deployed_in_preview |
 | `pct-web` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/pct-web` | triage |

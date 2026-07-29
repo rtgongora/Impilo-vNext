@@ -1,6 +1,27 @@
 {
-  "generated_at": "2026-07-16T10:15:06.589Z",
+  "generated_at": "2026-07-20T18:11:00.276Z",
   "targets": [
+    {
+      "id": "abis-service",
+      "path": "services/abis-service",
+      "component_name": "abis-service",
+      "type": "backend_service",
+      "plane": "trust",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "jib",
+      "image_strategy_status": "valid",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/abis-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/abis-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "cd services/abis-service && mvn install -DskipTests && build-runtime-image-from-jar",
+      "image_name": "impilo/abis-service"
+    },
     {
       "id": "ai-model-registry-service",
       "path": "services/ai-model-registry-service",
@@ -145,7 +166,7 @@
       "jib_module": "services/butano-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh butano-service",
+      "image_build_command": "cd services/butano-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/butano-service"
     },
     {
@@ -208,7 +229,7 @@
       "jib_module": "services/card-print-agent",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh card-print-agent",
+      "image_build_command": "cd services/card-print-agent && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/card-print-agent"
     },
     {
@@ -334,7 +355,7 @@
       "jib_module": "services/costing-engine-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh costing-engine-service",
+      "image_build_command": "cd services/costing-engine-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/costing-engine-service"
     },
     {
@@ -376,7 +397,7 @@
       "jib_module": "services/credential-verification-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh credential-verification-service",
+      "image_build_command": "cd services/credential-verification-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/credential-verification-service"
     },
     {
@@ -565,7 +586,7 @@
       "jib_module": "services/dispatch-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh dispatch-service",
+      "image_build_command": "cd services/dispatch-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/dispatch-service"
     },
     {
@@ -817,7 +838,7 @@
       "jib_module": "services/inpatient-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh inpatient-service",
+      "image_build_command": "cd services/inpatient-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/inpatient-service"
     },
     {
@@ -838,7 +859,7 @@
       "jib_module": "services/integration-hub",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh integration-hub",
+      "image_build_command": "cd services/integration-hub && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/integration-hub"
     },
     {
@@ -859,7 +880,7 @@
       "jib_module": "services/inventory-elmis-adapter",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh inventory-elmis-adapter",
+      "image_build_command": "cd services/inventory-elmis-adapter && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/inventory-elmis-adapter"
     },
     {
@@ -880,7 +901,7 @@
       "jib_module": "services/inventory-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh inventory-service",
+      "image_build_command": "cd services/inventory-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/inventory-service"
     },
     {
@@ -1136,6 +1157,27 @@
       "image_name": "impilo/madi-service"
     },
     {
+      "id": "matcher-engine",
+      "path": "services/matcher-engine",
+      "component_name": "matcher-engine",
+      "type": "backend_service",
+      "plane": "trust",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/matcher-engine/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/matcher-engine",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/matcher-engine/Dockerfile OR build-runtime-image-from-jar.sh matcher-engine",
+      "image_name": "impilo/matcher-engine"
+    },
+    {
       "id": "minio",
       "path": "docker-compose.yml",
       "component_name": "minio",
@@ -1258,7 +1300,7 @@
       "jib_module": "services/mushex-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh mushex-service",
+      "image_build_command": "cd services/mushex-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/mushex-service"
     },
     {
@@ -1321,7 +1363,7 @@
       "jib_module": "services/ndila-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh ndila-service",
+      "image_build_command": "cd services/ndila-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/ndila-service"
     },
     {
@@ -1363,7 +1405,7 @@
       "jib_module": "services/nhume-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh nhume-service",
+      "image_build_command": "cd services/nhume-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/nhume-service"
     },
     {
@@ -1619,6 +1661,27 @@
       "image_name": "impilo/pacs-adapter-service"
     },
     {
+      "id": "participation-service",
+      "path": "services/participation-service",
+      "component_name": "participation-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/participation-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/participation-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/participation-service/Dockerfile OR build-runtime-image-from-jar.sh participation-service",
+      "image_name": "impilo/participation-service"
+    },
+    {
       "id": "patient-safety-service",
       "path": "services/patient-safety-service",
       "component_name": "patient-safety-service",
@@ -1720,7 +1783,7 @@
       "jib_module": "services/pharmacy-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh pharmacy-service",
+      "image_build_command": "cd services/pharmacy-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/pharmacy-service"
     },
     {
@@ -2182,7 +2245,7 @@
       "jib_module": "services/surveillance-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh surveillance-service",
+      "image_build_command": "cd services/surveillance-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/surveillance-service"
     },
     {
@@ -2203,7 +2266,7 @@
       "jib_module": "services/tshepo-audit-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh tshepo-audit-service",
+      "image_build_command": "cd services/tshepo-audit-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/tshepo-audit-service"
     },
     {
@@ -2224,7 +2287,7 @@
       "jib_module": "services/tshepo-authz-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh tshepo-authz-service",
+      "image_build_command": "cd services/tshepo-authz-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/tshepo-authz-service"
     },
     {
@@ -2245,7 +2308,7 @@
       "jib_module": "services/tshepo-consent-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh tshepo-consent-service",
+      "image_build_command": "cd services/tshepo-consent-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/tshepo-consent-service"
     },
     {
@@ -2287,7 +2350,7 @@
       "jib_module": "services/tshepo-keys-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh tshepo-keys-service",
+      "image_build_command": "cd services/tshepo-keys-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/tshepo-keys-service"
     },
     {
@@ -2308,7 +2371,7 @@
       "jib_module": "services/tshepo-offline-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh tshepo-offline-service",
+      "image_build_command": "cd services/tshepo-offline-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/tshepo-offline-service"
     },
     {
@@ -2434,7 +2497,7 @@
       "jib_module": "services/wellness-service",
       "official_image": null,
       "official_chart": null,
-      "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh wellness-service",
+      "image_build_command": "cd services/wellness-service && mvn install -DskipTests && build-runtime-image-from-jar",
       "image_name": "impilo/wellness-service"
     },
     {

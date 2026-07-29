@@ -3045,6 +3045,33 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: matcher-engine
+    maven_module: matcher-engine
+    primary_plane: trust
+    plane: trust
+    domain: biometric-identity
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: ABIS
+    primary_protocol: rest
+    default_http_port: 9200
+    product_names:
+      - ABIS Matcher Engine
+    owner_team: TBD
+    system_of_record_for: []
+    consumes_from: []
+    exposes_to:
+      - abis-service
+    forbidden_responsibilities:
+      - must-not-own-biometric-template-governance
+      - must-not-store-demographics-or-pii
+      - must-not-be-called-except-via-abis-service
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: tshepo-service
     maven_module: tshepo-service
     primary_plane: trust

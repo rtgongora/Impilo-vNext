@@ -44,10 +44,10 @@ Legacy pipeline treated missing Dockerfile as failure.
 
 ## Current classification snapshot
 
-**Total components:** 148
+**Total components:** 151
 
-- **shared-dockerfile-template**: 76
-- **jib**: 20
+- **shared-dockerfile-template**: 78
+- **jib**: 21
 - **buildpacks**: 15
 - **not-required-internal-package**: 12
 - **not-required-generated-client**: 9

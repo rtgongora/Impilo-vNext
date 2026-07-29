@@ -28,6 +28,7 @@ waves:
     services:
       - abis-service
       - identity-assurance-service
+      - matcher-engine
       - mvumo-service
       - tshepo-offline-service
   - id: 2

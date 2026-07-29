@@ -9,12 +9,12 @@
 
 | Plane ID | Name | Evidence | Component count |
 |---|---|---|---|
-| trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 12 |
+| trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 14 |
 | registry | Registry & Sovereign Identity Spine | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | 8 |
 | clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 20 |
 | data | Data, Intelligence & Public Health | `docs/architecture/planes/04-data-intelligence-public-health.md` | 12 |
 | integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 46 |
-| experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 30 |
+| experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 31 |
 | enterprise | Enterprise Resource & Market Operations | `docs/architecture/planes/07-enterprise-resource-market-operations.md` | 17 |
 
 ## Trust, Identity Assurance & Governance
@@ -23,9 +23,11 @@ Evidence: [`docs/architecture/planes/01-trust-identity-assurance-governance.md`]
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
+| `abis-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `envoy` | infrastructure | required_full_boot | image_strategy_defined | certain |
 | `identity-assurance-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `keycloak` | infrastructure | required_full_boot | image_strategy_defined | certain |
+| `matcher-engine` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `mvumo-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `opa` | infrastructure | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `tshepo-audit-service` | backend_service | required_full_boot | image_strategy_defined | certain |
@@ -177,6 +179,7 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 | `ops-console` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `ops-docs` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `oros-web` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
+| `participation-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `pct-web` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `pharmacy-web` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `portal` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
