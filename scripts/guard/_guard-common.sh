@@ -245,8 +245,36 @@ _guard_normalise_base() {
   fi
 }
 
+# Say so when the fork-point base predates this checkout's tracking branch.
+#
+# _guard_published_refs excludes @{upstream} on purpose: pushing your own lane branch must not
+# launder your own work into "already reviewed". In a checkout that tracks a SHARED branch,
+# though, that exclusion also un-publishes every other lane's commits on it, and the base falls
+# back to the newest ancestor some *other* remote branch still holds. A coordinator worktree that
+# has merged canonical then gets tens of shipped commits charged to it, and the gates fail on
+# placeholder copy and thin pages nobody in this session wrote.
+#
+# The trade-off itself is not resolvable locally — git cannot tell a shared branch from a lane
+# branch pushed under another name — so this only makes the situation legible instead of silently
+# widening review. Written to stderr, so callers capturing the base on stdout are unaffected.
+_guard_note_cross_lane_base() {
+  local base="$1" up count
+  up="$(git rev-parse --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+  [[ -z "$up" ]] && return 0
+  # Only relevant once the tracking branch is actually merged in, and only when the base sits
+  # behind it — otherwise there is no inherited history in the review window.
+  git merge-base --is-ancestor "$up" HEAD 2>/dev/null || return 0
+  git merge-base --is-ancestor "$base" "$up" 2>/dev/null || return 0
+  count="$(git rev-list --count "${base}..${up}" 2>/dev/null || echo 0)"
+  (( count == 0 )) && return 0
+  echo "GUARD NOTE  base ${base:0:9} predates the tracking branch ${up#refs/remotes/}:" \
+       "${count} already-published commit(s) from other lanes are inside this review window." \
+       "To review only this lane's own commits, re-run with GUARD_UPSTREAM_REF=${up#refs/remotes/}" \
+       "(or GUARD_BASE_REF=<sha>). A failure attributable to those commits is inherited, not new." >&2
+}
+
 resolve_base_ref() {
-  local t m f
+  local t m f b
 
   if [[ -n "${GUARD_BASE_REF:-}" ]] && guard_is_commit "${GUARD_BASE_REF}"; then
     _guard_explain "GUARD_BASE_REF override (${GUARD_BASE_REF})"
@@ -290,7 +318,9 @@ resolve_base_ref() {
     else
       _guard_explain "base = newest published ancestor ${f}; only this lane's own commits are under review"
     fi
-    _guard_normalise_base "$f"
+    b="$(_guard_normalise_base "$f")"
+    _guard_note_cross_lane_base "$b"
+    echo "$b"
     return 0
   fi
   if m="$(_guard_merged_in_parent)"; then
