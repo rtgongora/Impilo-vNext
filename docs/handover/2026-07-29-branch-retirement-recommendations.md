@@ -211,6 +211,42 @@ glob, which matches production names such as `LatestReading.java`, so merely reo
 Mutation-proven both directions: a test-only deletion warns and exits 0; deleting a production service
 file — including one named `Latest*` — still fails and exits 1.
 
+### F5 — Guard self-reach: six guards fixed, five needed nothing
+
+The brief expected eleven whole-tree guards to need `guard_assert_scanned`. Reading each one, **six**
+could genuinely pass while scanning nothing, and **five** could not. Adding the assertion to all
+eleven would have added noise and implied a defect where there was none.
+
+Fixed (commits `d1490d648`, `014d2e8aa`), each mutation-proven by pointing its scan at an empty set:
+
+| Guard | Vacuity found |
+|---|---|
+| `check-top-no-record-level-emit.sh` | Both scans: the pct-service publishing files, and the TOP migration pinned as `V435__*.sql` — a renumber would silently empty it |
+| `check-confidential-lane-routing.sh` | Counted controllers and never asserted the count; detection is by entity **import**, so renaming a stamped entity empties the checked set while every message still reads OK |
+| `check-source-text-integrity.sh` | Counted ~18,000 files and printed that count in its pass line without ever requiring it to be non-zero |
+| `check-public-lane.sh` | Scan globs come from YAML; it would print `(0 files scanned)` as a PASS |
+| `check-rmnp-capture-coverage.sh` | Exited **0** on "no RMNP packs yet" — honest when the guard was wired ahead of the content, but 17 packs now exist, so zero means the scan broke |
+| `check-imnci-capture-coverage.sh` | Reads `rules`/`tables` via `dict.get`, so a key rename yields zero requirements — indistinguishable from full coverage |
+
+Deliberately unchanged, with reasons:
+
+- **`check-migration-version-collisions.sh`** already implements self-reach inline, and more
+  thoroughly than the shared helper: it fails on zero migration directories, on any directory it
+  cannot read, and on any directory that holds files but parses to zero versioned migrations.
+- **`check-madi-surfacing.sh`** and **`check-doctrine-compliance.sh`** are fixed-list existence
+  checkers. Every check is a positive assertion ("this file must exist"), which cannot pass
+  vacuously — if the tree moves, they fail loudly.
+- **`check-mobile-parity.sh`** and **`check-backend-frontend-parity.sh`** are orchestrators. Their
+  own loops are delta-scoped, where an empty set is legitimate (nothing changed); the whole-tree
+  scanning happens in the children they invoke (`check-*-mocks-and-stubs.sh`,
+  `check-*-api-surfacing.sh`, and `npm run test:no-stubs`).
+
+A seventh fix came out of the proving rather than the reading: the three guards that gained a
+`source` line resolved the helper **after** `cd "$REPO_PATH"`, so any relative invocation from
+outside the repository root died with `guard_assert_scanned: command not found`. The mutation probe
+went red for the wrong reason, which is how it was caught. Now verified from the repository root,
+from inside `scripts/guard`, and by absolute path.
+
 ### F3 — `services/oros-service/id_file` should not be tracked
 
 A stray build artefact containing a bare number, which produced a content conflict during merge 8.
