@@ -65,12 +65,6 @@ class DownstreamRouteContractTest {
      * Each line is a real defect, not an exemption.
      *
      * <ul>
-     *   <li><b>Tuso shifts / staffing</b> — tuso-service serves shifts at
-     *       {@code /v1/internal/facilities/{facilityId}/...}; nothing in the estate serves
-     *       {@code /v1/staffing} at all, so the roster-week read, the on-call roster and swaps are
-     *       dead. Being completed in vashandi, which owns {@code vsh_roster}/{@code vsh_shift}.
-     *       ({@code /v1/wards} was on this list and is fixed — ward create now goes to
-     *       inpatient-service, where ward reads already went.)</li>
      *   <li><b>FHIR gateway</b> — proxied to HAPI rather than declared as Spring routes, so the
      *       scanner cannot see them. Verify before removing this line.</li>
      *   <li><b>Nhume {@code /internal/v1}</b> — a bare prefix from a concatenated path; the
@@ -79,10 +73,12 @@ class DownstreamRouteContractTest {
      */
     private static final Set<String> BASELINE = Set.of(
             // ── Workforce / facility lane ────────────────────────────────────────
-            // tuso-service serves shifts at /v1/internal/facilities/{facilityId}/… — a repoint
-            // owned by another lane.
-            //
-            // /v1/wards and /v1/staffing are both FIXED and gone from this list:
+            // Nothing left here. /v1/shifts, /v1/wards and /v1/staffing were all on this list and
+            // are all FIXED:
+            //   * shift start/end now post to tuso's real routes — start-shift is facility-scoped
+            //     (/v1/internal/facilities/{facilityId}/start-shift) because a shift happens
+            //     somewhere, and end is /v1/internal/shifts/{shiftId}/end. The flat /v1/shifts was
+            //     served by no service at all, so every attempt to go on duty failed.
             //   * hospital wards are inpatient-service's (inpatient.ward), which is also where the
             //     BFF already read them from, so ward create was repointed there rather than built
             //     in tuso. Tuso's `wards` are zw_admin_ward — electoral wards on the geography
@@ -90,13 +86,6 @@ class DownstreamRouteContractTest {
             //   * rostering is vashandi's (vsh_roster/vsh_shift), and scheduled on-call is a
             //     projection over shifts carrying an on_call_role, not a rival concept beside the
             //     virtual-pool duty read.
-            //
-            // /v1/shifts is now FIXED too and has been removed from this list (2026-07-28, by the
-            // adult-medicine lane, because the guard failed the shared BFF build until someone did).
-            // Note HOW it was fixed, since it is not what the note above anticipated: tuso still does
-            // not serve /v1/shifts — it serves /v1/internal/shifts — and the fix was on the CALLER
-            // side. TusoServiceClient no longer requests that path at all. The violation disappeared
-            // because the call went away, not because the route arrived.
 
             // /v1/vitals was on this list and is FIXED: the vitals surface now reads and writes
             // pct's observation spine (/v1/observations, LOINC-coded) via VitalsObservationBridge,
