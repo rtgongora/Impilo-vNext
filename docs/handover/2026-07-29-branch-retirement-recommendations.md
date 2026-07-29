@@ -327,27 +327,274 @@ resurrected ~95 golden contract suites: the value of that lane is only realised 
 tests actually run. Widening it is a runner-cost decision and this estate already has billing/runner
 locks, so it is recorded here for the product owner's call rather than changed unilaterally.
 
+### F7 — Three merge defects the guards could not see, found only by running the tests (fixed)
+
+The change-safety guards passed the merged tip while three services could not pass their own test
+suites. Guards check structure; only the backend suites caught these. All three are fixed in this pass,
+and each is a distinct *kind* of merge hazard worth recognising.
+
+**1. A seed row keyed on a value the runtime does not have** —
+`fix(tshepo-authz): seed break-glass FACILITY_ADMIN rules with a real actor type`.
+The break-glass rules from `nervous-fermi-22e321` keyed two `FACILITY_ADMIN` review rules on
+`actor_type='STAFF'`, which is not a member of the runtime `ActorType` enum. The migration applied
+cleanly and looked complete; the rows could simply never match a request, so the reviewer path they
+exist to authorise was **dead in the database**. `PolicyRuleSeedVocabularyTest` is what caught it.
+Fixed to `NULL`, the shape `V026` already uses for role-scoped rules.
+
+**2. A test config that contradicts a mandatory architectural pattern** —
+`test(ubomi): keep Kafka autoconfiguration so the outbox publisher can wire`.
+`application-test.yml` excluded `KafkaAutoConfiguration` outright, but `UbomiOutboxPublisher` is an
+unconditional `@Component` — and the outbox pattern is mandatory for every service in this estate. The
+whole application context failed to load. Any service that gains an outbox publisher will hit this, so
+the fix is the estate-standard shape: keep the autoconfiguration, set `listener.auto-startup: false`.
+Building a `KafkaTemplate` needs no broker.
+
+**3. Two lanes that made opposite decisions about the same fixture** —
+`test(experience-bff): stop faking inpatient availability in the sovereign stub`. This one is the real
+lesson. On 2026-07-14, `6b5fc41e4` stubbed `/internal/v1/beds/wards` so the RBAC test got a 200. On
+2026-07-16, `bfdcc1d48` **reversed that on canonical**: it renamed the test to
+`bedWardsListPassesRbacAndFailsCleanWhenInpatientUnavailable` and asserted the honest 502
+`INPATIENT_UNAVAILABLE` that proves the request reached the sovereign client — dropping the stub and the
+`inpatient-base-url` registration with it. Branch 8 still carried the 14th's version.
+
+Resolving that file by taking the **union** of both sides' base-url registrations re-imported the
+retired stub and turned canonical's honest 502 back into a 200. The union heuristic is correct when both
+lanes fixed the same defect; it is **wrong when the lanes disagreed**, and then the later decision wins.
+Nothing consumed the 200 — `RbacIntegrationTest` is the only caller of that path. Registrations that do
+have consumers (`oros`, `reporting`, `varapi`) were kept.
+
+> Practical rule for the next consolidation: before taking a union in a **test fixture**, check whether
+> the two sides are additive or contradictory. A fixture that makes a dependency look available can
+> silently delete another lane's honest-failure assertion, and the merge will still compile and the
+> guards will still pass.
+
+### F9 — A rejected form extraction returns 500 and loses the clinician's whole submission (ESCALATED — owner decision)
+
+Found while fixing F7's third item. Not fixed here: it changes a clinical write path.
+
+`FormExtractionService.extractAll` wraps each item's extraction in `try/catch (RuntimeException) ->
+recordFailure(...)`, and the comment says why — "the form response itself must survive a rejected
+extraction — losing the clinician's answers because one derived observation was malformed would be a
+far worse outcome." That intent does not survive contact with Spring's transaction semantics.
+
+When the failing call is a `@Transactional` service participating in the same transaction —
+`problemService.add` is — its exception marks the shared transaction **rollback-only** before the catch
+runs. Extraction continues, the item is recorded as FAILED, and then the outer commit throws
+`UnexpectedRollbackException`. The client gets a 500 and the entire form response is rolled back:
+exactly the outcome the catch exists to prevent.
+
+Reproduction, and it is not exotic — a duplicate problem is the trigger:
+
+1. Submit a consult form whose `primaryDiagnosis` maps to CONDITION for a patient who already has
+   that problem ACTIVE on their list.
+2. The duplicate-problem guard rejects it: *"A problem matching 'Malaria' is already on this patient's
+   list (status ACTIVE). State whether this is the same problem returning or a distinct one."*
+3. `POST /v1/forms/responses/{id}/submit` returns 500 and the submission is lost.
+
+Chronic and recurring conditions make this a normal clinical situation, not an edge case. The guard
+itself is good and should stay; the transaction handling around it is what fails.
+
+Fixes worth considering, in the owner's order of preference — each needs a decision this pass should
+not make alone: run each item extraction in its own transaction (`REQUIRES_NEW`) so a rejection is
+genuinely isolated; or pre-check for the duplicate before calling, so no exception is raised on the
+expected path; or surface the rejection to the clinician as a decision ("same problem returning, or
+distinct?") rather than as a failure, which is what the guard's own message asks for.
+
+### F8 — Consolidation lanes need a declared target ref, or the guards charge them the whole fortnight
+
+Not a bug, but a sharp edge that will recur. Because `_guard_published_refs` excludes the branch's own
+upstream, a lane whose upstream *is* canonical gets base resolved to a pre-fortnight commit and reviews
+**1942 commits / 5722 files** of other lanes' work as if it authored them. Four checks go red on
+inherited debt and the run is unreadable.
+
+Recommend either setting `git config guard.upstreamRef origin/<canonical>` on consolidation branches, or
+documenting `GUARD_UPSTREAM_REF` in the merge runbook. The evidence for treating the four reds as
+inherited is in the next section — two-sided, not asserted.
+
+### F10 — Five instrument defects found by running the full pipeline, each uncovered by fixing the last
+
+The full local pipeline was the only thing that found these; every one of them had been passing or
+silently skipping. They are listed in discovery order because each was hidden behind the one before,
+which is the useful part of the story: a broken instrument conceals the next broken instrument.
+
+**1. Three guards audited a different repository.** `check-registry-inventory-contract`,
+`check-full-boot-waves` and `check-bff-downstream-mappings` defaulted `REPO` to the literal
+`/opt/impilo/repos/Impilo-vNext` and `cd`'d there. Run from any worktree they inspected that other
+working copy — which on this VM carries dirty files from unrelated lanes — and returned its verdict as
+the caller's. `check-full-boot-waves` reported a pass over 116 runtime services from the shared
+checkout while the tree under review had 119. `_guard-common.sh` already documents this failure mode in
+a comment; these three predate the rule. Fixed and verified from the repo root and from `/`.
+
+> The plan for this pass recorded "REPO_PATH: zero hardcoded occurrences remain; all script-relative."
+> That is not the case: 53 occurrences remain across `scripts/`. The three in `scripts/guard/` are
+> fixed because a guard that measures the wrong tree gives a false verdict. The rest are in
+> build/deploy/operator scripts, where the practical risk is lower and the change is broader than this
+> pass should take on. Worth a follow-up sweep.
+
+**2. The full-boot artifact generator could not run at all.** `generate-full-boot-artifacts.mjs`
+imports `js-yaml`; `scripts/full-boot/package.json` declares it, but nothing ever installed it, so in
+any fresh tree the generator died on the import — and all five call sites wrapped it in `|| true`. The
+pipeline reported "Full-boot artifact generation" as advisory-clean while generating nothing. It only
+appeared to work on the shared checkout, where `node_modules` was installed by hand in May 2026 and
+has sat there since. So the registry-driven artifacts it owns silently went stale for months, which is
+precisely the failure `4ae10ccfd` set out to prevent.
+
+**3. `surgery-service` was missing from `full-boot-waves.yml`.** Once the generator could run, it
+refused immediately: a registered, runtime-enabled service belonged to no wave. Pre-existing (missing
+at `9e4599fe6` too) and invisible only because nothing could report it. Assigned to wave 3
+(optional-clinical) with its peers. This is what a first honest run is supposed to look like.
+
+**4. Two generators fought over one output file.** `audit-helm-deployability.py` and
+`generate-full-boot-artifacts.mjs` both wrote `FULL_HELM_DEPLOYABILITY_MATRIX.md` with incompatible
+tables — a 22-row "required services, all helm_ready" summary versus the 155-row whole-estate audit of
+which services have no chart at all. Both run in the same pipeline, so the committed file meant
+whichever ran last, and each run destroyed the other's report. Separate files now.
+
+**5. Fixing defect 2 armed a live regression.** `generate-full-boot-artifacts.mjs` invokes
+`generate-full-preview-runtime-values.mjs`, which rewrites
+`values-full-preview-runtime.generated.yaml` — and that file carried a hand-added `secretEnv` block
+giving pct-service `KEYCLOAK_BACKEND_SECRET` plus the clinical-knowledge base URL and backend client
+id. pct needs them because the clinical knowledge platform is an OAuth2 resource server and IMAM
+admission routing runs from Kafka consumers and scheduled jobs, where there is no user token to
+borrow. The file's own header warned that regenerating drops the block and asked the next person to
+diff any regeneration — a warning that held only while the generator was too broken to run. Making it
+runnable would have deleted a live capability on the next pipeline run of any tree.
+
+The values now live in the generator's `specialEnv`/`specialSecretEnv`, beside the five services
+already there, so regeneration reproduces them. Verified by diffing the parsed YAML against the
+committed file: 100 services both sides, no service dropped, no `env`/`secretEnv`/`probes`/`resources`
+key lost.
+
+> The general lesson, and the reason defect 5 is the most dangerous of the five: a hand edit to a
+> generated file is not a fix, it is a fix with an expiry date. It survives exactly until someone
+> repairs the generator, and then it disappears silently at the moment everything else starts working.
+> If a generated file must carry a value, the generator has to know it.
+
+### F12 — Canonical could not build for production, and three green gates said otherwise (fixed)
+
+With the env vars supplied, `next build` reached type validation and failed immediately:
+
+```
+src/app/my-life/page.tsx
+Type error: Page "src/app/my-life/page.tsx" does not match the required types of a Next.js Page.
+  "resolveMyLifeTarget" is not a valid Page export field.
+```
+
+`de5f22c06` — canonical, 2026-07-28, one day before this pass — added the `/my-life` shim and exported
+its resolver so the test could call it. App Router accepts only the page fields it recognises. So
+**canonical had been unbuildable for a day** while `lint`, `type-check` and the unit tests were all
+green on that file: this constraint is enforced only inside `next build`, which was itself failing
+earlier for the missing `API_GATEWAY_URL`. Two instruments broken in series, and the second hid a real
+defect behind the first — the same pattern as F10.
+
+Fixed by making the resolver private, matching the `/provider-workspace` shim, with the test asserting
+through the render path. That is better coverage as well as legal: it proves the redirect actually
+fires, which calling the resolver directly never did. `next build` completes; 3 tests pass.
+
+### F13 — The rate limiter was throttling a test suite into failure (fixed for one service, 99 to go)
+
+`DeidPipelineMockMvcTest` failed on `expected:<200> but was:<429>`, with `X-RateLimit-Remaining: 0` on
+the response. The assertions were correct; the service was refusing its own test traffic.
+
+The Wave 14 baseline gives every service `new RateLimitGuard(100, 2)` — a 100-token in-memory bucket
+refilling at 2/s, keyed by actor with a fallback to remote address. Under MockMvc every request in a
+Spring test context resolves to the same key, so the bucket is shared by the whole context, and a
+module making more than 100 requests spends it. Refill does not save you: the suite runs far faster
+than 2 requests/second.
+
+Two things make this nasty out of proportion to the cause. The failure lands on **whichever test
+follows the hundredth request**, so it presents as an unrelated assertion failure in innocent code —
+and it moves as tests are added or reordered. And it is *latent*: the service is fine at 99 requests
+and broken at 101, so it fires on the commit that adds a test, not on the commit that caused it. Here
+the trigger was `e8af82066` (branch `unruffled-cartwright`) reviving the dead
+`DataGovernanceGoldenContractTest`, whose requests joined the same bucket. The rename was correct.
+
+Fixed: capacity and refill are now `@Value` properties defaulting to 100/2 — runtime behaviour
+unchanged — and the test profile widens the bucket instead of removing the filter, so the filter stays
+in the chain under test. The scaffolder emits the same shape for services created from now on.
+
+**Recommended sweep, not done here:** the other 99 services carry the hardcoded literal. Each is one
+suite-growth commit away from the same afternoon, and the diff is mechanical (the two `@Value`
+parameters plus one import).
+
+### F14 — The backend reactor runs fail-fast, so one failure hides the rest
+
+`backend-reactor-tests` invokes `mvn test` with no `--fail-at-end`, so data-governance's failure
+stopped the reactor and every module after it in reactor order went untested — the phase reported one
+red module when the true count was unknown. Re-running the pass took a full pipeline cycle per fix.
+
+Fail-fast is the right default for a feature branch, where you want the first error fast. On a
+consolidation pass it is the wrong shape: you want the complete list. Recommend `-fae` for the reactor
+phase, or at least a documented resume (`mvn … -rf :<module> -fae`, which is what was used here).
+
+### F11 — Inherited debt this pass did not close, with proof it is inherited
+
+Three services are registered and enabled but have no OpenAPI contract and no BFF downstream mapping:
+**procedures-service**, **surgery-service** and **mental-health-service** (surgery also reports
+`authzAudit: thin`). They are 68 routes across 22 controllers.
+
+They keep two gates red against a baseline of 0 (`check-product-truth`: violations=6; 
+`check-phase6-service-completion`: incomplete=3), and they are also what
+`check-bff-downstream-mappings` reports now that it reads the right tree.
+
+Proof they are inherited, not from this pass: the same two gates were run at pre-merge canonical
+`9e4599fe6` in a throwaway worktree and reported **the same 6 gaps and the same 3 services**. The
+merge's only effect was matcher-engine (F-above), which is closed.
+
+Not closed here on purpose. The estate's established remedy for a C gap is a *real* OpenAPI spec
+derived from the actual request records and entities — that is how `patient-safety.openapi.yaml` and
+`participation.openapi.yaml` were done, and the ratchet log is emphatic that no number was gamed. Three
+accurate specs over 68 routes is a delivery with domain review, not a tail-end task in a merge pass, and
+a hurried inaccurate contract would be worse than the honest gap. **The baseline was left at 0 and
+nothing was absorbed into it.**
+
 ## Change-safety gate result for this pass
 
-`bash scripts/guard/run-change-safety-gates.sh` on the merged tip reports BLOCKED, but the blocking
-entries are **merge-base attribution artefacts**, not defects introduced by this pass. Scoped to the
-delta this pass actually created:
+Run bare, `bash scripts/guard/run-change-safety-gates.sh` reports BLOCKED on four checks
+(`check-dangerous-deletions`, `check-service-inventory`, `check-backend-frontend-parity`,
+`check-mobile-parity`). Those four are **merge-base attribution artefacts**, and the mechanism is worth
+recording because it will recur on every consolidation pass.
+
+### Why the bare run is misleading here
+
+`_guard_published_refs` in [`scripts/guard/_guard-common.sh`](../../scripts/guard/_guard-common.sh)
+deliberately excludes the current branch's own upstream from the set of published refs. That is right
+for a normal feature lane, but this lane's upstream *is* canonical, so canonical was excluded, no
+published ancestor remained nearby, and the fallback resolved base to `6dfa1063c` — 2026-07-14,
+before the fortnight. The gate then reviewed **1942 commits and 5722 files**: the entire consolidated
+fortnight of every lane's work, charged to this one pass.
+
+The guard already provides the lever for this shape (`_guard_target_ref`, checked before the fallback),
+and it is what CI uses on a `pull_request` event:
 
 ```bash
-GUARD_BASE_REF=origin/claude/staging-ux-orchestration-remediation-Yypyl \
+GUARD_UPSTREAM_REF=origin/claude/staging-ux-orchestration-remediation-Yypyl \
   bash scripts/guard/run-change-safety-gates.sh
+# base-ref rule: declared target …, base = merge base with it
+# BASE: cb3447ee7 — under review: 3 commit(s), 3 file(s)
 # CHANGE-SAFETY: PASSED
 ```
 
-Backend–frontend parity `VERDICT: PASS`; mobile parity `VERDICT: PASS WITH ADVISORY WARNINGS`.
+### Proof the four are not this pass's defects
 
-The five entries the unscoped run reports name files this pass never touched
-(`NeonatalGentamicinDosing.java`, `GetAppSurface.tsx`, `clinical/chronic-registers/page.tsx`,
-`specialtyToolRegistry.ts`) — none appear in the 204-file net delta. They are canonical's own
-pre-existing debt, surfaced because a merge commit's base ref resolves to the merged-in tip. They are
-real items for their owning lanes, but they are not this pass's regressions.
+Two-sided, rather than asserted. The same four checks were run at **pre-merge canonical
+`9e4599fe6`** over the **same** wide base `6dfa1063c`, in a throwaway worktree:
 
-Final full-gate results are recorded in the "Final gate run" section below.
+| Check | Pre-merge `9e4599fe6` | Post-merge tip | Complaint set |
+|---|---|---|---|
+| `check-dangerous-deletions.sh` | FAIL | FAIL | identical |
+| `check-service-inventory.sh` | FAIL | FAIL | identical |
+| `check-backend-frontend-parity.sh` | FAIL | FAIL | identical |
+| `check-mobile-parity.sh` | FAIL | FAIL | identical |
+
+All four were already red before a single branch was merged, and the **net delta is empty** — the
+merges added no new complaint to any of them. Scoped to the delta this pass authored, all 24 checks
+pass; backend–frontend parity `VERDICT: PASS`, mobile parity `VERDICT: PASS WITH ADVISORY WARNINGS`.
+
+The files the wide run names (`NeonatalGentamicinDosing.java`, `GetAppSurface.tsx`,
+`clinical/chronic-registers/page.tsx`, `specialtyToolRegistry.ts`) are canonical's own pre-existing
+debt. They are real items for their owning lanes and should not be dismissed — but they are not
+regressions from this pass. See **F8** for the recommendation on the base-ref shape itself.
 
 ## Recommendation summary
 
