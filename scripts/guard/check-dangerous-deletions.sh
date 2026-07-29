@@ -16,6 +16,11 @@ echo "$DELETED"
 while IFS= read -r f; do
   [[ -z "$f" ]] && continue
   case "$f" in
+    # Test sources first: a deleted test is a warning, not a block. Matched by the
+    # Maven/JS test roots rather than a bare *test* glob, which also caught production
+    # names like LatestReading.java and would have downgraded a real deletion.
+    */src/test/*|*/__tests__/*|*.test.ts|*.test.tsx|*.spec.ts|*.spec.tsx)
+      guard_warn "test file deleted: $f" ;;
     services/*/*|services/*)
       guard_fail "service path deleted: $f"; FAIL=1 ;;
     ui/one-ui-shell/src/app/*)
@@ -26,8 +31,6 @@ while IFS= read -r f; do
       guard_fail "deploy/CI script deleted: $f"; FAIL=1 ;;
     docs/architecture/*|docs/doctrine/*)
       guard_warn "architecture doc deleted: $f" ;;
-    *test*|*Test*|*.test.ts|*.test.tsx)
-      guard_warn "test file deleted: $f" ;;
   esac
 done <<< "$DELETED"
 
