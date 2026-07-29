@@ -124,7 +124,7 @@ describe("HeroDiscoverySurface", () => {
 
     fireEvent.click(await screen.findByRole("tab", { name: /^Providers$/ }));
 
-    expect(await screen.findByText(/provider directory is coming soon/i)).toBeInTheDocument();
+    expect(await screen.findByText(/public provider directory isn.t open/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /verify a registered provider/i })).toHaveAttribute(
       "href",
       "/verify/practitioner",

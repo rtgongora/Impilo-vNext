@@ -847,7 +847,31 @@ function resolveHookBffPaths(pageText, visited = new Set(), fixtureHits = null) 
   if (/from\s+["']next\/navigation["']/.test(pageText) && /redirect\s*\(/.test(pageText)) {
     paths.add('route-delegation');
   }
+  if (isClientRedirectShim(pageText)) {
+    paths.add('route-delegation');
+  }
   return { paths: [...paths], persist };
+}
+
+/**
+ * A client-side intent-resolution shim: `"use client"` page that computes a target from the
+ * search params, calls `router.replace()` and renders nothing. It delegates as completely as a
+ * server `redirect()` — the backing belongs to the route it hands off to — so it earns the same
+ * `route-delegation` signal rather than a per-route allowlist entry.
+ *
+ * Deliberately narrow. The `return null` plus no-JSX pair is what makes it a shim: a real page
+ * that merely redirects on one branch still renders something on the others and must prove its
+ * own backing. Comments are stripped first so prose about JSX in a shim's header cannot satisfy
+ * the JSX test. Across the whole app this matches exactly the three shims that exist
+ * (/my-life, /provider-workspace, /auth/login/email) and nothing else.
+ */
+function isClientRedirectShim(pageText) {
+  if (!pageText) return false;
+  const code = pageText.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  if (!/from\s+["']next\/navigation["']/.test(code)) return false;
+  if (!/router\.(replace|push)\s*\(/.test(code)) return false;
+  if (!/return\s+null\s*;/.test(code)) return false;
+  return !/<[A-Za-z][\w.]*(\s|\/|>)/.test(code);
 }
 
 /** Routes that are shell, auth, legal, or navigation hubs — not direct BFF pages. */

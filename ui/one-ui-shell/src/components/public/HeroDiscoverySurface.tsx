@@ -582,10 +582,10 @@ export function HeroDiscoverySurface() {
 
         {category === "providers" ? (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-            <p className="font-semibold text-slate-900">Provider directory is coming soon</p>
+            <p className="font-semibold text-slate-900">Public provider directory isn&apos;t open</p>
             <p className="mt-1 text-xs text-slate-600">
-              A searchable directory of individual providers isn&apos;t open to the public yet. You can already
-              verify that a specific practitioner is registered and licensed.
+              Browsing individual providers isn&apos;t part of the public gateway. You can already verify that a
+              specific practitioner is registered and licensed.
             </p>
             <Link
               href="/verify/practitioner"
