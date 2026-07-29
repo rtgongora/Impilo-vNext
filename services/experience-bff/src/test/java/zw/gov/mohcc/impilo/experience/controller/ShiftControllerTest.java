@@ -29,8 +29,7 @@ class ShiftControllerTest {
 
     // Built on the closed-loopback test endpoint, not the live dev port: MockRestServiceServer
     // intercepts before the wire, and testServiceEndpoints() is unreachable by construction.
-    private static final String TUSO =
-            ServiceClientConfig.UNREACHABLE_TEST_ENDPOINT + "/v1/shifts";
+    private static final String TUSO = ServiceClientConfig.UNREACHABLE_TEST_ENDPOINT;
 
     // ── TUSO reachable ────────────────────────────────────────────────
 
@@ -38,7 +37,7 @@ class ShiftControllerTest {
     void startShift_passesTheShiftTusoOpenedStraightThrough() {
         RestTemplate rt = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
-        server.expect(requestTo(TUSO + "/start"))
+        server.expect(requestTo(TUSO + "/v1/internal/facilities/fac-1/start-shift"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(content().json("{\"facility_id\":\"fac-1\",\"workspace_id\":\"ws-1\","
                                           + "\"user_id\":\"user-1\",\"tenant_id\":\"tenant-1\"}"))
@@ -62,7 +61,7 @@ class ShiftControllerTest {
     void handoverShift_sendsTheNotesToTusoAndReturnsWhatTusoRecorded() {
         RestTemplate rt = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
-        server.expect(requestTo(TUSO + "/shift-9/end"))
+        server.expect(requestTo(TUSO + "/v1/internal/shifts/shift-9/end"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(content().json(
                         "{\"handover_notes\":\"OPD queue stable; 3 patients waiting\"}"))
@@ -87,7 +86,7 @@ class ShiftControllerTest {
     void handoverShift_echoesTheEndedShiftWhenTusoAcceptsWithoutABody() {
         RestTemplate rt = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
-        server.expect(requestTo(TUSO + "/shift-9/end"))
+        server.expect(requestTo(TUSO + "/v1/internal/shifts/shift-9/end"))
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess());
 
@@ -105,7 +104,7 @@ class ShiftControllerTest {
     void endShift_forwardsHandoverNotesAndReturnsTusosShift() {
         RestTemplate rt = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
-        server.expect(requestTo(TUSO + "/shift-9/end"))
+        server.expect(requestTo(TUSO + "/v1/internal/shifts/shift-9/end"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(content().json("{\"handover_notes\":\"ward quiet\"}"))
                 .andRespond(withSuccess("{\"data\":{\"id\":\"shift-9\",\"status\":\"ENDED\"}}",
