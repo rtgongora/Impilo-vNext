@@ -16,13 +16,22 @@ if ! command -v pnpm >/dev/null 2>&1; then
   exit 0
 fi
 
-gate_run "mobile-workspace-install" bash -c 'cd apps/mobile && pnpm install' || { ADVISORY=1; FAIL=0; }
+# A failed install is an environment problem (registry, lockfile, disk), not a code defect, so it
+# stays advisory — but it must say plainly that the typechecks did not run, otherwise a green gate
+# reads as "mobile types are clean" when nothing was checked.
+if ! gate_run "mobile-workspace-install" bash -c 'cd apps/mobile && pnpm install'; then
+  ADVISORY=1
+  gate_warn "mobile workspace install failed — typechecks did NOT run (advisory: environment, not code)"
+fi
 
 if [[ "$ADVISORY" == "0" ]]; then
-  gate_run "mobile-citizen-typecheck-advisory" bash -c 'cd apps/mobile/citizen-app && pnpm exec tsc --noEmit' || gate_warn "citizen-app typecheck failed (advisory)"
-  gate_run "mobile-provider-typecheck-advisory" bash -c 'cd apps/mobile/provider-app && pnpm exec tsc --noEmit' || gate_warn "provider-app typecheck failed (advisory)"
+  # Blocking. A type error in a shipped app is a code defect. These used to be downgraded to a
+  # warning and the script exited 0 regardless, so a mobile app that did not compile could not fail
+  # this gate — the check ran, reported, and was ignored.
+  gate_run "mobile-citizen-typecheck" bash -c 'cd apps/mobile/citizen-app && pnpm exec tsc --noEmit' || FAIL=1
+  gate_run "mobile-provider-typecheck" bash -c 'cd apps/mobile/provider-app && pnpm exec tsc --noEmit' || FAIL=1
 fi
 
 gate_warn "Android APK build and iOS builds are advisory until CI runners are stabilized (see docs/environment/MOBILE_TEST_GATE.md)"
 
-exit 0
+exit "$FAIL"

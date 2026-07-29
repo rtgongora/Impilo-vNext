@@ -179,9 +179,12 @@ pipeline_run_phase full-boot-inventory "Registry inventory contract" 0 \
 pipeline_run_phase change-safety "Change-safety gates" 1 \
   bash scripts/guard/run-change-safety-gates.sh
 
-# 15. Mobile build/typecheck (advisory — deep parity in parity-mobile phase)
-pipeline_run_phase mobile "Mobile build checks" 0 \
-  bash scripts/test/run-mobile-checks.sh || true
+# 15. Mobile build/typecheck — blocking on real type errors. The script itself keeps genuine
+# tooling absence advisory (no pnpm, failed workspace install, APK/iOS builds), so this fails on
+# broken mobile code, not on a thin VM. It was non-blocking AND called with `|| true`, so both
+# layers had to change: fixing either one alone would have left the failure swallowed.
+pipeline_run_phase mobile "Mobile build checks" 1 \
+  bash scripts/test/run-mobile-checks.sh
 
 # 16. Web E2E (advisory unless PIPELINE_E2E_BLOCKING=1)
 if [[ "${PIPELINE_SKIP_E2E:-1}" != "1" ]]; then
