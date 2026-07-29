@@ -40,7 +40,11 @@ vi.mock("@/hooks/useRoleGroup", () => ({
 vi.mock("@/hooks/queries/useEncounters", () => ({
   useEncounters: () => ({
     data: {
-      data: [{ id: "enc-1", attributes: { status: "IN_PROGRESS" } }],
+      // isOpen is what the page asks for, and PCT's status vocabulary is STARTED/ON_HOLD/COMPLETED.
+      // This mock said status: "IN_PROGRESS", a value PCT never sets — see the field comment in
+      // useEncounters. 29e76f7b0 moved the screens onto isOpen and left the mock behind, so the page
+      // correctly found no open encounter and rendered "No active encounter in scope".
+      data: [{ id: "enc-1", attributes: { status: "STARTED", isOpen: true } }],
     },
   }),
 }));

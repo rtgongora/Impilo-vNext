@@ -22,7 +22,14 @@ function isPng(file: string): boolean {
  * the registry path 404s until an asset is supplied. Keep this list SHORT and
  * documented; a new entry here should be a deliberate, reported gap.
  */
-const KNOWN_MISSING_LOGOS = new Set<string>([]);
+const KNOWN_MISSING_LOGOS = new Set<string>([
+  // mental-health: registered by e2454b5ef (W13 psychiatric emergency acceptance) with the
+  // conventional /brand/services/mental-health-logo.png path, but no asset was supplied and none is
+  // in the originals backup. ServiceLogo falls back to the registry's Lucide fallbackIcon, so the
+  // surface renders — the path itself 404s. Reported in docs/handover/2026-07-29-*.md; remove this
+  // entry when the asset lands, which the first assertion below will insist on.
+  "mental-health",
+]);
 
 describe("brand assets — service logos", () => {
   it("every registry logo path resolves to a real PNG (except documented known-missing)", () => {

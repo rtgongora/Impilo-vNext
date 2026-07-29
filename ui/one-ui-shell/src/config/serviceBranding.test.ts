@@ -10,8 +10,11 @@ import {
 } from "@/config/serviceBranding";
 
 describe("serviceBranding registry", () => {
-  it("lists all 24 sovereign services", () => {
-    expect(listSovereignServices()).toHaveLength(24);
+  // Hardcoded on purpose: adding a service to the registry should be a conscious act, and the count
+  // is what makes it one. 25 since e2454b5ef added mental-health (W13 psychiatric emergency
+  // acceptance). Its logo asset is still missing — see KNOWN_MISSING_LOGOS in brandAssets.test.ts.
+  it("lists all 25 sovereign services", () => {
+    expect(listSovereignServices()).toHaveLength(25);
   });
 
   it("includes the newly-branded services", () => {

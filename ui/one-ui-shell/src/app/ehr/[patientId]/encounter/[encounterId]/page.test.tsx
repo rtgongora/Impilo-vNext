@@ -75,7 +75,11 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
       data: {
         id: "enc-1",
         attributes: {
-          status: "IN_PROGRESS",
+          // "Close Encounter" only renders for an open encounter, and open is isOpen — PCT's status
+          // vocabulary is STARTED/ON_HOLD/COMPLETED, never "IN_PROGRESS". 29e76f7b0 moved the page onto
+          // isOpen; this mock kept the shape that made the button disappear.
+          status: "STARTED",
+          isOpen: true,
           encounterType: "OUTPATIENT",
           startedAt: "2026-04-08T09:00:00.000Z",
         },

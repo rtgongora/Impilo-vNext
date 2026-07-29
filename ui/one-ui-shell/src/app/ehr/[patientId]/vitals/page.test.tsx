@@ -24,7 +24,14 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
       data: [
         {
           id: "enc-1",
-          attributes: { status: "IN_PROGRESS", encounterType: "OUTPATIENT", startedAt: "2026-04-08T09:00:00.000Z" },
+          // isOpen, not status: PCT sets STARTED/ON_HOLD/COMPLETED and never "IN_PROGRESS", and the
+          // screens moved onto isOpen in 29e76f7b0 while this mock stayed on the old shape.
+          attributes: {
+            status: "STARTED",
+            isOpen: true,
+            encounterType: "OUTPATIENT",
+            startedAt: "2026-04-08T09:00:00.000Z",
+          },
         },
       ],
     },
