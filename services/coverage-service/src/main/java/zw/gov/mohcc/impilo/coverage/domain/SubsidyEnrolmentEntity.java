@@ -7,7 +7,12 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** Member ↔ subsidy-programme link, with an optional per-member annual-cap override. */
+/**
+ * Member ↔ subsidy-programme link (single SoR since V013), carrying both subsidy concerns:
+ * an optional per-member annual-cap override (value drawdown lane) and an optional
+ * exemption category (e.g. INDIGENT, ELDERLY, MATERNITY) — the billing classification
+ * that downstream costing (COSTA charging rules) keys exemptions/waivers on.
+ */
 @Entity
 @Table(name = "cv_subsidy_enrolments")
 public class SubsidyEnrolmentEntity {
@@ -25,7 +30,7 @@ public class SubsidyEnrolmentEntity {
     @Column(name = "subsidy_program_id", nullable = false)
     private UUID subsidyProgramId;
 
-    @Column(name = "member_cpid", nullable = false, length = 80)
+    @Column(name = "member_cpid", nullable = false, length = 255)
     private String memberCpid;
 
     @Column(name = "status", nullable = false, length = 16)
@@ -87,12 +92,12 @@ public class SubsidyEnrolmentEntity {
     public void setStatus(String status) { this.status = status; }
     public BigDecimal getAnnualCapOverride() { return annualCapOverride; }
     public void setAnnualCapOverride(BigDecimal annualCapOverride) { this.annualCapOverride = annualCapOverride; }
+    public String getExemptionCategory() { return exemptionCategory; }
+    public void setExemptionCategory(String exemptionCategory) { this.exemptionCategory = exemptionCategory; }
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
     public String getEnrolledBy() { return enrolledBy; }
     public void setEnrolledBy(String enrolledBy) { this.enrolledBy = enrolledBy; }
-    public String getExemptionCategory() { return exemptionCategory; }
-    public void setExemptionCategory(String exemptionCategory) { this.exemptionCategory = exemptionCategory; }
     public LocalDate getEffectiveFrom() { return effectiveFrom; }
     public void setEffectiveFrom(LocalDate effectiveFrom) { this.effectiveFrom = effectiveFrom; }
     public LocalDate getEffectiveTo() { return effectiveTo; }

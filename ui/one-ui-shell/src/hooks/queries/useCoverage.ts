@@ -312,7 +312,9 @@ export function useCoverageSubsidiesList() {
   });
 }
 
-// ── Subsidy value enrolment + annual-cap drawdown (Model X) ──────────────────
+// ── Subsidy member enrolment (consolidated SoR: cv_subsidy_enrolments) ───────
+// One enrolment lane carries both the annual-cap/value concern and the optional
+// exemption category; rows are snake_case (member_cpid, exemption_category, ...).
 
 export function useSubsidyEnrolments(memberCpid?: string | null) {
   return useQuery({
@@ -349,16 +351,54 @@ export function useConsumeSubsidy() {
   });
 }
 
-// ── Subsidy exemption-category enrolment (Model Y — costing waivers) ─────────
+// ── Subsidy exemption-category view (costing waivers) ────────────────────────
+// The BFF paths are kept stable, but since coverage V013 the rows are consolidated
+// enrolment-shaped: snake_case `member_cpid`/`exemption_category`, no `programCode`.
+// These hooks are typed (unlike the untyped list hooks above) precisely so a future
+// consumer reads the real fields at compile time rather than probing the old shape.
+// The normalizer keeps the legacy client_id/camelCase fallbacks defensively.
+
+export interface SubsidyExemptionRow {
+  id: string;
+  memberCpid: string;
+  subsidyProgramId: string;
+  exemptionCategory: string;
+  status: string;
+  effectiveFrom: string;
+  effectiveTo: string;
+}
+
+/** Fields a caller supplies to enrol a member's exemption category (BFF translates to snake_case). */
+export interface EnrollSubsidyExemptionInput {
+  memberCpid: string;
+  exemptionCategory: string;
+  programCode?: string;
+  subsidyProgramId?: string;
+  effectiveFrom?: string;
+}
+
+function normalizeSubsidyExemption(resource: unknown): SubsidyExemptionRow {
+  const record = getAttributes(resource);
+  const outer = asRecord(resource);
+  return {
+    id: readString(outer, "id") || readString(record, "id"),
+    memberCpid: readString(record, "member_cpid", "memberCpid", "client_id", "clientId"),
+    subsidyProgramId: readString(record, "subsidy_program_id", "subsidyProgramId"),
+    exemptionCategory: readString(record, "exemption_category", "exemptionCategory"),
+    status: readString(record, "status"),
+    effectiveFrom: readString(record, "effective_from", "effectiveFrom"),
+    effectiveTo: readString(record, "effective_to", "effectiveTo"),
+  };
+}
 
 export function useSubsidyExemptions(memberCpid?: string | null) {
   return useQuery({
     queryKey: ["coverage-subsidy-exemptions", memberCpid ?? null],
-    queryFn: async () => {
+    queryFn: async (): Promise<SubsidyExemptionRow[]> => {
       const res = await apiClient.get<unknown>(
         `/internal/v1/coverage/subsidies/enrollments?member_cpid=${encodeURIComponent(memberCpid ?? "")}`,
       );
-      return coverageListRows(res);
+      return coverageListRows(res).map(normalizeSubsidyExemption);
     },
     enabled: !!memberCpid,
   });
@@ -367,7 +407,7 @@ export function useSubsidyExemptions(memberCpid?: string | null) {
 export function useEnrollSubsidyExemption() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Record<string, unknown>) =>
+    mutationFn: (body: EnrollSubsidyExemptionInput) =>
       apiClient.post("/internal/v1/coverage/subsidies/enrollments", body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["coverage-subsidy-exemptions"] });

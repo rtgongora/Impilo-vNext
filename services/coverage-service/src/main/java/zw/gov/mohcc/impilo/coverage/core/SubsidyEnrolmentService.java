@@ -100,6 +100,24 @@ public class SubsidyEnrolmentService {
     }
 
     /**
+     * End an enrolment (e.g. eligibility lapsed). Idempotent: ending an already-ENDED
+     * enrolment returns its current snapshot. Balances and the drawdown ledger are left
+     * intact (audit history); {@link #consume} already rejects non-ACTIVE enrolments.
+     */
+    @Transactional
+    public SubsidyEnrolmentResponse end(UUID tenantId, UUID enrolmentId) {
+        SubsidyEnrolmentEntity e = enrolmentRepository.findByIdAndTenantId(enrolmentId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Subsidy enrolment not found: " + enrolmentId));
+        if (!"ENDED".equalsIgnoreCase(e.getStatus())) {
+            e.setStatus("ENDED");
+            e.setEffectiveTo(LocalDate.now());
+            e = enrolmentRepository.save(e);
+            log.info("Ended subsidy enrolment {} for member {}", enrolmentId, e.getMemberCpid());
+        }
+        return toResponse(tenantId, e);
+    }
+
+    /**
      * Draw down subsidy value against the annual cap. Rejects (does not partially apply) when
      * the cap would be exceeded — callers should first {@link #checkCap}.
      *

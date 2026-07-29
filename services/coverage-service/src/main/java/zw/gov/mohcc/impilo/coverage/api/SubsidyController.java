@@ -112,6 +112,15 @@ public class SubsidyController {
         return ResponseEntity.ok(enrolmentService.consume(tid, id, body));
     }
 
+    /** End an enrolment (e.g. eligibility lapsed). Idempotent. */
+    @PostMapping("/enrolments/{id}/end")
+    public ResponseEntity<SubsidyEnrolmentResponse> endEnrolment(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable("id") UUID id) {
+        UUID tid = UUID.fromString(tenantId);
+        return ResponseEntity.ok(enrolmentService.end(tid, id));
+    }
+
     // ── Per-member exemption-category enrolment (unified onto the ledgered model, V013) ──
 
     /**
