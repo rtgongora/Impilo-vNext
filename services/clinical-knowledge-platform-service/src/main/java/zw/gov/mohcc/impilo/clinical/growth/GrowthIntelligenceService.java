@@ -59,7 +59,14 @@ public class GrowthIntelligenceService {
                 decimal(row, "weightForAgeZ", "weight_for_age_z"),
                 decimal(row, "lengthHeightForAgeZ", "length_height_for_age_z"),
                 decimal(row, "headCircumferenceForAgeZ", "head_circumference_for_age_z"),
-                text(row, "statureMode", "stature_mode", "measurement_mode"));
+                text(row, "statureMode", "stature_mode", "measurement_mode"),
+                // pct-service returns flat rows carrying "growth_standard"; the experience BFF
+                // reshapes the same stamp as "standard" under derived. Both are accepted so a
+                // caller composing from either does not have to rename the field it already holds
+                // — and a caller that omits it entirely leaves the engine unable to see a handover
+                // it is not told about.
+                text(row, "growthStandard", "growth_standard", "standard"),
+                integer(row, "postmenstrualAgeWeeks", "postmenstrual_age_weeks"));
     }
 
     private GrowthIntelligenceContent load() {
@@ -96,6 +103,7 @@ public class GrowthIntelligenceService {
                         n.hasNonNull("staticWeightMinDays") ? n.get("staticWeightMinDays").asInt() : null,
                         n.path("absoluteWeightLoss").asBoolean(false),
                         n.path("statureModeChanged").asBoolean(false),
+                        n.path("standardChanged").asBoolean(false),
                         n.hasNonNull("maxAgeDays") ? n.get("maxAgeDays").asInt() : null,
                         action,
                         n.path("referralRequired").asBoolean(false),
@@ -185,6 +193,10 @@ public class GrowthIntelligenceService {
         m.put("assessable", a.assessable());
         m.put("not_assessable_reason", a.notAssessableReason());
         m.put("interpretation_blocked", a.interpretationBlocked());
+        // Distinguishes "compared and found nothing" from "not compared". A surface that draws a
+        // trend line or a reassuring tick must not do either on the strength of an empty signal
+        // list alone.
+        m.put("z_trend_derivable", a.zTrendDerivable());
         m.put("any_concern", a.anyConcern());
         m.put("referral_required", a.referralRequired());
         m.put("contacts_considered", a.contactsConsidered());
