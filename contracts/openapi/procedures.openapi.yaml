@@ -1,0 +1,1141 @@
+# =============================================================================
+# Procedures — canonical procedure catalogue, appropriateness, competence and the
+# governed content the procedure pipeline runs on (OpenAPI 3.0)
+#
+# Sovereign: procedures-service (port 8395, clinical plane). Routes, field names,
+# enumerations and required-ness below are derived from the live handlers in
+# api/controller/*, the record definitions in api/dto/*, the validation in core/*
+# and the CHECK constraints in db/migration/V002-V010 — not from a design sketch.
+#
+# Four conventions apply to every operation here, so they are not repeated:
+#
+#   1. X-Tenant-ID is a MANDATORY request header on every route. It is a
+#      @RequestHeader with no default, so an absent one is a 400 from Spring
+#      before any handler runs. Everything this service serves is tenant-scoped.
+#   2. Responses are the DTO records themselves, NOT an ApiResponse envelope.
+#      This service predates that helper and returns CatalogueDetail,
+#      AppropriatenessVerdict and the rest directly. Errors are the separate
+#      envelope in ProceduresExceptionHandler ({error:{code,message},timestamp}).
+#   3. Content codes travel as QUERY PARAMETERS, not path segments — except
+#      catalogue/{definitionCode}, which predates the finding. AuthzInternalRequest
+#      .deriveResourceType (tshepo-authz-service) treats a final non-UUID segment as
+#      the resource type, so a free-text code such as SAFETY-PAUSE-SURGERY as the
+#      last segment would derive THAT as the resource type and no ext_authz policy
+#      row would ever match. The route shapes here are the ones safe to pin.
+#   4. Only PUBLISHED content is ever served. A DRAFT definition is content in
+#      progress and a RETIRED one describes a procedure the service no longer
+#      governs; asking for either answers 404, not an empty body.
+#
+# This service is ENGINE-NOT-STORE. It holds governed content and returns
+# judgements; it records no execution. A safety-pause completion, a sedation
+# encounter, an actual complication and a delivered aftercare instruction are all
+# execution records owned by whichever service performs or discharges the
+# procedure. That is why there is no POST here other than an evaluation, and why
+# that evaluation persists nothing.
+#
+# No PII: nothing in this API carries patient identity. The appropriateness
+# request describes a patient in clinical facts only (age in days, pregnancy,
+# anticoagulation) and is not stored.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Procedures Service API
+  version: "1.0.0"
+  description: |
+    The national procedure catalogue and the pipeline content and engines around it:
+    appropriateness and duplication detection (§5), competence and privilege
+    resolution (§7), safety-pause templates (§9), the sedation continuum (§10),
+    recovery settings (§15), aftercare templates (§17), Clavien-Dindo grades and
+    complication profiles (§18), and the analytics indicator catalogue (§26).
+
+    Three doctrinal constraints are visible in the API shape and should survive any
+    change to it.
+
+    **Nothing is silently cancelled.** No appropriateness outcome is a cancellation.
+    The strongest is BLOCKED, which means "not as requested" and always carries the
+    suggested actions that would unblock it. A rejection with no next step is how a
+    request disappears from everybody's list.
+
+    **An unknown is never an assumption.** Boolean inputs are nullable on purpose:
+    a caller that has not checked whether the facility supports a procedure has not
+    established that it does not. Absent facts are reported as detections, not
+    resolved by default. Likewise an unreachable credentialing service yields
+    capacity UNKNOWN with mayProceedAlone=false — "could not ask" is not
+    "is credentialed".
+
+    **A supervised operator is never surfaced as independent.** VARAPI has modelled
+    supervision since its V002; the defect was that consumers read the status and
+    dropped supervisingProviderPublicId. A privilege naming a supervising provider
+    yields SUPERVISED here, whatever else is true of it.
+
+    Content maturity is stated rather than implied. Catalogue rows carry
+    approvingAuthority PENDING_MOHCC_RATIFICATION because the Ministry is the
+    clinical authority and this programme is not, and template content carries
+    contentMaturity ENGINEERING_SEED until it is ratified. SNOMED CT codes are null
+    throughout: an unverified concept id that looks authoritative is worse than a
+    null, because a null is a gap somebody fills.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8395
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Catalogue
+    description: The canonical procedure catalogue (§3) — read-only
+  - name: Appropriateness
+    description: Appropriateness and duplication detection (§5) — evaluation, persists nothing
+  - name: Competence
+    description: Competence and privilege resolution (§7) — VARAPI remains system of record
+  - name: Safety-Pause
+    description: Safety-pause templates (§9) — governed content
+  - name: Sedation
+    description: The sedation continuum (§10) with resolved rescue capability
+  - name: Recovery
+    description: Recovery settings (§15)
+  - name: Aftercare
+    description: Aftercare templates and delivery channels (§17)
+  - name: Complications
+    description: Clavien-Dindo grades and complication profiles (§18)
+  - name: Analytics
+    description: The pipeline analytics indicator catalogue (§26) — declares its own gaps
+
+paths:
+  /internal/v1/procedures/catalogue:
+    get:
+      operationId: proceduresCatalogueSearch
+      tags: [Catalogue]
+      summary: Search the published procedure catalogue
+      description: |
+        Filters are ANDed and each is ignored when blank. Only PUBLISHED definitions
+        are returned.
+
+        `catalogueSize` is part of the response on purpose: it reports how many
+        published definitions exist irrespective of the filter, so a caller can tell
+        a filter that matched nothing from a catalogue that did not load. A specialty
+        menu that renders empty silently removes capability from a clinician, and an
+        empty array alone cannot distinguish the two.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: specialty
+          in: query
+          description: Owning specialty — a ZIBO clinical specialty code, matched exactly.
+          schema: { type: string, example: EMERGENCY_MEDICINE }
+        - name: category
+          in: query
+          description: Catalogue category, matched exactly.
+          schema: { type: string, example: BEDSIDE }
+        - name: q
+          in: query
+          description: Free-text term matched against clinical name and synonyms.
+          schema: { type: string, example: chest drain }
+      responses:
+        '200':
+          description: Matching published definitions, with the catalogue size alongside
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogueListResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/procedures/catalogue/{definitionCode}:
+    get:
+      operationId: proceduresCatalogueByCode
+      tags: [Catalogue]
+      summary: Get one published definition with its requirement set
+      description: |
+        Requirements are returned in display order. Requirement depth is uneven and
+        deliberately so: the specification's demonstration procedures and the WHO
+        bellwethers carry full sets, everything else carries identity, consent,
+        site-and-side where lateralised, cadre and privilege. A thinner requirement
+        set produces a thinner readiness verdict, which is a known content gap rather
+        than a finished catalogue.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: definitionCode
+          in: path
+          required: true
+          description: Canonical definition code.
+          schema: { type: string, example: PROC-CHEST-DRAIN }
+      responses:
+        '200':
+          description: The published definition
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogueDetail' }
+        '404':
+          description: |
+            `CATALOGUE_ENTRY_NOT_FOUND` — no PUBLISHED entry for this code. A draft or
+            retired definition answers this too.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/procedures/appropriateness/evaluate:
+    post:
+      operationId: proceduresAppropriatenessEvaluate
+      tags: [Appropriateness]
+      summary: Evaluate a procedure request for appropriateness and duplication
+      description: |
+        Evaluation only — nothing is persisted. The requesting service records what it
+        decided to do about the verdict; a detections table here would be a second
+        record of a fact the order already owns.
+
+        An unknown procedure code is not a 404: it is a BLOCK detection
+        (`UNKNOWN_PROCEDURE`) inside a 200 verdict, because the caller asked for a
+        judgement about a request and that is the judgement. Evaluation stops there —
+        nothing else can be assessed against a definition that does not exist.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppropriatenessRequest' }
+      responses:
+        '200':
+          description: The verdict, with every detection carrying a suggested action
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppropriatenessVerdict' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/procedures/competence:
+    get:
+      operationId: proceduresCompetenceResolve
+      tags: [Competence]
+      summary: Resolve whether a provider may perform a procedure, alone
+      description: |
+        Evaluation only — VARAPI remains the credentialing system of record and nothing
+        is persisted here. Scope is compared at domain level, which is how VARAPI
+        actually stores it: the theatre programme queried the privilege "SURGEON" when
+        the domain scope is "SURGERY", and every check silently returned unavailable.
+
+        An unknown definition code and an unreachable VARAPI both answer 200 with
+        capacity UNKNOWN and `mayProceedAlone=false`, reasons naming which it was. This
+        route sits on the readiness path, where an error a caller might swallow becomes
+        a procedure that starts without a credentialed operator.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: providerId
+          in: query
+          required: true
+          description: Provider public identifier, as VARAPI holds it.
+          schema: { type: string }
+        - name: definitionCode
+          in: query
+          required: true
+          description: Canonical definition code.
+          schema: { type: string, example: PROC-CHEST-DRAIN }
+      responses:
+        '200':
+          description: The competence verdict, with the reasons behind it
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CompetenceVerdict' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/procedures/safety-pause-templates:
+    get:
+      operationId: proceduresSafetyPauseTemplate
+      tags: [Safety-Pause]
+      summary: Get a published safety-pause template with its confirmation items
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: code
+          in: query
+          required: true
+          description: Template code.
+          schema: { type: string, example: SAFETY-PAUSE-BEDSIDE }
+      responses:
+        '200':
+          description: The template, confirmation items in display order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SafetyPauseTemplateView' }
+        '404':
+          description: '`SAFETY_PAUSE_TEMPLATE_NOT_FOUND` — no PUBLISHED template for this code.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/procedures/sedation-levels:
+    get:
+      operationId: proceduresSedationLevels
+      tags: [Sedation]
+      summary: List the sedation continuum in depth order
+      description: |
+        Ordered by `depthRank` ascending. Each level carries its rescue capability
+        resolved inline rather than referenced, because that is the standard's own
+        point: the requirements that apply are those of the depth that may be
+        *reached*, and a caller should not need a second call to find out what that
+        means.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: All sedation levels for the tenant, shallowest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SedationLevelView' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/procedures/sedation-level-detail:
+    get:
+      operationId: proceduresSedationLevel
+      tags: [Sedation]
+      summary: Get one sedation level with its resolved rescue capability
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: code
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/SedationLevelCode' }
+      responses:
+        '200':
+          description: The sedation level
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SedationLevelView' }
+        '404':
+          description: '`SEDATION_LEVEL_NOT_FOUND` — no such level for this tenant.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/procedures/recovery-settings:
+    get:
+      operationId: proceduresRecoverySettings
+      tags: [Recovery]
+      summary: List recovery settings
+      description: Ordered by setting code.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: All recovery settings for the tenant
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/RecoverySettingView' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/procedures/recovery-setting-detail:
+    get:
+      operationId: proceduresRecoverySetting
+      tags: [Recovery]
+      summary: Get one recovery setting
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: code
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/RecoverySettingCode' }
+      responses:
+        '200':
+          description: The recovery setting
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RecoverySettingView' }
+        '404':
+          description: '`RECOVERY_SETTING_NOT_FOUND` — no such setting for this tenant.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/procedures/aftercare-templates:
+    get:
+      operationId: proceduresAftercareTemplate
+      tags: [Aftercare]
+      summary: Get a published aftercare template with its instructions and channels
+      description: |
+        Instructions come back in display order; delivery channels are sorted. The
+        channels say where an instruction may be delivered — this service does not
+        deliver it. Actually handing an instruction to Khuluma, Nompilo or a printed
+        handout is a delivery concern for whichever service discharges the procedure.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: code
+          in: query
+          required: true
+          description: Template code.
+          schema: { type: string, example: AFTERCARE-CHEST-DRAIN }
+      responses:
+        '200':
+          description: The template, with instructions and permitted delivery channels
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AftercareTemplateView' }
+        '404':
+          description: '`AFTERCARE_TEMPLATE_NOT_FOUND` — no PUBLISHED template for this code.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/procedures/clavien-dindo-grades:
+    get:
+      operationId: proceduresClavienDindoGrades
+      tags: [Complications]
+      summary: List the Clavien-Dindo severity grades
+      description: Ordered by display order, which is severity order.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: The seven grades
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ClavienDindoGradeView' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/procedures/complication-profiles:
+    get:
+      operationId: proceduresComplicationProfile
+      tags: [Complications]
+      summary: Get a published complication profile with its complication classes
+      description: |
+        A profile says which complications are anticipated for a class of procedure,
+        their typical grade, the monitoring they need and what escalation they trigger.
+        It does not record that a complication occurred — that is an execution record
+        owned by the service that performed the procedure.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: code
+          in: query
+          required: true
+          description: Profile code.
+          schema: { type: string, example: COMPLICATION-PROFILE-THEATRE }
+      responses:
+        '200':
+          description: The profile, classes in display order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ComplicationProfileView' }
+        '404':
+          description: '`COMPLICATION_PROFILE_NOT_FOUND` — no PUBLISHED profile for this code.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/procedures/analytics/indicators:
+    get:
+      operationId: proceduresAnalyticsIndicatorCatalogue
+      tags: [Analytics]
+      summary: List the pipeline analytics indicators with their computation status
+      description: |
+        This computes no numbers. Each indicator declares whether it is COMPUTED,
+        PARTIAL or NOT_YET_INSTRUMENTED, and where it is computed if it is — normally
+        reporting-service's TheatreReportingConsumer projection. The counts on the
+        summary exist so a dashboard can state its own coverage instead of presenting
+        an incomplete set as complete.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: The indicator catalogue with coverage counts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IndicatorSummary' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/procedures/analytics/indicator:
+    get:
+      operationId: proceduresAnalyticsIndicator
+      tags: [Analytics]
+      summary: Get one analytics indicator definition
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: code
+          in: query
+          required: true
+          description: Indicator code.
+          schema: { type: string }
+      responses:
+        '200':
+          description: The indicator definition
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IndicatorView' }
+        '404':
+          description: '`ANALYTICS_INDICATOR_NOT_FOUND` — no such indicator for this tenant.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      description: |
+        Tenant scope. Mandatory on every route — a @RequestHeader with no default, so
+        an absent one is rejected before any handler runs.
+      schema: { type: string, format: uuid }
+
+  responses:
+    Error:
+      description: Error envelope
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    # ── Error shape ─────────────────────────────────────────────────────────────
+    # ProceduresExceptionHandler's envelope. NOT the shared ApiResponse: this service
+    # returns bare DTOs on success, so there is no success/data wrapper to mirror.
+    # `status` is carried by the HTTP status, not repeated in the body.
+    ErrorEnvelope:
+      type: object
+      required: [error, timestamp]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: |
+                Domain code where one exists (`CATALOGUE_ENTRY_NOT_FOUND`,
+                `SAFETY_PAUSE_TEMPLATE_NOT_FOUND`, `SEDATION_LEVEL_NOT_FOUND`,
+                `RECOVERY_SETTING_NOT_FOUND`, `AFTERCARE_TEMPLATE_NOT_FOUND`,
+                `COMPLICATION_PROFILE_NOT_FOUND`, `ANALYTICS_INDICATOR_NOT_FOUND`),
+                otherwise the generic mapping: `NOT_FOUND`, `INVALID_REQUEST` (400),
+                `ILLEGAL_STATE` (409).
+            message:
+              type: string
+              description: Falls back to the status reason phrase when the exception carries none.
+        timestamp: { type: string, format: date-time }
+
+    # ── Enumerations (from the V002-V010 CHECK constraints) ─────────────────────
+    DefinitionStatus:
+      type: string
+      description: |
+        Only PUBLISHED is ever served by this API, so that is the only value a
+        response carries. The others exist in the catalogue and are named here
+        because the field is the reason a lookup 404s.
+      enum: [DRAFT, IN_REVIEW, PUBLISHED, RETIRED]
+    ContentStatus:
+      type: string
+      description: Template and profile lifecycle. Only PUBLISHED is served.
+      enum: [DRAFT, PUBLISHED, RETIRED]
+    ContentMaturity:
+      type: string
+      description: |
+        Whether the content has been clinically ratified. ENGINEERING_SEED is
+        engineering-authored content standing in until the Ministry ratifies it, and
+        saying so is the point of the field.
+      enum: [ENGINEERING_SEED, RATIFIED]
+    ProcedurePurpose:
+      type: string
+      enum: [DIAGNOSTIC, THERAPEUTIC, BOTH, SCREENING, MONITORING]
+    LateralityApplicability:
+      type: string
+      description: |
+        NOT_APPLICABLE is an explicit answer, never a default: "no side recorded" and
+        "side does not apply" are different facts, and conflating them is how a
+        wrong-side procedure passes a check. LATERALISED and MULTI_SITE are the values
+        that make a missing side a BLOCK.
+      enum: [LATERALISED, MIDLINE, BILATERAL_BY_DEFAULT, MULTI_SITE, NOT_APPLICABLE]
+    PregnancyApplicability:
+      type: string
+      enum: [NO_CONSTRAINT, CONTRAINDICATED, CAUTION, REQUIRES_TEST]
+    RequirementKind:
+      type: string
+      enum:
+        [CADRE, PRIVILEGE, COUNTERSIGNATURE, SUPERVISION, EQUIPMENT, CONSUMABLE,
+         MEDICINE, BLOOD, IMAGING, LABORATORY, IPC, STERILE_PROCESSING, PREPARATION,
+         DATA, CONSENT, SEDATION, MONITORING, RECOVERY_AREA, STAFFING, TRANSPORT,
+         POST_PROCEDURE_BED, INTERPRETER, EMERGENCY_BACKUP, FACILITY_CAPABILITY,
+         SITE_SIDE_VERIFICATION, PATIENT_IDENTITY, FASTING, ANTICOAGULATION, PREGNANCY]
+    RequirementObligation:
+      type: string
+      description: |
+        A CONDITIONAL requirement always carries a `conditionExpression` — enforced by
+        constraint, because a conditional requirement with no condition is a mandatory
+        one that looks optional.
+      enum: [MANDATORY, CONDITIONAL, RECOMMENDED]
+    ResolverUnavailableBehaviour:
+      type: string
+      description: What to do when the resolving service cannot be reached.
+      enum: [BLOCK, WARN]
+    SedationLevelCode:
+      type: string
+      enum:
+        [NO_SEDATION, LOCAL_ANAESTHESIA, MINIMAL_SEDATION, MODERATE_SEDATION,
+         DEEP_SEDATION, GENERAL_ANAESTHESIA, REGIONAL_ANAESTHESIA, NON_PHARMACOLOGICAL]
+    RecoverySettingCode:
+      type: string
+      enum: [NONE, BEDSIDE_OBSERVATION, RECOVERY_BAY, PACU, EXTENDED_OBSERVATION]
+    ConfirmationItem:
+      type: string
+      enum:
+        [PATIENT, PROCEDURE, SITE, SIDE, CONSENT, TEAM, ALLERGIES, ANTICOAGULATION,
+         ANTIBIOTICS, IMAGING, EQUIPMENT, SPECIMEN_PLAN, IMPLANT,
+         EXPECTED_CRITICAL_EVENTS, EMERGENCY_PLAN]
+    InstructionKind:
+      type: string
+      enum:
+        [MEDICATION, WOUND_SITE_CARE, ACTIVITY_RESTRICTION, DIET, WARNING_SIGNS,
+         FOLLOW_UP_APPOINTMENT, WHO_TO_CONTACT, DEVICE_CARE, RESULTS_FOLLOW_UP,
+         DRIVING_RESTRICTION, BATHING_HYGIENE, PAIN_MANAGEMENT, RETURN_TO_WORK_SCHOOL]
+    DeliveryChannel:
+      type: string
+      enum: [CLINICAL_SUMMARY, KHULUMA, NOMPILO, PRINTED_OFFLINE_HANDOUT, CAREGIVER_VIEW]
+    ClavienDindoGradeCode:
+      type: string
+      enum: ['I', 'II', IIIA, IIIB, IVA, IVB, 'V']
+    ComplicationType:
+      type: string
+      enum:
+        [SURGICAL_SITE_INFECTION, BLEEDING, ANASTOMOTIC_LEAK, DEEP_VEIN_THROMBOSIS,
+         PULMONARY_EMBOLISM, WOUND_DEHISCENCE, ORGAN_INJURY, NERVE_INJURY,
+         ANAESTHESIA_COMPLICATION, TRANSFUSION_REACTION, DEVICE_MALFUNCTION,
+         RETAINED_FOREIGN_OBJECT, WRONG_SITE_PROCEDURE, READMISSION,
+         UNPLANNED_RETURN_TO_THEATRE, SEPSIS, RENAL_INJURY, CARDIAC_EVENT, DEATH]
+    ComputationStatus:
+      type: string
+      description: |
+        A non-COMPUTED indicator always carries a `gapReason`, and a COMPUTED one
+        always carries `executableVia` — both enforced by constraint, so a reader never
+        has to guess whether a missing number is a gap or an outage.
+      enum: [COMPUTED, PARTIAL, NOT_YET_INSTRUMENTED]
+    AppropriatenessOutcome:
+      type: string
+      description: |
+        There is deliberately no CANCELLED. §5 forbids silently cancelling, and an
+        engine that can return a cancellation will eventually be wired to one. BLOCKED
+        means "not as requested" and always carries the actions that would unblock it.
+      enum: [APPROPRIATE, PROCEED_WITH_CLARIFICATION, BLOCKED]
+    DetectionDisposition:
+      type: string
+      description: |
+        What the requester is being asked to do. Never a bare refusal — every
+        disposition pairs with a `suggestedAction`.
+      enum: [CLARIFY, PROPOSE_ALTERNATIVE, BLOCK]
+    DetectionSeverity:
+      type: string
+      enum: [LOW, MEDIUM, HIGH]
+    CompetenceCapacity:
+      type: string
+      description: |
+        UNKNOWN exists because an unreachable credentialing service is not a
+        credentialed operator, and a resolver that cannot distinguish those two will
+        eventually report the wrong one. SUPERVISED is returned whenever the only
+        matching privilege names a supervising provider, whatever else is true of it.
+      enum: [INDEPENDENT, SUPERVISED, NOT_PERMITTED, UNKNOWN]
+
+    # ── Catalogue (§3) ──────────────────────────────────────────────────────────
+    CatalogueListResponse:
+      type: object
+      required: [items, matched, catalogueSize]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/CatalogueSummary' }
+        matched:
+          type: integer
+          description: Number of definitions matching the filter.
+        catalogueSize:
+          type: integer
+          format: int64
+          description: |
+            Published definitions in the catalogue, ignoring the filter. Present so a
+            caller can distinguish "filter matched nothing" from "catalogue is empty".
+    CatalogueSummary:
+      type: object
+      required: [definitionCode, version, clinicalName, category, owningSpecialty, purpose,
+                 permittedSettings, lateralityApplicability, requiresSiteSideVerification]
+      properties:
+        definitionCode: { type: string, example: PROC-CHEST-DRAIN }
+        version: { type: integer }
+        clinicalName: { type: string, example: Intercostal chest drain insertion }
+        category: { type: string, example: EMERGENCY }
+        owningSpecialty:
+          type: string
+          description: ZIBO clinical specialty code.
+          example: EMERGENCY_MEDICINE
+        purpose: { $ref: '#/components/schemas/ProcedurePurpose' }
+        permittedSettings:
+          type: array
+          description: |
+            Settings this definition may be performed in. Readiness and the
+            safety-pause template are selected by the setting chosen at request time.
+          items: { type: string }
+          example: [BEDSIDE, EMERGENCY, CRITICAL_CARE, WARD]
+        lateralityApplicability: { $ref: '#/components/schemas/LateralityApplicability' }
+        requiresSiteSideVerification:
+          type: boolean
+          description: |
+            Derived from the requirement set, and surfaced on the SUMMARY rather than
+            only the detail because a caller building a request needs to know it must
+            collect a side before it opens the detail.
+        expectedDurationMin: { type: integer, nullable: true }
+        ziboCode: { type: string, nullable: true }
+    CatalogueDetail:
+      type: object
+      required: [definitionCode, version, clinicalName, synonyms, category, owningSpecialty,
+                 purpose, permittedSettings, lateralityApplicability, techniqueVariants,
+                 recoveryRequired, status, requirements]
+      properties:
+        definitionCode: { type: string }
+        version:
+          type: integer
+          description: |
+            One row per (code, version) — an immutable version chain, not an overwrite.
+            A published definition is what some completed procedure was judged against,
+            so amending it in place would rewrite the standard a past procedure was
+            held to.
+        clinicalName: { type: string }
+        synonyms:
+          type: array
+          items: { type: string }
+        category: { type: string }
+        owningSpecialty: { type: string }
+        purpose: { $ref: '#/components/schemas/ProcedurePurpose' }
+        permittedSettings:
+          type: array
+          items: { type: string }
+        anatomicalSite: { type: string, nullable: true }
+        lateralityApplicability: { $ref: '#/components/schemas/LateralityApplicability' }
+        techniqueVariants:
+          type: array
+          items: { type: string }
+        ageMinDays:
+          type: integer
+          nullable: true
+          description: |
+            Age in DAYS, following the CKP rules framework: paediatric applicability
+            changes within days of birth and months cannot express that.
+        ageMaxDays: { type: integer, nullable: true }
+        pregnancyApplicability: { $ref: '#/components/schemas/PregnancyApplicability' }
+        indicationRuleRef:
+          type: string
+          nullable: true
+          description: |
+            CKP rule code. Clinical governance is held by reference, never by copy, so
+            the rule has one owner.
+        contraindicationRuleRef: { type: string, nullable: true }
+        expectedDurationMin: { type: integer, nullable: true }
+        recoveryRequired: { type: boolean }
+        observationMinutes: { type: integer, nullable: true }
+        consentType:
+          type: string
+          nullable: true
+          description: Mvumo consent template code.
+        safetyPauseTemplate: { type: string, nullable: true }
+        findingsTemplate: { type: string, nullable: true }
+        aftercareTemplate: { type: string, nullable: true }
+        defaultSedationLevelCode: { $ref: '#/components/schemas/SedationLevelCode' }
+        defaultRecoverySettingCode: { $ref: '#/components/schemas/RecoverySettingCode' }
+        defaultAftercareTemplateCode: { type: string, nullable: true }
+        complicationProfile: { type: string, nullable: true }
+        followUpPolicy: { type: string, nullable: true }
+        ziboCode:
+          type: string
+          nullable: true
+          description: ZIBO owns the code system; this is the reference into it.
+        snomedCtCode:
+          type: string
+          nullable: true
+          description: |
+            Null throughout the seeded catalogue, deliberately. An earlier draft carried
+            a code on every row and none could be verified against a SNOMED CT release
+            — several were visibly malformed. Real terminology binding is ZIBO's to own
+            and needs a licensed release to validate against.
+        icd9cmProcedureCode:
+          type: string
+          nullable: true
+          description: Present only where ZIBO already publishes the code.
+        status: { $ref: '#/components/schemas/DefinitionStatus' }
+        approvingAuthority:
+          type: string
+          nullable: true
+          description: |
+            Non-null on any PUBLISHED definition, by constraint. Seeded content reads
+            `PENDING_MOHCC_RATIFICATION`: the Ministry is the clinical authority and a
+            blank authority on published content is how unratified guidance acquires the
+            appearance of ratification.
+        sourceCitation: { type: string, nullable: true }
+        requirements:
+          type: array
+          description: In display order.
+          items: { $ref: '#/components/schemas/RequirementView' }
+    RequirementView:
+      type: object
+      required: [requirementKind, obligation, overridableInEmergency]
+      properties:
+        requirementKind: { $ref: '#/components/schemas/RequirementKind' }
+        requirementCode: { type: string, nullable: true }
+        requirementLabel: { type: string, nullable: true }
+        obligation: { $ref: '#/components/schemas/RequirementObligation' }
+        conditionExpression:
+          type: string
+          nullable: true
+          description: Always present when `obligation` is CONDITIONAL.
+        ownerRole: { type: string, nullable: true }
+        resolverService:
+          type: string
+          nullable: true
+          description: Service that can answer whether this requirement is met.
+        overridableInEmergency:
+          type: boolean
+          description: |
+            Always false for SITE_SIDE_VERIFICATION, by constraint. The emergency lane's
+            procedures — chest drain, thoracostomy, central line, thoracotomy,
+            escharotomy, burr hole — are exactly the lateralised ones done at speed by a
+            lone clinician with no second checker and no marking step, which is where
+            wrong-side harm happens.
+        onResolverUnavailable: { $ref: '#/components/schemas/ResolverUnavailableBehaviour' }
+
+    # ── Appropriateness (§5) ────────────────────────────────────────────────────
+    AppropriatenessRequest:
+      type: object
+      required: [definitionCode]
+      description: |
+        What the caller knows about the request and the patient. Boolean fields are
+        nullable on purpose: null means "not asserted" and is treated differently from
+        false. A caller that has not checked whether the facility supports a procedure
+        has not established that it does not, and collapsing those two is how an unknown
+        becomes a confident answer.
+      properties:
+        definitionCode:
+          type: string
+          description: |
+            An unpublished or unknown code yields a 200 verdict carrying the
+            `UNKNOWN_PROCEDURE` BLOCK detection, not a 404.
+          example: PROC-CHEST-DRAIN
+        setting:
+          type: string
+          description: |
+            Where the procedure would be done. Checked against the definition's
+            permitted settings.
+          example: BEDSIDE
+        anatomicalSite: { type: string }
+        side:
+          type: string
+          description: |
+            Required in practice for a LATERALISED or MULTI_SITE procedure: absence
+            produces a BLOCK that no emergency override can waive. A side supplied for a
+            midline procedure produces a CLARIFY, because either the request or the
+            catalogue entry is wrong and it is worth finding out which.
+        requestedFor:
+          type: string
+          format: date
+          description: |
+            Intended date. A past date produces a LOW CLARIFY. Also the anchor for the
+            duplicate-window calculation; today is used when it is absent.
+        patientAgeDays:
+          type: integer
+          nullable: true
+          description: Age in days, matching the catalogue's own applicability units.
+        pregnant:
+          type: boolean
+          nullable: true
+          description: |
+            Null is meaningful: for a REQUIRES_TEST procedure an unknown pregnancy status
+            is itself a HIGH CLARIFY detection.
+        onAnticoagulant: { type: boolean, nullable: true }
+        patientIdentityConfirmed:
+          type: boolean
+          nullable: true
+          description: |
+            The requester asserts an identity match. Absence of the assertion is not a
+            match, and anything other than true produces a HIGH CLARIFY.
+        openRequestExists: { type: boolean, nullable: true }
+        lastCompletedOn:
+          type: string
+          format: date
+          nullable: true
+          description: |
+            When this procedure was last completed for the patient. Compared against the
+            definition's declared repeat window; where no window is declared the repeat is
+            reported as undeclared rather than assumed acceptable.
+        otherOpenProcedureCodes:
+          type: array
+          items: { type: string }
+          description: Checked against the definition's conflict list.
+        completedProcedureCodes:
+          type: array
+          items: { type: string }
+          description: Checked against the definition's prerequisites.
+        facilitySupportsProcedure: { type: boolean, nullable: true }
+        requiredSpecialistAvailable: { type: boolean, nullable: true }
+        requiredEquipmentAvailable: { type: boolean, nullable: true }
+    AppropriatenessVerdict:
+      type: object
+      required: [outcome, detectionCount, detections]
+      properties:
+        outcome: { $ref: '#/components/schemas/AppropriatenessOutcome' }
+        detectionCount: { type: integer }
+        detections:
+          type: array
+          items: { $ref: '#/components/schemas/Detection' }
+    Detection:
+      type: object
+      required: [code, disposition, severity, message, suggestedAction]
+      properties:
+        code:
+          type: string
+          description: |
+            One of the §5 detection codes: `UNKNOWN_PROCEDURE`,
+            `PATIENT_IDENTITY_UNCONFIRMED`, `SIDE_NOT_SPECIFIED`,
+            `SIDE_ON_NON_LATERALISED_PROCEDURE`, `SITE_MISMATCH`,
+            `DUPLICATE_OPEN_REQUEST`, `DUPLICATE_WINDOW_UNDECLARED`,
+            `RECENT_EQUIVALENT_PROCEDURE`, `CONFLICTING_PROCEDURE`,
+            `MISSING_PREREQUISITE`, `AGE_BELOW_RANGE`, `AGE_ABOVE_RANGE`,
+            `CONTRAINDICATED_IN_PREGNANCY`, `CAUTION_IN_PREGNANCY`,
+            `PREGNANCY_STATUS_UNKNOWN`, `SETTING_NOT_PERMITTED`,
+            `INAPPROPRIATE_FACILITY`, `REQUIRED_SPECIALIST_UNAVAILABLE`,
+            `REQUIRED_EQUIPMENT_UNAVAILABLE`, `REQUESTED_IN_THE_PAST`,
+            `ANTICOAGULATION_UNRESOLVED`.
+        disposition: { $ref: '#/components/schemas/DetectionDisposition' }
+        severity: { $ref: '#/components/schemas/DetectionSeverity' }
+        message: { type: string }
+        suggestedAction:
+          type: string
+          description: |
+            Always populated. A detection that tells a clinician something is wrong
+            without telling them what to do next is an obstruction, and obstructions get
+            overridden by habit — so the engine that raised it is ignored when it is
+            finally right.
+
+    # ── Competence (§7) ─────────────────────────────────────────────────────────
+    CompetenceVerdict:
+      type: object
+      required: [providerId, definitionCode, capacity, mayProceedAlone,
+                 countersignatureRequired, reasons]
+      properties:
+        providerId: { type: string }
+        definitionCode: { type: string }
+        capacity: { $ref: '#/components/schemas/CompetenceCapacity' }
+        mayProceedAlone:
+          type: boolean
+          description: True only for INDEPENDENT. Never true by omission.
+        supervisingProviderPublicId:
+          type: string
+          nullable: true
+          description: |
+            Set when capacity is SUPERVISED. This is the field VARAPI has always exposed
+            and consumers dropped, which is why a trainee could be surfaced as an
+            independent authorised operator.
+        countersignatureRequired:
+          type: boolean
+          description: |
+            True whenever the catalogue declares a COUNTERSIGNATURE requirement, and
+            always true for a SUPERVISED operator whether the catalogue asked for it or
+            not: supervision that leaves no signature is unreviewable.
+        reasons:
+          type: array
+          description: |
+            Why this capacity was reached, in the resolver's own words — including
+            "credentialing service unavailable" when that is the answer.
+          items: { type: string }
+
+    # ── Safety pause (§9) and sedation (§10) ────────────────────────────────────
+    SafetyPauseTemplateView:
+      type: object
+      required: [templateCode, templateName, status, confirmationItems]
+      properties:
+        templateCode: { type: string, example: SAFETY-PAUSE-BEDSIDE }
+        templateName: { type: string }
+        applicableSetting: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/ContentStatus' }
+        approvingAuthority:
+          type: string
+          nullable: true
+          description: Non-null on PUBLISHED templates, by constraint.
+        confirmationItems:
+          type: array
+          description: In display order — the order the pause is actually run in.
+          items: { $ref: '#/components/schemas/ConfirmationItemView' }
+    ConfirmationItemView:
+      type: object
+      required: [confirmationItem]
+      properties:
+        confirmationItem: { $ref: '#/components/schemas/ConfirmationItem' }
+        promptText:
+          type: string
+          nullable: true
+          description: What the team is asked out loud.
+    SedationLevelView:
+      type: object
+      required: [levelCode, levelLabel, depthRank]
+      properties:
+        levelCode: { $ref: '#/components/schemas/SedationLevelCode' }
+        levelLabel: { type: string }
+        depthRank:
+          type: integer
+          description: Position on the continuum. Lists are ordered by this ascending.
+        monitoringRequired: { type: string, nullable: true }
+        providerCompetenceRequired: { type: string, nullable: true }
+        typicalRecoveryCriteria: { type: string, nullable: true }
+        rescueCapability:
+          allOf:
+            - $ref: '#/components/schemas/RescueCapability'
+          nullable: true
+          description: |
+            The next-deeper level's actual requirements, resolved inline. Null only for
+            the deepest level, which has nothing deeper to rescue from.
+    RescueCapability:
+      type: object
+      required: [levelCode, levelLabel]
+      properties:
+        levelCode: { $ref: '#/components/schemas/SedationLevelCode' }
+        levelLabel: { type: string }
+        monitoringRequired: { type: string, nullable: true }
+        providerCompetenceRequired: { type: string, nullable: true }
+
+    # ── Recovery (§15) and aftercare (§17) ──────────────────────────────────────
+    RecoverySettingView:
+      type: object
+      required: [settingCode, settingLabel]
+      properties:
+        settingCode: { $ref: '#/components/schemas/RecoverySettingCode' }
+        settingLabel: { type: string }
+        minimumObservationMinutes: { type: integer, nullable: true }
+        dischargeReadinessCriteria: { type: string, nullable: true }
+        monitoringRequired: { type: string, nullable: true }
+    AftercareTemplateView:
+      type: object
+      required: [templateCode, templateName, status, instructions, deliveryChannels]
+      properties:
+        templateCode: { type: string, example: AFTERCARE-CHEST-DRAIN }
+        templateName: { type: string }
+        applicableSetting: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/ContentStatus' }
+        approvingAuthority: { type: string, nullable: true }
+        contentMaturity: { $ref: '#/components/schemas/ContentMaturity' }
+        instructions:
+          type: array
+          description: In display order.
+          items: { $ref: '#/components/schemas/InstructionView' }
+        deliveryChannels:
+          type: array
+          description: |
+            Where this template's instructions may be delivered, sorted. Declaring the
+            channel is this service's job; delivering on it is not.
+          items: { $ref: '#/components/schemas/DeliveryChannel' }
+    InstructionView:
+      type: object
+      required: [instructionKind, instructionText]
+      properties:
+        instructionKind: { $ref: '#/components/schemas/InstructionKind' }
+        instructionText: { type: string }
+
+    # ── Complications (§18) ─────────────────────────────────────────────────────
+    ClavienDindoGradeView:
+      type: object
+      required: [gradeCode, gradeLabel]
+      properties:
+        gradeCode: { $ref: '#/components/schemas/ClavienDindoGradeCode' }
+        gradeLabel: { type: string }
+        description: { type: string, nullable: true }
+    ComplicationProfileView:
+      type: object
+      required: [profileCode, profileName, status, classes]
+      properties:
+        profileCode: { type: string }
+        profileName: { type: string }
+        applicableSetting: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/ContentStatus' }
+        approvingAuthority: { type: string, nullable: true }
+        contentMaturity: { $ref: '#/components/schemas/ContentMaturity' }
+        classes:
+          type: array
+          description: In display order.
+          items: { $ref: '#/components/schemas/ComplicationClassView' }
+    ComplicationClassView:
+      type: object
+      required: [complicationType, neverEvent]
+      properties:
+        complicationType: { $ref: '#/components/schemas/ComplicationType' }
+        typicalGradeCode:
+          allOf:
+            - $ref: '#/components/schemas/ClavienDindoGradeCode'
+          nullable: true
+          description: |
+            The grade this complication typically reaches. Not a foreign key and not a
+            prediction about any actual patient.
+        monitoringRequired: { type: string, nullable: true }
+        escalationAction: { type: string, nullable: true }
+        neverEvent:
+          type: boolean
+          description: |
+            Whether this is an event that must never happen. Queried separately by the
+            readiness and dashboard consumers, which need "what must never happen" as a
+            fast lookup rather than a client-side filter over everything.
+
+    # ── Analytics indicators (§26) ──────────────────────────────────────────────
+    IndicatorSummary:
+      type: object
+      required: [total, computed, partial, notYetInstrumented, indicators]
+      properties:
+        total: { type: integer }
+        computed: { type: integer }
+        partial: { type: integer }
+        notYetInstrumented:
+          type: integer
+          description: |
+            Reported alongside the others so a consumer can state its own coverage. An
+            indicator set that hides how much of itself is uninstrumented presents an
+            incomplete picture as a complete one.
+        indicators:
+          type: array
+          description: In display order.
+          items: { $ref: '#/components/schemas/IndicatorView' }
+    IndicatorView:
+      type: object
+      required: [indicatorCode, indicatorName, computationStatus, delegatedOutOfScope]
+      properties:
+        indicatorCode: { type: string }
+        indicatorName: { type: string }
+        numeratorDescription: { type: string, nullable: true }
+        denominatorDescription: { type: string, nullable: true }
+        computationStatus: { $ref: '#/components/schemas/ComputationStatus' }
+        executableVia:
+          type: string
+          nullable: true
+          description: |
+            Where the number actually comes from — normally reporting-service's
+            TheatreReportingConsumer projection. Non-null whenever
+            `computationStatus` is COMPUTED, by constraint.
+        gapReason:
+          type: string
+          nullable: true
+          description: |
+            Why there is no number yet. Non-null on every non-COMPUTED indicator, by
+            constraint, so a reader never has to guess whether a missing value is a
+            declared gap or a failure.
+        owningService: { type: string, nullable: true }
+        delegatedOutOfScope:
+          type: boolean
+          description: |
+            Whether the indicator belongs to another service's scope. Recorded rather
+            than dropped, so the catalogue stays a complete list of what §26 asks for.
+        sourceCitation: { type: string, nullable: true }

@@ -1,0 +1,1680 @@
+# =============================================================================
+# Surgery — the surgical episode spine: assessment, decision, prehabilitation,
+# complication pathways, longitudinal objects, follow-up, waiting-list
+# revalidation and specialty content (OpenAPI 3.0)
+#
+# Sovereign: surgery-service (port 8396, clinical plane). Routes, field names,
+# enumerations and required-ness below are derived from the live handlers in
+# api/controller/*, the validation in core/* and the CHECK constraints in
+# db/migration/V002-V008 — not from a design sketch.
+#
+# Five conventions apply throughout, so they are not repeated per operation:
+#
+#   1. TENANT comes from the TrustContext, which TrustContextFilter populates
+#      from X-Tenant-ID. Every query is tenant-scoped, so the header is required
+#      in practice on every route. It is only a declared @RequestHeader on the two
+#      analytics routes, where its absence is a 400; elsewhere an absent header
+#      leaves a null tenant and nothing is found.
+#   2. ACTOR comes from the TrustContext's X-Actor-ID and is stamped on writes as
+#      recognisedBy / gradedBy / disclosedBy / closedBy / assessedBy / decidedBy /
+#      recordedBy / removedBy / plannedBy / revalidatedBy / operator / createdBy.
+#      Absent, it records the literal "system" rather than failing — these routes
+#      are backend-internal and pre-authz, and losing the record would be worse
+#      than recording an unattributed one. Only decidedBy and operator can be
+#      overridden from the body.
+#   3. Most bodies are accepted as free-form JSON objects (Map<String,Object>) and
+#      applied field by field, so an UNKNOWN FIELD IS SILENTLY IGNORED rather than
+#      rejected. The properties documented here are the complete set each handler
+#      actually reads. Absent keys leave the stored value untouched; that is what
+#      makes the PUT routes refinements rather than replacements.
+#   4. Responses are bare JSON objects, NOT an ApiResponse envelope. Errors are
+#      the separate envelope in SurgeryExceptionHandler
+#      ({error:{code,message},timestamp}).
+#   5. Episode ids travel as PATH VARIABLES because they are opaque UUIDs. The
+#      free-text-code-as-final-segment shape that defeats AuthzInternalRequest
+#      .deriveResourceType does not arise here; the two specialty routes and the
+#      analytics detail route take their codes as query parameters for that reason.
+#
+# REACHABILITY. Every route here is backend-internal: no authz rows, no BFF proxy
+# and no UI, deferred to a dedicated reachability wave rather than attempted inline
+# with content. That is a stated status, not a claim of completeness.
+#
+# No PII: subjects are referenced by CPID, per doctrine.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Surgery Service API
+  version: "1.0.0"
+  description: |
+    The surgical episode and the record chain around it. A surgical episode is a
+    management-course record: it references PCT journeys and never contains them,
+    contributes conditions into PCT rather than copying them, and records surgical
+    reasoning and this service's own view of that reasoning's progress.
+
+    Four doctrinal constraints are visible in the API shape and should survive any
+    change to it.
+
+    **A clinical record needs a resolvable PCT anchor.** Opening an episode without
+    a journeyId or an encounterId is refused (care-continuum-doctrine CC-5). An
+    episode floating free of the continuum is a record nobody will find again.
+
+    **Contribute, never copy.** Conditions and closed complications are written into
+    `pct_problems` with `responsible_service=surgery`, best-effort: a PCT outage
+    never blocks recording locally, and the un-contributed episodes are a
+    reconciliation query rather than lost work. PCT remains the owner.
+
+    **A reference without a review is a fabricated confidence.** On the assessment,
+    imaging, pathology, functional-status and pregnancy references cannot be set
+    unless the matching reviewed flag is true. The registries stay the owners of
+    those facts; this record only says they were looked at.
+
+    **A complication cannot be closed quietly.** A pathway must be graded, owned,
+    disclosed to the patient or family, and given an outcome before it closes.
+    Closure of an episode is gated on histology too, and fails SAFE: an unreachable
+    specimen list blocks closure rather than clearing it, because an unknown
+    histology status is not a reviewed one.
+
+    Content maturity is stated rather than implied: specialty indications and
+    operative templates carry contentMaturity ENGINEERING_SEED and
+    approvingAuthority PENDING_MOHCC_RATIFICATION until the Ministry ratifies them,
+    and the analytics catalogue declares which of its indicators nothing computes
+    yet.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8396
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Episodes
+    description: The surgical episode (S1) — PCT-anchored, never PCT-containing
+  - name: Assessment
+    description: The general surgical assessment (S2) — one row per episode, refined over time
+  - name: Decision
+    description: The surgical decision-making record (S3)
+  - name: Prehabilitation
+    description: Optimisation execution items across the 16 domains (SB-1)
+  - name: Complications
+    description: Complication pathway instances — recognise, grade, own, disclose, close (SB-1)
+  - name: Longitudinal-Objects
+    description: Drains, stomas and wounds over time (SB-2)
+  - name: Follow-up
+    description: Discharge and follow-up items (SB-2)
+  - name: Waitlist
+    description: Waiting-list clinical revalidation (SB-2) — append-only
+  - name: Specialty-Content
+    description: Specialty indications and operative templates (SB-2/SB-4)
+  - name: Analytics
+    description: The surgical-pack analytics indicator catalogue (§23) — declares its own gaps
+
+paths:
+  /internal/v1/surgery/episodes:
+    post:
+      operationId: surgeryEpisodeOpen
+      tags: [Episodes]
+      summary: Open a surgical episode
+      description: |
+        Requires a subject, a resolvable PCT anchor and the operative indication —
+        the surgical reasoning this service exists to record.
+
+        When `conditionDisplay` is supplied, the condition is contributed into
+        `pct_problems` best-effort. A failed contribution is not an error: the
+        episode is still returned, with `pctContributed=false`, and is picked up by
+        the reconciliation query rather than retried inline.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OpenEpisodeRequest' }
+      responses:
+        '200':
+          description: The opened episode
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalEpisodeView' }
+        '400':
+          description: |
+            `SUBJECT_CPID_REQUIRED`, `PCT_ANCHOR_REQUIRED` or
+            `OPERATIVE_INDICATION_REQUIRED`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    get:
+      operationId: surgeryEpisodesForSubject
+      tags: [Episodes]
+      summary: List a subject's surgical episodes
+      description: Most recently created first.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: subjectCpid
+          in: query
+          required: true
+          description: Subject reference. CPID only — no PII in this record.
+          schema: { type: string }
+      responses:
+        '200':
+          description: The subject's episodes, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SurgicalEpisodeView' }
+
+  /internal/v1/surgery/episodes/{id}:
+    get:
+      operationId: surgeryEpisodeGet
+      tags: [Episodes]
+      summary: Get a surgical episode
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeIdShort'
+      responses:
+        '200':
+          description: The episode
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalEpisodeView' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+
+  /internal/v1/surgery/episodes/{id}/link-procedure-episode:
+    post:
+      operationId: surgeryEpisodeLinkProcedureEpisode
+      tags: [Episodes]
+      summary: Link the episode to its procedure episode
+      description: |
+        Records a reference to `inpatient.procedure_episode` — never a copy of it.
+        The link is what brings the histology closure gate into play, since specimens
+        belong to the operation rather than to this record.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeIdShort'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LinkProcedureEpisodeRequest' }
+      responses:
+        '200':
+          description: The updated episode
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalEpisodeView' }
+        '400':
+          description: '`INVALID_REQUEST` — `procedureEpisodeRef` absent or not a UUID.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+
+  /internal/v1/surgery/episodes/{id}/transition:
+    post:
+      operationId: surgeryEpisodeTransition
+      tags: [Episodes]
+      summary: Move the episode to another status
+      description: |
+        Transitioning to CLOSED runs the §16 histology gate when a procedure episode
+        is linked: every specimen from the linked operation must have a reviewed and
+        acknowledged histology result. The gate fails SAFE and deliberately opposite
+        to the PCT contribution's fail-open posture — an unreachable specimen list
+        answers 503, because an unknown histology status blocks closure rather than
+        clearing it. An episode with no linked operation has no specimens to gate on
+        and closes freely.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeIdShort'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EpisodeTransitionRequest' }
+      responses:
+        '200':
+          description: The episode in its new status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalEpisodeView' }
+        '400':
+          description: '`INVALID_STATUS` — not one of the five episode statuses.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+        '409':
+          description: |
+            `HISTOLOGY_UNREVIEWED` — specimens from the linked operation have
+            histology pending or an unacknowledged result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '503':
+          description: |
+            `SPECIMEN_STATE_UNKNOWN` — the linked operation's specimen state could
+            not be established, so closure is refused rather than allowed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/episodes/{episodeId}/assessment:
+    put:
+      operationId: surgeryAssessmentRecord
+      tags: [Assessment]
+      summary: Record or refine the general surgical assessment
+      description: |
+        Upserts the single assessment row for the episode: an assessment is a
+        conversation and an examination that becomes more complete, not a series of
+        versions. Only the keys present in the body are applied.
+
+        The reference fields are paired with review flags and cannot be set alone —
+        a reference id without a review behind it would fabricate confidence about a
+        review that never happened. The underlying facts stay in their own
+        registries; this record only says they were reviewed.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssessmentRecordRequest' }
+      responses:
+        '200':
+          description: The assessment as stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalAssessment' }
+        '400':
+          description: |
+            `IMAGING_REVIEW_REQUIRED`, `PATHOLOGY_REVIEW_REQUIRED` or
+            `REFERENCE_REVIEW_REQUIRED` — a reference was supplied without its
+            reviewed flag set true.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+    get:
+      operationId: surgeryAssessmentGet
+      tags: [Assessment]
+      summary: Get the general surgical assessment
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      responses:
+        '200':
+          description: The assessment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalAssessment' }
+        '404':
+          description: '`SURGICAL_ASSESSMENT_NOT_FOUND` — nothing recorded for this episode yet.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/episodes/{episodeId}/decision:
+    put:
+      operationId: surgeryDecisionRecord
+      tags: [Decision]
+      summary: Record or refine the surgical decision-making record
+      description: |
+        Upserts the single decision row for the episode. Diagnosis and certainty are
+        not repeated here — they are read from the episode's `pctProblemRef`, because
+        PCT owns them.
+
+        `finalDecision`, its author and its timestamp travel together or not at all.
+        Supplying a final decision stamps `decidedAt` and `decidedBy` (the body's
+        `decidedBy` if given, otherwise the TrustContext actor): a decision with no
+        author or no timestamp is not one anybody can stand behind.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecisionRecordRequest' }
+      responses:
+        '200':
+          description: The decision record as stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalDecision' }
+        '400':
+          description: '`INVALID_FINAL_DECISION` — not PROCEED, DO_NOT_PROCEED or DEFER.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+    get:
+      operationId: surgeryDecisionGet
+      tags: [Decision]
+      summary: Get the surgical decision-making record
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      responses:
+        '200':
+          description: The decision record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalDecision' }
+        '404':
+          description: '`SURGICAL_DECISION_NOT_FOUND` — nothing recorded for this episode yet.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/episodes/{episodeId}/prehab:
+    put:
+      operationId: surgeryPrehabRecordItem
+      tags: [Prehabilitation]
+      summary: Record or update an optimisation item for one domain
+      description: |
+        Upserts on (episode, domain) — one row per optimisation workstream, refined
+        as it progresses. The row records THIS service's execution status of the
+        workstream, never the underlying clinical fact: smoking status lives in
+        `pct_social_history` and is referenced through `registryRef`, not copied
+        here.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PrehabItemRequest' }
+      responses:
+        '200':
+          description: The optimisation item as stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PrehabItem' }
+        '400':
+          description: '`INVALID_PREHAB_DOMAIN` or `INVALID_PREHAB_STATUS`.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+    get:
+      operationId: surgeryPrehabList
+      tags: [Prehabilitation]
+      summary: List the episode's optimisation items
+      description: Ordered by domain.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      responses:
+        '200':
+          description: The optimisation items recorded so far
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PrehabItem' }
+
+  /internal/v1/surgery/episodes/{episodeId}/complications:
+    post:
+      operationId: surgeryComplicationRecognise
+      tags: [Complications]
+      summary: Recognise a complication, opening a pathway
+      description: |
+        Stage 1 of the pathway. The complication vocabulary is shared with
+        procedures-service's content-side `complication_class` — one governed list,
+        not a second registry.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComplicationRecogniseRequest' }
+      responses:
+        '200':
+          description: The newly opened pathway
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ComplicationPathway' }
+        '400':
+          description: '`INVALID_COMPLICATION_TYPE` — absent or outside the governed vocabulary.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+    get:
+      operationId: surgeryComplicationList
+      tags: [Complications]
+      summary: List the episode's complication pathways
+      description: Most recently recognised first.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      responses:
+        '200':
+          description: The pathways, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ComplicationPathway' }
+
+  /internal/v1/surgery/episodes/{episodeId}/complications/{pathwayId}:
+    put:
+      operationId: surgeryComplicationUpdate
+      tags: [Complications]
+      summary: Record ownership, investigation and treatment
+      description: |
+        Stages 3 to 5. Ownership is what makes the pathway somebody's: closure is
+        refused without it. Investigation and treatment are free text and are not
+        constrained — "observation only" is a legitimate treatment, and a
+        non-empty check would only invite boilerplate.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+        - $ref: '#/components/parameters/PathwayId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComplicationUpdateRequest' }
+      responses:
+        '200':
+          description: The updated pathway
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ComplicationPathway' }
+        '404': { $ref: '#/components/responses/PathwayNotFound' }
+
+  /internal/v1/surgery/episodes/{episodeId}/complications/{pathwayId}/grade:
+    post:
+      operationId: surgeryComplicationGrade
+      tags: [Complications]
+      summary: Grade the complication (Clavien-Dindo)
+      description: |
+        Stage 2. Grade, grader and timestamp are set together — the same
+        all-or-nothing pairing the schema enforces.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+        - $ref: '#/components/parameters/PathwayId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComplicationGradeRequest' }
+      responses:
+        '200':
+          description: The graded pathway
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ComplicationPathway' }
+        '400':
+          description: '`INVALID_GRADE` — not one of the seven Clavien-Dindo grades.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/PathwayNotFound' }
+
+  /internal/v1/surgery/episodes/{episodeId}/complications/{pathwayId}/disclose:
+    post:
+      operationId: surgeryComplicationDisclose
+      tags: [Complications]
+      summary: Record disclosure to the patient or family
+      description: |
+        Stage 6, and a required stage before closure. Stamps the discloser and the
+        time; the notes are optional. A complication register that can close a
+        pathway nobody was told about is a register of things that were hidden.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+        - $ref: '#/components/parameters/PathwayId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComplicationDiscloseRequest' }
+      responses:
+        '200':
+          description: The pathway, now disclosed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ComplicationPathway' }
+        '404': { $ref: '#/components/responses/PathwayNotFound' }
+
+  /internal/v1/surgery/episodes/{episodeId}/complications/{pathwayId}/close:
+    post:
+      operationId: surgeryComplicationClose
+      tags: [Complications]
+      summary: Close the pathway with an outcome
+      description: |
+        Stage 7. Refused unless the pathway has been graded, owned and disclosed —
+        each refusal names which precondition is missing.
+
+        On closure the complication is contributed into `pct_problems` as
+        "<type> (Clavien-Dindo <grade>) — <outcome>" with certainty CONFIRMED,
+        best-effort: a PCT outage does not block the closure, and `pctProblemRef`
+        stays null until a later reconciliation succeeds.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+        - $ref: '#/components/parameters/PathwayId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComplicationCloseRequest' }
+      responses:
+        '200':
+          description: The closed pathway
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ComplicationPathway' }
+        '400':
+          description: '`OUTCOME_REQUIRED` — an outcome is mandatory to close.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/PathwayNotFound' }
+        '409':
+          description: |
+            `PATHWAY_NOT_GRADED`, `PATHWAY_NOT_OWNED` or `PATHWAY_NOT_DISCLOSED` —
+            the stage named has not happened yet.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/episodes/{episodeId}/longitudinal-objects:
+    post:
+      operationId: surgeryLongitudinalObjectPlace
+      tags: [Longitudinal-Objects]
+      summary: Record placement of a drain, stoma or wound
+      description: |
+        Implants are deliberately absent: they stay federated to inventory-service's
+        own implant registry, and this service never holds implant data.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LongitudinalObjectPlaceRequest' }
+      responses:
+        '200':
+          description: The placed object, status ACTIVE
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LongitudinalObject' }
+        '400':
+          description: '`INVALID_LONGITUDINAL_OBJECT_KIND` or `SITE_AND_INDICATION_REQUIRED`.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+    get:
+      operationId: surgeryLongitudinalObjectList
+      tags: [Longitudinal-Objects]
+      summary: List the episode's drains, stomas and wounds
+      description: Most recently placed first, including removed and revised ones.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      responses:
+        '200':
+          description: The objects, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LongitudinalObject' }
+
+  /internal/v1/surgery/episodes/{episodeId}/longitudinal-objects/{objectId}/remove:
+    post:
+      operationId: surgeryLongitudinalObjectRemove
+      tags: [Longitudinal-Objects]
+      summary: Record removal of an object
+      description: |
+        Stamps the remover and the time together — a removal is an actor and a time,
+        or it did not happen. The body is optional.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+        - $ref: '#/components/parameters/ObjectId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LongitudinalObjectRemoveRequest' }
+      responses:
+        '200':
+          description: The object, status REMOVED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LongitudinalObject' }
+        '404': { $ref: '#/components/responses/ObjectNotFound' }
+
+  /internal/v1/surgery/episodes/{episodeId}/longitudinal-objects/{objectId}/revise:
+    post:
+      operationId: surgeryLongitudinalObjectRevise
+      tags: [Longitudinal-Objects]
+      summary: Replace an object with a new one
+      description: |
+        The old object becomes REVISED and points forward through
+        `revisedToObjectId`; a new ACTIVE object is created, inheriting the kind and,
+        unless overridden, the site. **The response is the NEW object**, not the
+        revised one. Site and indication default from the old object, so a bare
+        revision is legitimate. The body is optional.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+        - $ref: '#/components/parameters/ObjectId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LongitudinalObjectReviseRequest' }
+      responses:
+        '200':
+          description: The newly created replacement object
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LongitudinalObject' }
+        '404': { $ref: '#/components/responses/ObjectNotFound' }
+
+  /internal/v1/surgery/episodes/{episodeId}/followup:
+    put:
+      operationId: surgeryFollowupRecord
+      tags: [Follow-up]
+      summary: Record or refine discharge and follow-up items
+      description: |
+        Upserts the single follow-up row for the episode. Supplying `fitNoteNotes`
+        also stamps who issued the fit note and when — the note and its issuance are
+        one act.
+
+        `surveillancePlanRef` is a reference into PCT's `pct_care_plans`, never a
+        copy of the plan.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FollowupRecordRequest' }
+      responses:
+        '200':
+          description: The follow-up record as stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalFollowup' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+    get:
+      operationId: surgeryFollowupGet
+      tags: [Follow-up]
+      summary: Get the discharge and follow-up record
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      responses:
+        '200':
+          description: The follow-up record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalFollowup' }
+        '404':
+          description: '`SURGICAL_FOLLOWUP_NOT_FOUND` — nothing recorded for this episode yet.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/episodes/{episodeId}/waitlist-revalidation:
+    post:
+      operationId: surgeryWaitlistRevalidate
+      tags: [Waitlist]
+      summary: Record a waiting-list clinical revalidation
+      description: |
+        Append-only: each revalidation is a dated, attributed event, never an
+        overwrite of the last one. `stillClinicallyAppropriate` is mandatory — an
+        explicit yes or no, never assumed, because a revalidation that does not
+        answer that question is a timestamp pretending to be a review.
+
+        This is surgery-service's only slice of the waiting-list model; scheduling
+        owns the rest.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WaitlistRevalidationRequest' }
+      responses:
+        '200':
+          description: The recorded revalidation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WaitlistRevalidation' }
+        '400':
+          description: '`STILL_CLINICALLY_APPROPRIATE_REQUIRED` — the field is absent.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+    get:
+      operationId: surgeryWaitlistRevalidationList
+      tags: [Waitlist]
+      summary: List the episode's revalidations
+      description: Most recent first.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
+      responses:
+        '200':
+          description: The revalidation history, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/WaitlistRevalidation' }
+
+  /internal/v1/surgery/specialties/indications:
+    get:
+      operationId: surgerySpecialtyIndications
+      tags: [Specialty-Content]
+      summary: List a specialty's indications
+      description: |
+        Content over shared infrastructure: the spine is built once and each of the
+        fifteen specialties contributes indications into it rather than forking its
+        own model. Ordered by indication code.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: specialty
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/SurgicalSpecialty' }
+      responses:
+        '200':
+          description: The specialty's indications
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SpecialtyIndication' }
+        '400':
+          description: '`INVALID_SPECIALTY` — not one of the fifteen surgical specialties.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/specialties/templates:
+    get:
+      operationId: surgerySpecialtyTemplates
+      tags: [Specialty-Content]
+      summary: List a specialty's operative templates
+      description: Ordered by template code.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: specialty
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/SurgicalSpecialty' }
+      responses:
+        '200':
+          description: The specialty's operative templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OperativeTemplate' }
+        '400':
+          description: '`INVALID_SPECIALTY` — not one of the fifteen surgical specialties.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/analytics/indicators:
+    get:
+      operationId: surgeryAnalyticsIndicatorCatalogue
+      tags: [Analytics]
+      summary: List the surgical-pack analytics indicators with their computation status
+      description: |
+        This computes no numbers. Each indicator declares whether it is COMPUTED,
+        PARTIAL or NOT_YET_INSTRUMENTED, and where it is computed if it is — normally
+        reporting-service's `rpt_theatre_case_metric` projection. The counts exist so
+        a consumer can state its own coverage instead of presenting an incomplete set
+        as complete.
+
+        X-Tenant-ID is an explicit required header on this route, so an absent one is
+        a 400.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdExplicit'
+      responses:
+        '200':
+          description: The indicator catalogue with coverage counts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IndicatorSummary' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/surgery/analytics/indicator:
+    get:
+      operationId: surgeryAnalyticsIndicator
+      tags: [Analytics]
+      summary: Get one surgical analytics indicator definition
+      parameters:
+        - $ref: '#/components/parameters/TenantIdExplicit'
+        - name: code
+          in: query
+          required: true
+          description: Indicator code.
+          schema: { type: string }
+      responses:
+        '200':
+          description: The indicator definition
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IndicatorView' }
+        '404':
+          description: '`ANALYTICS_INDICATOR_NOT_FOUND` — no such indicator for this tenant.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      description: |
+        Tenant scope, read from the TrustContext that TrustContextFilter populates
+        from this header. Not a declared @RequestHeader on this route, so an absent
+        one is not rejected outright — it leaves a null tenant and the request finds
+        nothing (or fails on write). Required in practice.
+      schema: { type: string, format: uuid }
+    TenantIdExplicit:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      description: |
+        Tenant scope. A declared @RequestHeader on this route, so an absent one is a
+        400 before the handler runs.
+      schema: { type: string, format: uuid }
+    EpisodeId:
+      name: episodeId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    EpisodeIdShort:
+      name: id
+      in: path
+      required: true
+      description: Surgical episode id.
+      schema: { type: string, format: uuid }
+    PathwayId:
+      name: pathwayId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ObjectId:
+      name: objectId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Error:
+      description: Error envelope
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    EpisodeNotFound:
+      description: '`SURGICAL_EPISODE_NOT_FOUND` — no such episode in this tenant.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    PathwayNotFound:
+      description: '`COMPLICATION_PATHWAY_NOT_FOUND` — no such pathway in this tenant.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    ObjectNotFound:
+      description: '`LONGITUDINAL_OBJECT_NOT_FOUND` — no such object in this tenant.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    # ── Error shape ─────────────────────────────────────────────────────────────
+    # SurgeryExceptionHandler's envelope, mirroring procedures-service's. NOT the
+    # shared ApiResponse: these handlers return bare objects on success, so there is
+    # no success/data wrapper to mirror. The HTTP status carries the status.
+    ErrorEnvelope:
+      type: object
+      required: [error, timestamp]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: |
+                The domain code where one exists — every code named in this contract
+                comes from a SurgeryDomainException. Otherwise the generic mapping:
+                `NOT_FOUND`, or `INVALID_REQUEST` (400) for a malformed UUID or an
+                unparseable body value.
+            message:
+              type: string
+              description: Falls back to the status reason phrase when the exception carries none.
+        timestamp: { type: string, format: date-time }
+
+    # ── Enumerations (from the service allowlists and V002-V008 CHECKs) ─────────
+    EpisodeStatus:
+      type: string
+      description: |
+        ABANDONED is a real outcome, distinct from CLOSED: an episode that stopped
+        without completing is not one that finished. Transitioning to CLOSED passes
+        the histology gate.
+      enum: [ASSESSMENT, LISTED_FOR_SURGERY, OPERATED, CLOSED, ABANDONED]
+      default: ASSESSMENT
+    FinalDecision:
+      type: string
+      description: |
+        DEFER is not a soft no — it is a decision to revisit, which is why the
+        waiting-list revalidation record exists alongside it.
+      enum: [PROCEED, DO_NOT_PROCEED, DEFER]
+    PrehabDomain:
+      type: string
+      description: |
+        The 16-domain optimisation vocabulary. Engineering-derived: the source
+        specification is not vendored in this repository, and saying so is more
+        useful than implying a ratified list.
+      enum:
+        [ANAEMIA, NUTRITION, GLYCAEMIC_CONTROL, SMOKING_CESSATION, ALCOHOL_REDUCTION,
+         VTE_PLAN, ANTIBIOTIC_PROPHYLAXIS_PLAN, BLOOD_PREPARATION,
+         CARDIORESPIRATORY_FITNESS, PHYSIOTHERAPY, PSYCHOLOGICAL_PREPARATION,
+         MEDICATION_OPTIMISATION, DENTAL, WEIGHT_MANAGEMENT, FRAILTY_INTERVENTION,
+         SOCIAL_DISCHARGE_PREPARATION]
+    PrehabStatus:
+      type: string
+      description: |
+        DECLINED and NOT_REQUIRED are kept apart on purpose: a patient who declined
+        an optimisation and one who never needed it are different facts, and only one
+        of them is a conversation to revisit.
+      enum: [PLANNED, IN_PROGRESS, COMPLETED, NOT_REQUIRED, DECLINED]
+    ComplicationType:
+      type: string
+      description: |
+        Shared with procedures-service's content-side `complication_class` — one
+        governed vocabulary across the two services, not two registries.
+      enum:
+        [SURGICAL_SITE_INFECTION, BLEEDING, ANASTOMOTIC_LEAK, DEEP_VEIN_THROMBOSIS,
+         PULMONARY_EMBOLISM, WOUND_DEHISCENCE, ORGAN_INJURY, NERVE_INJURY,
+         ANAESTHESIA_COMPLICATION, TRANSFUSION_REACTION, DEVICE_MALFUNCTION,
+         RETAINED_FOREIGN_OBJECT, WRONG_SITE_PROCEDURE, READMISSION,
+         UNPLANNED_RETURN_TO_THEATRE, SEPSIS, RENAL_INJURY, CARDIAC_EVENT, DEATH]
+    ClavienDindoGradeCode:
+      type: string
+      enum: ['I', 'II', IIIA, IIIB, IVA, IVB, 'V']
+    PathwayStatus:
+      type: string
+      enum: [OPEN, CLOSED]
+      default: OPEN
+    LongitudinalObjectKind:
+      type: string
+      description: |
+        Implants are deliberately not here — inventory-service owns the implant
+        registry and this service never duplicates it.
+      enum: [DRAIN, STOMA, WOUND]
+    LongitudinalObjectStatus:
+      type: string
+      enum: [ACTIVE, REMOVED, REVISED]
+      default: ACTIVE
+    SurgicalSpecialty:
+      type: string
+      enum:
+        [GENERAL_SURGERY, ORTHOPAEDICS, UROLOGY, ENT, OPHTHALMOLOGY,
+         COLORECTAL, UPPER_GI_HPB, BREAST_ENDOCRINE, VASCULAR, NEUROSURGERY,
+         CARDIOTHORACIC, MAXILLOFACIAL, PLASTICS, PAEDIATRIC_SURGERY, SURGICAL_ONCOLOGY]
+    WoundClassification:
+      type: string
+      enum: [CLEAN, CLEAN_CONTAMINATED, CONTAMINATED, DIRTY]
+    ContentMaturity:
+      type: string
+      description: |
+        ENGINEERING_SEED is engineering-authored content standing in until the
+        Ministry ratifies it. Saying so is the point of the field.
+      enum: [ENGINEERING_SEED, RATIFIED]
+      default: ENGINEERING_SEED
+    ComputationStatus:
+      type: string
+      description: |
+        A non-COMPUTED indicator always carries a `gapReason`, and a COMPUTED one
+        always carries `executableVia` — both enforced by constraint, so a reader
+        never has to guess whether a missing number is a declared gap or a failure.
+      enum: [COMPUTED, PARTIAL, NOT_YET_INSTRUMENTED]
+
+    # ── Episode (S1) ────────────────────────────────────────────────────────────
+    OpenEpisodeRequest:
+      type: object
+      required: [subjectCpid, operativeIndication]
+      description: |
+        `journeyId` or `encounterId` is also required — at least one of the two, which
+        OpenAPI cannot express as a plain required list.
+      properties:
+        subjectCpid:
+          type: string
+          description: Subject reference. CPID only — no PII in this record.
+        journeyId:
+          type: string
+          description: |
+            PCT journey anchor. Free-form here rather than a UUID, because it is
+            passed straight through to PCT as given.
+        encounterId:
+          type: string
+          format: uuid
+          description: |
+            PCT encounter anchor. Supply this or `journeyId`: an episode with no
+            resolvable anchor is refused with `PCT_ANCHOR_REQUIRED`
+            (care-continuum-doctrine CC-5).
+        operativeIndication:
+          type: string
+          description: |
+            Mandatory. The surgical reasoning this service exists to record — an
+            episode without it records that an operation was considered but not why.
+        nonOperativeOptionsConsidered:
+          type: string
+          description: The alternatives weighed. Part of the reasoning, not a formality.
+        conditionDisplay:
+          type: string
+          description: |
+            When present, triggers the best-effort contribution into `pct_problems`
+            with `responsible_service=surgery`. Absent, no contribution is attempted
+            and `pctContributed` is false.
+        diagnosticCertainty:
+          type: string
+          description: Passed through to PCT with the contribution.
+        evidence:
+          type: string
+          description: Passed through to PCT with the contribution.
+        specialty: { $ref: '#/components/schemas/SurgicalSpecialty' }
+    SurgicalEpisodeView:
+      type: object
+      required: [id, subjectCpid, operativeIndication, status, pctContributed]
+      properties:
+        id: { type: string, format: uuid }
+        subjectCpid: { type: string }
+        journeyId: { type: string, nullable: true }
+        encounterId: { type: string, format: uuid, nullable: true }
+        procedureEpisodeRef:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            Reference to `inpatient.procedure_episode`, never a copy. Null until
+            linked, and its presence is what brings the histology closure gate into
+            play.
+        pctProblemRef:
+          type: string
+          format: uuid
+          nullable: true
+          description: The contributed PCT problem, when the contribution succeeded.
+        operativeIndication: { type: string }
+        nonOperativeOptionsConsidered: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/EpisodeStatus' }
+        specialty:
+          allOf:
+            - $ref: '#/components/schemas/SurgicalSpecialty'
+          nullable: true
+        pctContributed:
+          type: boolean
+          description: |
+            Whether the condition reached PCT. False is a real state, not an error:
+            the episode is local truth either way, and the un-contributed ones are a
+            reconciliation query.
+    LinkProcedureEpisodeRequest:
+      type: object
+      required: [procedureEpisodeRef]
+      properties:
+        procedureEpisodeRef:
+          type: string
+          format: uuid
+          description: The `inpatient.procedure_episode` this episode's operation is.
+    EpisodeTransitionRequest:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/EpisodeStatus' }
+
+    # ── Assessment (S2) ─────────────────────────────────────────────────────────
+    AssessmentRecordRequest:
+      type: object
+      description: |
+        Every field is optional and only the keys present are applied, which is what
+        makes this a refinement. The reviewed/ref pairs are the exception: supplying a
+        ref without its flag true is refused.
+      properties:
+        presentingProblem: { type: string }
+        symptomTimeline: { type: string }
+        woundHealingHistory: { type: string }
+        bleedingThrombosisHistory: { type: string }
+        infectionHistory: { type: string }
+        anaestheticHistoryNotes: { type: string }
+        nutritionAssessment: { type: string }
+        frailtyNotes: { type: string }
+        socialSupportNotes: { type: string }
+        transportPlan: { type: string }
+        workLivelihoodImpact: { type: string }
+        patientGoals:
+          type: string
+          description: |
+            What the patient wants out of this. Recorded as content this service owns
+            outright, not derived from anything.
+        examinationFindings: { type: string }
+        differentialDiagnosisNotes: { type: string }
+        surgicalRiskAssessment: { type: string }
+        previousSurgeryReviewed: { type: boolean }
+        previousSurgeryNotes: { type: string }
+        allergiesReviewed:
+          type: boolean
+          description: |
+            A reviewed flag, not the allergy list. Allergies are owned elsewhere and
+            are not duplicated here.
+        allergyReviewNotes: { type: string }
+        medicationsReviewed: { type: boolean }
+        medicationReconciliationNotes: { type: string }
+        functionalStatusReviewed: { type: boolean }
+        functionalAssessmentRef:
+          type: string
+          format: uuid
+          description: |
+            Requires `functionalStatusReviewed=true` in the same request, else
+            `REFERENCE_REVIEW_REQUIRED`.
+        pregnancyStatusConfirmed: { type: boolean }
+        pregnancyEpisodeRef:
+          type: string
+          format: uuid
+          description: |
+            Requires `pregnancyStatusConfirmed=true` in the same request, else
+            `REFERENCE_REVIEW_REQUIRED`.
+        imagingReviewed: { type: boolean }
+        imagingRef:
+          type: string
+          description: |
+            Requires `imagingReviewed=true` in the same request, else
+            `IMAGING_REVIEW_REQUIRED`. Free-form, not a UUID — imaging references
+            take several shapes across the estate.
+        pathologyReviewed: { type: boolean }
+        pathologyRef:
+          type: string
+          description: |
+            Requires `pathologyReviewed=true` in the same request, else
+            `PATHOLOGY_REVIEW_REQUIRED`.
+    SurgicalAssessment:
+      type: object
+      required: [id, surgicalEpisodeId]
+      description: |
+        Every field the request accepts, plus the identity and attribution fields the
+        service stamps. Text fields are null until recorded; the reviewed flags are
+        booleans and default false.
+      properties:
+        id: { type: string, format: uuid }
+        surgicalEpisodeId: { type: string, format: uuid }
+        presentingProblem: { type: string, nullable: true }
+        symptomTimeline: { type: string, nullable: true }
+        woundHealingHistory: { type: string, nullable: true }
+        bleedingThrombosisHistory: { type: string, nullable: true }
+        infectionHistory: { type: string, nullable: true }
+        anaestheticHistoryNotes: { type: string, nullable: true }
+        nutritionAssessment: { type: string, nullable: true }
+        frailtyNotes: { type: string, nullable: true }
+        socialSupportNotes: { type: string, nullable: true }
+        transportPlan: { type: string, nullable: true }
+        workLivelihoodImpact: { type: string, nullable: true }
+        patientGoals: { type: string, nullable: true }
+        examinationFindings: { type: string, nullable: true }
+        differentialDiagnosisNotes: { type: string, nullable: true }
+        surgicalRiskAssessment: { type: string, nullable: true }
+        previousSurgeryReviewed: { type: boolean }
+        previousSurgeryNotes: { type: string, nullable: true }
+        allergiesReviewed: { type: boolean }
+        allergyReviewNotes: { type: string, nullable: true }
+        medicationsReviewed: { type: boolean }
+        medicationReconciliationNotes: { type: string, nullable: true }
+        functionalStatusReviewed: { type: boolean }
+        functionalAssessmentRef: { type: string, format: uuid, nullable: true }
+        pregnancyStatusConfirmed: { type: boolean }
+        pregnancyEpisodeRef: { type: string, format: uuid, nullable: true }
+        imagingReviewed: { type: boolean }
+        imagingRef: { type: string, nullable: true }
+        pathologyReviewed: { type: boolean }
+        pathologyRef: { type: string, nullable: true }
+        assessedBy:
+          type: string
+          description: The TrustContext actor, or "system" when none was presented.
+        assessedAt: { type: string, format: date-time, nullable: true }
+
+    # ── Decision (S3) ───────────────────────────────────────────────────────────
+    DecisionRecordRequest:
+      type: object
+      description: |
+        All fields optional; only the keys present are applied. Diagnosis and
+        certainty are absent by design — they are read from the episode's PCT problem
+        reference rather than repeated here.
+      properties:
+        naturalHistory:
+          type: string
+          description: What happens without the operation. Part of the reasoning, not boilerplate.
+        expectedBenefit: { type: string }
+        materialRisksConsidered:
+          type: string
+          description: |
+            The clinician's own risk reasoning. Distinct from mvumo's
+            consent-conversation field of a similar name: this is what was weighed,
+            not what was discussed and consented to.
+        anaestheticImplications: { type: string }
+        bloodImplications: { type: string }
+        functionalImplications: { type: string }
+        fertilityImplications: { type: string }
+        stomaPossibility: { type: boolean }
+        stomaPossibilityNotes: { type: string }
+        implantPossibility: { type: boolean }
+        implantPossibilityNotes: { type: string }
+        rehabilitationExpectation: { type: string }
+        financialAccessImplications: { type: string }
+        patientPreference: { type: string }
+        finalDecision:
+          allOf:
+            - $ref: '#/components/schemas/FinalDecision'
+          description: |
+            Supplying this stamps `decidedAt` and `decidedBy` together with it. The
+            three travel together or not at all.
+        decidedBy:
+          type: string
+          description: |
+            Overrides the TrustContext actor as the decision's author. Only read when
+            `finalDecision` is also present.
+    SurgicalDecision:
+      type: object
+      required: [id, surgicalEpisodeId]
+      properties:
+        id: { type: string, format: uuid }
+        surgicalEpisodeId: { type: string, format: uuid }
+        naturalHistory: { type: string, nullable: true }
+        expectedBenefit: { type: string, nullable: true }
+        materialRisksConsidered: { type: string, nullable: true }
+        anaestheticImplications: { type: string, nullable: true }
+        bloodImplications: { type: string, nullable: true }
+        functionalImplications: { type: string, nullable: true }
+        fertilityImplications: { type: string, nullable: true }
+        stomaPossibility: { type: boolean, nullable: true }
+        stomaPossibilityNotes: { type: string, nullable: true }
+        implantPossibility: { type: boolean, nullable: true }
+        implantPossibilityNotes: { type: string, nullable: true }
+        rehabilitationExpectation: { type: string, nullable: true }
+        financialAccessImplications: { type: string, nullable: true }
+        patientPreference: { type: string, nullable: true }
+        finalDecision:
+          allOf:
+            - $ref: '#/components/schemas/FinalDecision'
+          nullable: true
+        decidedBy: { type: string, nullable: true }
+        decidedAt: { type: string, format: date-time, nullable: true }
+
+    # ── Prehabilitation (SB-1) ──────────────────────────────────────────────────
+    PrehabItemRequest:
+      type: object
+      required: [domain]
+      properties:
+        domain:
+          allOf:
+            - $ref: '#/components/schemas/PrehabDomain'
+          description: |
+            The upsert key together with the episode — one row per optimisation
+            workstream.
+        status: { $ref: '#/components/schemas/PrehabStatus' }
+        target:
+          type: string
+          description: What the optimisation is aiming at, in this patient's terms.
+        notes: { type: string }
+        registryRef:
+          type: string
+          description: |
+            Reference into the registry that owns the underlying clinical fact — e.g.
+            `pct_social_history` for smoking status. The fact is never copied here.
+    PrehabItem:
+      type: object
+      required: [id, surgicalEpisodeId, domain]
+      properties:
+        id: { type: string, format: uuid }
+        surgicalEpisodeId: { type: string, format: uuid }
+        domain: { $ref: '#/components/schemas/PrehabDomain' }
+        status:
+          allOf:
+            - $ref: '#/components/schemas/PrehabStatus'
+          nullable: true
+          description: Null until a status is first supplied.
+        target: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        registryRef: { type: string, nullable: true }
+        plannedBy:
+          type: string
+          description: |
+            The actor who first created the row, stamped once and not updated on
+            later refinements.
+
+    # ── Complication pathways (SB-1) ────────────────────────────────────────────
+    ComplicationRecogniseRequest:
+      type: object
+      required: [complicationType]
+      properties:
+        complicationType: { $ref: '#/components/schemas/ComplicationType' }
+    ComplicationGradeRequest:
+      type: object
+      required: [gradeCode]
+      properties:
+        gradeCode: { $ref: '#/components/schemas/ClavienDindoGradeCode' }
+    ComplicationUpdateRequest:
+      type: object
+      properties:
+        ownedBy:
+          type: string
+          description: |
+            The owning team or clinician. Closure is refused without it — a
+            complication nobody owns is one nobody is following up.
+        investigation: { type: string }
+        treatment:
+          type: string
+          description: Free text. "Observation only" is a legitimate treatment.
+    ComplicationDiscloseRequest:
+      type: object
+      properties:
+        disclosureNotes:
+          type: string
+          description: |
+            Optional. The disclosure itself is recorded by the act of calling this
+            route, which stamps the discloser and the time.
+    ComplicationCloseRequest:
+      type: object
+      required: [outcome]
+      properties:
+        outcome:
+          type: string
+          description: |
+            Mandatory and non-blank. Also the text carried into the PCT contribution
+            alongside the type and grade.
+    ComplicationPathway:
+      type: object
+      required: [id, surgicalEpisodeId, complicationType, recognisedBy, recognisedAt, status]
+      properties:
+        id: { type: string, format: uuid }
+        surgicalEpisodeId: { type: string, format: uuid }
+        complicationType: { $ref: '#/components/schemas/ComplicationType' }
+        recognisedBy: { type: string }
+        recognisedAt: { type: string, format: date-time }
+        gradeCode:
+          allOf:
+            - $ref: '#/components/schemas/ClavienDindoGradeCode'
+          nullable: true
+        gradedBy: { type: string, nullable: true }
+        ownedBy: { type: string, nullable: true }
+        investigation: { type: string, nullable: true }
+        treatment: { type: string, nullable: true }
+        disclosedAt: { type: string, format: date-time, nullable: true }
+        disclosedBy: { type: string, nullable: true }
+        disclosureNotes: { type: string, nullable: true }
+        outcome: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/PathwayStatus' }
+        closedAt: { type: string, format: date-time, nullable: true }
+        closedBy: { type: string, nullable: true }
+        pctProblemRef:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            Set when the closed complication reached `pct_problems`. Null on a closed
+            pathway means the contribution has not succeeded yet, not that it was
+            skipped.
+
+    # ── Longitudinal objects (SB-2) ─────────────────────────────────────────────
+    LongitudinalObjectPlaceRequest:
+      type: object
+      required: [kind, site, indication]
+      properties:
+        kind: { $ref: '#/components/schemas/LongitudinalObjectKind' }
+        site:
+          type: string
+          description: Mandatory and non-blank.
+        indication:
+          type: string
+          description: |
+            Mandatory and non-blank. A drain nobody recorded a reason for is a drain
+            nobody knows when to remove.
+        operator:
+          type: string
+          description: Overrides the TrustContext actor as the placing operator.
+    LongitudinalObjectRemoveRequest:
+      type: object
+      description: Optional body — the removal itself is recorded either way.
+      properties:
+        removalReason: { type: string }
+    LongitudinalObjectReviseRequest:
+      type: object
+      description: |
+        Optional body. Site defaults to the old object's; indication defaults to
+        "Revision of <old id>"; kind is always inherited.
+      properties:
+        site: { type: string }
+        indication: { type: string }
+        operator: { type: string }
+        removalReason:
+          type: string
+          description: Recorded against the OLD object, which becomes REVISED.
+    LongitudinalObject:
+      type: object
+      required: [id, surgicalEpisodeId, kind, site, placedAt, indication, status]
+      properties:
+        id: { type: string, format: uuid }
+        surgicalEpisodeId: { type: string, format: uuid }
+        kind: { $ref: '#/components/schemas/LongitudinalObjectKind' }
+        site: { type: string }
+        placedAt: { type: string, format: date-time }
+        operator: { type: string }
+        indication: { type: string }
+        status: { $ref: '#/components/schemas/LongitudinalObjectStatus' }
+        removedAt: { type: string, format: date-time, nullable: true }
+        removedBy: { type: string, nullable: true }
+        removalReason: { type: string, nullable: true }
+        revisedToObjectId:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            On a REVISED object, the replacement it points forward to. The chain is
+            what makes a device's history readable rather than a set of unrelated rows.
+
+    # ── Follow-up (SB-2) ────────────────────────────────────────────────────────
+    FollowupRecordRequest:
+      type: object
+      description: All fields optional; only the keys present are applied.
+      properties:
+        restrictions: { type: string }
+        fitNoteNotes:
+          type: string
+          description: |
+            Supplying this also stamps `fitNoteIssuedAt` and `fitNoteIssuedBy` — the
+            note and its issuance are one act.
+        transportArranged: { type: boolean }
+        transportNotes: { type: string }
+        futureSurgeryIntent:
+          type: string
+          description: |
+            A staged or planned later operation. Recorded here so the intent survives
+            the discharge rather than living in somebody's memory.
+        surveillancePlanRef:
+          type: string
+          format: uuid
+          description: |
+            Reference into PCT's `pct_care_plans`, never a copy of the plan itself.
+    SurgicalFollowup:
+      type: object
+      required: [id, surgicalEpisodeId, transportArranged]
+      properties:
+        id: { type: string, format: uuid }
+        surgicalEpisodeId: { type: string, format: uuid }
+        restrictions: { type: string, nullable: true }
+        fitNoteNotes: { type: string, nullable: true }
+        fitNoteIssuedAt: { type: string, format: date-time, nullable: true }
+        fitNoteIssuedBy: { type: string, nullable: true }
+        transportArranged: { type: boolean }
+        transportNotes: { type: string, nullable: true }
+        futureSurgeryIntent: { type: string, nullable: true }
+        surveillancePlanRef: { type: string, format: uuid, nullable: true }
+        recordedBy: { type: string }
+        recordedAt: { type: string, format: date-time, nullable: true }
+
+    # ── Waiting-list revalidation (SB-2) ────────────────────────────────────────
+    WaitlistRevalidationRequest:
+      type: object
+      required: [stillClinicallyAppropriate]
+      properties:
+        stillClinicallyAppropriate:
+          type: boolean
+          description: |
+            Mandatory — an explicit yes or no, never assumed. A revalidation that does
+            not answer this question is a timestamp pretending to be a review.
+        notes: { type: string }
+        nextRevalidationDue:
+          type: string
+          format: date
+          description: When this episode should be revalidated again.
+    WaitlistRevalidation:
+      type: object
+      required: [id, surgicalEpisodeId, revalidatedAt, revalidatedBy, stillClinicallyAppropriate]
+      properties:
+        id: { type: string, format: uuid }
+        surgicalEpisodeId: { type: string, format: uuid }
+        revalidatedAt: { type: string, format: date-time }
+        revalidatedBy: { type: string }
+        stillClinicallyAppropriate: { type: boolean }
+        notes: { type: string, nullable: true }
+        nextRevalidationDue: { type: string, format: date, nullable: true }
+
+    # ── Specialty content (SB-2/SB-4) ───────────────────────────────────────────
+    SpecialtyIndication:
+      type: object
+      required: [specialty, indicationCode, conditionDisplay, contentMaturity, approvingAuthority]
+      properties:
+        specialty: { $ref: '#/components/schemas/SurgicalSpecialty' }
+        indicationCode: { type: string }
+        conditionDisplay: { type: string }
+        typicalProcedure: { type: string, nullable: true }
+        urgencyGuidance: { type: string, nullable: true }
+        nonOperativeAlternatives:
+          type: string
+          nullable: true
+          description: |
+            Present on the content itself, so the alternatives are available at the
+            point the decision is being made rather than recalled afterwards.
+        notes: { type: string, nullable: true }
+        contentMaturity: { $ref: '#/components/schemas/ContentMaturity' }
+        approvingAuthority:
+          type: string
+          description: |
+            Defaults to `PENDING_MOHCC_RATIFICATION`. The Ministry is the clinical
+            authority; unratified content says so rather than appearing approved.
+    OperativeTemplate:
+      type: object
+      required: [specialty, templateCode, templateName, contentMaturity, approvingAuthority]
+      properties:
+        specialty: { $ref: '#/components/schemas/SurgicalSpecialty' }
+        templateCode: { type: string }
+        templateName: { type: string }
+        typicalProcedure: { type: string, nullable: true }
+        position: { type: string, nullable: true }
+        preparation: { type: string, nullable: true }
+        incision: { type: string, nullable: true }
+        keySteps: { type: string, nullable: true }
+        techniqueOptions: { type: string, nullable: true }
+        closurePlan: { type: string, nullable: true }
+        woundClassification:
+          allOf:
+            - $ref: '#/components/schemas/WoundClassification'
+          nullable: true
+        postopInstructions: { type: string, nullable: true }
+        contentMaturity: { $ref: '#/components/schemas/ContentMaturity' }
+        approvingAuthority: { type: string }
+
+    # ── Analytics indicators (§23) ──────────────────────────────────────────────
+    IndicatorSummary:
+      type: object
+      required: [total, computed, partial, notYetInstrumented, indicators]
+      properties:
+        total: { type: integer }
+        computed: { type: integer }
+        partial: { type: integer }
+        notYetInstrumented:
+          type: integer
+          description: |
+            Reported alongside the others so a consumer can state its own coverage
+            instead of presenting an incomplete indicator set as a complete one.
+        indicators:
+          type: array
+          description: In display order.
+          items: { $ref: '#/components/schemas/IndicatorView' }
+    IndicatorView:
+      type: object
+      required: [indicatorCode, indicatorName, computationStatus, delegatedOutOfScope]
+      properties:
+        indicatorCode: { type: string }
+        indicatorName: { type: string }
+        numeratorDescription: { type: string, nullable: true }
+        denominatorDescription: { type: string, nullable: true }
+        computationStatus: { $ref: '#/components/schemas/ComputationStatus' }
+        executableVia:
+          type: string
+          nullable: true
+          description: |
+            Where the number actually comes from — normally reporting-service's
+            `rpt_theatre_case_metric` projection. Non-null whenever
+            `computationStatus` is COMPUTED, by constraint.
+        gapReason:
+          type: string
+          nullable: true
+          description: |
+            Why there is no number yet. Non-null on every non-COMPUTED indicator, by
+            constraint.
+        owningService: { type: string, nullable: true }
+        delegatedOutOfScope:
+          type: boolean
+          description: |
+            Whether the indicator belongs to another service's scope. Recorded rather
+            than dropped, so the catalogue stays a complete list of what §23 asks for.
+        lancetCoreIndicator:
+          type: string
+          nullable: true
+          description: |
+            The Lancet Commission on Global Surgery core indicator this maps to, where
+            one applies. Note this occupies the field position that
+            procedures-service's equivalent view uses for `sourceCitation` — the two
+            catalogues are separate and their last field differs.
+

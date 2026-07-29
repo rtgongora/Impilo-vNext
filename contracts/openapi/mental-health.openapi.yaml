@@ -1,0 +1,940 @@
+# =============================================================================
+# Mental Health — psychiatric emergency acceptance, involuntary care & restraint
+# reduction (OpenAPI 3.0)
+#
+# Sovereign: mental-health-service (port 8397, clinical plane). Internal API uses
+# TSHEPO TrustContext and returns ApiResponse envelopes. Routes, field names,
+# enumerations and required-ness below are derived from the live handlers in
+# api/controller/{Referral,ClinicalRecord,Safety}Controller and the validation in
+# core/{Referral,ClinicalRecord,InvoluntaryEpisode,RestraintEvent,AdmissionRequest}Service.
+#
+# Two conventions that apply to every operation here, so they are not repeated:
+#
+#   1. Actor fields (requestedBy, acceptedBy, assessedBy, authorisedBy, initiatedBy,
+#      reviewedBy, createdBy, formulatedBy, scheduledBy) are OPTIONAL in the body.
+#      Omit them and the handler substitutes the TrustContext actor. The service
+#      layer requires a value; the fallback is what satisfies it. Sending one
+#      overrides the actor, which is why they are accepted at all.
+#   2. Every body field is accepted in camelCase or snake_case (ReferralController.str
+#      takes an alias list). The camelCase spelling is canonical and is what is
+#      documented; responses are always snake_case, because the row mappers build
+#      them that way.
+#
+# No PII: subjects are referenced by CPID, per doctrine.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Mental Health Service API
+  version: "1.0.0"
+  description: |
+    The accepting side of a psychiatric emergency handover, and the record chain that
+    follows it: assessment, risk formulation, safety plan and follow-up; involuntary
+    episodes with a named legal basis; a restraint-reduction register; and admission
+    requests raised into PCT.
+
+    Two doctrinal constraints are visible in the API shape and should survive any
+    change to it. Restraint events cannot be recorded without stating what
+    de-escalation was attempted first — a restraint-reduction register that only
+    records restraint is not one. And this service raises admission requests but never
+    decides them: PCT owns admission, and acknowledgement carries PCT's own id back.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8397
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Referrals
+    description: Intake, triage and disposition of psychiatric emergency referrals
+  - name: Clinical-Record
+    description: Assessment, risk formulation, safety plan and follow-up
+  - name: Involuntary-Care
+    description: Involuntary episodes and their legal basis
+  - name: Restraint-Reduction
+    description: Restraint register, review and outstanding-review queue
+  - name: Admission-Requests
+    description: Admission requests raised into PCT (raised here, decided there)
+
+paths:
+  /internal/v1/mental-health/referrals:
+    post:
+      operationId: mentalHealthReferralIntake
+      tags: [Referrals]
+      summary: Accept a psychiatric emergency handover as a referral
+      description: |
+        Idempotent on `handoverId`: a redelivered request returns the existing referral
+        rather than creating a duplicate, and still answers 201.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReferralIntakeRequest' }
+      responses:
+        '201':
+          description: Referral created, or the existing referral for this handover
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: mentalHealthReferralList
+      tags: [Referrals]
+      summary: List referrals by status
+      parameters:
+        - name: status
+          in: query
+          description: Referral status to filter by.
+          schema: { $ref: '#/components/schemas/ReferralStatus' }
+      responses:
+        '200':
+          description: Referrals in the requested status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralListResponse' }
+
+  /internal/v1/mental-health/referrals/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ReferralId'
+    get:
+      operationId: mentalHealthReferralGet
+      tags: [Referrals]
+      summary: Get a single referral
+      responses:
+        '200':
+          description: The referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralResponse' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/mental-health/referrals/{id}/accept:
+    parameters:
+      - $ref: '#/components/parameters/ReferralId'
+    post:
+      operationId: mentalHealthReferralAccept
+      tags: [Referrals]
+      summary: Accept a pending referral
+      description: Only a PENDING referral can be accepted; any other status is a 400.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReferralAcceptRequest' }
+      responses:
+        '200':
+          description: The accepted referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/mental-health/referrals/{id}/decline:
+    parameters:
+      - $ref: '#/components/parameters/ReferralId'
+    post:
+      operationId: mentalHealthReferralDecline
+      tags: [Referrals]
+      summary: Decline a pending referral, with a reason
+      description: |
+        Only a PENDING referral can be declined, and a reason is mandatory — a declined
+        psychiatric emergency handover with no stated reason is not an auditable decision.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReferralDeclineRequest' }
+      responses:
+        '200':
+          description: The declined referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/mental-health/referrals/{referralId}/assessments:
+    parameters:
+      - $ref: '#/components/parameters/ReferralIdPath'
+    post:
+      operationId: mentalHealthAssessmentRecord
+      tags: [Clinical-Record]
+      summary: Record a mental-state assessment against a referral
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssessmentRecordRequest' }
+      responses:
+        '201':
+          description: The recorded assessment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssessmentResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: mentalHealthAssessmentList
+      tags: [Clinical-Record]
+      summary: List assessments recorded against a referral
+      responses:
+        '200':
+          description: Assessments for the referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssessmentListResponse' }
+
+  /internal/v1/mental-health/assessments/{assessmentId}/risk-formulation:
+    parameters:
+      - name: assessmentId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      operationId: mentalHealthRiskFormulationRecord
+      tags: [Clinical-Record]
+      summary: Record a risk formulation against an assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RiskFormulationRecordRequest' }
+      responses:
+        '201':
+          description: The recorded risk formulation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RiskFormulationResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: mentalHealthRiskFormulationList
+      tags: [Clinical-Record]
+      summary: List risk formulations for an assessment
+      responses:
+        '200':
+          description: Risk formulations for the assessment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RiskFormulationListResponse' }
+
+  /internal/v1/mental-health/referrals/{referralId}/safety-plans:
+    parameters:
+      - $ref: '#/components/parameters/ReferralIdPath'
+    post:
+      operationId: mentalHealthSafetyPlanRecord
+      tags: [Clinical-Record]
+      summary: Record a safety plan against a referral
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SafetyPlanRecordRequest' }
+      responses:
+        '201':
+          description: The recorded safety plan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SafetyPlanResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: mentalHealthSafetyPlanList
+      tags: [Clinical-Record]
+      summary: List safety plans for a referral
+      responses:
+        '200':
+          description: Safety plans for the referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SafetyPlanListResponse' }
+
+  /internal/v1/mental-health/referrals/{referralId}/followups:
+    parameters:
+      - $ref: '#/components/parameters/ReferralIdPath'
+    post:
+      operationId: mentalHealthFollowupSchedule
+      tags: [Clinical-Record]
+      summary: Schedule a follow-up against a referral
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FollowupScheduleRequest' }
+      responses:
+        '201':
+          description: The scheduled follow-up
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FollowupResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: mentalHealthFollowupList
+      tags: [Clinical-Record]
+      summary: List follow-ups for a referral
+      responses:
+        '200':
+          description: Follow-ups for the referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FollowupListResponse' }
+
+  /internal/v1/mental-health/followups/{id}/complete:
+    parameters:
+      - $ref: '#/components/parameters/ResourceId'
+    post:
+      operationId: mentalHealthFollowupComplete
+      tags: [Clinical-Record]
+      summary: Mark a follow-up complete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FollowupCompleteRequest' }
+      responses:
+        '200':
+          description: The completed follow-up
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FollowupResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/mental-health/referrals/{referralId}/involuntary-episodes:
+    parameters:
+      - $ref: '#/components/parameters/ReferralIdPath'
+    post:
+      operationId: mentalHealthInvoluntaryEpisodeOpen
+      tags: [Involuntary-Care]
+      summary: Open an involuntary episode under a named legal basis
+      description: |
+        `legalBasis` must name the actual legal instrument or section. A referral can hold
+        only one open episode at a time; a second attempt is a 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InvoluntaryEpisodeOpenRequest' }
+      responses:
+        '201':
+          description: The opened involuntary episode
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoluntaryEpisodeResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409':
+          description: An involuntary episode is already open for this referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    get:
+      operationId: mentalHealthInvoluntaryEpisodeHistory
+      tags: [Involuntary-Care]
+      summary: Involuntary-episode history for a referral
+      responses:
+        '200':
+          description: Involuntary episodes for the referral, open and closed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoluntaryEpisodeListResponse' }
+
+  /internal/v1/mental-health/involuntary-episodes/{id}/close:
+    parameters:
+      - $ref: '#/components/parameters/ResourceId'
+    post:
+      operationId: mentalHealthInvoluntaryEpisodeClose
+      tags: [Involuntary-Care]
+      summary: Close an open involuntary episode
+      description: Only an OPEN episode can be closed, and `endedReason` is mandatory.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InvoluntaryEpisodeCloseRequest' }
+      responses:
+        '200':
+          description: The closed involuntary episode
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoluntaryEpisodeResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/mental-health/referrals/{referralId}/restraint-events:
+    parameters:
+      - $ref: '#/components/parameters/ReferralIdPath'
+    post:
+      operationId: mentalHealthRestraintEventRecord
+      tags: [Restraint-Reduction]
+      summary: Record a restraint event
+      description: |
+        `deEscalationAttempted` is mandatory: this is a restraint-reduction register, so it
+        records what was tried before restraint, never just that restraint was used.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RestraintEventRecordRequest' }
+      responses:
+        '201':
+          description: The recorded restraint event
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RestraintEventResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: mentalHealthRestraintEventHistory
+      tags: [Restraint-Reduction]
+      summary: Restraint-event history for a referral
+      responses:
+        '200':
+          description: Restraint events for the referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RestraintEventListResponse' }
+
+  /internal/v1/mental-health/restraint-events/{id}/end:
+    parameters:
+      - $ref: '#/components/parameters/ResourceId'
+    post:
+      operationId: mentalHealthRestraintEventEnd
+      tags: [Restraint-Reduction]
+      summary: Record the end of an ongoing restraint event
+      description: Takes no body — the handler stamps the end time itself.
+      responses:
+        '200':
+          description: The ended restraint event
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RestraintEventResponse' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/mental-health/restraint-events/{id}/review:
+    parameters:
+      - $ref: '#/components/parameters/ResourceId'
+    post:
+      operationId: mentalHealthRestraintEventReview
+      tags: [Restraint-Reduction]
+      summary: Review a restraint event
+      description: A restraint event can be reviewed once; a second attempt is a 400.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RestraintEventReviewRequest' }
+      responses:
+        '200':
+          description: The reviewed restraint event
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RestraintEventResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/mental-health/restraint-events/unreviewed:
+    get:
+      operationId: mentalHealthRestraintEventUnreviewed
+      tags: [Restraint-Reduction]
+      summary: Restraint events still awaiting review, across the tenant
+      description: |
+        The outstanding-review queue. This is the operational surface that makes the
+        register a reduction instrument rather than a log.
+      responses:
+        '200':
+          description: Restraint events with no review recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RestraintEventListResponse' }
+
+  /internal/v1/mental-health/referrals/{referralId}/admission-requests:
+    parameters:
+      - $ref: '#/components/parameters/ReferralIdPath'
+    post:
+      operationId: mentalHealthAdmissionRequestRaise
+      tags: [Admission-Requests]
+      summary: Raise an admission request into PCT
+      description: |
+        Raises, never decides. The request lands as RAISED and stays there until PCT
+        acknowledges it with its own admission id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdmissionRequestRaiseRequest' }
+      responses:
+        '201':
+          description: The raised admission request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdmissionRequestResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: mentalHealthAdmissionRequestHistory
+      tags: [Admission-Requests]
+      summary: Admission-request history for a referral
+      responses:
+        '200':
+          description: Admission requests for the referral
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdmissionRequestListResponse' }
+
+  /internal/v1/mental-health/admission-requests/{id}/acknowledge:
+    parameters:
+      - $ref: '#/components/parameters/ResourceId'
+    post:
+      operationId: mentalHealthAdmissionRequestAcknowledge
+      tags: [Admission-Requests]
+      summary: Acknowledge an admission request with PCT's admission id
+      description: |
+        `pctAdmissionId` is mandatory: an acknowledgement that cannot be traced to the
+        admission PCT actually created is not an acknowledgement.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdmissionRequestAcknowledgeRequest' }
+      responses:
+        '200':
+          description: The acknowledged admission request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdmissionRequestResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ReferralId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ReferralIdPath:
+      name: referralId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Error:
+      description: Error envelope
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    # ── Envelope ────────────────────────────────────────────────────────────────
+    # Shape of zw.gov.mohcc.impilo.shared.response.ApiResponse: success/data/error/
+    # correlationId/timestamp, serialised NON_NULL — so `error` is absent on success
+    # and `data` absent on failure.
+    EnvelopeFields:
+      type: object
+      required: [success, correlationId, timestamp]
+      properties:
+        success: { type: boolean }
+        correlationId: { type: string }
+        timestamp: { type: string, format: date-time }
+    ErrorEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            error:
+              type: object
+              properties:
+                code: { type: string }
+                message: { type: string }
+                status: { type: integer }
+
+    ReferralResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Referral' }
+    ReferralListResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Referral' }
+    AssessmentResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Assessment' }
+    AssessmentListResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Assessment' }
+    RiskFormulationResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/RiskFormulation' }
+    RiskFormulationListResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/RiskFormulation' }
+    SafetyPlanResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/SafetyPlan' }
+    SafetyPlanListResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/SafetyPlan' }
+    FollowupResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Followup' }
+    FollowupListResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Followup' }
+    InvoluntaryEpisodeResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/InvoluntaryEpisode' }
+    InvoluntaryEpisodeListResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/InvoluntaryEpisode' }
+    RestraintEventResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/RestraintEvent' }
+    RestraintEventListResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/RestraintEvent' }
+    AdmissionRequestResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/AdmissionRequest' }
+    AdmissionRequestListResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeFields'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/AdmissionRequest' }
+
+    # ── Enumerations (from the service-layer allowlists) ────────────────────────
+    ReferralStatus:
+      type: string
+      enum: [PENDING, ACCEPTED, DECLINED]
+      default: PENDING
+    AssessmentType:
+      type: string
+      enum: [INITIAL, REVIEW, DISCHARGE]
+    CapacityOutcome:
+      type: string
+      enum: [HAS_CAPACITY, LACKS_CAPACITY, FLUCTUATING]
+    RiskLevel:
+      type: string
+      enum: [LOW, MODERATE, HIGH]
+    FollowupType:
+      type: string
+      enum: [CLINIC_REVIEW, HOME_VISIT, PHONE_CHECK, COMMUNITY_TEAM]
+    RestraintType:
+      type: string
+      enum: [PHYSICAL, MECHANICAL, CHEMICAL, SECLUSION]
+
+    # ── Requests ────────────────────────────────────────────────────────────────
+    ReferralIntakeRequest:
+      type: object
+      required: [episodeId, handoverId]
+      properties:
+        episodeId:
+          type: string
+          format: uuid
+          description: The emergency episode this handover came from.
+        handoverId:
+          type: string
+          format: uuid
+          description: Handover identity, and the idempotency key for intake.
+        facilityId:
+          type: string
+          format: uuid
+          description: Accepting facility. Defaults to the TrustContext facility.
+        subjectCpid:
+          type: string
+          description: Subject reference. CPID only — no PII in this record.
+        requestReason: { type: string }
+        requestedBy: { type: string }
+    ReferralAcceptRequest:
+      type: object
+      properties:
+        acceptedBy: { type: string }
+    ReferralDeclineRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          description: |
+            Mandatory. Also accepted as `declineReason`/`decline_reason`.
+        declinedBy: { type: string }
+    AssessmentRecordRequest:
+      type: object
+      properties:
+        assessmentType: { $ref: '#/components/schemas/AssessmentType' }
+        mentalStateExam: { type: string }
+        capacityAssessed:
+          type: boolean
+          default: false
+          description: |
+            When true, `capacityOutcome` is required. When false or absent,
+            `capacityOutcome` must be absent — a capacity outcome without an
+            assessment behind it is rejected rather than stored.
+        capacityOutcome: { $ref: '#/components/schemas/CapacityOutcome' }
+        assessedBy: { type: string }
+        notes: { type: string }
+    RiskFormulationRecordRequest:
+      type: object
+      required: [riskToSelf, riskToOthers, riskSummary]
+      properties:
+        riskToSelf: { $ref: '#/components/schemas/RiskLevel' }
+        riskToOthers: { $ref: '#/components/schemas/RiskLevel' }
+        riskSummary: { type: string }
+        formulatedBy: { type: string }
+    SafetyPlanRecordRequest:
+      type: object
+      properties:
+        warningSigns: { type: string }
+        copingStrategies: { type: string }
+        supportContacts: { type: string }
+        meansRestrictionNotes: { type: string }
+        createdBy: { type: string }
+    FollowupScheduleRequest:
+      type: object
+      required: [scheduledAt]
+      properties:
+        scheduledAt: { type: string, format: date-time }
+        followupType: { $ref: '#/components/schemas/FollowupType' }
+        scheduledBy: { type: string }
+    FollowupCompleteRequest:
+      type: object
+      properties:
+        outcomeNotes: { type: string }
+    InvoluntaryEpisodeOpenRequest:
+      type: object
+      required: [legalBasis]
+      properties:
+        legalBasis:
+          type: string
+          description: The actual legal instrument or section relied on.
+        authorisedBy: { type: string }
+        reviewDueAt:
+          type: string
+          format: date-time
+          description: When the episode must next be reviewed.
+    InvoluntaryEpisodeCloseRequest:
+      type: object
+      required: [endedReason]
+      properties:
+        endedReason: { type: string }
+    RestraintEventRecordRequest:
+      type: object
+      required: [restraintType, reason, deEscalationAttempted]
+      properties:
+        restraintType: { $ref: '#/components/schemas/RestraintType' }
+        reason: { type: string }
+        deEscalationAttempted:
+          type: string
+          description: What was attempted before restraint. Mandatory, and free text
+            rather than a flag, because "tried talking first" is not an audit trail.
+        initiatedBy: { type: string }
+    RestraintEventReviewRequest:
+      type: object
+      required: [reviewOutcome]
+      properties:
+        reviewOutcome: { type: string }
+        reviewedBy: { type: string }
+    AdmissionRequestRaiseRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string }
+        targetFacilityId:
+          type: string
+          format: uuid
+          description: Preferred receiving facility, if one is named.
+        requestedBy: { type: string }
+    AdmissionRequestAcknowledgeRequest:
+      type: object
+      required: [pctAdmissionId]
+      properties:
+        pctAdmissionId:
+          type: string
+          description: PCT's own admission identifier for the resulting admission.
+
+    # ── Resources (exactly the row mappers in the controllers) ──────────────────
+    Referral:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        facility_id: { type: string, format: uuid }
+        episode_id: { type: string, format: uuid }
+        handover_id: { type: string, format: uuid }
+        subject_cpid: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/ReferralStatus' }
+        request_reason: { type: string, nullable: true }
+        requested_by: { type: string }
+        requested_at: { type: string, format: date-time, nullable: true }
+        reviewed_by: { type: string, nullable: true }
+        reviewed_at: { type: string, format: date-time, nullable: true }
+        decline_reason: { type: string, nullable: true }
+    Assessment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        referral_id: { type: string, format: uuid }
+        assessment_type: { type: string, nullable: true }
+        mental_state_exam: { type: string, nullable: true }
+        capacity_assessed: { type: boolean }
+        capacity_outcome: { type: string, nullable: true }
+        assessed_by: { type: string }
+        assessed_at: { type: string, format: date-time, nullable: true }
+        notes: { type: string, nullable: true }
+    RiskFormulation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        assessment_id: { type: string, format: uuid }
+        risk_to_self: { $ref: '#/components/schemas/RiskLevel' }
+        risk_to_others: { $ref: '#/components/schemas/RiskLevel' }
+        risk_summary: { type: string }
+        formulated_by: { type: string }
+        formulated_at: { type: string, format: date-time, nullable: true }
+    SafetyPlan:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        referral_id: { type: string, format: uuid }
+        warning_signs: { type: string, nullable: true }
+        coping_strategies: { type: string, nullable: true }
+        support_contacts: { type: string, nullable: true }
+        means_restriction_notes: { type: string, nullable: true }
+        created_by: { type: string }
+        created_at: { type: string, format: date-time, nullable: true }
+    Followup:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        referral_id: { type: string, format: uuid }
+        followup_type: { type: string, nullable: true }
+        scheduled_at: { type: string, format: date-time, nullable: true }
+        scheduled_by: { type: string }
+        completed_at: { type: string, format: date-time, nullable: true }
+        outcome_notes: { type: string, nullable: true }
+    InvoluntaryEpisode:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        referral_id: { type: string, format: uuid }
+        legal_basis: { type: string }
+        authorised_by: { type: string }
+        authorised_at: { type: string, format: date-time, nullable: true }
+        review_due_at: { type: string, format: date-time, nullable: true }
+        status:
+          type: string
+          enum: [OPEN, CLOSED]
+        ended_at: { type: string, format: date-time, nullable: true }
+        ended_reason: { type: string, nullable: true }
+    RestraintEvent:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        referral_id: { type: string, format: uuid }
+        restraint_type: { $ref: '#/components/schemas/RestraintType' }
+        reason: { type: string }
+        de_escalation_attempted: { type: string }
+        initiated_by: { type: string }
+        initiated_at: { type: string, format: date-time, nullable: true }
+        ended_at: { type: string, format: date-time, nullable: true }
+        reviewed_by: { type: string, nullable: true }
+        reviewed_at: { type: string, format: date-time, nullable: true }
+        review_outcome: { type: string, nullable: true }
+    AdmissionRequest:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        referral_id: { type: string, format: uuid }
+        reason: { type: string }
+        requested_by: { type: string }
+        requested_at: { type: string, format: date-time, nullable: true }
+        target_facility_id: { type: string, format: uuid, nullable: true }
+        status:
+          type: string
+          enum: [RAISED, ACKNOWLEDGED]
+        pct_admission_id: { type: string, nullable: true }
