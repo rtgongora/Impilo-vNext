@@ -128,7 +128,12 @@ def main() -> None:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
 
     md = [
-        "# Full Helm Deployability Matrix",
+        "# Full-Boot Required Helm Readiness",
+        "",
+        "Chart readiness for the services full boot actually requires. The whole-estate view — every",
+        "registered service and whether it has a chart at all — is FULL_HELM_DEPLOYABILITY_MATRIX.md,",
+        "written by generate-full-boot-artifacts.mjs. Both once wrote that one path, so whichever ran",
+        "last in the pipeline replaced the other's report with an incompatible table.",
         "",
         f"Generated: {datetime.now(timezone.utc).isoformat()}",
         "",
@@ -155,7 +160,7 @@ def main() -> None:
             f"| {r['id']} | {r['plane']} | {r['port'] or '—'} | {r['deploy_order']} | {r['image'] or '—'} | {r['status']} | {r['note']} |"
         )
     md.append("")
-    (ROOT / "docs/environment/FULL_HELM_DEPLOYABILITY_MATRIX.md").write_text("\n".join(md))
+    (ROOT / "docs/environment/FULL_BOOT_REQUIRED_HELM_READINESS.md").write_text("\n".join(md))
 
     infra_deps = [
         ("postgres", "postgres:16-alpine", "postgres.yaml", "postgres", "5432", "pg_isready", 1),
