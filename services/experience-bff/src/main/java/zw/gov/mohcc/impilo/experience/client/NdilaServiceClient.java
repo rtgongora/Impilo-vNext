@@ -86,6 +86,15 @@ public class NdilaServiceClient {
         return new org.springframework.http.HttpEntity<>(headers);
     }
 
+    /** {@link #anonymousSafeEntity()} with a JSON body, for public-lane POSTs. */
+    private org.springframework.http.HttpEntity<Object> anonymousSafeEntity(Object body) {
+        org.springframework.http.HttpHeaders headers = anonymousSafeEntity().getHeaders();
+        org.springframework.http.HttpHeaders withBody = new org.springframework.http.HttpHeaders();
+        withBody.putAll(headers);
+        withBody.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        return new org.springframework.http.HttpEntity<>(body, withBody);
+    }
+
     public JsonNode nearbyAssets(Map<String, Object> body) {
         String url = baseUrl + "/api/v1/ndila/tracking/assets/nearby";
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
@@ -144,7 +153,14 @@ public class NdilaServiceClient {
         body.put("origins", java.util.List.of(origin));
         body.put("destinations", destinations);
         body.put("mode", "DRIVING");
-        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+        // Service-originated trust headers, not a bare body. The only caller is the ANONYMOUS
+        // public find-care lane, whose trust headers are stripped at the edge — so no actor is
+        // forwarded, and ndila's Tshepo guard denies this INTERNAL operation with
+        // UNAUTHENTICATED_ACTOR. That denial arrives as HTTP 200 + success:false, so the caller
+        // reads it as "no route" and degrades to straight-line distance with a null ETA. A bearer
+        // token does not satisfy the guard: it reads the actor headers, never the JWT, which is why
+        // giving this call a valid service token did not restore ETAs on its own.
+        return restTemplate.postForEntity(url, anonymousSafeEntity(body), JsonNode.class).getBody();
     }
 
     // ── Catchment resolution (R6/G4) — ndila is the geography SoR ─────────────
