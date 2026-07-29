@@ -102,6 +102,10 @@ export const INTERNAL_ONLY_PATTERNS = [
   /^inventory-elmis-adapter$/,
   /^pharmacy-elmis-adapter$/,
   /^pacs-adapter-service$/,
+  // Biometric compute engine behind abis-service: /v1/engine/{extract,verify,identify} is called
+  // only by BmeClientMatchingEngine, and the UI reaches biometrics through abis-service. It has no
+  // BFF surface or frontend by design, the same as the adapters and engines above.
+  /^matcher-engine$/,
   /^wellness-service$/, // deprecated, migrated to simba
 ];
 
