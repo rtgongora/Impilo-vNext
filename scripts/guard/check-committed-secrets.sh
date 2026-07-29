@@ -28,11 +28,17 @@ PATTERN='[A-Za-z0-9_.:/-]*([Cc]hange[_-][Mm]e|CHANGE_ME)[A-Za-z0-9_-]*'
 
 # Emit "path<TAB>token" for every placeholder/secret hit in the tracked,
 # non-generated-doc scope. Kept in one function so baseline and check never drift.
+#
+# The secret-scanning tooling itself is excluded BY NAME, not by directory. gitleaks-diff-scan.sh
+# only mentions the token in a comment describing the convention it detects, and the guard was
+# reporting that as a committed secret — a scan-scope bug, so it belongs here rather than in the
+# baseline, where it would have looked like accepted debt. Excluding all of scripts/guard/ would be
+# the wrong fix: a real secret pasted into any other guard script must still be caught.
 scan() {
   git ls-files -z --cached --others --exclude-standard \
     | grep -zvE '(^|/)(node_modules|target|dist|build|reports|\.git)/' \
     | grep -zvE '\.(md|example)$|example\.env$|\.example\.' \
-    | grep -zvE '^scripts/guard/(committed-secrets-baseline\.txt|check-committed-secrets\.sh)$' \
+    | grep -zvE '^scripts/guard/(committed-secrets-baseline\.txt|check-committed-secrets\.sh|gitleaks-diff-scan\.sh)$' \
     | grep -zvE '^\.gitleaks\.toml$' \
     | xargs -0 grep -HoIE "$PATTERN" 2>/dev/null \
     | sed -E 's/^([^:]+):(.*)$/\1\t\2/' \

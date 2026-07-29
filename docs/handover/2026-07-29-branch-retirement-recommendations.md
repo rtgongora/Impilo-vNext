@@ -247,6 +247,72 @@ outside the repository root died with `guard_assert_scanned: command not found`.
 went red for the wrong reason, which is how it was caught. Now verified from the repository root,
 from inside `scripts/guard`, and by absolute path.
 
+### F6 — Four dev cryptographic seeds silently apply in production, and the estate never provisioned them (ESCALATED — owner decision)
+
+This is the most serious finding in the pass, and it is why the secrets guard red was **not** treated
+as baseline drift. `scripts/guard/check-committed-secrets.sh` reported nine new entries and one
+stale. Triaged individually by reading each `@Value` default:
+
+**Silently applies — a real risk, deliberately NOT baselined (5 entries):**
+
+| Service / class | Property | Behaviour when unset |
+|---|---|---|
+| `vito-service` `crypto/ImpiloIdCipher` | `vito.identity.impilo-id-encryption-key` | Logs a warning, then encrypts Impilo IDs with the source-visible `DEV_KEY` |
+| `vito-service` `qr/QrSigningService` | `vito.qr.signing-key-seed` | Logs a warning, then **signs** QR codes with the source-visible `DEV_SEED` |
+| `vito-service` `card/CardAssertionVerifier` | `card-print.qr.public-key` | Logs a warning, then derives the **verify** key from the dev seed — so a card signed with the public dev seed is accepted as genuine |
+| `card-print-agent` `QrAssertionService` | `card-print.qr.signing-key-seed` | Logs a warning, then signs printed-card assertions with the dev seed |
+| `coverage-service` `EligibilityTokenService` | `ruvimbo.token.secret` | **Worst of the five.** The placeholder is the `@Value` default itself, with no length check and no warning at all. Eligibility tokens are HMAC'd with a secret anyone can read in the repository |
+
+A warning in a log is not failing closed. Nobody reads a startup warning on the hundredth restart.
+
+**The confirming evidence.** Searching `deploy/`, `infra/` and `compose/` for these properties finds
+**exactly one** provisioned: `WALLET_CARD_ENCRYPTION_MASTER_KEY`, in
+`deploy/helm/impilo-vnext/values-full-preview.yaml`. That is the one seed whose provider,
+`MasterKeyCardDataKeyProvider`, **throws** `IllegalStateException` when the value is missing, weak, or
+literally `change-me`.
+
+So the only seed that got provisioned is the only one that refused to start without it. The four that
+merely warn were never provisioned in any environment — which means the full-boot preview stack is
+today signing card QRs, verifying card assertions, encrypting Impilo IDs and minting Ruvimbo
+eligibility tokens with keys that are readable in this repository. That is the argument for failing
+closed, demonstrated rather than asserted.
+
+**Why they are not fixed in this pass.** Making them fail closed is the correct remediation, but it
+would stop those four services from starting in preview the moment it landed, because nothing
+provisions the values. That is a deploy-affecting change and needs provisioning via `secretKeyRef`
+(`docs/security/secrets-management-migration-plan.md`) authorised alongside it. Recommended sequence:
+
+1. Provision the four properties as sealed/external secrets in the preview and production values.
+2. Then change each of the four to fail closed, matching `MasterKeyCardDataKeyProvider`.
+3. Rotate anything already signed or encrypted with a dev seed — the current values are public.
+
+The guard therefore **stays red on these five**, which is the honest state. It runs in GitHub Actions
+(`.github/workflows/ci.yml:875`) and is not part of `run-change-safety-gates.sh` or
+`run-local-quality-gates.sh`, so this does not mask either local gate.
+
+**Fixed in this pass — scan-scope bug (1 entry).** `scripts/guard/gitleaks-diff-scan.sh` was reported
+as containing a committed secret. It does not: line 7 is a *comment* describing the
+`*-change-me-*` convention that the sibling scanner detects. The secrets guard was scanning its own
+tooling. Extended the self-exclusion at `check-committed-secrets.sh` to name that scanner, rather
+than adding a baseline row that would have looked like accepted debt. Excluded by filename, not by
+directory, so a real secret pasted into any other guard script is still caught.
+
+**Baselined — genuine non-secrets (3 entries), with reasons:**
+
+- `mushe-wallet-service` `MasterKeyCardDataKeyProvider.java` — the `change-me` literal here is the
+  value the constructor **rejects**. It is a rejection sentinel, not a key.
+- `mushe-wallet-service` `CardHealthDataCryptoTest.java` — test fixture.
+- `vito-service` `CardAssertionVerifierTest.java` — test fixture.
+
+**Pruned — one stale row:** `mushe-wallet-service` `CardHealthDataService.java`, whose occurrence a
+migration phase already removed. Edited by hand rather than by `--update-baseline`, because that flag
+rewrites the baseline from the current scan and would have silently blessed all five real findings —
+the blanket-baseline outcome this triage exists to avoid.
+
+**Mutation-proven.** With a planted `planted-violation-change-me-now` token, the guard reported six
+new entries instead of five and named the planted file, confirming it still discriminates a new
+violation while the five known findings stand. Probe removed.
+
 ### F3 — `services/oros-service/id_file` should not be tracked
 
 A stray build artefact containing a bare number, which produced a content conflict during merge 8.
