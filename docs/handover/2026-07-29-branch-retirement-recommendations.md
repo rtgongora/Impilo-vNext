@@ -1,8 +1,9 @@
 # Branch retirement recommendations — 2026-07-29 canonical catch-up merge
 
 **Canonical branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
-**Canonical tip after this pass:** `98d4e52ab` (198 commits ahead of the pre-pass tip), with this
+**Canonical tip after this pass:** `b046d1a1a` (200 commits ahead of the pre-pass tip), with this
 document's own commit on top
+**Final pipeline verdict on that tip:** `PASS` — 27 of 27 phases, 0 failed, 0 advisory
 **Canonical tip before this pass:** `9e4599fe6`
 **Work branch used:** `coord/merge-catchup-20260729` in worktree `/opt/impilo/repos/wt-merge-catchup`
 
@@ -653,19 +654,23 @@ regressions from this pass. See **F8** for the recommendation on the base-ref sh
 
 `bash scripts/pipeline/run-local-quality-gates.sh`, full run on the merged tip:
 
+**`Verdict: PASS` — 27 passed, 0 failed, 0 advisory**, with `GUARD_UPSTREAM_REF` set to canonical per F8.
+
 | | Count | |
 |---|---|---|
-| Passed | 24 | includes Frontend checks, Backend checks, Product Truth audit gate, Phase 6 service completion, Mobile build checks, all six full-boot phases, Core transaction evidence |
-| Failed | 3 | Backend-to-frontend parity, Mobile parity, Change-safety gates — all three the F8 attribution artefact, see below |
+| Passed | 27 | every phase: both parity gates, Change-safety, Frontend, Backend, Product Truth, Phase 6, Core transaction evidence, all six full-boot phases, Mobile build checks |
+| Failed | 0 | |
 | Advisory | 0 | |
 
 The three contract reds are closed: Product Truth reports **violations=0 at the unchanged baseline of 0**
 with `Gaps: 0`, Phase 6 reports **104/104 complete**, and the phase6 golden-thread unit test passes with
 the rest of the frontend phase.
 
-The three that now read red are the same base-ref artefact as F8, and the proof is the same shape as
-before — re-run with the review window scoped to what this lane actually authored
-(`GUARD_BASE_REF=2929668c2`, the pushed canonical tip):
+Run **bare** on the same tip, the pipeline instead reports 24/3 — Backend-to-frontend parity, Mobile
+parity and Change-safety go red on the F8 attribution artefact. Recording both runs rather than only the
+green one, because the bare run is what anyone re-running this will get by default. The proof it is an
+artefact is the same shape as before: re-run with the review window scoped to what this lane actually
+authored (`GUARD_BASE_REF=2929668c2`, the pushed canonical tip):
 
 | Check | Bare run | Scoped to this lane's commits |
 |---|---|---|
