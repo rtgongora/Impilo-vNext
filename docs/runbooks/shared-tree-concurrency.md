@@ -152,6 +152,28 @@ the same command — the push added no new duplicate, but a known one was walked
 
 Never `&&` a guard into a push. A control you do not stop for is only a detector with extra steps.
 
+**Which changes the gates consider yours.** The base is the newest ancestor of `HEAD` that is already
+published on a remote branch other than your own branch's — so on a **merge** the commits canonical
+brought in are not charged to you, on a **fast-forward** nothing is, and on a **lane branch** every
+commit you authored is under review, not just the last one. Pushing your *own* branch does not make
+work published for this purpose: it is unreviewed until it reaches canonical.
+
+That rule replaced a plain `HEAD~1` on 2026-07-27, and the old one failed in *both* directions at
+once. On a lane that had deleted a service file and then merged 72 canonical commits, the gates named
+three of canonical's long-shipped files — a growth-engine consolidation, a landing surface, a mobile
+tool registry — and **did not name the lane's own deletion**, which sat in `HEAD~1`. That is how a
+guard gets muted: it fires on work that is not yours while missing the work that is.
+
+```bash
+GUARD_BASE_REF=<sha>       # review exactly this range (escape hatch; CI sets it)
+GUARD_UPSTREAM_REF=<ref>   # name the branch your lane is measured against
+```
+
+`scripts/guard/tests/base-ref-resolution-test.sh` asserts the rule over throwaway repositories and
+runs first inside the gate suite; the rule itself is written out in `scripts/guard/_guard-common.sh`.
+Guards run from a **worktree** now review that worktree — `REPO_PATH` no longer defaults to the main
+checkout — so a lane no longer gates somebody else's tree by accident.
+
 ## 5b. Landing on a fast-moving canonical
 
 Combining §3, §5 and §5a into one procedure, because landing your own branch on this shared branch
@@ -166,8 +188,7 @@ CANON=origin/claude/staging-ux-orchestration-remediation-Yypyl
 git fetch origin claude/staging-ux-orchestration-remediation-Yypyl
 git merge "$CANON" --no-edit                      # re-merge the LATEST tip, not the one you tested
 git merge-base --is-ancestor "$(git rev-parse $CANON)" HEAD || exit 1   # the ancestor LAW
-# scoped gate: diff only YOUR work, so the gate does not blame you for canonical's own commits
-GUARD_BASE_REF="$(git rev-parse $CANON)" bash scripts/guard/run-change-safety-gates.sh || exit 1
+bash scripts/guard/run-change-safety-gates.sh || exit 1     # already scoped to your work — see §5a
 ```
 
 Then two rules that make it terminate instead of looping forever:
@@ -187,13 +208,13 @@ Then two rules that make it terminate instead of looping forever:
    fi
    ```
 
-Why the scoped `GUARD_BASE_REF`: the gate's default base is `HEAD~1`, which on a **merge commit**
-diffs against your pre-merge tip and attributes *all* the merged canonical commits to you — it will
-flag other lanes' already-shipped work (a deleted service file, a new registry) as yours. Scoping the
-base to the canonical tip shows only your actual diff. If the *default* run blocks on files outside
-your diff, that is the base artifact, not your defect — but per §5a you still stop, confirm each hit
-is canonical's own shipped work (`git diff <canon>..HEAD -- <path>` empty), and get it cleared before
-pushing. Do not silently push past a blocked default gate on your own judgement.
+**The `GUARD_BASE_REF="$(git rev-parse $CANON)"` this step used to carry is no longer needed.** It
+existed because the gate's default base was `HEAD~1`, which on a merge commit attributed every merged
+canonical commit to you; §5a is now the default and computes the same scope by itself. Setting it by
+hand is harmless but redundant — and it is still the escape hatch if you ever need to pin a range.
+If a run blocks on a file outside your diff, treat that as a real hit, not a base artifact: confirm
+(`git diff "$CANON"..HEAD -- <path>` empty) and get it cleared before pushing. Do not silently push
+past a blocked gate on your own judgement.
 
 **A merge lands source, not a running fix.** If the regression you are closing is user-visible, the
 merge does not close it — the deployed image is still the pre-merge build until someone rebuilds and

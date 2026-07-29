@@ -20,7 +20,7 @@ fi
 guard_pass "no-stub guard (production path scan)"
 
 # Heuristic scan on NEW/changed production files only
-NEW_FILES=$(git diff --name-only "$BASE"...HEAD -- 'ui/one-ui-shell/src/' 2>/dev/null \
+NEW_FILES=$(git diff --name-only "$BASE" HEAD -- 'ui/one-ui-shell/src/' 2>/dev/null \
   | guard_filter '\.(tsx|ts)$' || true)
 
 while IFS= read -r f; do

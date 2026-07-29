@@ -36,7 +36,7 @@ bash scripts/guard/check-mobile-mocks-and-stubs.sh || { FAIL=1; PARITY_BLOCKING=
 bash scripts/guard/check-mobile-api-surfacing.sh || { FAIL=1; PARITY_BLOCKING=1; }
 
 # Mobile dependency sanity when mobile tree changed
-if git diff --name-only "$BASE"...HEAD -- 'apps/mobile/' 2>/dev/null | head -1 | grep -q .; then
+if git diff --name-only "$BASE" HEAD -- 'apps/mobile/' 2>/dev/null | head -1 | grep -q .; then
   if command -v pnpm >/dev/null 2>&1; then
     if (cd apps/mobile && pnpm install --frozen-lockfile 2>/dev/null || pnpm install); then
       guard_pass "mobile workspace install"
@@ -65,8 +65,8 @@ for cfg in apps/mobile/citizen-app/app.json apps/mobile/provider-app/app.json; d
 done
 
 # Matrix drift on mobile column changes in registry
-if git diff --name-only "$BASE"...HEAD | guard_filter -q 'scripts/frontend/generate-parity-docs.mjs'; then
-  if ! git diff --name-only "$BASE"...HEAD | guard_filter -q 'MOBILE_PARITY_MATRIX|generate-parity-inventories'; then
+if git diff --name-only "$BASE" HEAD | guard_filter -q 'scripts/frontend/generate-parity-docs.mjs'; then
+  if ! git diff --name-only "$BASE" HEAD | guard_filter -q 'MOBILE_PARITY_MATRIX|generate-parity-inventories'; then
     guard_fail "parity registry changed without MOBILE_PARITY_MATRIX regeneration"
     FAIL=1
   fi
