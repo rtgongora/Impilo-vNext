@@ -279,13 +279,121 @@ class PolicyEngineTest {
     }
 
     // ════════════════════════════════════════════════════════════════════
-    // Step 3: Break-glass
+    // Step 3 + Step 4.5: Break-glass (doctrine guard, then reason + step-up)
+    //
+    // Break-glass is ONLY for an already-authenticated, sufficiently-verified
+    // PROVIDER acting in a facility context on a named patient. The Step-4.5
+    // doctrine guard (evaluateBreakGlassAccess) enforces those preconditions
+    // BEFORE the active-request (reason) + step-up checks widen access — it can
+    // never turn an unknown user into a health worker, nor override a disputed
+    // (revoked) provider identity.
     // ════════════════════════════════════════════════════════════════════
 
+    /**
+     * Build a break-glass data-access request. A fully-compliant request is a verified PROVIDER
+     * (Provider ID activated, LOA3) in a facility context, targeting a named patient (X-Subject-ID).
+     */
+    private static AuthzInternalRequest breakGlassRequest(
+            String actorType, String providerId, UUID facilityId, String subjectId,
+            int acrLoa, String assuranceLevel) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, actorType, List.of("DOCTOR"), "BREAK_GLASS",
+                DEVICE_FP, CORRELATION_ID, facilityId, WORKSPACE_ID,
+                null, "GET", "/v1/patients/" + (subjectId == null ? "" : subjectId),
+                "GET:/v1/patients", "patients", subjectId,
+                acrLoa, "session-abc", null,
+                providerId, null, null, null, subjectId, assuranceLevel,
+                null, null, DutyContext.absent()
+        );
+    }
+
+    /** A fully doctrine-compliant break-glass request: verified provider + facility + named patient. */
+    private static AuthzInternalRequest compliantBreakGlassRequest() {
+        return breakGlassRequest("PROVIDER", "PUB-PROVIDER-1", FACILITY_ID, "cpid-999", 3, "LOA3");
+    }
+
     @Test
-    @DisplayName("evaluate: BREAK_GLASS without active request -> DENY with NO_BREAK_GLASS_REQUEST")
+    @DisplayName("Step 4.5 break-glass: a non-provider (citizen) declaring BREAK_GLASS -> DENY (never mints a health worker)")
+    void evaluate_breakGlass_nonProvider_denies() {
+        AuthzInternalRequest request = breakGlassRequest("CITIZEN", null, FACILITY_ID, "cpid-999", 3, "LOA3");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("BREAK_GLASS_REQUIRES_VERIFIED_PROVIDER", response.errorCode(),
+                "Break-glass must never transform an unknown/non-provider user into a health worker");
+        verifyNoInteractions(breakGlassService);
+    }
+
+    @Test
+    @DisplayName("Step 4.5 break-glass: PROVIDER actor but no activated Provider ID -> DENY (verified provider)")
+    void evaluate_breakGlass_noProviderId_denies() {
+        AuthzInternalRequest request = breakGlassRequest("PROVIDER", null, FACILITY_ID, "cpid-999", 3, "LOA3");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("BREAK_GLASS_REQUIRES_VERIFIED_PROVIDER", response.errorCode());
+        verifyNoInteractions(breakGlassService);
+    }
+
+    @Test
+    @DisplayName("Step 4.5 break-glass: verified provider but assurance below LOA2 -> DENY (sufficiently-verified)")
+    void evaluate_breakGlass_lowAssurance_denies() {
+        // ACR LOA1 and no assurance-header upgrade -> effectiveLoa=1 < BREAK_GLASS_MIN_LOA (2).
+        AuthzInternalRequest request = breakGlassRequest("PROVIDER", "PUB-PROVIDER-1", FACILITY_ID, "cpid-999", 1, null);
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("BREAK_GLASS_REQUIRES_VERIFIED_PROVIDER", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.5 break-glass: no facility context -> DENY (facility context required)")
+    void evaluate_breakGlass_noFacilityContext_denies() {
+        AuthzInternalRequest request = breakGlassRequest("PROVIDER", "PUB-PROVIDER-1", null, "cpid-999", 3, "LOA3");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("BREAK_GLASS_REQUIRES_FACILITY_CONTEXT", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.5 break-glass: no named patient -> DENY (patient context required; never blanket)")
+    void evaluate_breakGlass_noPatientContext_denies() {
+        AuthzInternalRequest request = breakGlassRequest("PROVIDER", "PUB-PROVIDER-1", FACILITY_ID, null, 3, "LOA3");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("BREAK_GLASS_REQUIRES_PATIENT_CONTEXT", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.5 break-glass: a revoked (disputed) provider identity is denied and never reaches break-glass")
+    void evaluate_breakGlass_revokedProvider_denies() {
+        AuthzInternalRequest request = compliantBreakGlassRequest();
+        when(privilegeRevocationStore.isRevoked("PUB-PROVIDER-1")).thenReturn(true);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("PROVIDER_PRIVILEGE_REVOKED", response.errorCode(),
+                "Break-glass must never override a disputed/revoked provider identity");
+        verifyNoInteractions(riskScoring, breakGlassService);
+    }
+
+    @Test
+    @DisplayName("evaluate: compliant break-glass without active request -> DENY with NO_BREAK_GLASS_REQUEST")
     void evaluate_withBreakGlass_requiresActiveRequest() {
-        AuthzInternalRequest request = requestWithPurpose("BREAK_GLASS");
+        AuthzInternalRequest request = compliantBreakGlassRequest();
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID)))
                 .thenReturn(10);
         when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID))
@@ -300,9 +408,9 @@ class PolicyEngineTest {
     }
 
     @Test
-    @DisplayName("evaluate: BREAK_GLASS with active request but no step-up -> STEP_UP_REQUIRED")
+    @DisplayName("evaluate: compliant break-glass with active request but no step-up -> STEP_UP_REQUIRED")
     void evaluate_withBreakGlass_requiresStepUp() {
-        AuthzInternalRequest request = requestWithPurpose("BREAK_GLASS");
+        AuthzInternalRequest request = compliantBreakGlassRequest();
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID)))
                 .thenReturn(10);
         when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID))
@@ -321,9 +429,9 @@ class PolicyEngineTest {
     }
 
     @Test
-    @DisplayName("evaluate: BREAK_GLASS with active request + step-up -> ALLOW with ELEVATED logging")
+    @DisplayName("evaluate: compliant break-glass with active request + step-up -> ALLOW with ELEVATED logging")
     void evaluate_withBreakGlass_allowsWithStepUp() {
-        AuthzInternalRequest request = requestWithPurpose("BREAK_GLASS");
+        AuthzInternalRequest request = compliantBreakGlassRequest();
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID)))
                 .thenReturn(10);
         when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID))
@@ -344,6 +452,113 @@ class PolicyEngineTest {
 
         // Verify audit was logged
         verify(auditPublisher).queueAuditEvent(eq(request), eq("ALLOW"), eq(10), isNull(), any());
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // V056: break-glass GOVERNANCE surface (management endpoints at the gateway)
+    //
+    // Mirrors the V056 seed: the /v1/break-glass request/review endpoints are
+    // granted only to a verified provider (create) or a supervisor (review),
+    // pinned by path_contains + min_loa. "Never mint a health worker" is enforced
+    // by FAIL-CLOSED default-deny (no ALLOW rule grants a citizen the surface) —
+    // NOT by a DENY row, because the engine ignores a DENY rule's conditions and a
+    // path-scoped citizen DENY would be impossible / over-broad.
+    // ════════════════════════════════════════════════════════════════════
+
+    /** A break-glass MANAGEMENT-endpoint request (OPERATIONS purpose, not BREAK_GLASS). */
+    private static AuthzInternalRequest breakGlassMgmtRequest(
+            String path, String httpMethod, List<String> roles, String actorType, String assuranceLevel) {
+        String resourceType = path.substring(path.lastIndexOf('/') + 1);
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, actorType, roles, "OPERATIONS",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, httpMethod, path, httpMethod + ":" + path, resourceType, null,
+                2, "session-abc", null,
+                null, null, null, null, null, assuranceLevel,
+                null, null, DutyContext.absent()
+        );
+    }
+
+    /** The V056 ALLOW rule: raise a break-glass request (verified provider, pinned + min_loa 2). */
+    private PolicyRuleEntity breakGlassRequestAllowRule() {
+        PolicyRuleEntity rule = buildAllowRule("break-glass", "PROVIDER", null, "POST", null);
+        rule.setName("break-glass-request-provider");
+        rule.setConditions("{\"path_contains\": \"/v1/break-glass\", \"min_loa\": 2}");
+        rule.setPriority(40);
+        return rule;
+    }
+
+    /** The V056 ALLOW rule: supervisor lists the review queue (pinned to /v1/break-glass/review). */
+    private PolicyRuleEntity breakGlassReviewAllowRule() {
+        PolicyRuleEntity rule = buildAllowRule("review", "PROVIDER", "DISTRICT_SUPERVISOR", "GET", null);
+        rule.setName("break-glass-review-list-supervisor");
+        rule.setConditions("{\"path_contains\": \"/v1/break-glass/review\", \"min_loa\": 2}");
+        rule.setPriority(40);
+        return rule;
+    }
+
+    @Test
+    @DisplayName("V056: verified PROVIDER (LOA2) POSTing /v1/break-glass -> ALLOW (raise request)")
+    void evaluate_breakGlassMgmt_providerRaise_allows() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(breakGlassRequestAllowRule()));
+
+        AuthzInternalRequest req = breakGlassMgmtRequest(
+                "/v1/break-glass", "POST", List.of("DOCTOR"), "PROVIDER", "LOA2");
+
+        assertEquals(Verdict.ALLOW, policyEngine.evaluate(req).verdict(),
+                "A verified provider at LOA2 must be allowed to raise a break-glass request");
+    }
+
+    @Test
+    @DisplayName("V056: CITIZEN reaching the break-glass surface -> DENY (fail-closed default; never minted)")
+    void evaluate_breakGlassMgmt_citizen_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        // Only the provider/supervisor ALLOW rules exist; a citizen matches none -> NO_ALLOW_RULE.
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(breakGlassRequestAllowRule(), breakGlassReviewAllowRule()));
+
+        AuthzInternalRequest req = breakGlassMgmtRequest(
+                "/v1/break-glass", "POST", List.of("CITIZEN"), "CITIZEN", "LOA2");
+
+        AuthzResponse resp = policyEngine.evaluate(req);
+        assertEquals(Verdict.DENY, resp.verdict(),
+                "A citizen must never be granted the break-glass management surface");
+        assertEquals("NO_ALLOW_RULE", resp.errorCode(),
+                "Default-deny (no matching ALLOW) — not an over-broad DENY row");
+    }
+
+    @Test
+    @DisplayName("V056: DISTRICT_SUPERVISOR listing /v1/break-glass/review -> ALLOW (retrospective review)")
+    void evaluate_breakGlassMgmt_supervisorReview_allows() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(breakGlassReviewAllowRule()));
+
+        AuthzInternalRequest req = breakGlassMgmtRequest(
+                "/v1/break-glass/review", "GET", List.of("DISTRICT_SUPERVISOR"), "PROVIDER", "LOA2");
+
+        assertEquals(Verdict.ALLOW, policyEngine.evaluate(req).verdict(),
+                "A DISTRICT_SUPERVISOR must be allowed to review the pending break-glass queue");
+    }
+
+    @Test
+    @DisplayName("V056 collision-safety: the review ALLOW does NOT grant another service's /review endpoint")
+    void evaluate_breakGlassMgmt_reviewCollision_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        // Same supervisor rule (pinned to /v1/break-glass/review) must not grant a DIFFERENT service's
+        // endpoint that merely shares the generic last segment 'review'.
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(breakGlassReviewAllowRule()));
+
+        AuthzInternalRequest req = breakGlassMgmtRequest(
+                "/v1/quality/case/review", "GET", List.of("DISTRICT_SUPERVISOR"), "PROVIDER", "LOA2");
+
+        AuthzResponse resp = policyEngine.evaluate(req);
+        assertEquals(Verdict.DENY, resp.verdict(),
+                "A colliding 'review' segment on a non-break-glass path must not be granted here");
+        assertEquals("NO_ALLOW_RULE", resp.errorCode());
     }
 
     // ════════════════════════════════════════════════════════════════════
