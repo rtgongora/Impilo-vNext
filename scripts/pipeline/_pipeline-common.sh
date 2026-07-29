@@ -128,7 +128,7 @@ if p.exists():
         print(\"- Top image strategies: \" + \", \".join(f\"{k}={v}\" for k,v in top))
 " 2>/dev/null || echo "- (discovery summary parse failed)"
     else
-      echo "- Run: node scripts/full-boot/generate-full-boot-artifacts.mjs"
+      echo "- Run: bash scripts/full-boot/generate-artifacts.sh"
     fi
     if [[ -f "$REPO_PATH/reports/full-boot/full-boot-runtime-report.json" ]]; then
       python3 -c "

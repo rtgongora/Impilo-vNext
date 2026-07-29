@@ -163,7 +163,7 @@ fi
 full_boot_blocking=0
 [[ "${PIPELINE_FULL_BOOT_BLOCKING:-0}" == "1" ]] && full_boot_blocking=1
 pipeline_run_phase full-boot-discover "Full-boot artifact generation" 0 \
-  node scripts/full-boot/generate-full-boot-artifacts.mjs || true
+  bash scripts/full-boot/generate-artifacts.sh || true
 pipeline_run_phase full-boot-targets "Full-boot build/image target discovery" 0 \
   bash scripts/build/discover-build-targets.sh || true
 pipeline_run_phase full-boot-doctrine "Doctrine compliance" "$full_boot_blocking" \

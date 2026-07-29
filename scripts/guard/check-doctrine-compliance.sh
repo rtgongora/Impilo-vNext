@@ -27,7 +27,7 @@ done
 
 # Advisory: compliance matrix exists
 [[ -f docs/architecture/VNEXT_DOCTRINE_COMPLIANCE_MATRIX.md ]] && guard_pass "doctrine compliance matrix generated" \
-  || { guard_warn "run generate-full-boot-artifacts.mjs"; ADVISORY=1; }
+  || { guard_warn "run scripts/full-boot/generate-artifacts.sh"; ADVISORY=1; }
 
 # Advisory: experience shell canonical (no ui/experience fork)
 if [[ -d ui/experience ]]; then

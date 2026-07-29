@@ -8,7 +8,7 @@ FULL_BOOT_CLASSIFICATION="${FULL_BOOT_CLASSIFICATION:-config/full-boot-service-c
 
 parity_ensure_full_catalog() {
   if [[ ! -f "$FULL_BOOT_CLASSIFICATION" ]]; then
-    node scripts/full-boot/generate-full-boot-artifacts.mjs 2>/dev/null || true
+    bash scripts/full-boot/generate-artifacts.sh 2>/dev/null || true
   fi
 }
 PARITY_BLOCKING=0
