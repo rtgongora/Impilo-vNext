@@ -32,12 +32,21 @@
 #      ({error:{code,message},timestamp}).
 #   5. Episode ids travel as PATH VARIABLES because they are opaque UUIDs. The
 #      free-text-code-as-final-segment shape that defeats AuthzInternalRequest
-#      .deriveResourceType does not arise here; the two specialty routes and the
-#      analytics detail route take their codes as query parameters for that reason.
+#      .deriveResourceType does not arise here; the two specialty-catalogue routes,
+#      the analytics detail route and the episode-specialty DELETE take their codes
+#      as query parameters for that reason.
 #
-# REACHABILITY. Every route here is backend-internal: no authz rows, no BFF proxy
-# and no UI, deferred to a dedicated reachability wave rather than attempted inline
-# with content. That is a stated status, not a claim of completeness.
+# REACHABILITY, by route family rather than as a blanket statement:
+#   * REACHABLE — the episode spine (S1), assessment (S2) and decision (S3) routes,
+#     plus reopen and the episode-specialty routes: tshepo-authz V302/V303 rows,
+#     an experience-BFF proxy (SurgeryController) and a clinician surface at
+#     /work/clinical/surgery.
+#   * BACKEND-INTERNAL — prehabilitation, complication pathways, longitudinal
+#     objects, follow-up, waiting-list revalidation, specialty content and analytics.
+#     No authz rows, no BFF proxy, no UI.
+# Reachable means a request can traverse the estate to the handler. NOTHING in this
+# contract has been exercised over real HTTP against a deployed stack; the wiring is
+# proven by unit and route-shape tests only.
 #
 # No PII: subjects are referenced by CPID, per doctrine.
 # =============================================================================
@@ -268,6 +277,207 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
 
+  /internal/v1/surgery/episodes/{id}/reopen:
+    post:
+      operationId: surgeryEpisodeReopen
+      tags: [Episodes]
+      summary: Reopen the episode for a return to theatre
+      description: |
+        The audited counterpart to `/transition`, and the ONLY way an episode reaches
+        REOPENED — a plain transition to that status is refused, so no reoperation can
+        enter the record without a reason attached to a named clinician. The service
+        stamps `reopenedBy` from the TrustContext actor and `reopenedAt` from the clock;
+        a DB CHECK refuses a REOPENED row whose audit triple is incomplete, so the trail
+        cannot be bypassed by a direct write either.
+
+        Reopening is accepted only from OPERATED or CLOSED. A case still being assessed
+        or listed has nothing to return to; an ABANDONED one was never operated.
+
+        `reoperationOfEpisodeId` is for the OTHER representation of a reoperation — one
+        given its own episode, pointing back at its predecessor — and is normally absent
+        when reopening in place. An episode may not reference itself.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeIdShort'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReopenEpisodeRequest' }
+      responses:
+        '200':
+          description: The reopened episode, carrying its reopen audit trail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SurgicalEpisodeView' }
+        '400':
+          description: |
+            `REOPEN_REASON_REQUIRED` — a blank reason; or
+            `REOPERATION_SELF_REFERENCE` — the predecessor is the episode itself.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404':
+          description: |
+            `SURGICAL_EPISODE_NOT_FOUND` — no such episode in this tenant. Also raised
+            when the supplied predecessor does not resolve, so a mistyped or
+            cross-tenant reference fails here rather than at flush.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '409':
+          description: |
+            `EPISODE_NOT_REOPENABLE` — reopening was attempted from a status other than
+            OPERATED or CLOSED.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/episodes/{id}/specialties:
+    get:
+      operationId: surgeryEpisodeSpecialtiesList
+      tags: [Episodes]
+      summary: List every specialty on the case, lead and shared
+      description: |
+        Shared-specialty care. `surgical_episode.specialty` remains the LEAD specialty
+        and every existing reader of it is unaffected; this collection is the complete
+        set. Exactly one entry has role LEAD, enforced by a partial unique index.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeIdShort'
+      responses:
+        '200':
+          description: |
+            The specialties on this episode. An empty array means no specialty was
+            recorded — it never means the read failed, which surfaces as a non-2xx.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/EpisodeSpecialty' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+    post:
+      operationId: surgeryEpisodeSpecialtyAdd
+      tags: [Episodes]
+      summary: Add a joining specialty to a shared case
+      description: |
+        Role defaults to SHARED. A second LEAD is refused — use the lead-handover route,
+        which demotes the incumbent in the same transaction rather than leaving the case
+        momentarily leaderless or double-led.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeIdShort'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddEpisodeSpecialtyRequest' }
+      responses:
+        '200':
+          description: The specialty as recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EpisodeSpecialty' }
+        '400':
+          description: |
+            `SPECIALTY_REQUIRED` — no specialty supplied;
+            `INVALID_SPECIALTY` — not one of the fifteen surgical specialties; or
+            `INVALID_SPECIALTY_ROLE` — role is neither LEAD nor SHARED.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+        '409':
+          description: |
+            `SPECIALTY_ALREADY_ON_EPISODE` — that specialty is already recorded; or
+            `LEAD_SPECIALTY_ALREADY_SET` — a second LEAD was attempted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    delete:
+      operationId: surgeryEpisodeSpecialtyRemove
+      tags: [Episodes]
+      summary: Remove a joining specialty from a shared case
+      description: |
+        The specialty travels as a QUERY PARAMETER, not a path segment. As a segment it
+        would become the ext_authz derived resource type (`.../specialties/VASCULAR`
+        derives `VASCULAR`, not `specialties`), so no policy row could match and the
+        route would be permanently unreachable — the free-text-code-in-path trap this
+        programme was corrected for. tshepo-authz V303 gates it as `specialties`/DELETE.
+
+        The LEAD cannot be removed, only handed over: a shared case with no lead has
+        nobody accountable for it.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeIdShort'
+        - name: specialty
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/SurgicalSpecialty' }
+      responses:
+        '200':
+          description: The remaining specialties on the episode
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/EpisodeSpecialty' }
+        '404':
+          description: |
+            `SURGICAL_EPISODE_NOT_FOUND`, or `SPECIALTY_NOT_ON_EPISODE` — that
+            specialty is not recorded on this case.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '409':
+          description: '`CANNOT_REMOVE_LEAD_SPECIALTY` — hand the lead over instead.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/surgery/episodes/{id}/specialties/lead:
+    post:
+      operationId: surgeryEpisodeLeadTransfer
+      tags: [Episodes]
+      summary: Hand the lead specialty over to another team
+      description: |
+        One transaction: the incumbent lead is demoted to SHARED before the new one is
+        promoted, so the partial unique index never sees two leads. The episode's own
+        `specialty` column moves with it, keeping every existing reader of the lead
+        specialty correct. A specialty not yet on the case is added as the new lead.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeIdShort'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransferLeadRequest' }
+      responses:
+        '200':
+          description: Every specialty on the episode, with the new lead in place
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/EpisodeSpecialty' }
+        '400':
+          description: |
+            `SPECIALTY_REQUIRED` — no specialty supplied; or `INVALID_SPECIALTY` —
+            not one of the fifteen surgical specialties.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+        '409':
+          description: |
+            `LEAD_UNCHANGED` — that specialty already leads the case. Refused rather
+            than treated as a no-op, so a handover that did nothing is not recorded as
+            one that happened.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
   /internal/v1/surgery/episodes/{episodeId}/assessment:
     put:
       operationId: surgeryAssessmentRecord
@@ -338,6 +548,14 @@ paths:
         Supplying a final decision stamps `decidedAt` and `decidedBy` (the body's
         `decidedBy` if given, otherwise the TrustContext actor): a decision with no
         author or no timestamp is not one anybody can stand behind.
+
+        `decisionForum` records WHO decided rather than what was decided, and the two
+        are independent — an MDT can defer, an individual can proceed. An MDT decision
+        must cite the PCT board record behind it; surgery resolves that reference on
+        write and distinguishes three outcomes rather than two: found is verified,
+        definitively absent is refused, and PCT unreachable is recorded UNVERIFIED. An
+        outage must not block recording that a board decided, and must not be allowed
+        to look like confirmation that it did.
       parameters:
         - $ref: '#/components/parameters/TenantId'
         - $ref: '#/components/parameters/EpisodeId'
@@ -353,11 +571,24 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/SurgicalDecision' }
         '400':
-          description: '`INVALID_FINAL_DECISION` — not PROCEED, DO_NOT_PROCEED or DEFER.'
+          description: |
+            `INVALID_FINAL_DECISION` — not PROCEED, DO_NOT_PROCEED or DEFER;
+            `INVALID_DECISION_FORUM` — not INDIVIDUAL or MDT;
+            `MDT_REFERENCE_REQUIRED` — an MDT decision naming no board record, or
+            naming one without saying which PCT record it is in;
+            `INVALID_MDT_SOURCE` — not one of PCT's two MDT systems of record; or
+            `INVALID_MDT_REFERENCE` — the reference is not a UUID.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
-        '404': { $ref: '#/components/responses/EpisodeNotFound' }
+        '404':
+          description: |
+            `SURGICAL_EPISODE_NOT_FOUND`, or `MDT_DECISION_NOT_FOUND` — PCT answered
+            and has no such board record. Distinct from PCT being unreachable, which
+            succeeds with the reference left unverified.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
     get:
       operationId: surgeryDecisionGet
       tags: [Decision]
@@ -994,8 +1225,32 @@ components:
         ABANDONED is a real outcome, distinct from CLOSED: an episode that stopped
         without completing is not one that finished. Transitioning to CLOSED passes
         the histology gate.
-      enum: [ASSESSMENT, LISTED_FOR_SURGERY, OPERATED, CLOSED, ABANDONED]
+
+        REOPENED is not reachable through `/transition` — only through `/reopen`,
+        which requires a reason and stamps who and when. That asymmetry is the point:
+        a return to theatre with no recorded cause is not a record of anything.
+      enum: [ASSESSMENT, LISTED_FOR_SURGERY, OPERATED, CLOSED, ABANDONED, REOPENED]
       default: ASSESSMENT
+    MdtDecisionSource:
+      type: string
+      description: |
+        Which of PCT's MDT systems of record the referenced board decision lives in.
+        PCT holds TWO — `pct_mdt_decisions` (V114) and `pct_mdt_sessions` case items
+        (V051) — and consolidating them is a cross-lane decision this programme does
+        not own. Surgery references whichever one applies and keeps no third copy.
+      enum: [PCT_MDT_DECISION, PCT_MDT_CASE_ITEM]
+    DecisionForum:
+      type: string
+      description: Whether one clinician decided, or a multidisciplinary team did.
+      enum: [INDIVIDUAL, MDT]
+      default: INDIVIDUAL
+    SpecialtyRole:
+      type: string
+      description: |
+        Exactly one LEAD per episode, enforced by a partial unique index rather than
+        by service code alone.
+      enum: [LEAD, SHARED]
+      default: SHARED
     FinalDecision:
       type: string
       description: |
@@ -1145,12 +1400,78 @@ components:
           allOf:
             - $ref: '#/components/schemas/SurgicalSpecialty'
           nullable: true
+        reoperationOfEpisodeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            The predecessor episode, when this reoperation was given its own episode
+            rather than reopening the original in place. Both shapes exist because
+            both happen; neither may reference itself.
+        reopenedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Set only by `/reopen`. The three reopen audit fields are all-or-nothing at
+            the database level, so a REOPENED episode without them cannot exist.
+        reopenedBy: { type: string, nullable: true }
+        reopenReason: { type: string, nullable: true }
         pctContributed:
           type: boolean
           description: |
             Whether the condition reached PCT. False is a real state, not an error:
             the episode is local truth either way, and the un-contributed ones are a
             reconciliation query.
+    ReopenEpisodeRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          description: |
+            Mandatory and non-blank. Why the patient is going back to theatre is the
+            whole clinical content of a reopen.
+        reoperationOfEpisodeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            Optional predecessor link, for a reoperation recorded as its own episode.
+            Absent when reopening in place, which is the common case.
+    EpisodeSpecialty:
+      type: object
+      required: [id, specialty, role, addedBy]
+      properties:
+        id: { type: string, format: uuid }
+        specialty: { $ref: '#/components/schemas/SurgicalSpecialty' }
+        role: { $ref: '#/components/schemas/SpecialtyRole' }
+        contribution:
+          type: string
+          nullable: true
+          description: What this team did on the case, in their own words.
+        addedBy:
+          type: string
+          description: |
+            The TrustContext actor, or `migration:V011` for the lead specialties
+            backfilled from the episode's own column when the table was introduced.
+        addedAt: { type: string, format: date-time }
+    AddEpisodeSpecialtyRequest:
+      type: object
+      required: [specialty]
+      properties:
+        specialty: { $ref: '#/components/schemas/SurgicalSpecialty' }
+        role: { $ref: '#/components/schemas/SpecialtyRole' }
+        contribution: { type: string, nullable: true }
+    TransferLeadRequest:
+      type: object
+      required: [specialty]
+      properties:
+        specialty:
+          allOf:
+            - $ref: '#/components/schemas/SurgicalSpecialty'
+          description: The team taking the lead. Added to the case if not already on it.
+        contribution: { type: string, nullable: true }
     LinkProcedureEpisodeRequest:
       type: object
       required: [procedureEpisodeRef]
@@ -1313,6 +1634,22 @@ components:
           description: |
             Overrides the TrustContext actor as the decision's author. Only read when
             `finalDecision` is also present.
+        decisionForum:
+          allOf:
+            - $ref: '#/components/schemas/DecisionForum'
+          description: |
+            MDT requires `mdtDecisionRef` and `mdtDecisionSource`; INDIVIDUAL clears
+            them. Half a set is refused by a CHECK constraint, so a decision cannot
+            claim a board it does not name, nor name one it did not come from.
+        mdtDecisionRef:
+          type: string
+          format: uuid
+          description: |
+            The PCT board decision this came from. Surgery looks it up on write: found
+            sets `mdtDecisionVerifiedAt`; genuinely absent is a 404; PCT unreachable
+            records the reference UNVERIFIED rather than failing the write or faking a
+            confirmation.
+        mdtDecisionSource: { $ref: '#/components/schemas/MdtDecisionSource' }
     SurgicalDecision:
       type: object
       required: [id, surgicalEpisodeId]
@@ -1339,6 +1676,25 @@ components:
           nullable: true
         decidedBy: { type: string, nullable: true }
         decidedAt: { type: string, format: date-time, nullable: true }
+        decisionForum: { $ref: '#/components/schemas/DecisionForum' }
+        mdtDecisionRef: { type: string, format: uuid, nullable: true }
+        mdtDecisionSource:
+          allOf:
+            - $ref: '#/components/schemas/MdtDecisionSource'
+          nullable: true
+        mdtDecisionVerifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When surgery last confirmed the referenced board decision exists in PCT.
+        mdtDecisionVerified:
+          type: boolean
+          description: |
+            THREE states collapse into two if this is read carelessly. False means
+            "recorded but not confirmed" — PCT was unreachable when it was written —
+            and NOT "the board did not decide this", which is refused outright at
+            write time. A consumer that renders false as an absent or invalid board
+            decision is misreporting an MDT.
 
     # ── Prehabilitation (SB-1) ──────────────────────────────────────────────────
     PrehabItemRequest:
