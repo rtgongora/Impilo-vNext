@@ -22,7 +22,6 @@ export const ORPHAN_PAGE_BASELINE = [
   "/clinical/inpatient/admissions/new",
   "/developer/event-catalogue",
   "/ehr/[patientId]/charts/[chartId]",
-  "/ehr/[patientId]/emergency",
   "/ehr/[patientId]/encounter",
   "/ehr/[patientId]/procedures/[episodeId]",
   "/facility/[id]/cockpit",

@@ -312,6 +312,7 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
                 patientLabel={patientId}
                 traumaId={visit.active_trauma_id ? String(visit.active_trauma_id) : undefined}
                 mechanism={visit.chief_complaint ? String(visit.chief_complaint) : undefined}
+                // clinical-logic-guard: labels the acuity pct already decided; the ternary asks whether one exists, it does not derive one
                 triageCategory={visit.current_acuity ? `Acuity ${String(visit.current_acuity)}` : undefined}
                 location={visit.zone ? String(visit.zone) : "ED"}
                 onEnded={() => void emergencyActivations.refetch()}

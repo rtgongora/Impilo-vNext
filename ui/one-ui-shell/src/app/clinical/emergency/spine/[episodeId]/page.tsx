@@ -49,8 +49,14 @@ export default function EmergencyEpisodeSpinePage({ params }: { params: { episod
         title={episode.data ? String(episode.data.episode_reference ?? params.episodeId) : "Emergency episode"}
         subtitle="pct.emergency_episode — the continuum-side spine"
       >
-        <div className="mb-4 flex justify-end">
-          <Link href="/clinical/emergency/board" className="text-sm text-primary underline">← Emergency board</Link>
+        <div className="mb-4 flex flex-wrap justify-end gap-x-4 gap-y-1 text-sm">
+          <Link href={`/clinical/emergency/spine/${params.episodeId}/observation`} className="text-primary underline">
+            Observation stay
+          </Link>
+          <Link href={`/clinical/emergency/spine/${params.episodeId}/disposition`} className="text-primary underline">
+            Disposition
+          </Link>
+          <Link href="/clinical/emergency/board" className="text-primary underline">← Emergency board</Link>
         </div>
 
         {episode.isLoading && <p className="text-sm text-muted-foreground">Loading episode…</p>}

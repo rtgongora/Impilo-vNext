@@ -128,6 +128,13 @@ export const ROUTES: RouteDefinition[] = [
   // Facility-wide command view: state counts plus the alert queue's three authorities
   // (acknowledge / respond / close). Literal 3-segment sibling — must stay above [visitId].
   { path: "/clinical/emergency/command", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Command", navLabel: "Emergency Command", navZone: "work" },
+  // Three more literal 3-segment siblings — same first-match-wins rule, all above [visitId].
+  { path: "/clinical/emergency/activation", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Open Emergency Episode", navLabel: "Open Episode", navZone: "work" },
+  { path: "/clinical/emergency/pre-arrival", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED Pre-Arrival", navLabel: "Pre-Arrival", navZone: "work" },
+  { path: "/clinical/emergency/analytics", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Analytics", navLabel: "Emergency Analytics", navZone: "work" },
+  // Five-segment children of the spine; they cannot collide with the four-segment spine entry.
+  { path: "/clinical/emergency/spine/[episodeId]/disposition", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Episode Disposition", navLabel: "Episode Disposition", navZone: "work" },
+  { path: "/clinical/emergency/spine/[episodeId]/observation", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Observation Stay", navLabel: "Observation Stay", navZone: "work" },
   { path: "/clinical/emergency/spine/[episodeId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Episode Spine", navLabel: "Episode Spine", navZone: "work" },
   { path: "/clinical/emergency/[visitId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED Visit", navLabel: "ED Visit", navZone: "work" },
 
@@ -335,6 +342,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/notes", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Clinical Notes", navLabel: "Notes", navZone: "work" },
   { path: "/ehr/[patientId]/documents", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Documents", navLabel: "Documents", navZone: "work" },
   { path: "/ehr/[patientId]/encounters", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Encounters", navLabel: "Encounters", navZone: "work" },
+  // Shipped with a page and inbound links from PatientBanner.tsx but no entry here, so
+  // matchRouteDefinition returned null and AuthGuardProvider applied NO guard to a chart tab that
+  // shows emergency history. Registering it is the guard.
+  { path: "/ehr/[patientId]/emergency", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Emergency", navLabel: "Emergency", navZone: "work" },
   { path: "/ehr/[patientId]/encounter/[encounterId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Encounter", navLabel: "Encounter", navZone: "work" },
   { path: "/ehr/[patientId]/immunizations", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Immunizations", navLabel: "Immunizations", navZone: "work" },
   { path: "/ehr/[patientId]/consults", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Consults & Referrals", navLabel: "Consults", navZone: "work" },
@@ -1086,7 +1097,11 @@ export const ROUTES: RouteDefinition[] = [
 // MCI casualty tagging (W15b, 28 Jul 2026): +1 — /work/daidzai/disasters/[id]/casualties. Total 827.
 // Surgery SB-3 reachability (28 Jul 2026): +2 — /work/clinical/procedures (existed but was
 // unregistered/orphaned) and /work/clinical/surgery (S1-S3 surgical episode workspace). Total 829.
-export const EXPECTED_ROUTE_COUNT = 830;
+// Emergency pack W15 (30 Jul 2026): +6 — /clinical/emergency/activation, .../pre-arrival,
+// .../analytics, .../spine/[episodeId]/disposition, .../spine/[episodeId]/observation, and
+// /ehr/[patientId]/emergency, which had a page and inbound links but no registration and therefore
+// no guard. Total 836.
+export const EXPECTED_ROUTE_COUNT = 836;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

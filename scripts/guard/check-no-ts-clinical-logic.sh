@@ -34,6 +34,7 @@ source "$REPO_PATH/scripts/guard/_guard-common.sh"
 
 SCOPED_PATHS=(
   "ui/one-ui-shell/src/features/emergency"
+  "ui/one-ui-shell/src/app/clinical/emergency"
   "ui/shared-ui/components/ElapsedTimer.tsx"
   "ui/shared-ui/components/EventTimeline.tsx"
   "ui/shared-ui/components/StalenessBadge.tsx"
