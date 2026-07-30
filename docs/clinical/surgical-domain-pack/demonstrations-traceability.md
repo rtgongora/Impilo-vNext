@@ -24,7 +24,7 @@ the runtime-proof rig or test class that proves it. "Closed" means the wave name
 | 6 | Obstetric operation invoking the Reproductive Pack | all | **Closeable today** | Identical mechanism to the procedures pipeline's own demonstration 4: `TheatreService.recordObstetricContext`/`recordDelivery`/`recordNeonatalHandover` emit `theatre.obstetric.*` events; pct-service's `TheatreObstetricConsumer` opens the baby's own episode on CPID. Surgery-service adds nothing parallel — the demonstration's own point ("no parallel obstetric model") is satisfied by absence, the same way P15 found for the pipeline's demonstration 4 | `theatre-emergency-journeys.sh` (obstetric/neonatal legs) — same rig, same finding, cited rather than re-proven |
 | 7 | Orthopaedic implant with complete traceability | 6-13, 17-20 | **Closeable today, patient-facing leg unconfirmed** | `ImplantTraceabilityService.traceByRecall(udi, lot)` (P8) is real and queries every affected patient; `surgical_longitudinal_object` (SB-2, V006) references implants by `implant_registry_ref` rather than copying them, so a recall trace and a surgical episode's own longitudinal-object list both resolve to the SAME inventory record | `procedures-p8-specimen-device-journeys.sh`, `surgery-longitudinal-followup-specialty-journeys.sh` (federation proof, J-SB2-17). NOT built: any patient-facing implant card or automatic notification — identical named gap to P15's own demonstration 8, not re-derived independently, same owners (inventory-service + notification-service) |
 | 8 | Cancelled operation with safe rescheduling | 7, 9 | **Closeable today, rebooking-link unconfirmed** | Identical mechanism to the procedures pipeline's own demonstration 9: OROS `ProcedureWorkflowState.CANCELLED` is terminal with a mandatory `workflow_state_reason`+`workflow_next_action` pair (P2, V300) — the request survives cancellation with a reason and a next action, on the record. `surgical_waitlist_revalidation` (SB-2) is a DIFFERENT fact (clinical still-appropriate revalidation, append-only) and does not itself represent a cancellation-to-rebooking link | `procedures-request-lifecycle-journeys.sh` (mandatory-reason invariant). NOT built: a structural rebooking link (no `supersedes`/`original_order_id` column) — identical named gap to P15's own demonstration 9, same owner (oros-service), not re-derived independently |
-| 9 | Postoperative sepsis and unplanned return to theatre | 13-15, 19 | **Not closed — same class of gap as P15's demonstration 10** | `surgical_complication_pathway` (SB-1, V005) genuinely drives escalation: `recognise → grade → own → investigate → treat → disclose → close`, CHECK-enforced (`chk_complication_pathway_closure`), contributes to `pct_problems` on close. **But a second operation cannot join the SAME episode**: `surgical_episode.status` (S1) has no REOPENED state (`ASSESSMENT/LISTED_FOR_SURGERY/OPERATED/CLOSED/ABANDONED` only, confirmed by reading `SurgicalEpisodeService` directly), and no `parent_episode_id`/`reoperation_of` column exists anywhere in the schema. `inpatient.procedure_episode` has the identical gap, named since P10 and reconfirmed unchanged by P15 — this demonstration is a second, independent proof that the same missing REOPENED-state work blocks two different scenarios, not one | `surgery-complication-prehab-journeys.sh` (pathway workflow, real). Reoperation-joins-same-episode: no proof exists because no code exists — same recommendation as P15's own: run the ten theatre rigs first (still unconfirmed as of this wave, four consecutive Phase-S waves later), then build REOPENED once, for both schemas together rather than twice |
+| 9 | Postoperative sepsis and unplanned return to theatre | 13-15, 19 | **Not closed — same class of gap as P15's demonstration 10** | `surgical_complication_pathway` (SB-1, V005) genuinely drives escalation: `recognise → grade → own → investigate → treat → disclose → close`, CHECK-enforced (`chk_complication_pathway_closure`), contributes to `pct_problems` on close. **But a second operation cannot join the SAME episode**: `surgical_episode.status` (S1) has no REOPENED state (`ASSESSMENT/LISTED_FOR_SURGERY/OPERATED/CLOSED/ABANDONED` only, CHECK-enforced in `V002__surgical_episode.sql`), and no `parent_episode_id`/`reoperation_of` column exists in the surgery schema. **Correction (2026-07-30): `inpatient.procedure_episode` does NOT have the identical gap**, contrary to what P10 and P15 recorded — `ProcedureEpisodeService.returnToTheatre()` has kept a returning case on the same episode since Wave 4. The inpatient side is missing a complication trigger, predecessor linkage and a distinct state; the surgery side is missing the whole capability. Two related jobs, not one shared one | `surgery-complication-prehab-journeys.sh` (pathway workflow, real). Reoperation-joins-same-episode on the surgery schema: no proof exists because no code exists. The precondition — running the ten theatre rigs — was discharged on 2026-07-30, all ten at baseline (`reports/journeys/theatre-gate-20260730/SUMMARY.md`) |
 | 10 | Histology result that changes the care plan | 17-20 | **Partial** | The passive half is real: `requireHistologyReviewed` (SB-1) refuses episode CLOSED on an unacknowledged specimen — a critical result genuinely blocks the course from being filed and forgotten. The ACTIVE half the demonstration names — "reopens planning" — is not built: acknowledging a critical result does not itself trigger any new `surgical_decision` row, notification, or care-plan update; it only prevents forward progress until a human separately chooses to act | `surgery-complication-prehab-journeys.sh` (the blocking half only) |
 
 ## What this wave closed
@@ -39,14 +39,28 @@ against an unvendored eleventh-hour spec reading.
    is a single column; representing shared care across two specialties on one episode needs
    either a join table (`surgical_episode_specialty_involvement`) or a different modelling
    choice entirely. Not attempted this wave — a real schema decision, not a wire-up.
-2. **Demonstration 9 (reoperation joins the same episode) and demonstration 3's MDT gap** are
-   smaller instances of the SAME structural absence P10/P15 already named as the single largest
-   remaining gap in the whole programme: no REOPENED state and no reoperation-linkage anywhere in
-   `inpatient.procedure_episode` OR `surgery.surgical_episode`. **The ten pre-existing theatre
-   rigs still have not been run since P4** (confirmed again this wave; four consecutive Phase-S
-   waves have now made and repeated this same finding) — the standing recommendation is
-   unchanged: run them first, in their own pass, before either schema's shared lifecycle is
-   touched.
+2. **Demonstration 9 (reoperation joins the same episode) and demonstration 3's MDT gap** — the
+   two schemas are **not** in the same state, and four waves of this document treated them as if
+   they were.
+
+   `surgery.surgical_episode` genuinely has nothing: its `status` CHECK is a hard five-value
+   constraint (`ASSESSMENT/LISTED_FOR_SURGERY/OPERATED/CLOSED/ABANDONED`) with no `REOPENED` and
+   no `reoperation_of_episode_id`.
+
+   `inpatient.procedure_episode` is further along than recorded: `ProcedureEpisodeService.returnToTheatre()`
+   has existed since Wave 4 and keeps the same episode, returning it to `READY_FOR_THEATRE` and
+   flagging `procedure_postop_record.return_to_theatre`. Its gaps are a complication-originated
+   trigger, predecessor linkage, and a distinct `REOPENED` state. Note the asymmetry that makes
+   these different jobs: `procedure_episode.status` has **no DB CHECK at all** — its state machine
+   is Java-only — whereas `surgical_episode.status` is CHECK-enforced and needs a migration to
+   widen.
+
+   **The standing "run the rigs first" recommendation has been discharged.** All ten theatre rigs
+   ran on 2026-07-30 and every one matched its recorded baseline
+   (`reports/journeys/theatre-gate-20260730/SUMMARY.md`). They need Docker and `mvn package`, not
+   the packaged estate five consecutive waves believed was required. The pass immediately found a
+   total outage of theatre intake introduced by this programme's own V300. Nothing now blocks
+   touching either schema's lifecycle.
 3. **Demonstrations 5/7/8's cross-pack or cross-service legs** (paediatric-pack dosing/override,
    patient-facing implant notification, structural rebooking link) belong to peer services or
    packs and are named with their owners above, not attempted here — identical shape and, for 7
