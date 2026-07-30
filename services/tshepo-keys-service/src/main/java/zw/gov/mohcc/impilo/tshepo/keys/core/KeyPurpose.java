@@ -29,8 +29,20 @@ public enum KeyPurpose {
     /** SMART-card print-agent QR assertions (card credential signing). */
     CARD_ASSERTION,
     /** E-prescription version signing + prescription tokens (OROS, OF-B2 §13.2). */
-    PRESCRIPTION_SIGNING;
+    PRESCRIPTION_SIGNING,
+    /** PDP decision envelopes — proof that Tshepo authorised a specific request (D2). */
+    AUTHZ_DECISION;
 
+    /**
+     * Resolve a purpose name. Null or blank means the caller expressed no purpose and gets
+     * {@link #GENERAL}, the documented default.
+     *
+     * <p>An unrecognised name throws. It used to fall back to {@code GENERAL}, which meant a
+     * caller asking for a purpose this deployment does not know about was quietly handed a
+     * general key and signed a trust-bearing artefact with it — the exact substitution the
+     * purpose scoping exists to prevent, and invisible to the caller because the response
+     * looks identical. During a rolling upgrade that is precisely the caller worth refusing.</p>
+     */
     public static KeyPurpose fromString(String value) {
         if (value == null || value.isBlank()) {
             return GENERAL;
@@ -38,7 +50,7 @@ public enum KeyPurpose {
         try {
             return KeyPurpose.valueOf(value.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            return GENERAL;
+            throw new IllegalArgumentException("Unknown key purpose: " + value);
         }
     }
 }
