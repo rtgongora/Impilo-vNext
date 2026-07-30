@@ -117,6 +117,11 @@ pipeline_run_phase cohesion "Cross-service cohesion" "$cohesion_blocking" \
 pipeline_run_phase ext-authz-allowlist "ext_authz upstream header allowlist" 1 \
   bash scripts/guard/check-ext-authz-header-allowlist.sh
 
+# 9d-3. A5 reference classification (blocking): a new free-text programme_id/department_id
+# column must be classified, not left to be discovered later as an unresolvable value.
+pipeline_run_phase reference-id-classification "A5 reference id classification" 1 \
+  bash scripts/guard/check-reference-id-classification.sh
+
 # 9e. Preview sandbox runtime smoke + persistence E2E (blocking when preview reachable)
 preview_blocking=1
 [[ "${PREVIEW_SMOKE_BLOCKING:-1}" != "1" ]] && preview_blocking=0
