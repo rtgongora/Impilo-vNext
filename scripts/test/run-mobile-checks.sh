@@ -30,6 +30,19 @@ if [[ "$ADVISORY" == "0" ]]; then
   # this gate — the check ran, reported, and was ignored.
   gate_run "mobile-citizen-typecheck" bash -c 'cd apps/mobile/citizen-app && pnpm exec tsc --noEmit' || FAIL=1
   gate_run "mobile-provider-typecheck" bash -c 'cd apps/mobile/provider-app && pnpm exec tsc --noEmit' || FAIL=1
+
+  # Blocking, and not redundant with the typechecks above. tsc resolves imports through
+  # tsconfig; Metro resolves them through watchFolders and nodeModulesPaths, and the two
+  # disagree — mobile imports the canonical contracts/ files from outside its own pnpm
+  # workspace (G2), which tsc accepts unconditionally and Metro accepts only because both
+  # metro.config.js files watch the repo-root contracts directory. Without a real bundle,
+  # dropping that line is a green gate and a broken app.
+  bundle_out="$(mktemp -d)"
+  trap 'rm -rf "$bundle_out"' EXIT
+  gate_run "mobile-citizen-bundle" bash -c \
+    "cd apps/mobile/citizen-app && pnpm exec expo export --platform android --output-dir '$bundle_out/citizen'" || FAIL=1
+  gate_run "mobile-provider-bundle" bash -c \
+    "cd apps/mobile/provider-app && pnpm exec expo export --platform android --output-dir '$bundle_out/provider'" || FAIL=1
 fi
 
 gate_warn "Android APK build and iOS builds are advisory until CI runners are stabilized (see docs/environment/MOBILE_TEST_GATE.md)"
