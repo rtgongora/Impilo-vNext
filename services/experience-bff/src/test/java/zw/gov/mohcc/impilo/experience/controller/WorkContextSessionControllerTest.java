@@ -133,6 +133,126 @@ class WorkContextSessionControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    // ── C3: the general mint, for every context family and every mode ────────────────
+
+    private static zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext proven(
+            String contextId, String kind, java.util.List<String> modes, String defaultMode) {
+        return new zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext(
+                contextId, kind, "WGV", "rec-1", null, "org-9", null, "prog-7",
+                "PROGRAMME_MANAGER", java.util.List.of(), modes, defaultMode, "CATALOG",
+                "dep-3", "Oncology", "ward-2", "sp-1", "ws-4", null,
+                java.util.List.of("PROGRAMME_SUSPENDED"), "National TB Programme", "other", 10);
+    }
+
+    @Test
+    void provenNonClinicalContextMintsTheRequestedMode_notHardcodedClinicalCare() throws Exception {
+        when(resolutionService.proveContext(actorId, null, "ctx-1")).thenReturn(
+                proven("ctx-1", "programme", java.util.List.of("PROGRAMME_MANAGEMENT", "REPORTING"), "PROGRAMME_MANAGEMENT"));
+        when(tshepoIdentityClient.issueWorkContextToken(any())).thenReturn(MAPPER.readTree(
+                "{\"data\":{\"token\":\"jws\",\"jti\":\"jti-9\",\"expiresAt\":\"2026-07-19T12:00:00Z\"}}"));
+
+        ResponseEntity<Map<String, Object>> response = start(Map.of(
+                "contextId", "ctx-1", "workMode", "REPORTING"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var captor = org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(tshepoIdentityClient).issueWorkContextToken(captor.capture());
+        assertThat(captor.getValue().get("workMode")).isEqualTo("REPORTING");
+        assertThat(captor.getValue().get("contextKind")).isEqualTo("programme");
+        assertThat(captor.getValue().get("programmeId")).isEqualTo("prog-7");
+        assertThat(captor.getValue().get("departmentId")).isEqualTo("dep-3");
+        // The legacy branch could never have reached this code path at all.
+        verify(varapiClient, never()).getProviderByHealthId(any());
+    }
+
+    @Test
+    void provenContextWithoutRequestedMode_fallsBackToTheContextsOwnDefault() throws Exception {
+        when(resolutionService.proveContext(actorId, null, "ctx-1")).thenReturn(
+                proven("ctx-1", "programme", java.util.List.of("PROGRAMME_MANAGEMENT"), "PROGRAMME_MANAGEMENT"));
+        when(tshepoIdentityClient.issueWorkContextToken(any())).thenReturn(MAPPER.readTree(
+                "{\"data\":{\"token\":\"jws\",\"jti\":\"jti-9\",\"expiresAt\":\"2026-07-19T12:00:00Z\"}}"));
+
+        ResponseEntity<Map<String, Object>> response = start(Map.of("contextId", "ctx-1"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var captor = org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(tshepoIdentityClient).issueWorkContextToken(captor.capture());
+        assertThat(captor.getValue().get("workMode")).isEqualTo("PROGRAMME_MANAGEMENT");
+    }
+
+    @Test
+    void modeTheContextDoesNotOffer_isDeniedWithoutEnumeratingWhatItDoesOffer() {
+        when(resolutionService.proveContext(actorId, null, "ctx-1")).thenReturn(
+                proven("ctx-1", "programme", java.util.List.of("PROGRAMME_MANAGEMENT"), "PROGRAMME_MANAGEMENT"));
+
+        ResponseEntity<Map<String, Object>> response = start(Map.of(
+                "contextId", "ctx-1", "workMode", "CLINICAL_CARE"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
+        assertThat(error.get("code")).isEqualTo("WORK_MODE_UNAVAILABLE");
+        assertThat(String.valueOf(error.get("message"))).doesNotContain("PROGRAMME_MANAGEMENT");
+        verify(tshepoIdentityClient, never()).issueWorkContextToken(any());
+    }
+
+    @Test
+    void contextOfferingNoModeAtAll_isRefusedRatherThanMintedIntoAnArbitraryOne() {
+        when(resolutionService.proveContext(actorId, null, "ctx-1")).thenReturn(
+                proven("ctx-1", "programme", java.util.List.of(), null));
+
+        ResponseEntity<Map<String, Object>> response = start(Map.of("contextId", "ctx-1"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        verify(tshepoIdentityClient, never()).issueWorkContextToken(any());
+    }
+
+    @Test
+    void unprovableContextIdGetsGenericDenial() {
+        when(resolutionService.proveContext(actorId, null, "ctx-nope")).thenReturn(null);
+
+        ResponseEntity<Map<String, Object>> response = start(Map.of("contextId", "ctx-nope"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
+        assertThat(error.get("code")).isEqualTo("WORK_SESSION_UNAVAILABLE");
+        verify(tshepoIdentityClient, never()).issueWorkContextToken(any());
+    }
+
+    @Test
+    void restrictionsAreSurfacedSoTheShellCanSayWhyAContextIsDegraded() throws Exception {
+        when(resolutionService.proveContext(actorId, null, "ctx-1")).thenReturn(
+                proven("ctx-1", "programme", java.util.List.of("PROGRAMME_MANAGEMENT"), "PROGRAMME_MANAGEMENT"));
+        when(tshepoIdentityClient.issueWorkContextToken(any())).thenReturn(MAPPER.readTree(
+                "{\"data\":{\"token\":\"jws\",\"jti\":\"jti-9\",\"expiresAt\":\"2026-07-19T12:00:00Z\"}}"));
+
+        ResponseEntity<Map<String, Object>> response = start(Map.of("contextId", "ctx-1"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> attrs = (Map<String, Object>) data.get("attributes");
+        @SuppressWarnings("unchecked")
+        java.util.List<String> restrictions = (java.util.List<String>) attrs.get("restrictions");
+        assertThat(restrictions).containsExactly("PROGRAMME_SUSPENDED");
+    }
+
+    @Test
+    void legacyFacilityBranchIsUntouchedWhenNoContextIdIsSent() throws Exception {
+        when(varapiClient.getProviderByHealthId(actorId)).thenReturn(provider());
+        when(vashandiClient.fetchWorkContext(actorId)).thenReturn(workContextWithAssignment());
+        when(tshepoIdentityClient.issueWorkContextToken(any())).thenReturn(MAPPER.readTree(
+                "{\"data\":{\"token\":\"jws\",\"jti\":\"jti-1\",\"expiresAt\":\"2026-07-19T12:00:00Z\"}}"));
+
+        start(Map.of("facilityId", facilityId));
+
+        var captor = org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(tshepoIdentityClient).issueWorkContextToken(captor.capture());
+        assertThat(captor.getValue().get("workMode")).isEqualTo("CLINICAL_CARE");
+        verify(resolutionService, never()).proveContext(any(), any(), any());
+    }
+
     @Test
     void eligibilitySummaryIsOwnerOnlyAndHonestWhenSuspended() throws Exception {
         when(varapiClient.getProviderByHealthId(actorId)).thenReturn(MAPPER.readTree(

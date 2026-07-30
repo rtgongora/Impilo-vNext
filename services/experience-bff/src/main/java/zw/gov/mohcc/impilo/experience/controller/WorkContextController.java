@@ -164,6 +164,17 @@ public class WorkContextController {
         String workspaceId = str(body.get("workspaceId"));
         String previousJti = str(body.get("previousJti"));
         String regulatoryOrgId = str(body.get("organisationId"));
+        String contextId = str(body.get("contextId"));
+
+        // C3 — the general mint. A contextId from GET /work-context/resolved is re-proven
+        // against source here and minted with the mode the caller asked for, so every one
+        // of the six context families can start a session. The two branches below predate
+        // the resolver and remain for callers that have not adopted the chooser: they
+        // handle exactly two families and can only ever mint CLINICAL_CARE.
+        if (contextId != null) {
+            return startProvenContextSession(tenantId, requestId, correlationId, actorId,
+                    contextId, str(body.get("workMode")), previousJti);
+        }
 
         // ROM-W2 — regulatory (org-scoped) work session. Regulatory personnel are NOT
         // facility-attached and are not varapi providers; their context is an ACTIVE
@@ -237,12 +248,10 @@ public class WorkContextController {
         if (roleTemplateId != null) {
             issueRequest.put("roleTemplateId", roleTemplateId);
         }
-        // TODO(Phase C): mode is hardcoded pending the resolver's proveContext
-        // restructuring (POST /work-context/session/mode-aware) — CLINICAL_CARE
-        // is correct for every context this branch proves today (a Vashandi
-        // clinical facility assignment), but the request should carry the
-        // caller's requested mode once non-clinical facility contexts
-        // (department/facility management) are resolvable here.
+        // CLINICAL_CARE is correct for every context THIS branch proves — a Vashandi
+        // clinical facility assignment — and it stays hardcoded here because the branch
+        // cannot prove anything else. Callers needing another mode, or any of the other
+        // five context families, send contextId and take the proven path above.
         issueRequest.put("workMode", "CLINICAL_CARE");
         issueRequest.put("purposeOfUse", "TREATMENT");
         if (previousJti != null) {
@@ -265,6 +274,93 @@ public class WorkContextController {
         attributes.put("facilityId", facilityId);
         attributes.put("workspaceId", workspaceId);
         attributes.put("roleTemplateId", roleTemplateId);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", actorId, "type", "work-session", "attributes", attributes));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Mint a work session for any resolved context (C3).
+     *
+     * <p>The mode is the caller's, validated against what the proven context actually
+     * offers — not a constant. {@code startWorkSession}'s original branch hardcoded
+     * {@code CLINICAL_CARE}, which was true of every context it could prove (a Vashandi
+     * clinical facility assignment) and false the moment a department manager, programme
+     * officer or support engineer tried to start work.</p>
+     *
+     * <p>{@code contextId} is re-proven against source here, exactly as
+     * {@code switchWorkMode} does — it is a value the caller holds from the chooser, never
+     * a bearer credential.</p>
+     */
+    private ResponseEntity<Map<String, Object>> startProvenContextSession(
+            String tenantId, String requestId, String correlationId, String actorId,
+            String contextId, String requestedMode, String previousJti) {
+
+        ResolvedWorkContext proven = resolutionService.proveContext(actorId, null, contextId);
+        if (proven == null) {
+            // Generic denial — never discloses whether the contextId is unknown, expired,
+            // or belongs to someone else.
+            return errorBody(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "WORK_SESSION_UNAVAILABLE",
+                    "Work access is currently unavailable for the selected context.",
+                    requestId, correlationId);
+        }
+
+        // Absent an explicit choice, the context's own default is the honest answer; a
+        // context offering no default and no requested mode confers no usable authority,
+        // so it is refused rather than minted into an arbitrary one.
+        String mode = requestedMode != null ? requestedMode : proven.defaultMode();
+        if (mode == null || !proven.availableModes().contains(mode)) {
+            // Generic denial — never enumerates which modes ARE available.
+            return errorBody(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "WORK_MODE_UNAVAILABLE",
+                    "The requested mode is currently unavailable for this context.",
+                    requestId, correlationId);
+        }
+
+        Map<String, Object> issueRequest = new LinkedHashMap<>();
+        issueRequest.put("tenantId", tenantId);
+        issueRequest.put("actorId", actorId);
+        issueRequest.put("workMode", mode);
+        issueRequest.put("contextId", proven.contextId());
+        issueRequest.put("contextKind", proven.contextKind());
+        putIfPresent(issueRequest, "facilityId", proven.facilityId());
+        putIfPresent(issueRequest, "organisationId", proven.organisationId());
+        putIfPresent(issueRequest, "jurisdictionCode", proven.jurisdictionCode());
+        putIfPresent(issueRequest, "programmeId", proven.programmeId());
+        putIfPresent(issueRequest, "departmentId", proven.departmentId());
+        putIfPresent(issueRequest, "wardId", proven.wardId());
+        putIfPresent(issueRequest, "workspaceId", proven.workspaceId());
+        putIfPresent(issueRequest, "servicePointId", proven.servicePointId());
+        putIfPresent(issueRequest, "roleTemplateId", proven.roleTemplateId());
+        if (previousJti != null) {
+            issueRequest.put("previousJti", previousJti);
+        }
+
+        JsonNode issued = tshepoIdentityClient.issueWorkContextToken(issueRequest);
+        JsonNode data = issued != null ? issued.path("data") : null;
+        if (data == null || data.isMissingNode() || data.isNull()) {
+            return errorBody(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                    "WORK_TOKEN_UNAVAILABLE",
+                    "The work session could not be started. Try again.",
+                    requestId, correlationId);
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("token", text(data, "token"));
+        attributes.put("jti", text(data, "jti"));
+        attributes.put("expiresAt", text(data, "expiresAt"));
+        attributes.put("contextId", proven.contextId());
+        attributes.put("contextKind", proven.contextKind());
+        attributes.put("workMode", mode);
+        attributes.put("facilityId", proven.facilityId());
+        attributes.put("workspaceId", proven.workspaceId());
+        attributes.put("roleTemplateId", proven.roleTemplateId());
+        // Carried through so the shell can say why a context is degraded rather than
+        // presenting a restricted duty as an unqualified one. Enforcement is the PDP's.
+        attributes.put("restrictions", proven.restrictions());
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", actorId, "type", "work-session", "attributes", attributes));
