@@ -19,11 +19,13 @@ import java.util.UUID;
  * <p>The clinical and doctrinal invariants — a stillbirth mints no person, a certificate needs its
  * civil-notification event, a termination needs its lawful authorisation — are enforced below the
  * service by CHECK constraints, so they hold even against a write that bypasses this service. What
- * the service adds is the offline idempotency and the default confidentiality category.
+ * the service adds is the offline idempotency and the confidentiality stamp.
  *
- * <p>Loss records ship at {@code FULL_CLINICAL} with the SPECIALLY_PROTECTED gap stated: the
- * dedicated confidentiality pass (a separate lane) will stamp and enforce; this service does not
- * wait on it, exactly as the HIV programme shipped in W3.
+ * <p>Losses ARE stamped here — {@link #record} decides the category and basis through
+ * {@link ConfidentialityStamper}, and {@link #forMother} filters through
+ * {@link ConfidentialRecordGuard}. The protection class stays at {@code FULL_CLINICAL} until
+ * {@code pct.confidentiality.stamp-class} is flipped, which is a governance act and not a gap in this
+ * service. See {@code docs/clinical-governance/rmnp/srh-confidentiality-stamping.md}.
  */
 @Service
 public class PregnancyLossRecordService {
