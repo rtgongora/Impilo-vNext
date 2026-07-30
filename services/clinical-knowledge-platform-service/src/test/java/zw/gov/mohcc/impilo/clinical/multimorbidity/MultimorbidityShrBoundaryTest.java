@@ -101,5 +101,8 @@ class MultimorbidityShrBoundaryTest {
         assertThat(ClinicalKafkaTopics.topicForEventType(MultimorbidityShrPublisher.EVENT_TYPE))
                 .isEqualTo("impilo.clinical.multimorbidity.issue.detected")
                 .isNotEqualTo("impilo.clinical.events");
+        assertThat(ClinicalKafkaTopics.topicForEventType(MultimorbidityShrPublisher.RESOLVED_EVENT_TYPE))
+                .isEqualTo("impilo.clinical.multimorbidity.issue.resolved")
+                .isNotEqualTo("impilo.clinical.events");
     }
 }

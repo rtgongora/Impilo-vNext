@@ -146,4 +146,17 @@ class DetectedIssueShrBoundaryTest {
             assertThat(tag.getCode()).isEqualTo(TENANT.toString());
         });
     }
+
+    @Test
+    void retirementMovesStatusToCancelledNotEnteredInError() {
+        // FHIR R4 has no "resolved" on DetectedIssue. cancelled means the finding cleared;
+        // entered-in-error would claim the original filing was a mistake.
+        DetectedIssue issue = build("{\"severity\":\"HIGH\"}");
+        assertThat(issue.getStatus()).isEqualTo(DetectedIssue.DetectedIssueStatus.FINAL);
+
+        ButanoEventConsumer.applyDetectedIssueRetirement(issue);
+
+        assertThat(issue.getStatus()).isEqualTo(DetectedIssue.DetectedIssueStatus.CANCELLED);
+        assertThat(issue.getStatus()).isNotEqualTo(DetectedIssue.DetectedIssueStatus.ENTEREDINERROR);
+    }
 }
