@@ -5,6 +5,8 @@ import zw.gov.mohcc.impilo.clinical.calculator.CalculatorInput;
 import zw.gov.mohcc.impilo.clinical.calculator.CalculatorOption;
 import zw.gov.mohcc.impilo.clinical.calculator.CalculatorOutput;
 import zw.gov.mohcc.impilo.clinical.calculator.CalculatorRegistration;
+import zw.gov.mohcc.impilo.clinical.calculator.CalculatorResult;
+import zw.gov.mohcc.impilo.medicine.anthropometry.BodyMassIndex;
 import zw.gov.mohcc.impilo.medicine.anthropometry.BodySurfaceArea;
 import zw.gov.mohcc.impilo.medicine.common.Sex;
 import zw.gov.mohcc.impilo.medicine.metabolic.AnionGap;
@@ -36,6 +38,7 @@ public final class RenalMetabolicCalculators {
         all.add(egfr());
         all.add(creatinineClearance());
         all.add(bodySurfaceArea());
+        all.add(bodyMassIndex());
         all.add(correctedCalcium());
         all.add(correctedSodium());
         all.add(anionGap());
@@ -175,6 +178,65 @@ public final class RenalMetabolicCalculators {
                                     result.mostellerM2(), BodySurfaceArea.UNIT),
                             CalculatorOutput.secondary("spread", "Difference between formulae",
                                     result.spreadM2(), BodySurfaceArea.UNIT)));
+        });
+    }
+
+    private static CalculatorRegistration bodyMassIndex() {
+        var descriptor = new CalculatorDescriptor(
+                "body-mass-index",
+                "Body mass index",
+                "Anthropometry",
+                "Body mass index with the WHO adult classification.",
+                "WHO Technical Report Series 894, Geneva 2000, table 2.1. Primary text not vendored"
+                        + " in this system.",
+                List.of(
+                        CalculatorInput.decimal("height_cm", "Height", "cm", null),
+                        CalculatorInput.decimal("weight_kg", "Weight", "kg", null),
+                        CalculatorInput.integer("age_years", "Age", "years",
+                                "Needed to know whether the adult bands apply at all. A child's index"
+                                        + " is read against growth references instead.")),
+                List.of(
+                        "The index cannot distinguish muscle from fat, or peripheral from central"
+                                + " adiposity. It over-reads in the muscular and under-reads where lean"
+                                + " mass is low, which includes people who have lost weight through"
+                                + " chronic illness.",
+                        "The WHO cut-points were derived largely in European populations, and the WHO"
+                                + " notes that health risk in some Asian populations rises at lower"
+                                + " values. No ethnic adjustment is applied here.",
+                        "The index is not interpretable in pregnancy. This calculator has no way to"
+                                + " know, so a surface filing a BMI must carry that itself.",
+                        "Below " + BodyMassIndex.ADULT_FROM_AGE_YEARS + " years the index is still"
+                                + " calculated but no band is issued, because the adult table would"
+                                + " record a normal childhood value as a nutritional diagnosis."),
+                BodyMassIndex.CONTENT_VERSION);
+
+        return new CalculatorRegistration(descriptor, inputs -> {
+            var result = BodyMassIndex.of(inputs.decimal("height_cm"), inputs.decimal("weight_kg"),
+                    inputs.integer("age_years"));
+
+            if (!result.computed()) {
+                // The paediatric case has an index but no band. Returning the arithmetic alongside
+                // the refusal lets a surface show the number it did produce without implying the
+                // classification it deliberately withheld.
+                var refused = descriptor.refuse(result.reason().name(), result.explanation());
+                if (!result.hasIndex()) {
+                    return refused;
+                }
+                return new CalculatorResult(descriptor.id(), false,
+                        List.of(CalculatorOutput.primary("bmi", "Body mass index", result.bmi(),
+                                BodyMassIndex.UNIT,
+                                "The arithmetic only. No WHO band applies at this age.")),
+                        refused.refusalReason(), refused.refusalDetail(), descriptor.caveats(),
+                        result.contentVersion());
+            }
+            return descriptor.produce(result.contentVersion(),
+                    List.of(
+                            CalculatorOutput.primary("bmi", "Body mass index", result.bmi(),
+                                    BodyMassIndex.UNIT),
+                            CalculatorOutput.primary("category", "WHO category",
+                                    result.category().label(), null),
+                            CalculatorOutput.secondary("category_range", "Published interval",
+                                    result.category().range(), null)));
         });
     }
 

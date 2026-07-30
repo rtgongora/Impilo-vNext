@@ -12,6 +12,10 @@
  *
  * Backed by: Clinical Knowledge Platform (port 8270), Search service (port 8230),
  * MSIKA product registry, guidance service, Landela DMS.
+ *
+ * Calculators live in components/clinical/calculators. Both the list and the arithmetic come from
+ * the platform — this page holds neither, which is what stops the list drifting from what actually
+ * computes.
  */
 
 import Link from "next/link";
@@ -33,6 +37,7 @@ import { DiscoverFacilitiesMapPanel } from "@/components/maps/DiscoverFacilities
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 import { OfflineClinicalQueueOrchestrationPanel } from "@/components/clinical/OfflineClinicalQueueOrchestrationPanel";
 import { AIDiagnosticAssistant } from "@/components/clinical/AIDiagnosticAssistant";
+import { CalculatorsPanel } from "@/components/clinical/calculators/CalculatorsPanel";
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPE & DATA DEFINITIONS
@@ -454,108 +459,6 @@ function InteractionCheckerPanel() {
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <p>Interaction data is for clinical decision support only. Always verify against authoritative sources. Severity levels: <strong>Major</strong> (avoid combination), <strong>Moderate</strong> (use with caution), <strong>Minor</strong> (monitor).</p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Calculators ────────────────────────────────────────────────── */
-
-const CALCULATORS = [
-  { id: "gfr", name: "eGFR (CKD-EPI)", category: "Renal", description: "Estimated glomerular filtration rate using CKD-EPI equation" },
-  { id: "bmi", name: "BMI", category: "General", description: "Body mass index with WHO classification" },
-  { id: "bsa", name: "BSA", category: "General", description: "Body surface area (DuBois & Mosteller)" },
-  { id: "curb65", name: "CURB-65", category: "Respiratory", description: "Community-acquired pneumonia severity score" },
-  { id: "wells-dvt", name: "Wells Score (DVT)", category: "Haematology", description: "Pre-test probability for deep vein thrombosis" },
-  { id: "wells-pe", name: "Wells Score (PE)", category: "Haematology", description: "Pre-test probability for pulmonary embolism" },
-  { id: "cha2ds2", name: "CHA\u2082DS\u2082-VASc", category: "Cardiology", description: "Stroke risk in atrial fibrillation" },
-  { id: "meld", name: "MELD Score", category: "Hepatology", description: "Model for end-stage liver disease" },
-  { id: "apgar", name: "APGAR Score", category: "Neonatal", description: "Newborn assessment at 1 and 5 minutes" },
-  { id: "gcs", name: "Glasgow Coma Scale", category: "Neurology", description: "Level of consciousness assessment" },
-  { id: "sofa", name: "SOFA Score", category: "Critical Care", description: "Sequential organ failure assessment" },
-  { id: "child-pugh", name: "Child-Pugh", category: "Hepatology", description: "Hepatic function classification" },
-  { id: "corrected-calcium", name: "Corrected Calcium", category: "Endocrine", description: "Albumin-corrected serum calcium" },
-  { id: "anion-gap", name: "Anion Gap", category: "Metabolic", description: "Serum anion gap with delta-delta ratio" },
-  { id: "creatinine-clearance", name: "CrCl (Cockcroft-Gault)", category: "Renal", description: "Creatinine clearance for drug dosing" },
-  { id: "corrected-na", name: "Corrected Sodium", category: "Metabolic", description: "Sodium corrected for hyperglycaemia" },
-];
-
-function CalculatorsPanel() {
-  const [search, setSearch] = useState("");
-  const [selectedCalc, setSelectedCalc] = useState<string | null>(null);
-
-  const categories = [...new Set(CALCULATORS.map((c) => c.category))].sort();
-  const filtered = search.length > 0
-    ? CALCULATORS.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.category.toLowerCase().includes(search.toLowerCase()))
-    : CALCULATORS;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Calculator className="w-6 h-6 text-primary" />
-        <h2 className="text-lg font-semibold text-foreground">Clinical Calculators</h2>
-      </div>
-      <p className="text-sm text-muted-foreground">Validated clinical scoring tools and medical calculators for point-of-care use.</p>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search calculators..."
-          className="w-full rounded-lg border border-border pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-      </div>
-
-      {selectedCalc ? (
-        <CalculatorDetail calcId={selectedCalc} onBack={() => setSelectedCalc(null)} />
-      ) : (
-        <>
-          <div className="flex gap-2 flex-wrap">
-            {categories.map((cat) => (
-              <button key={cat} onClick={() => setSearch(cat)} className="text-xs border border-border rounded-full px-3 py-1 hover:bg-success-soft hover:border-emerald-300 transition">
-                {cat}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {filtered.map((calc) => (
-              <button key={calc.id} onClick={() => setSelectedCalc(calc.id)}
-                className="bg-card rounded-lg border border-border p-4 text-left hover:border-emerald-300 hover:bg-success-soft/50 transition">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-foreground">{calc.name}</p>
-                  <span className="text-xs bg-emerald-100 text-primary-hover rounded-full px-2 py-0.5">{calc.category}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{calc.description}</p>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function CalculatorDetail({ calcId, onBack }: { calcId: string; onBack: () => void }) {
-  const calc = CALCULATORS.find((c) => c.id === calcId);
-  if (!calc) return null;
-
-  return (
-    <div className="bg-card rounded-lg border border-border p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-foreground">{calc.name}</h3>
-          <p className="text-xs text-muted-foreground">{calc.description}</p>
-        </div>
-        <button onClick={onBack} className="text-xs text-muted-foreground hover:text-foreground">Close</button>
-      </div>
-      <div className="bg-success-soft border border-success/25 rounded-lg p-4 text-center">
-        <Calculator className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-        <p className="text-sm text-primary-hover font-medium">Calculator interface</p>
-        <p className="text-xs text-primary mt-1">Enter patient parameters to compute the {calc.name}. Results are calculated client-side.</p>
-        <p className="text-xs text-muted-foreground mt-3">Full calculator form connected to Clinical Knowledge Platform (port 8270).</p>
-      </div>
-      <div className="flex gap-2 text-xs">
-        <span className="bg-neutral-100 text-muted-foreground rounded-full px-2.5 py-1">{calc.category}</span>
-        <span className="bg-neutral-100 text-muted-foreground rounded-full px-2.5 py-1">Validated</span>
-        <span className="bg-neutral-100 text-muted-foreground rounded-full px-2.5 py-1">Point-of-care</span>
       </div>
     </div>
   );
