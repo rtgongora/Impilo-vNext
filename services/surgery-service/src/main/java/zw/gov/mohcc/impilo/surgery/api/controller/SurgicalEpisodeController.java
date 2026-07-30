@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.surgery.api.controller;
 
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.OpenEpisodeRequest;
+import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.ReopenEpisodeRequest;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.SurgicalEpisodeView;
 import zw.gov.mohcc.impilo.surgery.core.SurgicalEpisodeService;
 
@@ -52,5 +53,18 @@ public class SurgicalEpisodeController {
     @PostMapping("/{id}/transition")
     public SurgicalEpisodeView transition(@PathVariable UUID id, @RequestBody Map<String, String> body) {
         return service.transition(id, body.get("status"));
+    }
+
+    /**
+     * Reopen for a return to theatre (V010, demonstration 9). Separate from {@code /transition}
+     * because it carries a mandatory reason and records who reopened the episode.
+     */
+    @PostMapping("/{id}/reopen")
+    public SurgicalEpisodeView reopen(@PathVariable UUID id, @RequestBody ReopenEpisodeRequest req) {
+        UUID predecessor = null;
+        if (req.reoperationOfEpisodeId() != null && !req.reoperationOfEpisodeId().isBlank()) {
+            predecessor = UUID.fromString(req.reoperationOfEpisodeId());
+        }
+        return service.reopen(id, req.reason(), predecessor);
     }
 }
