@@ -155,15 +155,18 @@ nothing exists.
 | 16 | Pathology + specimen closure (10 states) | PARTIAL | OROS has the states; the surgical closure gate has nothing to gate |
 | 17 | Implants, devices, drains, stomas (12 attributes) | PARTIAL | implant registry with recall real; drains, stomas and wounds absent; patient-facing information and removal/revision absent |
 | 18 | Discharge + long-term follow-up (18 items) | PARTIAL | surgical discharge summary real; surveillance, future surgery, restrictions, fit note, transport absent |
-| 19 | Decision support (12 areas) | **ABSENT** | CKP machinery ready, no content |
+| 19 | Decision support (12 areas) | PARTIAL | 147 rules authored (SB-4) and loaded into `clinical.rule_definitions` by CKP `V300` as inspectable content; none executable — the authored logic is prose, and every row is unratified and outside its effective window by construction |
 | 20 | Facility capability (14 dimensions) | PARTIAL | spaces/beds/equipment/instrument sets; capability query absent |
 | 21 | Integration; finance must not delay emergency | PARTIAL | costa bundle real; the emergency-not-delayed invariant is unproven |
 | 22 | Offline (9 surfaces) | **ABSENT** | — |
-| 23 | Analytics (20 indicators) | PARTIAL | 2 of 20 |
+| 23 | Analytics (20 indicators) | PARTIAL | 4 of 20 `COMPUTED`, 8 `PARTIAL`, 8 `NOT_YET_INSTRUMENTED` per `surgery.analytics_indicator_definition` (SB-6) |
 | 24 | 10 demonstrations | PARTIAL | theatre rigs prove elective, emergency, obstetric, day-case, cancellation, complication journeys at case level; none of the ten as written (they span the whole course) |
 | 25 | Expected outputs (14) | PARTIAL | this audit is the first |
 
-**Score: 0 BUILT · 16 PARTIAL · 9 ABSENT.**
+**Score: 0 BUILT · 17 PARTIAL · 8 ABSENT.**
+
+(Section 19 moved ABSENT → PARTIAL when CKP `V300` loaded the authored rules. Recounted from the
+table above, 25 rows, not adjusted by assumption.)
 
 Note the contrast with the pipeline matrix: there, everything was built for one setting. Here,
 the middle of the journey is built and both ends are missing. Nothing scores BUILT at section
