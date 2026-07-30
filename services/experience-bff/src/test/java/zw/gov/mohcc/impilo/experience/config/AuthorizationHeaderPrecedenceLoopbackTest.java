@@ -298,7 +298,8 @@ class AuthorizationHeaderPrecedenceLoopbackTest {
     private RestTemplate interceptedTemplate(String mintedToken) {
         ServiceClientConfig config = new ServiceClientConfig();
         return config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(provider(mintedToken),
-                new VisibilityPropagationShadowReporter(new ObjectMapper())));
+                new VisibilityPropagationShadowReporter(new ObjectMapper()),
+                new VisibilityObligationPropagator(false)));
     }
 
     private String header(String path, String name) {

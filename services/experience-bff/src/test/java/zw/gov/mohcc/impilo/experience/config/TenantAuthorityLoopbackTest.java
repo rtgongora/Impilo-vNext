@@ -258,7 +258,8 @@ class TenantAuthorityLoopbackTest {
                         return Optional.empty();
                     }
                 },
-                new VisibilityPropagationShadowReporter(new ObjectMapper())));
+                new VisibilityPropagationShadowReporter(new ObjectMapper()),
+                new VisibilityObligationPropagator(false)));
     }
 
     private String header(String path, String name) {

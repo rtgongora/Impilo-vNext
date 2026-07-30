@@ -74,7 +74,8 @@ class ServiceTokenPatchLoopbackTest {
         RestTemplate serviceRestTemplate =
                 config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(provider,
                         new zw.gov.mohcc.impilo.experience.config.VisibilityPropagationShadowReporter(
-                                new ObjectMapper())));
+                                new ObjectMapper()),
+                        new zw.gov.mohcc.impilo.experience.config.VisibilityObligationPropagator(false)));
 
         DOWNSTREAM.stubFor(com.github.tomakehurst.wiremock.client.WireMock
                 .patch(urlEqualTo("/v1/internal/vashandi/swaps/swap-1/decide"))
