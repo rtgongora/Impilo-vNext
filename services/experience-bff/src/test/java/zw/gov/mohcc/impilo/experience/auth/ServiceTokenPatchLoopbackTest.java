@@ -72,7 +72,9 @@ class ServiceTokenPatchLoopbackTest {
         // The REAL bean, with its real transport factory. No MockRestServiceServer here.
         ServiceClientConfig config = new ServiceClientConfig();
         RestTemplate serviceRestTemplate =
-                config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(provider));
+                config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(provider,
+                        new zw.gov.mohcc.impilo.experience.config.VisibilityPropagationShadowReporter(
+                                new ObjectMapper())));
 
         DOWNSTREAM.stubFor(com.github.tomakehurst.wiremock.client.WireMock
                 .patch(urlEqualTo("/v1/internal/vashandi/swaps/swap-1/decide"))

@@ -330,12 +330,21 @@ public class ServiceClientConfig {
      * </ol>
      */
     @Bean
-    public ClientHttpRequestInterceptor trustHeaderForwardingInterceptor(ServiceTokenProvider serviceTokenProvider) {
+    public ClientHttpRequestInterceptor trustHeaderForwardingInterceptor(
+            ServiceTokenProvider serviceTokenProvider,
+            VisibilityPropagationShadowReporter visibilityShadowReporter) {
         return (request, body, execution) -> {
             ServletRequestAttributes attrs =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attrs != null) {
                 HttpServletRequest inbound = attrs.getRequest();
+                // Measure the visibility tightening this hop WOULD apply if the obligation were
+                // forwarded. Observation only — see VisibilityPropagationShadowReporter for why the
+                // measurement has to precede the change: two of the three downstream guards are
+                // permissive on a null profile and restrictive on a present one, so forwarding
+                // tightens routes nobody has enumerated, while the third fails closed and so needs
+                // the forwarding to exist at all.
+                visibilityShadowReporter.report(inbound, request);
                 // Tenant is forwarded only-if-absent so a client method can declare the PLANE its
                 // rows live on. The two-plane model requires it: facility/provider/geo masters are
                 // registry-plane, and a care-plane caller asking a facility question must read
