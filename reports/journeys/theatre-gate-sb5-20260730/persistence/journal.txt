@@ -1,0 +1,28 @@
+== RIG: infra (postgres + redis) + inpatient-service (real FSM + Flyway V001..V065)
+== RIG: infra (postgres + redis) + inpatient-service (real FSM + Flyway V001..V065)
+== RIG: infra (postgres + redis) + inpatient-service (real FSM + Flyway V001..V065)
+== BOOT: inpatient-service (Flyway migrates V001..V065)
+   PASS: inpatient-service booted healthy (Flyway applied V001..V065)
+== J-TP-1 V065 version column on inpatient.procedure_episode
+   PASS: J-TP-1 version column exists NOT NULL DEFAULT 0 (got: NO|0)
+== J-TP-2 intake dedup (same OROS order → one episode)
+   PASS: J-TP-2 duplicate intake deduped to ONE episode (c93856b6-15dd-4c21-b6f9-06347d22ceb8, rows=1)
+== J-TP-3 version increments + durable after triage
+   PASS: J-TP-3 version incremented on mutation (1 -> 2; triage_priority=URGENT durable)
+== J-TP-4 idempotent keyed write (blood request resubmit → one row)
+   PASS: J-TP-4 resubmitted keyed blood-request collapsed to ONE link row
+
+== THEATRE-PERSISTENCE §18 RIG RESULT: PASS=5 FAIL=0
+== RIG: infra (postgres + redis) + inpatient-service (real FSM + Flyway V001..V065)
+== BOOT: inpatient-service (Flyway migrates V001..V065)
+   PASS: inpatient-service booted healthy (Flyway applied V001..V065)
+== J-TP-1 V065 version column on inpatient.procedure_episode
+   PASS: J-TP-1 version column exists NOT NULL DEFAULT 0 (got: NO|0)
+== J-TP-2 intake dedup (same OROS order → one episode)
+   PASS: J-TP-2 duplicate intake deduped to ONE episode (d2e05579-9300-42e7-a540-95b8f1f553f8, rows=1)
+== J-TP-3 version increments + durable after triage
+   PASS: J-TP-3 version incremented on mutation (1 -> 2; triage_priority=URGENT durable)
+== J-TP-4 idempotent keyed write (blood request resubmit → one row)
+   PASS: J-TP-4 resubmitted keyed blood-request collapsed to ONE link row
+
+== THEATRE-PERSISTENCE §18 RIG RESULT: PASS=5 FAIL=0
