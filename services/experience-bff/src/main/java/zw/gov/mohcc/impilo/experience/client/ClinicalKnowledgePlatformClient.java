@@ -99,6 +99,29 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /**
+     * Classifies one woman against the WHO maternal near-miss criteria.
+     *
+     * <p>The body is forwarded as built, and an omitted observation must stay omitted. Filling absent
+     * fields with false here would turn "we never measured her creatinine" into "her creatinine was
+     * normal", and a near-miss recorded as a normal birth improves the near-miss-to-death ratio while
+     * removing the one case with the most to learn from.
+     */
+    public JsonNode nearMissClassify(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/near-miss/classify";
+        log.debug("Clinical platform: maternal near-miss classify");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** The near-miss-to-death ratio and mortality index over a reporting period's cases. */
+    public JsonNode nearMissIndicators(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/near-miss/indicators";
+        log.debug("Clinical platform: maternal near-miss indicators");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";

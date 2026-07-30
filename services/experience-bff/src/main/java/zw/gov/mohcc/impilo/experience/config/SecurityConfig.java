@@ -388,6 +388,14 @@ public class SecurityConfig {
                     // ── Clinical source PDF ingestion (operators / admin only) ──
                     .requestMatchers("/internal/v1/clinical/source/**")
                             .hasAnyRole(ADMIN_ROLES)
+                    // ── Maternal near-miss identification and indicators ────────
+                    // Pinned to clinical roles rather than left to the .authenticated() catch-all
+                    // below: this classifies a woman against the WHO organ-dysfunction criteria and
+                    // computes the facility's mortality index, and neither is a general read. It is
+                    // deliberately NOT on the confidential lane — identification carries no
+                    // confidentiality stamp, and stamping it would make the ratio uncomputable.
+                    .requestMatchers("/internal/v1/clinical/maternal/near-miss/**")
+                            .hasAnyRole(CLINICAL_ROLES)
                     // ── National clinical knowledge (EDLIZ-aligned) ───────
                     .requestMatchers("/internal/v1/clinical/**")
                             .authenticated()
