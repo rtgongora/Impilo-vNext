@@ -20,6 +20,7 @@ public class VarapiProperties {
     private LearningPlatformSyncProperties learningPlatformSync = new LearningPlatformSyncProperties();
     private CouncilRegulatoryProperties councilRegulatory = new CouncilRegulatoryProperties();
     private IdentityProperties identity = new IdentityProperties();
+    private OrgRegistryProperties orgRegistry = new OrgRegistryProperties();
 
     public String getRegistryMode() { return registryMode; }
     public void setRegistryMode(String registryMode) { this.registryMode = registryMode; }
@@ -38,6 +39,9 @@ public class VarapiProperties {
 
     public TusoProperties getTuso() { return tuso; }
     public void setTuso(TusoProperties tuso) { this.tuso = tuso; }
+
+    public OrgRegistryProperties getOrgRegistry() { return orgRegistry; }
+    public void setOrgRegistry(OrgRegistryProperties orgRegistry) { this.orgRegistry = orgRegistry; }
 
     public DocumentProperties getDocument() { return document; }
     public void setDocument(DocumentProperties document) { this.document = document; }
@@ -117,6 +121,22 @@ public class VarapiProperties {
 
         public String getBaseUrl() { return baseUrl; }
         public void setBaseUrl(String v) { this.baseUrl = v; }
+    }
+
+    /**
+     * The Regulatory Configuration Registry, which lives in organization-registry. Varapi reads
+     * a council's ACTIVE configuration from it in order to materialise that council's registers.
+     * Two reads, no writes: varapi never authors configuration.
+     */
+    public static class OrgRegistryProperties {
+        private String baseUrl = "http://localhost:8153";
+        private boolean enabled = true;
+
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String v) { this.baseUrl = v; }
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
     }
 
     public static class DocumentProperties {
