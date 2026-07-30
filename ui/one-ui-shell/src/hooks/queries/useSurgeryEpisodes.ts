@@ -24,7 +24,9 @@ export type SurgicalEpisodeStatus =
   | "LISTED_FOR_SURGERY"
   | "OPERATED"
   | "CLOSED"
-  | "ABANDONED";
+  | "ABANDONED"
+  /** V010 — reopened for a return to theatre. Only reachable via the audited reopen route. */
+  | "REOPENED";
 
 export interface SurgicalEpisode {
   id: string;
@@ -36,8 +38,14 @@ export interface SurgicalEpisode {
   operativeIndication: string | null;
   nonOperativeOptionsConsidered: string | null;
   status: SurgicalEpisodeStatus;
+  /** The LEAD specialty. Every specialty on a shared case comes from `useEpisodeSpecialties`. */
   specialty: string | null;
   pctContributed: boolean;
+  /** V010 reoperation trail — the predecessor episode, and who reopened this one, when and why. */
+  reoperationOfEpisodeId?: string | null;
+  reopenedAt?: string | null;
+  reopenedBy?: string | null;
+  reopenReason?: string | null;
 }
 
 export interface OpenEpisodePayload {
@@ -92,6 +100,16 @@ export interface SurgicalAssessment {
 
 export type SurgicalFinalDecision = "PROCEED" | "DO_NOT_PROCEED" | "DEFER";
 
+/** V012 — was this decided by one clinician, or by a multidisciplinary team? */
+export type SurgicalDecisionForum = "INDIVIDUAL" | "MDT";
+
+/**
+ * Which of PCT's two MDT systems of record the referenced board decision lives in. Surgery
+ * references them; it deliberately does not keep a third copy. That PCT holds two at all is an
+ * inherited defect recorded in the programme lease, not something this surface can resolve.
+ */
+export type MdtDecisionSource = "PCT_MDT_DECISION" | "PCT_MDT_CASE_ITEM";
+
 /** S3 view — final-decision/decidedBy/decidedAt travel as an all-or-nothing trio (CHECK-enforced). */
 export interface SurgicalDecision {
   id?: string;
@@ -114,6 +132,27 @@ export interface SurgicalDecision {
   finalDecision?: SurgicalFinalDecision | null;
   decidedBy?: string | null;
   decidedAt?: string | null;
+  /** V012 — MDT forum. `mdtDecisionRef` points into PCT; surgery keeps no board record of its own. */
+  decisionForum?: SurgicalDecisionForum | null;
+  mdtDecisionRef?: string | null;
+  mdtDecisionSource?: MdtDecisionSource | null;
+  mdtDecisionVerifiedAt?: string | null;
+  /**
+   * Whether surgery could actually confirm the referenced board decision exists in PCT. False
+   * means recorded-but-unconfirmed (PCT was unreachable at the time), NOT "the board did not
+   * decide this" — a distinction the UI must keep visible rather than showing a bare tick.
+   */
+  mdtDecisionVerified?: boolean;
+}
+
+/** One specialty on a shared surgical case (V011). */
+export interface EpisodeSpecialty {
+  id: string;
+  specialty: string;
+  role: "LEAD" | "SHARED";
+  contribution: string | null;
+  addedBy: string;
+  addedAt: string;
 }
 
 /** True when a query error is the 404 "not recorded yet" gap rather than a real failure. */
@@ -234,6 +273,91 @@ export function useRecordSurgicalDecision(episodeId: string | null) {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["surgery", "decision", episodeId] });
+    },
+  });
+}
+
+/**
+ * V010 reopen for a return to theatre. Distinct from `useTransitionSurgicalEpisode`: the reason
+ * is mandatory and the server stamps who reopened and when. A plain transition to REOPENED is
+ * refused server-side precisely so this audit cannot be sidestepped.
+ */
+export function useReopenSurgicalEpisode(episodeId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SurgicalEpisode,
+    unknown,
+    { reason: string; reoperationOfEpisodeId?: string | null }
+  >({
+    mutationFn: (payload) =>
+      apiClient.post<SurgicalEpisode>(`/internal/v1/surgery/episodes/${episodeId}/reopen`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["surgery"] });
+    },
+  });
+}
+
+/**
+ * V011 — every specialty on the case, lead and shared. Same contract as the episode list: an
+ * error is "could not read which teams are on this case", never a rendered empty roster. On a
+ * theatre surface that difference decides whether a second team is expected in the room.
+ */
+export function useEpisodeSpecialties(episodeId: string | null) {
+  return useQuery<EpisodeSpecialty[]>({
+    queryKey: ["surgery", "specialties", episodeId],
+    queryFn: () =>
+      apiClient.get<EpisodeSpecialty[]>(`/internal/v1/surgery/episodes/${episodeId}/specialties`),
+    enabled: !!episodeId,
+  });
+}
+
+export function useAddEpisodeSpecialty(episodeId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    EpisodeSpecialty,
+    unknown,
+    { specialty: string; role?: "LEAD" | "SHARED"; contribution?: string | null }
+  >({
+    mutationFn: (payload) =>
+      apiClient.post<EpisodeSpecialty>(
+        `/internal/v1/surgery/episodes/${episodeId}/specialties`,
+        payload,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["surgery"] });
+    },
+  });
+}
+
+/** Handing the lead over also moves the episode's own lead-specialty column, server-side. */
+export function useTransferEpisodeLead(episodeId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation<EpisodeSpecialty[], unknown, { specialty: string; contribution?: string | null }>({
+    mutationFn: (payload) =>
+      apiClient.post<EpisodeSpecialty[]>(
+        `/internal/v1/surgery/episodes/${episodeId}/specialties/lead`,
+        payload,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["surgery"] });
+    },
+  });
+}
+
+/**
+ * The specialty travels as a query parameter, never a path segment. As a segment it would
+ * become the ext_authz derived resource type and no policy row could match, making the route
+ * permanently unreachable — see tshepo-authz V303's header.
+ */
+export function useRemoveEpisodeSpecialty(episodeId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation<EpisodeSpecialty[], unknown, { specialty: string }>({
+    mutationFn: ({ specialty }) =>
+      apiClient.delete<EpisodeSpecialty[]>(
+        `/internal/v1/surgery/episodes/${episodeId}/specialties?specialty=${encodeURIComponent(specialty)}`,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["surgery"] });
     },
   });
 }

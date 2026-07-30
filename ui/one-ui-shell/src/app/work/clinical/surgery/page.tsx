@@ -22,18 +22,29 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   isNotRecorded,
+  useAddEpisodeSpecialty,
+  useEpisodeSpecialties,
   useOpenSurgicalEpisode,
   useRecordSurgicalAssessment,
   useRecordSurgicalDecision,
+  useRemoveEpisodeSpecialty,
+  useReopenSurgicalEpisode,
   useSurgicalAssessment,
   useSurgicalDecision,
   useSurgicalEpisodes,
+  useTransferEpisodeLead,
   useTransitionSurgicalEpisode,
   type SurgicalAssessment,
   type SurgicalDecision,
+  type SurgicalEpisode,
   type SurgicalEpisodeStatus,
 } from "@/hooks/queries/useSurgeryEpisodes";
 
+/**
+ * REOPENED is deliberately absent: it is reachable only through the audited reopen route,
+ * which carries a mandatory reason. Offering it here as a plain transition would let a
+ * clinician reopen a case with no recorded cause — and the server refuses it anyway.
+ */
 const STATUS_OPTIONS: SurgicalEpisodeStatus[] = [
   "ASSESSMENT",
   "LISTED_FOR_SURGERY",
@@ -48,7 +59,30 @@ const STATUS_STYLE: Record<string, string> = {
   OPERATED: "bg-emerald-50 text-emerald-800",
   CLOSED: "bg-gray-100 text-gray-600",
   ABANDONED: "bg-gray-100 text-gray-600",
+  REOPENED: "bg-rose-50 text-rose-800",
 };
+
+/** The fifteen surgical specialties, matching surgery-service's own CHECK constraint. */
+const SURGICAL_SPECIALTIES = [
+  "GENERAL_SURGERY",
+  "ORTHOPAEDICS",
+  "UROLOGY",
+  "ENT",
+  "OPHTHALMOLOGY",
+  "COLORECTAL",
+  "UPPER_GI_HPB",
+  "BREAST_ENDOCRINE",
+  "VASCULAR",
+  "NEUROSURGERY",
+  "CARDIOTHORACIC",
+  "MAXILLOFACIAL",
+  "PLASTICS",
+  "PAEDIATRIC_SURGERY",
+  "SURGICAL_ONCOLOGY",
+];
+
+/** Reopening is only offered from the states surgery-service actually accepts it from. */
+const REOPENABLE_FROM: SurgicalEpisodeStatus[] = ["OPERATED", "CLOSED"];
 
 /** S2 free-text elements, complete against SurgicalAssessmentService's own field list. */
 const ASSESSMENT_TEXT_FIELDS: Array<{ key: keyof SurgicalAssessment; label: string }> = [
@@ -262,6 +296,9 @@ function DecisionPanel({ episodeId }: { episodeId: string }) {
   const record = useRecordSurgicalDecision(episodeId);
   const [draft, setDraft] = useState<Partial<SurgicalDecision>>({});
   const [finalDecision, setFinalDecision] = useState<string>("");
+  const [forum, setForum] = useState<string>("");
+  const [mdtRef, setMdtRef] = useState("");
+  const [mdtSource, setMdtSource] = useState("PCT_MDT_DECISION");
   const [editing, setEditing] = useState(false);
 
   const startEdit = () => {
@@ -273,6 +310,9 @@ function DecisionPanel({ episodeId }: { episodeId: string }) {
     }
     setDraft(base);
     setFinalDecision("");
+    setForum(decisionQ.data?.decisionForum ?? "");
+    setMdtRef(decisionQ.data?.mdtDecisionRef ?? "");
+    setMdtSource(decisionQ.data?.mdtDecisionSource ?? "PCT_MDT_DECISION");
     setEditing(true);
   };
 
@@ -285,8 +325,20 @@ function DecisionPanel({ episodeId }: { episodeId: string }) {
     // finalDecision travels only when explicitly chosen this save — the server stamps
     // decidedBy/decidedAt as an all-or-nothing trio with it.
     if (finalDecision) payload.finalDecision = finalDecision;
+    // The forum travels as a set: MDT requires a board reference and its source; reverting to
+    // INDIVIDUAL clears them. Sending a half-set is refused server-side by a CHECK constraint,
+    // so the form sends whole states only.
+    if (forum === "MDT") {
+      payload.decisionForum = "MDT";
+      payload.mdtDecisionRef = mdtRef.trim();
+      payload.mdtDecisionSource = mdtSource;
+    } else if (forum === "INDIVIDUAL") {
+      payload.decisionForum = "INDIVIDUAL";
+    }
     record.mutate(payload, { onSuccess: () => setEditing(false) });
   };
+
+  const mdtIncomplete = forum === "MDT" && mdtRef.trim() === "";
 
   return (
     <div className="mt-4 rounded-lg border border-gray-100 p-3" data-testid="surgery-decision-panel">
@@ -330,6 +382,33 @@ function DecisionPanel({ episodeId }: { episodeId: string }) {
           ) : (
             <p className="text-xs text-muted-foreground">No final decision yet — deliberation in progress.</p>
           )}
+          {decisionQ.data.decisionForum === "MDT" ? (
+            <p className="text-xs" data-testid="surgery-decision-forum">
+              <span className="font-semibold uppercase text-muted-foreground">Forum: </span>
+              Multidisciplinary team · board decision {decisionQ.data.mdtDecisionRef} in{" "}
+              {decisionQ.data.mdtDecisionSource}
+              {decisionQ.data.mdtDecisionVerified ? (
+                <span className="ml-1 text-emerald-700" data-testid="surgery-decision-mdt-verified">
+                  (confirmed present in PCT
+                  {decisionQ.data.mdtDecisionVerifiedAt
+                    ? ` at ${decisionQ.data.mdtDecisionVerifiedAt}`
+                    : ""}
+                  )
+                </span>
+              ) : (
+                // Recorded-but-unconfirmed is not the same as "the board did not decide this",
+                // and must not render as either a tick or an absence.
+                <span className="ml-1 text-amber-700" data-testid="surgery-decision-mdt-unverified">
+                  (recorded, not yet confirmed against PCT)
+                </span>
+              )}
+            </p>
+          ) : decisionQ.data.decisionForum ? (
+            <p className="text-xs" data-testid="surgery-decision-forum">
+              <span className="font-semibold uppercase text-muted-foreground">Forum: </span>
+              Individual clinician
+            </p>
+          ) : null}
           {DECISION_TEXT_FIELDS.filter((f) => decisionQ.data?.[f.key]).map((f) => (
             <p key={String(f.key)}>
               <span className="text-xs font-semibold uppercase text-muted-foreground">{f.label}: </span>
@@ -363,11 +442,64 @@ function DecisionPanel({ episodeId }: { episodeId: string }) {
               <option value="DEFER">DEFER</option>
             </select>
           </div>
+
+          {/* V012 — MDT forum. Surgery REFERENCES PCT's board record; it keeps no copy. */}
+          <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+            <label className="block text-xs">
+              <span className="font-semibold uppercase text-muted-foreground">Decision forum</span>
+              <select
+                value={forum}
+                onChange={(e) => setForum(e.target.value)}
+                className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
+                data-testid="surgery-decision-forum-select"
+              >
+                <option value="">Leave unchanged</option>
+                <option value="INDIVIDUAL">Individual clinician</option>
+                <option value="MDT">Multidisciplinary team</option>
+              </select>
+            </label>
+            {forum === "MDT" && (
+              <>
+                <label className="block text-xs">
+                  <span className="font-semibold uppercase text-muted-foreground">
+                    PCT board decision ID
+                  </span>
+                  <input
+                    type="text"
+                    value={mdtRef}
+                    onChange={(e) => setMdtRef(e.target.value)}
+                    placeholder="UUID of the PCT MDT record"
+                    className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
+                    data-testid="surgery-decision-mdt-ref"
+                  />
+                </label>
+                <label className="block text-xs">
+                  <span className="font-semibold uppercase text-muted-foreground">Which PCT record</span>
+                  <select
+                    value={mdtSource}
+                    onChange={(e) => setMdtSource(e.target.value)}
+                    className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
+                    data-testid="surgery-decision-mdt-source"
+                  >
+                    <option value="PCT_MDT_DECISION">pct_mdt_decisions</option>
+                    <option value="PCT_MDT_CASE_ITEM">pct_mdt_sessions case item</option>
+                  </select>
+                </label>
+              </>
+            )}
+          </div>
+          {forum === "MDT" && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              PCT holds two MDT records; pick the one the board decision was minuted in. Surgery
+              stores only the reference.
+            </p>
+          )}
+
           <div className="mt-3 flex items-center gap-2">
             <button
               type="button"
               onClick={save}
-              disabled={record.isPending}
+              disabled={record.isPending || mdtIncomplete}
               className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
               data-testid="surgery-decision-save"
             >
@@ -380,6 +512,11 @@ function DecisionPanel({ episodeId }: { episodeId: string }) {
             >
               Cancel
             </button>
+            {mdtIncomplete && (
+              <span className="text-xs text-muted-foreground" data-testid="surgery-decision-mdt-required">
+                An MDT decision needs the PCT board decision it came from.
+              </span>
+            )}
             {record.isError && (
               <span className="text-sm text-danger" role="alert" data-testid="surgery-decision-save-failed">
                 Save failed — the decision has NOT been recorded.
@@ -388,6 +525,221 @@ function DecisionPanel({ episodeId }: { episodeId: string }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * V011 — every specialty operating on this case, not just the lead. Removal is offered only for
+ * SHARED teams: the lead cannot be removed, only handed over, and the server enforces that too.
+ */
+function SpecialtiesPanel({ episodeId }: { episodeId: string }) {
+  const specialtiesQ = useEpisodeSpecialties(episodeId);
+  const add = useAddEpisodeSpecialty(episodeId);
+  const transferLead = useTransferEpisodeLead(episodeId);
+  const remove = useRemoveEpisodeSpecialty(episodeId);
+
+  const [specialty, setSpecialty] = useState("");
+  const [contribution, setContribution] = useState("");
+
+  const present = new Set((specialtiesQ.data ?? []).map((s) => s.specialty));
+  const selectable = SURGICAL_SPECIALTIES.filter((s) => !present.has(s));
+  const failed = add.isError || transferLead.isError || remove.isError;
+
+  const reset = () => {
+    setSpecialty("");
+    setContribution("");
+  };
+
+  return (
+    <div className="mt-4 rounded-lg border border-gray-100 p-3" data-testid="surgery-specialties-panel">
+      <h4 className="text-xs font-semibold uppercase text-muted-foreground">
+        Specialties on this case (S1 · shared-specialty care)
+      </h4>
+
+      {specialtiesQ.isLoading ? (
+        <p className="mt-2 text-sm text-muted-foreground">Loading specialties…</p>
+      ) : specialtiesQ.isError ? (
+        // Never an empty roster on failure: on a theatre surface that reads as "no second team
+        // is coming", which is exactly the wrong thing to tell a room.
+        <p className="mt-2 text-sm text-danger" role="alert" data-testid="surgery-specialties-unavailable">
+          Could not read which teams are on this case. This is not the same as there being only
+          one team.
+        </p>
+      ) : specialtiesQ.data && specialtiesQ.data.length === 0 ? (
+        <p className="mt-2 text-sm text-muted-foreground" data-testid="surgery-specialties-empty">
+          No specialty recorded on this episode.
+        </p>
+      ) : (
+        <ul className="mt-2 space-y-1" data-testid="surgery-specialties-list">
+          {specialtiesQ.data?.map((s) => (
+            <li key={s.id} className="flex flex-wrap items-center gap-2 text-sm">
+              <span
+                className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
+                  s.role === "LEAD" ? "bg-indigo-50 text-indigo-800" : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {s.role}
+              </span>
+              <span className="font-medium">{s.specialty}</span>
+              {s.contribution && <span className="text-xs text-muted-foreground">{s.contribution}</span>}
+              <span className="text-xs text-muted-foreground">added by {s.addedBy}</span>
+              {s.role === "SHARED" && (
+                <button
+                  type="button"
+                  onClick={() => remove.mutate({ specialty: s.specialty })}
+                  disabled={remove.isPending}
+                  className="rounded-md border border-gray-200 px-2 py-0.5 text-xs disabled:opacity-50"
+                  data-testid="surgery-specialty-remove"
+                >
+                  Remove
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-end gap-2">
+        <label className="block text-xs">
+          <span className="font-semibold uppercase text-muted-foreground">Specialty</span>
+          <select
+            value={specialty}
+            onChange={(e) => setSpecialty(e.target.value)}
+            className="mt-0.5 block rounded-md border border-gray-200 px-2 py-1.5 text-sm"
+            data-testid="surgery-specialty-select"
+          >
+            <option value="">Choose a specialty…</option>
+            {selectable.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block flex-1 text-xs min-w-[180px]">
+          <span className="font-semibold uppercase text-muted-foreground">Contribution</span>
+          <input
+            type="text"
+            value={contribution}
+            onChange={(e) => setContribution(e.target.value)}
+            placeholder="e.g. vascular control of the iliac vessels"
+            className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
+            data-testid="surgery-specialty-contribution"
+          />
+        </label>
+        <button
+          type="button"
+          disabled={!specialty || add.isPending}
+          onClick={() =>
+            add.mutate(
+              { specialty, role: "SHARED", contribution: contribution.trim() || null },
+              { onSuccess: reset },
+            )
+          }
+          className="rounded-md border border-gray-200 px-3 py-1.5 text-sm disabled:opacity-50"
+          data-testid="surgery-specialty-add"
+        >
+          {add.isPending ? "Adding…" : "Add joining team"}
+        </button>
+        <button
+          type="button"
+          disabled={!specialty || transferLead.isPending}
+          onClick={() =>
+            transferLead.mutate(
+              { specialty, contribution: contribution.trim() || null },
+              { onSuccess: reset },
+            )
+          }
+          className="rounded-md border border-gray-200 px-3 py-1.5 text-sm disabled:opacity-50"
+          data-testid="surgery-specialty-lead"
+        >
+          {transferLead.isPending ? "Handing over…" : "Hand the lead over"}
+        </button>
+      </div>
+      {failed && (
+        <p className="mt-2 text-sm text-danger" role="alert" data-testid="surgery-specialty-write-failed">
+          That change was NOT saved — the specialties on this case are unchanged.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * V010 — reopening for a return to theatre. Deliberately separate from the transition control:
+ * the reason is mandatory, and the server records who reopened the episode and when. The
+ * predecessor field is for the other shape (a reoperation given its own episode) and stays
+ * optional.
+ */
+function ReopenPanel({ episode }: { episode: SurgicalEpisode }) {
+  const reopen = useReopenSurgicalEpisode(episode.id);
+  const [reason, setReason] = useState("");
+  const [predecessor, setPredecessor] = useState("");
+
+  if (!REOPENABLE_FROM.includes(episode.status)) return null;
+
+  return (
+    <div className="mt-4 rounded-lg border border-rose-100 p-3" data-testid="surgery-reopen-panel">
+      <h4 className="text-xs font-semibold uppercase text-muted-foreground">
+        Return to theatre — reopen this episode
+      </h4>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Reopening records a reason against your name. A plain status change to REOPENED is
+        refused, so this is the only way a reoperation enters the record.
+      </p>
+      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+        <label className="block text-xs">
+          <span className="font-semibold uppercase text-muted-foreground">Reason (required)</span>
+          <input
+            type="text"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. post-operative haemorrhage requiring re-exploration"
+            className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
+            data-testid="surgery-reopen-reason"
+          />
+        </label>
+        <label className="block text-xs">
+          <span className="font-semibold uppercase text-muted-foreground">
+            Predecessor episode (optional)
+          </span>
+          <input
+            type="text"
+            value={predecessor}
+            onChange={(e) => setPredecessor(e.target.value)}
+            placeholder="Episode this reoperation follows"
+            className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
+            data-testid="surgery-reopen-predecessor"
+          />
+        </label>
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        <button
+          type="button"
+          disabled={!reason.trim() || reopen.isPending}
+          onClick={() =>
+            reopen.mutate(
+              { reason: reason.trim(), reoperationOfEpisodeId: predecessor.trim() || null },
+              {
+                onSuccess: () => {
+                  setReason("");
+                  setPredecessor("");
+                },
+              },
+            )
+          }
+          className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-800 disabled:opacity-50"
+          data-testid="surgery-reopen-submit"
+        >
+          {reopen.isPending ? "Reopening…" : "Reopen episode"}
+        </button>
+        {reopen.isError && (
+          <span className="text-sm text-danger" role="alert" data-testid="surgery-reopen-failed">
+            Reopen failed — the episode is unchanged and no return to theatre has been recorded.
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -678,6 +1030,18 @@ export default function SurgicalEpisodesPage() {
                     {selected.nonOperativeOptionsConsidered}
                   </p>
                 )}
+                {selected.reopenedAt && (
+                  <p className="mt-1 text-sm text-rose-800" data-testid="surgery-episode-reopen-trail">
+                    <span className="text-xs font-semibold uppercase">Returned to theatre: </span>
+                    {selected.reopenReason} — reopened by {selected.reopenedBy} at{" "}
+                    {selected.reopenedAt}
+                  </p>
+                )}
+                {selected.reoperationOfEpisodeId && (
+                  <p className="text-xs text-muted-foreground" data-testid="surgery-episode-predecessor">
+                    Reoperation following episode {selected.reoperationOfEpisodeId}
+                  </p>
+                )}
 
                 <div className="mt-3 flex items-center gap-2">
                   <select
@@ -714,6 +1078,8 @@ export default function SurgicalEpisodesPage() {
                   )}
                 </div>
 
+                <SpecialtiesPanel episodeId={selected.id} />
+                <ReopenPanel episode={selected} />
                 <AssessmentPanel episodeId={selected.id} />
                 <DecisionPanel episodeId={selected.id} />
               </div>
