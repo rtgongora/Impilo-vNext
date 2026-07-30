@@ -92,8 +92,15 @@ public class PostnatalContactService {
         }
         var stamp = stampFor(contact);
         if (stamp == null) {
-            // Not SRH content: ordinary maternity care, no category, no protection claimed.
+            // Not SRH content: ordinary maternity care, no category, no protection claimed. The
+            // category trio is cleared rather than left alone, because a caller may hand back a
+            // contact that once carried contraception content and no longer does. Leaving a stale
+            // category beside FULL_CLINICAL would leave the row claiming to be SRH content it no
+            // longer holds — and post-flip the shadow signal would keep counting it.
             contact.setSensitivityClass(ConfidentialityStamper.CLASS_FULL_CLINICAL);
+            contact.setConfidentialityCategory(null);
+            contact.setConfidentialityBasis(null);
+            contact.setConfidentialityPolicyVersion(null);
         } else {
             contact.setSensitivityClass(stamp.sensitivityClass());
             contact.setConfidentialityCategory(stamp.category());
