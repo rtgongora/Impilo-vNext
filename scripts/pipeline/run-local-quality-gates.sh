@@ -122,6 +122,11 @@ pipeline_run_phase ext-authz-allowlist "ext_authz upstream header allowlist" 1 \
 pipeline_run_phase reference-id-classification "A5 reference id classification" 1 \
   bash scripts/guard/check-reference-id-classification.sh
 
+# 9d-4. Policy path pins (blocking): a `path_contains` pin ending in `/` matches the
+# collection root and nothing under it, so the rule reports a boundary it does not enforce.
+pipeline_run_phase policy-path-pins "policy path_contains pin semantics" 1 \
+  bash scripts/guard/check-policy-path-pins.sh
+
 # 9e. Preview sandbox runtime smoke + persistence E2E (blocking when preview reachable)
 preview_blocking=1
 [[ "${PREVIEW_SMOKE_BLOCKING:-1}" != "1" ]] && preview_blocking=0
