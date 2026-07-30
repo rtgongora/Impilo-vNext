@@ -361,6 +361,70 @@ public class EdWorkflowController {
         }
     }
 
+    /**
+     * The pre-arrival board was readable but not writable through the BFF: pct has served
+     * {@code POST /v1/ed/pre-arrival} since the ED lane was built and nothing could call it, so the
+     * board could only ever show rows some other path had created.
+     */
+    @PostMapping("/pre-arrival")
+    public ResponseEntity<Map<String, Object>> upsertPreArrival(@RequestBody Map<String, Object> body) {
+        return proxyPct(() -> pctClient.upsertEdPreArrival(body), "PCT upsertEdPreArrival", HttpStatus.CREATED);
+    }
+
+    /** EMS arrival: converts a pre-arrival notification into a real ED visit. */
+    @PostMapping("/arrival")
+    public ResponseEntity<Map<String, Object>> arrival(@RequestBody Map<String, Object> body) {
+        return proxyPct(() -> pctClient.edArrivalFromEms(body), "PCT edArrivalFromEms", HttpStatus.CREATED);
+    }
+
+    // ── Diagnostics: the ten-state machine's acting and closing transitions ────────────────────
+    //
+    // Ordering a diagnostic, acting on a critical result and closing an order were all pct-only. The
+    // estate's one ED safety event (pct.ed.critical_result) is raised by this lane, and the clinician
+    // who must act on it had no route to record that they did.
+
+    @PostMapping("/visits/{visitId}/diagnostics")
+    public ResponseEntity<Map<String, Object>> orderDiagnostic(@PathVariable UUID visitId,
+                                                                @RequestBody(required = false) Map<String, Object> body) {
+        return proxyPct(() -> pctClient.orderEdDiagnostic(visitId, body != null ? body : Map.of()),
+                "PCT orderEdDiagnostic", HttpStatus.CREATED);
+    }
+
+    @PostMapping("/diagnostics/reconcile-critical")
+    public ResponseEntity<Map<String, Object>> reconcileCritical(@RequestBody Map<String, Object> body) {
+        return proxyPct(() -> pctClient.reconcileEdCriticalResult(body), "PCT reconcileEdCriticalResult", HttpStatus.OK);
+    }
+
+    @PostMapping("/diagnostics/{linkId}/act")
+    public ResponseEntity<Map<String, Object>> actOnDiagnostic(@PathVariable UUID linkId,
+                                                                @RequestBody(required = false) Map<String, Object> body) {
+        return proxyPct(() -> pctClient.actOnEdDiagnostic(linkId, body != null ? body : Map.of()),
+                "PCT actOnEdDiagnostic", HttpStatus.OK);
+    }
+
+    /** pct refuses to close a critical order that was never acted on; that 4xx must reach the clinician. */
+    @PostMapping("/diagnostics/{linkId}/close")
+    public ResponseEntity<Map<String, Object>> closeDiagnostic(@PathVariable UUID linkId,
+                                                                @RequestBody Map<String, Object> body) {
+        return proxyPct(() -> pctClient.closeEdDiagnostic(linkId, body), "PCT closeEdDiagnostic", HttpStatus.OK);
+    }
+
+    private ResponseEntity<Map<String, Object>> proxyPct(java.util.function.Supplier<JsonNode> call,
+                                                          String op, HttpStatus successStatus) {
+        try {
+            return ResponseEntity.status(successStatus).body(Map.of("data", requirePayload(call.get(), op)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                throw new ResponseStatusException(e.getStatusCode(), e.getResponseBodyAsString(), e);
+            }
+            throw upstreamFailure(op, e);
+        } catch (Exception e) {
+            throw upstreamFailure(op, e);
+        }
+    }
+
     @GetMapping("/pathways")
     public ResponseEntity<Map<String, Object>> listEdPathways() {
         try {

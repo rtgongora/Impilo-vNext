@@ -133,6 +133,88 @@ public class EmergencyEpisodeController {
         return proxyPost(() -> pctClient.respondEmergencyAlert(alertId, body), "PCT respondEmergencyAlert", HttpStatus.OK);
     }
 
+    /**
+     * Acknowledging says a human saw it; responding says a human acted; closing says the condition is
+     * gone. Only the close lifts pct's partial unique index on open alerts, so until it is reachable the
+     * same hazard can never re-raise on the same episode.
+     */
+    @PostMapping("/alerts/{alertId}/close")
+    public ResponseEntity<Map<String, Object>> closeAlert(@PathVariable UUID alertId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.closeEmergencyAlert(alertId, body), "PCT closeEmergencyAlert", HttpStatus.OK);
+    }
+
+    // ── Order sets (W7b) ──────────────────────────────────────────────────────────────────────
+
+    @PostMapping("/{episodeId}/order-sets")
+    public ResponseEntity<Map<String, Object>> invokeOrderSet(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.invokeEmergencyOrderSet(episodeId, body), "PCT invokeEmergencyOrderSet", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{episodeId}/order-sets")
+    public ResponseEntity<Map<String, Object>> orderSets(@PathVariable UUID episodeId) {
+        return proxyGet(() -> pctClient.emergencyOrderSets(episodeId), "PCT emergencyOrderSets");
+    }
+
+    @GetMapping("/order-sets/{instanceId}")
+    public ResponseEntity<Map<String, Object>> orderSet(@PathVariable UUID instanceId) {
+        return proxyGet(() -> pctClient.getEmergencyOrderSet(instanceId), "PCT getEmergencyOrderSet");
+    }
+
+    @PostMapping("/order-sets/items/{itemId}/order")
+    public ResponseEntity<Map<String, Object>> orderItem(@PathVariable UUID itemId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.orderEmergencyOrderSetItem(itemId, body), "PCT orderEmergencyOrderSetItem", HttpStatus.OK);
+    }
+
+    /** pct rejects a decline that carries no reason; that 4xx must reach the clinician, not become a 502. */
+    @PostMapping("/order-sets/items/{itemId}/decline")
+    public ResponseEntity<Map<String, Object>> declineItem(@PathVariable UUID itemId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.declineEmergencyOrderSetItem(itemId, body), "PCT declineEmergencyOrderSetItem", HttpStatus.OK);
+    }
+
+    // ── Medication administration (W8a) ────────────────────────────────────────────────────────
+
+    @PostMapping("/{episodeId}/medications")
+    public ResponseEntity<Map<String, Object>> recordMedication(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.recordEmergencyMedication(episodeId, body), "PCT recordEmergencyMedication", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{episodeId}/medications")
+    public ResponseEntity<Map<String, Object>> medications(@PathVariable UUID episodeId) {
+        return proxyGet(() -> pctClient.emergencyMedications(episodeId), "PCT emergencyMedications");
+    }
+
+    // ── Observation / short stay (W9b) ─────────────────────────────────────────────────────────
+
+    @PostMapping("/{episodeId}/observation-stays")
+    public ResponseEntity<Map<String, Object>> startObservationStay(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.startEmergencyObservationStay(episodeId, body),
+                "PCT startEmergencyObservationStay", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{episodeId}/observation-stays")
+    public ResponseEntity<Map<String, Object>> observationStays(@PathVariable UUID episodeId) {
+        return proxyGet(() -> pctClient.emergencyObservationStays(episodeId), "PCT emergencyObservationStays");
+    }
+
+    @PostMapping("/observation-stays/{stayId}/end")
+    public ResponseEntity<Map<String, Object>> endObservationStay(@PathVariable UUID stayId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.endEmergencyObservationStay(stayId, body),
+                "PCT endEmergencyObservationStay", HttpStatus.OK);
+    }
+
+    // ── Identity link (W12) ────────────────────────────────────────────────────────────────────
+
+    /** Append-only: a resolution links, it never overwrites, and both identities are retained forever. */
+    @PostMapping("/{episodeId}/identity-link")
+    public ResponseEntity<Map<String, Object>> linkIdentity(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.linkEmergencyIdentity(episodeId, body), "PCT linkEmergencyIdentity", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{episodeId}/identity-link")
+    public ResponseEntity<Map<String, Object>> identityLinks(@PathVariable UUID episodeId) {
+        return proxyGet(() -> pctClient.emergencyIdentityLinks(episodeId), "PCT emergencyIdentityLinks");
+    }
+
     /** Episode-by-state + alert-by-severity counts for one facility (W10 command view). */
     @GetMapping("/command-summary")
     public ResponseEntity<Map<String, Object>> commandSummary(@RequestParam UUID facilityId) {

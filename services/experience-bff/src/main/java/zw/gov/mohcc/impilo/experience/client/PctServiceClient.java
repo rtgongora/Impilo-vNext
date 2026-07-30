@@ -1233,6 +1233,152 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Closing an alert is a separate authority from acknowledging or responding to it: ack says a human
+     * saw it, respond says a human acted, close says the condition that raised it is gone. Only close
+     * clears the partial unique index that suppresses a duplicate open alert, so without this method the
+     * suppression never lifts and the same hazard can never re-raise.
+     */
+    public JsonNode closeEmergencyAlert(UUID alertId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/alerts/" + alertId + "/close";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency order sets (W7b) ────────────────────────────────────────────────────────────
+    //
+    // pct.EmergencyOrderSetController has been live since W7b and was reachable from nothing at all —
+    // no BFF client method, no BFF route. A declined order-set item carries a mandatory reason, which
+    // is the whole clinical point of the table; unreachable, that reason could never be captured.
+
+    public JsonNode invokeEmergencyOrderSet(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/order-sets";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyOrderSets(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/order-sets";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getEmergencyOrderSet(UUID instanceId) {
+        String url = baseUrl + "/v1/emergency/order-sets/" + instanceId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode orderEmergencyOrderSetItem(UUID itemId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/order-sets/items/" + itemId + "/order";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Declining is a first-class clinical act and pct requires a reason for it. */
+    public JsonNode declineEmergencyOrderSetItem(UUID itemId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/order-sets/items/" + itemId + "/decline";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency medication administration (W8a) ──────────────────────────────────────────────
+    //
+    // pct.EmergencyMedicationAdminController — the table that exists specifically to kill the old
+    // medications_json blob. Also unreachable until this wave.
+
+    public JsonNode recordEmergencyMedication(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/medications";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyMedications(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/medications";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency observation / short stay (W9b) ───────────────────────────────────────────────
+    //
+    // Not an admission and not a discharge — the genuinely unowned middle state. The disposition
+    // proxy landed in W9b's BFF pass; the observation stay it depends on did not.
+
+    public JsonNode startEmergencyObservationStay(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/observation-stays";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyObservationStays(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/observation-stays";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode endEmergencyObservationStay(UUID stayId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/observation-stays/" + stayId + "/end";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency identity link (W12) ──────────────────────────────────────────────────────────
+    //
+    // Append-only, link-never-overwrite: both identities are retained forever. Unreachable from the
+    // experience layer, the unknown patient recorded at the ED door could never be resolved by the
+    // clinician who recognises them.
+
+    public JsonNode linkEmergencyIdentity(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/identity-link";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyIdentityLinks(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/identity-link";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── ED intake + diagnostics acts (pre-existing pct routes, never proxied) ──────────────────
+
+    public JsonNode upsertEdPreArrival(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/pre-arrival";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode edArrivalFromEms(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/arrival";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode orderEdDiagnostic(UUID visitId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/visits/" + visitId + "/diagnostics";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode reconcileEdCriticalResult(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/diagnostics/reconcile-critical";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Acting on a critical result is what pct's close CHECK requires before the order may be closed. */
+    public JsonNode actOnEdDiagnostic(UUID linkId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/diagnostics/" + linkId + "/act";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode closeEdDiagnostic(UUID linkId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/diagnostics/" + linkId + "/close";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Clinical Depth — Care Plans (strangler migration) ───────
 
     public JsonNode addCarePlanGoal(String planId, Map<String, Object> body) {

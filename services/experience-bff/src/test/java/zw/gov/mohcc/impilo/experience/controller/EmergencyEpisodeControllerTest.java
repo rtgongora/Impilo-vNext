@@ -30,6 +30,9 @@ class EmergencyEpisodeControllerTest {
     private static final UUID EPISODE_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
     private static final UUID FACILITY_ID = UUID.fromString("00000000-0000-4000-8000-000000000002");
     private static final UUID HANDOVER_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
+    private static final UUID ALERT_ID = UUID.fromString("00000000-0000-4000-8000-000000000004");
+    private static final UUID ITEM_ID = UUID.fromString("00000000-0000-4000-8000-000000000005");
+    private static final UUID STAY_ID = UUID.fromString("00000000-0000-4000-8000-000000000006");
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
@@ -94,6 +97,74 @@ class EmergencyEpisodeControllerTest {
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(502));
     }
 
+    // ── Reachability closure: every route below existed on pct and reached nothing ────────────
+
+    @Test
+    void closeAlert_isReachable_soASuppressedHazardCanReRaise() {
+        var controller = new EmergencyEpisodeController(new StubPctClient());
+        ResponseEntity<Map<String, Object>> response = controller.closeAlert(ALERT_ID, Map.of("closedBy", "nurse-A"));
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertThat(data.get("status").asText()).isEqualTo("CLOSED");
+    }
+
+    @Test
+    void invokeOrderSet_returns201WithItems() {
+        var controller = new EmergencyEpisodeController(new StubPctClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.invokeOrderSet(EPISODE_ID, Map.of("orderSetCode", "EM_SEPSIS_BUNDLE"));
+        assertThat(response.getStatusCode().value()).isEqualTo(201);
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertThat(data.get("items").isArray()).isTrue();
+    }
+
+    @Test
+    void orderSetsForEpisode_returnsList() {
+        var controller = new EmergencyEpisodeController(new StubPctClient());
+        JsonNode data = (JsonNode) controller.orderSets(EPISODE_ID).getBody().get("data");
+        assertThat(data.isArray()).isTrue();
+    }
+
+    @Test
+    void declineOrderSetItem_withoutReason_surfacesPctsOwn422_notA502() {
+        var controller = new EmergencyEpisodeController(new PctClientRejectingReasonlessDecline());
+        assertThatThrownBy(() -> controller.declineItem(ITEM_ID, Map.of()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> {
+                    var rse = (ResponseStatusException) ex;
+                    assertThat(rse.getStatusCode().value()).isEqualTo(422);
+                    assertThat(rse.getReason()).contains("decline_reason");
+                });
+    }
+
+    @Test
+    void recordMedication_returns201() {
+        var controller = new EmergencyEpisodeController(new StubPctClient());
+        ResponseEntity<Map<String, Object>> response = controller.recordMedication(EPISODE_ID,
+                Map.of("medicationCode", "ADRENALINE", "doseValue", 1, "doseUnit", "mg"));
+        assertThat(response.getStatusCode().value()).isEqualTo(201);
+    }
+
+    @Test
+    void observationStay_startListAndEnd_areAllReachable() {
+        var controller = new EmergencyEpisodeController(new StubPctClient());
+        assertThat(controller.startObservationStay(EPISODE_ID, Map.of("reason", "head injury watch"))
+                .getStatusCode().value()).isEqualTo(201);
+        assertThat(((JsonNode) controller.observationStays(EPISODE_ID).getBody().get("data")).isArray()).isTrue();
+        assertThat(controller.endObservationStay(STAY_ID, Map.of("outcome", "DISCHARGED"))
+                .getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void identityLink_isAppendOnly_historyIsAList() {
+        var controller = new EmergencyEpisodeController(new StubPctClient());
+        assertThat(controller.linkIdentity(EPISODE_ID,
+                Map.of("resolvedSubjectCpid", "CPID-1", "resolutionMethod", "CLINICAL_RECOGNITION"))
+                .getStatusCode().value()).isEqualTo(201);
+        JsonNode history = (JsonNode) controller.identityLinks(EPISODE_ID).getBody().get("data");
+        assertThat(history.isArray()).isTrue();
+    }
+
     private static final class StubPctClient extends PctServiceClient {
         StubPctClient() { super(new RestTemplate(), endpoints(), mapper); }
 
@@ -114,6 +185,48 @@ class EmergencyEpisodeControllerTest {
         @Override public JsonNode acceptEmergencyHandover(UUID handoverId, Map<String, Object> body) {
             return mapper.createObjectNode().put("episode_id", EPISODE_ID.toString())
                     .put("state", "CLOSED_HANDED_OVER").put("handover_id", handoverId.toString());
+        }
+        @Override public JsonNode closeEmergencyAlert(UUID alertId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("alert_id", alertId.toString()).put("status", "CLOSED");
+        }
+        @Override public JsonNode invokeEmergencyOrderSet(UUID episodeId, Map<String, Object> body) {
+            var node = mapper.createObjectNode().put("instance_id", UUID.randomUUID().toString())
+                    .put("episode_id", episodeId.toString()).put("status", "ACTIVE");
+            node.putArray("items").add(mapper.createObjectNode().put("item_id", ITEM_ID.toString()));
+            return node;
+        }
+        @Override public JsonNode emergencyOrderSets(UUID episodeId) {
+            var arr = mapper.createArrayNode();
+            arr.add(mapper.createObjectNode().put("episode_id", episodeId.toString()));
+            return arr;
+        }
+        @Override public JsonNode recordEmergencyMedication(UUID episodeId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("episode_id", episodeId.toString()).put("status", "ADMINISTERED");
+        }
+        @Override public JsonNode startEmergencyObservationStay(UUID episodeId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("stay_id", STAY_ID.toString()).put("status", "OPEN");
+        }
+        @Override public JsonNode emergencyObservationStays(UUID episodeId) {
+            return mapper.createArrayNode().add(mapper.createObjectNode().put("stay_id", STAY_ID.toString()));
+        }
+        @Override public JsonNode endEmergencyObservationStay(UUID stayId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("stay_id", stayId.toString()).put("status", "ENDED");
+        }
+        @Override public JsonNode linkEmergencyIdentity(UUID episodeId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("episode_id", episodeId.toString())
+                    .put("resolution_method", "CLINICAL_RECOGNITION");
+        }
+        @Override public JsonNode emergencyIdentityLinks(UUID episodeId) {
+            return mapper.createArrayNode().add(mapper.createObjectNode().put("episode_id", episodeId.toString()));
+        }
+    }
+
+    /** pct's own gate: a decline with no reason is a validation failure, not an outage. */
+    private static final class PctClientRejectingReasonlessDecline extends PctServiceClient {
+        PctClientRejectingReasonlessDecline() { super(new RestTemplate(), endpoints(), mapper); }
+        @Override public JsonNode declineEmergencyOrderSetItem(UUID itemId, Map<String, Object> body) {
+            throw HttpClientErrorException.create(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Unprocessable Entity", null, "decline_reason is required".getBytes(), null);
         }
     }
 
