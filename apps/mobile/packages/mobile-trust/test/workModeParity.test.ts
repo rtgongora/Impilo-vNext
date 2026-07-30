@@ -2,22 +2,21 @@
  * Golden-thread parity (Phase G2) — mobile's WorkMode contract vs the canonical
  * contracts/trust/types/work-mode.ts.
  *
- * apps/mobile is its own pnpm workspace and Metro's watchFolders stop at
- * apps/mobile, so mobile cannot today `import` the canonical file the way
- * ui/one-ui-shell does (a relative import escaping its own workspace). Until
- * that bundler work lands and can be verified against a real Metro build,
- * src/workMode.ts is a hand-mirror — and a hand-mirror with no test is exactly
- * the drift the web side has ~60 golden-thread tests to prevent.
+ * These assertions used to guard a hand-mirror. src/workMode.ts now re-exports
+ * the canonical file directly — both apps' metro.config.js watch the repo-root
+ * contracts/ directory, and an `expo export` proves Metro bundles it — so most
+ * of what follows is trivially true.
  *
- * This test removes the drift risk without the bundler change: it reads the
- * canonical source directly and fails the build the moment the two disagree.
- * The canonical file is pure TypeScript with zero imports, so it can be loaded
- * as-is here.
+ * They are kept, and one was added, because "trivially true" is a property of
+ * the current implementation, not of the contract. The equality checks are what
+ * fail if the re-export is ever unwound back into a copy that then drifts; the
+ * structural check below is what fails the moment it is unwound at all, while
+ * the copy is still correct and every other assertion here still passes.
  */
 import { describe, it, expect } from "vitest";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { WORK_MODES, WORK_MODE_DEFINITIONS, grantsIdentifiedClinicalRead } from "../src/workMode";
 
 const CANONICAL_PATH = path.resolve(
@@ -50,6 +49,20 @@ describe("WorkMode parity with contracts/trust", () => {
   it("defines no mode the canonical contract does not (a mobile-invented mode is a denial)", async () => {
     const canonical = await import(CANONICAL_PATH);
     expect(Object.keys(WORK_MODE_DEFINITIONS).sort()).toEqual(Object.keys(canonical.WORK_MODE_DEFINITIONS).sort());
+  });
+
+  it("re-exports the canonical file rather than declaring its own definitions", () => {
+    const source = readFileSync(
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../src/workMode.ts"),
+      "utf8"
+    );
+
+    expect(source).toContain("contracts/trust/types/work-mode");
+    expect(
+      source,
+      "a local WORK_MODE_DEFINITIONS literal means the mirror is back, and a copy that is " +
+        "correct on the day it lands is exactly how the last one started"
+    ).not.toMatch(/WORK_MODE_DEFINITIONS[^=\n]*=\s*\{/);
   });
 
   it("agrees on which modes grant identified clinical read — the access-control-bearing rule", async () => {

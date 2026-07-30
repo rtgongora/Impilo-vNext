@@ -1,79 +1,35 @@
 /**
  * Impilo vNext — Mobile Work Mode Contract
  *
- * Mirror of contracts/trust/types/work-mode.ts (itself the TS twin of
- * libs/tshepo-contracts/.../enums/WorkMode.java), kept in step by
- * test/workModeParity.test.ts — which loads the canonical file and fails the
- * build on any disagreement in modes, labels, anchorKind, clinicalDataAccess,
- * or the identified-clinical-read rule. Edit the canonical file first, then
- * mirror here; the test is what makes that safe.
+ * The WorkMode vocabulary is re-exported from contracts/trust/types/work-mode.ts
+ * (itself the TS twin of libs/tshepo-contracts/.../enums/WorkMode.java), so
+ * mobile and the web shell now read the same file rather than two copies of it.
  *
- * A mirror exists at all because apps/mobile is its own pnpm workspace and
- * Metro's watchFolders stop at apps/mobile, so mobile cannot `import` the
- * canonical file the way ui/one-ui-shell does (a relative import escaping its
- * own workspace). Collapsing this into a direct import is still the better end
- * state, but it needs bundler work verified against a real Metro build.
+ * This used to be a hand-mirror, because Metro watches only its own workspace
+ * and could not reach a file above apps/mobile. Adding the repo-root contracts/
+ * directory to `watchFolders` in both apps' metro.config.js removes that limit;
+ * the import is proven by an `expo export` in CI, not only by type-check, since
+ * TypeScript resolving a path says nothing about whether Metro can bundle it.
+ *
+ * test/workModeParity.test.ts still runs. It compares this module against the
+ * canonical file, which is now trivially true — and that is the point: it is
+ * what fails if anyone reintroduces a local copy here.
  */
 
-export type WorkMode =
-  | "CLINICAL_CARE"
-  | "VIRTUAL_CARE"
-  | "DEPARTMENT_MANAGEMENT"
-  | "FACILITY_MANAGEMENT"
-  | "JURISDICTION_OPERATIONS"
-  | "PROGRAMME_MANAGEMENT"
-  | "TECHNICAL_SUPPORT"
-  | "FACILITY_SUPPORT"
-  | "REGULATORY_OPERATIONS"
-  | "INSPECTION_COMPLIANCE"
-  | "COMMUNITY_OUTREACH"
-  | "SPECIMEN_TRANSPORT";
+export type {
+  WorkMode,
+  WorkModeAnchorKind,
+  WorkModeClinicalDataAccess,
+  WorkModeDefinition,
+} from "../../../../../contracts/trust/types/work-mode";
 
-export const WORK_MODES: readonly WorkMode[] = [
-  "CLINICAL_CARE",
-  "VIRTUAL_CARE",
-  "DEPARTMENT_MANAGEMENT",
-  "FACILITY_MANAGEMENT",
-  "JURISDICTION_OPERATIONS",
-  "PROGRAMME_MANAGEMENT",
-  "TECHNICAL_SUPPORT",
-  "FACILITY_SUPPORT",
-  "REGULATORY_OPERATIONS",
-  "INSPECTION_COMPLIANCE",
-  "COMMUNITY_OUTREACH",
-  "SPECIMEN_TRANSPORT",
-];
+export {
+  WORK_MODES,
+  WORK_MODE_DEFINITIONS,
+  grantsIdentifiedClinicalRead,
+} from "../../../../../contracts/trust/types/work-mode";
 
-export type WorkModeAnchorKind = "FACILITY" | "ORGANISATION" | "JURISDICTION" | "PROGRAMME" | "FACILITY_OR_ORGANISATION"
-  | "FACILITY_OR_PROGRAMME";
-
-export type WorkModeClinicalDataAccess = "IDENTIFIED" | "AGGREGATE" | "NONE";
-
-export interface WorkModeDefinition {
-  mode: WorkMode;
-  label: string;
-  anchorKind: WorkModeAnchorKind;
-  clinicalDataAccess: WorkModeClinicalDataAccess;
-}
-
-export const WORK_MODE_DEFINITIONS: Readonly<Record<WorkMode, WorkModeDefinition>> = {
-  CLINICAL_CARE: { mode: "CLINICAL_CARE", label: "Clinical Care", anchorKind: "FACILITY", clinicalDataAccess: "IDENTIFIED" },
-  VIRTUAL_CARE: { mode: "VIRTUAL_CARE", label: "Virtual Care", anchorKind: "FACILITY_OR_ORGANISATION", clinicalDataAccess: "IDENTIFIED" },
-  DEPARTMENT_MANAGEMENT: { mode: "DEPARTMENT_MANAGEMENT", label: "Department Management", anchorKind: "FACILITY", clinicalDataAccess: "AGGREGATE" },
-  FACILITY_MANAGEMENT: { mode: "FACILITY_MANAGEMENT", label: "Facility Management", anchorKind: "FACILITY", clinicalDataAccess: "AGGREGATE" },
-  JURISDICTION_OPERATIONS: { mode: "JURISDICTION_OPERATIONS", label: "Jurisdiction Operations", anchorKind: "JURISDICTION", clinicalDataAccess: "AGGREGATE" },
-  PROGRAMME_MANAGEMENT: { mode: "PROGRAMME_MANAGEMENT", label: "Programme Management", anchorKind: "PROGRAMME", clinicalDataAccess: "AGGREGATE" },
-  TECHNICAL_SUPPORT: { mode: "TECHNICAL_SUPPORT", label: "Technical Support", anchorKind: "ORGANISATION", clinicalDataAccess: "NONE" },
-  FACILITY_SUPPORT: { mode: "FACILITY_SUPPORT", label: "Facility Support", anchorKind: "FACILITY", clinicalDataAccess: "NONE" },
-  REGULATORY_OPERATIONS: { mode: "REGULATORY_OPERATIONS", label: "Regulatory Operations", anchorKind: "ORGANISATION", clinicalDataAccess: "NONE" },
-  INSPECTION_COMPLIANCE: { mode: "INSPECTION_COMPLIANCE", label: "Inspection & Compliance", anchorKind: "ORGANISATION", clinicalDataAccess: "NONE" },
-  COMMUNITY_OUTREACH: { mode: "COMMUNITY_OUTREACH", label: "Community Outreach", anchorKind: "FACILITY_OR_PROGRAMME", clinicalDataAccess: "IDENTIFIED" },
-  SPECIMEN_TRANSPORT: { mode: "SPECIMEN_TRANSPORT", label: "Specimen Transport", anchorKind: "FACILITY_OR_ORGANISATION", clinicalDataAccess: "NONE" },
-};
-
-export function grantsIdentifiedClinicalRead(mode: WorkMode): boolean {
-  return WORK_MODE_DEFINITIONS[mode].clinicalDataAccess === "IDENTIFIED";
-}
+import type { WorkMode } from "../../../../../contracts/trust/types/work-mode";
 
 /**
  * A single resolved work context as returned by
