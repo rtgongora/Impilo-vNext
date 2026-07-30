@@ -26,6 +26,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- JWS verification primitive for the decision envelope (D3). -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tshepo-trust-crypto</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Spring Web (for filter + RestClient) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
