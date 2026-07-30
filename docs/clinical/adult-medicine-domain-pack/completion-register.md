@@ -19,7 +19,7 @@ outstanding.
 | 4 | Canonical episode and problem model | **DONE** | — |
 | 5 | 17-step adult journey | **PARTIAL** | The steps exist as surfaces; the journey is not modelled as a journey, so nothing tracks a patient's position in it. |
 | 6 | Full medical clerking | **PARTIAL** | V106 covers social, family, functional, procedures and advance directives. **The Save/Add buttons on social-history, family-history and advance-directives were previously dead** — the BFF had no write route for any of the five V106 tables, so nothing a clinician entered on those screens could ever reach `pct-service`. Now wired: `StructuredHistoryController` exposes five POST routes, `PctServiceClient` forwards to pct-service's append-only writes, and the three UI pages call the new `useMutation` hooks (`StructuredHistoryWritesTest`, plus UI wiring tests). Functional-assessment and procedure writes are exposed on the BFF but have no UI entry point yet. Roughly 25 of the ~35 items are not structured, and the conditional logic ("do not re-document what is known") is not built. |
-| 7 | Examination framework | **PARTIAL** | 22 regions, 6 states and the coverage read are DONE (V113). **The eleven graphics are modelled but not drawn** — `graphic`/`site`/`laterality` are stored and validated, and no diagram renders anywhere. |
+| 7 | Examination framework | **PARTIAL** | 22 regions, 6 states and the coverage read are DONE (V113). **The eleven graphics now draw** — ExaminationShell mounts body-map instruments whose ids are the V113 graphic codes (`CHEST_AUSCULTATION` … `PRESSURE_INJURIES`), reusing existing maps where they fit and adding cardiac / neuro / dermatome / oedema maps for the rest. Submit no longer drops `graphic`/`site`/`laterality`; marks collapse to those three columns (last pin wins). History redraws a stored site read-only. Outstanding against the brief: not every one of the 22 regions has a diagram (only the nine that clinically site findings), and the new maps are engineering-authored pending clinical verification of SNOMED bindings. |
 | 8 | Thirteen specialty workspaces | **PARTIAL** | All thirteen exist as governed configuration over the shared spine, each stating its own `notBuilt` list on screen (a test fails the build if any list is empty). **An estate sweep corrected those lists in ~14 places** — they were authored from the brief, not from a search. Already owned elsewhere, so integrate rather than build: transfusion planning (**madi-service**, a full blood service), glucose/device data (**telemonitoring**), tobacco cessation (**simba**), and **advance-care planning, which THIS PACK already built** (`pct_advance_directives` V106 + UI) and which was wrongly listed as missing on two lists. Five more have a real spine and need a specialty view rather than a system of record: endoscopy, biopsy, dialysis prep + vascular access, ECG/echo/spirometry, volume status. ~30 are correctly absent. |
 | 9 | Multimorbidity engine | **PARTIAL** | 11 panels and 7 detections are built and honest about their own inputs. Appointments (booking-service), investigations (OROS, LAB/IMAGING only) and functional status (pct functional assessments) are **now composed by the BFF** — `excessive_visit_schedule`, `repeated_investigations` and `high_treatment_burden` move off UNDETERMINED, and `appointment_burden`, `functional_impact` and `monitoring_plan` move off unknown, all proven in `MultimorbidityControllerTest`. Patient priorities and the care team remain uncomposed **because no service in the estate owns either concept yet** (an advance directive is not "what matters to the patient day to day"; an MDT roster is not a standing care team) — those two panels correctly stay unknown until a first home for the data is built. |
 | 10 | Medicines and clinical pharmacology | **PARTIAL** | Reconciliation (V107) and deprescribing content exist; medication facts are now derived rather than asserted. No interaction checking, no renal/hepatic dosing engine, no formulary/refill/possession. |
@@ -50,25 +50,10 @@ demonstration rig grew from 23 to 35 assertions while its stated-gap count fell 
 
 ## The three highest-value next pieces, in order
 
-All three of the previous three are done. The next three, on the same reasoning — smallest step from
-modelled to usable, then the gaps that make correct work invisible:
+All three of the previous three are done. Transfer of care (V116) and the eleven §7
+examination diagrams are drawn. The next three, on the same reasoning:
 
-1. ~~Enable the CKP Kafka relay~~ **Configured, proven, not yet deployed.**
-   `impilo.clinical.kafka.relay-enabled` is now `true` for `impilo-full-preview` in
-   `values-full-preview.yaml`, and `ClinicalKafkaOutboxRelayIT` proves — against a real embedded
-   Kafka broker, not a mock — that a real HTTP call to `/assess` produces a real outbox row the real
-   relay drains onto the exact topic `butano-service` listens on, with the field names its consumer
-   reads. The preview deploy that makes this live in the running estate is held for explicit
-   authorization (dev-preview-sandbox.mdc); until then every `DetectedIssue` the §9 engine produces
-   still sits in the outbox in the environments actually running today.
-2. ~~Compose the remaining §9 sources in the BFF~~ **Three of five done.** Appointments,
-   investigations and functional status are now composed in `MultimorbidityController`
-   (`MultimorbidityControllerTest`), moving three detections and three panels off
-   UNDETERMINED/unknown. Patient priorities and the care team are the two still uncomposed, and
-   correctly so: no service in the estate owns either concept yet (an advance directive is not "what
-   matters to the patient day to day"; an MDT roster is not a standing care team). Those two panels
-   should stay unknown until a first home for the data exists — composing them against the wrong
-   source would be a worse defect than leaving them unknown.
-3. ~~A transfer-of-care record.~~ **Built (V116).** `pct_care_transfers` records the act;
-   ownership of a linked consultation moves only on acceptance with `accepting_ref`. A consultation
-   may still only *recommend* a takeover; answering never moves `owning_service`.
+1. DetectedIssue retirement when an issue stops being detected (silence must never retire).
+2. Drive the ten §23 journeys through the service layer (treat CANNOT lines as hypotheses).
+3. ~~Draw the eleven examination graphics~~ **Done.** Body-map instruments keyed by V113
+   codes; submit carries `graphic`/`site`/`laterality`; history redraws stored sites.
