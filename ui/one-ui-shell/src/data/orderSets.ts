@@ -1,15 +1,22 @@
 /**
- * Order Sets — pre-configured bundles of orders for common clinical scenarios.
+ * Order sets — NOT a live ambulatory SoR.
  *
- * Health OS doctrine: "faster to edit than to type one thing after another."
+ * `ORDER_SETS` and `components/ehr/cart/*` (EncounterCart, OrderSetPicker) are orphaned static UI.
+ * Nothing in the product mounts them. There is no OROS/PCT ambulatory order-set definition that
+ * places real orders when selected. Pathway "apply" on the mobile BFF starts a CKP pathway session
+ * and places no order. ED has separate instance-tracking order sets — a different surface.
  *
- * Each order set contains:
- * - Investigations to order
- * - Medications to prescribe
- * - Nursing observations to initiate
- * - Diet/activity orders
+ * Do not wire these constants into a submit path. Keep as a design sketch until a real SoR exists.
  *
- * Users select an order set → review → edit → submit as a batch.
+ * @see docs/clinical/adult-medicine-domain-pack/completion-register.md §11
+ */
+
+export const AMBULATORY_ORDER_SETS_BUILT = false as const;
+
+/**
+ * Design-sketch catalogue only — not served to clinicians as a live feature.
+ *
+ * Each sketch set may contain investigations, medications, nursing observations, diet/activity.
  */
 
 export interface OrderSetItem {

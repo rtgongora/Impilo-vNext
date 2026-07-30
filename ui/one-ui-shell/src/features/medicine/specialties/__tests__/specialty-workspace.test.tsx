@@ -139,8 +139,20 @@ describe("SpecialtyWorkspaceShell", () => {
 
   it("always renders the not-built section", () => {
     render(<SpecialtyWorkspaceShell patientId="p1" specialtyKey="cardiology" />);
-    expect(screen.getByTestId("specialty-not-built")).toHaveTextContent(/ECG workflow/);
+    expect(screen.getByTestId("specialty-not-built")).toHaveTextContent(/Ambulatory monitoring/);
     expect(screen.getByTestId("specialty-not-built")).toHaveTextContent(/has not built it/i);
+  });
+
+  it("cardiology exposes shared-spine links for ECG/echo and volume status", () => {
+    render(<SpecialtyWorkspaceShell patientId="p1" specialtyKey="cardiology" />);
+    expect(screen.getByTestId("specialty-spine")).toHaveTextContent(/ECG \/ echo/);
+    expect(screen.getByTestId("specialty-spine")).toHaveTextContent(/Volume status/);
+  });
+
+  it("every specialty has a spineLinks array (may be empty)", () => {
+    for (const s of MEDICINE_SPECIALTIES) {
+      expect(Array.isArray(s.spineLinks), s.key).toBe(true);
+    }
   });
 
   it("offers the registers only for specialties that run one", () => {

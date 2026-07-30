@@ -9,17 +9,23 @@ const state = vi.hoisted(() => ({
   answer: { mutate: vi.fn(), isPending: false, isError: false },
   requestTransfer: { mutate: vi.fn(), isPending: false, isError: false },
   acceptTransfer: { mutate: vi.fn(), isPending: false, isError: false },
+  recordMdt: { mutate: vi.fn(), isPending: false, isError: false },
 }));
 
-vi.mock("@/hooks/queries/useConsultations", () => ({
-  useConsultations: () => state.consultations,
-  useMdtDecisions: () => state.decisions,
-  useCareTransfers: () => state.transfers,
-  useRequestConsultation: () => state.request,
-  useAnswerConsultation: () => state.answer,
-  useRequestCareTransfer: () => state.requestTransfer,
-  useAcceptCareTransfer: () => state.acceptTransfer,
-}));
+vi.mock("@/hooks/queries/useConsultations", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/hooks/queries/useConsultations")>();
+  return {
+    ...actual,
+    useConsultations: () => state.consultations,
+    useMdtDecisions: () => state.decisions,
+    useCareTransfers: () => state.transfers,
+    useRequestConsultation: () => state.request,
+    useAnswerConsultation: () => state.answer,
+    useRequestCareTransfer: () => state.requestTransfer,
+    useAcceptCareTransfer: () => state.acceptTransfer,
+    useRecordMdtDecision: () => state.recordMdt,
+  };
+});
 
 // eslint-disable-next-line import/first
 import { ConsultationShell } from "../ConsultationShell";
@@ -53,6 +59,7 @@ describe("ConsultationShell — asking a question never hands over the patient",
     state.answer = { mutate: vi.fn(), isPending: false, isError: false };
     state.requestTransfer = { mutate: vi.fn(), isPending: false, isError: false };
     state.acceptTransfer = { mutate: vi.fn(), isPending: false, isError: false };
+    state.recordMdt = { mutate: vi.fn(), isPending: false, isError: false };
   });
 
   it("every consultation says who still holds the patient", () => {
@@ -234,5 +241,33 @@ describe("ConsultationShell — asking a question never hands over the patient",
 
     fireEvent.change(screen.getByTestId("consultation-question"), { target: { value: "Surgical?" } });
     expect(screen.getByTestId("consultation-send")).not.toBeDisabled();
+  });
+
+  it("an MDT decision cannot be recorded without chair, participants, decision and anchor", () => {
+    render(<ConsultationShell patientId="p1" journeyId="90000000-0000-4000-8000-000000000101" />);
+    expect(screen.getByTestId("mdt-record")).toBeDisabled();
+
+    fireEvent.change(screen.getByTestId("mdt-chaired-by"), { target: { value: "Dr M" } });
+    fireEvent.change(screen.getByTestId("mdt-participants"), { target: { value: "Oncology" } });
+    fireEvent.change(screen.getByTestId("mdt-decision"), { target: { value: "Proceed" } });
+    expect(screen.getByTestId("mdt-record")).not.toBeDisabled();
+
+    fireEvent.click(screen.getByTestId("mdt-record"));
+    expect(state.recordMdt.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject_cpid: "p1",
+        journey_id: "90000000-0000-4000-8000-000000000101",
+        chaired_by: "Dr M",
+        participants: "Oncology",
+        decision: "Proceed",
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("a failed MDT record says nothing was saved", () => {
+    state.recordMdt = { ...state.recordMdt, isError: true };
+    render(<ConsultationShell patientId="p1" />);
+    expect(screen.getByTestId("mdt-record-failed")).toHaveTextContent(/Nothing has been recorded/i);
   });
 });

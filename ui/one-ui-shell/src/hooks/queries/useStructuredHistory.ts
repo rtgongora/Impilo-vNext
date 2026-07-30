@@ -149,13 +149,15 @@ function parseActivities(raw: unknown): ActivityScore[] {
 }
 
 function mapFunctionalRow(row: Record<string, unknown>): FunctionalAssessment {
+  const rawType = String(row.type ?? row.assessmentType ?? row.assessment_type ?? "").toLowerCase();
+  const type = (["barthel", "katz", "lawton"].includes(rawType) ? rawType : "barthel") as AssessmentType;
   return {
-    id: String(row.id),
-    type: row.type as AssessmentType,
-    date: String(row.date ?? ""),
+    id: String(row.id ?? row.assessment_id ?? ""),
+    type,
+    date: String(row.date ?? row.assessmentDate ?? row.assessment_date ?? ""),
     assessor: String(row.assessor ?? ""),
-    totalScore: Number(row.totalScore ?? 0),
-    maxScore: Number(row.maxScore ?? 0),
+    totalScore: Number(row.totalScore ?? row.total_score ?? 0),
+    maxScore: Number(row.maxScore ?? row.max_score ?? 0),
     interpretation: String(row.interpretation ?? ""),
     activities: parseActivities(row.activities),
   };
@@ -304,6 +306,73 @@ export function useRecordAdvanceDirective(patientId: string) {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["ehr", "advance-directives", patientId] });
+    },
+  });
+}
+
+export interface RecordFunctionalAssessmentInput {
+  assessmentType: AssessmentType | string;
+  assessmentDate?: string;
+  assessor?: string;
+  /** XOR with scoreAbsentReason — never both, never neither. */
+  totalScore?: number;
+  maxScore?: number;
+  scoreAbsentReason?: string;
+  interpretation?: string;
+}
+
+export function useRecordFunctionalAssessment(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: RecordFunctionalAssessmentInput) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>("/internal/v1/ehr/functional-assessments", {
+        subject_cpid: patientId,
+        assessment_type: String(input.assessmentType).toUpperCase(),
+        assessment_date: input.assessmentDate,
+        assessor: input.assessor,
+        total_score: input.totalScore,
+        max_score: input.maxScore,
+        score_absent_reason: input.scoreAbsentReason,
+        interpretation: input.interpretation,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["ehr", "functional-assessments", patientId] });
+    },
+  });
+}
+
+export interface RecordPastProcedureInput {
+  name: string;
+  code?: string;
+  codeSystem?: string;
+  procedureType?: string;
+  procedureDate?: string;
+  datePrecision?: "EXACT" | "MONTH" | "YEAR" | "APPROXIMATE";
+  performer?: string;
+  facility?: string;
+  status?: string;
+  notes?: string;
+}
+
+export function useRecordPastProcedure(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: RecordPastProcedureInput) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>("/internal/v1/ehr/procedures", {
+        subject_cpid: patientId,
+        name: input.name,
+        code: input.code,
+        code_system: input.codeSystem,
+        procedure_type: input.procedureType,
+        procedure_date: input.procedureDate,
+        date_precision: input.datePrecision ?? "APPROXIMATE",
+        performer: input.performer,
+        facility: input.facility,
+        status: input.status,
+        notes: input.notes,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["ehr", "patient-procedures", patientId] });
     },
   });
 }

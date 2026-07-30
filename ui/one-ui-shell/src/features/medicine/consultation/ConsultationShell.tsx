@@ -9,8 +9,11 @@ import {
   useCareTransfers,
   useConsultations,
   useMdtDecisions,
+  useRecordMdtDecision,
   useRequestCareTransfer,
   useRequestConsultation,
+  MDT_MEETING_TYPES,
+  MDT_TREATMENT_INTENTS,
   type CareTransfer,
   type Consultation,
 } from "@/hooks/queries/useConsultations";
@@ -183,9 +186,17 @@ export function ConsultationShell({
   const answer = useAnswerConsultation(patientId);
   const requestTransfer = useRequestCareTransfer(patientId);
   const acceptTransfer = useAcceptCareTransfer(patientId);
+  const recordMdt = useRecordMdtDecision(patientId);
 
   const [askedOf, setAskedOf] = useState("");
   const [question, setQuestion] = useState("");
+  const [mdtType, setMdtType] = useState<string>("COMPLEX_MEDICINE");
+  const [mdtChair, setMdtChair] = useState("");
+  const [mdtParticipants, setMdtParticipants] = useState("");
+  const [mdtDecision, setMdtDecision] = useState("");
+  const [mdtIntent, setMdtIntent] = useState<string>("");
+  const [mdtNext, setMdtNext] = useState("");
+  const [mdtAnchor, setMdtAnchor] = useState(journeyId ?? "");
 
   const pendingByConsultation = new Map(
     (transfers.data?.data ?? [])
@@ -202,6 +213,43 @@ export function ConsultationShell({
       asked_of_service: askedOf.trim().toUpperCase(),
       question: question.trim(),
     });
+  };
+
+  const sendMdt = () => {
+    if (
+      mdtChair.trim() === "" ||
+      mdtParticipants.trim() === "" ||
+      mdtDecision.trim() === "" ||
+      mdtAnchor.trim() === ""
+    ) {
+      return;
+    }
+    const anchor = mdtAnchor.trim();
+    const looksUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(anchor);
+    recordMdt.mutate(
+      {
+        subject_cpid: patientId,
+        ...(looksUuid
+          ? { journey_id: anchor }
+          : { encounter_id: anchor }),
+        meeting_type: mdtType,
+        chaired_by: mdtChair.trim(),
+        participants: mdtParticipants.trim(),
+        decision: mdtDecision.trim(),
+        treatment_intent: mdtIntent || null,
+        next_action: mdtNext.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          setMdtChair("");
+          setMdtParticipants("");
+          setMdtDecision("");
+          setMdtIntent("");
+          setMdtNext("");
+        },
+      },
+    );
   };
 
   return (
@@ -297,6 +345,109 @@ export function ConsultationShell({
           </Link>
           ; if one met, its minutes live there, not here.
         </p>
+
+        <div
+          className="rounded-lg border border-border bg-card p-4 space-y-2"
+          data-testid="mdt-new"
+        >
+          <h4 className="text-sm font-medium">Record an MDT decision</h4>
+          <p className="text-xs text-muted-foreground">
+            Needs a visit or encounter anchor (care-continuum). Recording here never invents a
+            board session — that lives on MDT boards.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <select
+              className="rounded border border-border px-2 py-1 text-sm"
+              value={mdtType}
+              onChange={(e) => setMdtType(e.target.value)}
+              data-testid="mdt-meeting-type"
+            >
+              {MDT_MEETING_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              className="rounded border border-border px-2 py-1 text-sm min-w-48"
+              placeholder="Journey or encounter id"
+              value={mdtAnchor}
+              onChange={(e) => setMdtAnchor(e.target.value)}
+              data-testid="mdt-anchor"
+            />
+            <input
+              type="text"
+              className="rounded border border-border px-2 py-1 text-sm w-40"
+              placeholder="Chaired by"
+              value={mdtChair}
+              onChange={(e) => setMdtChair(e.target.value)}
+              data-testid="mdt-chaired-by"
+            />
+            <input
+              type="text"
+              className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
+              placeholder="Participants (who was in the room)"
+              value={mdtParticipants}
+              onChange={(e) => setMdtParticipants(e.target.value)}
+              data-testid="mdt-participants"
+            />
+            <input
+              type="text"
+              className="flex-1 min-w-64 rounded border border-border px-2 py-1 text-sm"
+              placeholder="The decision"
+              value={mdtDecision}
+              onChange={(e) => setMdtDecision(e.target.value)}
+              data-testid="mdt-decision"
+            />
+            <select
+              className="rounded border border-border px-2 py-1 text-sm"
+              value={mdtIntent}
+              onChange={(e) => setMdtIntent(e.target.value)}
+              data-testid="mdt-intent"
+            >
+              <option value="">Intent not recorded</option>
+              {MDT_TREATMENT_INTENTS.map((t) => (
+                <option key={t} value={t}>
+                  {t.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
+              placeholder="Next action (optional)"
+              value={mdtNext}
+              onChange={(e) => setMdtNext(e.target.value)}
+              data-testid="mdt-next-action"
+            />
+            <button
+              type="button"
+              onClick={sendMdt}
+              disabled={
+                recordMdt.isPending ||
+                mdtChair.trim() === "" ||
+                mdtParticipants.trim() === "" ||
+                mdtDecision.trim() === "" ||
+                mdtAnchor.trim() === ""
+              }
+              className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-60"
+              data-testid="mdt-record"
+            >
+              {recordMdt.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin inline" />
+              ) : (
+                "Record decision"
+              )}
+            </button>
+          </div>
+          {recordMdt.isError && (
+            <p className="text-sm text-danger" data-testid="mdt-record-failed">
+              The decision was <strong>not</strong> saved. Nothing has been recorded.
+            </p>
+          )}
+        </div>
+
         {decisions.isError ? (
           <div className="flex items-start gap-2 rounded-lg border border-danger/30 bg-red-50 p-4" data-testid="mdt-failed">
             <AlertTriangle className="w-4 h-4 text-danger mt-0.5" />

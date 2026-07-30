@@ -39,7 +39,9 @@ care-plan SoR already exists (rehab/secondary-prevention goals); pregnancy-aware
 only on accept with `accepting_ref`. The seven remaining CANNOTs are absences, not inventable
 capabilities.
 
-The clinician layer is still unproven. Listing the ten journeys is not proving a walkthrough.
+The clinician layer has a walkthrough **protocol**
+([`clinician-walkthrough.md`](clinician-walkthrough.md)); it has not been signed COMPLETE against
+preview. Listing the ten journeys is not proving a walkthrough.
 
 The `CANNOT` lines in those scripts are the authority for what is missing, because they are
 produced by running the thing rather than maintained by hand beside it.
