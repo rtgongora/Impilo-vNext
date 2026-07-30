@@ -1,0 +1,23 @@
+== RIG: infra (postgres + redis + kafka)
+   reporting-service health: 200
+   costing-engine-service health: 200
+   inpatient-service health: 200
+== J-QD: intake → seed implant+blood → complete → drain → replay → reconcile
+   PASS: case intake (095ba29d-a17f-4766-a21a-1959c0c6f033)
+   PASS: case COMPLETED (theatre.case.completed emitted)
+   PASS: J-QD-1 outbox drained → published to Kafka (published_at stamped)
+== waiting for async drain → COSTA bundle + reporting projection
+   PASS: J-QD-2 COSTA destination: exactly one THEATRE-TIME bundle line
+   PASS: J-QD-3 reporting destination: exactly one COMPLETED metric row
+== baseline COSTA lines for case=4 ; reporting rows for case=1
+== REPLAY: re-delivering the identical theatre.case.completed payload (at-least-once simulation)
+   PASS: J-QD-4 REPLAY no double-post billing (COSTA lines still 4)
+   PASS: J-QD-5 REPLAY no duplicate projection (reporting rows still 1, COMPLETED)
+   PASS: J-QD-6 broker depth ZERO — both consumer groups fully drained (costa lag=0, reporting lag=0)
+   PASS: J-QD-7 no dead-letters (outbox publish_error=0, costa failed-money quarantine=0)
+   PASS: J-QD-8 status reconciles (inpatient=COMPLETED == reporting=COMPLETED)
+   PASS: J-QD-9 composition reconciles (minutes=135, implants proj=1==rec=1, blood proj=1==rec=1)
+   PASS: J-QD-10 COSTA bundle reconciles to case (time+anaes+implant+blood each ×1)
+   PASS: J-QD-11 idempotency ledger holds exactly one THEATRE_CASE entry (replay absorbed)
+   PASS: J-QD-12 second case drains independently (per-episode idempotency, not a global stop)
+== RESULT: PASS=14 FAIL=0
