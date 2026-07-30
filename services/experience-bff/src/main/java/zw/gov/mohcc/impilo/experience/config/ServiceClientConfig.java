@@ -470,6 +470,27 @@ public class ServiceClientConfig {
                 // do not expose the constant yet.
                 forwardHeader(inbound, request, "X-Step-Up-Token");
             }
+            else {
+                // No inbound request at all — a @Scheduled sweep or a Kafka consumer. Such a
+                // call previously went out with NO tenant, and tenant is the isolation
+                // boundary every sovereign service reads, so background work either failed
+                // or read whatever a downstream defaults to. A background unit of work may
+                // declare its tenant via SystemTrustContext; nothing on a request path can
+                // reach this branch, because it is guarded by the absence of request
+                // attributes.
+                //
+                // No X-Actor-ID is set here, deliberately: background work is the platform
+                // acting, not a person, and stamping a subject's identity on a sweep would
+                // both impersonate them and misattribute the sweep's reads in audit.
+                SystemTrustContext.Context system = SystemTrustContext.current();
+                if (system != null) {
+                    setIfAbsent(request, CompanionHeaders.TENANT_ID, system.tenantId());
+                    setIfAbsent(request, CompanionHeaders.REQUEST_ID, system.requestId());
+                    setIfAbsent(request, CompanionHeaders.CORRELATION_ID, system.correlationId());
+                    setIfAbsent(request, CompanionHeaders.ACTOR_TYPE, "SYSTEM");
+                    setIfAbsent(request, X_SERVICE_ID, system.systemName());
+                }
+            }
             // No inbound user token and none pre-set by the caller: attach this workload's
             // OWN credential (client_credentials) so OAuth-enforcing downstreams (ndila,
             // clinical-knowledge-platform, …) stop 401ing service-originated calls into
@@ -567,5 +588,20 @@ public class ServiceClientConfig {
             return;
         }
         forwardHeader(inbound, outbound, headerName);
+    }
+
+    /**
+     * Set a header from a literal value only if the calling client method has not already
+     * set it — the same deliberate-override precedence {@link #forwardHeaderIfAbsent}
+     * gives inbound forwarding. Used for background work, which has no inbound request to
+     * forward from.
+     */
+    private static void setIfAbsent(org.springframework.http.HttpRequest outbound,
+                                    String headerName,
+                                    String value) {
+        if (value == null || value.isBlank() || outbound.getHeaders().containsKey(headerName)) {
+            return;
+        }
+        outbound.getHeaders().set(headerName, value);
     }
 }
