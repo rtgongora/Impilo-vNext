@@ -173,13 +173,36 @@ public class PregnancyEpisodeService {
     }
 
     /**
-     * Open a pregnancy episode, or return the one that already exists.
+     * The outcome of a booking attempt, saying WHICH of the two things happened.
+     *
+     * <p>A replay and a new booking both return a saved episode with an id, so a caller cannot tell
+     * them apart by looking at the row. An HTTP surface must: a replay is the packet arriving twice
+     * and answers 200, a new booking answers 201, and the difference is what stops an offline client
+     * from either double-booking a pregnancy or treating its own successful sync as a failure.
+     * Inferring it from a timestamp would be right most of the time, which is the worst kind of right.
+     */
+    public record OpenOutcome(PregnancyEpisodeEntity episode, boolean replayed) {
+    }
+
+    /**
+     * Open a pregnancy episode, or return the one that already exists, discarding which happened.
      *
      * @throws DuplicatePregnancyException when the woman already has an ongoing pregnancy, or one
      *                                     booked in the same week — a conflict a human must resolve
      */
     @Transactional
     public PregnancyEpisodeEntity open(OpenPregnancyCommand command) {
+        return openReporting(command).episode();
+    }
+
+    /**
+     * Open a pregnancy episode, reporting whether it was created or replayed.
+     *
+     * @throws DuplicatePregnancyException when the woman already has an ongoing pregnancy, or one
+     *                                     booked in the same week — a conflict a human must resolve
+     */
+    @Transactional
+    public OpenOutcome openReporting(OpenPregnancyCommand command) {
         if (command.clientOfflineId() != null) {
             Optional<PregnancyEpisodeEntity> replayed =
                     episodes.findByTenantIdAndClientOfflineId(command.tenantId(), command.clientOfflineId());
@@ -187,7 +210,7 @@ public class PregnancyEpisodeService {
                 // Idempotent replay: the packet arrived twice, not the pregnancy.
                 log.info("pregnancy.episode.replayed offlineId={} episode={}",
                         command.clientOfflineId(), replayed.get().getPregnancyEpisodeId());
-                return replayed.get();
+                return new OpenOutcome(replayed.get(), true);
             }
         }
 
@@ -252,7 +275,7 @@ public class PregnancyEpisodeService {
         log.info("pregnancy.episode.opened episode={} subject={} edd={} method={} confidence={}",
                 saved.getPregnancyEpisodeId(), saved.getSubjectCpid(),
                 saved.getEstimatedDeliveryDate(), saved.getDatingMethod(), saved.getDatingConfidence());
-        return saved;
+        return new OpenOutcome(saved, false);
     }
 
     /**
