@@ -112,6 +112,13 @@
             <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
+        <!-- @EmbeddedKafka for ClinicalKafkaOutboxRelayIT: proves the relay-enabled producer path
+             against a real broker, not a mock. -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

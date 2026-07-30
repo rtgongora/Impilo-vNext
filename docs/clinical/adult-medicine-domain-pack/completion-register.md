@@ -31,7 +31,7 @@ outstanding.
 | 16 | Clinical decision support | **DONE** | 12 governed packs, 383 fixtures, full provenance and override metadata. The pack's strongest asset. |
 | 17 | African and Zimbabwean context | **PARTIAL** | HIV, TB and EDLIZ are deep. Malaria, sickle-cell and rheumatic heart disease have no content; stockouts, distance and connectivity are not modelled. |
 | 18 | Integration | **PARTIAL** | PCT, CKP, zibo, OROS, BUTANO (Condition), procedures. Dura, Madi, TUSO, VARAPI, Khuluma, Nompilo, Ndila, Rito, Ruvimbo/COSTA, Fundo and Simba are not wired from this pack. |
-| 19 | Data model and interoperability | **PARTIAL** | Three producers now: `Condition`, `ClinicalImpression` (the examination) and `DetectedIssue` (the §9 findings). PII excluded, unknown values mapped to null rather than guessed, and the six examination states kept distinct at the FHIR boundary. **Two caveats:** the CKP Kafka relay defaults to OFF (`impilo.clinical.kafka.relay-enabled`), so DetectedIssue rows accumulate in the outbox until it is enabled per environment; and a DetectedIssue that stops being detected is never retired — the engine emits nothing on resolution, so an archived issue stays FINAL. ~23 resources still have no producer. |
+| 19 | Data model and interoperability | **PARTIAL** | Three producers now: `Condition`, `ClinicalImpression` (the examination) and `DetectedIssue` (the §9 findings). PII excluded, unknown values mapped to null rather than guessed, and the six examination states kept distinct at the FHIR boundary. **Two caveats:** the CKP Kafka relay still defaults to OFF (`impilo.clinical.kafka.relay-enabled`) — configured `true` for `impilo-full-preview` in `values-full-preview.yaml` and proven against a real embedded broker (`ClinicalKafkaOutboxRelayIT`), but that configuration is not yet deployed, so rows still accumulate in the outbox in every environment actually running today; and a DetectedIssue that stops being detected is never retired — the engine emits nothing on resolution, so an archived issue stays FINAL. ~23 resources still have no producer. |
 | 20 | Offline operation | **NOT BUILT** | Two verified blockers, **both in services this pack does not own**. (a) `OfflineRulesEngine.READ_ACTIONS:51` in **`tshepo-offline-service`** — *corrected: this register previously said offline-edge-service* — holds only READ_PATIENT/MEDICATION/ENCOUNTER/OBSERVATION, and the gate is two-layered (the set, and the capability token's `allowed-offline-actions` filter at mint time). Adding the three reads to the set **and** the READ_PATIENT-covers branch at `:124` needs no token change. (b) `offline-edge-service` — the client is not the constraint; `OfflineEdgeService.replayActions:143` only dispatches to FHIR for two vitals action types. **Corrected:** `useOfflineStore` is live in **one** screen (`HouseholdListScreen.tsx:27`), not several — `ScreeningScreen.tsx:21` imports it and never calls it. Medicine would be *consuming* an existing seam. Routed, not absorbed. |
 | 21 | Analytics | **PARTIAL** | 6 implemented, 6 partial, 9 not computable — see [`analytics-coverage.md`](analytics-coverage.md). Equity is **structurally** impossible here: PCT holds CPID and no PII by design. |
 | 22 | Testing | **PARTIAL** | Unit, content, migration and mutation proofs are strong. The 25 named clinical scenarios are not covered as scenarios. |
@@ -53,9 +53,14 @@ demonstration rig grew from 23 to 35 assertions while its stated-gap count fell 
 All three of the previous three are done. The next three, on the same reasoning — smallest step from
 modelled to usable, then the gaps that make correct work invisible:
 
-1. **Enable the CKP Kafka relay** (`impilo.clinical.kafka.relay-enabled`, currently defaulting to
-   false). Until it is on, every `DetectedIssue` the §9 engine produces sits in an outbox. The code
-   is complete and the finding is invisible anyway — one configuration decision, per environment.
+1. ~~Enable the CKP Kafka relay~~ **Configured, proven, not yet deployed.**
+   `impilo.clinical.kafka.relay-enabled` is now `true` for `impilo-full-preview` in
+   `values-full-preview.yaml`, and `ClinicalKafkaOutboxRelayIT` proves — against a real embedded
+   Kafka broker, not a mock — that a real HTTP call to `/assess` produces a real outbox row the real
+   relay drains onto the exact topic `butano-service` listens on, with the field names its consumer
+   reads. The preview deploy that makes this live in the running estate is held for explicit
+   authorization (dev-preview-sandbox.mdc); until then every `DetectedIssue` the §9 engine produces
+   still sits in the outbox in the environments actually running today.
 2. **Compose the remaining §9 sources in the BFF** — appointments, investigations, functional status,
    patient priorities, care team. Four of the seven detections currently report UNDETERMINED because
    nobody sends them, not because the engine cannot answer. Each is one read.
