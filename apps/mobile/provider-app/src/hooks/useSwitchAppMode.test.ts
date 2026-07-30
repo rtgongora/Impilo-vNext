@@ -124,10 +124,54 @@ describe("useSwitchAppMode (G3)", () => {
     expect(switchContextMocks.switchWorkContext).toHaveBeenCalledWith(expect.anything(), "CLINICAL_CARE");
   });
 
+  it("mints an outreach-mode token before entering outreach", async () => {
+    storeState.resolvedWorkContexts = [ctx({ availableModes: ["COMMUNITY_OUTREACH"] })];
+    switchContextMocks.switchWorkContext.mockResolvedValue(true);
+    const result = renderHook();
+
+    await act(async () => {
+      await result.current().switchAppMode("outreach");
+    });
+
+    expect(switchContextMocks.switchWorkContext).toHaveBeenCalledWith(expect.anything(), "COMMUNITY_OUTREACH");
+    expect(storeState.setGrantedMode).toHaveBeenCalledWith("outreach");
+  });
+
+  it("mints a transport-mode token before entering courier", async () => {
+    storeState.resolvedWorkContexts = [ctx({ availableModes: ["SPECIMEN_TRANSPORT"] })];
+    switchContextMocks.switchWorkContext.mockResolvedValue(true);
+    const result = renderHook();
+
+    await act(async () => {
+      await result.current().switchAppMode("courier");
+    });
+
+    expect(switchContextMocks.switchWorkContext).toHaveBeenCalledWith(expect.anything(), "SPECIMEN_TRANSPORT");
+    expect(storeState.setGrantedMode).toHaveBeenCalledWith("courier");
+  });
+
+  it("refuses outreach when no assignment grants it, rather than entering it locally", async () => {
+    // Before these modes were governed this was free local navigation, so a
+    // person with no outreach duty simply entered the workspace anyway.
+    storeState.resolvedWorkContexts = [ctx({ availableModes: ["CLINICAL_CARE"] })];
+    const result = renderHook();
+
+    let ok: boolean | undefined;
+    await act(async () => {
+      ok = await result.current().switchAppMode("outreach");
+    });
+
+    expect(ok).toBe(false);
+    expect(storeState.setMode).not.toHaveBeenCalledWith("outreach");
+    expect(storeState.setGrantedMode).not.toHaveBeenCalled();
+  });
+
   it("lets modes with no WorkMode analogue switch locally without minting", async () => {
     const result = renderHook();
 
-    for (const mode of ["outreach", "courier", "offline"] as const) {
+    // Only `offline` remains — outreach and courier now mint COMMUNITY_OUTREACH
+    // and SPECIMEN_TRANSPORT, and are covered by the minting tests above.
+    for (const mode of ["offline"] as const) {
       storeState.setMode.mockClear();
       storeState.setGrantedMode.mockClear();
       switchContextMocks.switchWorkContext.mockClear();

@@ -6,7 +6,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
 import { getHouseholds, getVisitsForHousehold } from "../../services/householdService";
-import { appStore, useAppStore } from "../../stores/appStore";
+import { useAppStore } from "../../stores/appStore";
+import { useSwitchAppMode } from "../../hooks/useSwitchAppMode";
 import type { Household, CommunityVisit } from "../../types";
 
 interface ScheduleItem {
@@ -17,6 +18,11 @@ interface ScheduleItem {
 
 export function FollowUpScreen() {
   const { facilityId } = useAppStore();
+  // Outreach is a governed mode (COMMUNITY_OUTREACH), so starting a visit mints
+  // a duty token before the workspace changes. It used to call setMode directly,
+  // which moved the UI into an outreach posture while the person still held
+  // whatever token they had.
+  const { switching, error: switchError, switchAppMode } = useSwitchAppMode();
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +58,11 @@ export function FollowUpScreen() {
     <Screen>
       <Header title="Follow-Up Schedule" />
       <ScrollView testID="follow-up-screen" style={styles.container}>
+        {switchError ? (
+          <Text testID="follow-up-switch-error" style={styles.switchErrorText}>
+            {switchError}
+          </Text>
+        ) : null}
         {loading ? (
           <LoadingSpinner size="md" />
         ) : error ? (
@@ -80,11 +91,12 @@ export function FollowUpScreen() {
                     </View>
                   </View>
                   <Button
-                    title="Start Visit"
+                    title={switching ? "Starting…" : "Start Visit"}
                     variant="primary"
                     size="sm"
+                    disabled={switching}
                     onPress={() => {
-                      appStore.getState().setMode("outreach");
+                      void switchAppMode("outreach");
                     }}
                     testID={`start-followup-${household.id}`}
                   />
@@ -119,6 +131,11 @@ const styles = StyleSheet.create({
   addressText: {
     fontSize: 14,
     color: colors.gray[500],
+  },
+  switchErrorText: {
+    fontSize: 14,
+    color: colors.error.main,
+    paddingVertical: 8,
   },
   badgeRow: {
     flexDirection: "row",

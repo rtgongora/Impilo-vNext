@@ -40,17 +40,25 @@ const SUPERVISORY_WORK_MODES = new Set([
 /**
  * Which governed WorkModes an AppMode may be entered under, most-preferred
  * first. An AppMode absent from this map has NO WorkMode analogue in the
- * resolver (outreach, courier, offline) and stays a local navigation choice —
- * see useSwitchAppMode.
+ * resolver — now only `offline`, which is connectivity state rather than a kind
+ * of work — and stays a local navigation choice; see useSwitchAppMode.
  *
  * This is what makes "supervisor grants no automatic patient access" structural
  * rather than cosmetic: entering supervisor mints a management-mode token, and
  * the PDP's clinicalDataAccess gate (Phase B4) then declines to fold the
  * clinical role every clinical policy rule matches on.
+ *
+ * The same gate is what makes `courier` meaningful: SPECIMEN_TRANSPORT carries
+ * clinicalDataAccess NONE, so a courier can prove custody of a specimen and
+ * cannot read a result. `outreach` is the opposite case — COMMUNITY_OUTREACH is
+ * IDENTIFIED, because recording a screening or an immunization against a named
+ * person is the work.
  */
 export const WORK_MODES_FOR_APP_MODE: Record<GovernedAppMode, string[]> = {
   provider: ["CLINICAL_CARE", "VIRTUAL_CARE"],
+  outreach: ["COMMUNITY_OUTREACH"],
   supervisor: ["FACILITY_MANAGEMENT", "DEPARTMENT_MANAGEMENT", "JURISDICTION_OPERATIONS", "PROGRAMME_MANAGEMENT"],
+  courier: ["SPECIMEN_TRANSPORT"],
 };
 
 /**

@@ -30,7 +30,7 @@ describe("provider landing surface", () => {
 
   it("leaves the tab alone when entering a non-provider workspace", () => {
     appStore.getState().setProviderTab("results");
-    appStore.getState().setMode("outreach");
+    appStore.getState().setGrantedMode("outreach");
     expect(appStore.getState().providerTab).toBe("results");
   });
 

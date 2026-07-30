@@ -27,8 +27,10 @@ import { WORK_MODES_FOR_APP_MODE, requiresWorkContextMint } from "./modeAvailabi
 import type { AppMode, GovernedAppMode, UngovernedAppMode } from "../types";
 
 const ALL_APP_MODES: AppMode[] = ["provider", "outreach", "supervisor", "offline", "courier"];
-const GOVERNED: GovernedAppMode[] = ["provider", "supervisor"];
-const UNGOVERNED: UngovernedAppMode[] = ["outreach", "offline", "courier"];
+const GOVERNED: GovernedAppMode[] = ["provider", "outreach", "supervisor", "courier"];
+// Only connectivity state remains ungoverned — outreach and courier are now
+// COMMUNITY_OUTREACH and SPECIMEN_TRANSPORT.
+const UNGOVERNED: UngovernedAppMode[] = ["offline"];
 
 describe("governed-mode fence", () => {
   it("classifies every AppMode as exactly one of governed or ungoverned", () => {
@@ -68,7 +70,11 @@ describe("governed-mode fence", () => {
     expect(appStore.getState().providerTab).toBe("messaging");
 
     appStore.getState().setProviderTab("messaging");
-    appStore.getState().setMode("outreach");
+    appStore.getState().setGrantedMode("outreach");
+    expect(appStore.getState().providerTab).toBe("messaging");
+
+    appStore.getState().setProviderTab("messaging");
+    appStore.getState().setMode("offline");
     expect(appStore.getState().providerTab).toBe("messaging");
   });
 });

@@ -42,14 +42,16 @@ describe("App Store — Offline Sync", () => {
   });
 
   it("manages mode switching", () => {
-    // Ungoverned workspaces — free local navigation, no duty token involved.
-    appStore.getState().setMode("outreach");
-    expect(appStore.getState().mode).toBe("outreach");
-
+    // Ungoverned workspace — connectivity state, no duty token involved.
     appStore.getState().setMode("offline");
     expect(appStore.getState().mode).toBe("offline");
 
-    appStore.getState().setMode("courier");
+    // Outreach and courier are governed (COMMUNITY_OUTREACH, SPECIMEN_TRANSPORT),
+    // so they only enter through the granted setter.
+    appStore.getState().setGrantedMode("outreach");
+    expect(appStore.getState().mode).toBe("outreach");
+
+    appStore.getState().setGrantedMode("courier");
     expect(appStore.getState().mode).toBe("courier");
 
     // Governed workspaces go through setGrantedMode, which useSwitchAppMode

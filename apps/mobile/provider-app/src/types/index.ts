@@ -11,13 +11,15 @@
  * work-context token (x-work-context-token), and the PDP reads it from there.
  *
  * Architecture decision #11 says delete this enum "once no protected behaviour
- * depends on it". Authority no longer does — but deleting it outright is still
- * wrong today, because `outreach`, `offline` and `courier` have NO WorkMode
- * analogue in the resolver's 10-mode catalog. Removing the enum would mean
- * either losing three working workspaces or inventing backend modes that
- * describe nothing real. The honest end state is a backend that models
- * outreach/courier/offline as governed contexts; until then the enum stays,
- * reduced to navigation and fenced by the split below.
+ * depends on it". `outreach` and `courier` are now governed: the backend models
+ * them as COMMUNITY_OUTREACH and SPECIMEN_TRANSPORT WorkModes, so entering them
+ * mints a duty token like any other posture.
+ *
+ * `offline` is the one that remains, and it is not waiting for a backend mode —
+ * decision #11 rules it is connectivity state layered over whatever context is
+ * active. A WorkMode for it would have to answer "offline to do what?" with
+ * every other mode's answer, so it stays a local navigation state and the enum
+ * stays with it, fenced by the split below.
  */
 export type AppMode = "provider" | "outreach" | "supervisor" | "offline" | "courier";
 
@@ -30,9 +32,13 @@ export type AppMode = "provider" | "outreach" | "supervisor" | "offline" | "cour
  * exists to prevent. `appStore` accepts these only via `setGrantedMode`, so
  * the compiler rejects a direct jump rather than relying on reviewer memory.
  */
-export type GovernedAppMode = "provider" | "supervisor";
+export type GovernedAppMode = "provider" | "outreach" | "supervisor" | "courier";
 
-/** AppModes with no governed WorkMode analogue — free local navigation. */
+/**
+ * AppModes with no governed WorkMode analogue — free local navigation. Now
+ * exactly one: `offline`, which is connectivity state rather than a kind of
+ * work (architecture decision #11).
+ */
 export type UngovernedAppMode = Exclude<AppMode, GovernedAppMode>;
 export type ProviderTabKey =
   | "workhome"
