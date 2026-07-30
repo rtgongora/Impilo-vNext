@@ -38,12 +38,12 @@
         "note": "Rito already names this measure in V005; reused rather than renamed."
       },
       {
-        "measure": "physical_abuse_free",
-        "prompt": "Were you free from being slapped, hit, or physically restrained?",
-        "mistreatmentCategory": "PHYSICAL_ABUSE",
-        "reverseScored": true,
-        "note": "Asked in the positive so a low score always means worse care, consistent with the rest of the set."
-      },
+      "measure": "physical_abuse_free",
+      "prompt": "Were you free from being slapped, hit, or physically restrained?",
+      "mistreatmentCategory": "PHYSICAL_ABUSE",
+      "reverseScored": false,
+      "note": "Asked in the positive — 'always free from it' is 5 and is the good answer — so a low score already means worse care, consistent with the rest of the set. This item was previously flagged reverseScored while positively worded, which would have stored a woman who was never struck as 1 of 5 and reported the facilities with no physical abuse as the most abusive. Reversal belongs only to a negatively-worded item; see never_left_alone."
+    },
       {
         "measure": "consent_before_procedures",
         "prompt": "Were procedures explained and your permission asked before they were done?",
@@ -64,8 +64,8 @@
         "measure": "never_left_alone",
         "prompt": "Were you left alone when you needed someone?",
         "mistreatmentCategory": "ABANDONMENT",
-        "reverseScored": true,
-        "note": "Abandonment during second stage is the category most often invisible to a facility, because nobody was there to record it."
+      "reverseScored": true,
+      "note": "Negatively worded — 'always left alone' is 5 and is the bad answer — so this one genuinely needs reversing before storage. Abandonment during second stage is the category most often invisible to a facility, because nobody was there to record it."
       },
       {
         "measure": "free_to_leave",

@@ -50,6 +50,22 @@ public class SurgicalEpisodeEntity {
     @Column(length = 48)
     private String specialty;
 
+    /**
+     * V010 — the predecessor, when a reoperation warranted a NEW episode. A reoperation that
+     * joins the same episode uses the {@code REOPENED} status instead and leaves this null.
+     */
+    @Column(name = "reoperation_of_episode_id")
+    private UUID reoperationOfEpisodeId;
+
+    @Column(name = "reopened_at")
+    private OffsetDateTime reopenedAt;
+
+    @Column(name = "reopened_by")
+    private String reopenedBy;
+
+    @Column(name = "reopen_reason", columnDefinition = "text")
+    private String reopenReason;
+
     @Column(name = "created_by")
     private String createdBy;
 
@@ -95,6 +111,14 @@ public class SurgicalEpisodeEntity {
     public void setStatus(String v) { this.status = v; }
     public String getSpecialty() { return specialty; }
     public void setSpecialty(String v) { this.specialty = v; }
+    public UUID getReoperationOfEpisodeId() { return reoperationOfEpisodeId; }
+    public void setReoperationOfEpisodeId(UUID v) { this.reoperationOfEpisodeId = v; }
+    public OffsetDateTime getReopenedAt() { return reopenedAt; }
+    public void setReopenedAt(OffsetDateTime v) { this.reopenedAt = v; }
+    public String getReopenedBy() { return reopenedBy; }
+    public void setReopenedBy(String v) { this.reopenedBy = v; }
+    public String getReopenReason() { return reopenReason; }
+    public void setReopenReason(String v) { this.reopenReason = v; }
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String v) { this.createdBy = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

@@ -48,6 +48,8 @@ class ProcedureEmergencyStartTest {
     @Mock EventOutboxRepository outboxRepository;
     @Mock ProcedureConsentRepository procedureConsentRepository;
     @Mock CostaServiceAccessClient costaServiceAccessClient;
+    @Mock zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureReturnToTheatreRepository returnToTheatreRepository;
+    @Mock zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureNoteRepository noteRepository;
 
     private ProcedureEpisodeService service;
     private final UUID tenant = UUID.randomUUID();
@@ -58,7 +60,8 @@ class ProcedureEmergencyStartTest {
         service = new ProcedureEpisodeService(episodeRepository, preopRepository, checklistRepository,
                 intraopRepository, postopRepository, pacuObservationRepository, documentRepository, consumableRepository,
                 implantRepository, anaesthesiaScoreRepository, countRepository, chartRepository, bloodLinkRepository,
-                outboxRepository, procedureConsentRepository, new ObjectMapper(), costaServiceAccessClient);
+                outboxRepository, procedureConsentRepository, new ObjectMapper(), costaServiceAccessClient,
+                returnToTheatreRepository, noteRepository);
         TrustContextHolder.set(new TrustContext(tenant, "actor-surgeon", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
         lenient().when(episodeRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(i -> i.getArgument(0));

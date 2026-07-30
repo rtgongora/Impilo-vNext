@@ -1,0 +1,4 @@
+9a83cdff-70d6-42e8-aa9e-74458c8897fc|CPID-REOP-1|ABANDONED|actor-surgeon|Postoperative haemorrhage — return to theatre|
+74a7e6a8-1eb1-4c2f-8f8d-6558b9e4c9e4|CPID-REOP-2|OPERATED|actor-surgeon|Anastomotic leak diagnosed on day 5|
+6f03ff06-ff8f-4038-a00e-9b7497cf9575|CPID-REOP-3|ASSESSMENT|||74a7e6a8-1eb1-4c2f-8f8d-6558b9e4c9e4
+76a2d8be-9489-4b0e-943c-e05e3a4c508a|CPID-REOP-ORDINARY|ASSESSMENT|||

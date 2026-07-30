@@ -39,7 +39,14 @@ import java.util.UUID;
 public class SurgicalEpisodeService {
 
     private static final List<String> STATUSES =
-            List.of("ASSESSMENT", "LISTED_FOR_SURGERY", "OPERATED", "CLOSED", "ABANDONED");
+            List.of("ASSESSMENT", "LISTED_FOR_SURGERY", "OPERATED", "CLOSED", "ABANDONED", "REOPENED");
+
+    /**
+     * The only states a reopen can come from (V010). There is nothing to reopen in ASSESSMENT or
+     * LISTED_FOR_SURGERY — the episode has not yet been operated — and an ABANDONED episode was
+     * ended without an operation, so a return to theatre would be a new episode, not a reopen.
+     */
+    private static final List<String> REOPENABLE_FROM = List.of("OPERATED", "CLOSED");
 
     private final SurgicalEpisodeRepository repository;
     private final PctProblemContributionClient pctClient;
@@ -124,11 +131,59 @@ public class SurgicalEpisodeService {
             throw new SurgeryDomainException("INVALID_STATUS", 400,
                     "status must be one of " + STATUSES);
         }
+        // REOPENED is reachable only through reopen(), which is where the reason and the actor are
+        // captured. Allowing it here would let a caller reach the state with no audit at all —
+        // and V010's chk_surgical_episode_reopened_is_audited would then reject the write anyway,
+        // as a constraint violation rather than as an answer. Say why instead.
+        if ("REOPENED".equals(newStatus)) {
+            throw new SurgeryDomainException("REOPEN_REQUIRES_REASON", 400,
+                    "Reopening is not a plain status change — POST /reopen with a reason, so the "
+                            + "return to theatre is recorded with who reopened it and why");
+        }
         SurgicalEpisodeEntity e = requireEpisode(episodeId);
         if ("CLOSED".equals(newStatus)) {
             requireHistologyReviewed(e);
         }
         e.setStatus(newStatus);
+        return toView(repository.save(e));
+    }
+
+    /**
+     * Surgical demonstration 9 — a reoperation joins the SAME episode. The patient returns to
+     * theatre for a bleed, a leak, a washout; that second operation belongs to the course of care
+     * the first one started, so the episode reopens rather than a disconnected new one appearing.
+     *
+     * <p>The alternative representation, a reoperation given its OWN episode because a different
+     * specialty or indication took over, is served by {@code reoperationOfEpisodeId} on the new
+     * episode instead. Both are real; see V010's header.</p>
+     */
+    @Transactional
+    public SurgicalEpisodeView reopen(UUID episodeId, String reason, UUID reoperationOfEpisodeId) {
+        if (reason == null || reason.isBlank()) {
+            throw new SurgeryDomainException("REOPEN_REASON_REQUIRED", 400,
+                    "reason is required — an unexplained reopen is not an auditable clinical act");
+        }
+        SurgicalEpisodeEntity e = requireEpisode(episodeId);
+        if (!REOPENABLE_FROM.contains(e.getStatus())) {
+            throw new SurgeryDomainException("EPISODE_NOT_REOPENABLE", 409,
+                    "Only an operated or closed episode can reopen (was " + e.getStatus()
+                            + "). An episode that has not reached theatre has nothing to reopen.");
+        }
+        if (reoperationOfEpisodeId != null) {
+            if (reoperationOfEpisodeId.equals(episodeId)) {
+                throw new SurgeryDomainException("REOPERATION_SELF_REFERENCE", 400,
+                        "An episode cannot be a reoperation of itself — reopening in place needs no "
+                                + "predecessor reference");
+            }
+            // Resolve within the tenant so a cross-tenant id cannot be linked, and so a typo
+            // surfaces as a 404 here rather than as a foreign key violation at flush.
+            requireEpisode(reoperationOfEpisodeId);
+            e.setReoperationOfEpisodeId(reoperationOfEpisodeId);
+        }
+        e.setStatus("REOPENED");
+        e.setReopenedAt(OffsetDateTime.now());
+        e.setReopenedBy(currentActor());
+        e.setReopenReason(reason);
         return toView(repository.save(e));
     }
 
@@ -187,6 +242,10 @@ public class SurgicalEpisodeService {
                 e.getNonOperativeOptionsConsidered(),
                 e.getStatus(),
                 e.getSpecialty(),
+                e.getReoperationOfEpisodeId() != null ? e.getReoperationOfEpisodeId().toString() : null,
+                e.getReopenedAt() != null ? e.getReopenedAt().toString() : null,
+                e.getReopenedBy(),
+                e.getReopenReason(),
                 e.getPctProblemRef() != null);
     }
 }

@@ -165,6 +165,14 @@ public class ProcedureEpisodeEntity {
     @Column(name = "death_case_ref")
     private String deathCaseRef;
 
+    /**
+     * V305 — the episode this one re-operates, when a return to theatre warranted a NEW episode
+     * rather than reopening this one in place. A return that keeps the same episode (the ordinary
+     * case, see {@code procedure_return_to_theatre}) leaves this null.
+     */
+    @Column(name = "reoperation_of_episode_id")
+    private UUID reoperationOfEpisodeId;
+
     @PrePersist
     void onCreate() {
         if (episodeId == null) episodeId = UUID.randomUUID();
@@ -259,6 +267,8 @@ public class ProcedureEpisodeEntity {
     public void setSiteSideConfirmedBy(String v) { this.siteSideConfirmedBy = v; }
     public java.time.OffsetDateTime getSiteSideConfirmedAt() { return siteSideConfirmedAt; }
     public void setSiteSideConfirmedAt(java.time.OffsetDateTime v) { this.siteSideConfirmedAt = v; }
+    public UUID getReoperationOfEpisodeId() { return reoperationOfEpisodeId; }
+    public void setReoperationOfEpisodeId(UUID v) { this.reoperationOfEpisodeId = v; }
     public String getSetting() { return setting; }
     public void setSetting(String v) { this.setting = (v == null || v.isBlank()) ? SETTING_THEATRE : v; }
     public java.util.UUID getCatalogueRef() { return catalogueRef; }

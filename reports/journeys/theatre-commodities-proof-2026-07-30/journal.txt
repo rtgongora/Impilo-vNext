@@ -1,0 +1,36 @@
+== RIG: infra (postgres + redis) + commodities substrate
+   tuso-service health: 200
+   inventory-service health: 200
+   oros-service health: 200
+   madi-service health: 200
+   inpatient-service health: 200
+== J-TC-1: implant UDI recorded → traceable, recall query finds the patient
+   PASS: theatre case created (e0c69b1f-b24b-4187-8851-3edf9ad30127)
+HTTP 201
+   PASS: implant recorded IMPLANTED (inventory unit issued)
+   PASS: inventory inv_implant_registry row exists for UDI-33105169
+   PASS: inventory inv_patient_implant link for patient
+   PASS: inpatient procedure_implant projection for UDI-33105169
+   PASS: case-side recall by lot LOT-HIP-42 found 1 implant(s)
+== J-TC-2: STERILE set issued → SOILED on return → reprocessed → STERILE
+   PASS: seeded STERILE instrument set (eb6dc880-9f98-4cdb-a8a0-05b3b9eaf9a6)
+   PASS: set issued to case (procedure_instrument_set_use=ISSUED)
+   PASS: TUSO set moved STERILE→IN_USE
+   PASS: TUSO set returned IN_USE→SOILED
+   PASS: CSSD cycle reprocessed SOILED→STERILE (sterile_until re-stamped)
+   PASS: CSSD cycle audit-log row written
+== J-TC-3: administer controlled drug requires a witness (400), then balances
+   PASS: administer without witness rejected 400
+   PASS: witnessed administer recorded
+   PASS: running balance after ISSUE(10)-ADMINISTER(2) = 8.0
+   PASS: inventory controlled-drug register rows for the case
+== J-TC-4: requestBlood creates a real MADI order; no-transfusion case is NOT_REQUIRED
+   PASS: requestBlood created MADI order 63319767-40cf-4c0c-bd72-2146c216d95a
+   PASS: madi.blood_orders row exists (jurisdiction defaulted)
+   PASS: no-transfusion case: BLOOD gate NOT_REQUIRED
+== J-TC-5: histopath report signed out FINAL (critical) + acknowledged
+   PASS: OROS histopath order placed (01KYRPWB2Y2AB9SPTFNZX5JRZJ)
+   PASS: histopath report signed out FINAL
+   PASS: FINAL histopath result created (Butano-bound via ReportService)
+   PASS: critical histopath acknowledged
+== SUMMARY: PASS=23 FAIL=0 (evidence in /opt/impilo/repos/wt-surgery-completion/reports/journeys/theatre-commodities-proof-2026-07-30)

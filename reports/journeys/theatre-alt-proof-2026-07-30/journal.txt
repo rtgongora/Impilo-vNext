@@ -1,0 +1,56 @@
+== RIG: infra (postgres + redis) + 5-service substrate
+   madi-service health: 200
+   nhume-service health: 200
+   rito-quality-safety-service health: 200
+   scheduling-service health: 200
+   inpatient-service health: 200
+== J-AL-1..3: DAY SURGERY — same-day discharge + failed-conversion admission
+   PASS: J-AL-1 day-case intake (c1b0aab7-8d86-4f35-b243-c3106866c1b6)
+   PASS: J-AL-1 triaged DAY_CASE
+   PASS: J-AL-1 same-day DISCHARGE decision accepted (Aldrete-ready)
+   PASS: J-AL-1 same-day discharge went HOME (no admission_ref)
+   PASS: J-AL-1 surgical discharge summary completed with follow-up
+   PASS: J-AL-2 not-ready day-case discharge BLOCKED (409)
+   PASS: J-AL-3 failed day case converted to admission (admission_ref=3ce64f2d-b8ec-4e26-841b-e64bc2be4918)
+   PASS: J-AL-3 NHUME PACU_TO_WARD movement routed on conversion
+== J-AL-4..7: CANCELLED CASE — structured reasons + rescheduling
+   PASS: J-AL-4 structured reason code normalised (NO_BLOOD)
+   PASS: J-AL-4 reschedulable=true for a reschedulable reason
+   PASS: J-AL-4 structured code persisted in reason column (NO_BLOOD—cross-matchnotready)
+   PASS: J-AL-4 theatre.case.cancelled event carries reason_code + reschedulable
+   PASS: J-AL-5 PATIENT_NON_ATTENDANCE reschedulable=false
+   PASS: J-AL-6 unknown reason code REJECTED (400)
+   PASS: J-AL-6 case not cancelled on rejected code (status=BOOKED)
+   PASS: J-AL-7 surgical waitlist entry placed (6f392e34-a77d-419a-a698-4478f157da99)
+   PASS: J-AL-7 cancelled case returns to waitlist (status WAITING)
+== J-AL-8..14: INTRAOP COMPLICATION — recorded + escalated
+   PASS: J-AL-8 major haemorrhage → MADI blood order placed (9efd3151-cedc-41b5-8557-49875316f227)
+   PASS: J-AL-8 blood order owned by MADI (reconciles)
+   PASS: J-AL-9 anaesthetic COMPLICATION chart event recorded
+   PASS: J-AL-9 deterioration safety event routed to RITO (quality/safety)
+   PASS: J-AL-10 equipment failure routed to asset-registry
+   PASS: J-AL-11 wrong/missing implant safety event recorded + routed
+   PASS: J-AL-12 count discrepancy recorded (non-zero)
+   PASS: J-AL-12 RETAINED_ITEM sentinel raised (RITO-routed)
+   PASS: J-AL-13 anaesthesia CONVERSION chart event recorded
+   PASS: J-AL-13 operative note updated on conversion
+   PASS: J-AL-14 return-to-theatre transition (→ READY_FOR_THEATRE)
+   PASS: J-AL-14 postop flagged return_to_theatre
+   PASS: J-AL-14 return recorded with cause, sequence and unplanned status
+   PASS: J-AL-14 return attributed to the real deciding actor (PROV-ZW-00020)
+   PASS: J-AL-14 second return recorded as seq 2 (a boolean cannot count)
+   PASS: J-AL-14 NEGATIVE return without a complication category refused (400)
+   PASS: J-AL-14 NEGATIVE invented complication category refused (400)
+   PASS: J-AL-14 NEGATIVE a haemorrhage cannot be declared planned (400)
+   PASS: J-AL-14 NEGATIVE refused returns wrote nothing
+   PASS: J-AL-14 planned second-look recorded as planned (not counted as harm)
+   PASS: J-AL-14 the unplanned-return indicator excludes the planned second-look
+   PASS: J-AL-14 NEGATIVE an episode cannot be a reoperation of itself
+   PASS: J-AL-14 a reoperation given its own episode links back to its predecessor
+   PASS: J-AL-14 unplanned ICU admission flagged
+== J-AL-15..18: CONCURRENCY — isolation between parallel cases
+   PASS: J-AL-15 safety events case-scoped (A=1 B=1, no bleed)
+   PASS: J-AL-16 chart entries case-scoped (A has only its own)
+   PASS: J-AL-17 cancelling A left B uncorrupted (A=CANCELLED B=IN_PROGRESS)
+   PASS: J-AL-18 specimen + patient identity case-scoped (no mislinkage/leakage)
+== RESULT: PASS=45 FAIL=0
