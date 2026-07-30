@@ -54,6 +54,54 @@ class SurgeryReachabilityRouteShapeTest {
                 .isEqualTo("decision");
     }
 
+    // ── completion wave: reoperation (V010) and shared-specialty care (V011), gated by V303 ──
+
+    @Test
+    void reopenDerivesReopen() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/reopen"))
+                .isEqualTo("reopen");
+    }
+
+    @Test
+    void everySpecialtiesVerbDerivesSpecialties() {
+        // GET, POST and DELETE all address the same path; only the action differs, which is why
+        // V303 writes three rows on one resource type rather than three resource types.
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/specialties"))
+                .isEqualTo("specialties");
+    }
+
+    @Test
+    void leadHandoverDerivesLead() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/specialties/lead"))
+                .isEqualTo("lead");
+    }
+
+    /**
+     * The reason the DELETE carries {@code ?specialty=} rather than a final path segment. This
+     * is the free-text-code-in-path trap: as a segment the specialty BECOMES the resource type,
+     * so no policy row could ever match and the route would be permanently unreachable. Asserted
+     * so that anyone who "tidies" the route back into REST shape sees why it was not.
+     */
+    @Test
+    void aSpecialtyAsAFinalSegmentWouldDeriveTheSpecialtyItselfNotSpecialties() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/specialties/GENERAL_SURGERY"))
+                .isEqualTo("GENERAL_SURGERY")
+                .isNotEqualTo("specialties");
+    }
+
+    /** The specialty-catalogue routes share the word but never the derived type. */
+    @Test
+    void theSpecialtyCatalogueRoutesDoNotCollideWithEpisodeSpecialties() {
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/surgery/specialties/indications"))
+                .isEqualTo("indications");
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/surgery/specialties/templates"))
+                .isEqualTo("templates");
+    }
+
     // ── procedures-service analytics (P14) ──
 
     @Test

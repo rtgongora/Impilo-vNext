@@ -89,8 +89,14 @@ public class SurgicalEpisodeController {
         return specialtyService.transferLead(id, body.get("specialty"), body.get("contribution"));
     }
 
-    @DeleteMapping("/{id}/specialties/{specialty}")
-    public List<Map<String, Object>> removeSpecialty(@PathVariable UUID id, @PathVariable String specialty) {
+    /**
+     * The specialty travels as a QUERY PARAMETER, not a final path segment. As a segment it
+     * would become the ext_authz derived resource type ({@code .../specialties/GENERAL_SURGERY}
+     * derives {@code GENERAL_SURGERY}, not {@code specialties}), so no policy row could ever
+     * match it — the free-text-code-in-path trap the programme was corrected for.
+     */
+    @DeleteMapping("/{id}/specialties")
+    public List<Map<String, Object>> removeSpecialty(@PathVariable UUID id, @RequestParam String specialty) {
         return specialtyService.removeSpecialty(id, specialty);
     }
 }
