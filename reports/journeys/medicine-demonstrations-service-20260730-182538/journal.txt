@@ -1,0 +1,54 @@
+── RIG: infra + pct + bff + ckp
+   pct (29090): 200
+   bff (29170): 200
+   ckp (29280): 200
+  PASS    3/3 services healthy
+── §23.1 Newly detected HTN + DM → integrated care plan (HTTP)
+  PASS    both diagnoses created via BFF conditions
+  PASS    one problem list carries both diagnoses (count=2)
+  PASS    HTN and DM enrolments via BFF programmes
+  PASS    MULTIMORBIDITY episode opened via pct (no BFF proxy yet)
+  PASS    ONE consolidated episode spans both problems
+── §23.2 HIV + TB + DM without disconnected records; confidentiality honesty
+  PASS    HIV/TB/chronic enrolments on same person (count=4)
+  PASS    HIV register refused with honest 403 (SPECIALLY_PROTECTED not enforcing)
+  CANNOT  SPECIALLY_PROTECTED still ships in SHADOW — CATEGORY_MAP_RATIFIED=false; the 403 is honesty about inert enforcement, not live restriction of named persons
+── §23.3 Heart failure across settings — dose history via services where it exists
+  PASS    HF problem created via BFF
+  CANNOT  HF-specific titration workspace (indication/reason model) is not built — OROS prescription amend history exists in the estate but is not exercised here without an oros-service jar in this rig
+── §23.4 CKD register → dialysis prep gap named honestly
+  PASS    CKD enrolment via BFF
+  PASS    CKD control_status recorded on the register
+  CANNOT  patient-level dialysis preparation, modality choice and vascular-access continuity have no SoR — procedures-service has HD catalogue/appropriateness but not prep-as-patient-fact; this rig does not boot procedures-service
+── §23.5 Stroke → examination + rehab/secondary-prevention care plan (hypothesis overturned)
+  PASS    neurological examination recorded via BFF
+  PASS    rehab + secondary-prevention goals recorded on a care plan (generic SoR EXISTS — prior CANNOT overstated absence)
+── §23.6 Decompensated liver → result actioned (V115) via pct
+  PASS    result action recorded via pct /v1/result-actions
+  PASS    NO_ACTION_NEEDED without rationale refused (HTTP 500)
+  CANNOT  paracentesis execution lives in procedures-service — proven here is that its RESULT can be actioned through PCT, not that the procedure ran in this rig
+── §23.7 Suspected cancer → confirm → MDT (staging/cycles still absent)
+  PASS    suspicion recorded as SUSPECTED via BFF
+  PASS    suspicion promoted to CONFIRMED
+  PASS    MDT decision recorded via BFF with problem link
+  PASS    MDT with blank participants refused (HTTP 502)
+  CANNOT  oncology staging, systemic therapy cycles, toxicity (CTCAE) and response have no patient record — MDT decision + treatment intent exist; catalogue chemo is not that record
+── §23.8 Older person ICOPE / multimorbidity — priorities still absent
+  PASS    frailty is a first-class problem via BFF
+  PASS    multimorbidity assess reachable; priorities panel remains unknown without a SoR
+  CANNOT  patient priorities have no SoR — §9 panel correctly stays unknown; no estate service owns 'what matters most day to day'
+── §23.9 Pregnancy coordination — CDS with explicit pregnancyStatus (wiring gap narrowed)
+  PASS    V111 pregnancy_episode_id column present (service can link)
+  PASS    pregnancy-aware rules fire PREGNANCY_CONTRAINDICATED_DRUG when pregnancyStatus is supplied
+  PASS    no pregnancy contraindication when pregnancyStatus=false (negative control)
+  CANNOT  medical workspace does not auto-compose V111 pregnancy into rules/evaluate — capability exists when pregnancyStatus is supplied; auto-wire from the medical view is the remaining gap
+── §23.10 Surgical consult without loss of ownership + V116 transfer
+  PASS    consultation records MEDICINE as owning_service
+  PASS    answering does not move ownership (takeover_recommended≠transfer)
+  PASS    consultation with no question refused (HTTP 502)
+  PASS    requesting transfer does not move ownership
+  PASS    accept without accepting_ref refused (HTTP 502)
+  PASS    accept with accepting_ref moves ownership to SURGERY (V116)
+
+=== service layer: PASS=30 FAIL=0 SKIP=0 ===
+=== 7 stated gaps (hypotheses after estate search) — NOT ten passing demos ===

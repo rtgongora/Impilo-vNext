@@ -35,9 +35,9 @@ outstanding.
 | 20 | Offline operation | **NOT BUILT** | Two verified blockers, **both in services this pack does not own**. (a) `OfflineRulesEngine.READ_ACTIONS:51` in **`tshepo-offline-service`** — *corrected: this register previously said offline-edge-service* — holds only READ_PATIENT/MEDICATION/ENCOUNTER/OBSERVATION, and the gate is two-layered (the set, and the capability token's `allowed-offline-actions` filter at mint time). Adding the three reads to the set **and** the READ_PATIENT-covers branch at `:124` needs no token change. (b) `offline-edge-service` — the client is not the constraint; `OfflineEdgeService.replayActions:143` only dispatches to FHIR for two vitals action types. **Corrected:** `useOfflineStore` is live in **one** screen (`HouseholdListScreen.tsx:27`), not several — `ScreeningScreen.tsx:21` imports it and never calls it. Medicine would be *consuming* an existing seam. Routed, not absorbed. |
 | 21 | Analytics | **PARTIAL** | 6 implemented, 6 partial, 9 not computable — see [`analytics-coverage.md`](analytics-coverage.md). Equity is **structurally** impossible here: PCT holds CPID and no PII by design. |
 | 22 | Testing | **PARTIAL** | Unit, content, migration and mutation proofs are strong. The 25 named clinical scenarios are not covered as scenarios. |
-| 23 | Required demonstrations | **PARTIAL** | The **record layer** is proven for all ten (`scripts/runtime-proof/medicine-demonstrations.sh`, 35/35, 8 stated gaps). The service and clinician layers are not. See [`demonstrations.md`](demonstrations.md). |
+| 23 | Required demonstrations | **PARTIAL** | The **record layer** is proven for all ten (`scripts/runtime-proof/medicine-demonstrations.sh`, 35/35, 8 stated gaps). The **service layer** is now also proven (`scripts/runtime-proof/medicine-demonstrations-service.sh`, 30/30, 7 stated gaps) — BFF + pct (+ CKP for pregnancy CDS / multimorbidity), with positive and negative controls including V116 accept-with-`accepting_ref`. The clinician walkthrough layer is not. See [`demonstrations.md`](demonstrations.md). |
 | 24 | Expected outputs | **PARTIAL** | Delivered: repository audit, medicine architecture, specialty map, HIV/TB DAK traceability, canonical problem model, decision-support catalogue, procedures integration, analytics, tests, completion report. Missing: DAK-style traceability for other specialties, full medical clerking, demonstration data. |
-| 25 | Definition of done | **NOT MET** | Of the ten conditions: one longitudinal record ✔, specialty views on shared truth ✔, HIV/TB DAK traceable ✔, procedures through the common pipeline ✔ (for the 3 built). **results reviewed and actioned** ✔ at the record layer (§11 — OROS acknowledges, V115 records what it caused). Outstanding: problems/medicines/tests/procedures fully reconciled, multimorbidity managed coherently end to end, Emergency and surgical handoffs proven, **offline operation** (§20), **end-to-end journeys pass** (§23 beyond the record layer). |
+| 25 | Definition of done | **NOT MET** | Of the ten conditions: one longitudinal record ✔, specialty views on shared truth ✔, HIV/TB DAK traceable ✔, procedures through the common pipeline ✔ (for the 3 built). **results reviewed and actioned** ✔ at the record layer (§11 — OROS acknowledges, V115 records what it caused). **§23 service-layer journeys** ✔ (HTTP proofs; seven honest CANNOTs remain). Outstanding: problems/medicines/tests/procedures fully reconciled, multimorbidity managed coherently end to end, Emergency and surgical handoffs proven in the product, **offline operation** (§20), **clinician walkthrough** of the ten journeys. |
 
 ## Totals
 
@@ -50,12 +50,15 @@ demonstration rig grew from 23 to 35 assertions while its stated-gap count fell 
 
 ## The three highest-value next pieces, in order
 
-All three of the previous three are done. Transfer of care (V116) and the eleven §7
-examination diagrams are drawn. DetectedIssue retirement (V071) is built. The next piece:
+All three of the previous Wave 2 pieces are done. Transfer of care (V116), the eleven §7
+examination diagrams, DetectedIssue retirement (V071), and the §23 **service-layer**
+demonstrations are built and proven.
 
 1. ~~DetectedIssue retirement when an issue stops being detected (silence must never retire).~~
    **Built.** V071 snapshot → diff on assess → `MULTIMORBIDITY_ISSUE_RESOLVED` → BUTANO
    `cancelled`. Silence and UNDETERMINED never retire.
-2. Drive the ten §23 journeys through the service layer (treat CANNOT lines as hypotheses).
+2. ~~Drive the ten §23 journeys through the service layer (treat CANNOT lines as hypotheses).~~
+   **Built.** `medicine-demonstrations-service.sh` — PASS=30 FAIL=0, 7 stated gaps after estate
+   search. Record-layer companion retained. Clinician walkthrough remains outstanding.
 3. ~~Draw the eleven examination graphics~~ **Done.** Body-map instruments keyed by V113
    codes; submit carries `graphic`/`site`/`laterality`; history redraws stored sites.

@@ -69,6 +69,9 @@ management:
         enabled: true
 
 impilo:
+  security:
+    # Estate-wide preview/test switch (IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS). Production keeps oauth2.
+    disable-oauth-for-tests: ${IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS:false}
   clinical:
     kafka:
       # Set true in environments with Kafka; outbox rows still accumulate when false.
