@@ -257,6 +257,12 @@ public class SecurityConfig {
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/imam/**")
                             .hasAnyRole(CLINICAL_ROLES)
+                    // Respectful maternity care. Placed BEFORE the clinician-only maternity matchers
+                    // below because the respondent is the woman herself: this is the one maternity
+                    // surface whose author is a citizen, and restricting it to CLINICAL_ROLES would
+                    // mean her experience of care could only be reported by the staff who provided it.
+                    .requestMatchers("/internal/v1/maternity/respectful-care/**")
+                            .hasAnyRole(mergeRoleSets(CITIZEN_ROLES, CLINICAL_ROLES))
                     .requestMatchers(HttpMethod.GET, "/internal/v1/maternity/**")
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/maternity/**")

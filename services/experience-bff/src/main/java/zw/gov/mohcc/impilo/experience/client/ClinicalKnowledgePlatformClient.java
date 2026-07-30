@@ -122,6 +122,28 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /** The respectful-maternity-care measure set: prompts, scale and which items are reverse-scored. */
+    public JsonNode respectfulCareInstrument() {
+        String url = baseUrl + "/internal/v1/clinical/maternal/respectful-care/instrument";
+        log.debug("Clinical platform: respectful maternity care instrument");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Normalises respectful-care answers into Rito-shaped domain scores.
+     *
+     * <p>Called rather than computed locally because which items are reverse-scored is ratifiable
+     * content, not arithmetic. A copy of that list here would mean a content revision needed a BFF
+     * release, and two callers could disagree about the polarity of the same stored number.
+     */
+    public JsonNode respectfulCareNormalise(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/respectful-care/normalise";
+        log.debug("Clinical platform: respectful maternity care normalise");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";
