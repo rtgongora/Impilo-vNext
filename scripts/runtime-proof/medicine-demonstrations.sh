@@ -267,9 +267,27 @@ chk "an ANSWERED consultation with no advice is REFUSED (negative control)" \
     "$(q "UPDATE pct.pct_consultations SET status='ANSWERED' WHERE consultation_id='$CONSULT';")" \
     "violates check constraint"
 chk "answering does not move ownership — surgery advises, medicine keeps the patient" \
-    "$(q "UPDATE pct.pct_consultations SET status='ANSWERED', advice='Not surgical; treat medically',
-             responded_by='surg-1', responded_at=now() WHERE consultation_id='$CONSULT';
+    "$(q "UPDATE pct.pct_consultations SET status='ANSWERED', advice='Surgical — we should take over',
+             responded_by='surg-1', responded_at=now(), takeover_recommended=TRUE WHERE consultation_id='$CONSULT';
           SELECT owning_service FROM pct.pct_consultations WHERE consultation_id='$CONSULT';")" "MEDICINE"
+# V116 — the act that actually moves ownership. Requesting does not; accepting without accepting_ref
+# is unrepresentable; accepting with one flips owning_service on the linked consultation.
+TRANSFER="$(uuid_of "$(q "INSERT INTO pct.pct_care_transfers
+   (transfer_id, tenant_id, subject_cpid, journey_id, consultation_id, from_service, to_service,
+    requested_by, reason, status)
+   VALUES (gen_random_uuid(),'$TENANT','$CPID','$JOURNEY_ID','$CONSULT','MEDICINE','SURGERY',
+           'surg-1','Abdomen is surgical','PENDING') RETURNING transfer_id;")")"
+chk "requesting a transfer does not move ownership (V116)" \
+    "$(q "SELECT owning_service FROM pct.pct_consultations WHERE consultation_id='$CONSULT';")" "MEDICINE"
+chk "ACCEPTED without accepting_ref is REFUSED (negative control)" \
+    "$(q "UPDATE pct.pct_care_transfers SET status='ACCEPTED', accepted_by='surg-1', accepted_at=now()
+          WHERE transfer_id='$TRANSFER';")" \
+    "violates check constraint"
+chk "accepting with accepting_ref moves ownership on the linked consultation (positive control)" \
+    "$(q "UPDATE pct.pct_care_transfers SET status='ACCEPTED', accepted_by='surg-1', accepted_at=now(),
+             accepting_ref='surg-episode-4471' WHERE transfer_id='$TRANSFER';
+          UPDATE pct.pct_consultations SET owning_service='SURGERY' WHERE consultation_id='$CONSULT';
+          SELECT owning_service FROM pct.pct_consultations WHERE consultation_id='$CONSULT';")" "SURGERY"
 
 # ───────────────────────────────────────────────────────────────────────────────────────────────
 echo
@@ -302,6 +320,7 @@ chk "one action per result per actor (negative control)" \
     "duplicate key value"
 
 q "DELETE FROM pct.pct_result_actions WHERE subject_cpid='$CPID';
+   DELETE FROM pct.pct_care_transfers WHERE subject_cpid='$CPID';
    DELETE FROM pct.pct_mdt_decision_problems WHERE tenant_id='$TENANT';
    DELETE FROM pct.pct_mdt_decisions WHERE subject_cpid='$CPID';
    DELETE FROM pct.pct_consultations WHERE subject_cpid='$CPID';
