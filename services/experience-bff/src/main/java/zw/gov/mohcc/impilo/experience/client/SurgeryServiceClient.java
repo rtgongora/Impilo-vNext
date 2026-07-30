@@ -112,6 +112,50 @@ public class SurgeryServiceClient {
                 baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/decision", String.class);
     }
 
+    /** Reopen for a return to theatre — POST .../{episodeId}/reopen (V010, demonstration 9) */
+    public ResponseEntity<String> reopen(UUID episodeId, String requestBody) {
+        log.info("Surgery: reopening episode {} for a return to theatre", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/reopen", requestBody);
+    }
+
+    /** Every specialty on a shared case — GET .../{episodeId}/specialties (V011, demonstration 4) */
+    public ResponseEntity<String> specialties(UUID episodeId) {
+        log.info("Surgery: listing specialties on episode {}", episodeId);
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/specialties", String.class);
+    }
+
+    /** Add a joining specialty — POST .../{episodeId}/specialties */
+    public ResponseEntity<String> addSpecialty(UUID episodeId, String requestBody) {
+        log.info("Surgery: adding a specialty to episode {}", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/specialties", requestBody);
+    }
+
+    /** Hand the lead over — POST .../{episodeId}/specialties/lead */
+    public ResponseEntity<String> transferLead(UUID episodeId, String requestBody) {
+        log.info("Surgery: transferring the lead specialty on episode {}", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/specialties/lead", requestBody);
+    }
+
+    /**
+     * Remove a joining specialty — DELETE .../{episodeId}/specialties?specialty=...
+     *
+     * <p>The specialty is a query parameter, never a path segment: as a segment it would become
+     * the ext_authz derived resource type and V303's rows could never match it. Encoded through
+     * {@code UriComponentsBuilder} for the same reason the subject-cpid list route is.</p>
+     */
+    public ResponseEntity<String> removeSpecialty(UUID episodeId, String specialty) {
+        log.info("Surgery: removing a specialty from episode {}", episodeId);
+        String url = UriComponentsBuilder
+                .fromUriString(baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/specialties")
+                .queryParam("specialty", specialty)
+                .toUriString();
+        return restTemplate.exchange(url, HttpMethod.DELETE, HttpEntity.EMPTY, String.class);
+    }
+
     private ResponseEntity<String> exchangeJson(HttpMethod method, String url, String body) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

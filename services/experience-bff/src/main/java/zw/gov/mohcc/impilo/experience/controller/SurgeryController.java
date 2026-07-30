@@ -78,4 +78,32 @@ public class SurgeryController {
     public ResponseEntity<String> decision(@PathVariable UUID episodeId) {
         return surgery.decision(episodeId);
     }
+
+    // ── Completion wave: reoperation (V010) and shared-specialty care (V011); gated by V303 ──
+
+    @PostMapping(value = "/{episodeId}/reopen", consumes = "application/json")
+    public ResponseEntity<String> reopen(@PathVariable UUID episodeId, @RequestBody String requestBody) {
+        return surgery.reopen(episodeId, requestBody);
+    }
+
+    @GetMapping("/{episodeId}/specialties")
+    public ResponseEntity<String> specialties(@PathVariable UUID episodeId) {
+        return surgery.specialties(episodeId);
+    }
+
+    @PostMapping(value = "/{episodeId}/specialties", consumes = "application/json")
+    public ResponseEntity<String> addSpecialty(@PathVariable UUID episodeId, @RequestBody String requestBody) {
+        return surgery.addSpecialty(episodeId, requestBody);
+    }
+
+    @PostMapping(value = "/{episodeId}/specialties/lead", consumes = "application/json")
+    public ResponseEntity<String> transferLead(@PathVariable UUID episodeId, @RequestBody String requestBody) {
+        return surgery.transferLead(episodeId, requestBody);
+    }
+
+    /** {@code ?specialty=} rather than a path segment — see {@link SurgeryServiceClient#removeSpecialty}. */
+    @DeleteMapping("/{episodeId}/specialties")
+    public ResponseEntity<String> removeSpecialty(@PathVariable UUID episodeId, @RequestParam String specialty) {
+        return surgery.removeSpecialty(episodeId, specialty);
+    }
 }
