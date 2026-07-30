@@ -141,6 +141,50 @@ guard_assert_scanned "$(printf '%s\n' "$BFF_CONTROLLERS" | grep -c .)" \
 BFF_CONFIDENTIAL_FILES=$(printf '%s\n' "$BFF_FILES" | grep -v '/src/test/' \
   | xargs -r grep -lE '"/?v1/confidential/|/internal/v1/confidential/|/v1/confidential/' 2>/dev/null || true)
 
+# Resolution is per-METHOD, not per-class, and that distinction is the whole correctness of this
+# section. PctServiceClient is one class holding both confidential and ordinary routes, so "controller
+# injects a class that somewhere names a confidential path" flags every citizen and wellness controller
+# that only ever calls the ordinary methods. A guard that fails on eleven innocent files teaches the
+# next engineer to disable it. So: extract the methods whose own body builds a confidential URL, and
+# only flag a controller that calls one of THOSE.
+confidential_methods() {
+    # Literal spaces, not [[:space:]]{4}: mawk has no interval expressions and answers a brace
+    # quantifier with "REcompile() - panic" on stderr and an empty result on stdout. That combination
+    # made this resolver silently return nothing while the guard still printed OK.
+    awk '
+      # A member declaration at class-body indent. Captures the name immediately before the "(".
+      /^    (public|protected|private)[ \t]/ && /\(/ {
+          line = $0
+          sub(/\(.*$/, "", line)                      # drop the parameter list
+          n = split(line, parts, /[[:space:]]+/)
+          method = parts[n]                            # last token before "(" is the name
+      }
+      /"\/?v1\/confidential\/|\/internal\/v1\/confidential\/|\/v1\/confidential\// {
+          if (method != "") print method
+      }
+    ' "$1" | sort -u
+}
+
+# Self-reach on the resolver itself. A file landed in BFF_CONFIDENTIAL_FILES because it contains a
+# confidential path literal, so at least one of them must yield at least one method name. Zero across
+# all of them means the extractor is broken, not that the estate is clean — and a broken extractor here
+# fails OPEN: every one-hop offender becomes invisible while the guard still prints OK. That is not
+# hypothetical; it is what the mawk brace quantifier above did.
+RESOLVER_YIELD=0
+for dep in $BFF_CONFIDENTIAL_FILES; do
+    [[ -z "$dep" ]] && continue
+    RESOLVER_YIELD=$((RESOLVER_YIELD + $(confidential_methods "$dep" | grep -c . || true)))
+done
+if [[ -n "$(printf '%s\n' "$BFF_CONFIDENTIAL_FILES" | grep -c . | grep -v '^0$')" ]] \
+   && [[ "$RESOLVER_YIELD" -eq 0 ]]; then
+    echo "FAIL: the confidential-method resolver matched no method in any of these files:"
+    printf '%s\n' "$BFF_CONFIDENTIAL_FILES" | sed 's/^/        /'
+    echo "      Each contains a confidential path literal, so at least one method must be attributed."
+    echo "      The awk method-declaration pattern has stopped matching this codebase's formatting."
+    echo "Confidential-lane routing guard: FAILED"
+    exit 1
+fi
+
 BFF_CHECKED=0
 BFF_FAIL=0
 for f in $BFF_CONTROLLERS; do
@@ -152,15 +196,18 @@ for f in $BFF_CONTROLLERS; do
         reaches_confidential=1
         reason="names a confidential downstream path directly"
     else
-        # One hop: does this controller use a BFF class that names a confidential downstream path?
+        # One hop: does this controller CALL a method that builds a confidential downstream URL?
         for dep in $BFF_CONFIDENTIAL_FILES; do
             [[ -z "$dep" || "$dep" == "$f" ]] && continue
             dep_class="$(basename "$dep" .java)"
-            if grep -qE "\b$dep_class\b" "$f" 2>/dev/null; then
-                reaches_confidential=1
-                reason="reaches the confidential lane through $dep_class"
-                break
-            fi
+            grep -qE "\b$dep_class\b" "$f" 2>/dev/null || continue
+            for m in $(confidential_methods "$dep"); do
+                if grep -qE "\.$m[[:space:]]*\(" "$f" 2>/dev/null; then
+                    reaches_confidential=1
+                    reason="calls $dep_class.$m(), which targets the confidential lane"
+                    break 2
+                fi
+            done
         done
     fi
 
