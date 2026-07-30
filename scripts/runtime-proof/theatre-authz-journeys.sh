@@ -49,7 +49,9 @@ command -v docker >/dev/null || { echo "docker not available — rig cannot run"
 JAR="$(ls "$REPO/services/tshepo-authz-service/target/tshepo-authz-service-"*.jar 2>/dev/null | grep -v original | head -1)"
 [ -n "$JAR" ] || { echo "tshepo-authz-service jar missing — run: mvn -f services/pom.xml -pl tshepo-authz-service -am package -DskipTests"; exit 2; }
 
-cleanup(){ [ "${KEEP_RIG:-0}" = "1" ] && return; kill "${SVC_PID:-0}" 2>/dev/null; docker rm -f ta-rig-pg ta-rig-redis >/dev/null 2>&1; }
+# See theatre-persistence-journeys.sh: an unset SVC_PID makes this `kill 0`, which signals the
+# caller's entire process group rather than this rig's service.
+cleanup(){ [ "${KEEP_RIG:-0}" = "1" ] && return; [ -n "${SVC_PID:-}" ] && kill "$SVC_PID" 2>/dev/null; docker rm -f ta-rig-pg ta-rig-redis >/dev/null 2>&1; return 0; }
 trap cleanup EXIT
 
 # ── Infra ────────────────────────────────────────────────────────────────────
