@@ -43,6 +43,51 @@ public class ProcedureNoteEntity {
     @Column(name = "postop_plan", columnDefinition = "TEXT")
     private String postopPlan;
 
+    // ── SB-5 (audit §13) — the eleven operative-record fields the audit named as absent.
+    //    Named to stay distinct from their near-namesakes elsewhere in the schema: the
+    //    anaesthetic technique on procedure_anaesthesia_chart_entry, and the fluids and
+    //    drains channels on procedure_pacu_observation. See V304's header. ──
+    @Column(name = "patient_position", columnDefinition = "TEXT")
+    private String patientPosition;
+
+    @Column(name = "skin_preparation", columnDefinition = "TEXT")
+    private String skinPreparation;
+
+    @Column(name = "incision", columnDefinition = "TEXT")
+    private String incision;
+
+    @Column(name = "operative_steps", columnDefinition = "TEXT")
+    private String operativeSteps;
+
+    @Column(name = "operative_technique", columnDefinition = "TEXT")
+    private String operativeTechnique;
+
+    @Column(name = "intraoperative_fluids", columnDefinition = "TEXT")
+    private String intraoperativeFluids;
+
+    @Column(name = "drains_placed", columnDefinition = "TEXT")
+    private String drainsPlaced;
+
+    @Column(name = "stomas_formed", columnDefinition = "TEXT")
+    private String stomasFormed;
+
+    @Column(name = "closure_method", columnDefinition = "TEXT")
+    private String closureMethod;
+
+    /** CLEAN | CLEAN_CONTAMINATED | CONTAMINATED | DIRTY — the template's vocabulary. */
+    @Column(name = "wound_classification", length = 24)
+    private String woundClassification;
+
+    @Column(name = "postoperative_instructions", columnDefinition = "TEXT")
+    private String postoperativeInstructions;
+
+    /** surgery.surgical_operative_template.id — a reference across services, never an FK. */
+    @Column(name = "operative_template_ref")
+    private UUID operativeTemplateRef;
+
+    @Column(name = "operative_template_code", length = 32)
+    private String operativeTemplateCode;
+
     @Column(name = "note_json", columnDefinition = "TEXT")
     private String noteJson;
 
@@ -103,6 +148,33 @@ public class ProcedureNoteEntity {
     public void setCountsCorrect(Boolean v) { this.countsCorrect = v; }
     public String getPostopPlan() { return postopPlan; }
     public void setPostopPlan(String v) { this.postopPlan = v; }
+    public String getPatientPosition() { return patientPosition; }
+    public void setPatientPosition(String v) { this.patientPosition = v; }
+    public String getSkinPreparation() { return skinPreparation; }
+    public void setSkinPreparation(String v) { this.skinPreparation = v; }
+    public String getIncision() { return incision; }
+    public void setIncision(String v) { this.incision = v; }
+    public String getOperativeSteps() { return operativeSteps; }
+    public void setOperativeSteps(String v) { this.operativeSteps = v; }
+    public String getOperativeTechnique() { return operativeTechnique; }
+    public void setOperativeTechnique(String v) { this.operativeTechnique = v; }
+    public String getIntraoperativeFluids() { return intraoperativeFluids; }
+    public void setIntraoperativeFluids(String v) { this.intraoperativeFluids = v; }
+    public String getDrainsPlaced() { return drainsPlaced; }
+    public void setDrainsPlaced(String v) { this.drainsPlaced = v; }
+    public String getStomasFormed() { return stomasFormed; }
+    public void setStomasFormed(String v) { this.stomasFormed = v; }
+    public String getClosureMethod() { return closureMethod; }
+    public void setClosureMethod(String v) { this.closureMethod = v; }
+    public String getWoundClassification() { return woundClassification; }
+    public void setWoundClassification(String v) { this.woundClassification = v; }
+    public String getPostoperativeInstructions() { return postoperativeInstructions; }
+    public void setPostoperativeInstructions(String v) { this.postoperativeInstructions = v; }
+    public UUID getOperativeTemplateRef() { return operativeTemplateRef; }
+    public void setOperativeTemplateRef(UUID v) { this.operativeTemplateRef = v; }
+    public String getOperativeTemplateCode() { return operativeTemplateCode; }
+    public void setOperativeTemplateCode(String v) { this.operativeTemplateCode = v; }
+
     public String getNoteJson() { return noteJson; }
     public void setNoteJson(String v) { this.noteJson = v; }
     public String getSignedBy() { return signedBy; }

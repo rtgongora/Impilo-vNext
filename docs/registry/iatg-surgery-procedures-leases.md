@@ -223,6 +223,30 @@ emergency 26/26 · alt 34/34 · authz 11/0 · persistence 5/0 · drainage 14/14.
 **P4 is the highest-risk wave in the programme** — it generalises a 2,072-line service behind
 those rigs.
 
+### Gate run 2026-07-30 — all ten, at baseline
+
+The gate was run in full for the first time since P4. **Every rig matched its recorded baseline**,
+including `elective-completeness` at 14/16 with the same two amber J-TE-8 board assertions.
+Evidence: `reports/journeys/theatre-gate-20260730/SUMMARY.md`.
+
+**The premise that deferred it for five waves was false.** The rigs need Docker and `mvn package`,
+not a packaged estate: each spins its own `postgres:16-alpine` (plus Redis, plus Kafka for
+queue-drainage and recovery-reporting) and runs services as `java -jar`. The heaviest needs seven
+JARs; the full set across all ten is eighteen, which packages in about twenty seconds on this VM.
+Run them serially — `theatre-elective` and `theatre-persistence` both bind 28121.
+
+**It found a total outage of theatre intake, caused by this programme.** On the first assertion of
+the first rig: P4's own `V300` added `procedure_episode.setting NOT NULL DEFAULT 'THEATRE'`, and a
+database default only applies when the INSERT omits the column. Hibernate names every mapped
+column, so it sent an explicit null, and nothing ever called `setSetting`. Every
+`procedure_episode` created through JPA had been failing with an HTTP 500 — elective and emergency
+intake alike — for the whole period the gate was deferred. Fixed in `cc2af1741`.
+
+The module suite could not have caught it: `application-test.yml` sets `flyway.enabled: false`
+with `ddl-auto: create-drop`, so inpatient's tests build their schema from the entities and are
+structurally blind to any migration-only constraint. **Treat a green inpatient suite as saying
+nothing about DB constraints.** That is what the rigs are for.
+
 ## 6. Obligations deferred to specific waves
 
 Recorded here so they cannot be quietly dropped:
@@ -250,12 +274,18 @@ Recorded here so they cannot be quietly dropped:
   missing), the build/containerisation/Helm deployability matrices, Helm chart and values,
   docker-compose, `envoy.yaml` route, tshepo-authz policy rows, `event_outbox` and Kafka topic,
   experience-bff proxy group, offline-sync scope, observability scrape.
-- **P5** — `SPECIALLY_PROTECTED` is decorative. One production reference,
-  `ResourceSensitivityClassifier:53`, collapsing it into `FULL_IDENTIFIED_CLINICAL`. Adolescent
-  confidentiality cannot be honestly built on it: either it is fixed first or P5 ships an explicit
-  PARTIAL that says so.
-- **P12 / S14** — the "financial state must never delay emergency surgery" invariant needs a rig
-  assertion, not prose.
+- ~~**P5** — `SPECIALLY_PROTECTED` is decorative.~~ **CLOSED, by a peer lane, verified 2026-07-30.**
+  It is no longer decorative: `ResourceSensitivityClassifier` genuinely classifies the confidential
+  lane markers, `shared-core` has a `SpeciallyProtectedVisibilityGuard`, TSHEPO has a
+  `VisibilityObligationComposer` and per-requester category logic in `PolicyEngine`, and all of it
+  is tested. `ResourceSensitivityClassifierTest` records that before that work "nothing in the
+  repository ever produced `SPECIALLY_PROTECTED`". Not this programme's doing — do not claim it.
+- ~~**P12 / S14** — the "financial state must never delay emergency surgery" invariant needs a rig
+  assertion, not prose.~~ **CLOSED by SB-6, verified 2026-07-30.**
+  `procedures-financial-clearance-journeys.sh` J-P12-9..12 assert it against real Postgres: an
+  EMERGENCY-triage episode reaches `EMERGENCY_OVERRIDE` with no `BLOCKED_*` value, and J-P12-11
+  supplies the contrast case proving that an ELECTIVE episode still can be blocked — so the
+  assertion tests a discriminating gate rather than a permissive one.
 
 ## 7. Known defects inherited, not caused
 

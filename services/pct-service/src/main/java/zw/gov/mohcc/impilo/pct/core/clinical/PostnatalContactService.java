@@ -72,13 +72,32 @@ public class PostnatalContactService {
                 PostnatalContactEntity::getConfidentialityCategory);
     }
 
+    /**
+     * The outcome of a recording attempt, saying WHICH of the two things happened.
+     *
+     * <p>Exists because a caller cannot tell a replay from a new visit by looking at the returned
+     * row — both are a saved contact with an id. An HTTP surface must be able to: a CHW who syncs
+     * twice needs the second attempt reported as the same visit, and a client that cannot distinguish
+     * them either double-counts a woman's day-3 contact or treats a genuine second visit as noise.
+     * Inferring it from timestamps or object identity would be a guess that is right most of the time,
+     * which is the worst kind.
+     */
+    public record RecordOutcome(PostnatalContactEntity contact, boolean replayed) {
+    }
+
+    /** Record a contact, discarding whether it was a replay. */
     @Transactional
     public PostnatalContactEntity record(PostnatalContactEntity contact) {
+        return recordReporting(contact).contact();
+    }
+
+    @Transactional
+    public RecordOutcome recordReporting(PostnatalContactEntity contact) {
         if (contact.getClientOfflineId() != null && !contact.getClientOfflineId().isBlank()) {
             Optional<PostnatalContactEntity> replayed = contacts.findByTenantIdAndClientOfflineId(
                     contact.getTenantId(), contact.getClientOfflineId());
             if (replayed.isPresent()) {
-                return replayed.get();
+                return new RecordOutcome(replayed.get(), true);
             }
         }
         if (contact.getPostnatalContactId() == null) {
@@ -124,6 +143,6 @@ public class PostnatalContactService {
         }
         // dangerSignsPresent is deliberately NOT defaulted: if the screen was not completed it stays
         // null, which the read path renders as "not screened", never "no danger signs".
-        return contacts.save(contact);
+        return new RecordOutcome(contacts.save(contact), false);
     }
 }

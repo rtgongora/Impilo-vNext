@@ -47,7 +47,10 @@ command -v docker >/dev/null || { echo "docker not available — rig cannot run"
 JAR="$(ls "$REPO/services/inpatient-service/target/inpatient-service-"*.jar 2>/dev/null | grep -v original | head -1)"
 [ -n "$JAR" ] || { echo "inpatient-service jar missing — run: mvn -f services/pom.xml -pl inpatient-service -am package -DskipTests"; exit 2; }
 
-cleanup(){ [ "${KEEP_RIG:-0}" = "1" ] && return; kill "${SVC_PID:-0}" 2>/dev/null; docker rm -f tp-rig-pg tp-rig-redis >/dev/null 2>&1; }
+# `kill "${SVC_PID:-0}"` becomes `kill 0` on any exit before the service is launched, and kill 0
+# signals the WHOLE PROCESS GROUP — i.e. whatever invoked this rig. A driver looping over the ten
+# rigs was being killed silently by this, mid-run, whenever the infra step failed.
+cleanup(){ [ "${KEEP_RIG:-0}" = "1" ] && return; [ -n "${SVC_PID:-}" ] && kill "$SVC_PID" 2>/dev/null; docker rm -f tp-rig-pg tp-rig-redis >/dev/null 2>&1; return 0; }
 trap cleanup EXIT
 
 say "RIG: infra (postgres + redis) + inpatient-service (real FSM + Flyway V001..V065)"
@@ -56,8 +59,17 @@ docker run -d --name tp-rig-pg -e POSTGRES_USER=impilo -e POSTGRES_PASSWORD=impi
 docker run -d --name tp-rig-redis -p $RPORT:6379 redis:7-alpine >/dev/null
 # Wait for Postgres to accept connections BEFORE creating the DB (a fixed sleep raced the boot —
 # createdb silently failed, then Flyway hit "database inpatient does not exist").
+# `pg_isready -U impilo` checks the UNIX SOCKET, which the temporary server that postgres runs
+# during initdb also answers on — so it reports ready, and the CREATE DATABASE that follows hits
+# "the database system is shutting down" when that temporary server stops. Ask over TCP, which
+# only the real server listens on, and confirm with an actual query.
 pg_ready=0
-for i in $(seq 1 30); do docker exec tp-rig-pg pg_isready -U impilo >/dev/null 2>&1 && { pg_ready=1; break; }; sleep 1; done
+for i in $(seq 1 45); do
+  docker exec tp-rig-pg pg_isready -h 127.0.0.1 -U impilo >/dev/null 2>&1 \
+    && docker exec tp-rig-pg psql -h 127.0.0.1 -U impilo -d postgres -tAc "SELECT 1" >/dev/null 2>&1 \
+    && { pg_ready=1; break; }
+  sleep 1
+done
 [ "$pg_ready" = "1" ] || { echo "postgres did not become ready"; exit 2; }
 docker exec tp-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE inpatient" >/dev/null 2>&1 || \
   docker exec tp-rig-pg psql -U impilo -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='inpatient'" | grep -q 1 \

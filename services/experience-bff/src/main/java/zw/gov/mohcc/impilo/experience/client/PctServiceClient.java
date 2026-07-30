@@ -1957,6 +1957,62 @@ public class PctServiceClient {
                 baseUrl + "/v1/programme-enrolments/" + enrolmentId + "/regimens", body, JsonNode.class));
     }
 
+    // ── The confidential reproductive lane ──────────────────────────────────────────────────────
+    //
+    // THESE METHODS RETURN ResponseEntity, AND THAT IS THE POINT. Everything above returns a bare
+    // JsonNode through extractData, which discards the status. On this lane the status carries
+    // clinical meaning that the body alone cannot replace:
+    //
+    //   409 — she already has an ongoing pregnancy. The body carries the existing episode id and a
+    //         reconciliation task. Flattened to a 502 by a well-meaning proxy, an offline booking is
+    //         lost and the client is told the service is down.
+    //   422 — the content is clinically incomplete (no dating basis, no PNC setting, a referral with
+    //         no reason). Retrying the identical packet will never help, and only the status says so.
+    //   200 vs 201 — a replayed offline packet versus a new record. A client that cannot tell them
+    //         apart either double-counts a visit or treats its own successful sync as a failure.
+    //
+    // The caller is expected to catch HttpStatusCodeException and forward status and body verbatim,
+    // as TelemonitoringBffController does for telemonitoring's coded envelope.
+    //
+    // The paths deliberately contain "/confidential/": tshepo-authz classifies confidentiality from
+    // the request path and V048's rules are pinned to it, so calling an ordinary path here would ask
+    // the PDP to mint no confidential category and then be surprised when the fail-closed guard
+    // withheld everything.
+
+    /** Book a pregnancy. 201 new, 200 replayed offline packet, 409 already booked, 422 undatable. */
+    public ResponseEntity<JsonNode> openPregnancyEpisode(Map<String, Object> body) {
+        log.info("PCT: booking pregnancy episode offlineId={}", body.get("clientOfflineId"));
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/pregnancy-episodes", body, JsonNode.class);
+    }
+
+    /** Her current pregnancy. A 200 with a null body means "not pregnant, or not yours to see". */
+    public ResponseEntity<JsonNode> getCurrentPregnancyEpisode(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/pregnancy-episodes/" + subjectCpid + "/current",
+                JsonNode.class);
+    }
+
+    /** Her obstetric history: every visible pregnancy episode. */
+    public ResponseEntity<JsonNode> getPregnancyEpisodes(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/pregnancy-episodes/" + subjectCpid, JsonNode.class);
+    }
+
+    /** Record a postnatal contact. 201 new, 200 replayed, 422 refused. */
+    public ResponseEntity<JsonNode> recordPostnatalContact(Map<String, Object> body) {
+        log.info("PCT: recording postnatal contact setting={} offlineId={}",
+                body.get("contactSetting"), body.get("clientOfflineId"));
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/postnatal-contacts", body, JsonNode.class);
+    }
+
+    /** A mother's postnatal contacts. */
+    public ResponseEntity<JsonNode> getPostnatalContacts(String motherCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/postnatal-contacts/" + motherCpid, JsonNode.class);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

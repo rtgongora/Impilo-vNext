@@ -112,6 +112,21 @@ public class SecurityConfig {
     private static final String[] PUBLIC_HEALTH_ROLES = mergeRoleSets(
             new String[]{"PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN"}, PLATFORM_OVERRIDES);
 
+    // The confidential reproductive lane. A woman books her own pregnancy and reads her own home-BP
+    // verdict, and a midwife books on her behalf at the ANC desk — so the citizen and clinical sets
+    // both reach it. This is coarse authentication, not the confidentiality decision: the
+    // confidential-category entitlement is TSHEPO's (V048 confidential-lane-read/write-*), evaluated
+    // per request against the ratified pack, and no role listed here can substitute for it.
+    private static final String[] CONFIDENTIAL_MATERNITY_ROLES =
+            mergeRoleSets(CITIZEN_ROLES, CLINICAL_ROLES);
+
+    // The CHW postnatal visit, plus the clinical roles who staff the facility end of the same
+    // schedule. CHW is included deliberately: V048 seeds no CHW write rule for the confidential lane,
+    // which is reported to the coordinator as a gap rather than worked around here — reaching the
+    // route and being entitled to the record remain two different questions.
+    private static final String[] COMMUNITY_POSTNATAL_ROLES =
+            mergeRoleSets(new String[]{"CHW"}, CLINICAL_ROLES);
+
     /** District / provincial / national operational snapshots (queue stats across facilities). */
     private static final String[] OPERATIONS_AGGREGATE_ROLES = mergeRoleSets(
             mergeRoleSets(mergeRoleSets(CLINICAL_ROLES, QUEUE_ROLES), PUBLIC_HEALTH_ROLES),
@@ -248,6 +263,20 @@ public class SecurityConfig {
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.PATCH, "/internal/v1/maternity/**")
                             .hasAnyRole(CLINICAL_ROLES)
+                    // The confidential reproductive lane. Two role sets because the lane serves two
+                    // callers: a woman booking her own pregnancy and reading her own home-BP verdict,
+                    // and a CHW recording a postnatal visit at her house. Coarse authentication only —
+                    // the confidential-category entitlement itself is TSHEPO's (V048), evaluated per
+                    // request against the ratified policy pack. A role here grants reach to the route,
+                    // never sight of a protected record.
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/confidential/maternity/**")
+                            .hasAnyRole(CONFIDENTIAL_MATERNITY_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/confidential/maternity/**")
+                            .hasAnyRole(CONFIDENTIAL_MATERNITY_ROLES)
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/confidential/community/postnatal/**")
+                            .hasAnyRole(COMMUNITY_POSTNATAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/confidential/community/postnatal/**")
+                            .hasAnyRole(COMMUNITY_POSTNATAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/labour-monitoring/**")
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/clinical-notes/**")
@@ -359,6 +388,14 @@ public class SecurityConfig {
                     // ── Clinical source PDF ingestion (operators / admin only) ──
                     .requestMatchers("/internal/v1/clinical/source/**")
                             .hasAnyRole(ADMIN_ROLES)
+                    // ── Maternal near-miss identification and indicators ────────
+                    // Pinned to clinical roles rather than left to the .authenticated() catch-all
+                    // below: this classifies a woman against the WHO organ-dysfunction criteria and
+                    // computes the facility's mortality index, and neither is a general read. It is
+                    // deliberately NOT on the confidential lane — identification carries no
+                    // confidentiality stamp, and stamping it would make the ratio uncomputable.
+                    .requestMatchers("/internal/v1/clinical/maternal/near-miss/**")
+                            .hasAnyRole(CLINICAL_ROLES)
                     // ── National clinical knowledge (EDLIZ-aligned) ───────
                     .requestMatchers("/internal/v1/clinical/**")
                             .authenticated()
