@@ -147,6 +147,7 @@ public class PolicyEngine {
     private final OpaDecisionClient opaDecisionClient;
     private final RoleTemplateCatalog roleTemplateCatalog;
     private final ConfidentialityPolicyPack confidentialityPack;
+    private final DecisionEnvelopeSigner decisionEnvelopeSigner;
 
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
@@ -162,7 +163,8 @@ public class PolicyEngine {
                         DelegationClient delegationClient,
                         OpaDecisionClient opaDecisionClient,
                         RoleTemplateCatalog roleTemplateCatalog,
-                        ConfidentialityPolicyPack confidentialityPack) {
+                        ConfidentialityPolicyPack confidentialityPack,
+                        DecisionEnvelopeSigner decisionEnvelopeSigner) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -178,6 +180,7 @@ public class PolicyEngine {
         this.opaDecisionClient = opaDecisionClient;
         this.roleTemplateCatalog = roleTemplateCatalog;
         this.confidentialityPack = confidentialityPack;
+        this.decisionEnvelopeSigner = decisionEnvelopeSigner;
     }
 
     /**
@@ -1432,12 +1435,13 @@ public class PolicyEngine {
                 headers.put(TrustHeaders.LOGGING_LEVEL, obligations.loggingLevel());
             }
 
+            String obligationsJson;
             try {
-                String obligationsJson = objectMapper.writeValueAsString(obligations);
-                headers.put(TrustHeaders.OBLIGATIONS, obligationsJson);
+                obligationsJson = objectMapper.writeValueAsString(obligations);
             } catch (JsonProcessingException e) {
-                headers.put(TrustHeaders.OBLIGATIONS, "{}");
+                obligationsJson = "{}";
             }
+            headers.put(TrustHeaders.OBLIGATIONS, obligationsJson);
 
             VisibilityProfile vp = obligations.visibilityProfile();
             if (vp != null) {
@@ -1470,6 +1474,23 @@ public class PolicyEngine {
                 }
             }
         }
+
+        // The envelope is minted here rather than in AuthorizeController because Envoy reaches
+        // the PDP over HTTP in the deployed config and over gRPC in local dev. Both transports
+        // forward whatever this map contains, so signing here covers both; signing in the HTTP
+        // controller would have left the gRPC path issuing unsigned allows.
+        //
+        // Digest what is actually in the header, not what it was serialized from: if
+        // serialization failed the header says "{}" and the envelope must commit to "{}".
+        decisionEnvelopeSigner.sign(
+                        request.tenantId(),
+                        request.actorId(),
+                        request.actorType(),
+                        request.correlationId(),
+                        request.method(),
+                        request.path(),
+                        headers.get(TrustHeaders.OBLIGATIONS))
+                .ifPresent(envelope -> headers.put(TrustHeaders.DECISION_ENVELOPE, envelope));
 
         return headers;
     }

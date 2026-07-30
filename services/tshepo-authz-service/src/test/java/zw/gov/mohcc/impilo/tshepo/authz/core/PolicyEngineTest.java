@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.Optional;
 import java.util.UUID;
 
+import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -54,6 +56,7 @@ class PolicyEngineTest {
     @Mock private OpaDecisionClient opaDecisionClient;
     @Mock private RoleTemplateCatalog roleTemplateCatalog;
     @Mock private ConfidentialityPolicyPack confidentialityPack;
+    @Mock private DecisionEnvelopeSigner decisionEnvelopeSigner;
 
     private AuthzProperties properties;
     private ObjectMapper objectMapper;
@@ -82,7 +85,8 @@ class PolicyEngineTest {
                 riskScoring, policyCacheService, privilegeRevocationStore, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, properties, objectMapper, visibilityEscalationService,
-                delegationClient, opaDecisionClient, roleTemplateCatalog, confidentialityPack
+                delegationClient, opaDecisionClient, roleTemplateCatalog, confidentialityPack,
+                decisionEnvelopeSigner
         );
     }
 
@@ -452,6 +456,67 @@ class PolicyEngineTest {
 
         // Verify audit was logged
         verify(auditPublisher).queueAuditEvent(eq(request), eq("ALLOW"), eq(10), isNull(), any());
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // D2: the signed decision envelope
+    // ════════════════════════════════════════════════════════════════════
+
+    @Test
+    @DisplayName("D2: break-glass ALLOW carries the envelope too — every allow path, not the common one")
+    void evaluate_breakGlassAllow_alsoCarriesTheEnvelope() {
+        when(decisionEnvelopeSigner.sign(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(java.util.Optional.of("header.payload.signature"));
+        AuthzInternalRequest request = compliantBreakGlassRequest();
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID)).thenReturn(true);
+        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID)).thenReturn(true);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict());
+        assertEquals("header.payload.signature",
+                response.headerMutations().get(TrustHeaders.DECISION_ENVELOPE),
+                "Break-glass is the allow path most worth proving, and it builds its headers "
+                        + "through a separate call site from the ordinary allow");
+    }
+
+    @Test
+    @DisplayName("D2: the envelope commits to the obligations string that is actually sent upstream")
+    void evaluate_envelopeDigestsTheHeaderItShipsBeside() {
+        org.mockito.ArgumentCaptor<String> obligationsSent = org.mockito.ArgumentCaptor.forClass(String.class);
+        when(decisionEnvelopeSigner.sign(any(), any(), any(), any(), any(), any(), obligationsSent.capture()))
+                .thenReturn(java.util.Optional.of("header.payload.signature"));
+        AuthzInternalRequest request = compliantBreakGlassRequest();
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID)).thenReturn(true);
+        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID)).thenReturn(true);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        // If these two ever diverge, a caller could keep the genuine envelope and widen the
+        // obligations beside it, which is precisely what the digest exists to prevent.
+        assertEquals(response.headerMutations().get(TrustHeaders.OBLIGATIONS),
+                obligationsSent.getValue(),
+                "The digested string and the shipped header must be the same string");
+    }
+
+    @Test
+    @DisplayName("D2: a PDP that cannot sign still allows — no envelope header, no denial")
+    void evaluate_whenSigningUnavailable_allowsWithoutTheHeader() {
+        when(decisionEnvelopeSigner.sign(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(java.util.Optional.empty());
+        AuthzInternalRequest request = compliantBreakGlassRequest();
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID)).thenReturn(true);
+        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID)).thenReturn(true);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "A keys-service outage must not become an estate-wide denial");
+        assertFalse(response.headerMutations().containsKey(TrustHeaders.DECISION_ENVELOPE),
+                "Absent rather than empty: an empty envelope would look like a malformed one");
     }
 
     // ════════════════════════════════════════════════════════════════════

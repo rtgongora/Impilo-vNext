@@ -100,6 +100,14 @@ public final class TrustHeaders {
     public static final String MASK_FIELDS   = "x-mask-fields";
     public static final String LOGGING_LEVEL = "x-logging-level";
 
+    /**
+     * Signed decision envelope (Phase D, D2): a short-lived compact JWS minted by the PDP
+     * on ALLOW and bound to the request it authorised. The other response headers state
+     * the decision; this one <em>proves</em> the PDP made it, so a caller that reached a
+     * service without traversing the gate cannot fabricate one.
+     */
+    public static final String DECISION_ENVELOPE = "x-decision-envelope";
+
     public static final String VISIBILITY_TIER        = "x-visibility-tier";
     public static final String PII_ACCESS             = "x-pii-access";
     public static final String CLINICAL_ACCESS      = "x-clinical-access";

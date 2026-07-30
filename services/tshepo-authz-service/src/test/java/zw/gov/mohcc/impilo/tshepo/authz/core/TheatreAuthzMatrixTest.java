@@ -62,6 +62,7 @@ class TheatreAuthzMatrixTest {
     @Mock private OpaDecisionClient opaDecisionClient;
     @Mock private RoleTemplateCatalog roleTemplateCatalog;
     @Mock private ConfidentialityPolicyPack confidentialityPack;
+    @Mock private DecisionEnvelopeSigner decisionEnvelopeSigner;
 
     private PolicyEngine engine;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -98,7 +99,8 @@ class TheatreAuthzMatrixTest {
         engine = new PolicyEngine(riskScoring, policyCacheService, privilegeRevocationStore,
                 consentClient, stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, props, objectMapper, visibilityEscalationService,
-                delegationClient, opaDecisionClient, roleTemplateCatalog, confidentialityPack);
+                delegationClient, opaDecisionClient, roleTemplateCatalog, confidentialityPack,
+                decisionEnvelopeSigner);
     }
 
     // ── request + rule fixtures ──────────────────────────────────────────────

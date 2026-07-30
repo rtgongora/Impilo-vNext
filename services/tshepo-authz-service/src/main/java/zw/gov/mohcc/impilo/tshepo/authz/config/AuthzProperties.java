@@ -44,6 +44,13 @@ public class AuthzProperties {
     private String auditServiceUrl = "http://localhost:8183";
     private String auditKafkaTopic = "tshepo.audit.events";
     private String keysServiceUrl = "http://localhost:8184";
+    // Signed decision envelope (D2). Off by default: minting costs a keys-service call per
+    // allowed request, and nothing verifies the envelope until D3 ships, so switching it on
+    // before then buys latency and no enforcement.
+    private boolean decisionEnvelopeEnabled = false;
+    // Short enough that a stolen envelope is worth little, long enough to survive the hop from
+    // the gate to the service plus the 60s clock skew the trust verifier already tolerates.
+    private int decisionEnvelopeTtlSeconds = 120;
     private String notificationServiceUrl = "http://localhost:8200";
     private String notificationNotifyPath = "/internal/v1/notify";
     private OtpDelivery otpDelivery = new OtpDelivery();
@@ -212,6 +219,10 @@ public class AuthzProperties {
     public void setAuditKafkaTopic(String auditKafkaTopic) { this.auditKafkaTopic = auditKafkaTopic; }
     public String getKeysServiceUrl() { return keysServiceUrl; }
     public void setKeysServiceUrl(String keysServiceUrl) { this.keysServiceUrl = keysServiceUrl; }
+    public boolean isDecisionEnvelopeEnabled() { return decisionEnvelopeEnabled; }
+    public void setDecisionEnvelopeEnabled(boolean decisionEnvelopeEnabled) { this.decisionEnvelopeEnabled = decisionEnvelopeEnabled; }
+    public int getDecisionEnvelopeTtlSeconds() { return decisionEnvelopeTtlSeconds; }
+    public void setDecisionEnvelopeTtlSeconds(int decisionEnvelopeTtlSeconds) { this.decisionEnvelopeTtlSeconds = decisionEnvelopeTtlSeconds; }
     public String getNotificationServiceUrl() { return notificationServiceUrl; }
     public void setNotificationServiceUrl(String notificationServiceUrl) { this.notificationServiceUrl = notificationServiceUrl; }
     public String getNotificationNotifyPath() { return notificationNotifyPath; }
