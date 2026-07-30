@@ -10,17 +10,20 @@ import {
   Eye,
   FileText,
   Loader2,
+  Plus,
   Shield,
-  Upload,
   Users,
+  X,
 } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { AdvanceDirective } from "@/hooks/queries/useStructuredHistory";
-import { useAdvanceDirectives } from "@/hooks/queries/useStructuredHistory";
+import { useAdvanceDirectives, useRecordAdvanceDirective } from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+
+const DIRECTIVE_TYPES = ["DNR", "Living Will", "Power of Attorney", "Organ Donation", "Mental Health Directive"];
 
 const STATUS_STYLES: Record<string, { bg: string; icon: ElementType }> = {
   Active: { bg: "bg-green-100 text-green-700", icon: CheckCircle2 },
@@ -62,6 +65,29 @@ export default function AdvanceDirectivesPage() {
   const activeDirectives = directives.filter((directive) => directive.status === "Active").length;
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [newType, setNewType] = useState("");
+  const [newSummary, setNewSummary] = useState("");
+  const [newEffectiveFrom, setNewEffectiveFrom] = useState("");
+  const recordDirective = useRecordAdvanceDirective(patientId);
+
+  function closeForm() {
+    setShowForm(false);
+    setNewType("");
+    setNewSummary("");
+    setNewEffectiveFrom("");
+    recordDirective.reset();
+  }
+
+  function submitDirective() {
+    if (!newType) {
+      return;
+    }
+    recordDirective.mutate(
+      { directiveType: newType, summary: newSummary || undefined, effectiveFrom: newEffectiveFrom || undefined },
+      { onSuccess: () => closeForm() }
+    );
+  }
 
   return (
     <EHRLayout>
@@ -137,11 +163,63 @@ export default function AdvanceDirectivesPage() {
                 <FileText className="h-5 w-5 text-purple-600" />
                 <h2 className="text-lg font-semibold text-foreground">Advance Directives</h2>
               </div>
-              <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover">
-                <Upload className="h-4 w-4" />
-                Upload Directive
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+              >
+                <Plus className="h-4 w-4" />
+                Add Directive
               </button>
             </div>
+
+            {showForm && (
+              <div className="rounded-lg border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-medium text-foreground">Add Advance Directive</h3>
+                  <button onClick={closeForm} className="text-muted-foreground hover:text-muted-foreground"><X className="h-4 w-4" /></button>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div>
+                    <label htmlFor="new-directive-type" className="mb-1 block text-xs font-medium text-muted-foreground">Directive Type</label>
+                    <select id="new-directive-type" value={newType} onChange={(e) => setNewType(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+                      <option value="">Select type...</option>
+                      {DIRECTIVE_TYPES.map((type) => (<option key={type} value={type}>{type}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="new-directive-effective-from" className="mb-1 block text-xs font-medium text-muted-foreground">Effective From</label>
+                    <input id="new-directive-effective-from" type="date" value={newEffectiveFrom} onChange={(e) => setNewEffectiveFrom(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label htmlFor="new-directive-summary" className="mb-1 block text-xs font-medium text-muted-foreground">Summary</label>
+                  <textarea id="new-directive-summary" value={newSummary} onChange={(e) => setNewSummary(e.target.value)} rows={3} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="What the directive instructs, in the patient's or witness's words" />
+                </div>
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  There is no document upload here — AdvanceDirectiveEntity records a document reference
+                  only if one already exists in Document Store; attaching the source file is done there,
+                  not on this form.
+                </p>
+                {recordDirective.isError && (
+                  <p className="mt-3 text-xs text-danger">
+                    This directive was not saved. Nothing on the patient&rsquo;s record changed — try again.
+                  </p>
+                )}
+                <div className="flex items-center gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={submitDirective}
+                    disabled={!newType || recordDirective.isPending}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+                  >
+                    {recordDirective.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Save Directive
+                  </button>
+                  <button onClick={closeForm} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background">Cancel</button>
+                </div>
+              </div>
+            )}
 
             {dnr && (
               <div className="flex items-start gap-3 rounded-lg border border-danger/28 bg-danger-soft p-4">

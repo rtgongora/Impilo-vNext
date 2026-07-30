@@ -1291,6 +1291,42 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    // history-writes: pct's StructuredHistoryController has always had these five POST routes;
+    // the BFF simply never called them, so every "Save"/"Add" button above them had nowhere to send
+    // its request. Each is append-only on pct's side — there is no PUT/PATCH, so "editing" an entry
+    // records a new one rather than mutating the old row (see FormResolverService's own read-latest
+    // pattern for the equivalent convention on the read side).
+
+    public JsonNode recordSocialHistory(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/social-history";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordFamilyMember(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/family-history";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordFunctionalAssessment(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/functional-assessments";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordProcedure(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/procedures";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordAdvanceDirective(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/advance-directives";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Care/Emergency/Inpatient (strangler migration) ──────────
 
     public JsonNode listCarePlans(String patientId) {
