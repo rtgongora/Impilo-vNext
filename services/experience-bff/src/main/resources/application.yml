@@ -50,6 +50,13 @@ impilo:
   # until the divergence rate is measured AND a real tenant claim exists: without the claim,
   # ENFORCE asserts "authenticated => the platform's tenant", which removes the caller's ability
   # to choose but is NOT per-tenant isolation. Flipping it is a PO decision, not a config tidy-up.
+  trust:
+    # Decision-envelope verification (D3). OFF until Flip 4 of the D7 cutover; SHADOW then ENFORCE.
+    # See docs/runbooks/work-context-d7-cutover.md. Env so it can be flipped without a helm upgrade
+    # while the repin hold stands. JWKS URI must reach tshepo-keys-service from this pod.
+    decision-envelope:
+      mode: ${IMPILO_TRUST_DECISION_ENVELOPE_MODE:OFF}
+      jwks-uri: ${IMPILO_TRUST_DECISION_ENVELOPE_JWKS_URI:http://tshepo-keys-service:8184/v1/keys/jwks}
   tenancy:
     mode: ${IMPILO_TENANCY_MODE:SHADOW}
     claim: ${IMPILO_TENANCY_CLAIM:tenant_id}

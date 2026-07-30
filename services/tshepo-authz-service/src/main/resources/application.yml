@@ -112,6 +112,11 @@ tshepo:
     # WORK_CONTEXT duty-token binding: OFF | SHADOW | ENFORCE (default SHADOW — observe-only)
     work-context-mode: ${TSHEPO_WORK_CONTEXT_MODE:SHADOW}
     work-context-introspect-path: /v1/identity/tokens/introspect
+    # Signed decision envelope (D2). Off until Flip 4 of the D7 cutover; see
+    # docs/runbooks/work-context-d7-cutover.md. Env so it can be flipped without a helm upgrade
+    # while the repin hold stands.
+    decision-envelope-enabled: ${TSHEPO_DECISION_ENVELOPE_ENABLED:false}
+    decision-envelope-ttl-seconds: ${TSHEPO_DECISION_ENVELOPE_TTL_SECONDS:120}
     # Audit service
     audit-service-url: ${TSHEPO_AUDIT_URL:http://localhost:8183}
     audit-kafka-topic: tshepo.audit.events
