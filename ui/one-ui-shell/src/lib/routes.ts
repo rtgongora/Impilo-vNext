@@ -942,6 +942,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/dura", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Dura — Stock & Supply", navLabel: "Dura Stock", navZone: "work" },
   { path: "/work/patient-safety", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Patient Safety — Pharmacovigilance", navLabel: "Patient Safety", navZone: "work" },
   { path: "/work/mental-health", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mental Health — Referral Queue", navLabel: "Mental Health", navZone: "work" },
+  // "restraint-review" is a literal sibling of "[referralId]" and must stay above it: a dynamic
+  // segment compiles to [^/]+ and first match wins, so registered second it would never be reached.
+  { path: "/work/mental-health/restraint-review", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mental Health — Restraint Review", navLabel: "Restraint Review", navZone: "work" },
+  { path: "/work/mental-health/[referralId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mental Health Record", navLabel: "Mental Health Record", navZone: "work" },
   { path: "/work/patient-safety/new", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Safety Report", navLabel: "New Report", navZone: "work" },
   { path: "/work/patient-safety/reports/[reportId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Report", navLabel: "Report", navZone: "work" },
   { path: "/work/patient-safety/cases/[caseId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Case", navLabel: "Case", navZone: "work" },
@@ -1101,7 +1105,10 @@ export const ROUTES: RouteDefinition[] = [
 // .../analytics, .../spine/[episodeId]/disposition, .../spine/[episodeId]/observation, and
 // /ehr/[patientId]/emergency, which had a page and inbound links but no registration and therefore
 // no guard. Total 836.
-export const EXPECTED_ROUTE_COUNT = 836;
+// Mental-health clinical record (W15, 30 Jul 2026): +2 — /work/mental-health/[referralId] and
+// /work/mental-health/restraint-review, the callers for the nineteen mental-health-service
+// operations that had none. Total 838.
+export const EXPECTED_ROUTE_COUNT = 838;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -6,11 +6,15 @@
  *
  * The accepting side of a psychiatric emergency handover (pct's emergency_handover,
  * target_type=MENTAL_HEALTH): lists PENDING referrals and lets a clinician accept or decline,
- * which writes the decision back onto pct's handover. The fuller clinical-record surface
- * (assessment, safety plan, involuntary episode, restraint events, admission requests, follow-up)
- * is deferred to W15's experience layer — this page covers the W13 acceptance surface only.
+ * which writes the decision back onto pct's handover.
+ *
+ * The clinical record that follows acceptance — assessment, risk formulation, safety plan,
+ * involuntary episode, restraint and its review, admission requests, follow-up — lives at
+ * /work/mental-health/[referralId], and the facility-wide restraint review backlog at
+ * /work/mental-health/restraint-review.
  */
 
+import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Brain, Check, X } from "lucide-react";
@@ -62,6 +66,12 @@ export default function MentalHealthQueuePage() {
         title="Mental Health"
         subtitle="Psychiatric emergency referrals awaiting acceptance"
       >
+        <div className="mb-4 text-sm">
+          <Link href="/work/mental-health/restraint-review" className="text-primary underline">
+            Restraint review backlog
+          </Link>
+        </div>
+
         {isLoading ? (
           <div className="flex items-center gap-2 py-12 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading referrals…
@@ -92,6 +102,12 @@ export default function MentalHealthQueuePage() {
                     <div className="mt-1 text-xs text-muted-foreground">
                       Requested by {r.requested_by} · {new Date(r.requested_at).toLocaleString()}
                     </div>
+                    <Link
+                      href={`/work/mental-health/${r.id}`}
+                      className="mt-1 inline-block text-xs text-primary underline"
+                    >
+                      Open the clinical record
+                    </Link>
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <button
