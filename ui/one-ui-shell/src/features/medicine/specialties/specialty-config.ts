@@ -267,7 +267,12 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     registers: [],
     examinationRegions: ["GENERAL_CONDITION", "LYMPH_NODES", "ANTHROPOMETRY", "FUNCTIONAL_STATUS"],
     notBuilt: [
-      "Staging", "MDT record (§14 is not built)", "Systemic anticancer therapy and cycle planning",
+      "Staging",
+      "The MDT decision record (§14) exists, but there is no form to record one from this"
+        + " screen — only a read list. There are also two MDT tables in pct-service today"
+        + " (the telemedicine board and this pack's decision record); see"
+        + " docs/clinical/adult-medicine-domain-pack/mdt-consolidation-proposal.md",
+      "Systemic anticancer therapy and cycle planning",
       "Regimen verification", "Toxicity and response tracking", "Survivorship and recurrence",
       "Financial and access navigation",
     ],

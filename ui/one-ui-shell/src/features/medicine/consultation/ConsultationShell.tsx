@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AlertTriangle, Loader2, Users } from "lucide-react";
 import {
   useAnswerConsultation,
@@ -204,6 +205,14 @@ export function ConsultationShell({
           <Users className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-semibold">Multidisciplinary decisions</h3>
         </div>
+        <p className="text-[11px] text-muted-foreground">
+          This is the governed decision record — author, participants and treatment intent. A
+          chaired board with its own agenda and consensus/dissent minutes is convened separately at{" "}
+          <Link href="/work/telemedicine/mdt" className="text-primary hover:underline">
+            MDT boards
+          </Link>
+          ; if one met, its minutes live there, not here.
+        </p>
         {decisions.isError ? (
           <div className="flex items-start gap-2 rounded-lg border border-danger/30 bg-red-50 p-4" data-testid="mdt-failed">
             <AlertTriangle className="w-4 h-4 text-danger mt-0.5" />

@@ -159,6 +159,14 @@ export default function MdtBoardPage() {
                           ))}
                         </ul>
                         {item.recordedBy && <p className="text-[10px] text-muted-foreground">Recorded by {item.recordedBy}</p>}
+                        {item.patientCpid && (
+                          <p className="text-[11px] text-muted-foreground">
+                            This is the board&rsquo;s recommendation, not the governed decision.{" "}
+                            <Link href={`/ehr/${item.patientCpid}/consultations`} className="text-primary hover:underline">
+                              Record the decision on this patient&rsquo;s Consultations page
+                            </Link>.
+                          </p>
+                        )}
                       </div>
                     ) : outcomeFor === item.caseItemId ? (
                       <div className="mt-2 space-y-2">
