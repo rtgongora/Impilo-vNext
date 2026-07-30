@@ -305,6 +305,9 @@ public class TokenIssuanceService {
                 requireAnchor(hasOrg, mode, "organisationId (the appointing body)");
             }
             case FACILITY_OR_ORGANISATION -> requireAnchor(hasFacility || hasOrg, mode, "facilityId or organisationId");
+            // Outreach is dispatched either by a facility or by the programme running the
+            // campaign. Requiring both would make half of real outreach unmintable.
+            case FACILITY_OR_PROGRAMME -> requireAnchor(hasFacility || hasProgramme, mode, "facilityId or programmeId");
         }
     }
 

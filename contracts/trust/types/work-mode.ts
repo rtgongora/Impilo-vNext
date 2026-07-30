@@ -23,7 +23,9 @@ export type WorkMode =
   | "TECHNICAL_SUPPORT"
   | "FACILITY_SUPPORT"
   | "REGULATORY_OPERATIONS"
-  | "INSPECTION_COMPLIANCE";
+  | "INSPECTION_COMPLIANCE"
+  | "COMMUNITY_OUTREACH"
+  | "SPECIMEN_TRANSPORT";
 
 export const WORK_MODES: readonly WorkMode[] = [
   "CLINICAL_CARE",
@@ -36,6 +38,8 @@ export const WORK_MODES: readonly WorkMode[] = [
   "FACILITY_SUPPORT",
   "REGULATORY_OPERATIONS",
   "INSPECTION_COMPLIANCE",
+  "COMMUNITY_OUTREACH",
+  "SPECIMEN_TRANSPORT",
 ];
 
 export type WorkModeAnchorKind =
@@ -43,7 +47,8 @@ export type WorkModeAnchorKind =
   | "ORGANISATION"
   | "JURISDICTION"
   | "PROGRAMME"
-  | "FACILITY_OR_ORGANISATION";
+  | "FACILITY_OR_ORGANISATION"
+  | "FACILITY_OR_PROGRAMME";
 
 export type WorkModeClinicalDataAccess = "IDENTIFIED" | "AGGREGATE" | "NONE";
 
@@ -114,6 +119,18 @@ export const WORK_MODE_DEFINITIONS: Readonly<Record<WorkMode, WorkModeDefinition
     mode: "INSPECTION_COMPLIANCE",
     label: "Inspection & Compliance",
     anchorKind: "ORGANISATION",
+    clinicalDataAccess: "NONE",
+  },
+  COMMUNITY_OUTREACH: {
+    mode: "COMMUNITY_OUTREACH",
+    label: "Community Outreach",
+    anchorKind: "FACILITY_OR_PROGRAMME",
+    clinicalDataAccess: "IDENTIFIED",
+  },
+  SPECIMEN_TRANSPORT: {
+    mode: "SPECIMEN_TRANSPORT",
+    label: "Specimen Transport",
+    anchorKind: "FACILITY_OR_ORGANISATION",
     clinicalDataAccess: "NONE",
   },
 };

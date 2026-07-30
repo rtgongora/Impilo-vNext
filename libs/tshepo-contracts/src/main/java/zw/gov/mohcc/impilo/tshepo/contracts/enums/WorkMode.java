@@ -50,11 +50,28 @@ public enum WorkMode {
     REGULATORY_OPERATIONS(AnchorKind.ORGANISATION, ClinicalDataAccess.NONE, PurposeOfUse.REGULATORY_DUTY),
 
     /** A regulator conducting an inspection or compliance review of a specific facility. */
-    INSPECTION_COMPLIANCE(AnchorKind.ORGANISATION, ClinicalDataAccess.NONE, PurposeOfUse.REGULATORY_DUTY);
+    INSPECTION_COMPLIANCE(AnchorKind.ORGANISATION, ClinicalDataAccess.NONE, PurposeOfUse.REGULATORY_DUTY),
+
+    /**
+     * Care delivered away from the facility — household screening, community
+     * immunization, defaulter follow-up. Identified, because the work is recording
+     * screenings and immunizations against a named person; a mode that could not
+     * would describe none of it. Anchored to the dispatching facility or the
+     * programme running the campaign, which are the two ways outreach is organised.
+     */
+    COMMUNITY_OUTREACH(AnchorKind.FACILITY_OR_PROGRAMME, ClinicalDataAccess.IDENTIFIED, PurposeOfUse.TREATMENT),
+
+    /**
+     * Specimen and consignment custody in transit — seals, cold-chain readings,
+     * proof of delivery. {@code NONE} is the point of the mode: a courier must be
+     * able to prove what they carried and under what conditions, and must never be
+     * able to read what it said. Logistics authority, not clinical authority.
+     */
+    SPECIMEN_TRANSPORT(AnchorKind.FACILITY_OR_ORGANISATION, ClinicalDataAccess.NONE, PurposeOfUse.OPERATIONS);
 
     /** What kind of anchor(s) a token minted in this mode must carry — validated at mint time. */
     public enum AnchorKind {
-        FACILITY, ORGANISATION, JURISDICTION, PROGRAMME, FACILITY_OR_ORGANISATION
+        FACILITY, ORGANISATION, JURISDICTION, PROGRAMME, FACILITY_OR_ORGANISATION, FACILITY_OR_PROGRAMME
     }
 
     /**
