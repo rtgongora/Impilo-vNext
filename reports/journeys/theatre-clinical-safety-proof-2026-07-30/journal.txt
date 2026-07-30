@@ -1,0 +1,33 @@
+== RIG: infra (postgres + redis) + 5-service substrate
+   madi-service health: 200
+   nhume-service health: 200
+   oros-service health: 200
+   rito-quality-safety-service health: 200
+   inpatient-service health: 200
+== J-CS-1: blood pipeline reconciles to MADI truth
+   PASS: theatre case created (4d1a9002-be37-4cea-848f-86e40eeec0e5)
+   PASS: requestBlood placed MADI order (715e2fd4-0a86-4806-bb0e-8a76151a6341)
+   PASS: MADI owns the blood order (madi.blood_order row exists)
+   PASS: inpatient blood projection references MADI order (no duplicate order)
+   PASS: BLOOD gate BLOCKED before MADI reservation (no false-ready)
+   PASS: BLOOD gate READY once MADI reservation_status=RESERVED (read-through)
+   PASS: administerBlood started a MADI transfusion episode (56bb0c9f-c3f3-4ed8-addc-b0fc5c795540)
+   PASS: inpatient blood projection == MADI transfusion_episode (single source of truth)
+== J-CS-2: patient movement reconciles to a NHUME delivery
+   PASS: requestPatientMovement accepted (201)
+   PASS: procedure_transport carries a NHUME delivery id (d0ebff49-a175-4be9-8910-c9a2952b9d15)
+   PASS: procedure_transport id == NHUME delivery (single source of truth)
+== J-CS-3: operative-note specimens open OROS orders + critical escalation
+   PASS: note specimens parsed into procedure_specimen rows (2)
+   INFO: OROS specimen id null (OROS may require order routing); projection stays honest
+== J-CS-4: surgical-count discrepancy gates Sign-Out and raises a RITO sentinel
+   PASS: count discrepancy computed (1)
+   PASS: RITO case opened for the discrepancy (10708b76-209b-4425-8f62-c257c20e0119)
+   PASS: rito.rit_safety_incident RETAINED_ITEM raised (single source of truth = RITO)
+   PASS: WHO Sign-Out BLOCKED (409) by unreconciled count
+   PASS: Sign-Out proceeds with an audited count override reason
+== J-CS-5: anaesthesia chart returns an ordered multi-channel time series
+   PASS: chart returns entries (3 channels: BLOOD,AGENT,FLUID)
+   PASS: chart series ordered by recorded_at
+   PASS: BLOOD channel PROJECTED from the MADI transfusion (no re-entry)
+== SUMMARY: PASS=18 FAIL=0
