@@ -471,6 +471,11 @@ public class RegulatoryConfigService {
         try {
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("packId", release.getPackId());
+            // Whose configuration this is. Without it a consumer can only learn the subject of the
+            // event by calling back for the pack, which makes every consumer depend on org-registry
+            // being reachable to interpret an event org-registry already had in hand.
+            payload.put("organisationId", packRepository.findByTenantIdAndId(tenantId, release.getPackId())
+                    .map(ConfigPackEntity::getOrganizationId).orElse(null));
             payload.put("releaseId", releaseId);
             payload.put("releaseKey", release.getReleaseKey());
             payload.put("previousReleaseId", activation.getPreviousReleaseId());
