@@ -174,6 +174,33 @@ export function useEmergencyCommandSummary(facilityId?: string) {
   });
 }
 
+export interface EmergencyCommandBoard {
+  items: {
+    summary?: EmergencyCommandSummary;
+    alerts?: EmergencyAlertRow[];
+    episodes?: EmergencyEpisodeRow[];
+  };
+  failures: { source: string; error: string; message: string }[];
+  meta?: { as_of?: string; degraded?: boolean };
+}
+
+/**
+ * The whole board in one call. Unlike every other read here it does not 502 when a source is
+ * unreachable — it returns whatever answered plus a `failures` list naming what did not, so one
+ * blind upstream costs one tile rather than blanking a board someone is standing in front of.
+ * The response is used as-is, never unwrapped through `unwrap`, because it has no `data` key.
+ */
+export function useEmergencyCommandBoard(facilityId?: string) {
+  return useQuery({
+    queryKey: ["emergency-command-board", facilityId],
+    queryFn: async () =>
+      (await apiClient.get(`${BASE}/command-board?facilityId=${facilityId}`)) as EmergencyCommandBoard,
+    enabled: !!facilityId,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+  });
+}
+
 export function useEmergencyAlertBoard(facilityId?: string) {
   return useQuery({
     queryKey: ["emergency-alert-board", facilityId],

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.support.EmergencyHonesty;
 
 import java.util.Map;
 import java.util.UUID;
@@ -219,6 +220,41 @@ public class EmergencyEpisodeController {
     @GetMapping("/command-summary")
     public ResponseEntity<Map<String, Object>> commandSummary(@RequestParam UUID facilityId) {
         return proxyGet(() -> pctClient.emergencyCommandSummary(facilityId), "PCT emergencyCommandSummary");
+    }
+
+    /**
+     * The command board in one call: state counts, the alert queue and the open episodes.
+     *
+     * Composed rather than left to three parallel client calls because the degradation rule differs
+     * from the rest of this controller. Elsewhere an unreachable pct is a 502 and the caller retries.
+     * Here a 502 would blank a board a charge nurse is standing in front of, on the strength of one
+     * blind source. Instead each source is read independently and any that fails is named in
+     * {@code failures} — the board still renders, and the tile that cannot be read says so rather
+     * than showing a zero.
+     */
+    @GetMapping("/command-board")
+    public ResponseEntity<Map<String, Object>> commandBoard(@RequestParam UUID facilityId) {
+        EmergencyHonesty.Composite board = EmergencyHonesty.composite();
+
+        try {
+            board.put("summary", pctClient.emergencyCommandSummary(facilityId));
+        } catch (Exception e) {
+            board.failed("summary", "emergency_command_summary_unavailable", "the emergency command summary", e);
+        }
+
+        try {
+            board.put("alerts", pctClient.emergencyAlertBoard(facilityId));
+        } catch (Exception e) {
+            board.failed("alerts", "emergency_alerts_unavailable", "emergency alerts", e);
+        }
+
+        try {
+            board.put("episodes", pctClient.emergencyEpisodeBoard(facilityId));
+        } catch (Exception e) {
+            board.failed("episodes", "emergency_episodes_unavailable", "open emergency episodes", e);
+        }
+
+        return board.build();
     }
 
     /** MCI bulk-mint (W11): mint one emergency_episode per not-yet-minted casualty on an incident. */

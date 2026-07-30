@@ -156,6 +156,38 @@ class EmergencyEpisodeControllerTest {
     }
 
     @Test
+    void commandBoard_stillRendersWhenOneSourceIsBlind_andNamesWhichOne() {
+        // A 502 here would blank a board a charge nurse is standing in front of, on the strength of
+        // one dead upstream. The board renders; the tile that cannot be read says so.
+        var controller = new EmergencyEpisodeController(new PctClientWithDeadAlerts());
+        ResponseEntity<Map<String, Object>> response = controller.commandBoard(FACILITY_ID);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+
+        @SuppressWarnings("unchecked")
+        var items = (Map<String, Object>) response.getBody().get("items");
+        assertThat(items).containsKeys("summary", "episodes");
+        assertThat(items).doesNotContainKey("alerts");
+
+        @SuppressWarnings("unchecked")
+        var failures = (java.util.List<Map<String, Object>>) response.getBody().get("failures");
+        assertThat(failures).hasSize(1);
+        assertThat(failures.get(0).get("source")).isEqualTo("alerts");
+        assertThat((String) failures.get(0).get("message"))
+                .contains("Do not treat this as an absence of emergency alerts");
+    }
+
+    @Test
+    void commandBoard_isNotMarkedDegradedWhenEverySourceAnswered() {
+        var controller = new EmergencyEpisodeController(new StubPctClient());
+        ResponseEntity<Map<String, Object>> response = controller.commandBoard(FACILITY_ID);
+
+        @SuppressWarnings("unchecked")
+        var meta = (Map<String, Object>) response.getBody().get("meta");
+        assertThat(meta.get("degraded")).isEqualTo(false);
+    }
+
+    @Test
     void identityLink_isAppendOnly_historyIsAList() {
         var controller = new EmergencyEpisodeController(new StubPctClient());
         assertThat(controller.linkIdentity(EPISODE_ID,
@@ -218,6 +250,28 @@ class EmergencyEpisodeControllerTest {
         }
         @Override public JsonNode emergencyIdentityLinks(UUID episodeId) {
             return mapper.createArrayNode().add(mapper.createObjectNode().put("episode_id", episodeId.toString()));
+        }
+        @Override public JsonNode emergencyCommandSummary(UUID facilityId) {
+            return mapper.createObjectNode().set("episodes_by_state",
+                    mapper.createObjectNode().put("OPEN_UNTRIAGED", 2));
+        }
+        @Override public JsonNode emergencyAlertBoard(UUID facilityId) {
+            return mapper.createArrayNode().add(mapper.createObjectNode().put("alert_id", ALERT_ID.toString()));
+        }
+    }
+
+    /** Summary and episodes answer; the alert source does not. */
+    private static final class PctClientWithDeadAlerts extends PctServiceClient {
+        PctClientWithDeadAlerts() { super(new RestTemplate(), endpoints(), mapper); }
+        @Override public JsonNode emergencyCommandSummary(UUID facilityId) {
+            return mapper.createObjectNode().set("episodes_by_state",
+                    mapper.createObjectNode().put("OPEN_UNTRIAGED", 2));
+        }
+        @Override public JsonNode emergencyEpisodeBoard(UUID facilityId) {
+            return mapper.createArrayNode();
+        }
+        @Override public JsonNode emergencyAlertBoard(UUID facilityId) {
+            throw new org.springframework.web.client.ResourceAccessException("connection refused");
         }
     }
 

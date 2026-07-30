@@ -125,6 +125,9 @@ export const ROUTES: RouteDefinition[] = [
   // below and MUST stay above it (same first-match-wins rule the comment above already states).
   // "spine/[episodeId]" does not collide regardless of order — it is a 4-segment path.
   { path: "/clinical/emergency/board", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Board", navLabel: "Emergency Board", navZone: "work" },
+  // Facility-wide command view: state counts plus the alert queue's three authorities
+  // (acknowledge / respond / close). Literal 3-segment sibling — must stay above [visitId].
+  { path: "/clinical/emergency/command", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Command", navLabel: "Emergency Command", navZone: "work" },
   { path: "/clinical/emergency/spine/[episodeId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Emergency Episode Spine", navLabel: "Episode Spine", navZone: "work" },
   { path: "/clinical/emergency/[visitId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED Visit", navLabel: "ED Visit", navZone: "work" },
 
@@ -1083,7 +1086,7 @@ export const ROUTES: RouteDefinition[] = [
 // MCI casualty tagging (W15b, 28 Jul 2026): +1 — /work/daidzai/disasters/[id]/casualties. Total 827.
 // Surgery SB-3 reachability (28 Jul 2026): +2 — /work/clinical/procedures (existed but was
 // unregistered/orphaned) and /work/clinical/surgery (S1-S3 surgical episode workspace). Total 829.
-export const EXPECTED_ROUTE_COUNT = 829;
+export const EXPECTED_ROUTE_COUNT = 830;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

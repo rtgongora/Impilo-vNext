@@ -40,7 +40,10 @@ export default function EmergencyEpisodeBoardPage() {
     <AppLayout>
       <PageShell title="Emergency episode board" subtitle="Every open episode at this facility — the continuum-side spine (pct.emergency_episode)">
         <div className="mb-4 flex items-center justify-between gap-4">
-          <Link href="/clinical/emergency" className="text-sm text-primary underline">← ED trackboard</Link>
+          <div className="flex gap-4">
+            <Link href="/clinical/emergency" className="text-sm text-primary underline">← ED trackboard</Link>
+            <Link href="/clinical/emergency/command" className="text-sm text-primary underline">Emergency command →</Link>
+          </div>
           <div className="flex items-center gap-2">
             <select
               className="rounded border px-2 py-1 text-sm"
