@@ -8,13 +8,24 @@
     <artifactId>medicine-domain</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>Impilo — Adult Medicine Domain (renal, cardiovascular, frailty, cognition, opioid, burden arithmetic)</name>
+    <name>Impilo — Adult Medicine Domain (bedside clinical calculators and classifications)</name>
     <description>
-        Pure Java 21 adult-medicine primitives shared by the clinical plane: the CKD-EPI 2021
-        race-free eGFR equation with KDIGO GFR categories, WHO/ISH-shaped cardiovascular risk
+        Pure Java 21 adult-medicine primitives shared by the clinical plane. Renal: the CKD-EPI 2021
+        race-free eGFR equation with KDIGO GFR categories, and Cockcroft-Gault creatinine clearance.
+        Hepatic: MELD and Child-Pugh. Respiratory: CURB-65 with CRB-65 as a separately banded
+        instrument. Thrombosis: the Wells scores for DVT and PE. Metabolic: albumin-corrected
+        calcium, glucose-corrected sodium, and the anion gap with its albumin correction and delta
+        ratio. Neurological: the Glasgow Coma Scale. Critical care: SOFA. Anthropometry: body
+        surface area by DuBois and Mosteller. Alongside these, WHO/ISH-shaped cardiovascular risk
         banding, the NYHA functional classification, the Rockwood Clinical Frailty Scale, generic
         cognitive-screen proportion banding, oral morphine equivalence, and a composite treatment
         burden index.
+
+        Every calculator shares one refusal discipline: when an input is missing, out of
+        physiological range, mutually inconsistent, or outside the instrument's validated
+        population, the result carries a named RefusalReason and a clinician-readable explanation
+        rather than a default, a sentinel or a null that reads as normal. A missing measurement is
+        never scored as a healthy one.
 
         The library owns arithmetic, never policy. It computes numbers and applies published
         classifications; it never decides what to do about them. Action thresholds, referral
