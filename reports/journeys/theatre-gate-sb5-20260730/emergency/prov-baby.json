@@ -1,0 +1,1 @@
+{"error":{"code":"FEDERATION_IDENTITY_INVALID","message":"Pod identity verification failed: No JWT token provided for federation identity","details":{"reason":"No JWT token provided for federation identity","pod_id":"national-spine"},"request_id":"d1d79e2f-2479-46d5-aff1-cd16643b4a97","correlation_id":"3765b438-07c1-4de5-851e-a83cb94a8c39"}}

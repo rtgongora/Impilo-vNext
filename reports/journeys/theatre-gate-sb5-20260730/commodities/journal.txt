@@ -1,0 +1,72 @@
+== RIG: infra (postgres + redis) + commodities substrate
+   tuso-service health: 200
+   inventory-service health: 200
+   oros-service health: 200
+   madi-service health: 200
+   inpatient-service health: 200
+== J-TC-1: implant UDI recorded → traceable, recall query finds the patient
+   PASS: theatre case created (ebbba3fc-1958-4df2-989e-15ebf6718a65)
+HTTP 201
+   PASS: implant recorded IMPLANTED (inventory unit issued)
+   PASS: inventory inv_implant_registry row exists for UDI-1d5a255c
+   PASS: inventory inv_patient_implant link for patient
+   PASS: inpatient procedure_implant projection for UDI-1d5a255c
+   PASS: case-side recall by lot LOT-HIP-42 found 1 implant(s)
+== J-TC-2: STERILE set issued → SOILED on return → reprocessed → STERILE
+   PASS: seeded STERILE instrument set (28d05c8c-c89a-42ed-92d0-b8696cf6e8ca)
+   PASS: set issued to case (procedure_instrument_set_use=ISSUED)
+   PASS: TUSO set moved STERILE→IN_USE
+   PASS: TUSO set returned IN_USE→SOILED
+   PASS: CSSD cycle reprocessed SOILED→STERILE (sterile_until re-stamped)
+   PASS: CSSD cycle audit-log row written
+== J-TC-3: administer controlled drug requires a witness (400), then balances
+   PASS: administer without witness rejected 400
+   PASS: witnessed administer recorded
+   PASS: running balance after ISSUE(10)-ADMINISTER(2) = 8.0
+   PASS: inventory controlled-drug register rows for the case
+== J-TC-4: requestBlood creates a real MADI order; no-transfusion case is NOT_REQUIRED
+   PASS: requestBlood created MADI order a6681028-6aa3-4a68-b064-564ff68196b1
+   PASS: madi.blood_orders row exists (jurisdiction defaulted)
+   PASS: no-transfusion case: BLOOD gate NOT_REQUIRED
+== J-TC-5: histopath report signed out FINAL (critical) + acknowledged
+   PASS: OROS histopath order placed (01KYRM8BHRP4DEJCWQ7Z7DKBNG)
+   PASS: histopath report signed out FINAL
+   PASS: FINAL histopath result created (Butano-bound via ReportService)
+   PASS: critical histopath acknowledged
+== SUMMARY: PASS=23 FAIL=0 (evidence in reports/journeys/theatre-gate-sb5-20260730/commodities)
+== RIG: infra (postgres + redis) + commodities substrate
+   tuso-service health: 200
+   inventory-service health: 200
+   oros-service health: 200
+   madi-service health: 200
+   inpatient-service health: 200
+== J-TC-1: implant UDI recorded → traceable, recall query finds the patient
+   PASS: theatre case created (5a6d1735-9565-42cf-bd23-cbe9533ddd86)
+HTTP 201
+   PASS: implant recorded IMPLANTED (inventory unit issued)
+   PASS: inventory inv_implant_registry row exists for UDI-50d334ac
+   PASS: inventory inv_patient_implant link for patient
+   PASS: inpatient procedure_implant projection for UDI-50d334ac
+   PASS: case-side recall by lot LOT-HIP-42 found 1 implant(s)
+== J-TC-2: STERILE set issued → SOILED on return → reprocessed → STERILE
+   PASS: seeded STERILE instrument set (a321747a-328e-4365-93b5-62f10c5bcf15)
+   PASS: set issued to case (procedure_instrument_set_use=ISSUED)
+   PASS: TUSO set moved STERILE→IN_USE
+   PASS: TUSO set returned IN_USE→SOILED
+   PASS: CSSD cycle reprocessed SOILED→STERILE (sterile_until re-stamped)
+   PASS: CSSD cycle audit-log row written
+== J-TC-3: administer controlled drug requires a witness (400), then balances
+   PASS: administer without witness rejected 400
+   PASS: witnessed administer recorded
+   PASS: running balance after ISSUE(10)-ADMINISTER(2) = 8.0
+   PASS: inventory controlled-drug register rows for the case
+== J-TC-4: requestBlood creates a real MADI order; no-transfusion case is NOT_REQUIRED
+   PASS: requestBlood created MADI order 716e78fa-320c-4ddd-b16c-6014a4fe6833
+   PASS: madi.blood_orders row exists (jurisdiction defaulted)
+   PASS: no-transfusion case: BLOOD gate NOT_REQUIRED
+== J-TC-5: histopath report signed out FINAL (critical) + acknowledged
+   PASS: OROS histopath order placed (01KYRMBT536VGWYXRJ4AZBTN66)
+   PASS: histopath report signed out FINAL
+   PASS: FINAL histopath result created (Butano-bound via ReportService)
+   PASS: critical histopath acknowledged
+== SUMMARY: PASS=23 FAIL=0 (evidence in reports/journeys/theatre-gate-sb5-20260730/commodities)
