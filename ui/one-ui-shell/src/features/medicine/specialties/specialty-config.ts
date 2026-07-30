@@ -140,8 +140,7 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     notBuilt: [
       "Dialysis preparation and modality choice", "Vascular access planning",
       "Transplant referral tracking", "Renal anaemia and mineral-bone management",
-      "The renal panel still reads a stored eGFR observation rather than deriving one — the"
-        + " calculator is served under Clinical tools, but the engines do not yet call it",
+      "Renal replacement therapy: dialysis adequacy, prescription and modality review",
     ],
   },
   {

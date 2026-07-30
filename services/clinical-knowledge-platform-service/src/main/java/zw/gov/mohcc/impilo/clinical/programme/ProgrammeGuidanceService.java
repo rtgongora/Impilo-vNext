@@ -4,11 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.clinical.multimorbidity.MedicationFactDeriver;
+import zw.gov.mohcc.impilo.clinical.renal.EgfrDerivation;
 import zw.gov.mohcc.impilo.clinical.rules.tabular.DakProvenance;
 import zw.gov.mohcc.impilo.clinical.rules.tabular.PredicateEvaluator;
 import zw.gov.mohcc.impilo.clinical.rules.tabular.RuleContentLoader;
 import zw.gov.mohcc.impilo.clinical.rules.tabular.TabularRule;
+import zw.gov.mohcc.impilo.medicine.common.Sex;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -119,6 +122,8 @@ public class ProgrammeGuidanceService {
         // finding the clinician had already made rather than making one.
         MedicationFactDeriver.Derivation derivation = medicationFactDeriver.derive(facts);
         Map<String, Object> workingFacts = new LinkedHashMap<>(derivation.facts());
+        Map<String, String> provenance = new LinkedHashMap<>(derivation.provenance());
+        deriveEgfr(workingFacts, provenance);
 
         List<ProgrammeAlert> alerts = new ArrayList<>();
         Set<String> notAssessed = new LinkedHashSet<>();
@@ -181,7 +186,76 @@ public class ProgrammeGuidanceService {
 
         return new ProgrammeAssessment(true, referralRequired, interruptive, alerts,
                 List.copyOf(notAssessed), contentProblems, applicable, contentVersion(rules), null,
-                derivation.provenance(), derivation.note());
+                Map.copyOf(provenance), derivation.note());
+    }
+
+    /**
+     * Works out an eGFR from a creatinine when the caller did not supply one.
+     *
+     * <p>Five rules in the deprescribing pack are gated on {@code egfr} — the metformin stop below
+     * 30, the NSAID and nephrotoxin cautions, and the renally-cleared dose review — and every one of
+     * them declined to score whenever the fact was absent. That is correct behaviour on missing
+     * data, but the fact was absent for the ordinary patient whose clinic measured a creatinine and
+     * never computed a rate, so a metformin gate that exists to catch a specific, avoidable harm was
+     * silent for most of the people it was written for.</p>
+     *
+     * <p>A supplied eGFR is left alone. A refusal writes nothing, which keeps the rules'
+     * cannot-assess behaviour exactly as it was: the fact stays missing, the rule reports it
+     * unassessed, and the clinician is asked rather than reassured.</p>
+     */
+    private void deriveEgfr(Map<String, Object> facts, Map<String, String> provenance) {
+        if (!PredicateEvaluator.unassessed(PredicateEvaluator.lookup(facts, EgfrDerivation.EGFR_KEY))) {
+            return;
+        }
+        Object creatinine = PredicateEvaluator.lookup(facts, "serumCreatinineUmolL");
+        if (PredicateEvaluator.unassessed(creatinine)) {
+            return;
+        }
+        BigDecimal value;
+        try {
+            value = new BigDecimal(creatinine.toString().trim());
+        } catch (NumberFormatException e) {
+            log.warn("Serum creatinine '{}' is not numeric, so no eGFR was derived", creatinine);
+            return;
+        }
+
+        Integer ageYears = ageYears(facts);
+        var derived = EgfrDerivation.fromCreatinine(value, ageYears,
+                Sex.parse(str(PredicateEvaluator.lookup(facts, "sex"))));
+        if (!derived.present()) {
+            if (derived.refusalReason() != null) {
+                log.debug("eGFR not derived for deprescribing: {} — {}",
+                        derived.refusalReason(), derived.refusalDetail());
+            }
+            return;
+        }
+        facts.put(EgfrDerivation.EGFR_KEY, derived.egfr());
+        provenance.put(EgfrDerivation.EGFR_KEY, EgfrDerivation.DERIVED_SOURCE);
+    }
+
+    /** Age in completed years, from either the years or the months a caller may have sent. */
+    private static Integer ageYears(Map<String, Object> facts) {
+        Object years = PredicateEvaluator.lookup(facts, "ageYears");
+        if (!PredicateEvaluator.unassessed(years)) {
+            try {
+                return new BigDecimal(years.toString().trim()).intValue();
+            } catch (NumberFormatException ignored) {
+                // Fall through to months rather than failing the whole derivation on one bad field.
+            }
+        }
+        Object months = PredicateEvaluator.lookup(facts, "ageMonths");
+        if (!PredicateEvaluator.unassessed(months)) {
+            try {
+                return new BigDecimal(months.toString().trim()).intValue() / 12;
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static String str(Object value) {
+        return value == null ? null : value.toString();
     }
 
     private List<String> unassessedInputs(TabularRule rule, Map<String, Object> facts,
