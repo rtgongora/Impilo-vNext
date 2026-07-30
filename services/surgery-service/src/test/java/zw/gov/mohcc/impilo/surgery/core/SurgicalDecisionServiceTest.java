@@ -34,6 +34,7 @@ class SurgicalDecisionServiceTest {
 
     @Mock SurgicalDecisionRepository repository;
     @Mock SurgicalEpisodeRepository episodeRepository;
+    @Mock zw.gov.mohcc.impilo.surgery.integration.PctMdtDecisionClient mdtClient;
 
     private SurgicalDecisionService service;
     private final UUID tenant = UUID.randomUUID();
@@ -41,7 +42,7 @@ class SurgicalDecisionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SurgicalDecisionService(repository, episodeRepository);
+        service = new SurgicalDecisionService(repository, episodeRepository, mdtClient);
         TrustContextHolder.set(new TrustContext(tenant, "actor-surgeon", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
         lenient().when(episodeRepository.findByIdAndTenantId(episodeId, tenant))
