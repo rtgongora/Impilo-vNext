@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ElementType } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Activity,
@@ -305,14 +306,24 @@ export default function AdvanceDirectivesPage() {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 pt-2">
-                            {directive.documentRef && (
-                              <button className="inline-flex items-center gap-1 rounded-lg border border-primary/25 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary-soft">
-                                <Eye className="h-3 w-3" /> View Document
-                              </button>
-                            )}
-                            <button className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background">
-                              Edit
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
+                            <Link
+                              href={`/ehr/${patientId}/documents`}
+                              className="inline-flex items-center gap-1 rounded-lg border border-primary/25 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary-soft"
+                            >
+                              <Eye className="h-3 w-3" /> Documents
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNewType(directive.type);
+                                setNewSummary(directive.summary);
+                                setNewEffectiveFrom("");
+                                setShowForm(true);
+                              }}
+                              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background"
+                            >
+                              Add updated directive
                             </button>
                           </div>
                         </div>

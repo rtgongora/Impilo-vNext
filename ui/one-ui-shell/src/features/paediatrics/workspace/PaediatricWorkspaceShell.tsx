@@ -45,7 +45,7 @@ export function PaediatricWorkspaceShell({ patientId }: PaediatricWorkspaceShell
   if (context.isLoading) {
     return (
       <p className="text-sm text-muted-foreground" data-testid="paediatric-workspace-loading">
-        Loading the child's record…
+        Loading the child&apos;s record…
       </p>
     );
   }

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
-import MyLifeShimPage, { resolveMyLifeTarget } from "./page";
+import MyLifeShimPage from "./page";
+import { resolveMyLifeTarget } from "./resolve-my-life-target";
 
 const replace = vi.fn();
 let searchParams = new URLSearchParams();

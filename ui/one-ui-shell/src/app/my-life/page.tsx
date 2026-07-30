@@ -23,11 +23,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-
-export function resolveMyLifeTarget(searchParams: URLSearchParams): string {
-  const query = searchParams.toString();
-  return query ? `/home?${query}` : "/home";
-}
+import { resolveMyLifeTarget } from "./resolve-my-life-target";
 
 export default function MyLifeShimPage() {
   const router = useRouter();
