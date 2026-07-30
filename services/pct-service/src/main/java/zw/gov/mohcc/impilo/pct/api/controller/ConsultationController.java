@@ -123,7 +123,8 @@ public class ConsultationController {
         if (e.isTakeoverRecommended()) {
             m.put("takeover_note",
                     "A takeover was RECOMMENDED and has not happened. " + e.getOwningService()
-                    + " still holds this patient until a transfer is recorded.");
+                    + " still holds this patient until a care transfer is accepted with the "
+                    + "receiving service's own record id.");
         }
         m.put("decline_reason", e.getDeclineReason());
         m.put("requested_at", e.getRequestedAt());

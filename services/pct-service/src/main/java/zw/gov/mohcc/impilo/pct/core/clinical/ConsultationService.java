@@ -27,10 +27,11 @@ import java.util.UUID;
  *
  * <p><strong>The one property this service exists to hold: asking a question never moves the
  * patient.</strong> {@code owning_service} is set once, at request time, to the requesting service,
- * and there is no code path here that changes it. A responder may recommend a takeover; performing
- * one is a different act with a different record. If an opinion could move ownership, the column
- * would be decorative and §23.10's failure — a patient silently becoming surgical because nobody
- * wrote down who still held them — would be back.</p>
+ * and {@link #answer} has no path that changes it (it asserts the owner did not move). A responder
+ * may recommend a takeover; performing one is {@link CareTransferService} — V116 — and ownership
+ * moves only on that service's acceptance with an {@code accepting_ref}. If an opinion could move
+ * ownership, the column would be decorative and §23.10's failure — a patient silently becoming
+ * surgical because nobody wrote down who still held them — would be back.</p>
  *
  * <p>The database enforces the same invariants (V114). This layer exists so a clinician gets a 400
  * naming the clinical problem rather than a constraint violation naming a constraint.</p>
