@@ -25,6 +25,12 @@ import java.util.List;
  * v1.1 trust headers (X-Tenant-ID, X-Pod-ID, X-Request-ID, X-Correlation-ID,
  * Authorization) from the inbound request to the outbound service call. This
  * ensures the sovereign service receives the same trust context as the BFF.</p>
+ *
+ * <p><b>The PDP visibility obligation is NOT part of that set by default.</b> {@code x-obligations}
+ * and the ten flat visibility headers are forwarded only when
+ * {@code experience.trust.propagate-obligations} is enabled, which it is not — see
+ * {@link VisibilityObligationPropagator} for why enabling it is blocked on an edge fix, and
+ * {@link VisibilityPropagationShadowReporter} for the measurement that sizes the change.</p>
  */
 @Configuration
 @EnableConfigurationProperties({ServiceClientConfig.ServiceEndpoints.class, ServiceTokenProperties.class})
@@ -330,12 +336,31 @@ public class ServiceClientConfig {
      * </ol>
      */
     @Bean
-    public ClientHttpRequestInterceptor trustHeaderForwardingInterceptor(ServiceTokenProvider serviceTokenProvider) {
+    public ClientHttpRequestInterceptor trustHeaderForwardingInterceptor(
+            ServiceTokenProvider serviceTokenProvider,
+            VisibilityPropagationShadowReporter visibilityShadowReporter,
+            VisibilityObligationPropagator visibilityObligationPropagator) {
         return (request, body, execution) -> {
             ServletRequestAttributes attrs =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attrs != null) {
                 HttpServletRequest inbound = attrs.getRequest();
+                // Measure the visibility tightening this hop WOULD apply if the obligation were
+                // forwarded. Observation only — see VisibilityPropagationShadowReporter for why the
+                // measurement has to precede the change: two of the three downstream guards are
+                // permissive on a null profile and restrictive on a present one, so forwarding
+                // tightens routes nobody has enumerated, while the third fails closed and so needs
+                // the forwarding to exist at all.
+                visibilityShadowReporter.report(inbound, request);
+                // Forward the PDP's visibility obligation — gated on
+                // experience.trust.propagate-obligations, DISABLED by default. Without it every
+                // downstream visibility guard sees a null profile on this hop, which withholds every
+                // stamped record from everyone once class stamping is enabled. With it, and without a
+                // strip at the edge, a forged x-confidential-categories reaches that same guard as a
+                // grant. The pre-check found the deployed Envoy has no ext_authz filter and no
+                // request_headers_to_remove at all, so enabling this is BLOCKED on the edge fix — see
+                // VisibilityObligationPropagator.
+                visibilityObligationPropagator.propagate(inbound, request);
                 // Tenant is forwarded only-if-absent so a client method can declare the PLANE its
                 // rows live on. The two-plane model requires it: facility/provider/geo masters are
                 // registry-plane, and a care-plane caller asking a facility question must read

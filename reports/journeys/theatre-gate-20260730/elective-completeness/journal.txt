@@ -1,0 +1,32 @@
+== RIG: infra
+== RIG: services
+   referral-service health: 200
+   PASS: referral-service booted
+   scheduling-service health: 200
+   PASS: scheduling-service booted
+   tuso-service health: 200
+   PASS: tuso-service booted
+   booking-service health: 200
+   PASS: booking-service booted
+   inpatient-service health: 200
+   PASS: inpatient-service booted
+== J-TE-1: surgical referral → worklist
+   PASS: surgical referral created (a18e7afb-5a25-4fa1-b798-0a07e3f1c587)
+   PASS: referral on receiving-team worklist
+== J-TE-2: accept → waitlist
+   PASS: case placed on waitlist (b71e4663-db54-4f0a-a9e3-4276dc86d7ea)
+== J-TE-3: idempotent placement
+   PASS: duplicate rejected — single active entry
+== J-TE-4: OR session + items + reorder
+   PASS: session with 2 items built + reordered
+== J-TE-5: conflict detection blocks double-booked surgeon
+   PASS: double-booked surgeon refused (409)
+== J-TE-6: publish → one procedure_episode per item
+   PASS: OR items published (2)
+   PASS: procedure_episode(s) created via booking seam (distinct booking_id=0)
+== J-TE-7: cancel → return to waitlist
+   PASS: cancelled case returned to waitlist
+== J-TE-8: readiness board blocks then resolves
+   FAIL: board did not block
+   FAIL: resolve-blocker did not route
+== SUMMARY: PASS=14 FAIL=2
