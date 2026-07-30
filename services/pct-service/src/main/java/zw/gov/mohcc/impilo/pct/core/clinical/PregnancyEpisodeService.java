@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.reproductive.confidentiality.ConfidentialityCategory;
 import zw.gov.mohcc.impilo.reproductive.dating.DatingBasis;
 import zw.gov.mohcc.impilo.reproductive.dating.EddCalculator;
 import zw.gov.mohcc.impilo.reproductive.dating.PregnancyDating;
@@ -38,6 +39,11 @@ import java.util.UUID;
  * conflict that a human must reconcile. Letting either surface as an unhandled exception would lose
  * a booking captured in a clinic with no network, which is precisely the case the offline mechanism
  * exists to serve.
+ *
+ * <p><b>An episode carries the SRH category but does not inherit its outcome's class.</b> Protecting
+ * the whole episode because it ended in a termination would hide the antenatal care from the
+ * maternity team; the TOP rows carry the confidence instead. See
+ * {@code docs/clinical-governance/rmnp/srh-confidentiality-stamping.md} §3.
  */
 @Service
 public class PregnancyEpisodeService {
@@ -54,17 +60,37 @@ public class PregnancyEpisodeService {
     private final PregnancyEpisodeRepository episodes;
     private final PregnancyDatingRevisionRepository revisions;
     private final RedatingPolicy redatingPolicy;
+    private final ConfidentialCarePolicyProvider confidentiality;
+    private final ConfidentialRecordGuard confidentialRecords;
 
     public PregnancyEpisodeService(PregnancyEpisodeRepository episodes,
-                                   PregnancyDatingRevisionRepository revisions) {
+                                   PregnancyDatingRevisionRepository revisions,
+                                   ConfidentialCarePolicyProvider confidentiality,
+                                   ConfidentialRecordGuard confidentialRecords) {
         this.episodes = episodes;
         this.revisions = revisions;
         this.redatingPolicy = RedatingPolicy.engineeringSeed();
+        this.confidentiality = confidentiality;
+        this.confidentialRecords = confidentialRecords;
     }
 
-    /** The woman's current pregnancy, if she has one. */
+    /** The woman's current pregnancy, if she has one — guarded, so a withheld episode reads as none. */
     @Transactional(readOnly = true)
     public Optional<PregnancyEpisodeEntity> currentPregnancy(UUID tenantId, String subjectCpid) {
+        return confidentialRecords.visible(ongoing(tenantId, subjectCpid),
+                PregnancyEpisodeEntity::getSensitivityClass,
+                PregnancyEpisodeEntity::getConfidentialityCategory);
+    }
+
+    /**
+     * The ongoing episode WITHOUT the confidentiality guard.
+     *
+     * <p>Exists only for the two boolean/derived answers below, which are called from clinical
+     * decision support with no request context. It must never be used to return a record, or to
+     * back an endpoint: everything that hands an episode to a caller goes through
+     * {@link #currentPregnancy}.
+     */
+    private Optional<PregnancyEpisodeEntity> ongoing(UUID tenantId, String subjectCpid) {
         if (tenantId == null || subjectCpid == null || subjectCpid.isBlank()) {
             return Optional.empty();
         }
@@ -78,23 +104,38 @@ public class PregnancyEpisodeService {
      * "she is not pregnant" are different statements, and the second is an assertion nobody made.
      * The form resolver relies on that distinction: a null leaves an applicability gate undecided
      * rather than silently excluding a form.
+     *
+     * <p><b>Deliberately UNGUARDED, and a known bounded leak.</b> It answers a boolean the record
+     * itself would refuse. {@code FormResolverService} calls it with no request context, so the
+     * fail-closed guard would return null for every requester and blank clinical decision support
+     * outright — a form that silently stops applying is worse than a boolean that says more than the
+     * record would. Recorded in the stamping doc §8 with a named owner rather than silently guarded;
+     * do not "fix" it by routing it through {@link #currentPregnancy}.
      */
     @Transactional(readOnly = true)
     public Boolean pregnant(UUID tenantId, String subjectCpid) {
-        return currentPregnancy(tenantId, subjectCpid).isPresent() ? Boolean.TRUE : null;
+        return ongoing(tenantId, subjectCpid).isPresent() ? Boolean.TRUE : null;
     }
 
-    /** Gestational age in completed days today, or null when undated. */
+    /**
+     * Gestational age in completed days today, or null when undated.
+     *
+     * <p>Unguarded for the same reason as {@link #pregnant}: gestation drives dose bands, referral
+     * thresholds and form applicability, and blanking it would degrade decision support rather than
+     * protect anyone. It returns a number, not the record.
+     */
     @Transactional(readOnly = true)
     public Integer gestationalAgeDays(UUID tenantId, String subjectCpid, LocalDate asOf) {
-        return currentPregnancy(tenantId, subjectCpid)
+        return ongoing(tenantId, subjectCpid)
                 .map(e -> EddCalculator.gestationalAgeDays(e.getEstimatedDeliveryDate(), asOf))
                 .orElse(null);
     }
 
     @Transactional(readOnly = true)
     public List<PregnancyEpisodeEntity> history(UUID tenantId, String subjectCpid) {
-        return episodes.findBySubject(tenantId, subjectCpid);
+        return confidentialRecords.filter(episodes.findBySubject(tenantId, subjectCpid),
+                PregnancyEpisodeEntity::getSensitivityClass,
+                PregnancyEpisodeEntity::getConfidentialityCategory);
     }
 
     /**
@@ -104,6 +145,13 @@ public class PregnancyEpisodeService {
      * the history is ambiguous, and attaching a partograph to the wrong pregnancy is worse than
      * attaching it to none: the wrong one is invisible, and the right one looks like it was never
      * charted.
+     *
+     * <p><b>Guarded, and it has no production callers yet — that is why it is guarded now.</b> It
+     * hands back an episode, so it is a disclosure read. Added guarded from birth for the same reason
+     * as {@code TerminationService.proceduresForSubject}: if the safe version does not exist before
+     * anyone needs it, the person who needs it writes the unguarded one. A future caller that needs
+     * linkage with no request context must not reach for this method — it needs its own accessor
+     * returning an identifier, on the model of {@link #pregnant}, so the choice stays visible.
      */
     @Transactional(readOnly = true)
     public Optional<PregnancyEpisodeEntity> episodeCovering(UUID tenantId, String subjectCpid, LocalDate on) {
@@ -113,7 +161,9 @@ public class PregnancyEpisodeService {
         List<PregnancyEpisodeEntity> candidates =
                 episodes.findCoveringDate(tenantId, subjectCpid, on, on.minusDays(LINKAGE_GRACE_DAYS));
         if (candidates.size() == 1) {
-            return Optional.of(candidates.get(0));
+            return confidentialRecords.visible(Optional.of(candidates.get(0)),
+                    PregnancyEpisodeEntity::getSensitivityClass,
+                    PregnancyEpisodeEntity::getConfidentialityCategory);
         }
         if (candidates.size() > 1) {
             log.warn("pregnancy.linkage.ambiguous subject={} on={} candidates={} — leaving unlinked",
@@ -189,7 +239,7 @@ public class PregnancyEpisodeService {
         episode.setGpDerivationComplete(false);
         episode.setGpUncountableCount(0);
         episode.setGpDiscrepancy(false);
-        episode.setSensitivityClass("FULL_CLINICAL");
+        applyStamp(episode, dating.pregnancyStartDate());
         episode.setClientOfflineId(command.clientOfflineId());
         episode.setCapturedAt(command.capturedAt());
         episode.setRecordedBy(command.recordedBy());
@@ -241,6 +291,30 @@ public class PregnancyEpisodeService {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Stamp the SRH category, and the protection class only once the governance flip enables it.
+     *
+     * <p>The act date is the pregnancy start date, not today — a pregnancy booked when she was 17 was
+     * booked under a promise of confidentiality that does not lapse when she turns 18 mid-pregnancy.
+     *
+     * <p>The legacy {@code confidentiality} column this replaced held {@code ROUTINE} from a third
+     * vocabulary. V437 left it nullable and unwritten with a COMMENT saying so; nothing here writes
+     * it, and nothing estate-wide reads it.
+     */
+    private void applyStamp(PregnancyEpisodeEntity episode, LocalDate pregnancyStartDate) {
+        var category = ConfidentialityCategory.SEXUAL_REPRODUCTIVE_HEALTH;
+        var policy = confidentiality.policyAsOf(episode.getTenantId(), pregnancyStartDate);
+        var subject = confidentiality.subjectAt(
+                episode.getTenantId(), episode.getSubjectCpid(), category, pregnancyStartDate);
+        var stamp = ConfidentialityStamper.gated(
+                ConfidentialityStamper.ageGated(category, subject, pregnancyStartDate, policy),
+                confidentiality.classStampingEnabled());
+        episode.setSensitivityClass(stamp.sensitivityClass());
+        episode.setConfidentialityCategory(stamp.category());
+        episode.setConfidentialityBasis(stamp.basis());
+        episode.setConfidentialityPolicyVersion(stamp.policyVersion());
+    }
 
     private void applyDating(PregnancyEpisodeEntity episode, PregnancyDating dating) {
         episode.setEstimatedDeliveryDate(dating.estimatedDeliveryDate());

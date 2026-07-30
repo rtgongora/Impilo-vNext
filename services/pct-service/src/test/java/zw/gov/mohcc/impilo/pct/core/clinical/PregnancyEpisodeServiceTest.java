@@ -39,7 +39,9 @@ class PregnancyEpisodeServiceTest {
     void setUp() {
         episodes = new FakeEpisodes();
         revisions = new FakeRevisions();
-        service = new PregnancyEpisodeService(episodes, revisions);
+        service = new PregnancyEpisodeService(episodes, revisions,
+                ReproductiveConfidentialityFixtures.unresolvedPolicy(),
+                new ConfidentialRecordGuard());
     }
 
     private PregnancyEpisodeService.OpenPregnancyCommand command(List<DatingBasis> bases, String offlineId) {
