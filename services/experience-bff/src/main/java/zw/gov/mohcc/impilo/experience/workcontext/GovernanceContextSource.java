@@ -19,10 +19,14 @@ public class GovernanceContextSource {
 
     private final WorkforceGovernanceClient governanceClient;
     private final WorkModeResolution modeResolution;
+    private final ProgrammeRegistryLookup programmeRegistry;
 
-    public GovernanceContextSource(WorkforceGovernanceClient governanceClient, WorkModeResolution modeResolution) {
+    public GovernanceContextSource(WorkforceGovernanceClient governanceClient,
+                                   WorkModeResolution modeResolution,
+                                   ProgrammeRegistryLookup programmeRegistry) {
         this.governanceClient = governanceClient;
         this.modeResolution = modeResolution;
+        this.programmeRegistry = programmeRegistry;
     }
 
     public String systemName() {
@@ -121,8 +125,43 @@ public class GovernanceContextSource {
             default -> "regular";
         };
 
-        String label = buildLabel(contextKind, targetId, organisationId, jurisdictionCode, roleCode);
         List<String> restrictions = new ArrayList<>();
+        String programmeName = null;
+
+        // A programme appointment carries no programme lifecycle state of its own, so the
+        // registry decides whether the appointment still means anything. Without this an
+        // appointment to a closed programme is indistinguishable from an active duty.
+        if ("programme".equals(contextKind)) {
+            ProgrammeRegistryLookup.Outcome outcome = programmeRegistry.lookup(programmeId);
+            if (outcome instanceof ProgrammeRegistryLookup.Outcome.Known known) {
+                ProgrammeRegistryLookup.Programme programme = known.programme();
+                programmeName = programme.name();
+                if (programme.confersNoAuthority()) {
+                    // The programme is over. Drop the context rather than show a duty that
+                    // cannot be entered — the appointment row outliving the programme is a
+                    // data-lifecycle artefact, not a workplace.
+                    return null;
+                }
+                if (programme.isSuspended()) {
+                    restrictions.add("PROGRAMME_SUSPENDED");
+                } else if (!programme.isActive()) {
+                    // An unrecognised status is not silently treated as ACTIVE.
+                    restrictions.add("PROGRAMME_STATUS_UNRECOGNISED");
+                }
+            } else if (outcome instanceof ProgrammeRegistryLookup.Outcome.Unknown) {
+                // The registry answered and does not know this programme — a dangling
+                // reference of exactly the class Phase A5 quarantines.
+                restrictions.add("PROGRAMME_UNRESOLVED");
+            } else {
+                // Registry unreachable. Deliberately NOT dropped: making an outage look
+                // like "you have no programme duty" is the degradation-blindness the
+                // resolver exists to prevent. It is marked unverified and rank-penalised;
+                // the PDP, not this picker, is the enforcement boundary.
+                restrictions.add("PROGRAMME_STATUS_UNVERIFIED");
+            }
+        }
+
+        String label = buildLabel(contextKind, targetId, organisationId, jurisdictionCode, roleCode, programmeName);
         int rankBoost = primary ? 250 : (secondary ? 50 : 0);
 
         return new ResolvedWorkContext(
@@ -135,10 +174,14 @@ public class GovernanceContextSource {
     }
 
     private static String buildLabel(String contextKind, String targetId, String organisationId,
-                                      String jurisdictionCode, String roleCode) {
+                                      String jurisdictionCode, String roleCode, String programmeName) {
         String anchor = switch (contextKind) {
             case "jurisdiction" -> jurisdictionCode != null ? jurisdictionCode : "Jurisdiction";
-            case "programme" -> "Programme " + targetId;
+            // The registry name where we have it — a picker row reading "Programme
+            // 7f3a-…" identifies nothing to the person choosing it.
+            case "programme" -> programmeName != null && !programmeName.isBlank()
+                    ? programmeName
+                    : "Programme " + targetId;
             case "virtual" -> "Virtual " + targetId;
             default -> organisationId != null ? "Organisation " + organisationId : "Organisation";
         };
