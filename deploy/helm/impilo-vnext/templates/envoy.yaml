@@ -127,12 +127,24 @@ data:
                                   - exact: "x-provider-id"
                                   - exact: "x-work-context-token"
                                   - exact: "x-assurance-level"
+                                  # The PDP reads all three, and until now Envoy forwarded
+                                  # none of them, so every consent check, subject-relationship
+                                  # check and workflow-state rule evaluated against a null.
+                                  # Forwarding them makes the gate stricter, not looser: a
+                                  # forged x-escalation-grant-id denies, because the grant is
+                                  # resolved server-side and must be bound to this actor.
+                                  - exact: "x-subject-id"
+                                  - exact: "x-escalation-grant-id"
+                                  - exact: "x-workflow-state"
                             headers_to_add:
                               - key: ":method"
                                 value: "%REQ(:METHOD)%"
                               - key: ":path"
                                 value: "%REQ(:PATH)%"
                           authorization_response:
+                            # Only headers listed here are copied from the PDP's response onto
+                            # the upstream request. Anything the PDP sets and this list omits is
+                            # silently dropped, and the client's own value survives in its place.
                             allowed_upstream_headers:
                               patterns:
                                 - exact: "x-obligations"
@@ -140,6 +152,33 @@ data:
                                 - exact: "x-max-scope"
                                 - exact: "x-mask-fields"
                                 - exact: "x-logging-level"
+                                # The authoritative identity. PolicyEngine overrides these from
+                                # the validated session precisely so a client cannot impersonate
+                                # by setting them (TPL-1) — but the override only reached Envoy,
+                                # not the service, so upstream kept reading the client's values
+                                # and the anti-impersonation control ended at the gate.
+                                - exact: "x-actor-id"
+                                - exact: "x-actor-type"
+                                - exact: "x-tenant-id"
+                                - exact: "x-correlation-id"
+                                - exact: "x-provider-id"
+                                - exact: "x-subject-id"
+                                - exact: "x-assurance-level"
+                                # Visibility obligations. A service that masks or suppresses
+                                # fields cannot honour an obligation it never received.
+                                - exact: "x-visibility-tier"
+                                - exact: "x-pii-access"
+                                - exact: "x-clinical-access"
+                                - exact: "x-aggregate-only"
+                                - exact: "x-resource-sensitivity"
+                                - exact: "x-escalation-grant-id"
+                                - exact: "x-export-policy"
+                                - exact: "x-suppress-fields"
+                                - exact: "x-drill-down-allowed"
+                                # The signed proof that the PDP issued this decision (D2).
+                                # Without it here, the envelope stops at Envoy and D3's
+                                # downstream verification has nothing to verify.
+                                - exact: "x-decision-envelope"
                           with_request_body:
                             max_request_bytes: 8192
                             allow_partial_message: true

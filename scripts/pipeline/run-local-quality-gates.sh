@@ -112,6 +112,11 @@ cohesion_blocking=1
 pipeline_run_phase cohesion "Cross-service cohesion" "$cohesion_blocking" \
   bash scripts/guard/check-cross-service-cohesion.sh
 
+# 9d-2. ext_authz upstream header allowlist (blocking): a header the PDP sets and the
+# Helm allowlist omits is dropped silently, and works fine in the gRPC-based dev configs.
+pipeline_run_phase ext-authz-allowlist "ext_authz upstream header allowlist" 1 \
+  bash scripts/guard/check-ext-authz-header-allowlist.sh
+
 # 9e. Preview sandbox runtime smoke + persistence E2E (blocking when preview reachable)
 preview_blocking=1
 [[ "${PREVIEW_SMOKE_BLOCKING:-1}" != "1" ]] && preview_blocking=0
