@@ -1,0 +1,43 @@
+== RIG: infra + inpatient-service
+   inpatient health: 200
+   PASS: inpatient-service booted
+== J-TH-1: elective theatre case — intake to COMPLETED
+   PASS: intake created theatre case (b62f9ca1-f7f4-4680-834f-bea26f618fa1)
+   PASS: episode row persisted status=BOOKED
+   PASS: WHO checklist seeded (12 items across 3 phases)
+   PASS: no fabricated OROS order id (owner not booted)
+   PASS: nursing preop advanced episode to PREOP
+   PASS: two preop assessments persisted (nursing + anaesthesia)
+   PASS: anaesthesia assessment cleared_for_theatre=true
+   PASS: anaesthesia clearance auto-completed WHO ANAESTHESIA_CHECK
+   PASS: readiness evaluated (200)
+   PASS: ROOM READY (owner=tuso)
+   PASS: no fabricated READY for un-booted owners (TEAM/EQUIPMENT honest)
+   PASS: not bookable yet (owners down, honest)
+   PASS: theatre_room_id stamped on episode
+   PASS: ROOM readiness check row persisted READY
+   PASS: booking blocked 409 without readiness (owner blockers)
+   PASS: booking accepted under audited override (200)
+   PASS: WHO Sign-In fully completed (4/4 items)
+   PASS: start blocked 409 without granted MVUMO consent (consent gate)
+   PASS: MVUMO consent bound GRANTED
+   PASS: theatre started -> IN_PROGRESS
+   PASS: intra-op event recorded
+   PASS: operative note drafted (DRAFT)
+   PASS: operative note signed (200)
+   PASS: note row SIGNED
+   PASS: note signed_provider_id = surgeon
+   PASS: no fabricated Butano ref (owner not booted)
+   PASS: PACU disposition WARD -> RECOVERED
+   PASS: episode COMPLETED
+== J-TH-1: outbox events
+   PASS: outbox row present: theatre.case.intake
+   PASS: outbox row present: theatre.readiness.evaluated
+   PASS: outbox row present: theatre.case.booked
+   PASS: outbox row present: theatre.case.started
+   PASS: outbox row present: theatre.note.signed
+   PASS: outbox row present: theatre.pacu.disposition
+== J-TH-2: honesty gates on a fresh case
+   PASS: no room assigned -> ROOM BLOCKED (NO_ROOM)
+   PASS: start blocked 409 on un-prepared case (checklist/consent gate)
+== VERDICT: 36 passed, 0 failed (evidence: reports/journeys/theatre-gate-20260730/elective/journal.txt)

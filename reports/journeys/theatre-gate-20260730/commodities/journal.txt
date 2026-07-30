@@ -1,0 +1,36 @@
+== RIG: infra (postgres + redis) + commodities substrate
+   tuso-service health: 200
+   inventory-service health: 200
+   oros-service health: 200
+   madi-service health: 200
+   inpatient-service health: 200
+== J-TC-1: implant UDI recorded → traceable, recall query finds the patient
+   PASS: theatre case created (177626c9-209f-4f1c-9ecc-6136dac43ca2)
+HTTP 201
+   PASS: implant recorded IMPLANTED (inventory unit issued)
+   PASS: inventory inv_implant_registry row exists for UDI-540b43ed
+   PASS: inventory inv_patient_implant link for patient
+   PASS: inpatient procedure_implant projection for UDI-540b43ed
+   PASS: case-side recall by lot LOT-HIP-42 found 1 implant(s)
+== J-TC-2: STERILE set issued → SOILED on return → reprocessed → STERILE
+   PASS: seeded STERILE instrument set (c6c91207-1295-4d79-aba3-e9b887a1c771)
+   PASS: set issued to case (procedure_instrument_set_use=ISSUED)
+   PASS: TUSO set moved STERILE→IN_USE
+   PASS: TUSO set returned IN_USE→SOILED
+   PASS: CSSD cycle reprocessed SOILED→STERILE (sterile_until re-stamped)
+   PASS: CSSD cycle audit-log row written
+== J-TC-3: administer controlled drug requires a witness (400), then balances
+   PASS: administer without witness rejected 400
+   PASS: witnessed administer recorded
+   PASS: running balance after ISSUE(10)-ADMINISTER(2) = 8.0
+   PASS: inventory controlled-drug register rows for the case
+== J-TC-4: requestBlood creates a real MADI order; no-transfusion case is NOT_REQUIRED
+   PASS: requestBlood created MADI order a7a1d859-8a1c-4585-99c4-774896ea8260
+   PASS: madi.blood_orders row exists (jurisdiction defaulted)
+   PASS: no-transfusion case: BLOOD gate NOT_REQUIRED
+== J-TC-5: histopath report signed out FINAL (critical) + acknowledged
+   PASS: OROS histopath order placed (01KYRGQK6JBDR7BNQ8B5WZ74RR)
+   PASS: histopath report signed out FINAL
+   PASS: FINAL histopath result created (Butano-bound via ReportService)
+   PASS: critical histopath acknowledged
+== SUMMARY: PASS=23 FAIL=0 (evidence in reports/journeys/theatre-gate-20260730/commodities)

@@ -1,0 +1,34 @@
+== RIG: infra (postgres + redis) + daidzai/vito/inpatient(+madi) substrate
+   daidzai-service health: 200
+   vito-service health: 200
+   inpatient-service health: 200
+   madi-service health: 200 (best-effort peer)
+== J-ES: emergency surgery — mint→header→stamp, activation, consent exception, start, phase
+   PASS: J-ES-0 daidzai minted a real trauma_episode_id (fbf9394f-1174-40bf-a38b-0039dca08ed8)
+   PASS: J-ES-0 provisional identity for the unknown patient (CPID-PROVISIONAL-b432d236-6d2f-44f6-b0c2-b731b96e5f77)
+   PASS: J-ES-1 emergency case activated (2031f4bf-3d4d-40b0-8b3d-86ae5107bf52)
+   PASS: J-ES-0 procedure_episode.trauma_episode_id == the minted id (ONE episode)
+   PASS: J-ES-1 provisional CPID accepted as subject_cpid
+   PASS: J-ES-1 triage forced to EMERGENCY
+   PASS: J-ES-1 emergency override armed
+   PASS: J-ES-1 minimal safe preop (NURSING) recorded
+   PASS: J-ES-4 emergency uncrossmatched blood defaulted to O-negative
+   PASS: J-ES-2 emergency consent exception recorded (EMERGENCY_EXCEPTION)
+   PASS: J-ES-2 consent-exception override AUDITED
+   PASS: J-ES-3 theatre started under emergency override (IN_PROGRESS)
+   PASS: J-ES-3 consent NOT marked verified (excepted, not obtained)
+   PASS: J-ES-5 THEATRE phase registered on the daidzai timeline (on start)
+   PASS: J-ES-5 case COMPLETED
+   PASS: J-ES-5 THEATRE phase is ONE idempotent timeline row (start+completion coalesced, no fork)
+   PASS: J-ES-5 trauma episode stays OPEN (surgery is a PHASE, not the end)
+   PASS: J-ES-5 daidzai timeline resolves the THEATRE phase (INCIDENT→…→THEATRE)
+== J-CS: obstetric emergency C-section — maternal+fetal+neonatal, provisional baby identity
+   PASS: J-CS-2 emergency C-section activated (cf2f0a60-249f-410d-a51f-5aa86e6e4ea2)
+   PASS: J-CS-2 provisional mother CPID accepted as subject_cpid
+   PASS: J-CS-1 maternal + fetal context recorded on the episode
+   PASS: J-CS-1 neonatal team paged (by reference)
+   PASS: J-CS-1 provisional identity for the neonate (CPID-PROVISIONAL-5d56ce88-d7bb-4123-8ab3-8b53780fe09c)
+   PASS: J-CS-1 delivery recorded as a mother-episode-scoped event
+   PASS: J-CS-1 delivery event LINKS the baby CPID to the mother's episode
+   PASS: J-CS-1 neonate handed to POSTNATAL (with mother)
+== RESULT: PASS=26 FAIL=0
