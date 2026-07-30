@@ -84,6 +84,24 @@ public class RegisterMaterialisationService {
     }
 
     /**
+     * Reconcile the registers of whichever council an org-registry organisation regulates.
+     *
+     * <p>Configuration events name an organisation, because org-registry is the system of record
+     * for organisation identity and knows nothing about councils. This is the translation, and it
+     * is deliberately a no-op when no council is linked to the organisation: activating the
+     * configuration of a regulator that does not regulate professionals — a hospital group, say —
+     * is a legitimate event that this materialiser has no business acting on.</p>
+     *
+     * @return empty when no council is linked to the organisation
+     */
+    @Transactional
+    public Optional<ReconcileReport> reconcileForOrganisation(UUID tenantId, UUID organisationId,
+                                                              String actor) {
+        return councilRepository.findByTenantIdAndOrgRegistryOrgId(tenantId, organisationId)
+                .map(council -> reconcile(tenantId, council.getId(), actor));
+    }
+
+    /**
      * Reconcile one council's registers against its ACTIVE configuration.
      *
      * @return a report of what changed; {@code outcome = CONFIGURATION_UNAVAILABLE} when the
