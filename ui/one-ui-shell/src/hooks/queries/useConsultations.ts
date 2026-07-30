@@ -104,3 +104,72 @@ export function useAnswerConsultation(patientId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["consultations", { patientId }] }),
   });
 }
+
+/** Transfer of care (V116). Ownership moves only on accept with accepting_ref. */
+export type CareTransferStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "WITHDRAWN";
+
+export interface CareTransfer {
+  transfer_id: string;
+  subject_cpid: string;
+  consultation_id: string | null;
+  from_service: string;
+  to_service: string;
+  reason: string;
+  status: CareTransferStatus;
+  accepting_ref: string | null;
+  ownership_note: string;
+  requested_at: string;
+}
+
+export function useCareTransfers(patientId: string) {
+  return useQuery<ApiResponse<CareTransfer[]>>({
+    queryKey: ["care-transfers", { patientId }],
+    queryFn: () =>
+      apiClient.get<ApiResponse<CareTransfer[]>>(
+        `/internal/v1/care-transfers?patient_id=${encodeURIComponent(patientId)}`,
+      ),
+    enabled: !!patientId,
+  });
+}
+
+export function useRequestCareTransfer(patientId: string) {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<CareTransfer>,
+    unknown,
+    {
+      subject_cpid: string;
+      journey_id?: string;
+      consultation_id?: string;
+      from_service: string;
+      to_service: string;
+      reason: string;
+    }
+  >({
+    mutationFn: (body) =>
+      apiClient.post<ApiResponse<CareTransfer>>("/internal/v1/care-transfers", body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["care-transfers", { patientId }] });
+      qc.invalidateQueries({ queryKey: ["consultations", { patientId }] });
+    },
+  });
+}
+
+export function useAcceptCareTransfer(patientId: string) {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<CareTransfer>,
+    unknown,
+    { transferId: string; accepting_ref: string }
+  >({
+    mutationFn: ({ transferId, accepting_ref }) =>
+      apiClient.post<ApiResponse<CareTransfer>>(
+        `/internal/v1/care-transfers/${transferId}/accept`,
+        { accepting_ref },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["care-transfers", { patientId }] });
+      qc.invalidateQueries({ queryKey: ["consultations", { patientId }] });
+    },
+  });
+}

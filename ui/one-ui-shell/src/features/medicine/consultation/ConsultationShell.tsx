@@ -4,10 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, Loader2, Users } from "lucide-react";
 import {
+  useAcceptCareTransfer,
   useAnswerConsultation,
+  useCareTransfers,
   useConsultations,
   useMdtDecisions,
+  useRequestCareTransfer,
   useRequestConsultation,
+  type CareTransfer,
   type Consultation,
 } from "@/hooks/queries/useConsultations";
 
@@ -31,15 +35,29 @@ const STATUS_CLASS: Record<string, string> = {
 
 function ConsultationCard({
   consultation,
+  pendingTransfer,
   onAnswer,
+  onRequestTransfer,
+  onAcceptTransfer,
   answering,
+  transferring,
 }: {
   consultation: Consultation;
+  pendingTransfer?: CareTransfer;
   onAnswer: (id: string, advice: string) => void;
+  onRequestTransfer: (consultation: Consultation) => void;
+  onAcceptTransfer: (transferId: string, acceptingRef: string) => void;
   answering: boolean;
+  transferring: boolean;
 }) {
   const [advice, setAdvice] = useState("");
+  const [acceptingRef, setAcceptingRef] = useState("");
   const open = consultation.status === "REQUESTED" || consultation.status === "ACCEPTED";
+  const canRequestTransfer =
+    consultation.takeover_recommended &&
+    consultation.status === "ANSWERED" &&
+    !pendingTransfer &&
+    consultation.owning_service === consultation.requesting_service;
 
   return (
     <div
@@ -105,6 +123,48 @@ function ConsultationCard({
           </button>
         </div>
       )}
+
+      {canRequestTransfer && (
+        <button
+          type="button"
+          onClick={() => onRequestTransfer(consultation)}
+          disabled={transferring}
+          className="rounded border border-warning/40 bg-amber-50 px-3 py-1.5 text-sm text-warning-foreground disabled:opacity-60"
+          data-testid={`request-transfer-${consultation.consultation_id}`}
+        >
+          Request transfer of care
+        </button>
+      )}
+
+      {pendingTransfer && (
+        <div
+          className="space-y-2 rounded border border-border bg-background/60 p-3"
+          data-testid={`pending-transfer-${pendingTransfer.transfer_id}`}
+        >
+          <p className="text-sm" data-testid={`transfer-note-${pendingTransfer.transfer_id}`}>
+            {pendingTransfer.ownership_note}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
+              placeholder="Your record id (accepting_ref)"
+              value={acceptingRef}
+              onChange={(e) => setAcceptingRef(e.target.value)}
+              data-testid={`accepting-ref-${pendingTransfer.transfer_id}`}
+            />
+            <button
+              type="button"
+              onClick={() => onAcceptTransfer(pendingTransfer.transfer_id, acceptingRef.trim())}
+              disabled={transferring || acceptingRef.trim() === ""}
+              className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-60"
+              data-testid={`accept-transfer-${pendingTransfer.transfer_id}`}
+            >
+              Accept transfer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -117,12 +177,21 @@ export function ConsultationShell({
   journeyId?: string;
 }) {
   const consultations = useConsultations(patientId);
+  const transfers = useCareTransfers(patientId);
   const decisions = useMdtDecisions(patientId);
   const request = useRequestConsultation(patientId);
   const answer = useAnswerConsultation(patientId);
+  const requestTransfer = useRequestCareTransfer(patientId);
+  const acceptTransfer = useAcceptCareTransfer(patientId);
 
   const [askedOf, setAskedOf] = useState("");
   const [question, setQuestion] = useState("");
+
+  const pendingByConsultation = new Map(
+    (transfers.data?.data ?? [])
+      .filter((t) => t.status === "PENDING" && t.consultation_id)
+      .map((t) => [t.consultation_id as string, t]),
+  );
 
   const send = () => {
     if (askedOf.trim() === "" || question.trim() === "") return;
@@ -141,7 +210,7 @@ export function ConsultationShell({
         <h3 className="font-semibold text-sm">Ask another team a question</h3>
         <p className="text-sm text-muted-foreground">
           A consultation asks a question. It never transfers the patient — medicine keeps them unless
-          a takeover is separately recorded.
+          a care transfer is separately accepted with the receiving service&apos;s own record id.
         </p>
         <div className="flex flex-wrap gap-2">
           <input
@@ -193,8 +262,23 @@ export function ConsultationShell({
             <ConsultationCard
               key={c.consultation_id}
               consultation={c}
+              pendingTransfer={pendingByConsultation.get(c.consultation_id)}
               answering={answer.isPending}
+              transferring={requestTransfer.isPending || acceptTransfer.isPending}
               onAnswer={(id, advice) => answer.mutate({ consultationId: id, advice })}
+              onRequestTransfer={(consultation) =>
+                requestTransfer.mutate({
+                  subject_cpid: patientId,
+                  journey_id: journeyId,
+                  consultation_id: consultation.consultation_id,
+                  from_service: consultation.owning_service,
+                  to_service: consultation.asked_of_service,
+                  reason: `Transfer following consultation ${consultation.consultation_id}`,
+                })
+              }
+              onAcceptTransfer={(transferId, acceptingRef) =>
+                acceptTransfer.mutate({ transferId, accepting_ref: acceptingRef })
+              }
             />
           ))
         )}

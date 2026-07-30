@@ -1788,6 +1788,35 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(baseUrl + "/v1/consultations/mdt", body, JsonNode.class));
     }
 
+    // ── Care transfer (brief.md §14 / V116) ─────────────────────
+    // Ownership moves only on accept with accepting_ref. Forward ownership_note unchanged.
+
+    public JsonNode listCareTransfers(String subjectCpid) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/care-transfers?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode careTransferInbox(String service) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/care-transfers/inbox?service="
+                + java.net.URLEncoder.encode(service, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode requestCareTransfer(Object body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/care-transfers", body, JsonNode.class));
+    }
+
+    public JsonNode acceptCareTransfer(String transferId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/care-transfers/" + transferId + "/accept", body, JsonNode.class));
+    }
+
+    public JsonNode declineCareTransfer(String transferId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/care-transfers/" + transferId + "/decline", body, JsonNode.class));
+    }
+
     public JsonNode getProgrammeEnrolment(String enrolmentId) {
         return extractData(restTemplate.getForEntity(
                 baseUrl + "/v1/programme-enrolments/" + enrolmentId, JsonNode.class));

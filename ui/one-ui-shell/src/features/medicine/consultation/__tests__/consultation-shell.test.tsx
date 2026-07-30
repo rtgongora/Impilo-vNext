@@ -4,15 +4,21 @@ import { render, screen, fireEvent } from "@testing-library/react";
 const state = vi.hoisted(() => ({
   consultations: { data: undefined as unknown, isError: false, isLoading: false },
   decisions: { data: undefined as unknown, isError: false, isLoading: false },
+  transfers: { data: undefined as unknown, isError: false, isLoading: false },
   request: { mutate: vi.fn(), isPending: false, isError: false },
   answer: { mutate: vi.fn(), isPending: false, isError: false },
+  requestTransfer: { mutate: vi.fn(), isPending: false, isError: false },
+  acceptTransfer: { mutate: vi.fn(), isPending: false, isError: false },
 }));
 
 vi.mock("@/hooks/queries/useConsultations", () => ({
   useConsultations: () => state.consultations,
   useMdtDecisions: () => state.decisions,
+  useCareTransfers: () => state.transfers,
   useRequestConsultation: () => state.request,
   useAnswerConsultation: () => state.answer,
+  useRequestCareTransfer: () => state.requestTransfer,
+  useAcceptCareTransfer: () => state.acceptTransfer,
 }));
 
 // eslint-disable-next-line import/first
@@ -42,8 +48,11 @@ describe("ConsultationShell — asking a question never hands over the patient",
   beforeEach(() => {
     state.consultations = { data: { data: [] }, isError: false, isLoading: false };
     state.decisions = { data: { data: [] }, isError: false, isLoading: false };
+    state.transfers = { data: { data: [] }, isError: false, isLoading: false };
     state.request = { mutate: vi.fn(), isPending: false, isError: false };
     state.answer = { mutate: vi.fn(), isPending: false, isError: false };
+    state.requestTransfer = { mutate: vi.fn(), isPending: false, isError: false };
+    state.acceptTransfer = { mutate: vi.fn(), isPending: false, isError: false };
   });
 
   it("every consultation says who still holds the patient", () => {
@@ -82,6 +91,69 @@ describe("ConsultationShell — asking a question never hands over the patient",
 
     expect(screen.getByTestId("takeover-c1")).toHaveTextContent(/has not happened/i);
     expect(screen.getByTestId("owner-c1")).toHaveTextContent(/MEDICINE/);
+    expect(screen.getByTestId("request-transfer-c1")).toBeInTheDocument();
+  });
+
+  it("requesting a transfer does not pretend ownership has moved", () => {
+    state.consultations = {
+      ...state.consultations,
+      data: {
+        data: [consultation({
+          status: "ANSWERED", advice: "Surgical", responded_by: "surg-1",
+          takeover_recommended: true,
+        })],
+      },
+    };
+    render(<ConsultationShell patientId="p1" />);
+
+    fireEvent.click(screen.getByTestId("request-transfer-c1"));
+    expect(state.requestTransfer.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        consultation_id: "c1",
+        from_service: "MEDICINE",
+        to_service: "SURGERY",
+      }),
+    );
+    expect(screen.getByTestId("owner-c1")).toHaveTextContent(/MEDICINE holds this patient/);
+  });
+
+  it("accepting a pending transfer requires the receiving service's own record id", () => {
+    state.consultations = {
+      ...state.consultations,
+      data: {
+        data: [consultation({
+          status: "ANSWERED", advice: "Surgical", responded_by: "surg-1",
+          takeover_recommended: true,
+        })],
+      },
+    };
+    state.transfers = {
+      data: {
+        data: [{
+          transfer_id: "t1",
+          subject_cpid: "p1",
+          consultation_id: "c1",
+          from_service: "MEDICINE",
+          to_service: "SURGERY",
+          reason: "Take over",
+          status: "PENDING",
+          accepting_ref: null,
+          ownership_note: "MEDICINE still holds this patient. A transfer has been requested of SURGERY and has not been accepted.",
+          requested_at: "2026-07-30",
+        }],
+      },
+      isError: false,
+      isLoading: false,
+    };
+    render(<ConsultationShell patientId="p1" />);
+
+    expect(screen.getByTestId("accept-transfer-t1")).toBeDisabled();
+    fireEvent.change(screen.getByTestId("accepting-ref-t1"), { target: { value: "surg-episode-1" } });
+    fireEvent.click(screen.getByTestId("accept-transfer-t1"));
+    expect(state.acceptTransfer.mutate).toHaveBeenCalledWith({
+      transferId: "t1",
+      accepting_ref: "surg-episode-1",
+    });
   });
 
   it("answering requires advice before the button is usable", () => {
