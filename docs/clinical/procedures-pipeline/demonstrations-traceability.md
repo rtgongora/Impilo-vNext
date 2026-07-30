@@ -29,7 +29,7 @@ missing piece; "not closed" names the real, still-missing capability and its own
 | 7 | Image-guided biopsy, specimen custody hand-off | **Closeable today** | `PROC-US-GUIDED-BIOPSY` (V003, tagged "§28 demonstration 7"); `SpecimenCustodyService.confirmLabel`/`recordReceipt` (P8) are real custody-transfer methods; P13's FHIR specimen ref | `procedures-p8-specimen-device-journeys.sh`, `procedures-fhir-specimen-journeys.sh` |
 | 8 | Implant lot/recall traceability | **Closeable today, patient-notification leg unconfirmed** | `ImplantTraceabilityService.traceByRecall(udi, lot)` (`ImplantTraceabilityService.java:216-244`) is real and queries `inv_implant_registry`/`inv_patient_implant` for every affected patient | `procedures-p8-specimen-device-journeys.sh` proves the query returns the right patients. NOT built: any automatic notification (SMS/portal alert) from a recall match to the affected patient — recall reaches the record, not confirmed to reach the patient. Named debt, owner: inventory-service + notification-service |
 | 9 | Cancelled procedure, rebooking, patient comms | **Closeable today, rebooking-link and comms unconfirmed** | OROS `ProcedureWorkflowState.CANCELLED` is terminal; `V300__procedure_request_lifecycle_depth.sql:26-49` makes `workflow_state_reason`+`workflow_next_action` mandatory on cancellation — the literal "request survives cancellation" mechanism (P2) | `procedures-request-lifecycle-journeys.sh` proves the mandatory-reason invariant. NOT built: a structural rebooking link (no `supersedes`/`original_order_id` column — a rebooking today is just a new, unlinked request) and confirmed wiring from cancellation to a patient-communication trigger (generic comms machinery exists in experience-bff's `AppointmentCommsWorkflowService`, tied to scheduling appointments, not confirmed reachable from procedure cancellation). Named debt, owner: oros-service (rebooking link) + experience-bff (comms wiring) |
-| 10 | Complication escalating into Emergency/Surgery | **Not closed — single largest remaining gap** | `DaidzaiEpisodeClient.mintForProcedure`/`registerPhase` exist but are called only at trauma-originated INTAKE, never from a complication path; `note.setComplications` is free text, not a trigger. **Correction (2026-07-30): the long-repeated claim that there is "no reopen method" is false.** `ProcedureEpisodeService.returnToTheatre()` has existed since Wave 4 (`67b89f68e`): it keeps the SAME episode, returns it from `PACU`/`RECOVERED`/`IN_PROGRESS` to `READY_FOR_THEATRE`, and sets `procedure_postop_record.return_to_theatre = true`. What is genuinely missing is narrower and should be stated as such — (a) no complication-originated trigger, so nothing in the complication path ever calls it; (b) no predecessor linkage, so a reopened episode does not record which operation preceded it; (c) no distinct `REOPENED` state, so a returned case is indistinguishable in the status column from a first-time one | — |
+| 10 | Complication escalating into Emergency/Surgery | **Closed (completion wave, 2026-07-30)** | The three gaps this row named are closed by `inpatient-service V305`. (a) **Complication-originated trigger**: `returnToTheatre` now requires a `complicationCategory` from a closed vocabulary (haemorrhage, sepsis, anastomotic leak, wound dehiscence, ischaemia, obstruction, retained item, device/implant failure, organ injury, planned second look, other) alongside a mandatory reason — the free-text `note.setComplications` is no longer the only record of why a patient went back. (b) **Predecessor linkage**: each return is its own row in `inpatient.procedure_return_to_theatre` with a sequence number and an optional link to the operative note it originated from, and `procedure_episode.reoperation_of_episode_id` covers the other shape, where the reoperation is given its own episode. (c) **A returned case is distinguishable**: the episode detail now carries its full list of returns rather than a single boolean. `PLANNED_SECOND_LOOK` must be flagged planned and nothing else may be — a planned relook counted as a complication corrupts the indicator this table feeds. The surgery-side counterpart is `surgery-service V010`'s audited `REOPENED` state (surgical demonstration 9) | `ProcedureReturnToTheatreTest`, extended `theatre-alt-journeys.sh` (real Postgres: cause and sequence stored, actor attributed, multiple returns counted, missing/invented category refused, planned-haemorrhage refused, self-referencing predecessor refused). Gated by tshepo-authz V034's existing `return-to-theatre` rows — no new policy row was needed, because the route is unchanged and only its body grew |
 
 ## What Wave P15 closed
 
@@ -39,22 +39,23 @@ missing piece; "not closed" names the real, still-missing capability and its own
 ## What Wave P15 did NOT close, named rather than silently dropped
 
 1. **Demonstration 6 (dialysis recurrence)** — no session/series data model exists in `inpatient-service` for any recurring procedure. This is new schema plus new domain logic (session numbering, cross-session vascular-access continuity, a programme-level consent type actually being resolved), not a "wire the existing pieces together" task like demonstrations 1/2/5/7. Recommended as its own wave, sized independently — attempting it inside "P15: tests" would have meant building real capability under a wave labelled proof-only.
-2. **Demonstration 10 (complication reopens the episode)** — still open, but smaller than four
-   waves of this document claimed, and no longer blocked.
+2. ~~**Demonstration 10 (complication reopens the episode)**~~ — **CLOSED by the completion wave
+   on 2026-07-30.** Its row above carries the mechanism and the proof. Two things from how it
+   closed are worth keeping.
 
-   Two corrections. First, a reopen method already exists: `ProcedureEpisodeService.returnToTheatre()`,
-   since Wave 4. The remaining work is a complication-originated trigger, predecessor linkage, and a
-   distinct `REOPENED` state — not a reopen path built from nothing.
+   It was smaller than four waves of this document claimed. A reopen method had existed since
+   Wave 4 (`ProcedureEpisodeService.returnToTheatre()`); what was missing was a
+   complication-originated trigger, predecessor linkage and a distinguishable returned case — not a
+   reopen path built from nothing. Documents that repeat a gap without re-reading the code grow
+   the gap in the telling.
 
-   Second, the stated blocker is gone. The recommendation to "run the ten theatre rigs first" was
-   correct, and it was carried out on 2026-07-30: all ten ran, and every one matched its recorded
-   baseline (`reports/journeys/theatre-gate-20260730/SUMMARY.md`). The rigs need Docker and
-   `mvn package`, not the packaged estate that five consecutive waves believed was required.
-
-   That pass paid for itself immediately. It found that **every creation of a `procedure_episode`
-   through JPA had been failing with an HTTP 500** since Wave P4, because V300's
-   `setting NOT NULL DEFAULT 'THEATRE'` never reached a Hibernate insert. The whole theatre intake
-   path was broken, elective and emergency alike, for the entire period the gate was deferred as too
-   expensive to run.
+   Its stated blocker turned out not to exist. The recommendation to "run the ten theatre rigs
+   first" was correct and was carried out: all ten ran, and every one matched its recorded baseline
+   (`reports/journeys/theatre-gate-20260730/SUMMARY.md`). The rigs need Docker and `mvn package`,
+   not the packaged estate five consecutive waves believed was required. That pass paid for itself
+   immediately — it found that **every creation of a `procedure_episode` through JPA had been
+   failing with an HTTP 500** since Wave P4, because V300's `setting NOT NULL DEFAULT 'THEATRE'`
+   never reached a Hibernate insert. The whole theatre intake path was broken, elective and
+   emergency alike, for the entire period the gate was deferred as too expensive to run.
 3. **Demonstration 5's single combined walkthrough**: each of its four legs (sedation, specimen custody, pathology, aftercare) has its own real proof; no one rig chains all four for one patient in one session. Not attempted this wave — each leg's existing proof is not redundant with a combined walkthrough, but a combined rig adds confirmation value, not new capability, and was judged lower priority than closing demonstrations 3 and the §27 duplication gap, which were real, uncovered functionality/proof gaps rather than a presentation gap.
 4. **Demonstrations 4/8/9's unconfirmed legs** (reproductive-pack gating, patient-notification-on-recall, rebooking-link + cancellation comms) belong to peer services (pct-service, notification-service, oros-service, experience-bff) and are named above with their owners, not attempted here.
