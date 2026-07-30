@@ -24,14 +24,22 @@ import java.util.UUID;
  * listener acts on. That is rule 4 of the materialiser — a council's registers follow approval,
  * never authoring.</p>
  *
- * <p><b>This listener is inert on the current estate, and that is a deployment fact rather than a
- * defect.</b> org-registry publishes to Kafka only when
- * {@code impilo.orgregistry.kafka-events-enabled=true} ({@code ORG_REGISTRY_KAFKA_EVENTS_ENABLED});
- * the code default is {@code false}, and in that mode {@code OrgRegistryOutboxNoKafkaDrainer} marks
- * outbox rows published and discards them. Until that flag is turned on, activation reconciles
- * nothing automatically and the endpoint is the real path. "No event arrived" and "no release was
- * activated" look identical from here, which is exactly why it is written down rather than assumed.
- * The same invariant governs {@code RegulatoryAppointmentEndedTokenConsumer} in tshepo-identity.</p>
+ * <p><b>Where this listener is live, and where it is not.</b> org-registry publishes to Kafka only
+ * when {@code impilo.orgregistry.kafka-events-enabled=true}
+ * ({@code ORG_REGISTRY_KAFKA_EVENTS_ENABLED}). The code default is {@code false}, and in that mode
+ * {@code OrgRegistryOutboxNoKafkaDrainer} marks outbox rows published and discards them, so
+ * activation reconciles nothing and the operator endpoint is the only path. The full-preview estate
+ * sets the flag to {@code true} ({@code deploy/helm/.../values-full-preview-runtime.generated.yaml}),
+ * verified on the running pod — so this listener is live there, not inert. Local, CI and any
+ * environment without a broker run on the default and are not.</p>
+ *
+ * <p><b>What has never happened.</b> As at 2026-07-30 the preview {@code event_outbox} holds zero
+ * rows: no configuration release has been activated and no appointment ended on that estate, so no
+ * org-registry event has ever been published there by any producer. The flag being on is not
+ * evidence the path works; nothing has yet travelled it. "No event arrived" and "no release was
+ * activated" are indistinguishable from here, which is why the first activation after deploy must be
+ * checked against the reconcile it should cause rather than assumed. The same applies to
+ * {@code RegulatoryAppointmentEndedTokenConsumer} in tshepo-identity.</p>
  */
 @Component
 public class ConfigReleaseActivatedListener {
