@@ -29,7 +29,7 @@ export interface RenalDosingPanelProps {
 export function RenalDosingPanel({ patientId }: RenalDosingPanelProps) {
   const egfrState = usePatientEgfr(patientId);
   const advise = useRenalDosingAdvise();
-  const [drugClass, setDrugClass] = useState(RENAL_DOSING_DRUG_CLASSES[0]?.key ?? "BIGUANIDE");
+  const [drugClass, setDrugClass] = useState<string>(RENAL_DOSING_DRUG_CLASSES[0]?.key ?? "BIGUANIDE");
 
   useEffect(() => {
     if (egfrState.isLoading || egfrState.egfr == null || !drugClass) {

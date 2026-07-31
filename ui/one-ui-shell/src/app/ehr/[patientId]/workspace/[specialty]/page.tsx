@@ -150,7 +150,7 @@ export default function SpecialtyWorkspacePage() {
             Hard-coded tiles below are not wired to production APIs. Disabled tools stay disabled by
             design — do not treat them as live capabilities.
           </p>
-          {medicineSpecialtyHref && (
+          {medicineSpecialty && medicineSpecialtyHref && (
             <Link
               href={medicineSpecialtyHref}
               data-testid="legacy-specialty-medicine-cta"

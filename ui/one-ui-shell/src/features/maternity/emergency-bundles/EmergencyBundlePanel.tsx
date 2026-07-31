@@ -46,7 +46,7 @@ export function EmergencyBundlePanel({
   const [clinicianConfirmedClose, setClinicianConfirmedClose] = useState(false);
 
   const assess = useEmergencyBundleAssess(kind);
-  const result = assess.data?.data ?? null;
+  const result = assess.data ?? null;
 
   useEffect(() => {
     assess.mutate({ completedSteps: [], minutesSinceTrigger: 0, minutesSinceLastObservation: 0 });

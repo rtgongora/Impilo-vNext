@@ -30,7 +30,7 @@ type ComponentKey = keyof typeof BISHOP_FIELD_OPTIONS;
 export function BishopScorePanel() {
   const [answers, setAnswers] = useState<Record<string, string | undefined>>({});
   const assess = useBishopScoreClassifyForm();
-  const result = assess.data?.data ?? null;
+  const result = assess.data ?? null;
   const unavailable = assess.isError && isBishopScoreUnavailable(assess.error);
 
   function setField(field: ComponentKey, code: string | undefined) {

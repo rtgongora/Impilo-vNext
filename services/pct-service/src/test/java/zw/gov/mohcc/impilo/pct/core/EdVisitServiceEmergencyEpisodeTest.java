@@ -65,6 +65,7 @@ class EdVisitServiceEmergencyEpisodeTest {
     @Mock private EdTraumaTeamService traumaTeamService;
     @Mock private EmergencyEpisodeService emergencyEpisodeService;
     @Mock private EmergencyDispositionService emergencyDispositionService;
+    @Mock private EdDiagnosticOrderRepository diagnosticOrderRepository;
 
     private EdVisitService service;
 
@@ -74,7 +75,7 @@ class EdVisitServiceEmergencyEpisodeTest {
                 visitRepository, triageAssessmentRepository, traumaRepository, traumaSurveyRepository,
                 dispositionRepository, pageRepository, emergencyCaseRepository, journeyRepository,
                 new ObjectMapper(), daidzaiEpisodes, traumaTeamService, emergencyEpisodeService,
-                emergencyDispositionService);
+                emergencyDispositionService, diagnosticOrderRepository);
         TrustContextHolder.set(new TrustContext(TENANT, "nurse-A", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), FACILITY, null, null, AccessMode.INTERNAL));
 

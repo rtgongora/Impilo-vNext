@@ -11,8 +11,8 @@ vi.mock("./useEmergencyBundle", async (importOriginal) => {
     ...actual,
     useEmergencyBundleAssess: () => ({
       mutate, isPending: false, isError: false, error: null,
-      data: { data: { status: "ACTIVE", steps: [{ code: "PPH_MASSAGE", name: "Uterine massage", status: "OVERDUE", mandatory: true, action: "Massage now." }],
-        outstanding_mandatory: ["PPH_MASSAGE"], may_close: false, note: "1 mandatory step(s) still outstanding." } },
+      data: { status: "ACTIVE", steps: [{ code: "PPH_MASSAGE", name: "Uterine massage", status: "OVERDUE", mandatory: true, action: "Massage now." }],
+        outstanding_mandatory: ["PPH_MASSAGE"], may_close: false, note: "1 mandatory step(s) still outstanding." },
     }),
   };
 });

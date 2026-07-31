@@ -19,13 +19,11 @@ describe("useBishopScoreClassifyForm", () => {
   it("posts classify-form with blank components omitted", async () => {
     post.mockResolvedValue({
       data: {
-        data: {
-          score: null,
-          interpretation: "INCOMPLETE",
-          components: { dilation: 2 },
-          missing: ["effacement", "station", "consistency", "position"],
-          content_version: "ENGINEERING_SEED",
-        },
+        score: null,
+        interpretation: "INCOMPLETE",
+        components: { dilation: 2 },
+        missing: ["effacement", "station", "consistency", "position"],
+        content_version: "ENGINEERING_SEED",
       },
     });
     const { result } = renderHook(() => useBishopScoreClassifyForm(), { wrapper });
@@ -38,7 +36,7 @@ describe("useBishopScoreClassifyForm", () => {
       formKey: "impilo.maternal.bishop.v1",
       answers: { "bishop.dilation": "DIL_3_4" },
     });
-    expect(result.current.data?.data.interpretation).toBe("INCOMPLETE");
-    expect(result.current.data?.data.score).toBeNull();
+    expect(result.current.data?.interpretation).toBe("INCOMPLETE");
+    expect(result.current.data?.score).toBeNull();
   });
 });
