@@ -1,4 +1,4 @@
-# RMNP lane — handover, 2026-07-28 (revised 2026-07-31, W13)
+# RMNP lane — handover, 2026-07-28 (revised 2026-07-31, W14)
 
 Companion to `2026-07-28-coordinator-handover.md`. Everything below is **landed on canonical**; nothing
 is unpushed. This document exists so the successor does not have to re-derive it.
@@ -23,12 +23,13 @@ of the code, say so in the line that does it.
 
 ## State
 
-RMNP W0–W12 are done. **W13 product completion is done** — every RMNP-owned capability that had a
-reachable backend now has LIVE web and/or mobile product UI (not route theater). Explicit deferrals
-remain listed below; they are not silently “done.”
+RMNP W0–W13 are done. **W14 deferred completion is done** (PO-authorized 2026-07-31): Bishop score,
+four service-only domains → HTTP+UI, confidentiality flip (Envoy strip → propagate → ENFORCE →
+stamp-class), and MPDSR review in Rito with readiness firewall.
 
-Not yet re-imaged or re-deployed — digests below are still the W11 build. W13 adds CKP emergency-bundle
-and MEC/PNC assess HTTP plus BFF confidential reproductive proxies; those jars must be in the next image.
+Not yet re-imaged or re-deployed — digests below are still the W11 build. Next image must include pct
+(V438), CKP (V042 + Bishop/MEC), experience-bff (propagate-obligations), tshepo-authz (V307 + ENFORCE),
+rito (MPDSR V201), Envoy (visibility strip), and zibo (`CATEGORY_MAP_RATIFIED`).
 
 **Deployed 2026-07-28, by digest via `kubectl set image` — NEVER helm** (eight services run digests
 the committed values do not name; a `helm upgrade` reverts three lanes and reports success):
@@ -120,14 +121,19 @@ The ordered six-step flip list is in
 
 | Item | Owner |
 |---|---|
-| MPDSR review workflow (trigger already emits; review exists nowhere) | Rito — spec at `../clinical-governance/rmnp/mpdsr-review-contract.md`, **firewall is the load-bearing part** |
 | Surgery's stale lease still claims blocked-on-confidentiality | **PO — still open, needs routing** |
-| Strip the visibility headers at the edge, then decide when to flip `propagate-obligations` | **cross-lane security + PO — blocks flip step 6 in practice** |
-| Deployed `deploy/helm/.../envoy.yaml` is a third, ungated copy of the Envoy config | **coordinator — the ENVOY-GATE comment names only two files** |
-| Next tshepo-authz migration number: V056 is consumed by the break-glass lane and RMNP's V048–V052 band is full | **coordinator — flip step 5 cannot name a number until this is allocated** |
-| Re-image and re-deploy pct, CKP and experience-bff for W12+W13 (pregnancy `"me"`, confidential reproductive reads, MEC/PNC assess, PPH/eclampsia bundles) | RMNP — digests above are the W11 build |
+| Re-image and re-deploy pct, CKP, experience-bff, tshepo-authz, rito, Envoy, zibo for W12–W14 | RMNP — digests above are the W11 build; flip configs land only after image+authorize |
 | `pregnant()` unguarded boolean, PNC mental-health/GBV vocabulary | recorded gaps, need owners |
-| MPDSR review, Bishop score, confidentiality flip, service-only domains (intention / preconception / fertility / delivery writes) | **Deferred** — see coordinator report; not RMNP product UI debt |
+| Legal instrument verification for contraception age 18 (still listed on pack `legalBasisToVerify`) | MoHCC / legal — PO preview flip used age 18; instruments remain to cite |
+
+### PO rulings locked 2026-07-31 (W14)
+
+| Topic | Decision |
+|---|---|
+| SRH ages | Three treatments: contraception **18**; STI **CASE_BY_CASE**; TOP **CASE_BY_CASE** |
+| Mandatory reporting | Stamp stays; report path **outside** stamp (`REGULATORY_DUTY` / `PUBLIC_HEALTH` never inherit SRH grant) |
+| MPDSR SoR | **`rito-quality-safety-service`** (A5 closed); RMNP consumes counts only |
+| Authz migration lease | **V307** authorized outside V048–V052 band |
 
 ## Landed in W12-UI (frontend parity)
 
@@ -156,6 +162,16 @@ Citizen pregnancy calls use the BFF `"me"` sentinel so the browser never holds a
 | W13-D | PPH / eclampsia emergency bundles | EHR `EmergencyBundlePanel` | specialty tools **WIRED** |
 
 **Honesty rules that must survive the next edit:** 502 ≠ empty chart; empty confidential list ≡ withhold (not proof of absence); `INSUFFICIENT_EVIDENCE` ≠ “cannot”; call-ahead verbatim; indeterminate near-miss cases stay in the bounds; PNC “no danger signs” only behind `screeningComplete`.
+
+## Landed in W14 (deferred completion — PO-authorized)
+
+| Wave | Surface | Notes |
+|---|---|---|
+| W14-A | Bishop score | CKP/BFF assess; form `impilo.maternal.bishop.v1`; specialty **WIRED**; assessment-only |
+| W14-B | Intention / preconception / fertility / delivery | pct + BFF `/confidential/reproductive`; EHR + provider; citizen intention `"me"` |
+| W14-C | Envoy visibility strip ×3 + pack PO ages + reporting outside stamp | then `propagate-obligations` via env default true |
+| W14-D | Flip ENFORCE + stamp-class + pack RATIFIED + CKP V042 + authz V307 + pct V438 | config/migration act — needs authorize after imaging |
+| W14-E | MPDSR review in Rito | `MPDSR_REVIEW`; Kafka+HTTP intake; firewall readiness task; ops UI `/rito/mpdsr` |
 
 ## Working method that earned its place
 
