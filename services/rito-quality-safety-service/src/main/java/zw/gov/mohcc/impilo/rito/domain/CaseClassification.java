@@ -25,10 +25,13 @@ public final class CaseClassification {
     public static final String AUDIT_FINDING = "AUDIT_FINDING";
     public static final String SYSTEM_QUALITY_SIGNAL = "SYSTEM_QUALITY_SIGNAL";
     public static final String SATISFACTION_SURVEY = "SATISFACTION_SURVEY";
+    /** W14-E — confidential maternal/perinatal death surveillance review (distinct from clinical SRH stamp). */
+    public static final String MPDSR_REVIEW = "MPDSR_REVIEW";
 
     public static final Set<String> CASE_TYPES = Set.of(
             COMPLAINT, COMPLIMENT, SUGGESTION, SAFETY_CONCERN, SAFETY_INCIDENT, NEAR_MISS,
-            ADVERSE_EVENT, QUALITY_FINDING, AUDIT_FINDING, SYSTEM_QUALITY_SIGNAL, SATISFACTION_SURVEY);
+            ADVERSE_EVENT, QUALITY_FINDING, AUDIT_FINDING, SYSTEM_QUALITY_SIGNAL, SATISFACTION_SURVEY,
+            MPDSR_REVIEW);
 
     // --- Pillars ---
     public static final String CLIENT_VOICE = "CLIENT_VOICE";
@@ -63,7 +66,7 @@ public final class CaseClassification {
             "PROVIDER_CONDUCT", "DISCRIMINATION_DIGNITY", "BILLING_DISPUTE");
 
     private static final Set<String> SAFETY_TYPES = Set.of(
-            SAFETY_CONCERN, SAFETY_INCIDENT, NEAR_MISS, ADVERSE_EVENT);
+            SAFETY_CONCERN, SAFETY_INCIDENT, NEAR_MISS, ADVERSE_EVENT, MPDSR_REVIEW);
 
     private static final Map<String, String> TYPE_TO_PILLAR = Map.ofEntries(
             Map.entry(COMPLAINT, CLIENT_VOICE),
@@ -74,6 +77,7 @@ public final class CaseClassification {
             Map.entry(SAFETY_INCIDENT, CLIENT_SAFETY),
             Map.entry(NEAR_MISS, CLIENT_SAFETY),
             Map.entry(ADVERSE_EVENT, CLIENT_SAFETY),
+            Map.entry(MPDSR_REVIEW, CLIENT_SAFETY),
             Map.entry(QUALITY_FINDING, SERVICE_QUALITY),
             Map.entry(SYSTEM_QUALITY_SIGNAL, SERVICE_QUALITY),
             Map.entry(AUDIT_FINDING, QUALITY_ASSURANCE));
@@ -87,7 +91,8 @@ public final class CaseClassification {
     }
 
     public static boolean isSensitive(String caseType, String category) {
-        if (caseType != null && (SAFETY_INCIDENT.equals(caseType) || ADVERSE_EVENT.equals(caseType))) {
+        if (caseType != null && (SAFETY_INCIDENT.equals(caseType) || ADVERSE_EVENT.equals(caseType)
+                || MPDSR_REVIEW.equals(caseType))) {
             return true;
         }
         return category != null && SENSITIVE_CATEGORIES.contains(category);

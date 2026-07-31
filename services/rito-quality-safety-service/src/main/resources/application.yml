@@ -86,6 +86,7 @@ rito:
       support: ${RITO_SIGNAL_TOPIC_SUPPORT:impilo.support.ticket.escalated}
       fundo: ${RITO_SIGNAL_TOPIC_FUNDO:impilo.learning.assignment.completed}
       inpatient: ${RITO_SIGNAL_TOPIC_INPATIENT:inpatient.safety}
+      pct-death: ${RITO_SIGNAL_TOPIC_PCT_DEATH:pct.events}
   integration:
     notification:
       base-url: ${NOTIFICATION_BASE_URL:http://localhost:8200}

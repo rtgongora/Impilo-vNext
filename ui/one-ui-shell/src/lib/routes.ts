@@ -938,6 +938,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/rito/audits/[auditId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Audit Detail", navLabel: "Audit", navZone: "professional" },
   { path: "/rito/improvement", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Improvement — CAPA & QI", navLabel: "Improvement", navZone: "professional" },
   { path: "/rito/surveys", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Experience Surveys", navLabel: "Surveys", navZone: "professional" },
+  { path: "/rito/mpdsr", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "MPDSR Reviews", navLabel: "MPDSR", navZone: "professional" },
+  { path: "/rito/mpdsr/[reviewId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "MPDSR Review Detail", navLabel: "MPDSR Review", navZone: "professional" },
   { path: "/my-life", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Life", navLabel: "My Life", navZone: "life" },
   { path: "/my-life/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Feedback", navLabel: "Feedback & Safety", navZone: "life" },
   { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },

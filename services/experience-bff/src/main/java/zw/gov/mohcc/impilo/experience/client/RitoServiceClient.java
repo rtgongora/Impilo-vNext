@@ -260,6 +260,30 @@ public class RitoServiceClient {
         return get(baseUrl + API + "/config/escalation-rules", "listEscalationRules");
     }
 
+    // ── MPDSR reviews (W14-E) ────────────────────────────────────────
+    private static final String MPDSR_API = "/internal/v1/mpdsr/reviews";
+
+    public JsonNode mpdsrFromDeathEvent(Map<String, Object> body) {
+        return post(baseUrl + MPDSR_API + "/from-death-event", body, "mpdsrFromDeathEvent");
+    }
+
+    public JsonNode listMpdsrReviews(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + MPDSR_API);
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return get(b.toUriString(), "listMpdsrReviews");
+    }
+
+    public JsonNode getMpdsrReview(String id) {
+        return get(baseUrl + MPDSR_API + "/" + id, "getMpdsrReview");
+    }
+
+    public JsonNode mpdsrReviewAction(String id, String sub, Map<String, Object> body) {
+        return post(baseUrl + MPDSR_API + "/" + id + "/" + sub, body != null ? body : Map.of(),
+                "mpdsrReviewAction:" + sub);
+    }
+
     // ── helpers ──────────────────────────────────────────────────────
     private JsonNode get(String url, String op) {
         log.debug("RITO {}: GET {}", op, url);

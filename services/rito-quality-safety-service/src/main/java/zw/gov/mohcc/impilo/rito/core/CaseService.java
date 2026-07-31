@@ -602,6 +602,9 @@ public class CaseService {
                     emitSafety(c, "rito.safety.near_miss.reported");
             case CaseClassification.ADVERSE_EVENT ->
                     emitSafety(c, "rito.safety.adverse_event.reported");
+            case CaseClassification.MPDSR_REVIEW ->
+                    emitter.emit("MPDSR_REVIEW", c.getId().toString(), "rito.mpdsr.case.opened", "CASE",
+                            c.getId().toString(), baseCasePayload(c), t);
             default -> { /* QUALITY_FINDING / SYSTEM_QUALITY_SIGNAL / AUDIT_FINDING / SAFETY_CONCERN — case.submitted suffices */ }
         }
     }

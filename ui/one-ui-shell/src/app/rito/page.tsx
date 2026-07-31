@@ -15,6 +15,7 @@ import {
   MessageSquareHeart,
   Building2,
   Globe2,
+  HeartPulse,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -24,6 +25,7 @@ const SECTIONS = [
   { href: "/rito/quality-signals", label: "Quality Signals", description: "Inbound signals to review and convert to cases", Icon: Radar },
   { href: "/rito/audits", label: "Audits & Supervision", description: "Quality audits, supportive supervision and findings", Icon: ShieldCheck },
   { href: "/rito/improvement", label: "CAPA & QI", description: "Corrective actions and quality-improvement plans", Icon: TrendingUp },
+  { href: "/rito/mpdsr", label: "MPDSR Reviews", description: "Confidential maternal & perinatal death surveillance committee work", Icon: HeartPulse },
   { href: "/rito/surveys", label: "Experience Surveys", description: "Client experience instruments and results", Icon: MessageSquareHeart },
   { href: "/work/facility/rito", label: "Facility Dashboard", description: "Site-level quality & safety rollups", Icon: Building2 },
   { href: "/work/above-site/rito", label: "Above-Site Oversight", description: "District, province and national rollups", Icon: Globe2 },
