@@ -2,15 +2,17 @@
 
 ## Status
 
-The `SPECIALLY_PROTECTED` **enforcement mechanism** is built, tested and shipped. The **content that
-decides what it means** is an engineering seed and is **inert**.
+The `SPECIALLY_PROTECTED` **enforcement mechanism** is built, tested and **in force for preview**
+(PO flip 2026-07-31 / W14-D). Legal verification of individual age thresholds remains explicit in
+the pack (`UNVERIFIED` for pack age rules; CKP parameter `VERIFIED` for contraception stamping).
 
 | Artefact | State |
 |---|---|
-| `services/tshepo-authz-service/src/main/resources/policy/adolescent-confidentiality-pack.json` | `ENGINEERING_SEED`, `effective: false` |
-| `tshepo.authz.confidentiality-mode` | `SHADOW` |
-| zibo `V008` code→category map (`ConfidentialCategoryService.CATEGORY_MAP_RATIFIED`) | `false` |
-| tshepo-authz `V048` lane policy rules | `active = false` |
+| `services/tshepo-authz-service/src/main/resources/policy/adolescent-confidentiality-pack.json` | `RATIFIED`, `effective: true` (PO preview 2026-07-31) |
+| `tshepo.authz.confidentiality-mode` | `ENFORCE` (default via env; W14-D) |
+| zibo `V008` code→category map (`ConfidentialCategoryService.CATEGORY_MAP_RATIFIED`) | `true` |
+| tshepo-authz `V048` lane policy rules | `active = true` (V307) |
+| `pct.confidentiality.stamp-class` | `true` (V438 backfill) |
 
 While inert, the PDP evaluates and audits what it *would* have done, grants nothing and denies
 nothing; zibo reports which categories a record's codes matched but hands back **no sensitivity

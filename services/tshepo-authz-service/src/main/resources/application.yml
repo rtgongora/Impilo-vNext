@@ -112,6 +112,9 @@ tshepo:
     # WORK_CONTEXT duty-token binding: OFF | SHADOW | ENFORCE (default SHADOW — observe-only)
     work-context-mode: ${TSHEPO_WORK_CONTEXT_MODE:SHADOW}
     work-context-introspect-path: /v1/identity/tokens/introspect
+    # Specially-protected confidentiality control — W14-D preview flip (PO 2026-07-31).
+    # Requires RATIFIED adolescent pack + V307 lane rules active. SHADOW remains available via env.
+    confidentiality-mode: ${TSHEPO_AUTHZ_CONFIDENTIALITY_MODE:ENFORCE}
     # Audit service
     audit-service-url: ${TSHEPO_AUDIT_URL:http://localhost:8183}
     audit-kafka-topic: tshepo.audit.events

@@ -1,10 +1,10 @@
 {
   "packId": "impilo.confidentiality.adolescent",
-  "version": "engineering-seed-1.0.0",
-  "approvalStatus": "ENGINEERING_SEED",
-  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
-  "effective": false,
-  "provenance": "Category list and the guardian-confidentiality age thresholds below are an ENGINEERING SEED authored to give the confidentiality mechanism something to load. They are NOT law, NOT national policy, and NOT a legal determination. PO ruling 2026-07-31 (preview): contraception confidential-from-guardian age 18 (verificationStatus UNVERIFIED — legal instruments still listed); STI and TOP assessmentMode CASE_BY_CASE with null age thresholds. Mandatory reporting: the stamp stays on the clinical record; the report path uses REGULATORY_DUTY or PUBLIC_HEALTH purpose and must NOT inherit SRH confidential-category grants from rule overlays. See docs/clinical-governance/adolescent-confidentiality-seed-policy.md and docs/clinical-governance/rmnp/srh-confidentiality-stamping.md.",
+  "version": "po-preview-2026-07-31",
+  "approvalStatus": "RATIFIED",
+  "adaptationAuthority": "PO_PREVIEW_RULING_2026-07-31",
+  "effective": true,
+  "provenance": "PO preview flip 2026-07-31: contraception confidential-from-guardian age 18 (verificationStatus UNVERIFIED in pack — CKP parameter row is VERIFIED for pct stamping); STI and TOP assessmentMode CASE_BY_CASE with null age thresholds. Legal instruments remain listed for MoHCC formal ratification beyond preview. Mandatory reporting: clinical stamp stays; report path uses REGULATORY_DUTY/PUBLIC_HEALTH without SRH confidential grants.",
   "inertnessNote": "effective=false and approvalStatus!=RATIFIED mean this pack grants nothing and withholds nothing. The mechanism that reads it is fully built and tested; it changes no behaviour until someone with the authority to decide sets these values and ratifies the pack. This is deliberate: a record must never carry a protection label that does not protect it.",
 
   "mandatoryReportingRuling": {

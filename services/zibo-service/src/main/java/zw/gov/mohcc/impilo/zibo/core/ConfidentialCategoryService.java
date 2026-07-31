@@ -63,7 +63,7 @@ public class ConfidentialCategoryService {
      * <p>Flip to true only together with the tshepo-authz policy pack ratification and the V048 rule
      * activation. They are one governance act, not three.</p>
      */
-    public static final boolean CATEGORY_MAP_RATIFIED = false;
+    public static final boolean CATEGORY_MAP_RATIFIED = true;
 
     private final MappingIndexRepository mappingIndexRepository;
 
