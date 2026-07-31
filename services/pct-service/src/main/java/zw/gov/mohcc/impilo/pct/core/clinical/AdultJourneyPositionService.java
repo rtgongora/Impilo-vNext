@@ -85,12 +85,13 @@ public class AdultJourneyPositionService {
                     + expected + ")");
         }
 
-        TrustContext ctx = TrustContextHolder.require();
         String journeyId = str(body.get("journey_id"), body.get("journeyId"));
         String encounterId = str(body.get("encounter_id"), body.get("encounterId"));
         if (journeyId == null && encounterId == null) {
             throw new IllegalArgumentException("journey_id or encounter_id is required (CC-5).");
         }
+
+        TrustContext ctx = TrustContextHolder.require();
         accessGuard.requireCareRelationship(ctx, subjectCpid, journeyId, encounterId);
 
         AdultJourneyPositionEntity e = new AdultJourneyPositionEntity();
