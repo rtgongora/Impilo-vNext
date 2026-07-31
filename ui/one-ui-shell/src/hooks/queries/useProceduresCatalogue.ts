@@ -86,6 +86,11 @@ export interface CatalogueDetail {
   defaultRecoverySettingCode: string | null;
   /** Wave P9 — the coarse setting-class FALLBACK for aftercareTemplate above, not the primary source. */
   defaultAftercareTemplateCode: string | null;
+  /**
+   * Wave W4 / P10 — complication profile code. Catalogue risk content (what to monitor for),
+   * not an actual occurrence and not surgery pathway grading. Resolve via useComplicationProfile.
+   */
+  complicationProfile: string | null;
   ziboCode: string | null;
   snomedCtCode: string | null;
   status: string;
@@ -374,5 +379,63 @@ export function useAnalyticsIndicator(indicatorCode: string | null) {
         `/internal/v1/procedures/analytics/indicator${buildQuery({ code: indicatorCode ?? undefined })}`,
       ),
     enabled: !!indicatorCode,
+  });
+}
+
+// ── Wave W4 — P10 Clavien-Dindo grades and complication profiles. Catalogue risk
+// content only (what to monitor for / how to grade) — NOT surgery pathway grading and NOT
+// a recorded occurrence. Same empty/unknown/unavailable discipline: a grades fetch failure
+// must surface as isError, never as a resolved empty array that would read as "no grades". ──
+
+export interface ClavienDindoGradeView {
+  gradeCode: string;
+  gradeLabel: string;
+  description: string | null;
+}
+
+export interface ComplicationClassView {
+  complicationType: string;
+  typicalGradeCode: string | null;
+  monitoringRequired: string | null;
+  escalationAction: string | null;
+  neverEvent: boolean;
+}
+
+export interface ComplicationProfileView {
+  profileCode: string;
+  profileName: string;
+  applicableSetting: string | null;
+  description: string | null;
+  status: string;
+  approvingAuthority: string | null;
+  /** ENGINEERING_SEED | RATIFIED — render ENGINEERING_SEED visibly. */
+  contentMaturity: string;
+  classes: ComplicationClassView[];
+}
+
+/**
+ * Clavien-Dindo severity grade catalogue.
+ *
+ * Consumer contract: `isError` means the grades could not be reached — never render that as
+ * an empty grade list. A resolved empty array (unlikely for a seeded continuum) is a genuine
+ * empty catalogue, distinct from unavailable.
+ */
+export function useClavienDindoGrades() {
+  return useQuery<ClavienDindoGradeView[]>({
+    queryKey: ["procedures", "clavien-dindo-grades"],
+    queryFn: () =>
+      apiClient.get<ClavienDindoGradeView[]>("/internal/v1/procedures/clavien-dindo-grades"),
+  });
+}
+
+export function useComplicationProfile(profileCode: string | null) {
+  return useQuery<ComplicationProfileView>({
+    queryKey: ["procedures", "complication-profile", profileCode],
+    queryFn: () =>
+      apiClient.get<ComplicationProfileView>(
+        `/internal/v1/procedures/complication-profiles${buildQuery({ code: profileCode ?? undefined })}`,
+      ),
+    enabled: !!profileCode,
+    retry: false,
   });
 }
