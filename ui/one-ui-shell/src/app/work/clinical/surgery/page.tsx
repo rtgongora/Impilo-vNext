@@ -6,8 +6,8 @@
  *
  * The clinician surface that makes surgery-service capability reachable: find a patient's
  * surgical episodes, open a new episode (CC-5-anchored: journey/encounter + operative
- * indication), work assessment/decision, and the course-of-care panels (prehab, complications,
- * longitudinal objects, follow-up, waitlist revalidation) via the real BFF routes.
+ * indication, with optional SB-4 catalogue indication pick), work assessment/decision,
+ * course-of-care panels, and the §23 surgical analytics catalogue.
  *
  * EMPTY VS UNKNOWN VS UNAVAILABLE, rendered as three distinct states, never collapsed:
  *   - isError                → "could not read the surgical record" (an error banner, never an
@@ -25,6 +25,8 @@ import { ComplicationPathwayPanel } from "@/components/clinical/surgery/Complica
 import { FollowupPanel } from "@/components/clinical/surgery/FollowupPanel";
 import { LongitudinalObjectsPanel } from "@/components/clinical/surgery/LongitudinalObjectsPanel";
 import { PrehabPanel } from "@/components/clinical/surgery/PrehabPanel";
+import { SpecialtyIndicationPicker } from "@/components/clinical/surgery/SpecialtyIndicationPicker";
+import { SurgeryAnalyticsPanel } from "@/components/clinical/surgery/SurgeryAnalyticsPanel";
 import { WaitlistRevalidationPanel } from "@/components/clinical/surgery/WaitlistRevalidationPanel";
 import {
   isNotRecorded,
@@ -788,6 +790,35 @@ function OpenEpisodeForm({ subjectCpid, onDone }: { subjectCpid: string; onDone:
       <h4 className="text-xs font-semibold uppercase text-muted-foreground">Open surgical episode</h4>
       <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
         <label className="block text-xs">
+          <span className="font-semibold uppercase text-muted-foreground">Specialty</span>
+          <select
+            value={form.specialty}
+            onChange={(e) => setForm({ ...form, specialty: e.target.value })}
+            className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
+            data-testid="surgery-open-specialty"
+          >
+            <option value="">Choose specialty…</option>
+            {SURGICAL_SPECIALTIES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <SpecialtyIndicationPicker
+          specialty={form.specialty}
+          onPick={(ind) =>
+            setForm({
+              ...form,
+              operativeIndication:
+                ind.conditionDisplay?.trim() || ind.typicalProcedure || form.operativeIndication,
+              nonOperativeOptionsConsidered:
+                ind.nonOperativeAlternatives?.trim() || form.nonOperativeOptionsConsidered,
+              conditionDisplay: ind.conditionDisplay?.trim() || form.conditionDisplay,
+            })
+          }
+        />
+        <label className="block text-xs">
           <span className="font-semibold uppercase text-muted-foreground">
             Operative indication (required)
           </span>
@@ -853,16 +884,6 @@ function OpenEpisodeForm({ subjectCpid, onDone }: { subjectCpid: string; onDone:
             type="text"
             value={form.evidence}
             onChange={set("evidence")}
-            className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
-          />
-        </label>
-        <label className="block text-xs">
-          <span className="font-semibold uppercase text-muted-foreground">Specialty</span>
-          <input
-            type="text"
-            value={form.specialty}
-            onChange={set("specialty")}
-            placeholder="e.g. GENERAL_SURGERY"
             className="mt-0.5 block w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm"
           />
         </label>
@@ -1097,6 +1118,8 @@ export default function SurgicalEpisodesPage() {
             )}
           </div>
         </div>
+
+        <SurgeryAnalyticsPanel />
       </PageShell>
     </AppLayout>
   );
