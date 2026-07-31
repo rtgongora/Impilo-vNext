@@ -1233,6 +1233,158 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Closing an alert is a separate authority from acknowledging or responding to it: ack says a human
+     * saw it, respond says a human acted, close says the condition that raised it is gone. Only close
+     * clears the partial unique index that suppresses a duplicate open alert, so without this method the
+     * suppression never lifts and the same hazard can never re-raise.
+     */
+    public JsonNode closeEmergencyAlert(UUID alertId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/alerts/" + alertId + "/close";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency order sets (W7b) ────────────────────────────────────────────────────────────
+    //
+    // pct.EmergencyOrderSetController has been live since W7b and was reachable from nothing at all —
+    // no BFF client method, no BFF route. A declined order-set item carries a mandatory reason, which
+    // is the whole clinical point of the table; unreachable, that reason could never be captured.
+
+    public JsonNode invokeEmergencyOrderSet(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/order-sets";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyOrderSets(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/order-sets";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getEmergencyOrderSet(UUID instanceId) {
+        String url = baseUrl + "/v1/emergency/order-sets/" + instanceId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode orderEmergencyOrderSetItem(UUID itemId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/order-sets/items/" + itemId + "/order";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Declining is a first-class clinical act and pct requires a reason for it. */
+    public JsonNode declineEmergencyOrderSetItem(UUID itemId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/order-sets/items/" + itemId + "/decline";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency medication administration (W8a) ──────────────────────────────────────────────
+    //
+    // pct.EmergencyMedicationAdminController — the table that exists specifically to kill the old
+    // medications_json blob. Also unreachable until this wave.
+
+    public JsonNode recordEmergencyMedication(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/medications";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyMedications(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/medications";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency observation / short stay (W9b) ───────────────────────────────────────────────
+    //
+    // Not an admission and not a discharge — the genuinely unowned middle state. The disposition
+    // proxy landed in W9b's BFF pass; the observation stay it depends on did not.
+
+    public JsonNode startEmergencyObservationStay(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/observation-stays";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyObservationStays(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/observation-stays";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode endEmergencyObservationStay(UUID stayId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/observation-stays/" + stayId + "/end";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Emergency identity link (W12) ──────────────────────────────────────────────────────────
+    //
+    // Append-only, link-never-overwrite: both identities are retained forever. Unreachable from the
+    // experience layer, the unknown patient recorded at the ED door could never be resolved by the
+    // clinician who recognises them.
+
+    public JsonNode linkEmergencyIdentity(UUID episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/identity-link";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode emergencyIdentityLinks(UUID episodeId) {
+        String url = baseUrl + "/v1/emergency/episodes/" + episodeId + "/identity-link";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── ED intake + diagnostics acts (pre-existing pct routes, never proxied) ──────────────────
+
+    public JsonNode upsertEdPreArrival(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/pre-arrival";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode edArrivalFromEms(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/arrival";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode orderEdDiagnostic(UUID visitId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/visits/" + visitId + "/diagnostics";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listEdDiagnostics(UUID visitId) {
+        String url = baseUrl + "/v1/ed/visits/" + visitId + "/diagnostics";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode reconcileEdCriticalResult(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/diagnostics/reconcile-critical";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Acting on a critical result is what pct's close CHECK requires before the order may be closed. */
+    public JsonNode actOnEdDiagnostic(UUID linkId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/diagnostics/" + linkId + "/act";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode closeEdDiagnostic(UUID linkId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/diagnostics/" + linkId + "/close";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Clinical Depth — Care Plans (strangler migration) ───────
 
     public JsonNode addCarePlanGoal(String planId, Map<String, Object> body) {
@@ -1288,6 +1440,42 @@ public class PctServiceClient {
     public JsonNode getAdvanceDirectives(String patientCpid) {
         String url = baseUrl + "/v1/ehr/advance-directives?patient_id=" + patientCpid;
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    // history-writes: pct's StructuredHistoryController has always had these five POST routes;
+    // the BFF simply never called them, so every "Save"/"Add" button above them had nowhere to send
+    // its request. Each is append-only on pct's side — there is no PUT/PATCH, so "editing" an entry
+    // records a new one rather than mutating the old row (see FormResolverService's own read-latest
+    // pattern for the equivalent convention on the read side).
+
+    public JsonNode recordSocialHistory(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/social-history";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordFamilyMember(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/family-history";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordFunctionalAssessment(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/functional-assessments";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordProcedure(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/procedures";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordAdvanceDirective(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/advance-directives";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 
@@ -1400,6 +1588,68 @@ public class PctServiceClient {
     public JsonNode closePartographSession(String sessionId, Map<String, Object> body) {
         String url = baseUrl + "/v1/maternity/partograph/sessions/" + sessionId + "/close";
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listVisitAttestations(String subjectCpid, String encounterId) {
+        String url = baseUrl + "/v1/clerking/visit-attestations?subject_cpid=" + subjectCpid
+                + "&encounter_id=" + encounterId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordVisitAttestation(Map<String, Object> body) {
+        String url = baseUrl + "/v1/clerking/visit-attestations";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getAdultJourneyPosition(String subjectCpid, String journeyId, String encounterId) {
+        StringBuilder url = new StringBuilder(baseUrl + "/v1/medicine/journey-position?subject_cpid=" + subjectCpid);
+        if (journeyId != null && !journeyId.isBlank()) {
+            url.append("&journey_id=").append(journeyId);
+        }
+        if (encounterId != null && !encounterId.isBlank()) {
+            url.append("&encounter_id=").append(encounterId);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordAdultJourneyPosition(Map<String, Object> body) {
+        String url = baseUrl + "/v1/medicine/journey-position";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listClerking(String resource, String subjectCpid) {
+        String url = baseUrl + "/v1/clerking/" + resource + "?subject_cpid=" + subjectCpid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordClerking(String resource, Map<String, Object> body) {
+        String url = baseUrl + "/v1/clerking/" + resource;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listMedicalEpisodes(String subjectCpid, boolean openOnly) {
+        String url = baseUrl + "/v1/medical-episodes?subject_cpid=" + subjectCpid
+                + "&open_only=" + openOnly;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listMedicationReconciliations(String subjectCpid) {
+        String url = baseUrl + "/v1/medication-reconciliations?subject_cpid=" + subjectCpid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listMedicationReconciliationItems(UUID reconciliationId) {
+        String url = baseUrl + "/v1/medication-reconciliations/" + reconciliationId + "/items";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
 
@@ -1752,6 +2002,35 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(baseUrl + "/v1/consultations/mdt", body, JsonNode.class));
     }
 
+    // ── Care transfer (brief.md §14 / V116) ─────────────────────
+    // Ownership moves only on accept with accepting_ref. Forward ownership_note unchanged.
+
+    public JsonNode listCareTransfers(String subjectCpid) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/care-transfers?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode careTransferInbox(String service) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/care-transfers/inbox?service="
+                + java.net.URLEncoder.encode(service, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode requestCareTransfer(Object body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/care-transfers", body, JsonNode.class));
+    }
+
+    public JsonNode acceptCareTransfer(String transferId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/care-transfers/" + transferId + "/accept", body, JsonNode.class));
+    }
+
+    public JsonNode declineCareTransfer(String transferId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/care-transfers/" + transferId + "/decline", body, JsonNode.class));
+    }
+
     public JsonNode getProgrammeEnrolment(String enrolmentId) {
         return extractData(restTemplate.getForEntity(
                 baseUrl + "/v1/programme-enrolments/" + enrolmentId, JsonNode.class));
@@ -1809,6 +2088,190 @@ public class PctServiceClient {
         log.info("PCT: starting regimen on enrolment={} code={}", enrolmentId, body.get("regimen_code"));
         return extractData(restTemplate.postForEntity(
                 baseUrl + "/v1/programme-enrolments/" + enrolmentId + "/regimens", body, JsonNode.class));
+    }
+
+    // ── The confidential reproductive lane ──────────────────────────────────────────────────────
+    //
+    // THESE METHODS RETURN ResponseEntity, AND THAT IS THE POINT. Everything above returns a bare
+    // JsonNode through extractData, which discards the status. On this lane the status carries
+    // clinical meaning that the body alone cannot replace:
+    //
+    //   409 — she already has an ongoing pregnancy. The body carries the existing episode id and a
+    //         reconciliation task. Flattened to a 502 by a well-meaning proxy, an offline booking is
+    //         lost and the client is told the service is down.
+    //   422 — the content is clinically incomplete (no dating basis, no PNC setting, a referral with
+    //         no reason). Retrying the identical packet will never help, and only the status says so.
+    //   200 vs 201 — a replayed offline packet versus a new record. A client that cannot tell them
+    //         apart either double-counts a visit or treats its own successful sync as a failure.
+    //
+    // The caller is expected to catch HttpStatusCodeException and forward status and body verbatim,
+    // as TelemonitoringBffController does for telemonitoring's coded envelope.
+    //
+    // The paths deliberately contain "/confidential/": tshepo-authz classifies confidentiality from
+    // the request path and V048's rules are pinned to it, so calling an ordinary path here would ask
+    // the PDP to mint no confidential category and then be surprised when the fail-closed guard
+    // withheld everything.
+
+    /** Book a pregnancy. 201 new, 200 replayed offline packet, 409 already booked, 422 undatable. */
+    public ResponseEntity<JsonNode> openPregnancyEpisode(Map<String, Object> body) {
+        log.info("PCT: booking pregnancy episode offlineId={}", body.get("clientOfflineId"));
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/pregnancy-episodes", body, JsonNode.class);
+    }
+
+    /** Her current pregnancy. A 200 with a null body means "not pregnant, or not yours to see". */
+    public ResponseEntity<JsonNode> getCurrentPregnancyEpisode(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/pregnancy-episodes/" + subjectCpid + "/current",
+                JsonNode.class);
+    }
+
+    /** Her obstetric history: every visible pregnancy episode. */
+    public ResponseEntity<JsonNode> getPregnancyEpisodes(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/pregnancy-episodes/" + subjectCpid, JsonNode.class);
+    }
+
+    /** Record a postnatal contact. 201 new, 200 replayed, 422 refused. */
+    public ResponseEntity<JsonNode> recordPostnatalContact(Map<String, Object> body) {
+        log.info("PCT: recording postnatal contact setting={} offlineId={}",
+                body.get("contactSetting"), body.get("clientOfflineId"));
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/postnatal-contacts", body, JsonNode.class);
+    }
+
+    /** A mother's postnatal contacts. */
+    public ResponseEntity<JsonNode> getPostnatalContacts(String motherCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/postnatal-contacts/" + motherCpid, JsonNode.class);
+    }
+
+    /**
+     * The methods she is currently using, with coverage resolved as at a date.
+     *
+     * <p>{@code asOf} is optional and forwarded only when present — pct defaults to today when the
+     * query param is absent, and sending an empty value here would override that default with pct's
+     * own "no value" handling rather than leaving the decision to pct.
+     */
+    public ResponseEntity<JsonNode> getContraceptionCoverage(String subjectCpid, String asOf) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl
+                + "/v1/confidential/reproductive/contraception/" + subjectCpid);
+        if (asOf != null && !asOf.isBlank()) {
+            builder.queryParam("asOf", asOf);
+        }
+        return restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+    }
+
+    /** Every contraceptive method she has ever been recorded on, current and stopped. */
+    public ResponseEntity<JsonNode> getContraceptionHistory(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/contraception/" + subjectCpid + "/history", JsonNode.class);
+    }
+
+    /** Pregnancy losses for a mother. Mother-anchored: a loss mints no person. */
+    public ResponseEntity<JsonNode> getPregnancyLosses(String motherCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/losses/" + motherCpid, JsonNode.class);
+    }
+
+    /** Termination authorisations for a subject, including requests that were declined. */
+    public ResponseEntity<JsonNode> getTopAuthorisations(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/top-authorisations/" + subjectCpid, JsonNode.class);
+    }
+
+    /** Termination procedures for a subject. */
+    public ResponseEntity<JsonNode> getTerminations(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/terminations/" + subjectCpid, JsonNode.class);
+    }
+
+    /** Her current stated reproductive intention, or null. */
+    public ResponseEntity<JsonNode> getCurrentReproductiveIntention(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/reproductive-intentions/" + subjectCpid + "/current",
+                JsonNode.class);
+    }
+
+    /** Reproductive intention history for a subject. */
+    public ResponseEntity<JsonNode> getReproductiveIntentionHistory(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/reproductive-intentions/" + subjectCpid + "/history",
+                JsonNode.class);
+    }
+
+    /** Active preconception plan for a subject, or null. */
+    public ResponseEntity<JsonNode> getActivePreconceptionPlan(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/preconception-plans/" + subjectCpid + "/active",
+                JsonNode.class);
+    }
+
+    /** Preconception plan history for a subject. */
+    public ResponseEntity<JsonNode> getPreconceptionPlanHistory(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/preconception-plans/" + subjectCpid + "/history",
+                JsonNode.class);
+    }
+
+    /** Open fertility episode for a subject, or null. */
+    public ResponseEntity<JsonNode> getCurrentFertilityEpisode(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/fertility-episodes/" + subjectCpid + "/current",
+                JsonNode.class);
+    }
+
+    /** Fertility episode history for a subject. */
+    public ResponseEntity<JsonNode> getFertilityEpisodeHistory(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/fertility-episodes/" + subjectCpid + "/history",
+                JsonNode.class);
+    }
+
+    /** Delivery records for a mother. */
+    public ResponseEntity<JsonNode> getDeliveryRecordsForMother(String motherCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/delivery-records/mother/" + motherCpid, JsonNode.class);
+    }
+
+    /** Delivery record for a pregnancy episode, or null. */
+    public ResponseEntity<JsonNode> getDeliveryRecordForPregnancy(UUID pregnancyEpisodeId) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/delivery-records/pregnancy/" + pregnancyEpisodeId,
+                JsonNode.class);
+    }
+
+    /** Record a reproductive intention. 201 new, 200 replayed. */
+    public ResponseEntity<JsonNode> recordReproductiveIntention(Map<String, Object> body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/reproductive-intentions", body, JsonNode.class);
+    }
+
+    /** Open a preconception plan. 201 new, 200 replayed, 422 refused. */
+    public ResponseEntity<JsonNode> openPreconceptionPlan(Map<String, Object> body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/preconception-plans", body, JsonNode.class);
+    }
+
+    /** Update a preconception plan. */
+    public ResponseEntity<JsonNode> updatePreconceptionPlan(UUID planId, Map<String, Object> body) {
+        return restTemplate.exchange(
+                baseUrl + "/v1/confidential/reproductive/preconception-plans/" + planId,
+                org.springframework.http.HttpMethod.PATCH,
+                new org.springframework.http.HttpEntity<>(body),
+                JsonNode.class);
+    }
+
+    /** Start a fertility episode. 201 new, 200 replayed, 422 refused. */
+    public ResponseEntity<JsonNode> startFertilityEpisode(Map<String, Object> body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/fertility-episodes", body, JsonNode.class);
+    }
+
+    /** Record a delivery. 201 new, 200 replayed, 409 duplicate pregnancy delivery. */
+    public ResponseEntity<JsonNode> recordDeliveryRecord(Map<String, Object> body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/delivery-records", body, JsonNode.class);
     }
 
     private JsonNode extractData(ResponseEntity<JsonNode> response) {

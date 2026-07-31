@@ -8,7 +8,7 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { FamilyMember } from "@/hooks/queries/useStructuredHistory";
-import { useFamilyHistory } from "@/hooks/queries/useStructuredHistory";
+import { useFamilyHistory, useRecordFamilyMember } from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const RELATIONSHIPS = ["Father", "Mother", "Brother", "Sister", "Son", "Daughter", "Paternal Grandfather", "Paternal Grandmother", "Maternal Grandfather", "Maternal Grandmother", "Uncle", "Aunt", "Cousin"];
@@ -43,6 +43,30 @@ export default function FamilyHistoryPage() {
   const [newAge, setNewAge] = useState("");
   const [newCondition, setNewCondition] = useState("");
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
+  const recordFamilyMember = useRecordFamilyMember(patientId);
+
+  function closeForm() {
+    setShowForm(false);
+    setNewRelationship("");
+    setNewName("");
+    setNewAge("");
+    setNewCondition("");
+    recordFamilyMember.reset();
+  }
+
+  function submitFamilyMember() {
+    if (!newRelationship) {
+      return;
+    }
+    recordFamilyMember.mutate(
+      {
+        relationship: newRelationship,
+        distinguisher: newName || undefined,
+        age: newAge ? Number(newAge) : undefined,
+      },
+      { onSuccess: () => closeForm() }
+    );
+  }
 
   return (
     <EHRLayout>
@@ -148,32 +172,50 @@ export default function FamilyHistoryPage() {
               <div className="rounded-lg border border-border bg-card p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-medium text-foreground">Add Family Member</h3>
-                  <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-muted-foreground"><X className="h-4 w-4" /></button>
+                  <button onClick={closeForm} className="text-muted-foreground hover:text-muted-foreground"><X className="h-4 w-4" /></button>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Relationship</label>
-                    <select value={newRelationship} onChange={(e) => setNewRelationship(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+                    <label htmlFor="new-relationship" className="mb-1 block text-xs font-medium text-muted-foreground">Relationship</label>
+                    <select id="new-relationship" value={newRelationship} onChange={(e) => setNewRelationship(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                       <option value="">Select relationship...</option>
                       {RELATIONSHIPS.map((relationship) => (<option key={relationship}>{relationship}</option>))}
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Name / Initials</label>
-                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="e.g., John M." />
+                    <label htmlFor="new-name" className="mb-1 block text-xs font-medium text-muted-foreground">Name / Initials</label>
+                    <input id="new-name" type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="e.g., John M." />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Current Age</label>
-                    <input type="number" value={newAge} onChange={(e) => setNewAge(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="65" />
+                    <label htmlFor="new-age" className="mb-1 block text-xs font-medium text-muted-foreground">Current Age</label>
+                    <input id="new-age" type="number" value={newAge} onChange={(e) => setNewAge(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="65" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Known Condition (search)</label>
-                  <input type="text" value={newCondition} onChange={(e) => setNewCondition(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="Search conditions (e.g., diabetes, hypertension)..." />
+                  <label htmlFor="new-condition" className="mb-1 block text-xs font-medium text-muted-foreground">Known Condition (not yet saved)</label>
+                  <input id="new-condition" type="text" value={newCondition} onChange={(e) => setNewCondition(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="Search conditions (e.g., diabetes, hypertension)..." />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    pct-service has no endpoint yet to record a condition against a family member, only to
+                    read one back. The relative is saved; this field is kept visible rather than hidden so
+                    the gap stays honest, but it is not sent.
+                  </p>
                 </div>
+                {recordFamilyMember.isError && (
+                  <p className="mt-3 text-xs text-danger">
+                    This family member was not saved. Nothing on the patient&rsquo;s record changed — try again.
+                  </p>
+                )}
                 <div className="flex items-center gap-3 pt-4">
-                  <button className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover">Add Member</button>
-                  <button onClick={() => setShowForm(false)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background">Cancel</button>
+                  <button
+                    type="button"
+                    onClick={submitFamilyMember}
+                    disabled={!newRelationship || recordFamilyMember.isPending}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+                  >
+                    {recordFamilyMember.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Add Member
+                  </button>
+                  <button onClick={closeForm} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background">Cancel</button>
                 </div>
               </div>
             )}

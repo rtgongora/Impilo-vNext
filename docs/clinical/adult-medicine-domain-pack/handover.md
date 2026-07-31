@@ -41,7 +41,7 @@ pct-service            794/794
 butano-service          53/53
 clinical-knowledge-…  1145/1145
 medicine UI (vitest)    88/88
-demonstrations rig      35/35  (+8 explicitly stated gaps)
+demonstrations rig      record 35/35 · service 30/30  (stated gaps retained)
 next build              exit 0
 EXPECTED_ROUTE_COUNT    824
 ```
@@ -182,8 +182,9 @@ another service, and any `notBuilt` entry.
 7. **§19 `DetectedIssue` retirement.** Stop the duplicate anticoagulant and the engine goes quiet —
    no event — so the archived issue stays FINAL forever. Needs a "was detected, now is not" signal.
    Guessing from silence is the failure this pack is written against, so this is a design step.
-8. **§23's service layer.** Record layer proven 35/35; drive the ten journeys through the services
-   next. `medicine-demonstrations.sh` is the template.
+8. **§23's service layer.** ~~Drive the ten journeys through the services.~~ **Done.**
+   Record layer 35/35; service layer 30/30 (`medicine-demonstrations-service.sh`); seven stated
+   gaps after estate search. Clinician walkthrough remains outstanding.
 
 ### Wave 3 — remaining pack-owned breadth
 

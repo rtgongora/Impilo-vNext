@@ -8,6 +8,9 @@ import java.util.UUID;
 @Table(name = "procedure_episode", schema = "inpatient")
 public class ProcedureEpisodeEntity {
 
+    /** Default execution setting, matching the V300 column default. */
+    public static final String SETTING_THEATRE = "THEATRE";
+
     @Id
     @Column(name = "episode_id")
     private UUID episodeId;
@@ -78,8 +81,13 @@ public class ProcedureEpisodeEntity {
     @Column(name = "site_side_confirmed_at")
     private java.time.OffsetDateTime siteSideConfirmedAt;
 
-    @Column(name = "setting", length = 48)
-    private String setting;
+    /**
+     * The column is NOT NULL DEFAULT 'THEATRE' (V300). A database default only applies when the
+     * column is omitted from the INSERT, and Hibernate always names every mapped column, so the
+     * default never reaches a JPA-created row — it must be mirrored here.
+     */
+    @Column(name = "setting", length = 48, nullable = false)
+    private String setting = SETTING_THEATRE;
 
     @Column(name = "catalogue_ref")
     private java.util.UUID catalogueRef;
@@ -156,6 +164,14 @@ public class ProcedureEpisodeEntity {
 
     @Column(name = "death_case_ref")
     private String deathCaseRef;
+
+    /**
+     * V305 — the episode this one re-operates, when a return to theatre warranted a NEW episode
+     * rather than reopening this one in place. A return that keeps the same episode (the ordinary
+     * case, see {@code procedure_return_to_theatre}) leaves this null.
+     */
+    @Column(name = "reoperation_of_episode_id")
+    private UUID reoperationOfEpisodeId;
 
     @PrePersist
     void onCreate() {
@@ -251,8 +267,10 @@ public class ProcedureEpisodeEntity {
     public void setSiteSideConfirmedBy(String v) { this.siteSideConfirmedBy = v; }
     public java.time.OffsetDateTime getSiteSideConfirmedAt() { return siteSideConfirmedAt; }
     public void setSiteSideConfirmedAt(java.time.OffsetDateTime v) { this.siteSideConfirmedAt = v; }
+    public UUID getReoperationOfEpisodeId() { return reoperationOfEpisodeId; }
+    public void setReoperationOfEpisodeId(UUID v) { this.reoperationOfEpisodeId = v; }
     public String getSetting() { return setting; }
-    public void setSetting(String v) { this.setting = v; }
+    public void setSetting(String v) { this.setting = (v == null || v.isBlank()) ? SETTING_THEATRE : v; }
     public java.util.UUID getCatalogueRef() { return catalogueRef; }
     public void setCatalogueRef(java.util.UUID v) { this.catalogueRef = v; }
     public String getRequestRef() { return requestRef; }

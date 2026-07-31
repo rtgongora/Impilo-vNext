@@ -10,26 +10,45 @@ in the appendix, mapped to the tests that now carry it.
 
 ## Status, stated plainly
 
-**None of the ten is runnable end to end today.** Listing them is not proving them, and this file
-must not be read as evidence that any passes.
-
 A journey has three layers: the **record** can carry it, the **services** can execute it, and a
-**clinician** can walk it in the product. `scripts/runtime-proof/medicine-demonstrations.sh` proves
-the first layer only, on real Postgres, on a clean database, in migration order — and it is written
-to make that limit impossible to overstate. Its current result:
+**clinician** can walk it in the product. Two of those layers are now proven; the third is not.
+
+`scripts/runtime-proof/medicine-demonstrations.sh` proves the **record** layer on real Postgres:
 
 ```
-record layer: PASS=23 FAIL=0
-10 stated gaps — the record cannot yet carry these parts, and no service or UI work changes that.
-This is NOT ten passing demonstrations and must not be reported as such.
+record layer: PASS=35 FAIL=0
+8 stated gaps — parts the record cannot yet carry (honest CANNOT lines after estate search).
+This is NOT ten clinician walkthroughs and must not be reported as such.
 ```
 
-The `CANNOT` lines in that script are the authority for what is missing, because they are produced
-by running the thing rather than maintained by hand beside it. A journey the record cannot carry is
-a journey no amount of service or UI work will make possible, so each one is a real, ordered
-dependency — which is why the record layer is worth proving on its own.
+`scripts/runtime-proof/medicine-demonstrations-service.sh` proves the **service** layer — HTTP
+through experience-bff and pct-service (and CKP where pregnancy CDS / multimorbidity need it), on a
+clean Docker Postgres + Redpanda + Redis rig:
 
-The "blocked on" column below is the human-readable form of the same register.
+```
+service layer: PASS=30 FAIL=0 SKIP=0
+7 stated gaps (hypotheses after estate search) — SPECIALLY_PROTECTED still SHADOW; HF titration
+workspace; dialysis prep SoR; procedures execution outside this rig; oncology staging/cycles;
+patient priorities SoR; pregnancyStatus not auto-composed from V111 into the medical view.
+This is NOT a clinician walkthrough in the product.
+```
+
+Estate search overturned several earlier CANNOT lines before the service rig was written: a generic
+care-plan SoR already exists (rehab/secondary-prevention goals); pregnancy-aware rules fire when
+`pregnancyStatus` is supplied; HIV register honesty is a real 403; V116 transfer ownership moves
+only on accept with `accepting_ref`. The seven remaining CANNOTs are absences, not inventable
+capabilities.
+
+The clinician layer has a walkthrough **protocol**
+([`clinician-walkthrough.md`](clinician-walkthrough.md)); it has not been signed COMPLETE against
+preview. Listing the ten journeys is not proving a walkthrough.
+
+The `CANNOT` lines in those scripts are the authority for what is missing, because they are
+produced by running the thing rather than maintained by hand beside it.
+
+The "blocked on" column below is the human-readable form of the same register. Where the service
+layer has since carried a journey, the row's outstanding gap is the remaining CANNOT — not a claim
+that the journey is still wholly blocked.
 
 ## The ten
 
@@ -108,9 +127,11 @@ that already exists).
 
 ## How they must be proven
 
-Follow `scripts/runtime-proof/medicine-programmes-journeys.sh`: positive **and** negative controls,
-against a live estate, with failures named clinically rather than by status code. A journey that
-asserts `200 OK` has proven that a server responded, not that a person was cared for.
+Follow `scripts/runtime-proof/medicine-demonstrations.sh` (record) and
+`scripts/runtime-proof/medicine-demonstrations-service.sh` (service): positive **and** negative
+controls, against a live estate / clean service rig, with failures named clinically rather than by
+status code. A journey that asserts `200 OK` has proven that a server responded, not that a person
+was cared for. The clinician walkthrough remains outstanding.
 
 ---
 

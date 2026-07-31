@@ -38,3 +38,27 @@ export type { PaginationParams } from "./pagination";
 // Safe fetch wrapper
 export { safeApi } from "./safeApi";
 export type { ApiResult } from "./safeApi";
+
+// Regulatory self-service / public explore / student registration
+export {
+  getMyRegulatorySummary,
+  getMyRenewalEligibility,
+  getMyRegulatoryApplications,
+  getMyRegulatoryComplaints,
+  getMyPracticeEstablishments,
+  getStudentApplicationSections,
+  resubmitStudentSection,
+  getContributionSections,
+  completeContributionSection,
+  getPublicCouncils,
+  getPublicCouncilRegisters,
+} from "./regulatory";
+export type {
+  MyRegulatorySummary,
+  MyRenewalEligibility,
+  MyRegulatoryApplication,
+  MyRegulatoryComplaint,
+  ApplicationSection,
+  PublicCouncil,
+  PublicRegister,
+} from "./regulatory";

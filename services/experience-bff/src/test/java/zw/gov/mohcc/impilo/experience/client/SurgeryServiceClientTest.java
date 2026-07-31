@@ -163,4 +163,133 @@ class SurgeryServiceClientTest {
         assertEquals(200, response.getStatusCode().value());
         server.verify();
     }
+
+    // ── Completion wave: reoperation (V010) and shared-specialty care (V011) ──
+
+    @Test
+    void reopenPostsJsonToItsOwnSegment() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/episodes/" + EPISODE + "/reopen"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andRespond(withSuccess("{\"status\":\"REOPENED\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).reopen(EPISODE, "{\"reason\":\"post-operative haemorrhage\"}");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void specialtiesReadAndAddShareOneFixedSegment() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/episodes/" + EPISODE + "/specialties"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+        server.expect(requestTo(BASE + "/internal/v1/surgery/episodes/" + EPISODE + "/specialties"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andRespond(withSuccess("{\"specialty\":\"VASCULAR\"}", MediaType.APPLICATION_JSON));
+
+        assertEquals(200, client(rt).specialties(EPISODE).getStatusCode().value());
+        assertEquals(200, client(rt).addSpecialty(EPISODE, "{\"specialty\":\"VASCULAR\"}")
+                .getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void leadHandoverPostsJsonToItsOwnSegment() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/episodes/" + EPISODE + "/specialties/lead"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).transferLead(EPISODE, "{\"specialty\":\"VASCULAR\"}");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    /**
+     * The load-bearing one. If the specialty ever moves back into the path, ext_authz derives
+     * the specialty itself as the resource type and V303's rows can never match — the route
+     * becomes permanently unreachable. This asserts the query-parameter shape, not just that
+     * a DELETE is issued.
+     */
+    @Test
+    void removeSpecialtySendsTheSpecialtyAsAQueryParameterNotAPathSegment() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/episodes/" + EPISODE
+                        + "/specialties?specialty=VASCULAR"))
+                .andExpect(method(HttpMethod.DELETE))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).removeSpecialty(EPISODE, "VASCULAR");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    // ── Specialty catalogue + analytics (V305) ──
+
+    @Test
+    void specialtyIndicationsSendsSpecialtyAsAQueryParameterOnTheCataloguePath() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/specialties/indications?specialty=COLORECTAL"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).specialtyIndications("COLORECTAL");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void specialtyTemplatesSendsSpecialtyAsAQueryParameterOnTheCataloguePath() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/specialties/templates?specialty=COLORECTAL"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).specialtyTemplates("COLORECTAL");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void analyticsIndicatorsHitsTheSurgeryAnalyticsCatalogue() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/analytics/indicators"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"total\":0,\"indicators\":[]}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).analyticsIndicators();
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void analyticsIndicatorSendsCodeAsAQueryParameter() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/analytics/indicator?code=SSI_RATE"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"indicatorCode\":\"SSI_RATE\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).analyticsIndicator("SSI_RATE");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
 }

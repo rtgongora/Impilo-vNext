@@ -1,19 +1,16 @@
 /**
- * SosScreen — Citizen one-tap SOS. Raises a real emergency request via the Daidzai BFF
- * and navigates to tracking. Life-safety, low friction; no payment is ever requested.
+ * SosScreen — Citizen one-tap SOS. Authenticated → Daidzai; guests → public gateway
+ * (requires callback number). Navigates to tracking. Life-safety, low friction; no payment.
  */
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Screen, Header, Card, CardBody, Button, TextField, ErrorState } from "@impilo/mobile-design-system";
 import { captureCurrentLocation } from "@impilo/mobile-ndila";
+import { useAuth } from "@impilo/mobile-auth";
 import { createSos, type CreateSosInput } from "../../services/emergencyService";
 
 const CATEGORIES = ["MEDICAL", "CARDIAC", "RESPIRATORY", "TRAUMA", "OBSTETRIC", "MENTAL_HEALTH", "OTHER"];
 
-/**
- * Best-effort GPS capture — NEVER blocks a life-safety SOS. If the device denies location or
- * times out, the request still goes out (with the free-text location the person typed).
- */
 async function bestEffortLocation(): Promise<{ lat?: number; lng?: number }> {
   try {
     const fix = await captureCurrentLocation({ highAccuracy: true, timeoutMs: 6000 });
@@ -24,10 +21,12 @@ async function bestEffortLocation(): Promise<{ lat?: number; lng?: number }> {
 }
 
 export function SosScreen({ onTrack }: { onTrack?: (requestId: string) => void }) {
+  const { isAuthenticated: authenticated } = useAuth();
   const [forSelf, setForSelf] = useState(true);
   const [category, setCategory] = useState("MEDICAL");
   const [severity, setSeverity] = useState("CRITICAL");
   const [where, setWhere] = useState("");
+  const [callbackNumber, setCallbackNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +42,8 @@ export function SosScreen({ onTrack }: { onTrack?: (requestId: string) => void }
         locationDescription: where || undefined,
         lat,
         lng,
+        authenticated,
+        callbackNumber: callbackNumber.trim() || undefined,
       };
       const req = await createSos(input);
       if (req?.id) onTrack?.(req.id);
@@ -96,13 +97,26 @@ export function SosScreen({ onTrack }: { onTrack?: (requestId: string) => void }
             <Text style={styles.label}>Where are you? (optional)</Text>
             <TextField value={where} onChangeText={setWhere} placeholder="e.g. near the bus rank" />
 
+            {!authenticated ? (
+              <>
+                <Text style={styles.label}>Callback phone number (required)</Text>
+                <TextField
+                  value={callbackNumber}
+                  onChangeText={setCallbackNumber}
+                  placeholder="e.g. +26377…"
+                  keyboardType="phone-pad"
+                  testID="sos-callback-number"
+                />
+              </>
+            ) : null}
+
             {error ? <ErrorState message={error} /> : null}
 
             <Button
               title={submitting ? "Sending SOS…" : "Send SOS now"}
               variant="destructive"
               loading={submitting}
-              disabled={submitting}
+              disabled={submitting || (!authenticated && !callbackNumber.trim())}
               onPress={send}
             />
           </CardBody>

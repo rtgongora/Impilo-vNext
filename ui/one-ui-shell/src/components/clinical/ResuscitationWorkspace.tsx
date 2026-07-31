@@ -20,6 +20,7 @@ import {
   Timer,
   Zap,
 } from "lucide-react";
+import { ElapsedTimer } from "shared-ui";
 import {
   RESUS_PHASES,
   ARREST_RHYTHMS,
@@ -144,6 +145,15 @@ export function ResuscitationWorkspace({
   const rec = record.data ?? null;
   const isEnded = !!(rec && (rec.outcome || rec.ended_at));
 
+  // When the resus clock started, from the record itself. No cadence is passed: the two-minute CPR
+  // rhythm is a clinical constant and belongs in governed content, not in this file — the timer
+  // says so rather than inventing one.
+  const resusStartedAt = rec ? rowWhen(rec) : "";
+  const lastCprAt = useMemo(() => {
+    const stamps = (cprCycles.data ?? []).map(rowWhen).filter(Boolean).sort();
+    return stamps.length ? stamps[stamps.length - 1] : "";
+  }, [cprCycles.data]);
+
   return (
     <div className="space-y-4" data-testid="resuscitation-workspace">
       {/* Glanceable identity + situation strip */}
@@ -170,6 +180,35 @@ export function ResuscitationWorkspace({
           Resuscitation stood down — outcome <strong>{str(rec?.outcome) || "recorded"}</strong>.
         </div>
       )}
+
+      {resusStartedAt ? (
+        <div className="flex flex-wrap items-start gap-x-10 gap-y-3 rounded-xl border border-border bg-card px-4 py-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Elapsed since resuscitation started
+            </p>
+            <ElapsedTimer
+              startedAt={resusStartedAt}
+              stopped={isEnded}
+              data-testid="resus-elapsed"
+              className="mt-1"
+            />
+          </div>
+          {lastCprAt ? (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Since last logged CPR cycle
+              </p>
+              <ElapsedTimer
+                startedAt={lastCprAt}
+                stopped={isEnded}
+                data-testid="resus-since-cpr"
+                className="mt-1"
+              />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         {/* Rapid entry column */}

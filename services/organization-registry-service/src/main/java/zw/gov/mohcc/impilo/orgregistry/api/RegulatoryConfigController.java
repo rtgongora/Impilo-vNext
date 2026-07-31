@@ -56,6 +56,15 @@ public class RegulatoryConfigController {
         return configService.listPacks(tenantId(), organizationId);
     }
 
+    /**
+     * Configuration audit for one regulatory organisation. Read-only; covers pack/release/activation
+     * events owned by org-registry — not every register access in varapi.
+     */
+    @GetMapping("/organizations/{organizationId}/audit-events")
+    public List<ConfigAuditEventEntity> listAuditEvents(@PathVariable UUID organizationId) {
+        return configService.listAuditEventsForOrganization(tenantId(), organizationId);
+    }
+
     // ── Definitions and versions ─────────────────────────────────────────────────────────────
 
     @GetMapping("/packs/{packId}/definitions")

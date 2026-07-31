@@ -1,7 +1,7 @@
 # MPDSR — maternal and perinatal death surveillance and response
 
-**Status:** specification and handover. **Deliberately not built by the RMNP lane.**
-**Audience:** whoever builds the review workflow — provisionally Rito, see §6.
+**Status:** **built in Rito** (`rito-quality-safety-service`, W14-E, 2026-07-31). PO confirmed SoR 2026-07-31.
+**Audience:** QI/clinical governance operators — committee review workflow in `/rito/mpdsr`.
 **Companion:** [`srh-confidentiality-stamping.md`](srh-confidentiality-stamping.md) ·
 near-miss identification is RMNP's (`rmnp-maternal-near-miss.json`) and is already built.
 
@@ -17,10 +17,10 @@ emits `DEATH_REVIEW_REQUIRED` from `DeathWorkflow`, flagging `MATERNAL`, `PERINA
 `ClassificationEngine`, deliberately carrying no confidentiality stamp because it is ordinary clinical
 classification.
 
-**The review does not exist anywhere.** No committee, no review workflow, no findings, no action
-tracking, no recommendations register. Rito has the substrate — `NEAR_MISS` case type, safety-incident
-and RCA endpoints, CAPA and QI-plan tracking — but nothing maternal-specific and no death-review
-lifecycle. The trigger currently fires into a system that has nowhere to put it.
+**The review is built in Rito (W14-E).** `MPDSR_REVIEW` case type, idempotent intake from
+`DEATH_REVIEW_REQUIRED` (Kafka + `POST /internal/v1/mpdsr/reviews/from-death-event`), committee/
+findings/actions lifecycle, and firewalled facility-readiness tasks with contaminated-payload tests.
+UI: `/rito/mpdsr` (ops/QI — not citizen, not EHR maternity chart).
 
 ## 2. Why RMNP is not building it
 

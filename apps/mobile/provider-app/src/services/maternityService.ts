@@ -323,3 +323,494 @@ export async function addCtgAnnotation(
   );
   return response.data.data;
 }
+
+// --- Maternal near-miss ----------------------------------------------------------------------
+//
+// Backend: experience-bff `/internal/v1/clinical/maternal/near-miss/classify-form`, NOT under
+// `${BASE}` — near-miss identification is ordinary clinical classification, deliberately not on
+// the confidential lane the rest of this module's postnatal-adjacent siblings might be, and it
+// composes CKP rather than pct-service. See `MaternalNearMissController.java`.
+//
+// The contract this function must not break, straight from that controller's doc comment:
+// blank ≠ ABSENT ≠ unrecognised. `answers` should be exactly the linkId → value map the governed
+// `impilo.maternal.nearmiss.assessment.v1` form (form 21) collected — a field the clinician left
+// blank must be OMITTED from the map, never sent as "ABSENT", or a near-miss becomes a normal
+// birth in the register. An answer the BFF cannot read comes back as a 422
+// (`ApiError.code === "unrecognised_form_answer"`) naming which one; that must reach the
+// clinician, not be swallowed.
+
+export interface NearMissClassification {
+  classification_code: string | null;
+  classification_name: string | null;
+  /** One of the classification engine's four states: CLASSIFIED, NOT_APPLICABLE, NOT_ASSESSED, INDETERMINATE. */
+  status: string;
+  is_near_miss: boolean;
+  /** True when a more severe row above this one could not be excluded — a floor, not a conclusion. */
+  provisional: boolean;
+  unresolved_criteria: string[];
+  missing_inputs: string[];
+  rationale: string | null;
+  review_required: boolean;
+  review_note: string | null;
+}
+
+export interface NearMissClassifyMeta {
+  request_id?: string;
+  correlation_id?: string;
+  form_key?: string;
+  criteria_recorded?: number;
+  /** Bare field names (no `nearMiss.` prefix) left blank — named, not just counted. */
+  criteria_left_blank?: string[];
+}
+
+export interface NearMissClassifyResult {
+  data: NearMissClassification;
+  meta: NearMissClassifyMeta;
+}
+
+const NEAR_MISS_FORM_KEY = "impilo.maternal.nearmiss.assessment.v1";
+
+/**
+ * Classifies a woman from form-21 answers. Never called with a `formKey` other than form 21's own
+ * unless a caller has a specific reason to override it — the BFF defaults to it anyway, but this
+ * makes the request self-describing on the wire.
+ */
+export async function classifyNearMissForm(
+  answers: Record<string, unknown>,
+  formKey: string = NEAR_MISS_FORM_KEY,
+): Promise<NearMissClassifyResult> {
+  const response = await apiClient.post<NearMissClassifyResult>(
+    "/internal/v1/clinical/maternal/near-miss/classify-form",
+    { formKey, answers },
+  );
+  return response.data;
+}
+
+// --- Severe maternal outcome indicators ------------------------------------------------------
+//
+// Backend: `POST /internal/v1/clinical/maternal/near-miss/indicators` — the near-miss-to-death
+// ratio and mortality index for a reporting period's cases. A ratio computed over zero deaths (or
+// an index over zero severe outcomes) is `null` — mathematically undefined, not zero — and must
+// never be rendered as 0 or dropped from what is shown. An unrecognised outcome value is CKP's
+// 422 (`ApiError.code === "unclassifiable_outcome"` when the BFF surfaces its own refusal shape;
+// this proxy forwards CKP's whole response, so callers reading `error.details` may instead need
+// `error.message`/`error.status` — see `MaternalNearMissController.java`'s `indicators` doc
+// comment) and must not be silently bucketed into NOT_SEVERE or NEAR_MISS_INDETERMINATE.
+
+export type NearMissIndicatorOutcome =
+  | "NEAR_MISS"
+  | "MATERNAL_DEATH"
+  | "NEAR_MISS_INDETERMINATE"
+  | "NOT_SEVERE";
+
+export interface NearMissIndicatorsResult {
+  indicator_period: string | null;
+  near_miss_count: number;
+  maternal_death_count: number;
+  indeterminate_count: number;
+  severe_maternal_outcome_count: number;
+  near_miss_to_death_ratio: number | null;
+  near_miss_to_death_ratio_upper_bound: number | null;
+  mortality_index: number | null;
+  mortality_index_lower_bound: number | null;
+  mortality_index_direction: string;
+  note: string | null;
+}
+
+/**
+ * Computes the ratio/index for a period. `cases` is forwarded exactly as given — this function
+ * invents no outcome for a case the caller did not label, because the two "reasonable" defaults
+ * (NOT_SEVERE or NEAR_MISS_INDETERMINATE) are precisely the failure modes CKP's 422 exists to
+ * refuse rather than let a caller guess.
+ */
+export async function computeNearMissIndicators(
+  indicatorPeriod: string,
+  cases: { outcome: NearMissIndicatorOutcome }[],
+): Promise<NearMissIndicatorsResult> {
+  const response = await apiClient.post<{ data: NearMissIndicatorsResult }>(
+    "/internal/v1/clinical/maternal/near-miss/indicators",
+    { indicatorPeriod, cases },
+  );
+  return response.data.data;
+}
+
+// --- Bishop score (cervical favourability) ---------------------------------------------------
+//
+// Backend: experience-bff `/internal/v1/clinical/maternal/bishop/classify-form`. Assessment only —
+// nothing persisted. Blank components stay omitted so CKP returns INCOMPLETE rather than inventing zero.
+
+export type BishopInterpretation = "UNFAVOURABLE" | "INTERMEDIATE" | "FAVOURABLE" | "INCOMPLETE";
+
+export interface BishopScoreAssessment {
+  score: number | null;
+  interpretation: BishopInterpretation;
+  components: Record<string, number>;
+  missing: string[];
+  content_version: string;
+}
+
+export const BISHOP_FORM_KEY = "impilo.maternal.bishop.v1";
+
+export async function assessBishopScoreForm(
+  answers: Record<string, unknown>,
+  formKey: string = BISHOP_FORM_KEY,
+): Promise<BishopScoreAssessment> {
+  const response = await apiClient.post<{ data: BishopScoreAssessment }>(
+    "/internal/v1/clinical/maternal/bishop/classify-form",
+    { formKey, answers },
+  );
+  return response.data.data;
+}
+
+// --- Emergency bundles (PPH, eclampsia) ------------------------------------------------------
+//
+// Backend: experience-bff `/internal/v1/clinical/maternal/emergency-bundles/{pph|eclampsia}/assess`.
+// Stateless checklist verdict from CKP's EmergencyBundleEngine — the episode and its recorded steps
+// are persisted by the caller's encounter record, not here. A null `controlConfirmed` must stay
+// omitted (never sent as false): unknown control is not "not controlled".
+
+export type EmergencyBundleStepStatus = "DONE" | "DUE" | "OVERDUE" | "NOT_YET_DUE";
+export type EmergencyBundleStatus = "ACTIVE" | "CLOSABLE" | "LAPSED_UNRESOLVED";
+
+export interface EmergencyBundleStep {
+  code: string;
+  name: string;
+  status: EmergencyBundleStepStatus;
+  mandatory: boolean;
+  action: string | null;
+}
+
+export interface EmergencyBundleAssessment {
+  status: EmergencyBundleStatus;
+  steps: EmergencyBundleStep[];
+  outstanding_mandatory: string[];
+  may_close: boolean;
+  note: string;
+}
+
+export interface EmergencyBundleAssessInput {
+  completedSteps: string[];
+  minutesSinceTrigger: number;
+  minutesSinceLastObservation: number;
+  controlConfirmed?: boolean | null;
+  clinicianConfirmedClose?: boolean;
+}
+
+export type EmergencyBundleKind = "pph" | "eclampsia";
+
+export async function assessEmergencyBundle(
+  kind: EmergencyBundleKind,
+  input: EmergencyBundleAssessInput,
+): Promise<EmergencyBundleAssessment> {
+  const body: Record<string, unknown> = {
+    completedSteps: input.completedSteps,
+    minutesSinceTrigger: input.minutesSinceTrigger,
+    minutesSinceLastObservation: input.minutesSinceLastObservation,
+  };
+  if (input.controlConfirmed != null) {
+    body.controlConfirmed = input.controlConfirmed;
+  }
+  if (input.clinicianConfirmedClose != null) {
+    body.clinicianConfirmedClose = input.clinicianConfirmedClose;
+  }
+  const path =
+    kind === "pph"
+      ? "/internal/v1/clinical/maternal/emergency-bundles/pph/assess"
+      : "/internal/v1/clinical/maternal/emergency-bundles/eclampsia/assess";
+  const response = await apiClient.post<{ data: EmergencyBundleAssessment }>(path, body);
+  return response.data.data;
+}
+
+// --- Birth destination -------------------------------------------------------------------------
+//
+// Backend: `GET /internal/v1/maternity/birth-destination`, NOT under `${BASE}` — it composes
+// tuso's facility status-summary and EmONC readiness rather than pct-service. See
+// `BirthDestinationService.java`'s three honesty rules, which this function must not launder:
+//
+//   1. `NOT_OPERATIONAL` covers both "assessed closed" and "operational status unknown" — an
+//      unconfirmed facility is never a safe destination by default.
+//   2. `CAPABILITY_UNKNOWN` ("nobody has assessed this") must render distinctly from
+//      `BELOW_REQUIRED_LEVEL` ("assessed, and it cannot") — collapsing the two turns the common
+//      case (unassessed) into a false refusal.
+//   3. A 502 (`status: "UNAVAILABLE"`) means tuso could not be reached. This function does not
+//      catch that failure — it propagates as a thrown `ApiError`, the same discipline as
+//      `getActivePartograph`'s PCT_UNAVAILABLE case, because a birth destination is not a place to
+//      render a network error as a clinical verdict in either direction.
+
+export type BirthDestinationRequiredLevel = "CEMONC" | "BEMONC" | "UNKNOWN";
+
+export type BirthDestinationStatus =
+  | "MEETS_REQUIRED_LEVEL"
+  | "BELOW_REQUIRED_LEVEL"
+  | "CAPABILITY_UNKNOWN"
+  | "NOT_OPERATIONAL"
+  | "REQUIRED_LEVEL_UNKNOWN"
+  | "UNAVAILABLE";
+
+/** Exactly `BirthDestinationController#toMap`'s field set. */
+export interface BirthDestinationVerdict {
+  facility_id: number;
+  required_level: BirthDestinationRequiredLevel;
+  status: BirthDestinationStatus;
+  operational_gate_passed: boolean;
+  emonc_verdict: string | null;
+  call_ahead: boolean;
+  message: string;
+  guidance: string;
+}
+
+export async function fetchBirthDestination(
+  facilityId: number,
+  requiredLevel: BirthDestinationRequiredLevel = "UNKNOWN",
+): Promise<BirthDestinationVerdict> {
+  const qs = new URLSearchParams({ facilityId: String(facilityId), requiredLevel });
+  const response = await apiClient.get<{ data: BirthDestinationVerdict }>(
+    `/internal/v1/maternity/birth-destination?${qs.toString()}`,
+  );
+  return response.data.data;
+}
+
+// --- Maternity summary ---------------------------------------------------------------------------
+//
+// Backend: `GET ${BASE}/summary`, a pure proxy to PCT's `MaternityController#summary` — see
+// `MaternityService.summary`. A 502 (`ApiError.code === "maternity_summary_unavailable"`) is an
+// outage, not "no maternity record for this woman" — this function propagates it exactly like
+// `getActivePartograph` propagates `PCT_UNAVAILABLE`, so a caller cannot render it as an empty
+// dashboard.
+
+export interface MaternitySummaryProgress {
+  status: string;
+  latest_dilation_cm: number | null;
+  expected_dilation_cm: number | null;
+  hours_behind_alert_line: number | null;
+  outstanding_observations: string[];
+  observations: string[];
+  recommended_action: string | null;
+  content_version: string;
+  content_source: string;
+}
+
+/** Exactly `MaternityService#summary`'s field set. */
+export interface MaternitySummary {
+  patient_id: string;
+  partograph_active: boolean;
+  partograph_session_id?: string;
+  progress?: MaternitySummaryProgress;
+  ctg_active: boolean;
+  ctg_session_id?: string;
+  observation_count: number;
+  last_observed_at: string | null;
+}
+
+export async function getMaternitySummary(patientId: string, encounterId?: string): Promise<MaternitySummary> {
+  const qs = new URLSearchParams({ patientId, ...(encounterId ? { encounterId } : {}) });
+  const response = await apiClient.get<{ data: MaternitySummary }>(`${BASE}/summary?${qs.toString()}`);
+  return response.data.data;
+}
+
+// --- Confidential reproductive reads (W13-B) ---------------------------------------------------
+//
+// Backend: experience-bff `/internal/v1/confidential/reproductive/**` — see
+// `ConfidentialReproductiveReadController.java`. Empty list = withhold (indistinguishable from
+// absence). A 502 (`ApiError.code === "PCT_UNAVAILABLE"`) propagates as a thrown `ApiError` —
+// never render that as "no records".
+
+const REPRODUCTIVE_BASE = "/internal/v1/confidential/reproductive";
+const MATERNITY_CONFIDENTIAL_BASE = "/internal/v1/confidential/maternity";
+
+export interface ContraceptionCoverage {
+  contraceptive_episode_id: string;
+  subject_cpid: string;
+  method_code: string | null;
+  method_class: string | null;
+  status: string | null;
+  coverage_status: string | null;
+  days_remaining: number | null;
+  next_due_on: string | null;
+  coverage_unknown_why: string | null;
+}
+
+export interface ContraceptiveEpisode {
+  contraceptive_episode_id: string;
+  subject_cpid: string;
+  method_code: string | null;
+  method_class: string | null;
+  status: string | null;
+  started_on: string | null;
+  ended_on: string | null;
+}
+
+export interface PregnancyLossRecord {
+  loss_record_id: string;
+  mother_cpid: string;
+  loss_type: string | null;
+  occurred_on: string | null;
+}
+
+export interface TopAuthorisation {
+  authorisation_id: string;
+  subject_cpid: string;
+  status: string | null;
+  legal_ground: string | null;
+  gestation_weeks_at_request: number | null;
+  consent_given: boolean | null;
+}
+
+export interface TerminationProcedure {
+  procedure_id: string;
+  subject_cpid: string;
+  method: string | null;
+  performed_on: string | null;
+}
+
+export interface ConfidentialPregnancyEpisode {
+  pregnancy_episode_id: string;
+  subject_cpid: string;
+  status: string;
+  estimated_delivery_date: string | null;
+  dating_method: string | null;
+  risk_status: string | null;
+  ended_on: string | null;
+}
+
+export async function fetchContraceptionCoverage(
+  subjectCpid: string,
+  asOf?: string,
+): Promise<ContraceptionCoverage[]> {
+  const suffix = asOf ? `?asOf=${encodeURIComponent(asOf)}` : "";
+  const response = await apiClient.get<{ data: ContraceptionCoverage[] | null }>(
+    `${REPRODUCTIVE_BASE}/contraception/${encodeURIComponent(subjectCpid)}${suffix}`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function fetchContraceptionHistory(subjectCpid: string): Promise<ContraceptiveEpisode[]> {
+  const response = await apiClient.get<{ data: ContraceptiveEpisode[] | null }>(
+    `${REPRODUCTIVE_BASE}/contraception/${encodeURIComponent(subjectCpid)}/history`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function fetchPregnancyLosses(motherCpid: string): Promise<PregnancyLossRecord[]> {
+  const response = await apiClient.get<{ data: PregnancyLossRecord[] | null }>(
+    `${REPRODUCTIVE_BASE}/losses/${encodeURIComponent(motherCpid)}`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function fetchTopAuthorisations(subjectCpid: string): Promise<TopAuthorisation[]> {
+  const response = await apiClient.get<{ data: TopAuthorisation[] | null }>(
+    `${REPRODUCTIVE_BASE}/top-authorisations/${encodeURIComponent(subjectCpid)}`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function fetchTerminations(subjectCpid: string): Promise<TerminationProcedure[]> {
+  const response = await apiClient.get<{ data: TerminationProcedure[] | null }>(
+    `${REPRODUCTIVE_BASE}/terminations/${encodeURIComponent(subjectCpid)}`,
+  );
+  return response.data.data ?? [];
+}
+
+/** Obstetric history for a patient CPID on the confidential maternity lane. */
+export async function fetchPatientPregnancyEpisodes(
+  patientCpid: string,
+): Promise<ConfidentialPregnancyEpisode[]> {
+  const response = await apiClient.get<{ data: ConfidentialPregnancyEpisode[] | null }>(
+    `${MATERNITY_CONFIDENTIAL_BASE}/pregnancy-episodes/${encodeURIComponent(patientCpid)}`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function fetchPatientCurrentPregnancy(
+  patientCpid: string,
+): Promise<ConfidentialPregnancyEpisode | null> {
+  const response = await apiClient.get<{ data: ConfidentialPregnancyEpisode | null }>(
+    `${MATERNITY_CONFIDENTIAL_BASE}/pregnancy-episodes/${encodeURIComponent(patientCpid)}/current`,
+  );
+  return response.data.data ?? null;
+}
+
+// --- W14-B: intention, preconception, fertility, delivery -----------------------------
+
+export interface ReproductiveIntention {
+  intention_id: string;
+  subject_cpid: string;
+  intention: string | null;
+  timeframe_months: number | null;
+  status: string | null;
+  recorded_at: string | null;
+}
+
+export interface PreconceptionPlan {
+  preconception_plan_id: string;
+  subject_cpid: string;
+  status: string | null;
+  opened_on: string | null;
+  folic_acid_started_on: string | null;
+}
+
+export interface FertilityEpisode {
+  fertility_episode_id: string;
+  subject_cpid: string;
+  status: string | null;
+  opened_on: string | null;
+  months_trying: number | null;
+}
+
+export interface DeliveryRecord {
+  delivery_record_id: string;
+  mother_cpid: string;
+  pregnancy_episode_id: string | null;
+  delivered_at: string | null;
+  delivery_mode: string | null;
+  babies_delivered: number | null;
+}
+
+export async function fetchCurrentReproductiveIntention(
+  subjectCpid: string,
+): Promise<ReproductiveIntention | null> {
+  const response = await apiClient.get<{ data: ReproductiveIntention | null }>(
+    `${REPRODUCTIVE_BASE}/reproductive-intentions/${encodeURIComponent(subjectCpid)}/current`,
+  );
+  return response.data.data ?? null;
+}
+
+export async function fetchActivePreconceptionPlan(
+  subjectCpid: string,
+): Promise<PreconceptionPlan | null> {
+  const response = await apiClient.get<{ data: PreconceptionPlan | null }>(
+    `${REPRODUCTIVE_BASE}/preconception-plans/${encodeURIComponent(subjectCpid)}/active`,
+  );
+  return response.data.data ?? null;
+}
+
+export async function fetchCurrentFertilityEpisode(
+  subjectCpid: string,
+): Promise<FertilityEpisode | null> {
+  const response = await apiClient.get<{ data: FertilityEpisode | null }>(
+    `${REPRODUCTIVE_BASE}/fertility-episodes/${encodeURIComponent(subjectCpid)}/current`,
+  );
+  return response.data.data ?? null;
+}
+
+export async function fetchDeliveryRecordsForMother(
+  motherCpid: string,
+): Promise<DeliveryRecord[]> {
+  const response = await apiClient.get<{ data: DeliveryRecord[] | null }>(
+    `${REPRODUCTIVE_BASE}/delivery-records/mother/${encodeURIComponent(motherCpid)}`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function recordReproductiveIntention(params: {
+  subjectCpid: string;
+  intention: string;
+  recordedBy: string;
+}): Promise<ReproductiveIntention> {
+  const response = await apiClient.post<{ data: ReproductiveIntention }>(
+    `${REPRODUCTIVE_BASE}/reproductive-intentions`,
+    params,
+  );
+  return response.data.data;
+}

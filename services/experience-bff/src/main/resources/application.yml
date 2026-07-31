@@ -152,6 +152,10 @@ impilo:
     telemonitoring-base-url: ${TELEMONITORING_BASE_URL:http://localhost:8394}
     procedures-base-url: ${PROCEDURES_BASE_URL:http://localhost:8395}
     surgery-base-url: ${SURGERY_BASE_URL:http://localhost:8396}
+    # Helm already sets MENTAL_HEALTH_BASE_URL and MENTAL_HEALTH_SERVICE_BASE_URL, but the client
+    # reads impilo.services.mental-health-base-url, which binds from IMPILO_SERVICES_* — so neither
+    # of those env vars reached it and every deployment would have talked to localhost:8397.
+    mental-health-base-url: ${MENTAL_HEALTH_BASE_URL:${MENTAL_HEALTH_SERVICE_BASE_URL:http://localhost:8397}}
     daidzai-base-url: ${DAIDZAI_BASE_URL:${DAIDZAI_SERVICE_BASE_URL:http://localhost:8392}}
     live-base-url: ${LIVE_BASE_URL:http://localhost:8380}
     iot-ingestion-base-url: ${IOT_INGESTION_BASE_URL:http://localhost:8330}
@@ -322,3 +326,13 @@ logging:
     zw.gov.mohcc.impilo: INFO
     org.springframework.web: INFO
     io.github.resilience4j: INFO
+
+# ── Experience trust / visibility obligation propagation ─────────────────────
+# PREREQUISITE: Envoy must strip visibility headers on /internal/v1/public/ AND the
+# authenticated BFF routes (see infra/envoy/*.yaml + deploy/helm/.../envoy.yaml) BEFORE
+# enabling this — otherwise clients can forge x-confidential-categories grants.
+# @Value default in VisibilityObligationPropagator stays false; this env default is true
+# for preview after W14-C edge strip lands (PO 2026-07-31).
+experience:
+  trust:
+    propagate-obligations: ${EXPERIENCE_TRUST_PROPAGATE_OBLIGATIONS:true}

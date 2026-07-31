@@ -131,10 +131,27 @@ export default function TheatreBoardPage() {
   return (
     <AppLayout>
       <PageShell title="Theatre list" subtitle="Triaged perioperative cases — readiness and the WHO checklist gate the start" icon={<Stethoscope className="h-5 w-5" />}>
-        <div className="mb-4 flex items-center justify-between">
-          <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background">
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </button>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background">
+              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+            </button>
+            <Link href="/work/clinical/theatre/board" className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background" data-testid="theatre-board-link">
+              Readiness board
+            </Link>
+            <Link href="/work/clinical/theatre/referrals" className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background" data-testid="theatre-referrals-link">
+              Surgical referrals
+            </Link>
+            <Link href="/scheduling/theatre-lists" className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background" data-testid="theatre-lists-link">
+              Theatre lists
+            </Link>
+            <Link href="/scheduling/surgical-waitlist" className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background" data-testid="theatre-waitlist-link">
+              Surgical waitlist
+            </Link>
+            <Link href="/reports/theatre" className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background" data-testid="theatre-reports-link">
+              Theatre utilisation
+            </Link>
+          </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => setShowEmergency((v) => !v)} className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100" data-testid="emergency-activate-toggle">
               <Siren className="h-3.5 w-3.5" /> Emergency activation

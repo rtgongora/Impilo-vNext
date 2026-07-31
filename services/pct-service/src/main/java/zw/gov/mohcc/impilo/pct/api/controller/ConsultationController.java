@@ -123,7 +123,8 @@ public class ConsultationController {
         if (e.isTakeoverRecommended()) {
             m.put("takeover_note",
                     "A takeover was RECOMMENDED and has not happened. " + e.getOwningService()
-                    + " still holds this patient until a transfer is recorded.");
+                    + " still holds this patient until a care transfer is accepted with the "
+                    + "receiving service's own record id.");
         }
         m.put("decline_reason", e.getDeclineReason());
         m.put("requested_at", e.getRequestedAt());
@@ -142,6 +143,7 @@ public class ConsultationController {
         m.put("treatment_intent", e.getTreatmentIntent());
         m.put("next_action", e.getNextAction());
         m.put("responsible_service", e.getResponsibleService());
+        m.put("case_item_id", e.getCaseItemId() == null ? null : e.getCaseItemId().toString());
         return m;
     }
 

@@ -27,10 +27,11 @@ import java.util.UUID;
  *
  * <p><strong>The one property this service exists to hold: asking a question never moves the
  * patient.</strong> {@code owning_service} is set once, at request time, to the requesting service,
- * and there is no code path here that changes it. A responder may recommend a takeover; performing
- * one is a different act with a different record. If an opinion could move ownership, the column
- * would be decorative and §23.10's failure — a patient silently becoming surgical because nobody
- * wrote down who still held them — would be back.</p>
+ * and {@link #answer} has no path that changes it (it asserts the owner did not move). A responder
+ * may recommend a takeover; performing one is {@link CareTransferService} — V116 — and ownership
+ * moves only on that service's acceptance with an {@code accepting_ref}. If an opinion could move
+ * ownership, the column would be decorative and §23.10's failure — a patient silently becoming
+ * surgical because nobody wrote down who still held them — would be back.</p>
  *
  * <p>The database enforces the same invariants (V114). This layer exists so a clinician gets a 400
  * naming the clinical problem rather than a constraint violation naming a constraint.</p>
@@ -287,6 +288,8 @@ public class ConsultationService {
         e.setRationale(str(body.get("rationale")));
         e.setNextAction(str(body.get("next_action"), body.get("nextAction")));
         e.setResponsibleService(str(body.get("responsible_service"), body.get("responsibleService")));
+        String caseItemRaw = str(body.get("case_item_id"), body.get("caseItemId"));
+        e.setCaseItemId(caseItemRaw == null ? null : UUID.fromString(caseItemRaw));
         e.setRecordedBy(ctx.actorId());
         mdtRepository.save(e);
 
@@ -345,6 +348,7 @@ public class ConsultationService {
         out.put("rationale", e.getRationale());
         out.put("next_action", e.getNextAction());
         out.put("responsible_service", e.getResponsibleService());
+        out.put("case_item_id", e.getCaseItemId() == null ? null : e.getCaseItemId().toString());
         out.put("problem_ids", problems);
         if (e.getTreatmentIntent() == null) {
             out.put("treatment_intent_note",

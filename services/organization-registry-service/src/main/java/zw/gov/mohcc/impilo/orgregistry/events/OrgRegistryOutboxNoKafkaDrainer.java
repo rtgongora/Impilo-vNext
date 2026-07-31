@@ -21,8 +21,8 @@ import java.util.Set;
  * <p><b>Work Context Resolution programme, Phase C (revocation fix):</b>
  * {@code tshepo-identity}'s {@code RegulatoryAppointmentEndedTokenConsumer}
  * exists to revoke a regulator's live duty token the moment their appointment
- * ends — but it only ever runs when Kafka is enabled. In every environment
- * that runs with the default (false, including preview today), this drainer
+ * ends — but it only ever runs when Kafka is enabled. In any environment
+ * that runs with the default (false), this drainer
  * marks the SAME "appointment ended" event published without ever notifying
  * identity, so a revoked regulator's session silently keeps working until
  * its 15-minute TTL expires on its own. A revocation path that swallows
@@ -32,6 +32,16 @@ import java.util.Set;
  * break) — it makes the specific gap for security-critical events LOUD
  * instead of silent, so it shows up in logs/alerting rather than only in an
  * audit years later.</p>
+ *
+ * <p><b>Where this class does and does not run (verified 2026-07-30).</b> full-preview sets
+ * {@code ORG_REGISTRY_KAFKA_EVENTS_ENABLED=true}
+ * ({@code deploy/helm/impilo-vnext/values-full-preview-runtime.generated.yaml}), confirmed on the
+ * running pod — so this drainer is NOT instantiated there and the revocation gap above does not
+ * apply to preview. It applies to local, CI and any environment without a broker. Note separately
+ * that preview's {@code event_outbox} holds zero rows: neither this drainer nor the publisher has
+ * ever handled an event there, so the revocation path remains unproven on the estate for want of
+ * traffic rather than for want of a flag. See
+ * {@code docs/handover/2026-07-30-org-registry-event-path-first-flight.md}.</p>
  */
 @Component
 @ConditionalOnProperty(name = "impilo.orgregistry.kafka-events-enabled",

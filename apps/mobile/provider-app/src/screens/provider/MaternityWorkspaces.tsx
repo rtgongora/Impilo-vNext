@@ -1,19 +1,25 @@
 /**
- * Partograph and CTG — governed maternal-instrument workspaces.
+ * Partograph, CTG and maternal near-miss — governed maternal-instrument workspaces.
  *
  * Replaces the generic notes-box the obstetrics specialty workspace fell back to. That fallback
  * came from a resolver that picked a tool's form by its POSITION in `specialtyWorkspaces.ts`'s
  * tool array — "Partograph" was a notes box only because it is first in that array, never because
  * anyone decided a partograph is notes. That positional resolver is gone: tools now resolve
- * through `data/specialtyToolRegistry.ts`, where these two are registered as WIRED against the
- * `PartographWorkspace` and `CtgWorkspace` surfaces below. Both instruments already have a real
- * backend (pct-service V056) and governed form definitions served from forms-service; this file
- * adds no persistence of its own.
+ * through `data/specialtyToolRegistry.ts`, where these three are registered as WIRED against the
+ * `PartographWorkspace`, `CtgWorkspace` and `MaternalNearMissWorkspace` surfaces below. Partograph
+ * and CTG persist against a real backend (pct-service V056); near-miss identification persists
+ * nothing anywhere (CKP's classification is stateless by design — see
+ * `MaternalNearMissController.java`'s doc comment on the clinical-knowledge-platform side). All
+ * three share governed form definitions served from forms-service; this file adds no persistence
+ * of its own.
  *
- * See docs/clinical/rmnp/partograph-ctg-mobile-contract.md for the six behaviours this UI must
- * preserve. The short version: a 200 saying "no session is open" and a 502 saying "could not ask"
- * are different clinical statements and must never render the same way; INSUFFICIENT_DATA is the
- * loudest state, not the calmest; and nothing here ever carries a previous value into a new entry.
+ * See docs/clinical/rmnp/partograph-ctg-mobile-contract.md for the six behaviours the partograph
+ * and CTG UIs must preserve. The short version: a 200 saying "no session is open" and a 502 saying
+ * "could not ask" are different clinical statements and must never render the same way;
+ * INSUFFICIENT_DATA is the loudest state, not the calmest; and nothing here ever carries a
+ * previous value into a new entry. The near-miss workspace answers to the same law under its own
+ * contract: blank ≠ ABSENT ≠ unrecognised, INDETERMINATE is never rendered as "no near-miss", and
+ * a 502 is an outage, not a clinical finding.
  */
 
 import React, { useMemo, useState } from "react";
@@ -33,9 +39,33 @@ import {
   getCtgSession,
   getCtgChunks,
   addCtgAnnotation,
+  classifyNearMissForm,
+  computeNearMissIndicators,
+  assessBishopScoreForm,
+  assessEmergencyBundle,
+  fetchBirthDestination,
+  getMaternitySummary,
+  fetchContraceptionCoverage,
+  fetchContraceptionHistory,
+  fetchPregnancyLosses,
+  fetchTopAuthorisations,
+  fetchPatientPregnancyEpisodes,
+  fetchCurrentReproductiveIntention,
+  fetchActivePreconceptionPlan,
+  fetchCurrentFertilityEpisode,
+  fetchDeliveryRecordsForMother,
   type PartographProgress,
   type AddPartographPointResult,
   type CtgChunk,
+  type NearMissClassifyResult,
+  type NearMissIndicatorOutcome,
+  type NearMissIndicatorsResult,
+  type BirthDestinationRequiredLevel,
+  type BirthDestinationVerdict,
+  type MaternitySummary,
+  type EmergencyBundleAssessment,
+  type EmergencyBundleKind,
+  type EmergencyBundleStepStatus,
 } from "../../services/maternityService";
 
 // --- shared governed-form rendering (mirrors EncounterFormsPanel's approach) ---------------
@@ -155,7 +185,10 @@ function GovernedField({
           {field.options.map((opt) => (
             <Pressable
               key={opt.code}
-              onPress={() => set(opt.code)}
+              // Tapping the already-selected option retracts it back to blank rather than being a
+              // no-op — a clinician must be able to undo an accidental tap on a coded criterion,
+              // not merely switch it to the other code.
+              onPress={() => set(answers[field.id] === opt.code ? undefined : opt.code)}
               style={[styles.option, answers[field.id] === opt.code && styles.optionSelected]}
               testID={`field-${field.id}-opt-${opt.code}`}
             >
@@ -166,12 +199,16 @@ function GovernedField({
               </Text>
             </Pressable>
           ))}
+          {(answers[field.id] === undefined || answers[field.id] === null) && (
+            <Text style={styles.notAssessedHint}>not assessed</Text>
+          )}
         </View>
       </View>
     );
   }
 
-  const keyboard = field.kind === "numeric_with_unit" ? "decimal-pad" : "default";
+  const isNumeric = field.kind === "numeric_with_unit" || field.kind === "decimal";
+  const keyboard = isNumeric ? "decimal-pad" : "default";
   return (
     <View style={styles.field}>
       <Text style={styles.label}>
@@ -182,7 +219,8 @@ function GovernedField({
         testID={`field-${field.id}`}
         value={answers[field.id] === undefined || answers[field.id] === null ? "" : String(answers[field.id])}
         keyboardType={keyboard as "decimal-pad" | "default"}
-        onChangeText={(t: string) => set(field.kind === "numeric_with_unit" && t !== "" ? Number(t) : t)}
+        onChangeText={(t: string) => set(isNumeric && t !== "" ? Number(t) : t === "" ? undefined : t)}
+        placeholder={isNumeric ? "Not assessed" : undefined}
         style={[styles.input, field.kind === "text" && { minHeight: 60 }]}
         multiline={field.kind === "text"}
       />
@@ -234,6 +272,318 @@ function PatientIdentifiers({
         onChangeText={setEncounterId}
         testID="maternity-encounter-id"
       />
+    </View>
+  );
+}
+
+// --- Maternity summary header ---------------------------------------------------------------
+//
+// Backend: `GET /internal/v1/maternity/summary` — see `getMaternitySummary`'s doc comment in
+// maternityService.ts. A 502 (`maternity_summary_unavailable`) renders as its own banner here,
+// never as "no maternity record" — the same discipline `UnavailableBanner` already applies to
+// PCT_UNAVAILABLE for the partograph and CTG queries above.
+
+/** The header area for a known patientId: is a partograph/CTG session open, how many labour
+ * observations exist, and when the last one was recorded. Shown once patientId is known — the
+ * summary is a real-time cross-cut of the same record the workspace below is about to open. */
+function MaternitySummaryHeader({ patientId }: { patientId: string }) {
+  const summary = useQuery({
+    queryKey: ["maternity-summary", patientId],
+    queryFn: () => getMaternitySummary(patientId),
+    enabled: patientId.trim().length > 0,
+  });
+
+  if (!patientId.trim()) return null;
+
+  if (summary.isLoading) {
+    return <Text style={styles.hint}>Loading maternity summary…</Text>;
+  }
+
+  if (summary.isError) {
+    const unavailable = summary.error instanceof ApiError && summary.error.code === "maternity_summary_unavailable";
+    return (
+      <View style={styles.unavailableBanner} testID="maternity-summary-unavailable" accessibilityRole="alert">
+        <Text style={styles.unavailableTitle}>The maternity summary could not be retrieved</Text>
+        <Text style={styles.unavailableBody}>
+          {unavailable
+            ? "This is not the same as this patient having no maternity record — do not treat it as an empty chart."
+            : "Please try again."}
+        </Text>
+      </View>
+    );
+  }
+
+  const data: MaternitySummary | undefined = summary.data;
+  if (!data) return null;
+
+  return (
+    <View style={styles.summaryHeader} testID="maternity-summary-header">
+      <Text style={styles.summaryLine}>
+        Partograph: {data.partograph_active ? "Active" : "No open session"}
+        {data.partograph_active && data.progress?.status ? ` (${data.progress.status})` : ""}
+      </Text>
+      <Text style={styles.summaryLine}>CTG: {data.ctg_active ? "Active" : "No open session"}</Text>
+      <Text style={styles.summaryLine}>
+        {data.observation_count} observation{data.observation_count === 1 ? "" : "s"} recorded
+        {data.last_observed_at ? ` · last ${new Date(data.last_observed_at).toLocaleString()}` : ""}
+      </Text>
+    </View>
+  );
+}
+
+// --- Confidential reproductive reads (W13-B) -------------------------------------------------
+//
+// Backend: `/internal/v1/confidential/reproductive/**` and maternity pregnancy episodes.
+// Empty list = withhold; 502 PCT_UNAVAILABLE must never render as "no records".
+
+const REPRODUCTIVE_EMPTY_HINT =
+  "Nothing visible on this confidential lane. That may mean no record, or records you may not see.";
+
+export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: string }) {
+  const contraception = useQuery({
+    queryKey: ["confidential-contraception", patientCpid],
+    queryFn: () => fetchContraceptionCoverage(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const losses = useQuery({
+    queryKey: ["confidential-losses", patientCpid],
+    queryFn: () => fetchPregnancyLosses(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const topAuths = useQuery({
+    queryKey: ["confidential-top-auths", patientCpid],
+    queryFn: () => fetchTopAuthorisations(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const episodes = useQuery({
+    queryKey: ["confidential-pregnancy-episodes", patientCpid],
+    queryFn: () => fetchPatientPregnancyEpisodes(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const intention = useQuery({
+    queryKey: ["confidential-intention", patientCpid],
+    queryFn: () => fetchCurrentReproductiveIntention(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const preconception = useQuery({
+    queryKey: ["confidential-preconception", patientCpid],
+    queryFn: () => fetchActivePreconceptionPlan(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const fertility = useQuery({
+    queryKey: ["confidential-fertility", patientCpid],
+    queryFn: () => fetchCurrentFertilityEpisode(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const deliveryRecords = useQuery({
+    queryKey: ["confidential-deliveries", patientCpid],
+    queryFn: () => fetchDeliveryRecordsForMother(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+
+  if (!patientCpid.trim()) return null;
+
+  const unavailable =
+    (contraception.isError && contraception.error instanceof ApiError && contraception.error.code === "PCT_UNAVAILABLE") ||
+    (losses.isError && losses.error instanceof ApiError && losses.error.code === "PCT_UNAVAILABLE") ||
+    (topAuths.isError && topAuths.error instanceof ApiError && topAuths.error.code === "PCT_UNAVAILABLE") ||
+    (episodes.isError && episodes.error instanceof ApiError && episodes.error.code === "PCT_UNAVAILABLE") ||
+    (intention.isError && intention.error instanceof ApiError && intention.error.code === "PCT_UNAVAILABLE") ||
+    (preconception.isError && preconception.error instanceof ApiError && preconception.error.code === "PCT_UNAVAILABLE") ||
+    (fertility.isError && fertility.error instanceof ApiError && fertility.error.code === "PCT_UNAVAILABLE") ||
+    (deliveryRecords.isError && deliveryRecords.error instanceof ApiError && deliveryRecords.error.code === "PCT_UNAVAILABLE");
+
+  if (
+    contraception.isLoading ||
+    losses.isLoading ||
+    topAuths.isLoading ||
+    episodes.isLoading ||
+    intention.isLoading ||
+    preconception.isLoading ||
+    fertility.isLoading ||
+    deliveryRecords.isLoading
+  ) {
+    return <Text style={styles.hint}>Loading confidential reproductive records…</Text>;
+  }
+
+  if (unavailable) {
+    return (
+      <View style={styles.unavailableBanner} testID="confidential-reproductive-unavailable" accessibilityRole="alert">
+        <Text style={styles.unavailableTitle}>Confidential records could not be retrieved</Text>
+        <Text style={styles.unavailableBody}>
+          This is not the same as there being nothing on file — do not treat it as an empty chart.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.workspace} testID="confidential-reproductive-section">
+      <Text style={styles.workspaceTitle}>Confidential reproductive health</Text>
+      <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+
+      <Text style={styles.sectionTitle}>Pregnancy episodes ({(episodes.data ?? []).length})</Text>
+      {(episodes.data ?? []).slice(0, 3).map((e) => (
+        <Text key={e.pregnancy_episode_id} style={styles.pointLine}>
+          {e.status}
+          {e.estimated_delivery_date ? ` · EDD ${new Date(e.estimated_delivery_date).toLocaleDateString()}` : ""}
+        </Text>
+      ))}
+
+      <Text style={styles.sectionTitle}>Contraception ({(contraception.data ?? []).length})</Text>
+      {(contraception.data ?? []).map((c) => (
+        <Text key={c.contraceptive_episode_id} style={styles.pointLine}>
+          {(c.method_code ?? c.method_class ?? "Method").replace(/_/g, " ").toLowerCase()} ·{" "}
+          {(c.coverage_status ?? "unknown").replace(/_/g, " ").toLowerCase()}
+        </Text>
+      ))}
+
+      <Text style={styles.sectionTitle}>Pregnancy losses ({(losses.data ?? []).length})</Text>
+      {(losses.data ?? []).map((l) => (
+        <Text key={l.loss_record_id} style={styles.pointLine}>
+          {(l.loss_type ?? "Loss").replace(/_/g, " ").toLowerCase()}
+          {l.occurred_on ? ` · ${new Date(l.occurred_on).toLocaleDateString()}` : ""}
+        </Text>
+      ))}
+
+      <Text style={styles.sectionTitle}>TOP authorisations ({(topAuths.data ?? []).length})</Text>
+      {(topAuths.data ?? []).map((a) => (
+        <Text key={a.authorisation_id} style={styles.pointLine}>
+          {(a.status ?? "Unknown").replace(/_/g, " ").toLowerCase()}
+        </Text>
+      ))}
+
+      <Text style={styles.sectionTitle}>Reproductive intention</Text>
+      {intention.data ? (
+        <Text style={styles.pointLine}>
+          {(intention.data.intention ?? "Not recorded").replace(/_/g, " ").toLowerCase()}
+        </Text>
+      ) : (
+        <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+      )}
+
+      <Text style={styles.sectionTitle}>Preconception</Text>
+      {preconception.data ? (
+        <Text style={styles.pointLine}>
+          {(preconception.data.status ?? "Active").replace(/_/g, " ").toLowerCase()}
+          {preconception.data.folic_acid_started_on
+            ? ` · folic acid ${new Date(preconception.data.folic_acid_started_on).toLocaleDateString()}`
+            : ""}
+        </Text>
+      ) : (
+        <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+      )}
+
+      <Text style={styles.sectionTitle}>Fertility</Text>
+      {fertility.data ? (
+        <Text style={styles.pointLine}>
+          {(fertility.data.status ?? "Active").replace(/_/g, " ").toLowerCase()}
+          {fertility.data.months_trying != null ? ` · ${fertility.data.months_trying} mo trying` : ""}
+        </Text>
+      ) : (
+        <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+      )}
+
+      <Text style={styles.sectionTitle}>Deliveries ({(deliveryRecords.data ?? []).length})</Text>
+      {(deliveryRecords.data ?? []).map((d) => (
+        <Text key={d.delivery_record_id} style={styles.pointLine}>
+          {(d.delivery_mode ?? "Birth").replace(/_/g, " ").toLowerCase()}
+          {d.delivered_at ? ` · ${new Date(d.delivered_at).toLocaleDateString()}` : ""}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+// --- Birth destination -----------------------------------------------------------------------
+//
+// Backend: `GET /internal/v1/maternity/birth-destination` — see `fetchBirthDestination`'s doc
+// comment. `CAPABILITY_UNKNOWN` renders distinctly from `BELOW_REQUIRED_LEVEL`: the former is
+// "nobody has assessed this yet" (call ahead), the latter is "assessed, and it does not meet the
+// level needed" — collapsing them turns the common unassessed case into a false refusal.
+
+const REQUIRED_LEVEL_OPTIONS: BirthDestinationRequiredLevel[] = ["UNKNOWN", "BEMONC", "CEMONC"];
+
+const DESTINATION_STATUS_LABEL: Record<BirthDestinationVerdict["status"], string> = {
+  MEETS_REQUIRED_LEVEL: "Meets the level of care needed",
+  BELOW_REQUIRED_LEVEL: "Assessed below the level of care needed",
+  CAPABILITY_UNKNOWN: "Emergency obstetric capability not yet assessed",
+  NOT_OPERATIONAL: "Not a confirmed operating maternity destination",
+  REQUIRED_LEVEL_UNKNOWN: "Level of care needed has not been established",
+  UNAVAILABLE: "Could not be determined",
+};
+
+export function BirthDestinationSection() {
+  const [facilityId, setFacilityId] = useState("");
+  const [requiredLevel, setRequiredLevel] = useState<BirthDestinationRequiredLevel>("UNKNOWN");
+
+  const assess = useMutation({
+    mutationFn: () => fetchBirthDestination(Number(facilityId), requiredLevel),
+  });
+
+  const canAssess = /^\d+$/.test(facilityId.trim());
+  const unavailable = assess.isError && assess.error instanceof ApiError && assess.error.status === 502;
+
+  return (
+    <View style={styles.workspace} testID="birth-destination-section">
+      <Text style={styles.workspaceTitle}>Birth destination check</Text>
+      <View style={styles.identifierRow}>
+        <TextInput
+          style={[styles.input, { flex: 1 }]}
+          placeholder="Facility ID"
+          value={facilityId}
+          onChangeText={setFacilityId}
+          keyboardType="number-pad"
+          testID="birth-destination-facility-id"
+        />
+      </View>
+      <View style={styles.options}>
+        {REQUIRED_LEVEL_OPTIONS.map((level) => (
+          <Pressable
+            key={level}
+            onPress={() => setRequiredLevel(level)}
+            style={[styles.option, requiredLevel === level && styles.optionSelected]}
+            testID={`birth-destination-level-${level}`}
+          >
+            <Text style={[styles.optionText, requiredLevel === level && styles.optionTextSelected]}>{level}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Pressable
+        style={[styles.primaryBtn, (!canAssess || assess.isPending) && styles.primaryBtnDisabled]}
+        disabled={!canAssess || assess.isPending}
+        onPress={() => assess.mutate()}
+        testID="birth-destination-assess"
+      >
+        <Text style={styles.primaryBtnText}>{assess.isPending ? "Assessing…" : "Assess"}</Text>
+      </Pressable>
+
+      {unavailable && (
+        <View style={styles.unavailableBanner} testID="birth-destination-unavailable" accessibilityRole="alert">
+          <Text style={styles.unavailableTitle}>The facility&apos;s status could not be retrieved</Text>
+          <Text style={styles.unavailableBody}>
+            Do not treat this as either a safe or an unsafe destination — it is unknown. Confirm by
+            phone before directing her here.
+          </Text>
+        </View>
+      )}
+
+      {assess.isError && !unavailable && (
+        <Text style={styles.errorText}>Could not assess this facility. Try again.</Text>
+      )}
+
+      {assess.data && !unavailable && (
+        <View style={styles.progressBox} testID="birth-destination-verdict">
+          <Text style={styles.progressStatus}>{DESTINATION_STATUS_LABEL[assess.data.status]}</Text>
+          <Text style={styles.progressDetail}>{assess.data.message}</Text>
+          <Text style={styles.progressDetail}>{assess.data.guidance}</Text>
+          {assess.data.call_ahead && (
+            <Text style={styles.progressAction} testID="birth-destination-call-ahead">
+              Call ahead
+            </Text>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -364,6 +714,8 @@ export function PartographWorkspace() {
         setEncounterId={setEncounterId}
       />
 
+      <MaternitySummaryHeader patientId={patientId} />
+
       {!patientId.trim() && <Text style={styles.hint}>Enter a patient ID to open or view a labour chart.</Text>}
 
       {patientId.trim().length > 0 && active.isLoading && (
@@ -468,6 +820,10 @@ export function PartographWorkspace() {
           </Pressable>
         </View>
       )}
+
+      <View style={styles.sectionDivider} />
+      <ConfidentialReproductiveSection patientCpid={patientId} />
+      <BirthDestinationSection />
     </ScrollView>
   );
 }
@@ -670,11 +1026,712 @@ export function CtgWorkspace() {
   );
 }
 
+// --- Maternal near-miss workspace ------------------------------------------------------------
+
+const NEAR_MISS_FORM_KEY = "impilo.maternal.nearmiss.assessment.v1";
+const LINK_PREFIX = "nearMiss.";
+
+function bareId(linkId: string): string {
+  return linkId.startsWith(LINK_PREFIX) ? linkId.slice(LINK_PREFIX.length) : linkId;
+}
+
+/** Humanises a tier code like `NEAR_MISS_CARDIOVASCULAR` into "Cardiovascular". */
+function humaniseTierCode(code: string): string {
+  return code
+    .replace(/^NEAR_MISS_/, "")
+    .split("_")
+    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+/**
+ * Whether a submitted form-21 answer set failed the BFF's read, and why. Mirrors the web lane's
+ * `useMaternalNearMiss.ts` — see that file's doc comment for the full shape reference, since both
+ * surfaces read the same controller.
+ */
+function refusalCopy(error: unknown): { title: string; body: string; list?: string[] } | null {
+  if (!(error instanceof ApiError)) return null;
+  if (error.code === "unrecognised_form_answer") {
+    return {
+      title: "These answers could not be read",
+      body:
+        error.message ||
+        "An unreadable answer being silently treated as a negative is how a near-miss is recorded as a normal birth. Correct them and resubmit.",
+      list: (error.details?.unrecognised_answers as string[] | undefined) ?? undefined,
+    };
+  }
+  if (error.status >= 500) {
+    return {
+      title: "The near-miss criteria could not be evaluated",
+      body:
+        error.message ||
+        "This is not a finding of \u2018no near-miss\u2019. Classify clinically and resubmit when the service returns.",
+    };
+  }
+  return { title: "Could not classify this assessment", body: "Nothing was recorded — try again." };
+}
+
+export function MaternalNearMissWorkspace() {
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [result, setResult] = useState<NearMissClassifyResult | null>(null);
+
+  const form = useGovernedForm(NEAR_MISS_FORM_KEY);
+
+  const labelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const section of form.definition?.sections ?? []) {
+      for (const f of section.fields) {
+        map.set(bareId(f.id), f.label);
+      }
+    }
+    return map;
+  }, [form.definition]);
+
+  const classify = useMutation({
+    mutationFn: () => classifyNearMissForm(answers, NEAR_MISS_FORM_KEY),
+    onSuccess: (r) => setResult(r),
+  });
+
+  function handleClear() {
+    setAnswers({});
+    setResult(null);
+    classify.reset();
+  }
+
+  const refusal = classify.isError ? refusalCopy(classify.error) : null;
+  const blank = result?.meta.criteria_left_blank ?? [];
+  const data = result?.data;
+  const inconclusive = !!data && (data.status === "INDETERMINATE" || data.provisional);
+
+  return (
+    <ScrollView style={styles.workspace} testID="near-miss-workspace">
+      <Text style={styles.workspaceTitle}>Maternal near-miss assessment</Text>
+      <Text style={styles.hint}>
+        WHO organ-dysfunction criteria — identification only, nothing is saved. Leave a field blank
+        if it was not assessed; a blank is never treated as a negative finding.
+      </Text>
+
+      {form.isLoading && <Text style={styles.hint}>Loading the near-miss assessment form…</Text>}
+      {!form.isLoading && !form.definition && (
+        <Text style={styles.errorText}>The near-miss assessment form definition is unavailable.</Text>
+      )}
+
+      {form.definition && (
+        <View style={styles.form} testID="near-miss-form">
+          <GovernedFormFields definition={form.definition} answers={answers} setAnswers={setAnswers} />
+
+          <Pressable
+            style={[styles.primaryBtn, classify.isPending && styles.primaryBtnDisabled]}
+            disabled={classify.isPending}
+            onPress={() => classify.mutate()}
+            testID="near-miss-submit"
+          >
+            <Text style={styles.primaryBtnText}>
+              {classify.isPending ? "Classifying…" : "Classify near-miss"}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.secondaryBtn} onPress={handleClear} testID="near-miss-clear">
+            <Text style={styles.secondaryBtnText}>Clear form</Text>
+          </Pressable>
+
+          {refusal && (
+            <View style={styles.unavailableBanner} testID="near-miss-refusal" accessibilityRole="alert">
+              <Text style={styles.unavailableTitle}>{refusal.title}</Text>
+              <Text style={styles.unavailableBody}>{refusal.body}</Text>
+              {refusal.list && refusal.list.length > 0 && (
+                <View style={{ marginTop: 4 }}>
+                  {refusal.list.map((a) => (
+                    <Text key={a} style={styles.unavailableBody}>
+                      • {a}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {data && (
+            <View style={styles.sessionBox} testID="near-miss-outcome">
+              {data.is_near_miss ? (
+                <View style={[styles.progressBox, { backgroundColor: "#FEE2E2", borderColor: "#DC2626" }]}>
+                  <Text style={[styles.progressStatus, { color: "#7F1D1D" }]}>
+                    Near-miss identified — {data.classification_name}
+                  </Text>
+                  {data.provisional && (
+                    <Text style={[styles.progressAction, { color: "#7F1D1D" }]}>
+                      Provisional: a more severe finding above this one could not be excluded.
+                    </Text>
+                  )}
+                  {data.rationale && <Text style={styles.progressDetail}>{data.rationale}</Text>}
+                  {data.review_note && <Text style={styles.progressDetail}>{data.review_note}</Text>}
+                </View>
+              ) : inconclusive ? (
+                <View style={[styles.progressBox, { backgroundColor: "#FEE2E2", borderColor: "#DC2626" }]} testID="near-miss-indeterminate">
+                  <Text style={[styles.progressStatus, { color: "#7F1D1D" }]}>
+                    Indeterminate — a near-miss cannot be ruled out
+                  </Text>
+                  <Text style={[styles.progressDetail, { color: "#7F1D1D" }]}>
+                    {data.rationale ||
+                      "A severity row could not be excluded on what was recorded. This is not the same as \u2018no near-miss\u2019."}
+                  </Text>
+                  {data.unresolved_criteria.length > 0 && (
+                    <View style={styles.outstandingBlock}>
+                      <Text style={styles.outstandingTitle}>Could not exclude</Text>
+                      {data.unresolved_criteria.map((code) => (
+                        <Text key={code} style={styles.outstandingLine}>
+                          • {humaniseTierCode(code)}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+                  {data.missing_inputs.length > 0 && (
+                    <View style={styles.outstandingBlock}>
+                      <Text style={styles.outstandingTitle}>Complete these to resolve it</Text>
+                      {data.missing_inputs.map((linkId) => (
+                        <Text key={linkId} style={styles.outstandingLine}>
+                          • {labelById.get(bareId(linkId)) ?? linkId}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View style={[styles.progressBox, { backgroundColor: "#D1FAE5", borderColor: "#22C55E" }]}>
+                  <Text style={[styles.progressStatus, { color: "#14532D" }]}>
+                    WHO near-miss criteria not met
+                  </Text>
+                  <Text style={styles.progressDetail}>
+                    {data.rationale ||
+                      "No organ-dysfunction criterion was met on the information recorded. This is not a statement that the woman was well."}
+                  </Text>
+                </View>
+              )}
+
+              {blank.length > 0 && (
+                <View style={styles.pointsList} testID="near-miss-blank">
+                  <Text style={styles.sectionTitle}>Left blank — not assessed, not recorded as absent</Text>
+                  {blank.map((field) => (
+                    <Text key={field} style={styles.pointLine}>
+                      • {labelById.get(field) ?? field}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      )}
+
+      <View style={styles.sectionDivider} />
+      <NearMissIndicatorsSection />
+    </ScrollView>
+  );
+}
+
+// --- Severe maternal outcome indicators -------------------------------------------------------
+//
+// Backend: `POST /internal/v1/clinical/maternal/near-miss/indicators` — see
+// `computeNearMissIndicators`'s doc comment in maternityService.ts. A null ratio/index is
+// undefined, not zero, and the indeterminate count is always shown even though it feeds neither.
+
+const INDICATOR_OUTCOME_OPTIONS: NearMissIndicatorOutcome[] = [
+  "NEAR_MISS",
+  "MATERNAL_DEATH",
+  "NEAR_MISS_INDETERMINATE",
+  "NOT_SEVERE",
+];
+
+function formatIndicatorValue(value: number | null, suffix: string): string {
+  return value === null ? "Not computable (undefined)" : `${value.toFixed(2)}${suffix}`;
+}
+
+function NearMissIndicatorsSection() {
+  const [period, setPeriod] = useState("");
+  const [outcomes, setOutcomes] = useState<NearMissIndicatorOutcome[]>(["NEAR_MISS"]);
+
+  const compute = useMutation({
+    mutationFn: () => computeNearMissIndicators(period, outcomes.map((outcome) => ({ outcome }))),
+  });
+
+  function addCase() {
+    setOutcomes((prev) => [...prev, "NEAR_MISS"]);
+  }
+
+  function setCaseOutcome(index: number, outcome: NearMissIndicatorOutcome) {
+    setOutcomes((prev) => prev.map((o, i) => (i === index ? outcome : o)));
+  }
+
+  function removeCase(index: number) {
+    setOutcomes((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
+  }
+
+  const result: NearMissIndicatorsResult | undefined = compute.data;
+  const isUnavailable = compute.isError && compute.error instanceof ApiError && compute.error.status >= 500;
+
+  return (
+    <View style={styles.workspace} testID="near-miss-indicators-section">
+      <Text style={styles.workspaceTitle}>Severe maternal outcome indicators</Text>
+      <Text style={styles.hint}>
+        The near-miss-to-death ratio and mortality index for a reporting period. Computed over
+        zero deaths, the ratio is undefined — never rendered as zero.
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Reporting period, e.g. 2026-Q2"
+        value={period}
+        onChangeText={setPeriod}
+        testID="near-miss-indicators-period"
+      />
+
+      {outcomes.map((outcome, idx) => (
+        <View key={idx} style={styles.identifierRow} testID={`near-miss-indicators-row-${idx}`}>
+          <View style={[styles.options, { flex: 1 }]}>
+            {INDICATOR_OUTCOME_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt}
+                onPress={() => setCaseOutcome(idx, opt)}
+                style={[styles.option, outcome === opt && styles.optionSelected]}
+                testID={`near-miss-indicators-outcome-${idx}-${opt}`}
+              >
+                <Text style={[styles.optionText, outcome === opt && styles.optionTextSelected]}>{opt}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Pressable onPress={() => removeCase(idx)} disabled={outcomes.length === 1} testID={`near-miss-indicators-remove-${idx}`}>
+            <Text style={styles.secondaryBtnText}>Remove</Text>
+          </Pressable>
+        </View>
+      ))}
+
+      <Pressable style={styles.secondaryBtn} onPress={addCase} testID="near-miss-indicators-add-row">
+        <Text style={styles.secondaryBtnText}>Add case</Text>
+      </Pressable>
+
+      <Pressable
+        style={[styles.primaryBtn, compute.isPending && styles.primaryBtnDisabled]}
+        disabled={compute.isPending}
+        onPress={() => compute.mutate()}
+        testID="near-miss-indicators-compute"
+      >
+        <Text style={styles.primaryBtnText}>{compute.isPending ? "Computing…" : "Compute"}</Text>
+      </Pressable>
+
+      {isUnavailable && (
+        <View style={styles.unavailableBanner} testID="near-miss-indicators-unavailable" accessibilityRole="alert">
+          <Text style={styles.unavailableTitle}>The near-miss criteria service could not be reached</Text>
+          <Text style={styles.unavailableBody}>Nothing was computed. This is not a ratio of zero.</Text>
+        </View>
+      )}
+
+      {compute.isError && !isUnavailable && (
+        <Text style={styles.errorText}>Some cases could not be classified. Try again.</Text>
+      )}
+
+      {result && !isUnavailable && (
+        <View style={styles.pointsList} testID="near-miss-indicators-result">
+          <Text style={styles.pointLine}>Near-miss: {result.near_miss_count}</Text>
+          <Text style={styles.pointLine}>Maternal death: {result.maternal_death_count}</Text>
+          {/* Never dropped, even though it feeds neither ratio below. */}
+          <Text style={styles.pointLine}>Indeterminate: {result.indeterminate_count}</Text>
+          <Text style={styles.pointLine}>Severe maternal outcomes: {result.severe_maternal_outcome_count}</Text>
+          <Text style={styles.progressStatus} testID="near-miss-indicators-ratio">
+            Near-miss-to-death ratio: {formatIndicatorValue(result.near_miss_to_death_ratio, ":1")}
+          </Text>
+          <Text style={styles.progressStatus} testID="near-miss-indicators-mortality-index">
+            Mortality index: {formatIndicatorValue(result.mortality_index, "%")}
+          </Text>
+          {result.note && <Text style={styles.progressDetail}>{result.note}</Text>}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// --- Emergency bundle workspaces (PPH, eclampsia) ----------------------------------------------
+//
+// Backend: experience-bff `/internal/v1/clinical/maternal/emergency-bundles/{pph|eclampsia}/assess`.
+// Stateless checklist verdict — nothing persisted here. A freshly-triggered bundle must show every
+// mandatory step outstanding; LAPSED_UNRESOLVED is the loudest state, never mistaken for closure.
+
+const BUNDLE_STATUS_LABEL: Record<EmergencyBundleAssessment["status"], string> = {
+  ACTIVE: "In progress — mandatory steps may remain",
+  CLOSABLE: "May close — all mandatory steps done and control confirmed",
+  LAPSED_UNRESOLVED: "Escalate — no recent observation on an open episode",
+};
+
+function bundleStepStyle(status: EmergencyBundleStepStatus) {
+  if (status === "OVERDUE" || status === "DUE") {
+    return { bg: "#FEE2E2", border: "#DC2626", text: "#7F1D1D" };
+  }
+  if (status === "DONE") {
+    return { bg: "#D1FAE5", border: "#22C55E", text: "#14532D" };
+  }
+  return { bg: "#F3F4F6", border: colors.gray[300], text: colors.gray[700] };
+}
+
+function EmergencyBundleWorkspace({
+  kind,
+  title,
+  controlLabel,
+  testIdPrefix,
+}: {
+  kind: EmergencyBundleKind;
+  title: string;
+  controlLabel: string;
+  testIdPrefix: string;
+}) {
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [minutesSinceTrigger, setMinutesSinceTrigger] = useState("0");
+  const [minutesSinceLastObservation, setMinutesSinceLastObservation] = useState("0");
+  const [controlConfirmed, setControlConfirmed] = useState<boolean | null>(null);
+  const [clinicianConfirmedClose, setClinicianConfirmedClose] = useState(false);
+  const [result, setResult] = useState<EmergencyBundleAssessment | null>(null);
+
+  const assess = useMutation({
+    mutationFn: () =>
+      assessEmergencyBundle(kind, {
+        completedSteps: [...completed],
+        minutesSinceTrigger: Number(minutesSinceTrigger) || 0,
+        minutesSinceLastObservation: Number(minutesSinceLastObservation) || 0,
+        controlConfirmed,
+        clinicianConfirmedClose,
+      }),
+    onSuccess: (r) => setResult(r),
+  });
+
+  const unavailable = assess.isError && assess.error instanceof ApiError && assess.error.status >= 500;
+
+  function toggleStep(code: string) {
+    setCompleted((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+  }
+
+  const steps = result?.steps ?? [];
+  const statusStyle =
+    result?.status === "LAPSED_UNRESOLVED"
+      ? { bg: "#FEE2E2", border: "#DC2626", text: "#7F1D1D" }
+      : result?.status === "CLOSABLE"
+        ? { bg: "#D1FAE5", border: "#22C55E", text: "#14532D" }
+        : { bg: "#FEF3C7", border: "#F59E0B", text: "#78350F" };
+
+  return (
+    <ScrollView style={styles.workspace} testID={`${testIdPrefix}-workspace`}>
+      <Text style={styles.workspaceTitle}>{title}</Text>
+      <Text style={styles.hint}>
+        Time-critical checklist assessment — nothing is saved here. Mark steps done, set elapsed
+        minutes, then assess. Unknown control is never treated as controlled.
+      </Text>
+
+      <View style={styles.identifierRow}>
+        <TextInput
+          style={[styles.input, { flex: 1 }]}
+          placeholder="Minutes since trigger"
+          value={minutesSinceTrigger}
+          onChangeText={setMinutesSinceTrigger}
+          keyboardType="number-pad"
+          testID={`${testIdPrefix}-minutes-trigger`}
+        />
+        <TextInput
+          style={[styles.input, { flex: 1 }]}
+          placeholder="Minutes since last observation"
+          value={minutesSinceLastObservation}
+          onChangeText={setMinutesSinceLastObservation}
+          keyboardType="number-pad"
+          testID={`${testIdPrefix}-minutes-last-obs`}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <Text style={styles.label}>{controlLabel}</Text>
+        <View style={styles.options}>
+          {(["unknown", "yes", "no"] as const).map((opt) => (
+            <Pressable
+              key={opt}
+              onPress={() =>
+                setControlConfirmed(opt === "unknown" ? null : opt === "yes")
+              }
+              style={[
+                styles.option,
+                (opt === "unknown" && controlConfirmed === null) ||
+                (opt === "yes" && controlConfirmed === true) ||
+                (opt === "no" && controlConfirmed === false)
+                  ? styles.optionSelected
+                  : null,
+              ]}
+              testID={`${testIdPrefix}-control-${opt}`}
+            >
+              <Text style={styles.optionText}>
+                {opt === "unknown" ? "Not assessed" : opt === "yes" ? "Confirmed" : "Not confirmed"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <Pressable
+        style={styles.field}
+        onPress={() => setClinicianConfirmedClose((v) => !v)}
+        testID={`${testIdPrefix}-clinician-close`}
+      >
+        <Text style={styles.label}>
+          Clinician confirmed closure: {clinicianConfirmedClose ? "Yes" : "No"}
+        </Text>
+      </Pressable>
+
+      {steps.length > 0 && (
+        <View style={styles.form} testID={`${testIdPrefix}-checklist`}>
+          <Text style={styles.sectionTitle}>Bundle steps</Text>
+          {steps.map((step) => {
+            const s = bundleStepStyle(step.status);
+            const done = completed.has(step.code);
+            return (
+              <Pressable
+                key={step.code}
+                onPress={() => toggleStep(step.code)}
+                style={[styles.progressBox, { backgroundColor: s.bg, borderColor: s.border, marginBottom: 6 }]}
+                testID={`${testIdPrefix}-step-${step.code}`}
+              >
+                <Text style={[styles.progressStatus, { color: s.text }]}>
+                  {done ? "✓ " : ""}
+                  {step.name}
+                  {step.mandatory ? " *" : ""} — {step.status}
+                </Text>
+                {step.action ? <Text style={styles.progressDetail}>{step.action}</Text> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+
+      <Pressable
+        style={[styles.primaryBtn, assess.isPending && styles.primaryBtnDisabled]}
+        disabled={assess.isPending}
+        onPress={() => assess.mutate()}
+        testID={`${testIdPrefix}-assess`}
+      >
+        <Text style={styles.primaryBtnText}>{assess.isPending ? "Assessing…" : "Assess bundle"}</Text>
+      </Pressable>
+
+      {unavailable && (
+        <View style={styles.unavailableBanner} testID={`${testIdPrefix}-unavailable`} accessibilityRole="alert">
+          <Text style={styles.unavailableTitle}>The bundle could not be evaluated</Text>
+          <Text style={styles.unavailableBody}>
+            This is not a statement that the emergency is resolved. Act clinically and resubmit when
+            the service returns.
+          </Text>
+        </View>
+      )}
+
+      {result && !unavailable && (
+        <View
+          style={[styles.progressBox, { backgroundColor: statusStyle.bg, borderColor: statusStyle.border, marginTop: 8 }]}
+          testID={`${testIdPrefix}-verdict`}
+        >
+          <Text style={[styles.progressStatus, { color: statusStyle.text }]}>
+            {BUNDLE_STATUS_LABEL[result.status]}
+          </Text>
+          <Text style={styles.progressDetail}>{result.note}</Text>
+          {result.outstanding_mandatory.length > 0 && (
+            <View style={styles.outstandingBlock}>
+              <Text style={styles.outstandingTitle}>Outstanding mandatory</Text>
+              {result.outstanding_mandatory.map((code) => (
+                <Text key={code} style={styles.outstandingLine}>
+                  • {code}
+                </Text>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+export function PphProtocolWorkspace() {
+  return (
+    <EmergencyBundleWorkspace
+      kind="pph"
+      title="PPH first-response protocol"
+      controlLabel="Bleeding controlled and confirmed"
+      testIdPrefix="pph-protocol"
+    />
+  );
+}
+
+export function EclampsiaProtocolWorkspace() {
+  return (
+    <EmergencyBundleWorkspace
+      kind="eclampsia"
+      title="Eclampsia / severe pre-eclampsia protocol"
+      controlLabel="Seizure/control stable and confirmed"
+      testIdPrefix="eclampsia-protocol"
+    />
+  );
+}
+
+// --- Bishop score workspace ------------------------------------------------------------------
+
+const BISHOP_FORM_KEY = "impilo.maternal.bishop.v1";
+const BISHOP_LINK_PREFIX = "bishop.";
+
+const BISHOP_FIELD_LABELS: Record<string, string> = {
+  dilation: "Cervical dilation",
+  effacement: "Cervical effacement",
+  station: "Fetal station",
+  consistency: "Cervical consistency",
+  position: "Cervical position",
+};
+
+function bishopBareId(linkId: string): string {
+  return linkId.startsWith(BISHOP_LINK_PREFIX) ? linkId.slice(BISHOP_LINK_PREFIX.length) : linkId;
+}
+
+export function BishopScoreWorkspace() {
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [result, setResult] = useState<import("../../services/maternityService").BishopScoreAssessment | null>(null);
+
+  const form = useGovernedForm(BISHOP_FORM_KEY);
+
+  const assess = useMutation({
+    mutationFn: () => assessBishopScoreForm(answers, BISHOP_FORM_KEY),
+    onSuccess: (r) => setResult(r),
+  });
+
+  const labelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const section of form.definition?.sections ?? []) {
+      for (const f of section.fields) {
+        map.set(bishopBareId(f.id), f.label);
+      }
+    }
+    return map;
+  }, [form.definition]);
+
+  const unavailable = assess.isError && assess.error instanceof ApiError && assess.error.status >= 500;
+
+  function handleClear() {
+    setAnswers({});
+    setResult(null);
+    assess.reset();
+  }
+
+  const interpretationLabel: Record<string, string> = {
+    UNFAVOURABLE: "Unfavourable cervix (≤ 6)",
+    INTERMEDIATE: "Intermediate favourability (7–9)",
+    FAVOURABLE: "Favourable cervix (≥ 10)",
+    INCOMPLETE: "Incomplete — not all components assessed",
+  };
+
+  return (
+    <ScrollView style={styles.workspace} testID="bishop-score-workspace">
+      <Text style={styles.workspaceTitle}>Bishop score</Text>
+      <Text style={styles.hint}>
+        Cervical favourability for induction readiness — assessment only, nothing saved. Leave a
+        field blank if it was not assessed; blank is never treated as zero.
+      </Text>
+
+      {form.isLoading && <Text style={styles.hint}>Loading the Bishop score form…</Text>}
+      {!form.isLoading && !form.definition && (
+        <Text style={styles.errorText}>The Bishop score form definition is unavailable.</Text>
+      )}
+
+      {form.definition && (
+        <View style={styles.form} testID="bishop-score-form">
+          <GovernedFormFields definition={form.definition} answers={answers} setAnswers={setAnswers} />
+
+          <Pressable
+            style={[styles.primaryBtn, assess.isPending && styles.primaryBtnDisabled]}
+            disabled={assess.isPending}
+            onPress={() => assess.mutate()}
+            testID="bishop-score-submit"
+          >
+            <Text style={styles.primaryBtnText}>
+              {assess.isPending ? "Assessing…" : "Assess Bishop score"}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.secondaryBtn} onPress={handleClear} testID="bishop-score-clear">
+            <Text style={styles.secondaryBtnText}>Clear form</Text>
+          </Pressable>
+
+          {unavailable && (
+            <View style={styles.unavailableBanner} testID="bishop-score-unavailable" accessibilityRole="alert">
+              <Text style={styles.unavailableTitle}>The Bishop score could not be evaluated</Text>
+              <Text style={styles.unavailableBody}>
+                This is not a statement that the cervix is favourable. Assess clinically and resubmit
+                when the service returns.
+              </Text>
+            </View>
+          )}
+
+          {result && !unavailable && (
+            <View style={styles.sessionBox} testID="bishop-score-outcome">
+              <View
+                style={[
+                  styles.progressBox,
+                  {
+                    backgroundColor:
+                      result.interpretation === "FAVOURABLE"
+                        ? "#D1FAE5"
+                        : result.interpretation === "INCOMPLETE"
+                          ? "#FEE2E2"
+                          : result.interpretation === "INTERMEDIATE"
+                            ? "#FEF3C7"
+                            : "#FFEDD5",
+                    borderColor:
+                      result.interpretation === "FAVOURABLE"
+                        ? "#22C55E"
+                        : result.interpretation === "INCOMPLETE"
+                          ? "#DC2626"
+                          : result.interpretation === "INTERMEDIATE"
+                            ? "#F59E0B"
+                            : "#FB923C",
+                  },
+                ]}
+              >
+                <Text style={styles.progressStatus}>{interpretationLabel[result.interpretation]}</Text>
+                {result.score != null && (
+                  <Text style={styles.progressDetail}>Total score: {result.score} / 13</Text>
+                )}
+              </View>
+
+              {result.missing.length > 0 && (
+                <View style={styles.pointsList} testID="bishop-score-missing">
+                  <Text style={styles.sectionTitle}>Complete these to compute a score</Text>
+                  {result.missing.map((field) => (
+                    <Text key={field} style={styles.pointLine}>
+                      • {labelById.get(field) ?? BISHOP_FIELD_LABELS[field] ?? field}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
 const styles = StyleSheet.create({
   workspace: { flex: 1 },
   workspaceTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900], marginBottom: 8 },
   identifierRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
   hint: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
+  sectionDivider: { height: 1, backgroundColor: colors.gray[200], marginVertical: 16 },
+  summaryHeader: {
+    borderWidth: 1,
+    borderColor: colors.gray[200],
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
+    gap: 2,
+  },
+  summaryLine: { fontSize: 12, color: colors.gray[700] },
   errorText: { fontSize: 13, color: "#B91C1C", marginTop: 6 },
   section: { marginBottom: 10 },
   sectionTitle: { fontSize: 13, fontWeight: "600", color: colors.gray[700], marginBottom: 6, marginTop: 8 },
@@ -701,6 +1758,7 @@ const styles = StyleSheet.create({
   optionSelected: { backgroundColor: "#DBEAFE", borderColor: "#3B82F6" },
   optionText: { fontSize: 12, color: colors.gray[700] },
   optionTextSelected: { color: "#1E3A8A", fontWeight: "600" },
+  notAssessedHint: { fontSize: 11, color: colors.gray[500], alignSelf: "center", marginLeft: 4 },
   unavailableBanner: {
     backgroundColor: "#FEF2F2",
     borderWidth: 1,

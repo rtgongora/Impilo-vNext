@@ -55,4 +55,25 @@ describe("TheatrePacuPanel (Aldrete recovery depth + discharge-readiness gate)",
       expect(post).toHaveBeenCalledWith("/internal/v1/theatre/cases/c-9/pacu/discharge", expect.objectContaining({ destination: "WARD", readinessOverride: true })),
     );
   });
+
+  it("shows unavailable banner on obs/readiness GET failure and never invents empty/unscored", async () => {
+    mockGets({ ready: true, band: "LOW", aldrete_score: 9, interpretation: "Ready" }, [
+      { observation_id: "o1", seq: 1, aldrete_score: 9, discharge_readiness_band: "LOW" },
+    ]);
+    render(<TheatrePacuPanel caseId="c-keep" />);
+    expect(await screen.findByTestId("pacu-readiness-ready")).toHaveTextContent(/LOW/i);
+    expect(screen.getByTestId("pacu-observation-row")).toHaveTextContent(/Aldrete 9/);
+
+    get.mockImplementation((u: string) => {
+      if (u.endsWith("/pacu/readiness") || u.endsWith("/pacu/observations")) {
+        return Promise.reject({ status: 502, error: { message: "upstream down" } });
+      }
+      return Promise.resolve({ data: [] });
+    });
+    fireEvent.click(screen.getByText("Refresh"));
+    expect(await screen.findByTestId("pacu-load-unavailable")).toHaveTextContent(/do not treat this as unscored or empty/i);
+    expect(screen.getByTestId("pacu-observation-row")).toHaveTextContent(/Aldrete 9/);
+    expect(screen.getByTestId("pacu-readiness-ready")).toHaveTextContent(/LOW/i);
+    expect(screen.queryByText(/No PACU observations recorded/i)).not.toBeInTheDocument();
+  });
 });

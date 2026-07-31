@@ -34,7 +34,7 @@ class ServiceClientConfigTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes((MockHttpServletRequest) inbound));
 
         MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.GET, java.net.URI.create("http://example.test"));
-        config.trustHeaderForwardingInterceptor(providerNeverConsulted()).intercept(outbound, new byte[0], (request, body) ->
+        config.trustHeaderForwardingInterceptor(providerNeverConsulted(), shadowReporter(), propagatorDisabled()).intercept(outbound, new byte[0], (request, body) ->
                 new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
 
         assertEquals("tenant-1", outbound.getHeaders().getFirst(CompanionHeaders.TENANT_ID));
@@ -69,7 +69,7 @@ class ServiceClientConfigTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
         MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.POST, java.net.URI.create("http://example.test"));
-        config.trustHeaderForwardingInterceptor(providerNeverConsulted()).intercept(outbound, new byte[0], (request, body) ->
+        config.trustHeaderForwardingInterceptor(providerNeverConsulted(), shadowReporter(), propagatorDisabled()).intercept(outbound, new byte[0], (request, body) ->
                 new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
 
         assertEquals("episode-77", outbound.getHeaders().getFirst(CompanionHeaders.TRAUMA_EPISODE_ID));
@@ -86,7 +86,7 @@ class ServiceClientConfigTest {
                 new ServletRequestAttributes((MockHttpServletRequest) requestWithHeaders()));
 
         MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.POST, java.net.URI.create("http://example.test"));
-        config.trustHeaderForwardingInterceptor(providerNeverConsulted()).intercept(outbound, new byte[0], (request, body) ->
+        config.trustHeaderForwardingInterceptor(providerNeverConsulted(), shadowReporter(), propagatorDisabled()).intercept(outbound, new byte[0], (request, body) ->
                 new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
 
         assertNull(outbound.getHeaders().getFirst(CompanionHeaders.TRAUMA_EPISODE_ID));
@@ -107,7 +107,7 @@ class ServiceClientConfigTest {
         // RequestContextHolder deliberately left empty.
 
         MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.GET, java.net.URI.create("http://ndila"));
-        config.trustHeaderForwardingInterceptor(providerYielding("svc-token-1")).intercept(outbound, new byte[0],
+        config.trustHeaderForwardingInterceptor(providerYielding("svc-token-1"), shadowReporter(), propagatorDisabled()).intercept(outbound, new byte[0],
                 (request, body) -> new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
 
         assertEquals("Bearer svc-token-1", outbound.getHeaders().getFirst(CompanionHeaders.AUTHORIZATION));
@@ -122,7 +122,7 @@ class ServiceClientConfigTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
         MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.GET, java.net.URI.create("http://ndila"));
-        config.trustHeaderForwardingInterceptor(providerYielding("svc-token-2")).intercept(outbound, new byte[0],
+        config.trustHeaderForwardingInterceptor(providerYielding("svc-token-2"), shadowReporter(), propagatorDisabled()).intercept(outbound, new byte[0],
                 (request, body) -> new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
 
         assertEquals("Bearer svc-token-2", outbound.getHeaders().getFirst(CompanionHeaders.AUTHORIZATION));
@@ -138,7 +138,7 @@ class ServiceClientConfigTest {
 
         MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.GET, java.net.URI.create("http://ndila"));
         // providerNeverConsulted() throws AssertionError if getAccessToken() is invoked.
-        config.trustHeaderForwardingInterceptor(providerNeverConsulted()).intercept(outbound, new byte[0],
+        config.trustHeaderForwardingInterceptor(providerNeverConsulted(), shadowReporter(), propagatorDisabled()).intercept(outbound, new byte[0],
                 (request, body) -> new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
 
         assertEquals("Bearer token", outbound.getHeaders().getFirst(CompanionHeaders.AUTHORIZATION));
@@ -151,7 +151,7 @@ class ServiceClientConfigTest {
 
         MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.GET, java.net.URI.create("http://ndila"));
         outbound.getHeaders().set(CompanionHeaders.AUTHORIZATION, "Bearer pre-set");
-        config.trustHeaderForwardingInterceptor(providerNeverConsulted()).intercept(outbound, new byte[0],
+        config.trustHeaderForwardingInterceptor(providerNeverConsulted(), shadowReporter(), propagatorDisabled()).intercept(outbound, new byte[0],
                 (request, body) -> new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
 
         assertEquals("Bearer pre-set", outbound.getHeaders().getFirst(CompanionHeaders.AUTHORIZATION));
@@ -167,7 +167,7 @@ class ServiceClientConfigTest {
         ServiceClientConfig config = new ServiceClientConfig();
 
         MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.GET, java.net.URI.create("http://ndila"));
-        var response = config.trustHeaderForwardingInterceptor(providerYieldingNothing()).intercept(outbound, new byte[0],
+        var response = config.trustHeaderForwardingInterceptor(providerYieldingNothing(), shadowReporter(), propagatorDisabled()).intercept(outbound, new byte[0],
                 (request, body) -> new MockClientHttpResponse(new byte[0], org.springframework.http.HttpStatus.OK));
 
         assertNull(outbound.getHeaders().getFirst(CompanionHeaders.AUTHORIZATION));
@@ -199,7 +199,7 @@ class ServiceClientConfigTest {
 
         ServiceClientConfig config = new ServiceClientConfig();
         org.springframework.web.client.RestTemplate serviceRestTemplate =
-                config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(realProvider));
+                config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(realProvider, shadowReporter(), propagatorDisabled()));
         org.springframework.test.web.client.MockRestServiceServer downstream =
                 org.springframework.test.web.client.MockRestServiceServer.bindTo(serviceRestTemplate).build();
         downstream.expect(org.springframework.test.web.client.match.MockRestRequestMatchers
@@ -244,6 +244,19 @@ class ServiceClientConfigTest {
         };
     }
 
+    /**
+     * The visibility shadow reporter, which observes and logs only. Real rather than stubbed, so these
+     * tests would catch it if it ever started mutating the outbound request it is passed.
+     */
+    private static VisibilityPropagationShadowReporter shadowReporter() {
+        return new VisibilityPropagationShadowReporter(new com.fasterxml.jackson.databind.ObjectMapper());
+    }
+
+    /** The obligation propagator in its shipped state: disabled, forwarding nothing. */
+    private static VisibilityObligationPropagator propagatorDisabled() {
+        return new VisibilityObligationPropagator(false);
+    }
+
     private abstract static class StubServiceTokenProvider extends ServiceTokenProvider {
         StubServiceTokenProvider() {
             super(new ServiceTokenProperties(false, null, null, null, null), new ObjectMapper());
@@ -283,7 +296,7 @@ class ServiceClientConfigTest {
             RequestContextHolder.setRequestAttributes(
                     new ServletRequestAttributes((MockHttpServletRequest) requestWithHeaders()));
             org.springframework.web.client.RestTemplate template =
-                    config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(providerNeverConsulted()));
+                    config.serviceRestTemplate(config.trustHeaderForwardingInterceptor(providerNeverConsulted(), shadowReporter(), propagatorDisabled()));
 
             String url = "http://127.0.0.1:" + server.getAddress().getPort() + "/patch";
             org.springframework.http.ResponseEntity<String> response = template.exchange(

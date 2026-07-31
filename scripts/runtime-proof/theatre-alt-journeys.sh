@@ -32,7 +32,10 @@
 #     J-AL-12  count discrepancy → RITO RETAINED_ITEM sentinel + discrepancy row.
 #     J-AL-13  conversion of planned procedure → anaesthesia technique CONVERSION
 #              chart event + operative-note update.
-#     J-AL-14  return-to-theatre (re-operative) + unplanned ICU admission.
+#     J-AL-14  return-to-theatre (re-operative) + unplanned ICU admission, and
+#              (V305) the return as a RECORD: cause, sequence, deciding actor,
+#              planned-vs-unplanned, predecessor linkage, and the negatives —
+#              no cause, an invented cause, and harm disguised as planned.
 #
 #   MULTIPLE CONCURRENT CASES (§15 concurrency)
 #     J-AL-15  two concurrent cases: safety events stay case-scoped (no bleed).
@@ -270,10 +273,55 @@ NOTE13=$(INPSQL "SELECT count(*) FROM inpatient.procedure_note WHERE episode_id=
 # J-AL-14: return-to-theatre + unplanned ICU admission.
 CO14=$(intake CPID-ZW-CO-2 "Exploratory laparotomy" "EXLAP" URGENT)
 force_status "$CO14" PACU
-R2T=$(curl -s -X POST $INP/internal/v1/theatre/cases/$CO14/return-to-theatre $(hdr) -d '{"reason":"post-op intra-abdominal bleeding"}' | jval status)
+R2T=$(curl -s -X POST $INP/internal/v1/theatre/cases/$CO14/return-to-theatre $(hdr) -d '{"reason":"post-op intra-abdominal bleeding","complicationCategory":"HAEMORRHAGE"}' | jval status)
 [ "$R2T" = "READY_FOR_THEATRE" ] && ok "J-AL-14 return-to-theatre transition (→ READY_FOR_THEATRE)" || bad "J-AL-14 return-to-theatre not READY_FOR_THEATRE (got '$R2T')"
 R2TF=$(INPSQL "SELECT return_to_theatre FROM inpatient.procedure_postop_record WHERE episode_id='$CO14'")
 [ "$R2TF" = "t" ] && ok "J-AL-14 postop flagged return_to_theatre" || bad "J-AL-14 return_to_theatre flag not set (got '$R2TF')"
+
+# ── V305 (demonstration 10): the return is a RECORD, not just a flag ──────────────────
+# The boolean above cannot say why the patient went back, who decided, or how many times.
+# NB: a boolean concatenated into text renders as 'false', not the bare 'f' psql prints alone.
+R2TROW=$(INPSQL "SELECT seq||'|'||complication_category||'|'||planned FROM inpatient.procedure_return_to_theatre WHERE episode_id='$CO14'")
+[ "$R2TROW" = "1|HAEMORRHAGE|false" ] && ok "J-AL-14 return recorded with cause, sequence and unplanned status" || bad "J-AL-14 return_to_theatre record wrong (got '$R2TROW')"
+R2TWHO=$(INPSQL "SELECT returned_by FROM inpatient.procedure_return_to_theatre WHERE episode_id='$CO14'")
+[ -n "$R2TWHO" ] && [ "$R2TWHO" != "system" ] && ok "J-AL-14 return attributed to the real deciding actor ($R2TWHO)" || bad "J-AL-14 return not attributed to a real actor (got '$R2TWHO')"
+
+# A second return is counted, not collapsed into the first. This is what one boolean lost.
+force_status "$CO14" PACU
+curl -s -X POST $INP/internal/v1/theatre/cases/$CO14/return-to-theatre $(hdr) -d '{"reason":"persistent contamination, further washout","complicationCategory":"SEPSIS"}' >/dev/null
+R2TN=$(INPSQL "SELECT count(*)||'|'||max(seq) FROM inpatient.procedure_return_to_theatre WHERE episode_id='$CO14'")
+[ "$R2TN" = "2|2" ] && ok "J-AL-14 second return recorded as seq 2 (a boolean cannot count)" || bad "J-AL-14 second return not counted (got '$R2TN')"
+
+# NEGATIVE: a return with no cause is refused — free text cannot be counted, and the DAK
+# unplanned-return indicator is only meaningful if every return carries a classified cause.
+force_status "$CO14" PACU
+NOCAT=$(curl -s -o /dev/null -w '%{http_code}' -X POST $INP/internal/v1/theatre/cases/$CO14/return-to-theatre $(hdr) -d '{"reason":"went back"}')
+[ "$NOCAT" = "400" ] && ok "J-AL-14 NEGATIVE return without a complication category refused (400)" || bad "J-AL-14 uncategorised return was accepted (got HTTP $NOCAT)"
+BADCAT=$(curl -s -o /dev/null -w '%{http_code}' -X POST $INP/internal/v1/theatre/cases/$CO14/return-to-theatre $(hdr) -d '{"reason":"bleeding","complicationCategory":"A_BIT_OF_BLEEDING"}')
+[ "$BADCAT" = "400" ] && ok "J-AL-14 NEGATIVE invented complication category refused (400)" || bad "J-AL-14 invented category was accepted (got HTTP $BADCAT)"
+# The dangerous direction: declaring a haemorrhage "planned" would remove it from the harm count.
+FAKEPLAN=$(curl -s -o /dev/null -w '%{http_code}' -X POST $INP/internal/v1/theatre/cases/$CO14/return-to-theatre $(hdr) -d '{"reason":"bleeding","complicationCategory":"HAEMORRHAGE","planned":true}')
+[ "$FAKEPLAN" = "400" ] && ok "J-AL-14 NEGATIVE a haemorrhage cannot be declared planned (400)" || bad "J-AL-14 harm could be hidden as planned (got HTTP $FAKEPLAN)"
+NOTWRITTEN=$(INPSQL "SELECT count(*) FROM inpatient.procedure_return_to_theatre WHERE episode_id='$CO14'")
+[ "$NOTWRITTEN" = "2" ] && ok "J-AL-14 NEGATIVE refused returns wrote nothing" || bad "J-AL-14 a refused return still wrote a row (count now $NOTWRITTEN)"
+
+# A genuine staged second-look IS planned, and must be recorded as such so it is not counted as harm.
+CO14B=$(intake CPID-ZW-CO-2B "Damage-control laparotomy" "DCLAP" URGENT)
+force_status "$CO14B" PACU
+curl -s -X POST $INP/internal/v1/theatre/cases/$CO14B/return-to-theatre $(hdr) -d '{"reason":"staged second-look booked at the index operation","complicationCategory":"PLANNED_SECOND_LOOK","planned":true}' >/dev/null
+PLANNED=$(INPSQL "SELECT planned FROM inpatient.procedure_return_to_theatre WHERE episode_id='$CO14B'")
+[ "$PLANNED" = "t" ] && ok "J-AL-14 planned second-look recorded as planned (not counted as harm)" || bad "J-AL-14 planned second-look not recorded as planned (got '$PLANNED')"
+UNPLANNED_ONLY=$(INPSQL "SELECT count(*) FROM inpatient.procedure_return_to_theatre WHERE planned = FALSE AND episode_id IN ('$CO14','$CO14B')")
+[ "$UNPLANNED_ONLY" = "2" ] && ok "J-AL-14 the unplanned-return indicator excludes the planned second-look" || bad "J-AL-14 unplanned-return count wrong (got '$UNPLANNED_ONLY', expected 2)"
+
+# The predecessor column (V305) exists and refuses a self-loop, which would read as a
+# predecessor chain that never terminates.
+SELFLOOP=$(docker exec al-rig-pg psql -U impilo -d inpatient -tAc "UPDATE inpatient.procedure_episode SET reoperation_of_episode_id='$CO14' WHERE episode_id='$CO14'" 2>&1 | tr -d '\n')
+case "$SELFLOOP" in *chk_procedure_episode_reoperation_not_self*) ok "J-AL-14 NEGATIVE an episode cannot be a reoperation of itself" ;;
+  *) bad "J-AL-14 self-referencing reoperation link was accepted (got '$SELFLOOP')" ;; esac
+docker exec al-rig-pg psql -U impilo -d inpatient -tAc "UPDATE inpatient.procedure_episode SET reoperation_of_episode_id='$CO14' WHERE episode_id='$CO14B'" >/dev/null 2>&1
+PRED=$(INPSQL "SELECT reoperation_of_episode_id FROM inpatient.procedure_episode WHERE episode_id='$CO14B'")
+[ "$PRED" = "$CO14" ] && ok "J-AL-14 a reoperation given its own episode links back to its predecessor" || bad "J-AL-14 predecessor link not stored (got '$PRED')"
 CO15=$(intake CPID-ZW-CO-3 "Bowel resection" "BOWELRES" URGENT)
 force_status "$CO15" PACU
 curl -s -X POST $INP/internal/v1/theatre/cases/$CO15/pacu/observations $(hdr) -d '{"aldreteScore":5,"recordedBy":"recovery-nurse"}' >/dev/null

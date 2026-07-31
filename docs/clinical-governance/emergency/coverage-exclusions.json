@@ -34,8 +34,10 @@
       "standardId": "EMS.DSEC.MINIMUM_DATASET",
       "decision": "DEFERRED",
       "plannedWave": "W17",
-      "reason": "The emergency_episode (pct V200) carries part of the dataset structurally, but the dataset-to-column mapping and the 22 indicators derived from it are the analytics wave; declaring them implemented now would overstate what the reporting layer actually produces.",
-      "revisitCondition": "W17 lands the DSEC->column mapping and the indicator definitions in reporting-service, citing EMS.DSEC.MINIMUM_DATASET; the permitted value lists remain a separate zibo dependency."
+      "landedWave": "W17",
+      "reason": "W17 landed the Theatre-pattern projection (reporting V200/V201), four report definitions that query only rpt_emergency_episode_metric, and the DSEC 47+31 element mapping. 17/47 core elements are MAPPED, 8 PARTIAL, 22 UNMAPPED; three indicators are IMPLEMENTED, two PARTIAL, three NOT_COMPUTABLE. Permitted value lists remain a zibo ENGINEERING_SEED dependency.",
+      "revisitCondition": "Project triage acuity events, observation stays, resuscitation intervals, and critical-result ack timings; flip remaining UNMAPPED core elements as their SoRs emit; cite EMS.DSEC.MINIMUM_DATASET from CKP content when value sets are verified.",
+      "mapping": "docs/clinical/emergency-domain-pack/dsec-element-mapping.json"
     },
     {
       "standardId": "EMS.SSC26.SCREENING",

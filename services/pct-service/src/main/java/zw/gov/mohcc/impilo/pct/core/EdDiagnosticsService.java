@@ -20,6 +20,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -225,6 +226,33 @@ public class EdDiagnosticsService {
         out.put("id", link.getId().toString());
         out.put("status", link.getStatus());
         return out;
+    }
+
+    /** Durable worklist for an ED visit — surviving refresh / multi-device. */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listForVisit(UUID visitId) {
+        TrustContext ctx = TrustContextHolder.require();
+        visitRepository.findById(visitId)
+                .filter(v -> ctx.tenantId().equals(v.getTenantId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ED visit not found"));
+        return orderLinkRepository.findByVisitIdOrderByCreatedAtDesc(visitId).stream()
+                .map(this::linkRow)
+                .toList();
+    }
+
+    public Map<String, Object> linkRow(EdDiagnosticOrderEntity link) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("link_id", link.getId().toString());
+        m.put("id", link.getId().toString());
+        m.put("visit_id", link.getVisitId() != null ? link.getVisitId().toString() : null);
+        m.put("oros_order_id", link.getOrosOrderId());
+        m.put("order_type", link.getOrderType());
+        m.put("test_code", link.getTestCode());
+        m.put("status", link.getStatus());
+        m.put("acted_at", link.getActedAt() != null ? link.getActedAt().toString() : null);
+        m.put("closed_at", link.getClosedAt() != null ? link.getClosedAt().toString() : null);
+        m.put("created_at", link.getCreatedAt() != null ? link.getCreatedAt().toString() : null);
+        return m;
     }
 
     private void writeSafetyOutbox(UUID tenantId, UUID episodeId, String orderId, String resultId, String reason) {

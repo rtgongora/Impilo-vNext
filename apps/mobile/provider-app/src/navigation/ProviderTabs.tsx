@@ -15,12 +15,15 @@ import { ResultsViewScreen } from "../screens/provider/ResultsViewScreen";
 import { ProfessionalProfileScreen } from "../screens/provider/ProfessionalProfileScreen";
 import { QueueManagementScreen } from "../screens/provider/QueueManagementScreen";
 import { ClinicalToolsScreen } from "../screens/provider/ClinicalToolsScreen";
+import { EmergencyHubScreen } from "../screens/provider/EmergencyHubScreen";
 import { EncounterScreen } from "../screens/provider/EncounterScreen";
 import { MessagingScreen } from "../screens/provider/MessagingScreen";
 import { HealthOsAppsScreen } from "../screens/provider/HealthOsAppsScreen";
 import { ProviderSocialScreen } from "../screens/provider/ProviderSocialScreen";
 import { WellnessSocialWorkbenchScreen } from "../screens/provider/WellnessSocialWorkbenchScreen";
 import { DiagnosticsScreen } from "../screens/provider/DiagnosticsScreen";
+import { TheatreQueueScreen } from "../screens/provider/TheatreQueueScreen";
+import { SurgeryEpisodesScreen } from "../screens/provider/SurgeryEpisodesScreen";
 import { useAppStore } from "../stores/appStore";
 import { useEncounterStore } from "../stores/encounterStore";
 import type { ProviderTabKey } from "../types";
@@ -54,6 +57,11 @@ export function ProviderTabs() {
       key: "workhome" as const,
       label: "Work Home",
       icon: tabIcon(providerTab === "workhome" ? "home" : "home-outline", providerTab === "workhome"),
+    },
+    {
+      key: "emergency" as const,
+      label: "Emergency",
+      icon: tabIcon(providerTab === "emergency" ? "medkit" : "medkit-outline", providerTab === "emergency"),
     },
     {
       key: "dashboard" as const,
@@ -96,6 +104,16 @@ export function ProviderTabs() {
       icon: tabIcon(providerTab === "queue" ? "list" : "list-outline", providerTab === "queue"),
     },
     {
+      key: "theatre" as const,
+      label: "Theatre",
+      icon: tabIcon(providerTab === "theatre" ? "medkit" : "medkit-outline", providerTab === "theatre"),
+    },
+    {
+      key: "surgery" as const,
+      label: "Surgery",
+      icon: tabIcon(providerTab === "surgery" ? "medical" : "medical-outline", providerTab === "surgery"),
+    },
+    {
       key: "messaging" as const,
       label: "Messages",
       icon: tabIcon(providerTab === "messaging" ? "chatbubbles" : "chatbubbles-outline", providerTab === "messaging"),
@@ -121,6 +139,8 @@ export function ProviderTabs() {
     switch (providerTab) {
       case "workhome":
         return <WorkHomeScreen />;
+      case "emergency":
+        return <EmergencyHubScreen />;
       case "dashboard":
         return <ProviderDashboardScreen />;
       case "patients":
@@ -133,6 +153,10 @@ export function ProviderTabs() {
         return <ResultsViewScreen />;
       case "queue":
         return <QueueManagementScreen />;
+      case "theatre":
+        return <TheatreQueueScreen />;
+      case "surgery":
+        return <SurgeryEpisodesScreen />;
       case "messaging":
         return <MessagingScreen />;
       case "social":

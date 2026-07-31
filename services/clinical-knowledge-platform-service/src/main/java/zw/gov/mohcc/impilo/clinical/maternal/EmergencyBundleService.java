@@ -48,6 +48,15 @@ public class EmergencyBundleService {
                 minutesSinceLastObservation, bleedingControlledConfirmed, clinicianConfirmedClose);
     }
 
+    public EmergencyBundleEngine.Assessment assessEclampsia(Set<String> completedSteps,
+                                                            long minutesSinceTrigger,
+                                                            long minutesSinceLastObservation,
+                                                            Boolean controlConfirmed,
+                                                            boolean clinicianConfirmedClose) {
+        return EmergencyBundleEngine.assess(bundle(ECLAMPSIA_BUNDLE), completedSteps, minutesSinceTrigger,
+                minutesSinceLastObservation, controlConfirmed, clinicianConfirmedClose);
+    }
+
     /**
      * Assess any loaded bundle by its resource path — eclampsia and sepsis run on the same engine
      * and the same closure rules as PPH; only the step content and windows differ.

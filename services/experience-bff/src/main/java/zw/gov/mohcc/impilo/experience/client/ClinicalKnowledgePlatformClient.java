@@ -83,6 +83,156 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /**
+     * The self-measured blood-pressure series verdict.
+     *
+     * <p>An assessment, not an intake: telemonitoring owns {@code tm_readings} and remains the single
+     * SHR writer of monitoring-band Observations, so this call hands CKP a series it already holds and
+     * gets back a clinical reading of it. The body is passed through as built — in particular a null
+     * {@code dangerSignPresent} must stay null, because a danger sign that was never asked about is not
+     * one that was denied, and this client must not normalise between the two.
+     */
+    public JsonNode smbpAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/smbp/assess";
+        log.debug("Clinical platform: SMBP series verdict");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Classifies one woman against the WHO maternal near-miss criteria.
+     *
+     * <p>The body is forwarded as built, and an omitted observation must stay omitted. Filling absent
+     * fields with false here would turn "we never measured her creatinine" into "her creatinine was
+     * normal", and a near-miss recorded as a normal birth improves the near-miss-to-death ratio while
+     * removing the one case with the most to learn from.
+     */
+    public JsonNode nearMissClassify(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/near-miss/classify";
+        log.debug("Clinical platform: maternal near-miss classify");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** The near-miss-to-death ratio and mortality index over a reporting period's cases. */
+    public JsonNode nearMissIndicators(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/near-miss/indicators";
+        log.debug("Clinical platform: maternal near-miss indicators");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode mecAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/contraception/mec/assess";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode pncMaternalAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/pnc/maternal/assess";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode pncNewbornAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/pnc/newborn/assess";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** PPH first-response bundle checklist verdict. Stateless — caller persists the episode. */
+    public JsonNode emergencyBundleAssessPph(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/emergency-bundles/pph/assess";
+        log.debug("Clinical platform: PPH emergency bundle assess");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Eclampsia first-response bundle checklist verdict. Stateless — caller persists the episode. */
+    public JsonNode emergencyBundleAssessEclampsia(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/emergency-bundles/eclampsia/assess";
+        log.debug("Clinical platform: eclampsia emergency bundle assess");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Bishop cervical favourability score — assessment only.
+     *
+     * <p>The body is passed through as built. An omitted component must stay omitted; filling absent
+     * fields with zero here would turn "we never assessed effacement" into "0% effacement".
+     */
+    public JsonNode bishopAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/bishop/assess";
+        log.debug("Clinical platform: Bishop score assess");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** The respectful-maternity-care measure set: prompts, scale and which items are reverse-scored. */
+    public JsonNode respectfulCareInstrument() {
+        String url = baseUrl + "/internal/v1/clinical/maternal/respectful-care/instrument";
+        log.debug("Clinical platform: respectful maternity care instrument");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Normalises respectful-care answers into Rito-shaped domain scores.
+     *
+     * <p>Called rather than computed locally because which items are reverse-scored is ratifiable
+     * content, not arithmetic. A copy of that list here would mean a content revision needed a BFF
+     * release, and two callers could disagree about the polarity of the same stored number.
+     */
+    public JsonNode respectfulCareNormalise(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/respectful-care/normalise";
+        log.debug("Clinical platform: respectful maternity care normalise");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** The bedside calculators this platform serves, with the descriptors a form renders from. */
+    public JsonNode listCalculators() {
+        String url = baseUrl + "/internal/v1/clinical/calculators";
+        log.debug("Clinical platform: list calculators");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** One calculator's description, including the fields a form must render and its caveats. */
+    public JsonNode describeCalculator(String calculatorId) {
+        String url = baseUrl + "/internal/v1/clinical/calculators/" + calculatorId;
+        log.debug("Clinical platform: describe calculator {}", calculatorId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Runs a calculator over submitted values.
+     *
+     * <p>The body is passed through as built, and the response is passed back as returned. A
+     * refusal — the calculator declining to produce a number, with a named reason and an
+     * explanation — is a successful call, and this client must not convert one into an error or an
+     * empty result. Both would present a stated clinical limitation as a system fault.</p>
+     */
+    public JsonNode evaluateCalculator(String calculatorId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/calculators/" + calculatorId + "/evaluate";
+        log.debug("Clinical platform: evaluate calculator {}", calculatorId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Renal dosing awareness — advisory bands from {@code RenalDosingAdvisor}, not dose arithmetic. */
+    public JsonNode renalDosingAdvise(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/medicine/renal-dosing/advise";
+        log.debug("Clinical platform: renal dosing advise");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";

@@ -81,6 +81,30 @@ class PostnatalContactServiceTest {
     }
 
     @Test
+    @DisplayName("a contact that no longer carries contraception content is cleared of its old stamp")
+    void aStaleCategoryIsClearedRatherThanLeftBesideFullClinical() {
+        var c = minimalContact();
+        // As a re-record would arrive: the trio is still populated from an earlier version of this
+        // contact, while the contraception content that justified it has been removed.
+        c.setContraceptionDiscussed(Boolean.FALSE);
+        c.setPostpartumContraceptionEpisodeId(null);
+        c.setSensitivityClass("SPECIALLY_PROTECTED");
+        c.setConfidentialityCategory("SEXUAL_REPRODUCTIVE_HEALTH");
+        c.setConfidentialityBasis(ConfidentialityStamper.BASIS_SUBJECT_UNDER_POLICY_AGE);
+        c.setConfidentialityPolicyVersion("old-policy-0.9.0");
+
+        var saved = service.record(c);
+
+        assertThat(saved.getSensitivityClass()).isEqualTo("FULL_CLINICAL");
+        assertThat(saved.getConfidentialityCategory())
+                .as("a stale category beside FULL_CLINICAL claims SRH content the row no longer holds, "
+                        + "and the shadow-withhold signal would keep counting it")
+                .isNull();
+        assertThat(saved.getConfidentialityBasis()).isNull();
+        assertThat(saved.getConfidentialityPolicyVersion()).isNull();
+    }
+
+    @Test
     @DisplayName("an explicitly completed screen with no danger signs is preserved, not overwritten")
     void completedScreenPreserved() {
         var c = minimalContact();

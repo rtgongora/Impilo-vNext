@@ -104,10 +104,100 @@ public class PreconceptionService {
                 .orElseThrow(() -> new IllegalArgumentException("No preconception plan " + planId));
         requireTeratogenActionIfFound(changes);
         requireHighDoseReason(changes);
-        // Field-by-field copy is out of scope for this method's callers today; the guard is the point.
+        mergePlanFields(plan, changes);
         plan.setUpdatedBy(actor);
         plan.setUpdatedAt(OffsetDateTime.now());
         return plans.save(plan);
+    }
+
+    private static void mergePlanFields(PreconceptionPlanEntity target, PreconceptionPlanEntity changes) {
+        if (changes.getStatus() != null) {
+            target.setStatus(changes.getStatus());
+        }
+        if (changes.getOpenedOn() != null) {
+            target.setOpenedOn(changes.getOpenedOn());
+        }
+        if (changes.getClosedOn() != null) {
+            target.setClosedOn(changes.getClosedOn());
+        }
+        if (changes.getClosureReason() != null) {
+            target.setClosureReason(changes.getClosureReason());
+        }
+        if (changes.getFolicAcidStartedOn() != null) {
+            target.setFolicAcidStartedOn(changes.getFolicAcidStartedOn());
+        }
+        if (changes.getFolicAcidDoseMg() != null) {
+            target.setFolicAcidDoseMg(changes.getFolicAcidDoseMg());
+        }
+        if (changes.getFolicAcidHighDoseReason() != null) {
+            target.setFolicAcidHighDoseReason(changes.getFolicAcidHighDoseReason());
+        }
+        if (changes.getTeratogenicMedicationReviewOn() != null) {
+            target.setTeratogenicMedicationReviewOn(changes.getTeratogenicMedicationReviewOn());
+        }
+        if (changes.getTeratogenicMedicationFound() != null) {
+            target.setTeratogenicMedicationFound(changes.getTeratogenicMedicationFound());
+        }
+        if (changes.getTeratogenicMedicationDetail() != null) {
+            target.setTeratogenicMedicationDetail(changes.getTeratogenicMedicationDetail());
+        }
+        if (changes.getTeratogenicMedicationAction() != null) {
+            target.setTeratogenicMedicationAction(changes.getTeratogenicMedicationAction());
+        }
+        if (changes.getChronicConditionsReviewedOn() != null) {
+            target.setChronicConditionsReviewedOn(changes.getChronicConditionsReviewedOn());
+        }
+        if (changes.getDiabetesControlOptimised() != null) {
+            target.setDiabetesControlOptimised(changes.getDiabetesControlOptimised());
+        }
+        if (changes.getHypertensionControlOptimised() != null) {
+            target.setHypertensionControlOptimised(changes.getHypertensionControlOptimised());
+        }
+        if (changes.getRubellaImmunityStatus() != null) {
+            target.setRubellaImmunityStatus(changes.getRubellaImmunityStatus());
+        }
+        if (changes.getRubellaVaccinatedOn() != null) {
+            target.setRubellaVaccinatedOn(changes.getRubellaVaccinatedOn());
+        }
+        if (changes.getTetanusStatus() != null) {
+            target.setTetanusStatus(changes.getTetanusStatus());
+        }
+        if (changes.getHivStatusKnown() != null) {
+            target.setHivStatusKnown(changes.getHivStatusKnown());
+        }
+        if (changes.getHivArtOptimised() != null) {
+            target.setHivArtOptimised(changes.getHivArtOptimised());
+        }
+        if (changes.getPartnerHivStatusKnown() != null) {
+            target.setPartnerHivStatusKnown(changes.getPartnerHivStatusKnown());
+        }
+        if (changes.getSubstanceUseReviewedOn() != null) {
+            target.setSubstanceUseReviewedOn(changes.getSubstanceUseReviewedOn());
+        }
+        if (changes.getAlcoholUse() != null) {
+            target.setAlcoholUse(changes.getAlcoholUse());
+        }
+        if (changes.getTobaccoUse() != null) {
+            target.setTobaccoUse(changes.getTobaccoUse());
+        }
+        if (changes.getBmi() != null) {
+            target.setBmi(changes.getBmi());
+        }
+        if (changes.getAnaemiaScreenedOn() != null) {
+            target.setAnaemiaScreenedOn(changes.getAnaemiaScreenedOn());
+        }
+        if (changes.getHaemoglobinGDl() != null) {
+            target.setHaemoglobinGDl(changes.getHaemoglobinGDl());
+        }
+        if (changes.getGeneticOrFamilyRisk() != null) {
+            target.setGeneticOrFamilyRisk(changes.getGeneticOrFamilyRisk());
+        }
+        if (changes.getGeneticRiskDetail() != null) {
+            target.setGeneticRiskDetail(changes.getGeneticRiskDetail());
+        }
+        if (changes.getResultingPregnancyEpisodeId() != null) {
+            target.setResultingPregnancyEpisodeId(changes.getResultingPregnancyEpisodeId());
+        }
     }
 
     /**

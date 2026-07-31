@@ -1,11 +1,35 @@
-# RMNP lane — handover, 2026-07-28
+# RMNP lane — handover, 2026-07-28 (revised 2026-07-31, W14)
 
-Companion to `2026-07-28-coordinator-handover.md`. Everything below is **landed on canonical and
-deployed**; nothing is unpushed. This document exists so the successor does not have to re-derive it.
+Companion to `2026-07-28-coordinator-handover.md`. Everything below is **landed on canonical**; nothing
+is unpushed. This document exists so the successor does not have to re-derive it.
 
-## State: complete and live
+## What the 2026-07-28 revision of this document got wrong
 
-RMNP W0–W10 are done. W11 (first `/confidential/` controller + deploy) is done.
+Recorded because the pattern matters more than the three facts. The W10 handover and the stamping doc
+declared work complete that the code did not do, and both read as settled, so the next session began by
+trusting them. Three claims failed on inspection:
+
+1. **Two of the six decision-table rows were unimplemented.** The stamping doc's §3 named contraceptive
+   and pregnancy episodes as stamped; neither service referenced the stamper or the read guard, and
+   `PregnancyEpisodeService.open()` hardcoded `FULL_CLINICAL`. Closed in W12-A.
+2. **A second fail-closed trap existed that no guard watched** — the BFF forwards no obligation to pct,
+   so after flip step 6 every BFF-mediated read of a stamped record would be withheld from everyone
+   including its author. Addressed shadow-first in W12-B; see the stamping doc §9.
+3. **Near-miss and RMC were engine-only.** No controller, BFF, indicator or submission path existed for
+   either. Built in W12-D and W12-E.
+
+**A finished wave is not a verified one.** State what a reader can check, and if a document runs ahead
+of the code, say so in the line that does it.
+
+## State
+
+RMNP W0–W13 are done. **W14 deferred completion is done** (PO-authorized 2026-07-31): Bishop score,
+four service-only domains → HTTP+UI, confidentiality flip (Envoy strip → propagate → ENFORCE →
+stamp-class), and MPDSR review in Rito with readiness firewall.
+
+Not yet re-imaged or re-deployed — digests below are still the W11 build. Next image must include pct
+(V438), CKP (V042 + Bishop/MEC), experience-bff (propagate-obligations), tshepo-authz (V307 + ENFORCE),
+rito (MPDSR V201), Envoy (visibility strip), and zibo (`CATEGORY_MAP_RATIFIED`).
 
 **Deployed 2026-07-28, by digest via `kubectl set image` — NEVER helm** (eight services run digests
 the committed values do not name; a `helm upgrade` reverts three lanes and reports success):
@@ -30,7 +54,16 @@ after the governance flip it withholds **every stamped record from every request
 author**, while the service stays green and the tests pass.
 
 `scripts/guard/check-confidential-lane-routing.sh` makes that a build failure. Do not weaken it, and
-do not "fix" a failure by removing the stamp.
+do not "fix" a failure by removing the stamp. Since W12-B it also covers `services/experience-bff/**`,
+resolving per **method** rather than per class: a controller is flagged only if it calls a client method
+that itself builds a `/confidential/` URL, so the eleven controllers that merely inject a mixed client
+stay quiet. If you add a client method reaching a confidential upstream path, every controller calling
+it must be mounted under `/internal/v1/confidential/`.
+
+**And the obligation, not just the path.** `scripts/guard/check-visibility-obligation-propagation.sh`
+(W12-B) fails the build if the BFF's forwarded header set stops covering every header the visibility
+parser reads. It is the guard for the trap in the stamping doc §9, which is the one that will bite
+harder than the path trap because it needs no new endpoint to trigger — flip step 6 alone is enough.
 
 ## Deliberately inert — do not flip without the governance act
 
@@ -65,15 +98,80 @@ The ordered six-step flip list is in
   in a read path or a UI re-manufactures the false all-clear.
 - **Near-miss carries no confidentiality stamp.** Identification is ordinary clinical classification;
   only the MPDSR *review* is a governed confidential instrument.
+- **`experience.trust.propagate-obligations` ships false, and the order matters.** The deployed Envoy
+  strips the visibility headers on `/internal/v1/public/` only, so today the BFF's refusal to forward is
+  the only thing between a forged `x-confidential-categories` and pct's guard. Flipping the flag before
+  the edge strips them trades a fail-closed bug for a forge-your-own-grant bug. Strip first.
+- **Indeterminate near-miss cases stay in the denominator**, and the indicators report a lower and an
+  upper bound rather than one number. Dropping them would make the ratio improve as record-keeping
+  degrades, which is exactly backwards for an indicator meant to detect degradation.
+- **CKP normalises RMC scores, not the BFF.** Reverse-scoring is a property of the instrument, and the
+  instrument is ratifiable content CKP owns. Normalising in the BFF would mean a content correction
+  needs a BFF release, and two callers could disagree about polarity while both look right.
+- **The RMC narrative and the rating are deliberately not linked.** Rito's anonymous public-case lane
+  returns a claim code and no internal id, so an anonymous account cannot be joined to an attributed
+  score. That is the privacy property, not a missing foreign key. The narrative is filed **first** so a
+  scoring or rating failure never loses what she wrote.
+- **Physical abuse and detention route to patient safety, not the facility complaints queue.** An
+  anonymous report of abuse sent to the accused facility is worse than no report. `physical_abuse_free`
+  is positively worded and therefore **not** reverse-scored — the W10 JSON had that flag inverted, which
+  would have made the safest facilities score as the most abusive.
 
 ## Outstanding, and who owns it
 
 | Item | Owner |
 |---|---|
-| MPDSR review workflow (trigger already emits; review exists nowhere) | Rito — spec at `../clinical-governance/rmnp/mpdsr-review-contract.md`, **firewall is the load-bearing part** |
 | Surgery's stale lease still claims blocked-on-confidentiality | **PO — still open, needs routing** |
-| Citizen SMBP + CHW postnatal BFF endpoints | RMNP — contracts in `docs/clinical/rmnp/*-mobile-contract.md`, both must mount under `/confidential/` |
+| Re-image and re-deploy pct, CKP, experience-bff, tshepo-authz, rito, Envoy, zibo for W12–W14 | RMNP — digests above are the W11 build; flip configs land only after image+authorize |
 | `pregnant()` unguarded boolean, PNC mental-health/GBV vocabulary | recorded gaps, need owners |
+| Legal instrument verification for contraception age 18 (still listed on pack `legalBasisToVerify`) | MoHCC / legal — PO preview flip used age 18; instruments remain to cite |
+
+### PO rulings locked 2026-07-31 (W14)
+
+| Topic | Decision |
+|---|---|
+| SRH ages | Three treatments: contraception **18**; STI **CASE_BY_CASE**; TOP **CASE_BY_CASE** |
+| Mandatory reporting | Stamp stays; report path **outside** stamp (`REGULATORY_DUTY` / `PUBLIC_HEALTH` never inherit SRH grant) |
+| MPDSR SoR | **`rito-quality-safety-service`** (A5 closed); RMNP consumes counts only |
+| Authz migration lease | **V307** authorized outside V048–V052 band |
+
+## Landed in W12-UI (frontend parity)
+
+| Surface | Web | Mobile |
+|---|---|---|
+| SMBP series verdict | `/my/monitoring` (hypertension plans) | citizen Personal → Monitoring |
+| Pregnancy booking / current | `/my/pregnancy` | citizen Personal → Pregnancy |
+| Near-miss form 21 → classify-form | EHR `/ehr/[patientId]/maternity` panel | provider maternity specialty tool (WIRED) |
+| Respectful maternity care | `/my-life/feedback/respectful-maternity` | citizen Personal → RMC |
+| CHW community postnatal | — (Outreach is mobile-primary) | provider Outreach → Postnatal tab |
+
+Citizen pregnancy calls use the BFF `"me"` sentinel so the browser never holds a CPID.
+
+## Landed in W13 (product completion)
+
+| Wave | Surface | Web | Mobile |
+|---|---|---|---|
+| W13-A | Birth destination / EmONC | EHR maternity + `/my/pregnancy` | provider maternity + citizen pregnancy |
+| W13-A | Maternity summary | EHR maternity header | provider maternity |
+| W13-A | Near-miss indicators | EHR maternity panel | provider specialty |
+| W13-B | Confidential contraception / losses / TOP | EHR reproductive panel | provider confidential section; citizen contraception only |
+| W13-B | Clinician pregnancy episodes | EHR pregnancy episodes (patient CPID) | provider maternity |
+| W13-C | ANC first + follow-up (`impilo.anc.*`) | dedicated clinical journeys | Obstetrics specialty workspaces |
+| W13-C | Facility PNC maternal / newborn (`impilo.pnc.*`) | journeys + screening-gate honesty | same; newborn does not restate PSBI |
+| W13-C | FP eligibility + MEC assess | form 18 → `/clinical/contraception/mec/assess` | form 18 workspace (MEC post-submit web-primary) |
+| W13-D | PPH / eclampsia emergency bundles | EHR `EmergencyBundlePanel` | specialty tools **WIRED** |
+
+**Honesty rules that must survive the next edit:** 502 ≠ empty chart; empty confidential list ≡ withhold (not proof of absence); `INSUFFICIENT_EVIDENCE` ≠ “cannot”; call-ahead verbatim; indeterminate near-miss cases stay in the bounds; PNC “no danger signs” only behind `screeningComplete`.
+
+## Landed in W14 (deferred completion — PO-authorized)
+
+| Wave | Surface | Notes |
+|---|---|---|
+| W14-A | Bishop score | CKP/BFF assess; form `impilo.maternal.bishop.v1`; specialty **WIRED**; assessment-only |
+| W14-B | Intention / preconception / fertility / delivery | pct + BFF `/confidential/reproductive`; EHR + provider; citizen intention `"me"` |
+| W14-C | Envoy visibility strip ×3 + pack PO ages + reporting outside stamp | then `propagate-obligations` via env default true |
+| W14-D | Flip ENFORCE + stamp-class + pack RATIFIED + CKP V042 + authz V307 + pct V438 | config/migration act — needs authorize after imaging |
+| W14-E | MPDSR review in Rito | `MPDSR_REVIEW`; Kafka+HTTP intake; firewall readiness task; ops UI `/rito/mpdsr` |
 
 ## Working method that earned its place
 

@@ -45,6 +45,13 @@ export interface AppState {
   /** Active learning subject identity for Fundo parity flows. */
   learningSubjectType: string | null;
   learningSubjectId: string | null;
+  /**
+   * Deep-link / in-app request to open a surface under the Professional tab
+   * (e.g. "regulatory" → My Regulatory Affairs). Consumed once then cleared.
+   */
+  professionalSurfaceRequest: string | null;
+  /** Student-registration contributor invite id from a deep link. */
+  contributeInviteRequest: string | null;
 
   /**
    * Enters an UNGOVERNED workspace (outreach/offline/courier) — free local
@@ -77,6 +84,8 @@ export interface AppState {
   setAppsFocus: (focus: AppState["appsFocus"]) => void;
   setLearningSubject: (subjectType: string | null, subjectId: string | null) => void;
   setResolvedWorkContexts: (contexts: ResolvedWorkContextView[]) => void;
+  setProfessionalSurfaceRequest: (surface: string | null) => void;
+  setContributeInviteRequest: (inviteId: string | null) => void;
   clearContext: () => void;
 }
 
@@ -115,6 +124,8 @@ export const appStore = createStore<AppState>((set) => ({
   appsFocus: null,
   learningSubjectType: null,
   learningSubjectId: null,
+  professionalSurfaceRequest: null,
+  contributeInviteRequest: null,
 
   setMode: (mode) => set((state) => applyMode(state, mode)),
   setGrantedMode: (mode) => set((state) => applyMode(state, mode)),
@@ -131,6 +142,8 @@ export const appStore = createStore<AppState>((set) => ({
   setAppsFocus: (appsFocus) => set({ appsFocus }),
   setLearningSubject: (learningSubjectType, learningSubjectId) => set({ learningSubjectType, learningSubjectId }),
   setResolvedWorkContexts: (resolvedWorkContexts) => set({ resolvedWorkContexts }),
+  setProfessionalSurfaceRequest: (professionalSurfaceRequest) => set({ professionalSurfaceRequest }),
+  setContributeInviteRequest: (contributeInviteRequest) => set({ contributeInviteRequest }),
   clearContext: () =>
     set({
       facilityId: null,

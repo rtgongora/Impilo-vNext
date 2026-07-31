@@ -1,0 +1,284 @@
+{
+  "version": "1",
+  "note": "Shared IITT fixture corpus. JVM @TestFactory and the TeaVM browser harness both load this file — lifting a scenario out of Java and into here is the only way 'passes the Java fixture corpus in-browser' is falsifiable.",
+  "scenarios": [
+    {
+      "id": "adult-red-inventory",
+      "kind": "inventory",
+      "source": "IittTriageContentTest#adultRedInventory",
+      "inventory": {
+        "chart": "adultRed",
+        "exactCodes": [
+          "ADULT_RED_UNRESPONSIVE",
+          "ADULT_RED_STRIDOR", "ADULT_RED_RESP_DISTRESS_OR_CYANOSIS",
+          "ADULT_RED_CAP_REFILL", "ADULT_RED_WEAK_FAST_PULSE", "ADULT_RED_HEAVY_BLEEDING",
+          "ADULT_RED_HR_50_150",
+          "ADULT_RED_ACTIVE_CONVULSIONS", "ADULT_RED_ANY_TWO_NEURO", "ADULT_RED_HYPOGLYCAEMIA",
+          "ADULT_RED_HIGH_RISK_TRAUMA", "ADULT_RED_POISONING", "ADULT_RED_THREATENED_LIMB",
+          "ADULT_RED_SNAKE_BITE", "ADULT_RED_CHEST_ABDO_PAIN_OVER_50",
+          "ADULT_RED_ECG_ISCHAEMIA", "ADULT_RED_VIOLENT",
+          "ADULT_RED_PREG_HEAVY_BLEEDING", "ADULT_RED_PREG_SEVERE_ABDO_PAIN",
+          "ADULT_RED_PREG_SEIZURES", "ADULT_RED_PREG_SEVERE_HEADACHE",
+          "ADULT_RED_PREG_VISUAL_CHANGES", "ADULT_RED_PREG_HYPERTENSION",
+          "ADULT_RED_PREG_ACTIVE_LABOUR", "ADULT_RED_PREG_TRAUMA"
+        ]
+      }
+    },
+    {
+      "id": "paediatric-red-inventory",
+      "kind": "inventory",
+      "source": "IittTriageContentTest#paediatricRedInventory",
+      "inventory": {
+        "chart": "paediatricRed",
+        "exactCodes": [
+          "PAED_RED_UNRESPONSIVE", "PAED_RED_STRIDOR", "PAED_RED_RESP_DISTRESS_OR_CYANOSIS",
+          "PAED_RED_CAP_REFILL", "PAED_RED_WEAK_FAST_PULSE", "PAED_RED_HEAVY_BLEEDING",
+          "PAED_RED_COLD_EXTREMITIES", "PAED_RED_ANY_TWO_DEHYDRATION",
+          "PAED_RED_ACTIVE_CONVULSIONS", "PAED_RED_ALTERED_WITH_MENINGISM",
+          "PAED_RED_HYPOGLYCAEMIA",
+          "PAED_RED_INFANT_UNDER_8_DAYS", "PAED_RED_UNDER_2M_ABNORMAL_TEMP",
+          "PAED_RED_HIGH_RISK_TRAUMA", "PAED_RED_THREATENED_LIMB",
+          "PAED_RED_TESTICULAR_PAIN", "PAED_RED_SNAKE_BITE", "PAED_RED_POISONING",
+          "PAED_RED_PREGNANT_WITH_ADULT_RED"
+        ]
+      }
+    },
+    {
+      "id": "adult-yellow-count",
+      "kind": "inventory",
+      "source": "IittTriageContentTest#yellowInventories",
+      "inventory": { "chart": "adultYellow", "exactCount": 23 }
+    },
+    {
+      "id": "paediatric-yellow-count",
+      "kind": "inventory",
+      "source": "IittTriageContentTest#yellowInventories",
+      "inventory": { "chart": "paediatricYellow", "exactCount": 18 }
+    },
+    {
+      "id": "adult-hr-red-band",
+      "kind": "evaluate",
+      "source": "IittTriageContentTest#adultHeartRateBandsAreDistinct",
+      "facts": { "fixture": "completeNormalAdult", "vitals": { "heart_rate": 155 } },
+      "expect": {
+        "priority": "RED",
+        "triggeringCodes": ["ADULT_RED_HR_50_150"]
+      }
+    },
+    {
+      "id": "adult-hr-step3-high-risk",
+      "kind": "evaluate",
+      "source": "IittTriageContentTest#adultHeartRateBandsAreDistinct",
+      "facts": { "fixture": "completeNormalAdult", "vitals": { "heart_rate": 140 } },
+      "expect": {
+        "priority": "YELLOW",
+        "requiresClinicianReview": true,
+        "triggeringCodesEmpty": true,
+        "highRiskVitalPrefixes": ["HR <60 or >130"]
+      }
+    },
+    {
+      "id": "adult-hr-neither-band",
+      "kind": "evaluate",
+      "source": "IittTriageContentTest#adultHeartRateBandsAreDistinct",
+      "facts": { "fixture": "completeNormalAdult", "vitals": { "heart_rate": 100 } },
+      "expect": { "priority": "GREEN" }
+    },
+    {
+      "id": "adult-any-two-needs-two-one-sign",
+      "kind": "evaluate",
+      "source": "IittTriageContentTest#adultAnyTwoOfNeedsTwo",
+      "facts": { "fixture": "completeNormalAdult", "signs": { "headache": true } },
+      "expect": { "triggeringCodesForbidden": ["ADULT_RED_ANY_TWO_NEURO"] }
+    },
+    {
+      "id": "adult-any-two-needs-two-two-signs",
+      "kind": "evaluate",
+      "source": "IittTriageContentTest#adultAnyTwoOfNeedsTwo",
+      "facts": {
+        "fixture": "completeNormalAdult",
+        "signs": { "headache": true, "stiff_neck": true }
+      },
+      "expect": {
+        "priority": "RED",
+        "triggeringCodes": ["ADULT_RED_ANY_TWO_NEURO"]
+      }
+    },
+    {
+      "id": "paed-altered-alone-does-not-fire",
+      "kind": "evaluate",
+      "source": "IittTriageContentTest#paediatricAlteredMentalStatusIsAConjunction",
+      "facts": {
+        "fixture": "completeNormalChild",
+        "signs": { "altered_mental_status": true }
+      },
+      "expect": { "triggeringCodesForbidden": ["PAED_RED_ALTERED_WITH_MENINGISM"] }
+    },
+    {
+      "id": "paed-altered-with-fever-fires",
+      "kind": "evaluate",
+      "source": "IittTriageContentTest#paediatricAlteredMentalStatusIsAConjunction",
+      "facts": {
+        "fixture": "completeNormalChild",
+        "signs": { "altered_mental_status": true, "hypothermia_or_fever": true }
+      },
+      "expect": { "triggeringCodes": ["PAED_RED_ALTERED_WITH_MENINGISM"] }
+    },
+    {
+      "id": "paed-chart-no-adult-hr-red",
+      "kind": "inventory",
+      "source": "IittTriageContentTest#paediatricChartHasNoAdultHeartRateRedCriterion",
+      "inventory": { "chart": "paediatricRed", "codeMustNotContain": "HR_50_150" }
+    },
+    {
+      "id": "unassessed-never-green",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#unassessedPatientIsNeverGreen",
+      "facts": { "ageDays": 10950 },
+      "expect": {
+        "priority": "NOT_TRIAGEABLE",
+        "unassessedContains": ["heart_rate", "spo2_percent", "avpu"],
+        "destinationContains": "Insufficient assessment"
+      }
+    },
+    {
+      "id": "unmeasured-vital-not-normal",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#unmeasuredVitalsAreNotNormalVitals",
+      "facts": {
+        "fixture": "allSignsAbsent",
+        "ageDays": 10950,
+        "vitals": {
+          "heart_rate": 80,
+          "respiratory_rate": 16,
+          "temperature_c": 37.0,
+          "avpu": 0
+        }
+      },
+      "expect": {
+        "priority": "NOT_TRIAGEABLE",
+        "unassessedContains": ["spo2_percent"],
+        "highRiskEmpty": true
+      }
+    },
+    {
+      "id": "fully-assessed-well-is-green",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#fullyAssessedWellPatientIsGreen",
+      "facts": { "fixture": "completeNormalAdult" },
+      "expect": {
+        "priority": "GREEN",
+        "unassessedEmpty": true,
+        "destinationContains": "low acuity"
+      }
+    },
+    {
+      "id": "red-beats-yellow",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#redBeatsYellow",
+      "facts": {
+        "fixture": "completeNormalAdult",
+        "signs": { "stridor": true, "wheezing": true }
+      },
+      "expect": {
+        "priority": "RED",
+        "allTriggeringTiers": "RED"
+      }
+    },
+    {
+      "id": "unknown-age-refused",
+      "kind": "evaluateThrows",
+      "source": "WhoIittEngineSafetyTest#unknownAgeIsRefused",
+      "facts": { "vitals": { "heart_rate": 80 } },
+      "expectThrows": {
+        "exceptionSimpleName": "IllegalArgumentException",
+        "messageContains": "no safe default chart"
+      }
+    },
+    {
+      "id": "age-selects-adult-chart",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#ageSelectsTheChart",
+      "facts": { "fixture": "completeNormalAdult" },
+      "expect": { "chart": "IITT_ADULT_AGE_12_AND_OVER" }
+    },
+    {
+      "id": "age-selects-paediatric-chart",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#ageSelectsTheChart",
+      "facts": {
+        "fixture": "allSignsAbsent",
+        "ageDays": 1095,
+        "vitals": {
+          "heart_rate": 110,
+          "respiratory_rate": 24,
+          "temperature_c": 37.0,
+          "spo2_percent": 98,
+          "avpu": 0
+        }
+      },
+      "expect": { "chart": "IITT_PAEDIATRIC_AGE_UNDER_12" }
+    },
+    {
+      "id": "paed-band-infant-hr-150-green",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#paediatricBandsAreAgeSpecific",
+      "facts": {
+        "fixture": "allSignsAbsent",
+        "ageDays": 180,
+        "vitals": {
+          "heart_rate": 150,
+          "respiratory_rate": 40,
+          "temperature_c": 37.0,
+          "spo2_percent": 98,
+          "avpu": 0
+        }
+      },
+      "expect": { "priority": "GREEN" }
+    },
+    {
+      "id": "paed-band-ten-year-hr-150-yellow",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#paediatricBandsAreAgeSpecific",
+      "facts": {
+        "fixture": "allSignsAbsent",
+        "ageDays": 3650,
+        "vitals": {
+          "heart_rate": 150,
+          "respiratory_rate": 20,
+          "temperature_c": 37.0,
+          "spo2_percent": 98,
+          "avpu": 0
+        }
+      },
+      "expect": {
+        "priority": "YELLOW",
+        "requiresClinicianReview": true
+      }
+    },
+    {
+      "id": "paed-bands-contiguous",
+      "kind": "property",
+      "source": "WhoIittEngineSafetyTest#paediatricBandsAreContiguous",
+      "property": {
+        "name": "paediatricBandsContiguous",
+        "ageDaysFromInclusive": 0,
+        "ageDaysToExclusive": 4380
+      }
+    },
+    {
+      "id": "high-risk-vitals-ask-for-review",
+      "kind": "evaluate",
+      "source": "WhoIittEngineSafetyTest#highRiskVitalsRequestReviewRatherThanAutoPromoting",
+      "facts": {
+        "fixture": "completeNormalAdult",
+        "vitals": { "spo2_percent": 88 }
+      },
+      "expect": {
+        "priority": "YELLOW",
+        "requiresClinicianReview": true,
+        "priorityNot": "RED"
+      }
+    }
+  ]
+}

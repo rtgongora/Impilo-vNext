@@ -1,13 +1,13 @@
-import React, { useCallback, useReducer } from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useReducer, useState } from "react";
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, GlassSurface, useTier } from "@impilo/mobile-design-system";
 import { captureCurrentLocation } from "@impilo/mobile-ndila";
+import { useAuth } from "@impilo/mobile-auth";
 import { createSos } from "../../services/emergencyService";
 import { TrackEmergencyScreen } from "../../screens/emergency/TrackEmergencyScreen";
 import { buildDefaultSosInput, initialSosState, sosReducer } from "./sosFlow";
 
-/** Best-effort GPS — never blocks the SOS. Denied/slow location just sends without coordinates. */
 async function bestEffortLocation(): Promise<{ lat?: number; lng?: number }> {
   try {
     const fix = await captureCurrentLocation({ highAccuracy: true, timeoutMs: 6000 });
@@ -17,29 +17,28 @@ async function bestEffortLocation(): Promise<{ lat?: number; lng?: number }> {
   }
 }
 
-/**
- * FloatingSosButton — the Future-Realism flagship "wow" slice: a persistent, glass, danger-glow
- * emergency FAB on the citizen app. One-tap → confirm → real Daidzai emergency request → live track.
- *
- * Doctrine: life-safety + low friction, but SEND is always gated behind an explicit confirm
- * (accidental-trigger guard). Every state is honest (sending / tracking / error) — never faked.
- * No payment is ever requested. Styling degrades to a solid, AA-legible surface on the baseline tier.
- */
 export interface FloatingSosButtonProps {
-  /** Distance from the bottom safe area; keeps clear of the tab bar + the Nompilo launcher. */
   bottomOffset?: number;
   testID?: string;
 }
 
 export function FloatingSosButton({ bottomOffset = 96, testID = "citizen-sos-fab" }: FloatingSosButtonProps) {
   const [state, dispatch] = useReducer(sosReducer, initialSosState);
+  const [callbackNumber, setCallbackNumber] = useState("");
+  const { isAuthenticated: authenticated } = useAuth();
   const tier = useTier();
 
   const send = useCallback(async () => {
     dispatch({ type: "SEND" });
     try {
       const location = await bestEffortLocation();
-      const req = await createSos(buildDefaultSosInput(location));
+      const req = await createSos(
+        buildDefaultSosInput({
+          ...location,
+          authenticated,
+          callbackNumber: callbackNumber.trim() || undefined,
+        }),
+      );
       if (req?.id) {
         dispatch({ type: "SENT", requestId: req.id });
       } else {
@@ -54,7 +53,9 @@ export function FloatingSosButton({ bottomOffset = 96, testID = "citizen-sos-fab
         error: e instanceof Error ? e.message : "Could not send your SOS. Please try again or call for help.",
       });
     }
-  }, []);
+  }, [authenticated, callbackNumber]);
+
+  const canSend = authenticated || callbackNumber.trim().length > 0;
 
   return (
     <>
@@ -100,7 +101,7 @@ export function FloatingSosButton({ bottomOffset = 96, testID = "citizen-sos-fab
                   <Text style={styles.sheetTitle}>Couldn&apos;t send your SOS</Text>
                   <Text style={styles.sheetBody}>{state.error}</Text>
                   <View style={styles.row}>
-                    <Button title="Try again" variant="destructive" onPress={send} />
+                    <Button title="Try again" variant="destructive" onPress={send} disabled={!canSend} />
                     <Button title="Cancel" variant="secondary" onPress={() => dispatch({ type: "CANCEL" })} />
                   </View>
                 </>
@@ -110,8 +111,25 @@ export function FloatingSosButton({ bottomOffset = 96, testID = "citizen-sos-fab
                   <Text style={styles.sheetBody}>
                     Help will be dispatched for you. No payment is ever required for an emergency.
                   </Text>
+                  {!authenticated ? (
+                    <TextInput
+                      style={styles.callbackInput}
+                      value={callbackNumber}
+                      onChangeText={setCallbackNumber}
+                      placeholder="Callback phone (required)"
+                      placeholderTextColor="#8A9A93"
+                      keyboardType="phone-pad"
+                      testID="citizen-sos-callback"
+                    />
+                  ) : null}
                   <View style={styles.row}>
-                    <Button title="Send SOS" variant="destructive" onPress={send} testID="citizen-sos-confirm" />
+                    <Button
+                      title="Send SOS"
+                      variant="destructive"
+                      onPress={send}
+                      disabled={!canSend}
+                      testID="citizen-sos-confirm"
+                    />
                     <Button title="Cancel" variant="secondary" onPress={() => dispatch({ type: "CANCEL" })} />
                   </View>
                 </>
@@ -133,6 +151,16 @@ const styles = StyleSheet.create({
   sheet: { padding: 20 },
   sheetTitle: { color: "#EEF4F0", fontSize: 18, fontWeight: "700", marginBottom: 8 },
   sheetBody: { color: "#C7D4CD", fontSize: 14, lineHeight: 20, marginBottom: 16, textAlign: "center" },
+  callbackInput: {
+    borderWidth: 1,
+    borderColor: "#4A5C54",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#EEF4F0",
+    marginBottom: 16,
+    fontSize: 16,
+  },
   center: { alignItems: "center", paddingVertical: 8 },
   row: { flexDirection: "row", gap: 12, justifyContent: "center" },
   trackHost: { flex: 1, borderRadius: 16, overflow: "hidden" },

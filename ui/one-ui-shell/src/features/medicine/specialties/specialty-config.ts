@@ -50,6 +50,12 @@ export interface SpecialtyDefinition {
   registers: RegisterKey[];
   /** Examination regions from §7 that this specialty's assessment centres on. */
   examinationRegions: string[];
+  /**
+   * Honest deep links into shared spine that §8 asked for as specialty tooling. These are not
+   * new SoRs — they compose procedures catalogue, OROS worklists, vitals fluid balance, etc.
+   * Shortening `notBuilt` is only allowed when a matching spineLinks entry (or real build) exists.
+   */
+  spineLinks: { label: string; href: (patientId: string) => string; note?: string }[];
   /** What §8 asks for here that this pack has NOT built. Never shortened without building it. */
   notBuilt: string[];
 }
@@ -69,11 +75,27 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     ],
     problemMatchers: ["I10", "I11", "I20", "I21", "I25", "I34", "I42", "I48", "I50", "R55",
       "HYPERTENS", "HEART FAILURE", "ISCHAEMIC HEART", "ANGINA", "ATRIAL FIBRILLATION", "SYNCOPE"],
-    cdsTopics: ["cvd-risk", "deprescribing"],
+    cdsTopics: ["cvd-risk", "deprescribing", "rhd"],
     registers: ["HYPERTENSION"],
     examinationRegions: ["CARDIOVASCULAR", "VITAL_SIGNS", "OEDEMA", "PERIPHERAL_VASCULAR", "GENERAL_CONDITION"],
+    spineLinks: [
+      {
+        label: "ECG / echo procedure worklist",
+        href: () => "/diagnostics/procedure-worklist",
+        note: "OROS PROCEDURE fulfilment for ECG and echocardiography — not a cardiology-owned SoR.",
+      },
+      {
+        label: "Volume status (fluid balance + oedema exam)",
+        href: (patientId) => `/ehr/${patientId}/vitals`,
+        note: "Inpatient fluid_balance via BFF; oedema on examination. Outpatient dialysis fluid stays telemonitoring.",
+      },
+      {
+        label: "Record cardiovascular examination",
+        href: (patientId) => `/ehr/${patientId}/examination`,
+      },
+    ],
     notBuilt: [
-      "ECG workflow", "Echocardiography", "Ambulatory monitoring", "Volume-status tracking",
+      "Ambulatory monitoring",
       "Medicine titration tracking", "Device and procedure referrals", "Longitudinal outcomes",
     ],
   },
@@ -93,9 +115,31 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["procedure-indication", "antimicrobial-stewardship"],
     registers: ["CHRONIC_RESPIRATORY"],
     examinationRegions: ["RESPIRATORY", "VITAL_SIGNS", "CYANOSIS", "GENERAL_CONDITION"],
+    spineLinks: [
+      {
+        label: "Spirometry / PFT procedure worklist",
+        href: () => "/diagnostics/procedure-worklist",
+        note: "OROS PROCEDURE workflow names spirometry; inhaler technique remains unbuilt.",
+      },
+      {
+        label: "Home respiratory monitoring (telemonitoring)",
+        href: () => "/work/telemonitoring",
+        note: "§15 SoR for home metrics. Peak-flow instrument type is still an extension inside telemonitoring — do not invent a rival adult-medicine table.",
+      },
+      {
+        label: "Bronchoscopy catalogue",
+        href: () => "/work/clinical/procedures",
+      },
+      {
+        label: "Tobacco cessation (Simba coaching)",
+        href: () => "/wellness/coaching",
+        note: "simba-service owns PLAN-TOBACCO-QUIT — link, do not fork a respiratory SoR.",
+      },
+    ],
     notBuilt: [
-      "Spirometry", "Peak flow", "Inhaler technique assessment", "Symptom-control scores",
-      "Exacerbation history", "Tobacco cessation", "Oxygen eligibility",
+      "Peak flow instrument inside telemonitoring", "Inhaler technique assessment", "Symptom-control scores",
+      "Exacerbation history", "Tobacco cessation (simba owns cessation — integrate, do not fork)",
+      "Oxygen eligibility",
     ],
   },
   {
@@ -114,10 +158,21 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["procedure-indication", "oncology"],
     registers: [],
     examinationRegions: ["ABDOMEN", "JAUNDICE", "HYDRATION", "ANTHROPOMETRY", "GENERAL_CONDITION"],
+    spineLinks: [
+      {
+        label: "Endoscopy / patient procedures",
+        href: (patientId) => `/ehr/${patientId}/procedures`,
+        note: "OGD / colonoscopy / flexi-sigmoidoscopy in procedures-service — shared spine, not a gastro SoR.",
+      },
+      {
+        label: "Procedure catalogue",
+        href: () => "/work/clinical/procedures",
+      },
+    ],
     notBuilt: [
-      "Endoscopy pathway", "Nutrition assessment and support",
-      "Child-Pugh / MELD staging (no governed hepatic instrument exists — hepatic impairment is " +
-        "null for every patient in production)",
+      "Nutrition assessment and support",
+      "Child-Pugh / MELD staging (calculators compute in clinical-tools; hepatic impairment is still " +
+        "null for every patient in production until a governed hepatic instrument feeds the record)",
     ],
   },
   {
@@ -137,10 +192,24 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["deprescribing", "procedure-indication"],
     registers: ["CHRONIC_KIDNEY_DISEASE", "HYPERTENSION"],
     examinationRegions: ["OEDEMA", "HYDRATION", "VITAL_SIGNS", "PALLOR", "GENERAL_CONDITION"],
+    spineLinks: [
+      {
+        label: "CKD register",
+        href: () => "/clinical/chronic-registers",
+      },
+      {
+        label: "Haemodialysis / PD / AV fistula catalogue",
+        href: () => "/work/clinical/procedures",
+        note: "PROC-HAEMODIALYSIS, PROC-PERITONEAL-DIALYSIS, PROC-AV-FISTULA.",
+      },
+      {
+        label: "Fluid balance / volume",
+        href: (patientId) => `/ehr/${patientId}/vitals`,
+      },
+    ],
     notBuilt: [
-      "Dialysis preparation and modality choice", "Vascular access planning",
       "Transplant referral tracking", "Renal anaemia and mineral-bone management",
-      "eGFR is consumed but never computed — it is supplied by the caller",
+      "Renal replacement therapy: dialysis adequacy, prescription and modality review",
     ],
   },
   {
@@ -159,6 +228,13 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["cvd-risk", "deprescribing"],
     registers: ["DIABETES"],
     examinationRegions: ["FEET", "EYES", "ENDOCRINE", "ANTHROPOMETRY", "PERIPHERAL_VASCULAR"],
+    spineLinks: [
+      {
+        label: "Glucose monitoring and device data (telemonitoring)",
+        href: () => "/work/telemonitoring",
+        note: "§15 SoR for home metrics and DIABETES programme bands — not an endocrinology-owned table.",
+      },
+    ],
     notBuilt: [
       "Glucose monitoring and device data", "HbA1c trend", "Hypoglycaemia tracking",
       "Complication screening schedule (eye, renal, foot, cardiovascular)",
@@ -181,6 +257,7 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["procedure-indication", "mhgap"],
     registers: [],
     examinationRegions: ["NEUROLOGY", "COGNITION", "FUNCTIONAL_STATUS", "MUSCULOSKELETAL", "EYES"],
+    spineLinks: [],
     notBuilt: [
       "Seizure classification", "EEG", "Imaging workflow", "Rehabilitation goals",
       "Driving and occupational advice (requires the national policy, which is not encoded)",
@@ -201,9 +278,10 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     ],
     problemMatchers: ["B20", "B21", "B22", "B23", "B24", "A15", "A16", "B50", "B54", "A41", "B18",
       "HIV", "TUBERCULOSIS", "MALARIA", "SEPSIS", "HEPATITIS"],
-    cdsTopics: ["antimicrobial-stewardship"],
+    cdsTopics: ["antimicrobial-stewardship", "malaria"],
     registers: [],
     examinationRegions: ["GENERAL_CONDITION", "VITAL_SIGNS", "LYMPH_NODES", "SKIN", "ABDOMEN"],
+    spineLinks: [],
     notBuilt: [
       "Malaria pathway", "Sepsis follow-up", "Travel and outbreak-linked care",
       "Long-term antimicrobial therapy tracking",
@@ -225,6 +303,7 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["deprescribing", "antimicrobial-stewardship"],
     registers: [],
     examinationRegions: ["MUSCULOSKELETAL", "SKIN", "FUNCTIONAL_STATUS", "GENERAL_CONDITION"],
+    spineLinks: [],
     notBuilt: [
       "Disease-activity scores", "Biologic/DMARD therapy tracking",
       "Pre-immunosuppression infection screening", "Infusion monitoring",
@@ -243,9 +322,21 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     ],
     problemMatchers: ["D50", "D57", "D64", "D66", "D69", "I26", "I82", "C91", "C92",
       "ANAEMIA", "SICKLE", "THROMB", "LEUKAEMIA"],
-    cdsTopics: ["procedure-indication", "oncology"],
+    cdsTopics: ["procedure-indication", "oncology", "sickle-cell"],
     registers: [],
     examinationRegions: ["PALLOR", "LYMPH_NODES", "ABDOMEN", "SKIN", "GENERAL_CONDITION"],
+    spineLinks: [
+      {
+        label: "Bone-marrow biopsy catalogue",
+        href: () => "/work/clinical/procedures",
+        note: "PROC-BONE-MARROW-BIOPSY — shared spine, not a haematology SoR.",
+      },
+      {
+        label: "Transfusion episodes (Madi)",
+        href: () => "/madi/transfusion",
+        note: "madi-service owns orders, crossmatch, issue and haemovigilance — not a haematology SoR.",
+      },
+    ],
     notBuilt: [
       "Transfusion planning", "Anticoagulation monitoring", "Longitudinal laboratory trends",
     ],
@@ -266,8 +357,18 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["oncology", "palliative"],
     registers: [],
     examinationRegions: ["GENERAL_CONDITION", "LYMPH_NODES", "ANTHROPOMETRY", "FUNCTIONAL_STATUS"],
+    spineLinks: [
+      {
+        label: "Record an MDT decision",
+        href: (patientId) => `/ehr/${patientId}/consultations`,
+        note: "V114 decision record. Telemedicine board sessions remain a separate surface.",
+      },
+    ],
     notBuilt: [
-      "Staging", "MDT record (§14 is not built)", "Systemic anticancer therapy and cycle planning",
+      "Staging",
+      "Two MDT tables remain in pct-service (telemedicine board V051 and decision record V114); " +
+        "see docs/clinical/adult-medicine-domain-pack/mdt-consolidation-proposal.md",
+      "Systemic anticancer therapy and cycle planning",
       "Regimen verification", "Toxicity and response tracking", "Survivorship and recurrence",
       "Financial and access navigation",
     ],
@@ -288,9 +389,21 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["oncology", "procedure-indication"],
     registers: [],
     examinationRegions: ["SKIN", "FEET", "GENERAL_CONDITION"],
+    spineLinks: [
+      {
+        label: "Biopsy catalogue (US-guided / marrow / breast core)",
+        href: () => "/work/clinical/procedures",
+        note: "Shared procedures-service biopsy definitions. No PROC-SKIN-BIOPSY row yet.",
+      },
+      {
+        label: "Patient procedure history",
+        href: (patientId) => `/ehr/${patientId}/procedures`,
+      },
+    ],
     notBuilt: [
       "Photography with consent (consent capture and image handling are not built here)",
-      "Structured morphology coding", "Biopsy pathway",
+      "Structured morphology coding",
+      "Dedicated skin-biopsy catalogue code (PROC-SKIN-BIOPSY) — shared biopsy machinery exists",
     ],
   },
   {
@@ -308,9 +421,20 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["icope", "deprescribing", "palliative"],
     registers: [],
     examinationRegions: ["COGNITION", "FRAILTY", "FUNCTIONAL_STATUS", "ANTHROPOMETRY", "EYES", "GENERAL_CONDITION"],
+    spineLinks: [
+      {
+        label: "Advance directives (V106)",
+        href: (patientId) => `/ehr/${patientId}/advance-directives`,
+        note: "This pack already owns advance-care planning on the shared spine — not missing.",
+      },
+      {
+        label: "Functional status",
+        href: (patientId) => `/ehr/${patientId}/functional-status`,
+      },
+    ],
     notBuilt: [
       "Continence assessment", "Social support and carer needs",
-      "Long-term care placement", "Advance-care planning record",
+      "Long-term care placement",
     ],
   },
   {
@@ -329,8 +453,14 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["palliative", "deprescribing"],
     registers: [],
     examinationRegions: ["GENERAL_CONDITION", "FUNCTIONAL_STATUS", "HYDRATION", "SKIN"],
+    spineLinks: [
+      {
+        label: "Advance directives",
+        href: (patientId) => `/ehr/${patientId}/advance-directives`,
+      },
+    ],
     notBuilt: [
-      "Symptom-score instruments", "Care-preference and advance-care-planning record",
+      "Symptom-score instruments",
       "Family and caregiver support", "Home care", "Bereavement follow-up",
       "Controlled-medicine register",
     ],

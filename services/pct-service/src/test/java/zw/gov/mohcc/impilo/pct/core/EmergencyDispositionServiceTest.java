@@ -46,7 +46,7 @@ public class EmergencyDispositionServiceTest {
         dispositionRepo = new InMemoryDispositionRepo();
         var handoverRepo = new EmergencyEpisodeServiceTest.InMemoryHandoverRepo();
         var outbox = new EmergencyEpisodeServiceTest.CountingOutbox();
-        episodeService = new EmergencyEpisodeService(episodeRepo, handoverRepo, outbox, new ObjectMapper());
+        episodeService = new EmergencyEpisodeService(episodeRepo, handoverRepo, outbox, new ObjectMapper(), org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class));
         service = new EmergencyDispositionService(episodeRepo, dispositionRepo, episodeService);
     }
 
@@ -194,7 +194,21 @@ public class EmergencyDispositionServiceTest {
     void forEpisodeReturnsDisposition() {
         UUID episodeId = seedEpisode(EmergencyEpisodeState.OPEN_IN_CARE);
         service.record(episodeId, TENANT, disposition("DISCHARGED_HOME"));
-        assertThat(service.forEpisode(episodeId, TENANT).getDispositionType()).isEqualTo("DISCHARGED_HOME");
+        assertThat(service.forEpisode(episodeId, TENANT))
+                .isPresent()
+                .get()
+                .extracting(EmergencyDispositionEntity::getDispositionType)
+                .isEqualTo("DISCHARGED_HOME");
+    }
+
+    @Test
+    @DisplayName("forEpisode is empty when nothing has been recorded yet — not a 404")
+    void forEpisodeEmptyWhenAbsent() {
+        // Absence is the state the disposition form opens into. Treating it as NOT_FOUND made the
+        // UI refuse to show the form (honest degradation on a failed read), which locked clinicians
+        // out of recording the first disposition on a freshly opened episode.
+        UUID episodeId = seedEpisode(EmergencyEpisodeState.OPEN_IN_CARE);
+        assertThat(service.forEpisode(episodeId, TENANT)).isEmpty();
     }
 
     /** Minimal in-memory fake — only the methods EmergencyDispositionService actually calls. */

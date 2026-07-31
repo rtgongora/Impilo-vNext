@@ -1,14 +1,100 @@
 /**
- * MonitoringSection — Remote wearable device management.
+ * MonitoringSection — Remote wearable device management, plus (RMNP W12) her home
+ * blood-pressure series verdict for any active hypertension monitoring plan.
  */
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { Button, Badge, LoadingSpinner, colors } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchDevices, pairDevice, syncDevice } from "../../services/monitoringService";
+import {
+  fetchMyMonitoringPlans,
+  fetchSmbpVerdict,
+  isSmbpUnavailableError,
+  type SmbpVerdict,
+} from "../../services/smbpService";
 import { useAppStore } from "../../stores/appStore";
 
 const DEVICE_TYPES = ["BLOOD_PRESSURE", "GLUCOSE_METER", "PULSE_OXIMETER", "SMARTWATCH", "THERMOMETER", "SCALE"];
+
+/** Never green, never "controlled" until CKP says so — INSUFFICIENT_DATA is not reassurance. */
+function verdictBadge(verdict: SmbpVerdict): { label: string; variant: "error" | "warning" | "success" | "default" } {
+  switch (verdict) {
+    case "URGENT":
+      return { label: "Needs urgent care", variant: "error" };
+    case "ELEVATED_REFER":
+      return { label: "Come in for a check", variant: "warning" };
+    case "CONTROLLED":
+      return { label: "Looks controlled", variant: "success" };
+    case "INSUFFICIENT_DATA":
+    default:
+      return { label: "Not enough readings yet", variant: "default" };
+  }
+}
+
+/** The blood-pressure series verdict for one hypertension monitoring plan. */
+function SmbpVerdictCard({ planId }: { planId: string }) {
+  // dangerSignPresent stays omitted here — this card reads a series she already submitted, it
+  // does not ask her a new question, so the field must never be coerced to `false`.
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["smbp-verdict", planId],
+    queryFn: () => fetchSmbpVerdict(planId),
+  });
+
+  if (isLoading) return <LoadingSpinner size="sm" />;
+
+  if (error) {
+    if (isSmbpUnavailableError(error)) {
+      return (
+        <Text style={styles.smbpUnavailable} testID="smbp-verdict-unavailable">
+          We couldn&apos;t check your blood-pressure readings just now. This is not the same as
+          having no readings — please try again shortly, and contact your care team if you feel
+          unwell.
+        </Text>
+      );
+    }
+    return null;
+  }
+
+  if (!data) return null;
+  const badge = verdictBadge(data.verdict);
+
+  return (
+    <View style={styles.smbpCard} testID="smbp-verdict-card">
+      <View style={styles.smbpHeader}>
+        <Text style={styles.smbpTitle}>Home blood-pressure check</Text>
+        <Badge variant={badge.variant} testID="smbp-verdict-badge">
+          {badge.label}
+        </Badge>
+      </View>
+      <Text style={styles.smbpMessage}>{data.message}</Text>
+      {data.note ? <Text style={styles.smbpNote}>{data.note}</Text> : null}
+      {data.alerts.map((a) => (
+        <Text key={a.code} style={styles.smbpAlert}>
+          {a.message}
+          {a.requiredAction ? ` — ${a.requiredAction}` : ""}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+/** Hypertension monitoring plans only — programme-gated so the card never shows for other plans. */
+function SmbpVerdictSection() {
+  const { data: plans } = useQuery({
+    queryKey: ["my-monitoring-plans"],
+    queryFn: fetchMyMonitoringPlans,
+  });
+  const hypertensionPlans = (plans ?? []).filter((p) => p.programmeCode === "HYPERTENSION");
+  if (hypertensionPlans.length === 0) return null;
+  return (
+    <View style={styles.smbpSection}>
+      {hypertensionPlans.map((p) => (
+        <SmbpVerdictCard key={p.id} planId={p.id} />
+      ))}
+    </View>
+  );
+}
 
 export function MonitoringSection() {
   const profile = useAppStore((s) => s.profile);
@@ -59,6 +145,8 @@ export function MonitoringSection() {
 
   return (
     <View style={styles.container}>
+      <SmbpVerdictSection />
+
       <View style={styles.header}>
         <Text style={styles.sectionTitle}>My Devices</Text>
         <TouchableOpacity onPress={() => setShowPair(!showPair)}><Text style={styles.addLink}>+ Pair Device</Text></TouchableOpacity>
@@ -149,4 +237,12 @@ const styles = StyleSheet.create({
   syncButton: { backgroundColor: "#2563EB", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   syncText: { color: "#FFF", fontSize: 13, fontWeight: "600" },
   syncForm: { marginTop: 8, gap: 8 },
+  smbpSection: { gap: 8, marginBottom: 4 },
+  smbpCard: { backgroundColor: colors.gray[50], borderRadius: 12, padding: 14, gap: 6 },
+  smbpHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  smbpTitle: { fontSize: 14, fontWeight: "700", color: colors.gray[900] },
+  smbpMessage: { fontSize: 13, color: colors.gray[700] },
+  smbpNote: { fontSize: 12, color: colors.gray[500] },
+  smbpAlert: { fontSize: 12, color: "#92400E" },
+  smbpUnavailable: { fontSize: 12, color: colors.gray[500], backgroundColor: colors.gray[50], borderRadius: 10, padding: 10 },
 });

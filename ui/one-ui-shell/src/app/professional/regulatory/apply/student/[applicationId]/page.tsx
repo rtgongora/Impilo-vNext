@@ -11,6 +11,7 @@
  * that alone while everything else they already completed stays completed.
  */
 
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { AlertCircle, Check, Clock, RotateCcw } from "lucide-react";
 import { LuminousStage } from "shared-ui";
@@ -25,6 +26,34 @@ import {
 function SectionRow({ section, applicationId }: { section: ApplicationSection; applicationId: string }) {
   const resubmit = useResubmitSection(applicationId);
   const returned = section.state === "RETURNED";
+  const contentKeys = useMemo(() => {
+    const content = section.content && typeof section.content === "object" ? section.content : {};
+    const keys = Object.keys(content);
+    return keys.length > 0 ? keys : ["notes"];
+  }, [section.content]);
+
+  const [draft, setDraft] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!returned) return;
+    const content = section.content && typeof section.content === "object" ? section.content : {};
+    const next: Record<string, string> = {};
+    for (const key of contentKeys) {
+      const value = content[key];
+      next[key] = value == null ? "" : String(value);
+    }
+    setDraft(next);
+  }, [returned, section.content, contentKeys]);
+
+  const payload = useMemo(() => {
+    const body: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(draft)) {
+      if (value.trim()) body[key] = value.trim();
+    }
+    return body;
+  }, [draft]);
+
+  const canResubmit = Object.keys(payload).length > 0 && !resubmit.isPending;
 
   return (
     <li
@@ -54,7 +83,7 @@ function SectionRow({ section, applicationId }: { section: ApplicationSection; a
       </div>
 
       {returned ? (
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 space-y-3">
           <p className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-300">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <span>{section.returnedReason}</span>
@@ -63,15 +92,33 @@ function SectionRow({ section, applicationId }: { section: ApplicationSection; a
             Only this part needs changing. Everything else you have completed stays as it is, and
             your application keeps its place — you are not starting again.
           </p>
+          <div className="space-y-2">
+            {contentKeys.map((key) => (
+              <label key={key} className="block text-xs">
+                <span className="text-muted-foreground">{key}</span>
+                <textarea
+                  value={draft[key] ?? ""}
+                  onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </label>
+            ))}
+          </div>
           <button
             type="button"
-            onClick={() => resubmit.mutate({ sectionKey: section.sectionKey, content: {} })}
-            disabled={resubmit.isPending}
+            onClick={() => resubmit.mutate({ sectionKey: section.sectionKey, content: payload })}
+            disabled={!canResubmit}
             className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/60 px-3 py-1.5 text-sm font-medium text-amber-700 hover:bg-amber-500/10 disabled:opacity-50 dark:text-amber-300"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden />
             {resubmit.isPending ? "Sending…" : "Send this part again"}
           </button>
+          {!canResubmit && !resubmit.isPending ? (
+            <p className="text-xs text-muted-foreground">
+              Enter the corrected information before sending this part again.
+            </p>
+          ) : null}
         </div>
       ) : null}
     </li>

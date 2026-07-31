@@ -203,6 +203,70 @@
         {"name": "neutrophil count not available — cannot interpret", "facts": {"paracentesisPerformed": "YES"}, "expectFires": false},
         {"name": "no tap performed — nothing to interpret", "facts": {"paracentesisPerformed": "NO", "asciticPmnPerMm3": 400}, "expectFires": false}
       ]
+    },
+    {
+      "code": "ARTHROCENTESIS_HOT_JOINT",
+      "name": "Arthrocentesis — hot joint with suspected septic arthritis",
+      "layer": "PROCEDURE_INDICATION",
+      "ruleType": "INDICATION",
+      "severity": "HIGH",
+      "interruptive": false,
+      "requiredInputs": ["arthrocentesisConsidered", "hotJoint", "coagulopathy"],
+      "appliesWhen": {"input": "arthrocentesisConsidered", "op": "eq", "value": "YES"},
+      "logic": {"all": [
+        {"input": "hotJoint", "op": "eq", "value": "YES"},
+        {"input": "coagulopathy", "op": "eq", "value": "NO"}
+      ]},
+      "message": "Diagnostic arthrocentesis is indicated — hot joint with no coagulopathy; send fluid for cell count, Gram stain and culture before antibiotics when safe.",
+      "explanation": "Septic arthritis destroys a joint within hours to days. The definitive test is synovial fluid analysis; empirical antibiotics before the tap are reserved for patients who are critically unstable. Coagulopathy must be addressed first because haemarthrosis after a tap is difficult to evacuate.",
+      "requiredAction": "Aspirate the joint under aseptic technique, send cell count / differential / Gram stain / culture / crystals, then start empirical antibiotics for septic arthritis per national regimen unless an alternative diagnosis is already proven.",
+      "sourceRefs": ["EDLIZ — septic arthritis: aspirate before antibiotics when the patient is stable", "Standard rheumatology / orthopaedic practice — hot joint"],
+      "dakRef": {"dak": "EDLIZ", "dakVersion": "2015", "id": "MEDICINE.PROCEDURE_APPROPRIATENESS", "row": "arthrocentesis indication"},
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "No WHO DAK covers adult bedside procedural appropriateness; there is no source statement to adopt.",
+        "nationalStatement": "A hot joint with suspected septic arthritis warrants diagnostic arthrocentesis once coagulopathy is excluded or corrected.",
+        "rationale": "Wave 5.10 grows indication depth beyond LP/paracentesis/pleural aspiration. Execution remains procedures-service.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["EDLIZ — septic arthritis", "Standard hot-joint pathway"]
+      },
+      "testCases": [
+        {"name": "hot joint, no coagulopathy — indicated", "facts": {"arthrocentesisConsidered": "YES", "hotJoint": "YES", "coagulopathy": "NO"}, "expectFires": true},
+        {"name": "coagulopathy present — not cleared", "facts": {"arthrocentesisConsidered": "YES", "hotJoint": "YES", "coagulopathy": "YES"}, "expectFires": false},
+        {"name": "not considered — does not fire", "facts": {"arthrocentesisConsidered": "NO", "hotJoint": "YES", "coagulopathy": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "BONE_MARROW_ASPIRATION_UNEXPLAINED_CYTOPENIA",
+      "name": "Bone marrow aspiration — unexplained cytopenia after peripheral work-up",
+      "layer": "PROCEDURE_INDICATION",
+      "ruleType": "INDICATION",
+      "severity": "MODERATE",
+      "interruptive": false,
+      "requiredInputs": ["boneMarrowConsidered", "unexplainedCytopenia", "peripheralWorkupComplete"],
+      "appliesWhen": {"input": "boneMarrowConsidered", "op": "eq", "value": "YES"},
+      "logic": {"all": [
+        {"input": "unexplainedCytopenia", "op": "eq", "value": "YES"},
+        {"input": "peripheralWorkupComplete", "op": "eq", "value": "YES"}
+      ]},
+      "message": "Bone marrow aspiration/trephine is indicated — unexplained cytopenia after a completed peripheral work-up.",
+      "explanation": "Marrow examination is the next step when cytopenia is unexplained by drugs, deficiency, infection or peripheral destruction that the blood film and basic labs have already assessed. Doing marrow before that work-up wastes a painful procedure and can miss reversible causes.",
+      "requiredAction": "Refer to haematology / procedures-service for marrow aspiration and trephine with the peripheral work-up attached. Do not invent a transfusion or chemotherapy plan from this indication alone.",
+      "sourceRefs": ["EDLIZ — investigation of cytopenia", "Standard haematology practice — marrow after peripheral work-up"],
+      "dakRef": {"dak": "EDLIZ", "dakVersion": "2015", "id": "MEDICINE.PROCEDURE_APPROPRIATENESS", "row": "bone marrow indication"},
+      "adaptation": {
+        "type": "ADDED_NATIONAL",
+        "whoStatement": "No WHO DAK covers adult bedside procedural appropriateness; there is no source statement to adopt.",
+        "nationalStatement": "Unexplained cytopenia after a completed peripheral work-up is an indication for bone marrow examination.",
+        "rationale": "Wave 5.10 — indication only; execution and reporting stay on the procedures spine.",
+        "approvingAuthority": "PENDING_MOHCC_RATIFICATION",
+        "evidenceRefs": ["EDLIZ — cytopenia investigation", "Standard haematology marrow pathway"]
+      },
+      "testCases": [
+        {"name": "cytopenia after work-up — indicated", "facts": {"boneMarrowConsidered": "YES", "unexplainedCytopenia": "YES", "peripheralWorkupComplete": "YES"}, "expectFires": true},
+        {"name": "work-up incomplete — not yet", "facts": {"boneMarrowConsidered": "YES", "unexplainedCytopenia": "YES", "peripheralWorkupComplete": "NO"}, "expectFires": false},
+        {"name": "not considered", "facts": {"boneMarrowConsidered": "NO", "unexplainedCytopenia": "YES", "peripheralWorkupComplete": "YES"}, "expectFires": false}
+      ]
     }
   ]
 }

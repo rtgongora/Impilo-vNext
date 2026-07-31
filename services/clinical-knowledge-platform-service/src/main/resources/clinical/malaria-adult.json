@@ -1,0 +1,126 @@
+{
+  "packId": "malaria-adult",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Adult malaria — recognition, severity and treatment prompts (Zimbabwe / sub-Saharan Africa)",
+    "primarySource": "WHO Guidelines for malaria (2021); Zimbabwe Essential Medicines List (EDLIZ 2015) — antimalarial section",
+    "why": "Malaria remains a leading cause of adult fever in Zimbabwe. Delay in recognising severe disease and in starting effective artemisinin-based combination therapy (ACT) costs lives. This pack surfaces the recognition prompts and referral thresholds an adult-medicine clinician needs at the point of assessment — it does not prescribe dosing tables or stock management.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "The WHO malaria guideline and EDLIZ are NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against published WHO 2021 guidance and EDLIZ first-line ACT (artemether-lumefantrine); ships ENGINEERING_SEED until primary texts are vendored and MOHCC ratifies national thresholds. RDT-first strategy and severe-malaria referral criteria follow WHO structure; exact transport and inpatient thresholds are national operational decisions."
+    }
+  },
+  "rules": [
+    {
+      "code": "MAL_FEVER_ENDEMIC_SUSPECT",
+      "name": "Fever in an endemic area — suspect malaria and test before treating",
+      "layer": "INFECTIOUS_DISEASE",
+      "ruleType": "RECOGNITION",
+      "severity": "MEDIUM",
+      "requiredInputs": ["feverPresent", "endemicOrRecentTravel"],
+      "appliesWhen": {"input": "feverPresent", "op": "eq", "value": "YES"},
+      "logic": {"input": "endemicOrRecentTravel", "op": "eq", "value": "YES"},
+      "message": "Fever in a malaria-endemic area — suspect malaria and perform an RDT or microscopy before treating.",
+      "explanation": "In Zimbabwe and much of sub-Saharan Africa, malaria must be in the differential for any adult with fever. Treating on clinical grounds alone drives unnecessary antimalarial use and misses alternative diagnoses; withholding treatment while awaiting a test is unsafe when the pre-test probability is high.",
+      "requiredAction": "Perform a malaria rapid diagnostic test (RDT) or thick/thin film microscopy now. Do not start ACT on fever alone without a positive test or documented severe-malaria criteria requiring parenteral treatment while awaiting confirmation.",
+      "sourceRefs": ["WHO Guidelines for malaria (2021) — test before treat", "Zimbabwe malaria case management — RDT-first"],
+      "dakRef": {"dak": "WHO MALARIA", "dakVersion": "2021", "id": "", "row": "fever endemic suspect"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "All suspected malaria cases should be confirmed with a parasitological test before treatment where possible.", "nationalStatement": "Adopted as published; RDT-first is national policy.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO malaria guideline 2021", "EDLIZ artemether-lumefantrine"]},
+      "testCases": [
+        {"name": "fever in endemic area — suspect fires", "facts": {"feverPresent": "YES", "endemicOrRecentTravel": "YES"}, "expectFires": true},
+        {"name": "fever but not endemic — gate excludes", "facts": {"feverPresent": "YES", "endemicOrRecentTravel": "NO"}, "expectFires": false},
+        {"name": "no fever — rule does not apply", "facts": {"feverPresent": "NO", "endemicOrRecentTravel": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "MAL_RDT_POSITIVE_ACT",
+      "name": "Uncomplicated malaria confirmed — start ACT (EDLIZ first line)",
+      "layer": "INFECTIOUS_DISEASE",
+      "ruleType": "TREATMENT",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["malariaTestResult", "severeMalariaSigns"],
+      "appliesWhen": {"input": "malariaTestResult", "op": "eq", "value": "POSITIVE"},
+      "logic": {"input": "severeMalariaSigns", "op": "eq", "value": "NO"},
+      "message": "Uncomplicated malaria confirmed — start artemisinin-based combination therapy per national protocol.",
+      "explanation": "A positive RDT or blood film in an adult without severe features indicates uncomplicated malaria. EDLIZ lists artemether-lumefantrine as the first-line ACT for Plasmodium falciparum. Delay beyond 24 hours increases progression to severe disease.",
+      "requiredAction": "Start artemether-lumefantrine (or the ratified national ACT) at full adult dose for the weight band, complete the full course, and arrange review if vomiting prevents oral intake.",
+      "sourceRefs": ["EDLIZ 2015 — artemether-lumefantrine", "WHO Guidelines for malaria (2021) — ACT for uncomplicated P. falciparum"],
+      "dakRef": {"dak": "WHO MALARIA", "dakVersion": "2021", "id": "", "row": "uncomplicated ACT"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Artemisinin-based combination therapy is recommended for uncomplicated P. falciparum malaria.", "nationalStatement": "EDLIZ first line: artemether-lumefantrine pending ratification of any formulary update.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["EDLIZ antimalarial section", "WHO malaria guideline 2021"]},
+      "testCases": [
+        {"name": "positive test without severe signs — ACT fires", "facts": {"malariaTestResult": "POSITIVE", "severeMalariaSigns": "NO"}, "expectFires": true},
+        {"name": "positive with severe signs — severe rule owns this", "facts": {"malariaTestResult": "POSITIVE", "severeMalariaSigns": "YES"}, "expectFires": false},
+        {"name": "negative test — does not fire", "facts": {"malariaTestResult": "NEGATIVE", "severeMalariaSigns": "NO"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "MAL_SEVERE_REFER_URGENT",
+      "name": "Severe malaria features — urgent referral / parenteral treatment",
+      "layer": "INFECTIOUS_DISEASE",
+      "ruleType": "REFERRAL",
+      "severity": "HIGH",
+      "interruptive": true,
+      "referralRequired": true,
+      "requiredInputs": ["severeMalariaSigns"],
+      "logic": {"input": "severeMalariaSigns", "op": "eq", "value": "YES"},
+      "message": "Severe malaria suspected or confirmed — urgent referral for parenteral artesunate and inpatient care.",
+      "explanation": "Severe malaria — impaired consciousness, convulsions, respiratory distress, shock, acidosis, renal failure, severe anaemia, or inability to retain oral therapy — kills within hours. Oral ACT is insufficient; intravenous or intramuscular artesunate and supportive care are required at a facility that can manage complications.",
+      "requiredAction": "Arrange immediate transfer to the nearest facility capable of parenteral artesunate and critical care. Start pre-referral artesunate if national protocol allows and transfer is delayed. Treat hypoglycaemia, seizures and fever en route.",
+      "sourceRefs": ["WHO Guidelines for malaria (2021) — severe malaria", "WHO severe malaria management"],
+      "dakRef": {"dak": "WHO MALARIA", "dakVersion": "2021", "id": "", "row": "severe referral"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Severe malaria is a medical emergency requiring parenteral artesunate and urgent referral.", "nationalStatement": "Adopted as published; referral destination and pre-referral dosing are national operational decisions.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO malaria guideline 2021"]},
+      "testCases": [
+        {"name": "severe signs present — urgent referral fires", "facts": {"severeMalariaSigns": "YES"}, "expectFires": true},
+        {"name": "no severe signs — does not fire", "facts": {"severeMalariaSigns": "NO"}, "expectFires": false},
+        {"name": "severe signs not assessed — must not fire", "facts": {}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "MAL_NEGATIVE_HIGH_SUSPICION",
+      "name": "Negative test but high clinical suspicion — repeat test and do not dismiss",
+      "layer": "INFECTIOUS_DISEASE",
+      "ruleType": "REVIEW",
+      "severity": "MEDIUM",
+      "requiredInputs": ["malariaTestResult", "highClinicalSuspicion"],
+      "appliesWhen": {"input": "malariaTestResult", "op": "eq", "value": "NEGATIVE"},
+      "logic": {"input": "highClinicalSuspicion", "op": "eq", "value": "YES"},
+      "message": "Malaria test negative but clinical suspicion remains high — repeat the test and review the diagnosis.",
+      "explanation": "RDTs and films can be falsely negative in early infection, partial treatment, or prozone effect. Dismissing malaria on a single negative test in a febrile patient from an endemic area has caused preventable deaths.",
+      "requiredAction": "Repeat RDT or microscopy in 12–24 hours if fever persists, and investigate alternative causes in parallel. Do not withhold retreatment if severe features develop.",
+      "sourceRefs": ["WHO Guidelines for malaria (2021) — repeat testing", "National malaria case management"],
+      "dakRef": {"dak": "WHO MALARIA", "dakVersion": "2021", "id": "", "row": "negative high suspicion"},
+      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "WHO recommends repeat testing when suspicion remains after a negative result.", "nationalStatement": "Repeat-test prompt encoded for endemic adult fever where a single negative must not close the episode.", "rationale": "Encodes an explicit repeat-test prompt for endemic adult fever so a single negative does not close the episode.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO malaria guideline 2021"]},
+      "testCases": [
+        {"name": "negative with high suspicion — repeat prompt fires", "facts": {"malariaTestResult": "NEGATIVE", "highClinicalSuspicion": "YES"}, "expectFires": true},
+        {"name": "negative with low suspicion — does not fire", "facts": {"malariaTestResult": "NEGATIVE", "highClinicalSuspicion": "NO"}, "expectFires": false},
+        {"name": "positive test — different rule applies", "facts": {"malariaTestResult": "POSITIVE", "highClinicalSuspicion": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "MAL_PREGNANCY_CAUTION",
+      "name": "Malaria in pregnancy — treat promptly with pregnancy-safe regimen",
+      "layer": "INFECTIOUS_DISEASE",
+      "ruleType": "SAFETY_GATE",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["pregnant", "malariaTestResult"],
+      "appliesWhen": {"input": "pregnant", "op": "eq", "value": "YES"},
+      "logic": {"input": "malariaTestResult", "op": "eq", "value": "POSITIVE"},
+      "message": "Malaria in pregnancy — treat promptly with the pregnancy-safe antimalarial regimen.",
+      "explanation": "Malaria in pregnancy increases maternal anaemia, miscarriage, stillbirth and low birth weight. Some antimalarials are contraindicated in pregnancy; delay is as dangerous as the wrong drug.",
+      "requiredAction": "Start the ratified pregnancy-safe ACT or quinine regimen for the trimester. Refer if severe features or first trimester where national protocol requires specialist input. Arrange obstetric review and fetal surveillance.",
+      "sourceRefs": ["WHO Guidelines for malaria (2021) — pregnancy", "WHO antimalarial treatment in pregnancy"],
+      "dakRef": {"dak": "WHO MALARIA", "dakVersion": "2021", "id": "", "row": "pregnancy treatment"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Pregnant women with malaria should receive prompt effective treatment with a pregnancy-appropriate regimen.", "nationalStatement": "Exact regimen by trimester is a national ratification decision.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO malaria guideline 2021"]},
+      "testCases": [
+        {"name": "pregnant with positive test — caution fires", "facts": {"pregnant": "YES", "malariaTestResult": "POSITIVE"}, "expectFires": true},
+        {"name": "pregnant with negative test — does not fire", "facts": {"pregnant": "YES", "malariaTestResult": "NEGATIVE"}, "expectFires": false},
+        {"name": "not pregnant — gate excludes", "facts": {"pregnant": "NO", "malariaTestResult": "POSITIVE"}, "expectFires": false}
+      ]
+    }
+  ]
+}

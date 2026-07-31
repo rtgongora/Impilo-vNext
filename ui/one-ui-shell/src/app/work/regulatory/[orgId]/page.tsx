@@ -31,6 +31,12 @@ interface SurfaceLink {
    * vocabulary. A surface with no token is offered to every appointed role.
    */
   capability?: string;
+  /**
+   * When false, the hub shows the dashed "Not yet available" card even if the role workspace
+   * would otherwise offer the capability. Used so we never hard-link into ScopedAdministrationSurface
+   * stubs; Wave B restores real routes under /work/regulatory/[orgId]/….
+   */
+  platformReady?: boolean;
 }
 
 export default function RegulatoryOrgWorkspacePage() {
@@ -56,12 +62,14 @@ export default function RegulatoryOrgWorkspacePage() {
   }
 
   const surfaces: SurfaceLink[] = [
-    { capability: "REGISTER_ENTRIES", label: "Registers", description: "Professional registers, entries, restrictions and good standing.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W3" },
+    { capability: "REGISTER_ENTRIES", label: "Registers", description: "Statutory professional registers materialised from the activated configuration pack.", href: `/work/regulatory/${encodeURIComponent(orgId)}/registers`, wave: "NCZ-W1" },
     { capability: "APPLICATION_QUEUE", label: "Applications", description: "Registration, renewal and scope applications + correspondence.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W4" },
-    { capability: "CPD_REVIEW", label: "CPD", description: "Continuing professional development adjudication.", href: `/work/regulators/${encodeURIComponent(orgId)}/cpd-review`, wave: "W5" },
+    { capability: "APPLICATION_QUEUE", label: "Student applications", description: "Student registration queue — return sections and admit to the student register.", href: `/work/regulatory/${encodeURIComponent(orgId)}/student-applications`, wave: "NCZ-W1C" },
+    { capability: "APPLICATION_QUEUE", label: "Student reports", description: "Regulator board, ageing, returns by section and institution board.", href: `/work/regulatory/${encodeURIComponent(orgId)}/student-reports`, wave: "NCZ-W1D" },
+    { capability: "CPD_REVIEW", label: "CPD", description: "Continuing professional development adjudication (provider-scoped Fundo candidates).", href: `/work/regulatory/${encodeURIComponent(orgId)}/cpd-review`, wave: "W5" },
     { capability: "DISCIPLINARY_CASES", label: "Complaints & discipline", description: "Complaints, investigations and disciplinary proceedings.", href: `/work/regulators/${encodeURIComponent(orgId)}/disciplinary`, wave: "W7" },
-    { capability: "RESTRICTIONS", label: "Restrictions", description: "Conditions, restrictions and interdictions on the register.", href: `/work/regulators/${encodeURIComponent(orgId)}/restrictions`, wave: "W3" },
-    { capability: "AUDIT", label: "Audit", description: "Who reviewed, changed, approved or accessed each record.", href: `/work/regulators/${encodeURIComponent(orgId)}/audit`, wave: "W9" },
+    { capability: "RESTRICTIONS", label: "Restrictions", description: "Conditions, restrictions and interdictions on the register (read-only).", href: `/work/regulatory/${encodeURIComponent(orgId)}/restrictions`, wave: "W3" },
+    { capability: "AUDIT", label: "Audit", description: "Organisation-scoped configuration pack and release audit.", href: `/work/regulatory/${encodeURIComponent(orgId)}/audit`, wave: "W9" },
     { capability: "CONFIGURATION_READ", label: "Configuration", description: "The rules currently governing this regulator, and what is still awaiting a Council decision.", href: `/work/regulatory/${encodeURIComponent(orgId)}/configuration`, wave: "NCZ-W1A" },
   ];
 
@@ -105,8 +113,9 @@ export default function RegulatoryOrgWorkspacePage() {
 
               // A capability the platform has not built yet is stated, not linked. An empty page
               // reached through a working link reads as a broken system; "not built yet" reads as
-              // an honest one.
-              if (verdict === "AWAITING_IMPLEMENTATION") {
+              // an honest one. platformReady:false is the same honesty when the role pack offers
+              // the capability but the shell surface is still a stub.
+              if (verdict === "AWAITING_IMPLEMENTATION" || s.platformReady === false) {
                 return (
                   <div
                     key={s.label}

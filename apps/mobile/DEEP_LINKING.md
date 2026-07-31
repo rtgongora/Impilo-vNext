@@ -60,6 +60,7 @@ components are scoped to exactly these prefixes.
 | `/bills` | Health → Finance (bills & payments) |
 | `/welcome/report` (opt. `?ref=<case>`) | Health → Feedback; with `ref`, Track feedback seeded to that case |
 | `/get-involved` | Public health (participation) |
+| `/explore/regulatory` (or `/public/regulatory`) | Personal → Councils (public regulatory explore) |
 
 ### Provider app (`zw.gov.impilo.provider`)
 
@@ -68,6 +69,8 @@ components are scoped to exactly these prefixes.
 | `/provider` | Provider mode → Dashboard |
 | `/provider/<tab>` | Provider mode → matching tab (queue, patients, results, tools, apps, professional, diagnostics…) |
 | `/work` | Provider mode → Worklist (queue) |
+| `/professional/regulatory` | Provider mode → Professional → My Regulatory Affairs |
+| `/professional/regulatory/contribute/<inviteId>` | Provider mode → Professional → My Regulatory (contributor invite prefilled) |
 
 ## `.well-known` files (hosted by the website)
 

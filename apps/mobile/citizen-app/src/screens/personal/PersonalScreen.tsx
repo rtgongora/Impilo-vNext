@@ -21,6 +21,7 @@ import { WellnessJourneysSection } from "./WellnessJourneysSection";
 import { WalletSection } from "./WalletSection";
 import { EmergencySOSSection } from "./EmergencySOSSection";
 import { MonitoringSection } from "./MonitoringSection";
+import { PregnancySection } from "./PregnancySection";
 import { QueueStatusSection } from "./QueueStatusSection";
 import { FinanceSection } from "./FinanceSection";
 import { ChallengesScreen } from "./ChallengesScreen";
@@ -45,11 +46,13 @@ import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
 import { FeedbackScreen } from "../rito/FeedbackScreen";
 import { TrackFeedbackScreen } from "../rito/TrackFeedbackScreen";
+import { RespectfulMaternityCareScreen } from "../rito/RespectfulMaternityCareScreen";
 import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
 import { ProviderDiscoveryScreen } from "../discover/ProviderDiscoveryScreen";
 import { MadiDonorHubScreen } from "../madi/MadiDonorHubScreen";
 import { LiveDiscoverScreen } from "../live/LiveDiscoverScreen";
+import { PublicRegulatoryExploreScreen } from "./PublicRegulatoryExploreScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
 
 type PersonalTab =
@@ -78,6 +81,7 @@ type PersonalTab =
   | "programs"
   | "wallet"
   | "monitoring"
+  | "pregnancy"
   | "queue"
   | "sos"
   | "coverage"
@@ -97,10 +101,12 @@ type PersonalTab =
   | "support"
   | "rito-feedback"
   | "rito-track"
+  | "rito-respectful-maternity-care"
   | "prod-ready"
   | "madi-donor"
   | "marketplace-store"
-  | "impilo-live";
+  | "impilo-live"
+  | "regulatory-explore";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -133,6 +139,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "programs", label: "Programs", icon: "ribbon" },
   { id: "wallet", label: "Wallet", icon: "wallet" },
   { id: "monitoring", label: "Monitoring", icon: "pulse" },
+  { id: "pregnancy", label: "Pregnancy", icon: "heart-half" },
   { id: "queue", label: "Queue", icon: "location" },
   { id: "sos", label: "Emergency", icon: "warning" },
   { id: "coverage", label: "Coverage", icon: "shield" },
@@ -141,6 +148,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "support", label: "Help", icon: "help-circle" },
   { id: "rito-feedback", label: "Feedback", icon: "chatbox-ellipses" },
   { id: "rito-track", label: "Track Feedback", icon: "search-circle" },
+  { id: "rito-respectful-maternity-care", label: "Maternity Care Experience", icon: "heart-circle" },
   { id: "settings", label: "Settings", icon: "settings" },
   { id: "assessments", label: "Assessments", icon: "duplicate" },
   { id: "care-team", label: "Care Team", icon: "people" },
@@ -151,6 +159,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "delegated-pickup", label: "Pickup", icon: "car" },
   { id: "nhume-track", label: "Track Delivery", icon: "navigate" },
   { id: "marketplace-store", label: "Marketplace", icon: "storefront" },
+  { id: "regulatory-explore", label: "Councils", icon: "library-outline" },
   { id: "privacy", label: "Privacy", icon: "lock-closed" },
   { id: "terms", label: "Terms", icon: "document-text" },
 ];
@@ -184,6 +193,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   programs: ProgramsScreen,
   wallet: WalletSection,
   monitoring: MonitoringSection,
+  pregnancy: PregnancySection,
   queue: QueueStatusSection,
   sos: EmergencySOSSection,
   coverage: CoverageSection,
@@ -192,6 +202,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   support: SupportScreen,
   "rito-feedback": FeedbackScreen,
   "rito-track": TrackFeedbackScreen,
+  "rito-respectful-maternity-care": RespectfulMaternityCareScreen,
   settings: SettingsSection,
   assessments: AssessmentsSection,
   "care-team": CareTeamSection,
@@ -203,6 +214,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   "nhume-track": NhumeTrackingScreen,
   privacy: PrivacyPolicyScreen,
   terms: TermsOfUseScreen,
+  "regulatory-explore": PublicRegulatoryExploreScreen,
 };
 
 export function PersonalScreen() {
@@ -228,6 +240,7 @@ export function PersonalScreen() {
     "discover-providers": "discover-providers",
     "nhume-track": "nhume-track",
     monitoring: "monitoring",
+    pregnancy: "pregnancy",
     records: "records",
   };
 

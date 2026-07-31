@@ -22,7 +22,10 @@ public final class ClinicalKafkaTopics {
             // happened to open the multimorbidity view. Routed in the same change as the emitter: an
             // event type absent from this map falls to the impilo.clinical.events catch-all, which
             // publishes successfully and reaches nobody.
-            Map.entry("MULTIMORBIDITY_ISSUE_DETECTED", "impilo.clinical.multimorbidity.issue.detected")
+            Map.entry("MULTIMORBIDITY_ISSUE_DETECTED", "impilo.clinical.multimorbidity.issue.detected"),
+            // Retirement of a previously OPEN DetectedIssue when a subsequent assess answers the
+            // owning detection as no longer DETECTED. Silence never produces this event.
+            Map.entry("MULTIMORBIDITY_ISSUE_RESOLVED", "impilo.clinical.multimorbidity.issue.resolved")
     );
 
     private ClinicalKafkaTopics() {

@@ -265,6 +265,53 @@ class ProceduresControllerTest {
                 controller::analyticsIndicators);
     }
 
+    // ── Wave W4 — P10 Clavien-Dindo grades and complication profiles ──
+
+    @Test
+    void clavienDindoGradesReturnsTheDownstreamResponseVerbatim() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> clavienDindoGrades() {
+                return ResponseEntity.ok("[{\"gradeCode\":\"I\",\"gradeLabel\":\"Grade I\"}]");
+            }
+        });
+
+        var response = controller.clavienDindoGrades();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("[{\"gradeCode\":\"I\",\"gradeLabel\":\"Grade I\"}]", response.getBody());
+    }
+
+    @Test
+    void complicationProfileForwardsTheCodeFromTheQueryParameter() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> complicationProfile(String profileCode) {
+                assertEquals("COMPLICATIONS-LAPAROTOMY", profileCode);
+                return ResponseEntity.ok("{\"profileCode\":\"COMPLICATIONS-LAPAROTOMY\"}");
+            }
+        });
+
+        var response = controller.complicationProfile("COMPLICATIONS-LAPAROTOMY");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    /** Propagation control on the complication-profile surface — error must never become empty. */
+    @Test
+    void aDownstreamFailureOnTheComplicationSurfaceAlsoPropagates() {
+        ProceduresController controller = new ProceduresController(new StubClient() {
+            @Override
+            public ResponseEntity<String> clavienDindoGrades() {
+                throw new org.springframework.web.client.ResourceAccessException(
+                        "procedures-service unreachable");
+            }
+        });
+
+        assertThrows(org.springframework.web.client.ResourceAccessException.class,
+                controller::clavienDindoGrades);
+    }
+
     /** Overridable stub so each test only implements the one method it exercises. */
     private static class StubClient extends ProceduresServiceClient {
         StubClient() {

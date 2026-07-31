@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,14 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
      */
     List<OrderEntity> findByTenantIdAndSourceRefAndZiboOrderCodeAndStatusNotIn(
             UUID tenantId, String sourceRef, String ziboOrderCode, Collection<OrderStatus> statuses);
+
+    /**
+     * Patient-level duplicate-order guard: non-terminal orders for the same tenant, patient,
+     * and coded item placed after the repeat-interval cutoff.
+     */
+    List<OrderEntity> findByTenantIdAndPatientCpidAndZiboOrderCodeAndStatusNotInAndPlacedAtAfter(
+            UUID tenantId, String patientCpid, String ziboOrderCode,
+            Collection<OrderStatus> statuses, OffsetDateTime placedAtAfter);
 
     /**
      * Finds all orders for a patient within a specific tenant.

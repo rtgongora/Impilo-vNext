@@ -96,6 +96,14 @@ export default function ShareFeedbackPage() {
           </Link>
         </div>
 
+        <div className="mb-4 max-w-xl rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+          Giving birth or postnatal care feedback? Use the{" "}
+          <Link href="/my-life/feedback/respectful-maternity" className="font-semibold underline">
+            respectful maternity care survey
+          </Link>{" "}
+          instead — it asks the right questions and stays anonymous by default.
+        </div>
+
         {created ? (
           <div className="rounded-2xl border border-teal-300 bg-teal-50 p-6">
             <div className="mb-2 flex items-center gap-2 font-semibold text-teal-900">

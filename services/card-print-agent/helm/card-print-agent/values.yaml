@@ -19,8 +19,9 @@ env:
   POSTGRES_PASSWORD: "changeme"
   KEYCLOAK_URL: "http://keycloak:8080"
   KEYCLOAK_REALM: "impilo"
-  CARD_PRINT_QR_HMAC_SECRET: "changeme-not-for-production"
   LANDELA_ADAPTER_URL: "http://landela-adapter-service:8092"
+  # CARD_PRINT_QR_SIGNING_KEY_SEED is deliberately absent: it is required key material and
+  # must arrive from the impilo-app-secrets Secret, never from a values file in git.
 
 volumes:
   - name: print-output

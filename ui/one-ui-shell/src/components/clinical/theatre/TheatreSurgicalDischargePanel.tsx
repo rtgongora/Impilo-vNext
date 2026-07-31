@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { FileText, Loader2, RefreshCw, CheckCircle2, FlaskConical } from "lucide-react";
+import { FileText, Loader2, RefreshCw, CheckCircle2, FlaskConical, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 
 interface Discharge {
@@ -49,6 +49,7 @@ function errMessage(e: unknown): string {
 export function TheatreSurgicalDischargePanel({ caseId }: { caseId: string }) {
   const [record, setRecord] = useState<Discharge | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadUnavailable, setLoadUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -68,9 +69,10 @@ export function TheatreSurgicalDischargePanel({ caseId }: { caseId: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await apiClient.get(`/internal/v1/theatre/cases/${caseId}/discharge`).catch(() => null);
-      const d = r ? unwrap<Discharge>(r, { status: "NONE" }) : { status: "NONE" };
+      const r = await apiClient.get(`/internal/v1/theatre/cases/${caseId}/discharge`);
+      const d = unwrap<Discharge>(r, { status: "NONE" });
       setRecord(d);
+      setLoadUnavailable(false);
       // hydrate form from any existing draft so edits build on it
       if (d && d.status && d.status !== "NONE") {
         setFinalDiagnosis(d.final_diagnosis ?? "");
@@ -86,6 +88,9 @@ export function TheatreSurgicalDischargePanel({ caseId }: { caseId: string }) {
         setPatientInstructions(d.patient_instructions ?? "");
         setSickLeaveDays(d.sick_leave_days != null ? String(d.sick_leave_days) : "");
       }
+    } catch {
+      // Distinguish transport failure from genuine {status:NONE} — keep last known record.
+      setLoadUnavailable(true);
     } finally {
       setLoading(false);
     }
@@ -132,7 +137,7 @@ export function TheatreSurgicalDischargePanel({ caseId }: { caseId: string }) {
   const complete = () =>
     act(() => apiClient.post(`/internal/v1/theatre/cases/${caseId}/discharge/complete`, draftBody()), "Discharge summary completed and published to the record.");
 
-  const status = record?.status ?? "NONE";
+  const status = loadUnavailable && !record ? "UNKNOWN" : (record?.status ?? "NONE");
   const completed = status === "COMPLETED";
   const pendingPathology = Array.isArray(record?.pending_pathology) ? record!.pending_pathology! : [];
 
@@ -141,15 +146,21 @@ export function TheatreSurgicalDischargePanel({ caseId }: { caseId: string }) {
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-1.5 text-sm font-semibold"><FileText className="h-4 w-4" /> Surgical discharge summary</h3>
         <div className="flex items-center gap-2">
-          {status !== "NONE" && <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${completed ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{status}</span>}
+          {status !== "NONE" && status !== "UNKNOWN" && <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${completed ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{status}</span>}
           <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-xs hover:bg-card">
             <RefreshCw className="h-3 w-3" /> Refresh
           </button>
         </div>
       </div>
       {msg && <p className="mb-2 rounded-lg border border-border bg-background p-2 text-xs">{msg}</p>}
+      {loadUnavailable && (
+        <p className="mb-2 flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800" data-testid="discharge-load-unavailable">
+          <AlertTriangle className="h-3.5 w-3.5" /> Discharge summary unavailable — do not treat this as no summary started.
+        </p>
+      )}
       {loading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading discharge summary…</p>}
-      {!loading && status === "NONE" && <p className="mb-3 text-xs text-muted-foreground">No discharge summary started for this case.</p>}
+      {!loading && !loadUnavailable && status === "NONE" && <p className="mb-3 text-xs text-muted-foreground">No discharge summary started for this case.</p>}
+      {!loading && loadUnavailable && !record && <p className="mb-3 text-xs text-muted-foreground">Could not load the discharge summary for this case.</p>}
 
       {completed ? (
         <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-xs" data-testid="discharge-completed">

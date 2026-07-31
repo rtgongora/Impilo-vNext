@@ -1,13 +1,17 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.experience.client.MentalHealthServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.support.EmergencyHonesty;
 
 import java.util.Map;
 import java.util.UUID;
@@ -22,10 +26,9 @@ import java.util.UUID;
  * to avoid colliding with {@code CareEmergencyInpatientController}'s existing (deprecated) resuscitation
  * aliases already squatting on that namespace.
  *
- * <p>pct is sovereign here — this controller orchestrates nothing extra, it only forwards. A 4xx from
- * pct (an invalid FSM transition, a handover already resolved, a disposition that contradicts the
- * episode's state) is a real client-facing validation error and is surfaced as-is; only a genuine
- * upstream outage collapses to 502.
+ * <p>pct is sovereign for episode truth. One deliberate orchestration: after a successful
+ * {@code MENTAL_HEALTH} handover request, auto-intake the mh_referral so the MH queue is not empty.
+ * Intake failure does not roll back the PCT handover — it is reported as {@code mh_intake_status}.
  */
 @RestController
 @RequestMapping("/internal/v1/emergency-episodes")
@@ -34,9 +37,15 @@ public class EmergencyEpisodeController {
     private static final Logger log = LoggerFactory.getLogger(EmergencyEpisodeController.class);
 
     private final PctServiceClient pctClient;
+    private final MentalHealthServiceClient mentalHealthClient;
+    private final ObjectMapper objectMapper;
 
-    public EmergencyEpisodeController(PctServiceClient pctClient) {
+    public EmergencyEpisodeController(PctServiceClient pctClient,
+                                      MentalHealthServiceClient mentalHealthClient,
+                                      ObjectMapper objectMapper) {
         this.pctClient = pctClient;
+        this.mentalHealthClient = mentalHealthClient;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping
@@ -74,7 +83,104 @@ public class EmergencyEpisodeController {
 
     @PostMapping("/{episodeId}/handover")
     public ResponseEntity<Map<String, Object>> requestHandover(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
-        return proxyPost(() -> pctClient.requestEmergencyHandover(episodeId, body), "PCT requestEmergencyHandover", HttpStatus.CREATED);
+        JsonNode handover;
+        try {
+            handover = requirePayload(pctClient.requestEmergencyHandover(episodeId, body), "PCT requestEmergencyHandover");
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                throw new ResponseStatusException(e.getStatusCode(), e.getResponseBodyAsString(), e);
+            }
+            throw upstreamFailure("PCT requestEmergencyHandover", e);
+        } catch (Exception e) {
+            throw upstreamFailure("PCT requestEmergencyHandover", e);
+        }
+
+        String targetType = text(body, "targetType", "target_type");
+        if (!"MENTAL_HEALTH".equals(targetType)) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", handover));
+        }
+
+        ObjectNode enriched = handover.isObject()
+                ? ((ObjectNode) handover).deepCopy()
+                : objectMapper.createObjectNode().set("handover", handover);
+        try {
+            ObjectNode intake = objectMapper.createObjectNode();
+            intake.put("episodeId", episodeId.toString());
+            String handoverId = textNode(handover, "handover_id", "handoverId");
+            if (handoverId != null) {
+                intake.put("handoverId", handoverId);
+            }
+            putIfPresent(intake, "facilityId", text(body, "facilityId", "facility_id"));
+            putIfPresent(intake, "subjectCpid", text(body, "subjectCpid", "subject_cpid"));
+            putIfPresent(intake, "requestReason", text(body, "requestReason", "request_reason", "reason"));
+            putIfPresent(intake, "requestedBy", text(body, "requestedBy", "requested_by"));
+            if (!intake.hasNonNull("facilityId") || !intake.hasNonNull("subjectCpid")) {
+                try {
+                    JsonNode episode = pctClient.getEmergencyEpisode(episodeId);
+                    if (episode != null && episode.isObject()) {
+                        if (!intake.hasNonNull("facilityId")) {
+                            putIfPresent(intake, "facilityId", textNode(episode, "facility_id", "facilityId"));
+                        }
+                        if (!intake.hasNonNull("subjectCpid")) {
+                            putIfPresent(intake, "subjectCpid", textNode(episode, "subject_cpid", "subjectCpid"));
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("MH intake: could not enrich facility/subject from episode {}: {}", episodeId, e.getMessage());
+                }
+            }
+            JsonNode referral = mentalHealthClient.intakeReferral(intake);
+            enriched.put("mh_intake_status", "OK");
+            String referralId = textNode(referral, "id", "referral_id", "referralId");
+            if (referralId != null) {
+                enriched.put("referral_id", referralId);
+            }
+            if (referral != null && !referral.isNull()) {
+                enriched.set("mh_referral", referral);
+            }
+        } catch (Exception e) {
+            log.warn("MH auto-intake failed after MENTAL_HEALTH handover for episode {}: {}", episodeId, e.getMessage());
+            enriched.put("mh_intake_status", "FAILED");
+            enriched.put("mh_intake_error", e.getMessage() != null ? e.getMessage() : "mental-health intake failed");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", enriched));
+    }
+
+    private static String text(Map<String, Object> body, String... keys) {
+        if (body == null) {
+            return null;
+        }
+        for (String key : keys) {
+            Object v = body.get(key);
+            if (v != null) {
+                String s = String.valueOf(v).trim();
+                if (!s.isEmpty() && !"null".equals(s)) {
+                    return s;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String textNode(JsonNode node, String... keys) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        for (String key : keys) {
+            JsonNode child = node.get(key);
+            if (child != null && !child.isNull() && !child.asText().isBlank()) {
+                return child.asText();
+            }
+        }
+        return null;
+    }
+
+    private static void putIfPresent(ObjectNode node, String field, String value) {
+        if (value != null && !value.isBlank()) {
+            node.put(field, value);
+        }
     }
 
     @GetMapping("/{episodeId}/handovers")
@@ -133,10 +239,127 @@ public class EmergencyEpisodeController {
         return proxyPost(() -> pctClient.respondEmergencyAlert(alertId, body), "PCT respondEmergencyAlert", HttpStatus.OK);
     }
 
+    /**
+     * Acknowledging says a human saw it; responding says a human acted; closing says the condition is
+     * gone. Only the close lifts pct's partial unique index on open alerts, so until it is reachable the
+     * same hazard can never re-raise on the same episode.
+     */
+    @PostMapping("/alerts/{alertId}/close")
+    public ResponseEntity<Map<String, Object>> closeAlert(@PathVariable UUID alertId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.closeEmergencyAlert(alertId, body), "PCT closeEmergencyAlert", HttpStatus.OK);
+    }
+
+    // ── Order sets (W7b) ──────────────────────────────────────────────────────────────────────
+
+    @PostMapping("/{episodeId}/order-sets")
+    public ResponseEntity<Map<String, Object>> invokeOrderSet(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.invokeEmergencyOrderSet(episodeId, body), "PCT invokeEmergencyOrderSet", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{episodeId}/order-sets")
+    public ResponseEntity<Map<String, Object>> orderSets(@PathVariable UUID episodeId) {
+        return proxyGet(() -> pctClient.emergencyOrderSets(episodeId), "PCT emergencyOrderSets");
+    }
+
+    @GetMapping("/order-sets/{instanceId}")
+    public ResponseEntity<Map<String, Object>> orderSet(@PathVariable UUID instanceId) {
+        return proxyGet(() -> pctClient.getEmergencyOrderSet(instanceId), "PCT getEmergencyOrderSet");
+    }
+
+    @PostMapping("/order-sets/items/{itemId}/order")
+    public ResponseEntity<Map<String, Object>> orderItem(@PathVariable UUID itemId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.orderEmergencyOrderSetItem(itemId, body), "PCT orderEmergencyOrderSetItem", HttpStatus.OK);
+    }
+
+    /** pct rejects a decline that carries no reason; that 4xx must reach the clinician, not become a 502. */
+    @PostMapping("/order-sets/items/{itemId}/decline")
+    public ResponseEntity<Map<String, Object>> declineItem(@PathVariable UUID itemId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.declineEmergencyOrderSetItem(itemId, body), "PCT declineEmergencyOrderSetItem", HttpStatus.OK);
+    }
+
+    // ── Medication administration (W8a) ────────────────────────────────────────────────────────
+
+    @PostMapping("/{episodeId}/medications")
+    public ResponseEntity<Map<String, Object>> recordMedication(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.recordEmergencyMedication(episodeId, body), "PCT recordEmergencyMedication", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{episodeId}/medications")
+    public ResponseEntity<Map<String, Object>> medications(@PathVariable UUID episodeId) {
+        return proxyGet(() -> pctClient.emergencyMedications(episodeId), "PCT emergencyMedications");
+    }
+
+    // ── Observation / short stay (W9b) ─────────────────────────────────────────────────────────
+
+    @PostMapping("/{episodeId}/observation-stays")
+    public ResponseEntity<Map<String, Object>> startObservationStay(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.startEmergencyObservationStay(episodeId, body),
+                "PCT startEmergencyObservationStay", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{episodeId}/observation-stays")
+    public ResponseEntity<Map<String, Object>> observationStays(@PathVariable UUID episodeId) {
+        return proxyGet(() -> pctClient.emergencyObservationStays(episodeId), "PCT emergencyObservationStays");
+    }
+
+    @PostMapping("/observation-stays/{stayId}/end")
+    public ResponseEntity<Map<String, Object>> endObservationStay(@PathVariable UUID stayId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.endEmergencyObservationStay(stayId, body),
+                "PCT endEmergencyObservationStay", HttpStatus.OK);
+    }
+
+    // ── Identity link (W12) ────────────────────────────────────────────────────────────────────
+
+    /** Append-only: a resolution links, it never overwrites, and both identities are retained forever. */
+    @PostMapping("/{episodeId}/identity-link")
+    public ResponseEntity<Map<String, Object>> linkIdentity(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
+        return proxyPost(() -> pctClient.linkEmergencyIdentity(episodeId, body), "PCT linkEmergencyIdentity", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{episodeId}/identity-link")
+    public ResponseEntity<Map<String, Object>> identityLinks(@PathVariable UUID episodeId) {
+        return proxyGet(() -> pctClient.emergencyIdentityLinks(episodeId), "PCT emergencyIdentityLinks");
+    }
+
     /** Episode-by-state + alert-by-severity counts for one facility (W10 command view). */
     @GetMapping("/command-summary")
     public ResponseEntity<Map<String, Object>> commandSummary(@RequestParam UUID facilityId) {
         return proxyGet(() -> pctClient.emergencyCommandSummary(facilityId), "PCT emergencyCommandSummary");
+    }
+
+    /**
+     * The command board in one call: state counts, the alert queue and the open episodes.
+     *
+     * Composed rather than left to three parallel client calls because the degradation rule differs
+     * from the rest of this controller. Elsewhere an unreachable pct is a 502 and the caller retries.
+     * Here a 502 would blank a board a charge nurse is standing in front of, on the strength of one
+     * blind source. Instead each source is read independently and any that fails is named in
+     * {@code failures} — the board still renders, and the tile that cannot be read says so rather
+     * than showing a zero.
+     */
+    @GetMapping("/command-board")
+    public ResponseEntity<Map<String, Object>> commandBoard(@RequestParam UUID facilityId) {
+        EmergencyHonesty.Composite board = EmergencyHonesty.composite();
+
+        try {
+            board.put("summary", pctClient.emergencyCommandSummary(facilityId));
+        } catch (Exception e) {
+            board.failed("summary", "emergency_command_summary_unavailable", "the emergency command summary", e);
+        }
+
+        try {
+            board.put("alerts", pctClient.emergencyAlertBoard(facilityId));
+        } catch (Exception e) {
+            board.failed("alerts", "emergency_alerts_unavailable", "emergency alerts", e);
+        }
+
+        try {
+            board.put("episodes", pctClient.emergencyEpisodeBoard(facilityId));
+        } catch (Exception e) {
+            board.failed("episodes", "emergency_episodes_unavailable", "open emergency episodes", e);
+        }
+
+        return board.build();
     }
 
     /** MCI bulk-mint (W11): mint one emergency_episode per not-yet-minted casualty on an incident. */

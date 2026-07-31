@@ -1,0 +1,38 @@
+== RIG: infra (postgres + redis) + tshepo-authz-service (real PolicyEngine)
+== BOOT: tshepo-authz (Flyway ENABLED — clean auto-migrate on a fresh DB)
+   PASS: J-TA-1 tshepo-authz booted healthy — Flyway applied all migrations clean (no dup V030)
+== J-TA-2 V034 theatre §16 ALLOW families present
+   PASS: J-TA-2 rule present: theatre-checklist-sign-nurse
+   PASS: J-TA-2 rule present: theatre-anaesthesia-scores-anaesthetist
+   PASS: J-TA-2 rule present: theatre-discharge-surgeon
+   PASS: J-TA-2 rule present: theatre-discharge-complete-clinician
+   PASS: J-TA-2 rule present: theatre-return-surgeon
+   PASS: J-TA-2 rule present: theatre-emergency-case-surgeon
+   PASS: J-TA-2 rule present: theatre-consent-exception-surgeon
+== J-TA-3 emergency-surface rules carry min_loa floor
+   PASS: J-TA-3 all 6 emergency-surface rules carry min_loa
+== J-TA-4 HTTP deny path — missing mandatory trust headers
+   PASS: J-TA-4 missing-headers request DENIED 403 (fail-closed)
+== J-TA-5 HTTP deny path — CITIZEN reaching a theatre endpoint (correct-cadre-only)
+   PASS: J-TA-5 CITIZEN theatre request DENIED 403 (no PROVIDER-scoped ALLOW)
+
+== THEATRE-AUTHZ §16 RIG RESULT: PASS=11 FAIL=0
+== RIG: infra (postgres + redis) + tshepo-authz-service (real PolicyEngine)
+== BOOT: tshepo-authz (Flyway ENABLED — clean auto-migrate on a fresh DB)
+   PASS: J-TA-1 tshepo-authz booted healthy — Flyway applied all migrations clean (no dup V030)
+== J-TA-2 V034 theatre §16 ALLOW families present
+   PASS: J-TA-2 rule present: theatre-checklist-sign-nurse
+   PASS: J-TA-2 rule present: theatre-anaesthesia-scores-anaesthetist
+   PASS: J-TA-2 rule present: theatre-discharge-surgeon
+   PASS: J-TA-2 rule present: theatre-discharge-complete-clinician
+   PASS: J-TA-2 rule present: theatre-return-surgeon
+   PASS: J-TA-2 rule present: theatre-emergency-case-surgeon
+   PASS: J-TA-2 rule present: theatre-consent-exception-surgeon
+== J-TA-3 emergency-surface rules carry min_loa floor
+   PASS: J-TA-3 all 6 emergency-surface rules carry min_loa
+== J-TA-4 HTTP deny path — missing mandatory trust headers
+   PASS: J-TA-4 missing-headers request DENIED 403 (fail-closed)
+== J-TA-5 HTTP deny path — CITIZEN reaching a theatre endpoint (correct-cadre-only)
+   PASS: J-TA-5 CITIZEN theatre request DENIED 403 (no PROVIDER-scoped ALLOW)
+
+== THEATRE-AUTHZ §16 RIG RESULT: PASS=11 FAIL=0

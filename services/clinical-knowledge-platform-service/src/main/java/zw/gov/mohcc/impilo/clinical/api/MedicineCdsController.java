@@ -17,8 +17,9 @@ import java.util.Map;
  *
  * <p>Topics (W4–W6): {@code cvd-risk}, {@code deprescribing} (chronic disease); {@code
  * procedure-indication} (medical procedures); {@code icope} (geriatrics), {@code mhgap} (mental
- * health), {@code antimicrobial-stewardship}, {@code palliative}, {@code oncology}. Each maps to a
- * governed content pack registered under its WHO family in the traceability matrix.</p>
+ * health), {@code antimicrobial-stewardship}, {@code palliative}, {@code oncology}; {@code malaria},
+ * {@code sickle-cell}, {@code rhd} (African / Zimbabwean adult content). Each maps to a governed
+ * content pack registered under its WHO family in the traceability matrix.</p>
  *
  * <p>Advisory and auditable; never overrides provider judgement. A result built on unsupplied
  * inputs is reported incomplete, never as an all-clear. An unknown topic yields an explicit

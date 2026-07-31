@@ -71,11 +71,17 @@ public class ConfidentialityPolicyPack {
      * A guardian-confidentiality age rule. {@code confidentialFromGuardianAgeYears} is deliberately
      * nullable — an unanswered legal question reads as null, never as a plausible default, because a
      * guessed threshold that looks authoritative is worse than an obviously missing one.
+     *
+     * @param treatment optional SRH sub-type (CONTRACEPTION, STI, TOP) when category is
+     *                  SEXUAL_REPRODUCTIVE_HEALTH
+     * @param assessmentMode CASE_BY_CASE when no single age threshold applies (PO 2026-07-31 STI/TOP)
      */
     public record AgeRule(
             String category,
+            String treatment,
             Integer confidentialFromGuardianAgeYears,
             String verificationStatus,
+            String assessmentMode,
             String legalBasisToVerify) {
 
         /** Usable only when the threshold has actually been supplied and verified. */
@@ -101,9 +107,11 @@ public class ConfidentialityPolicyPack {
             List<AgeRule> rules = new ArrayList<>();
             root.path("guardianConfidentialityRules").forEach(n -> rules.add(new AgeRule(
                     n.path("category").asText(null),
+                    n.hasNonNull("treatment") ? n.get("treatment").asText(null) : null,
                     n.hasNonNull("confidentialFromGuardianAgeYears")
                             ? n.get("confidentialFromGuardianAgeYears").asInt() : null,
                     n.path("verificationStatus").asText("UNVERIFIED"),
+                    n.hasNonNull("assessmentMode") ? n.get("assessmentMode").asText(null) : null,
                     n.path("legalBasisToVerify").asText(null))));
             ageRules = List.copyOf(rules);
         } catch (Exception e) {
@@ -173,6 +181,11 @@ public class ConfidentialityPolicyPack {
             }
         }
         return kept;
+    }
+
+    /** Guardian-confidentiality age rules loaded from the pack (may include SRH treatment splits). */
+    public List<AgeRule> ageRules() {
+        return ageRules;
     }
 
     /** The guardian-confidentiality age rule for a category, or null when the pack declares none. */

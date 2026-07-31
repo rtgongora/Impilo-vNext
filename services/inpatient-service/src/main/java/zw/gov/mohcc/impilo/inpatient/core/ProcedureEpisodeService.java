@@ -41,6 +41,22 @@ public class ProcedureEpisodeService {
         }
     }
 
+    /**
+     * V305 — why the patient went back to theatre. Closed, because "unplanned return to theatre,
+     * by cause" is a counted safety indicator and free text cannot be counted.
+     */
+    private static final Set<String> RETURN_COMPLICATION_CATEGORIES = Set.of(
+            "HAEMORRHAGE", "SEPSIS", "ANASTOMOTIC_LEAK", "WOUND_DEHISCENCE", "ISCHAEMIA",
+            "OBSTRUCTION", "RETAINED_ITEM", "DEVICE_OR_IMPLANT_FAILURE", "ORGAN_INJURY",
+            "PLANNED_SECOND_LOOK", "OTHER");
+
+    /**
+     * Closed laterality vocabulary (V300 chk_procedure_episode_laterality). Free text fails open
+     * for wrong-site prevention — every writer must use these exact tokens.
+     */
+    private static final Set<String> LATERALITY_VOCAB = Set.of(
+            "LEFT", "RIGHT", "BILATERAL", "MIDLINE", "NOT_APPLICABLE", "MULTIPLE");
+
     private static final Map<String, List<String[]>> WHO_CHECKLIST = Map.of(
             "SIGN_IN", List.of(
                     new String[]{"ID_CONFIRM", "Patient identity confirmed"},
@@ -80,6 +96,9 @@ public class ProcedureEpisodeService {
     private final ObjectMapper objectMapper;
     // ── Wave P12 §23: read-only financial-clearance check against COSTA ──
     private final CostaServiceAccessClient costaServiceAccessClient;
+    // ── V305: the return-to-theatre record, and the operative note it originates from ──
+    private final ProcedureReturnToTheatreRepository returnToTheatreRepository;
+    private final ProcedureNoteRepository noteRepository;
 
     public ProcedureEpisodeService(
             ProcedureEpisodeRepository episodeRepository,
@@ -98,7 +117,9 @@ public class ProcedureEpisodeService {
             EventOutboxRepository outboxRepository,
             ProcedureConsentRepository procedureConsentRepository,
             ObjectMapper objectMapper,
-            CostaServiceAccessClient costaServiceAccessClient) {
+            CostaServiceAccessClient costaServiceAccessClient,
+            ProcedureReturnToTheatreRepository returnToTheatreRepository,
+            ProcedureNoteRepository noteRepository) {
         this.episodeRepository = episodeRepository;
         this.preopRepository = preopRepository;
         this.checklistRepository = checklistRepository;
@@ -116,6 +137,8 @@ public class ProcedureEpisodeService {
         this.procedureConsentRepository = procedureConsentRepository;
         this.objectMapper = objectMapper;
         this.costaServiceAccessClient = costaServiceAccessClient;
+        this.returnToTheatreRepository = returnToTheatreRepository;
+        this.noteRepository = noteRepository;
     }
 
     @Transactional
@@ -408,6 +431,58 @@ public class ProcedureEpisodeService {
                     "Site and side must be confirmed before a lateralised procedure starts. "
                     + "This cannot be waived by an emergency override.");
         }
+    }
+
+    /**
+     * Wave B3 — table-side confirmation of marked anatomical site and laterality.
+     *
+     * <p>Writes {@code laterality} (required, closed vocab), optional {@code anatomical_site},
+     * and the confirmation pair ({@code site_side_confirmed_by}/{@code site_side_confirmed_at})
+     * from the trust actor. Optionally completes the WHO Sign-In {@code SITE_MARKED} checklist
+     * item so the start gate and the checklist stay aligned.</p>
+     */
+    @Transactional
+    public Map<String, Object> confirmSiteAndSide(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity episode = requireEpisode(episodeId);
+        String laterality = ClinicalPayloadMapper.str(body, "laterality");
+        if (laterality == null || laterality.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "laterality is required — confirming site and side without a side is the "
+                            + "failure this gate exists to prevent");
+        }
+        laterality = laterality.trim().toUpperCase(Locale.ROOT);
+        if (!LATERALITY_VOCAB.contains(laterality)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "laterality must be one of " + LATERALITY_VOCAB);
+        }
+        String anatomicalSite = ClinicalPayloadMapper.str(body, "anatomicalSite", "anatomical_site");
+        if (anatomicalSite != null && anatomicalSite.isBlank()) {
+            anatomicalSite = null;
+        }
+
+        episode.setLaterality(laterality);
+        if (anatomicalSite != null) {
+            episode.setAnatomicalSite(anatomicalSite.length() > 128
+                    ? anatomicalSite.substring(0, 128) : anatomicalSite);
+        }
+        episode.setSiteSideConfirmedBy(currentActor());
+        episode.setSiteSideConfirmedAt(OffsetDateTime.now());
+        episodeRepository.save(episode);
+
+        autoCompleteSiteMarkedChecklist(episodeId);
+        return episodeDetail(episodeId);
+    }
+
+    private void autoCompleteSiteMarkedChecklist(UUID episodeId) {
+        checklistRepository.findByEpisodeIdAndPhaseOrderByItemCodeAsc(episodeId, "SIGN_IN").stream()
+                .filter(item -> "SITE_MARKED".equals(item.getItemCode()) && !item.isCompleted())
+                .forEach(item -> {
+                    item.setCompleted(true);
+                    item.setCompletedBy(currentActor());
+                    item.setCompletedAt(OffsetDateTime.now());
+                    checklistRepository.save(item);
+                });
+        maybeAdvanceToReady(episodeId);
     }
 
     /**
@@ -733,6 +808,13 @@ public class ProcedureEpisodeService {
     /**
      * Return-to-theatre: a PACU/recovery patient who deteriorates and needs re-operation goes back to a
      * re-operative state (READY_FOR_THEATRE) rather than being closed. Keeps the SAME episode/case.
+     *
+     * <p>V305 (pipeline demonstration 10) gives the event a record. Until now this wrote one
+     * boolean, {@code procedure_postop_record.return_to_theatre}, which cannot say why the patient
+     * went back, who decided, when, or whether it happened twice — and cannot distinguish a
+     * planned staged second-look from unplanned harm, which is the difference the DAK safety
+     * indicator is actually measuring. The boolean is still maintained for existing readers; the
+     * detail now sits in {@code procedure_return_to_theatre} beside it.</p>
      */
     @Transactional
     public Map<String, Object> returnToTheatre(UUID episodeId, Map<String, Object> body) {
@@ -741,6 +823,35 @@ public class ProcedureEpisodeService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Return-to-theatre only from a PACU/RECOVERED case (was " + episode.getStatus() + ")");
         }
+
+        String reason = ClinicalPayloadMapper.str(body, "reason");
+        if (reason == null || reason.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "reason is required — a return to theatre nobody can explain later is not an "
+                            + "auditable clinical event");
+        }
+        String category = ClinicalPayloadMapper.str(body, "complicationCategory", "complication_category");
+        if (category == null || category.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "complicationCategory is required and must be one of " + RETURN_COMPLICATION_CATEGORIES
+                            + " — free text cannot be counted, and 'unplanned return to theatre, by "
+                            + "cause' is exactly what a morbidity meeting asks");
+        }
+        category = category.toUpperCase(Locale.ROOT);
+        if (!RETURN_COMPLICATION_CATEGORIES.contains(category)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "complicationCategory must be one of " + RETURN_COMPLICATION_CATEGORIES);
+        }
+        boolean planned = Boolean.TRUE.equals(body.get("planned"))
+                || "true".equalsIgnoreCase(String.valueOf(body.get("planned")));
+        // A staged second-look IS the planned case. Recording it as unplanned would inflate the
+        // harm indicator with good practice; recording anything else as planned would hide harm.
+        if ("PLANNED_SECOND_LOOK".equals(category) != planned) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "PLANNED_SECOND_LOOK and planned=true describe the same thing and must agree — "
+                            + "every other category is an unplanned return");
+        }
+
         episode.setStatus("READY_FOR_THEATRE");
         episodeRepository.save(episode);
         ProcedurePostopRecordEntity postop = postopRepository.findByEpisodeId(episodeId)
@@ -748,6 +859,22 @@ public class ProcedureEpisodeService {
         postop.setEpisodeId(episodeId);
         postop.setReturnToTheatre(true);
         postopRepository.save(postop);
+
+        ProcedureReturnToTheatreEntity record = new ProcedureReturnToTheatreEntity();
+        record.setEpisodeId(episodeId);
+        record.setSeq((int) returnToTheatreRepository.countByEpisodeId(episodeId) + 1);
+        record.setReturnedBy(currentActor());
+        record.setReason(reason);
+        record.setComplicationCategory(category);
+        record.setPlanned(planned);
+        // The complication-originated link: the operative note whose recorded complications the
+        // patient is returning for. Absent when the deterioration was first noticed on the ward,
+        // and absent when no note has been written yet — neither is an error, and neither may be
+        // invented, so the column stays null and says so.
+        noteRepository.findByEpisodeId(episodeId)
+                .ifPresent(note -> record.setOriginatingNoteId(note.getNoteId()));
+        returnToTheatreRepository.save(record);
+
         return episodeDetail(episodeId);
     }
 
@@ -831,6 +958,24 @@ public class ProcedureEpisodeService {
         m.put("consumables", listConsumables(episodeId));
         m.put("anaesthesia_scores", listAnaesthesiaScores(episodeId));
         m.put("anaesthesia_score_suggestions", suggestAnaesthesiaScores(episodeId));
+        // V305: written detail is only worth writing if someone can read it back. The postop
+        // boolean above says a return happened; this says how many, why, and whether planned.
+        m.put("returns_to_theatre", returnToTheatreRepository.findByEpisodeIdOrderBySeqAsc(episodeId)
+                .stream().map(this::returnToTheatreRow).toList());
+        return m;
+    }
+
+    private Map<String, Object> returnToTheatreRow(ProcedureReturnToTheatreEntity r) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", r.getReturnId() != null ? r.getReturnId().toString() : null);
+        m.put("seq", r.getSeq());
+        m.put("returned_at", r.getReturnedAt());
+        m.put("returned_by", r.getReturnedBy());
+        m.put("reason", r.getReason());
+        m.put("complication_category", r.getComplicationCategory());
+        m.put("planned", r.isPlanned());
+        m.put("originating_note_id",
+                r.getOriginatingNoteId() != null ? r.getOriginatingNoteId().toString() : null);
         return m;
     }
 
@@ -1227,6 +1372,14 @@ public class ProcedureEpisodeService {
         m.put("booking_id", e.getBookingId());
         // Wave 4 §13 — theatre→inpatient continuity: the case references its inpatient admission episode.
         m.put("admission_ref", e.getAdmissionRef() != null ? e.getAdmissionRef().toString() : null);
+        // Wave B3 — structured site/side + confirmation pair (V300). Banner aliases
+        // surgical_site / surgical_side match what TheatreCaseBanner already reads.
+        m.put("anatomical_site", e.getAnatomicalSite());
+        m.put("laterality", e.getLaterality());
+        m.put("site_side_confirmed_by", e.getSiteSideConfirmedBy());
+        m.put("site_side_confirmed_at", e.getSiteSideConfirmedAt());
+        m.put("surgical_site", e.getAnatomicalSite());
+        m.put("surgical_side", e.getLaterality());
         return m;
     }
 

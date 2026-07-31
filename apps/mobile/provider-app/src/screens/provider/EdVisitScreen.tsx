@@ -13,8 +13,21 @@ import {
   edStartEncounter,
   edDisposition,
   scoreEdTriage,
+  edAssignZone,
+  edBindProtocol,
+  edPageTeam,
+  listEdDiagnostics,
+  orderEdDiagnostic,
+  actOnEdDiagnostic,
+  closeEdDiagnostic,
+  listTraumaTeam,
+  ackTraumaTeamMember,
+  escalateTraumaTeam,
 } from "../../services/edService";
 import { searchICD11, type ICD11SearchResult } from "../../services/diagnosisService";
+import { useAppStore } from "../../stores/appStore";
+import { OfflineTriageAdvisory } from "../../components/emergency/OfflineTriageAdvisory";
+import { EmergencyOutboxBadge } from "../../components/emergency/EmergencyOutboxBadge";
 
 const STEPS = ["Trackboard", "Triage", "Treatment", "Disposition"] as const;
 const ACUITY = [
@@ -30,9 +43,11 @@ const DISC_KEYS = [
   { id: "altered_consciousness", label: "Altered consciousness" },
   { id: "severe_pain_distress", label: "Severe pain/distress" },
 ] as const;
+const ZONES = ["RESUS", "MAJOR", "MINOR", "OBSERVATION", "FAST_TRACK"];
 
-export function EdVisitScreen() {
+export function EdVisitScreen({ embedded }: { embedded?: boolean } = {}) {
   const qc = useQueryClient();
+  const { facilityId, isOnline } = useAppStore();
   const [step, setStep] = useState(0);
   const [visitId, setVisitId] = useState<string | null>(null);
   const [patientCpid, setPatientCpid] = useState("");
@@ -44,10 +59,14 @@ export function EdVisitScreen() {
   const [dxResults, setDxResults] = useState<ICD11SearchResult[]>([]);
   const [dx, setDx] = useState<ICD11SearchResult | null>(null);
   const [disposition, setDisposition] = useState("DISCHARGE");
+  const [zone, setZone] = useState("MINOR");
+  const [protocolCode, setProtocolCode] = useState("");
+  const [diagCode, setDiagCode] = useState("CT_HEAD");
+  const [traumaId, setTraumaId] = useState<string | null>(null);
 
   const { data: visits, isLoading: loadingVisits } = useQuery({
-    queryKey: ["ed-visits"],
-    queryFn: () => listEdVisits(),
+    queryKey: ["ed-visits", facilityId],
+    queryFn: () => listEdVisits(facilityId ?? undefined),
   });
 
   const { data: visit, isLoading: loadingVisit } = useQuery({
@@ -59,15 +78,30 @@ export function EdVisitScreen() {
     enabled: !!visitId,
   });
 
+  const { data: diagnostics, refetch: refetchDx } = useQuery({
+    queryKey: ["ed-diagnostics", visitId],
+    queryFn: () => listEdDiagnostics(visitId!),
+    enabled: !!visitId,
+  });
+
+  const { data: traumaTeam, refetch: refetchTeam } = useQuery({
+    queryKey: ["trauma-team", traumaId],
+    queryFn: () => listTraumaTeam(traumaId!),
+    enabled: !!traumaId,
+    refetchInterval: 15_000,
+  });
+
   const openMutation = useMutation({
     mutationFn: () =>
       openEdVisit({
         patientCpid: patientCpid || "MOBILE-ED",
         chiefComplaint: complaint || "Undifferentiated",
         arrivalMode: "WALK_IN",
+        facilityId,
       }),
     onSuccess: (res) => {
-      const id = String((res.data as { visit_id?: string })?.visit_id ?? "");
+      const body = res.data as { data?: { visit_id?: string }; visit_id?: string };
+      const id = String(body?.data?.visit_id ?? body?.visit_id ?? "");
       if (id) {
         setVisitId(id);
         setStep(1);
@@ -95,6 +129,26 @@ export function EdVisitScreen() {
     onError: () => Alert.alert("Error", "Triage failed"),
   });
 
+  const zoneMut = useMutation({
+    mutationFn: () => edAssignZone(visitId!, { zone }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["ed-visit", visitId] }),
+  });
+
+  const protocolMut = useMutation({
+    mutationFn: () => edBindProtocol(visitId!, { protocolCode: protocolCode || "ED_STANDARD" }),
+    onSuccess: () => Alert.alert("Protocol bound"),
+  });
+
+  const pageMut = useMutation({
+    mutationFn: () => edPageTeam(visitId!, { teamType: "TRAUMA", message: "ED mobile page" }),
+    onSuccess: () => Alert.alert("Team paged"),
+  });
+
+  const orderDxMut = useMutation({
+    mutationFn: () => orderEdDiagnostic(visitId!, { orderCode: diagCode, priority: "STAT" }),
+    onSuccess: () => void refetchDx(),
+  });
+
   const encounterMutation = useMutation({
     mutationFn: () => edStartEncounter(visitId!),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["ed-visit", visitId] }),
@@ -116,6 +170,7 @@ export function EdVisitScreen() {
   });
 
   const previewScore = useCallback(async () => {
+    if (!isOnline) return;
     try {
       const res = await scoreEdTriage({
         scoreBoth: true,
@@ -128,7 +183,7 @@ export function EdVisitScreen() {
     } catch {
       /* non-blocking */
     }
-  }, [disc, pain]);
+  }, [disc, pain, isOnline]);
 
   const searchDx = async () => {
     if (!dxQuery.trim()) return;
@@ -138,10 +193,11 @@ export function EdVisitScreen() {
 
   const status = String(visit?.status ?? "");
   const visitList = (visits ?? []) as Record<string, unknown>[];
+  const activeTraumaId = traumaId ?? String(visit?.trauma_id ?? visit?.active_trauma_id ?? "");
 
-  return (
-    <Screen>
-      <Header title="ED Casualty" subtitle="Full visit wizard" />
+  const content = (
+    <>
+      {!embedded ? <Header title="ED Casualty" subtitle="Full visit wizard" /> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.tabBar} contentContainerStyle={s.tabPad}>
         {STEPS.map((label, i) => (
           <TouchableOpacity key={label} onPress={() => setStep(i)} style={[s.tab, step === i && s.activeTab]}>
@@ -151,6 +207,8 @@ export function EdVisitScreen() {
       </ScrollView>
 
       <ScrollView style={s.content} contentContainerStyle={s.pad}>
+        <EmergencyOutboxBadge onFlushComplete={() => void qc.invalidateQueries({ queryKey: ["ed-visits"] })} />
+
         {step === 0 && (
           <View style={s.section}>
             <Text style={s.h2}>ED trackboard</Text>
@@ -162,6 +220,7 @@ export function EdVisitScreen() {
                 onPress={() => {
                   setVisitId(String(v.visit_id));
                   setStep(1);
+                  if (v.trauma_id) setTraumaId(String(v.trauma_id));
                 }}
               >
                 <Text style={s.cardTitle}>{String(v.patient_cpid)}</Text>
@@ -180,6 +239,7 @@ export function EdVisitScreen() {
         {step === 1 && visitId && (
           <View style={s.section}>
             {loadingVisit ? <LoadingSpinner /> : null}
+            <OfflineTriageAdvisory offline={!isOnline} />
             <Text style={s.h2}>Structured triage</Text>
             <Text style={s.muted}>Visit {visitId} — {status}</Text>
             <View style={s.row}>
@@ -196,8 +256,13 @@ export function EdVisitScreen() {
                 <Text>{disc[d.id] ? "☑" : "☐"} {d.label}</Text>
               </TouchableOpacity>
             ))}
-            <Button title="Preview ESI/MTS score" variant="outline" onPress={previewScore} />
-            <Button title="Complete triage" onPress={() => triageMutation.mutate()} loading={triageMutation.isPending} />
+            <Button title="Preview ESI/MTS score" variant="outline" onPress={previewScore} disabled={!isOnline} />
+            <Button
+              title="Complete triage"
+              onPress={() => triageMutation.mutate()}
+              loading={triageMutation.isPending}
+              disabled={!isOnline}
+            />
           </View>
         )}
 
@@ -205,12 +270,53 @@ export function EdVisitScreen() {
           <View style={s.section}>
             <Text style={s.h2}>Treatment</Text>
             <Text style={s.muted}>Status: {status}</Text>
+            <Text style={s.label}>Assign zone</Text>
+            <View style={s.row}>
+              {ZONES.map((z) => (
+                <TouchableOpacity key={z} onPress={() => setZone(z)} style={[s.chip, zone === z && s.chipOn]}>
+                  <Text style={s.chipText}>{z}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Button title="Assign zone" variant="outline" onPress={() => zoneMut.mutate()} loading={zoneMut.isPending} />
+            <TextInput value={protocolCode} onChangeText={setProtocolCode} style={s.input} placeholder="Protocol code" />
+            <Button title="Bind protocol" variant="outline" onPress={() => protocolMut.mutate()} />
+            <Button title="Page trauma team" variant="outline" onPress={() => pageMut.mutate()} />
             <Button
               title={status === "IN_TREATMENT" ? "Encounter active" : "Start ED encounter"}
               onPress={() => encounterMutation.mutate()}
               loading={encounterMutation.isPending}
               disabled={status === "IN_TREATMENT"}
             />
+
+            <Text style={s.h2}>Diagnostics</Text>
+            <TextInput value={diagCode} onChangeText={setDiagCode} style={s.input} placeholder="Order code" />
+            <Button title="Order diagnostic" variant="outline" onPress={() => orderDxMut.mutate()} />
+            {(diagnostics ?? []).map((d) => (
+              <View key={String(d.link_id ?? d.id)} style={s.card}>
+                <Text style={s.cardTitle}>{String(d.order_code ?? d.orderCode)} — {String(d.status)}</Text>
+                <View style={s.row}>
+                  <Button title="Act" size="sm" onPress={() => actOnEdDiagnostic(String(d.link_id ?? d.id), { actedBy: "provider-mobile" }).then(() => void refetchDx())} />
+                  <Button title="Close" size="sm" variant="outline" onPress={() => closeEdDiagnostic(String(d.link_id ?? d.id), { closedBy: "provider-mobile" }).then(() => void refetchDx())} />
+                </View>
+              </View>
+            ))}
+
+            {activeTraumaId ? (
+              <>
+                <Text style={s.h2}>Trauma team</Text>
+                {(traumaTeam ?? []).map((m) => (
+                  <View key={String(m.id ?? m.workforce_profile_id)} style={s.row}>
+                    <Text style={s.muted}>{String(m.role)} — {String(m.ack_status ?? "PENDING")}</Text>
+                    {String(m.ack_status) !== "ACKED" && m.id ? (
+                      <Button title="Ack" size="sm" onPress={() => ackTraumaTeamMember(activeTraumaId, String(m.id)).then(() => void refetchTeam())} />
+                    ) : null}
+                  </View>
+                ))}
+                <Button title="Escalate no-ack" variant="outline" onPress={() => escalateTraumaTeam(activeTraumaId).then(() => void refetchTeam())} />
+              </>
+            ) : null}
+
             <Button title="Go to disposition" variant="outline" onPress={() => setStep(3)} />
           </View>
         )}
@@ -242,8 +348,11 @@ export function EdVisitScreen() {
           </View>
         )}
       </ScrollView>
-    </Screen>
+    </>
   );
+
+  if (embedded) return <View style={{ flex: 1 }}>{content}</View>;
+  return <Screen>{content}</Screen>;
 }
 
 const s = StyleSheet.create({

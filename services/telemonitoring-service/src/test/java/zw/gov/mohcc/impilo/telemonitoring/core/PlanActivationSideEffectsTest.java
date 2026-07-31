@@ -9,6 +9,8 @@ import org.springframework.test.context.ActiveProfiles;
 import zw.gov.mohcc.impilo.telemonitoring.core.MonitoringPlanService.CreatePlanCommand;
 import zw.gov.mohcc.impilo.telemonitoring.domain.ConsentStatus;
 import zw.gov.mohcc.impilo.telemonitoring.domain.PlanStatus;
+import zw.gov.mohcc.impilo.telemonitoring.integration.PctProblemContributionClient;
+import zw.gov.mohcc.impilo.telemonitoring.integration.PctProblemContributionClient.ContributionResult;
 import zw.gov.mohcc.impilo.telemonitoring.integration.PctTaskClient;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.entity.MonitoringPlanEntity;
@@ -43,6 +45,7 @@ class PlanActivationSideEffectsTest {
     @Autowired private EventOutboxRepository outboxRepository;
 
     @MockBean private PctTaskClient pctTaskClient;
+    @MockBean private PctProblemContributionClient pctProblemClient;
 
     private final UUID tenant = UUID.randomUUID();
 
@@ -56,6 +59,8 @@ class PlanActivationSideEffectsTest {
             programmeRepository.save(p);
         }
         when(pctTaskClient.createTask(any(), any(), any(), any(), any(), any(), any())).thenReturn(true);
+        when(pctProblemClient.contributeCondition(any(), any(), any(), any(), any(), any()))
+                .thenReturn(ContributionResult.unavailable());
     }
 
     private CreatePlanCommand cmd(String careTeamJson, String consentReference, String consentStatus) {
@@ -170,6 +175,50 @@ class PlanActivationSideEffectsTest {
 
         verify(pctTaskClient, never()).createTask(any(), any(), any(), any(), any(), any(), any());
         assertThat(events(plan)).doesNotContain("telemonitoring.plan.task_requested.v1");
+    }
+
+    // ── (c) Problem-list anchor: pct_problems contribution on activation ──
+
+    @Test
+    void activationContributesClinicalIndicationToPctProblems() {
+        UUID problemId = UUID.randomUUID();
+        when(pctProblemClient.contributeCondition(any(), any(), any(), eq("Essential hypertension"),
+                eq("PROVISIONAL"), any())).thenReturn(new ContributionResult(problemId, true));
+
+        MonitoringPlanEntity plan = planService.createDraft(cmd(null, null, "GRANTED"), true);
+        MonitoringPlanEntity active = planService.approve(plan.getId(), "clinician-b");
+
+        assertThat(active.getPctProblemRef()).isEqualTo(problemId);
+        assertThat(active.getPctProblemContributedAt()).isNotNull();
+        verify(pctProblemClient).contributeCondition(eq(active.getPatientCpid()), isNull(), isNull(),
+                eq("Essential hypertension"), eq("PROVISIONAL"), any());
+    }
+
+    @Test
+    void pctOutageDoesNotBlockActivation() {
+        when(pctProblemClient.contributeCondition(any(), any(), any(), any(), any(), any()))
+                .thenReturn(ContributionResult.unavailable());
+
+        MonitoringPlanEntity plan = planService.createDraft(cmd(null, null, "GRANTED"), true);
+        MonitoringPlanEntity active = planService.approve(plan.getId(), "clinician-b");
+
+        assertThat(active.getStatus()).isEqualTo(PlanStatus.ACTIVE);
+        assertThat(active.getPctProblemRef()).isNull();
+    }
+
+    @Test
+    void programmeCodeUsedWhenClinicalIndicationAbsent() {
+        UUID problemId = UUID.randomUUID();
+        when(pctProblemClient.contributeCondition(any(), any(), any(), eq("HYPERTENSION"),
+                eq("PROVISIONAL"), any())).thenReturn(new ContributionResult(problemId, true));
+
+        CreatePlanCommand noIndication = new CreatePlanCommand(tenant, "CPID-" + UUID.randomUUID(),
+                "HYPERTENSION", null, null, "HOME_SELF_MONITORING", "WEEKLY", null, null,
+                null, null, "clinician-a", null, "GRANTED");
+        MonitoringPlanEntity plan = planService.createDraft(noIndication, true);
+        MonitoringPlanEntity active = planService.approve(plan.getId(), "clinician-b");
+
+        assertThat(active.getPctProblemRef()).isEqualTo(problemId);
     }
 
     private List<String> events(MonitoringPlanEntity plan) {

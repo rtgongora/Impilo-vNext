@@ -1,0 +1,9 @@
+elective-completeness    exit=1  <no verdict line>
+emergency                exit=0  <no verdict line>
+persistence              exit=0  <no verdict line>
+authz                    exit=0  <no verdict line>
+clinical-safety          exit=0  <no verdict line>
+commodities              exit=0  <no verdict line>
+alt                      exit=0  <no verdict line>
+queue-drainage           exit=0  <no verdict line>
+recovery-reporting       exit=0  <no verdict line>

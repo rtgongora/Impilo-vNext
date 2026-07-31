@@ -22,6 +22,16 @@ const maternityMocks = vi.hoisted(() => ({
   getCtgSession: vi.fn(),
   getCtgChunks: vi.fn(),
   addCtgAnnotation: vi.fn(),
+  classifyNearMissForm: vi.fn(),
+  computeNearMissIndicators: vi.fn(),
+  fetchBirthDestination: vi.fn(),
+  // Auto-fetched by MaternitySummaryHeader as soon as a patientId is typed — every existing test in
+  // this file types a patientId, so this needs a benign default (never undefined: react-query
+  // treats a queryFn resolving to undefined as an error, which would render the summary header's
+  // own alert banner and break assertions that check no other alert is present).
+  getMaternitySummary: vi.fn().mockResolvedValue({
+    patient_id: "", partograph_active: false, ctg_active: false, observation_count: 0, last_observed_at: null,
+  }),
 }));
 vi.mock("../../services/maternityService", () => maternityMocks);
 
@@ -48,6 +58,14 @@ function typeInto(container: HTMLElement, testId: string, value: string) {
   act(() => {
     input.value = value;
     input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+async function click(container: HTMLElement, testId: string) {
+  const el = byTestId(container, testId) as HTMLElement | null;
+  if (!el) throw new Error(`Missing element: ${testId}`);
+  await act(async () => {
+    el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
 }
 
@@ -145,6 +163,84 @@ describe("PartographWorkspace", () => {
   // maternityService.test.ts, where `addPartographPoint` is shown to send exactly the answers
   // object it is given — the UI resets that object to {} on every new entry and after every
   // successful submit (see PartographWorkspace's pointMutation.onSuccess).
+
+  it("shows the maternity summary header once a patient id is known", async () => {
+    maternityMocks.getActivePartograph.mockResolvedValue({ partographActive: false, patientId: "P1" });
+    maternityMocks.getMaternitySummary.mockResolvedValue({
+      patient_id: "P1",
+      partograph_active: true,
+      progress: { status: "LEFT_OF_ALERT" },
+      ctg_active: false,
+      observation_count: 3,
+      last_observed_at: "2026-07-30T10:00:00Z",
+    });
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.PartographWorkspace />);
+    await flush();
+    typeInto(mounted.container, "maternity-patient-id", "P1");
+    await flush();
+
+    const header = byTestId(mounted.container, "maternity-summary-header");
+    expect(header?.textContent).toContain("Active");
+    expect(header?.textContent).toContain("3 observations recorded");
+  });
+});
+
+describe("BirthDestinationSection — the three honesty rules at the rendering layer", () => {
+  let mounted: { root: Root; container: HTMLElement } | undefined;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    if (mounted) {
+      act(() => mounted?.root.unmount());
+      mounted = undefined;
+    }
+  });
+
+  it("renders CAPABILITY_UNKNOWN distinctly, with 'Call ahead' shown", async () => {
+    maternityMocks.fetchBirthDestination.mockResolvedValue({
+      facility_id: 7,
+      required_level: "CEMONC",
+      status: "CAPABILITY_UNKNOWN",
+      operational_gate_passed: true,
+      emonc_verdict: "INSUFFICIENT_EVIDENCE",
+      call_ahead: true,
+      message: "Nothing is known about this facility's emergency obstetric capability.",
+      guidance: "Call ahead to confirm.",
+    });
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.BirthDestinationSection />);
+    await flush();
+
+    typeInto(mounted.container, "birth-destination-facility-id", "7");
+    await click(mounted.container, "birth-destination-level-CEMONC");
+    await click(mounted.container, "birth-destination-assess");
+    await flush();
+
+    const verdict = byTestId(mounted.container, "birth-destination-verdict");
+    expect(verdict?.textContent).toContain("not yet assessed");
+    expect(verdict?.textContent).not.toMatch(/\bcan\b|\bcannot\b/i);
+    expect(byTestId(mounted.container, "birth-destination-call-ahead")).toBeTruthy();
+  });
+
+  it("renders a distinct unavailable banner on a 502, never a safe or unsafe verdict", async () => {
+    maternityMocks.fetchBirthDestination.mockRejectedValue(
+      new ApiError({ code: "HTTP_502", message: "could not be retrieved", status: 502, correlationId: "c1" }),
+    );
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.BirthDestinationSection />);
+    await flush();
+
+    typeInto(mounted.container, "birth-destination-facility-id", "7");
+    await click(mounted.container, "birth-destination-assess");
+    await flush();
+
+    expect(byTestId(mounted.container, "birth-destination-unavailable")).toBeTruthy();
+    expect(byTestId(mounted.container, "birth-destination-verdict")).toBeFalsy();
+  });
 });
 
 describe("CtgWorkspace", () => {
@@ -202,5 +298,226 @@ describe("CtgWorkspace", () => {
 
     expect(mounted.container.textContent ?? "").toContain("could not be read");
     expect(byTestId(mounted.container, "ctg-no-session")).toBeFalsy();
+  });
+});
+
+/**
+ * MaternalNearMissWorkspace answers to its own contract (RMNP W12), enforced here at the
+ * rendering layer the same way the two suites above enforce theirs: blank ≠ ABSENT ≠
+ * unrecognised, INDETERMINATE is never rendered as "no near-miss", and a 502 reads as an outage
+ * rather than a clinical all-clear.
+ */
+describe("MaternalNearMissWorkspace", () => {
+  let mounted: { root: Root; container: HTMLElement } | undefined;
+
+  const NEAR_MISS_CATALOG = [
+    {
+      formKey: "impilo.maternal.nearmiss.assessment.v1",
+      definitionJson: JSON.stringify({
+        id: "maternal-near-miss-v1",
+        title: "Maternal near-miss",
+        sections: [
+          {
+            id: "cardiovascular",
+            title: "Cardiovascular",
+            fields: [
+              {
+                id: "nearMiss.shock",
+                label: "Shock",
+                kind: "coded_single",
+                options: [
+                  { code: "PRESENT", display: "Yes" },
+                  { code: "ABSENT", display: "No" },
+                ],
+              },
+              { id: "nearMiss.lactateMmolL", label: "Lactate", kind: "decimal", unit: "mmol/L" },
+            ],
+          },
+        ],
+      }),
+    },
+  ];
+
+  function baseOutcome(overrides: Record<string, unknown> = {}, metaOverrides: Record<string, unknown> = {}) {
+    return {
+      data: {
+        classification_code: "NEAR_MISS_NOT_MET",
+        classification_name: "WHO near-miss criteria not met",
+        status: "CLASSIFIED",
+        is_near_miss: false,
+        provisional: false,
+        unresolved_criteria: [],
+        missing_inputs: [],
+        rationale: "No organ-dysfunction criterion was met on the information recorded.",
+        review_required: false,
+        review_note: null,
+        ...overrides,
+      },
+      meta: {
+        request_id: "req-1",
+        correlation_id: "corr-1",
+        form_key: "impilo.maternal.nearmiss.assessment.v1",
+        criteria_recorded: 1,
+        criteria_left_blank: [],
+        ...metaOverrides,
+      },
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    formsMocks.getFormCatalog.mockResolvedValue(NEAR_MISS_CATALOG);
+  });
+
+  afterEach(() => {
+    if (mounted) {
+      act(() => mounted?.root.unmount());
+      mounted = undefined;
+    }
+  });
+
+  it("renders form-21's sections unanswered by default, and omits a blank field on submit", async () => {
+    maternityMocks.classifyNearMissForm.mockResolvedValue(baseOutcome());
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.MaternalNearMissWorkspace />);
+    await flush();
+
+    expect(mounted.container.textContent ?? "").toContain("Shock");
+    expect(mounted.container.textContent ?? "").toContain("Lactate");
+
+    await click(mounted.container, "field-nearMiss.shock-opt-PRESENT");
+    await flush();
+
+    await click(mounted.container, "near-miss-submit");
+    await flush();
+
+    expect(maternityMocks.classifyNearMissForm).toHaveBeenCalledTimes(1);
+    const [answers] = maternityMocks.classifyNearMissForm.mock.calls[0];
+    expect(answers).toEqual({ "nearMiss.shock": "PRESENT" });
+    expect(answers).not.toHaveProperty("nearMiss.lactateMmolL");
+  });
+
+  it("renders a near-miss identification with its rationale, distinctly from NOT_MET", async () => {
+    maternityMocks.classifyNearMissForm.mockResolvedValue(
+      baseOutcome({
+        classification_code: "NEAR_MISS_CARDIOVASCULAR",
+        classification_name: "Cardiovascular dysfunction",
+        is_near_miss: true,
+        review_required: true,
+        review_note: "She met the WHO near-miss criteria and survived.",
+        rationale: "Signs meet the criteria for NEAR_MISS_CARDIOVASCULAR.",
+      }),
+    );
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.MaternalNearMissWorkspace />);
+    await flush();
+
+    await click(mounted.container, "near-miss-submit");
+    await flush();
+
+    const outcome = byTestId(mounted.container, "near-miss-outcome");
+    expect(outcome?.textContent).toContain("Near-miss identified");
+    expect(outcome?.textContent).toContain("Cardiovascular dysfunction");
+    expect(outcome?.textContent).toContain("She met the WHO near-miss criteria");
+  });
+
+  it("never renders INDETERMINATE as 'no near-miss', and names the missing inputs by label", async () => {
+    maternityMocks.classifyNearMissForm.mockResolvedValue(
+      baseOutcome({
+        classification_code: null,
+        classification_name: null,
+        status: "INDETERMINATE",
+        is_near_miss: false,
+        unresolved_criteria: ["NEAR_MISS_CARDIOVASCULAR"],
+        missing_inputs: ["nearMiss.lactateMmolL"],
+        rationale: "Cannot classify: Cardiovascular dysfunction could not be excluded.",
+      }),
+    );
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.MaternalNearMissWorkspace />);
+    await flush();
+
+    await click(mounted.container, "near-miss-submit");
+    await flush();
+
+    const outcome = byTestId(mounted.container, "near-miss-indeterminate");
+    expect(outcome?.textContent).toContain("Indeterminate");
+    expect(outcome?.textContent).not.toMatch(/no near-miss/i);
+    expect(outcome?.textContent).toContain("Cardiovascular");
+    // The missing input is named by its real label, not its raw linkId.
+    expect(outcome?.textContent).toContain("Lactate");
+  });
+
+  it("renders the unrecognised-answer refusal with the answers it could not read, not a generic failure", async () => {
+    maternityMocks.classifyNearMissForm.mockRejectedValue(
+      new ApiError({
+        code: "unrecognised_form_answer",
+        message: "These answers could not be read, and were not treated as negatives.",
+        status: 422,
+        correlationId: "corr-nm2",
+        details: { unrecognised_answers: ["nearMiss.shock=MAYBE"], accepted_codes: ["PRESENT", "ABSENT"] },
+      }),
+    );
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.MaternalNearMissWorkspace />);
+    await flush();
+
+    await click(mounted.container, "near-miss-submit");
+    await flush();
+
+    const refusal = byTestId(mounted.container, "near-miss-refusal");
+    expect(refusal?.textContent).toContain("could not be read");
+    expect(refusal?.textContent).toContain("nearMiss.shock=MAYBE");
+  });
+
+  it("renders a 502 near_miss_unavailable as an outage, never as 'no near-miss found'", async () => {
+    maternityMocks.classifyNearMissForm.mockRejectedValue(
+      new ApiError({
+        code: "near_miss_unavailable",
+        message:
+          "The near-miss criteria could not be evaluated. This is not a finding of 'no near-miss'. Classify clinically and resubmit when the service returns.",
+        status: 502,
+        correlationId: "corr-nm3",
+      }),
+    );
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.MaternalNearMissWorkspace />);
+    await flush();
+
+    await click(mounted.container, "near-miss-submit");
+    await flush();
+
+    const refusal = byTestId(mounted.container, "near-miss-refusal");
+    expect(refusal?.textContent).toContain("could not be evaluated");
+    expect(refusal?.textContent).toContain("not a finding of 'no near-miss'");
+    expect(byTestId(mounted.container, "near-miss-outcome")).toBeFalsy();
+  });
+
+  it("computes severe maternal outcome indicators and never renders a null ratio as zero", async () => {
+    maternityMocks.computeNearMissIndicators.mockResolvedValue({
+      indicator_period: "2026-Q2",
+      near_miss_count: 1,
+      maternal_death_count: 0,
+      indeterminate_count: 1,
+      severe_maternal_outcome_count: 1,
+      near_miss_to_death_ratio: null,
+      near_miss_to_death_ratio_upper_bound: 1,
+      mortality_index: null,
+      mortality_index_lower_bound: 0,
+      mortality_index_direction: "HIGHER_IS_WORSE",
+      note: "No deaths recorded — the ratio is undefined, not zero.",
+    });
+    const mod = await import("../../screens/provider/MaternityWorkspaces");
+    mounted = renderWithQuery(<mod.MaternalNearMissWorkspace />);
+    await flush();
+
+    await click(mounted.container, "near-miss-indicators-compute");
+    await flush();
+
+    const result = byTestId(mounted.container, "near-miss-indicators-result");
+    expect(result?.textContent).toContain("Indeterminate: 1");
+    const ratio = byTestId(mounted.container, "near-miss-indicators-ratio");
+    expect(ratio?.textContent).toContain("Not computable");
+    expect(ratio?.textContent).not.toContain("0.00");
   });
 });

@@ -39,6 +39,7 @@ public class EdVisitService {
     private final EdTraumaTeamService traumaTeamService;
     private final EmergencyEpisodeService emergencyEpisodeService;
     private final EmergencyDispositionService emergencyDispositionService;
+    private final EdDiagnosticOrderRepository diagnosticOrderRepository;
 
     public EdVisitService(JourneyStateMachine journeyStateMachine,
                           TriageService triageService,
@@ -56,7 +57,8 @@ public class EdVisitService {
                           zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient daidzaiEpisodes,
                           EdTraumaTeamService traumaTeamService,
                           EmergencyEpisodeService emergencyEpisodeService,
-                          EmergencyDispositionService emergencyDispositionService) {
+                          EmergencyDispositionService emergencyDispositionService,
+                          EdDiagnosticOrderRepository diagnosticOrderRepository) {
         this.journeyStateMachine = journeyStateMachine;
         this.triageService = triageService;
         this.encounterService = encounterService;
@@ -74,6 +76,7 @@ public class EdVisitService {
         this.traumaTeamService = traumaTeamService;
         this.emergencyEpisodeService = emergencyEpisodeService;
         this.emergencyDispositionService = emergencyDispositionService;
+        this.diagnosticOrderRepository = diagnosticOrderRepository;
     }
 
     /**
@@ -885,6 +888,8 @@ public class EdVisitService {
                 .stream().map(this::pageRow).toList());
         m.put("protocol_suggestions", protocolSuggestions(visitId));
         dispositionRepository.findByVisitId(visitId).ifPresent(d -> m.put("disposition", dispositionRow(d)));
+        m.put("diagnostic_orders", diagnosticOrderRepository.findByVisitIdOrderByCreatedAtDesc(visitId).stream()
+                .map(this::diagnosticOrderRow).toList());
         traumaRepository.findFirstByVisitIdAndStatusOrderByActivatedAtDesc(visitId, "ACTIVE").ifPresent(t -> {
             m.put("active_trauma_id", t.getTraumaId().toString());
             m.put("trauma_surveys", traumaSurveyRepository.findByTraumaIdOrderByRecordedAtAsc(t.getTraumaId())
@@ -959,6 +964,20 @@ public class EdVisitService {
         m.put("primary_diagnosis_display", d.getPrimaryDiagnosisDisplay());
         m.put("external_cause_code", d.getExternalCauseCode());
         m.put("disposition_at", d.getDispositionAt().toString());
+        return m;
+    }
+
+    private Map<String, Object> diagnosticOrderRow(EdDiagnosticOrderEntity link) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("link_id", link.getId().toString());
+        m.put("id", link.getId().toString());
+        m.put("oros_order_id", link.getOrosOrderId());
+        m.put("order_type", link.getOrderType());
+        m.put("test_code", link.getTestCode());
+        m.put("status", link.getStatus());
+        m.put("acted_at", link.getActedAt() != null ? link.getActedAt().toString() : null);
+        m.put("closed_at", link.getClosedAt() != null ? link.getClosedAt().toString() : null);
+        m.put("created_at", link.getCreatedAt() != null ? link.getCreatedAt().toString() : null);
         return m;
     }
 

@@ -154,6 +154,33 @@ export function SpecialtyWorkspaceShell({
         </section>
       )}
 
+      {specialty.spineLinks.length > 0 && (
+        <section
+          className="rounded-lg border border-border bg-card p-5 space-y-2"
+          data-testid="specialty-spine"
+        >
+          <h3 className="font-semibold text-sm">Shared spine this specialty uses</h3>
+          <p className="text-sm text-muted-foreground">
+            These are deep links into existing services — not a second copy of the record.
+          </p>
+          <ul className="space-y-2 text-sm">
+            {specialty.spineLinks.map((link) => (
+              <li key={link.label} data-testid={`specialty-spine-${link.label}`}>
+                <Link
+                  href={link.href(patientId)}
+                  className="text-primary hover:underline"
+                >
+                  {link.label} →
+                </Link>
+                {link.note && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{link.note}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="rounded-lg border border-border bg-card p-5 space-y-2" data-testid="specialty-conditions">
         <h3 className="font-semibold text-sm">What {specialty.section} asks this specialty to support</h3>
         <ul className="grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">

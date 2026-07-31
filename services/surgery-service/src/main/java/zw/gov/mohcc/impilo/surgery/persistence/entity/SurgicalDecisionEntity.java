@@ -77,6 +77,22 @@ public class SurgicalDecisionEntity {
     @Column(name = "decided_at")
     private OffsetDateTime decidedAt;
 
+    /** V012 — INDIVIDUAL or MDT. Was this one surgeon's decision, or a board's? */
+    @Column(name = "decision_forum", nullable = false, length = 24)
+    private String decisionForum = "INDIVIDUAL";
+
+    /** A reference into PCT's board record. Surgery never owns an MDT system of record. */
+    @Column(name = "mdt_decision_ref")
+    private UUID mdtDecisionRef;
+
+    /** Which of PCT's two MDT tables the reference points at — a bare UUID would be ambiguous. */
+    @Column(name = "mdt_decision_source", length = 32)
+    private String mdtDecisionSource;
+
+    /** When surgery last resolved the reference against PCT. Null means unverified, not invalid. */
+    @Column(name = "mdt_decision_verified_at")
+    private OffsetDateTime mdtDecisionVerifiedAt;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -135,6 +151,14 @@ public class SurgicalDecisionEntity {
     public void setDecidedBy(String v) { this.decidedBy = v; }
     public OffsetDateTime getDecidedAt() { return decidedAt; }
     public void setDecidedAt(OffsetDateTime v) { this.decidedAt = v; }
+    public String getDecisionForum() { return decisionForum; }
+    public void setDecisionForum(String v) { this.decisionForum = v; }
+    public UUID getMdtDecisionRef() { return mdtDecisionRef; }
+    public void setMdtDecisionRef(UUID v) { this.mdtDecisionRef = v; }
+    public String getMdtDecisionSource() { return mdtDecisionSource; }
+    public void setMdtDecisionSource(String v) { this.mdtDecisionSource = v; }
+    public OffsetDateTime getMdtDecisionVerifiedAt() { return mdtDecisionVerifiedAt; }
+    public void setMdtDecisionVerifiedAt(OffsetDateTime v) { this.mdtDecisionVerifiedAt = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }

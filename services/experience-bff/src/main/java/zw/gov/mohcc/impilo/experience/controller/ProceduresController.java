@@ -112,4 +112,17 @@ public class ProceduresController {
     public ResponseEntity<String> analyticsIndicator(@RequestParam String code) {
         return procedures.analyticsIndicator(code);
     }
+
+    // ── Wave W4 — P10 Clavien-Dindo grades and complication profiles. Catalogue risk
+    // content only — see V306 in tshepo-authz-service. Not surgery pathway grading. ──
+
+    @GetMapping("/clavien-dindo-grades")
+    public ResponseEntity<String> clavienDindoGrades() {
+        return procedures.clavienDindoGrades();
+    }
+
+    @GetMapping("/complication-profiles")
+    public ResponseEntity<String> complicationProfile(@RequestParam String code) {
+        return procedures.complicationProfile(code);
+    }
 }

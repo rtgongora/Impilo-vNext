@@ -144,4 +144,56 @@ export const CDS_TOPICS: CdsTopicDefinition[] = [
       { key: "asciticPmnPerMm3", label: "Ascitic PMN (/mm³)", type: "number", placeholder: "e.g. 300" },
     ],
   },
+  {
+    topic: "malaria",
+    title: "Malaria (adult)",
+    description:
+      "WHO / EDLIZ-aligned — fever in endemic areas, ACT for uncomplicated disease, severe-malaria referral. ENGINEERING_SEED.",
+    fields: [
+      { key: "feverPresent", label: "Fever present", type: "select", options: YES_NO },
+      { key: "endemicOrRecentTravel", label: "Endemic area or recent travel", type: "select", options: YES_NO },
+      {
+        key: "malariaTestResult", label: "Malaria test (RDT/film)", type: "select",
+        options: [{ value: "POSITIVE", label: "Positive" }, { value: "NEGATIVE", label: "Negative" }],
+      },
+      { key: "severeMalariaSigns", label: "Severe malaria features", type: "select", options: YES_NO },
+      { key: "highClinicalSuspicion", label: "High clinical suspicion despite negative test", type: "select", options: YES_NO },
+      { key: "pregnant", label: "Pregnant", type: "select", options: YES_NO },
+    ],
+  },
+  {
+    topic: "sickle-cell",
+    title: "Sickle-cell disease (adult)",
+    description:
+      "Crisis recognition, hydroxyurea review, Madi transfusion referral (referral only — no transfusion SoR here). ENGINEERING_SEED.",
+    fields: [
+      { key: "sickleCellDiagnosis", label: "Sickle-cell disease confirmed", type: "select", options: YES_NO },
+      { key: "vocPainPresent", label: "Vaso-occlusive pain", type: "select", options: YES_NO },
+      { key: "acuteChestSyndrome", label: "Acute chest syndrome suspected", type: "select", options: YES_NO },
+      { key: "feverPresent", label: "Fever", type: "select", options: YES_NO },
+      { key: "vocEpisodesPast12Months", label: "VOC episodes (past 12 months)", type: "number", placeholder: "e.g. 3" },
+      { key: "transfusionIndicated", label: "Transfusion indicated", type: "select", options: YES_NO },
+    ],
+  },
+  {
+    topic: "rhd",
+    title: "Rheumatic heart disease",
+    description:
+      "Secondary benzathine penicillin prophylaxis, echo referral, ARF recognition. ENGINEERING_SEED.",
+    fields: [
+      { key: "rhdDiagnosis", label: "RHD established", type: "select", options: YES_NO },
+      { key: "daysSinceLastBenzathinePenicillin", label: "Days since last benzathine penicillin", type: "number", placeholder: "e.g. 30" },
+      { key: "penicillinAllergy", label: "Penicillin allergy documented", type: "select", options: YES_NO },
+      {
+        key: "monthsSinceLastEcho", label: "Months since last echo", type: "select",
+        options: [
+          { value: "6", label: "≤ 6 months" },
+          { value: "12", label: "12 months" },
+          { value: "14", label: "> 12 months" },
+          { value: "NEVER", label: "Never performed" },
+        ],
+      },
+      { key: "acuteRheumaticFeverSuspected", label: "Acute rheumatic fever suspected", type: "select", options: YES_NO },
+    ],
+  },
 ];

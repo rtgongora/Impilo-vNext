@@ -69,6 +69,26 @@ exceptions:
     remediation: Remove this entry if /contact gains a page-local transaction.
     issue: parity-public-contact-static
 
+  - path: ui/one-ui-shell/src/app/clinical/emergency/analytics/page.tsx
+    capability: Emergency analytics (WHO DSEC indicators)
+    reason: >-
+      A named-absence page, and it has no API hook on purpose. No emergency
+      indicator is computed anywhere: EMS.DSEC.MINIMUM_DATASET is recorded
+      DEFERRED to W17 in the emergency standards register, and reporting-service
+      has its own database with no view of the pct schema, so no definition
+      naming pct_* could execute even if one were seeded. The page therefore
+      lists the ten measures a district officer would expect and states what
+      blocks each, and renders no figures at all — a zero on an emergency
+      dashboard is read as "no deaths", not as "no pipeline". Wiring it to a
+      hook that returns nothing would be the stub this guard exists to catch.
+    review_date: 2026-09-01
+    owner: clinical-emergency
+    class: intentionally_deferred
+    remediation: >-
+      W17 lands the rpt_emergency_episode_metric projection and the indicator
+      definitions; replace the list with the real measures and delete this entry.
+    issue: parity-emergency-analytics-w17
+
 legacy_advisory_gaps:
   - capability: ZIBO terminology admin
     note: Separate zibo-web app; web shell link only — mobile n/a

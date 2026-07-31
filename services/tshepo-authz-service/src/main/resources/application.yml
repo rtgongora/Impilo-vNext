@@ -117,6 +117,9 @@ tshepo:
     # while the repin hold stands.
     decision-envelope-enabled: ${TSHEPO_DECISION_ENVELOPE_ENABLED:false}
     decision-envelope-ttl-seconds: ${TSHEPO_DECISION_ENVELOPE_TTL_SECONDS:120}
+    # Specially-protected confidentiality control — W14-D preview flip (PO 2026-07-31).
+    # Requires RATIFIED adolescent pack + V307 lane rules active. SHADOW remains available via env.
+    confidentiality-mode: ${TSHEPO_AUTHZ_CONFIDENTIALITY_MODE:ENFORCE}
     # Audit service
     audit-service-url: ${TSHEPO_AUDIT_URL:http://localhost:8183}
     audit-kafka-topic: tshepo.audit.events

@@ -91,13 +91,6 @@ class TheatreControllerTest {
     }
 
     @Test
-    void listBlood_failsSoftToEmptyList() {
-        ResponseEntity<Map<String, Object>> r = controller().listBlood("boom", "req-b2", "corr-b2");
-        assertEquals(200, r.getStatusCode().value());
-        assertTrue(((java.util.List<?>) r.getBody().get("data")).isEmpty());
-    }
-
-    @Test
     void recordCount_wrapsDiscrepancyGate() {
         ResponseEntity<Map<String, Object>> r = controller().recordCount("c1", "req-c", "corr-c",
                 Map.of("kind", "SWAB", "baselineCount", 10, "closingCount", 9));
@@ -156,10 +149,9 @@ class TheatreControllerTest {
     }
 
     @Test
-    void pacuReadiness_failsSoftToUnscored() {
-        ResponseEntity<Map<String, Object>> r = controller().pacuReadiness("boom", "req-pr2", "corr-pr2");
-        assertEquals(200, r.getStatusCode().value());
-        assertEquals("UNSCORED", ((Map<?, ?>) r.getBody().get("data")).get("band"));
+    void pacuReadiness_failurePropagates_doesNotFabricateUnscored() {
+        assertThrows(RuntimeException.class,
+                () -> controller().pacuReadiness("boom", "req-pr2", "corr-pr2"));
     }
 
     @Test
@@ -171,10 +163,21 @@ class TheatreControllerTest {
     }
 
     @Test
-    void getDischarge_failsSoftToNone() {
-        ResponseEntity<Map<String, Object>> r = controller().getDischarge("boom", "req-g", "corr-g");
-        assertEquals(200, r.getStatusCode().value());
-        assertEquals("NONE", ((Map<?, ?>) r.getBody().get("data")).get("status"));
+    void getDischarge_failurePropagates_doesNotFabricateNone() {
+        assertThrows(RuntimeException.class,
+                () -> controller().getDischarge("boom", "req-g", "corr-g"));
+    }
+
+    @Test
+    void listBlood_failurePropagates_doesNotFabricateEmpty() {
+        assertThrows(RuntimeException.class,
+                () -> controller().listBlood("boom", "req-bl", "corr-bl"));
+    }
+
+    @Test
+    void listCounts_failurePropagates_doesNotFabricateEmpty() {
+        assertThrows(RuntimeException.class,
+                () -> controller().listCounts("boom", "req-ct", "corr-ct"));
     }
 
     @Test
@@ -226,6 +229,56 @@ class TheatreControllerTest {
                 () -> controller().recordSpecimenReceipt("boom", "sp1", "req-x", "corr-x"));
     }
 
+    // ── Operative note honesty + return-to-theatre (V305) ──
+
+    @Test
+    void getNote_passesThroughNoneWhenNoDraft() {
+        ResponseEntity<Map<String, Object>> r = controller().getNote("c1", "req-n", "corr-n");
+        assertEquals(200, r.getStatusCode().value());
+        assertEquals("NONE", ((JsonNode) r.getBody().get("data")).get("status").asText());
+    }
+
+    @Test
+    void getNote_failurePropagates_doesNotFabricateNone() {
+        assertThrows(RuntimeException.class,
+                () -> controller().getNote("boom", "req-n2", "corr-n2"));
+    }
+
+    @Test
+    void returnToTheatre_passesThroughRecord() {
+        ResponseEntity<Map<String, Object>> r = controller().returnToTheatre("c1", "req-rtt", "corr-rtt",
+                Map.of("reason", "Bleeding", "complicationCategory", "HAEMORRHAGE", "planned", false));
+        assertEquals(200, r.getStatusCode().value());
+        JsonNode data = (JsonNode) r.getBody().get("data");
+        assertEquals("HAEMORRHAGE", data.get("complication_category").asText());
+        assertEquals("Bleeding", data.get("reason").asText());
+    }
+
+    @Test
+    void returnToTheatre_failurePropagates() {
+        assertThrows(RuntimeException.class,
+                () -> controller().returnToTheatre("boom", "req-rtt2", "corr-rtt2",
+                        Map.of("reason", "x", "complicationCategory", "OTHER")));
+    }
+
+    @Test
+    void confirmSiteAndSide_passesThrough() {
+        ResponseEntity<Map<String, Object>> r = controller().confirmSiteAndSide("c1", "req-ss", "corr-ss",
+                Map.of("laterality", "LEFT", "anatomicalSite", "Left inguinal canal"));
+        assertEquals(200, r.getStatusCode().value());
+        JsonNode data = (JsonNode) r.getBody().get("data");
+        assertEquals("LEFT", data.get("laterality").asText());
+        assertEquals("Left inguinal canal", data.get("anatomical_site").asText());
+        assertEquals("LEFT", data.get("surgical_side").asText());
+    }
+
+    @Test
+    void confirmSiteAndSide_failurePropagates_doesNotFabricateUnmarked() {
+        assertThrows(RuntimeException.class,
+                () -> controller().confirmSiteAndSide("boom", "req-ss2", "corr-ss2",
+                        Map.of("laterality", "LEFT")));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -255,6 +308,28 @@ class TheatreControllerTest {
             return mapper.createObjectNode().put("status", "SIGNED").put("signed_provider_id", "surgeon-1");
         }
 
+        @Override public JsonNode getTheatreNote(String caseId) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode().put("status", "NONE");
+        }
+
+        @Override public JsonNode returnTheatreCaseToTheatre(String caseId, Map<String, Object> body) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode()
+                    .put("reason", String.valueOf(body.get("reason")))
+                    .put("complication_category", String.valueOf(body.get("complicationCategory")))
+                    .put("planned", Boolean.TRUE.equals(body.get("planned")));
+        }
+
+        @Override public JsonNode confirmTheatreCaseSiteSide(String caseId, Map<String, Object> body) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode()
+                    .put("laterality", String.valueOf(body.get("laterality")))
+                    .put("anatomical_site", String.valueOf(body.get("anatomicalSite")))
+                    .put("surgical_side", String.valueOf(body.get("laterality")))
+                    .put("surgical_site", String.valueOf(body.get("anatomicalSite")));
+        }
+
         @Override public JsonNode routeTheatreDeath(String caseId, Map<String, Object> body) {
             return mapper.createObjectNode().put("status", "DECEASED").put("death_routed", false);
         }
@@ -269,6 +344,11 @@ class TheatreControllerTest {
         }
 
         @Override public JsonNode listTheatreBlood(String caseId) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createArrayNode();
+        }
+
+        @Override public JsonNode listTheatreCounts(String caseId) {
             if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
             return mapper.createArrayNode();
         }

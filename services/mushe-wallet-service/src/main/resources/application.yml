@@ -7,7 +7,10 @@ wallet:
     # derived as HMAC-SHA256(this, encryption_key_ref) — so it is NOT recoverable from the
     # stored key reference alone. MUST be provided (>= 32 chars) per environment; the service
     # fails closed (refuses to start) on a blank/weak key.
-    encryption-master-key: ${WALLET_CARD_ENCRYPTION_KEY:}
+    # Bound to WALLET_CARD_ENCRYPTION_MASTER_KEY (not …_KEY): Spring relaxed binding
+    # already mapped the Helm env of that name onto this property, which is why preview
+    # started despite the earlier misnamed ${WALLET_CARD_ENCRYPTION_KEY:} reference.
+    encryption-master-key: ${WALLET_CARD_ENCRYPTION_MASTER_KEY:}
 
 spring:
   application:

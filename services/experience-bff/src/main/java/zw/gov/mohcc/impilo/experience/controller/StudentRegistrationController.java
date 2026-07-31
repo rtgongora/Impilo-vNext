@@ -43,6 +43,75 @@ public class StudentRegistrationController {
                 ? varapiBaseUrl.substring(0, varapiBaseUrl.length() - 1) : varapiBaseUrl;
     }
 
+    // ── Regulator queue ──────────────────────────────────────────────────────────────────────
+
+    @GetMapping("/applications")
+    public ResponseEntity<JsonNode> listApplications(@RequestHeader Map<String, String> headers,
+                                                     @RequestParam(required = false) String councilId,
+                                                     @RequestParam(required = false) String organizationId,
+                                                     @RequestParam(required = false) String states) {
+        StringBuilder path = new StringBuilder("/v1/internal/student-applications?");
+        if (councilId != null && !councilId.isBlank()) {
+            path.append("councilId=").append(councilId).append('&');
+        }
+        if (organizationId != null && !organizationId.isBlank()) {
+            path.append("organizationId=").append(organizationId).append('&');
+        }
+        if (states != null && !states.isBlank()) {
+            path.append("states=").append(states).append('&');
+        }
+        return relay(HttpMethod.GET, path.toString(), headers, null);
+    }
+
+    @GetMapping("/applications/{applicationId}")
+    public ResponseEntity<JsonNode> getApplication(@RequestHeader Map<String, String> headers,
+                                                   @PathVariable String applicationId) {
+        return relay(HttpMethod.GET, "/v1/internal/student-applications/" + applicationId, headers, null);
+    }
+
+    // ── W1D reports ──────────────────────────────────────────────────────────────────────────
+
+    @GetMapping("/reports/regulator-board")
+    public ResponseEntity<JsonNode> regulatorBoard(@RequestHeader Map<String, String> headers,
+                                                   @RequestParam String councilId,
+                                                   @RequestParam(required = false) String applicationType) {
+        String path = "/v1/internal/student-applications/reports/regulator-board?councilId=" + councilId;
+        if (applicationType != null && !applicationType.isBlank()) {
+            path += "&applicationType=" + applicationType;
+        }
+        return relay(HttpMethod.GET, path, headers, null);
+    }
+
+    @GetMapping("/reports/ageing")
+    public ResponseEntity<JsonNode> ageing(@RequestHeader Map<String, String> headers,
+                                           @RequestParam String councilId,
+                                           @RequestParam(required = false) String applicationType) {
+        String path = "/v1/internal/student-applications/reports/ageing?councilId=" + councilId;
+        if (applicationType != null && !applicationType.isBlank()) {
+            path += "&applicationType=" + applicationType;
+        }
+        return relay(HttpMethod.GET, path, headers, null);
+    }
+
+    @GetMapping("/reports/returns-by-section")
+    public ResponseEntity<JsonNode> returnsBySection(@RequestHeader Map<String, String> headers,
+                                                     @RequestParam String councilId,
+                                                     @RequestParam(required = false) String applicationType) {
+        String path = "/v1/internal/student-applications/reports/returns-by-section?councilId=" + councilId;
+        if (applicationType != null && !applicationType.isBlank()) {
+            path += "&applicationType=" + applicationType;
+        }
+        return relay(HttpMethod.GET, path, headers, null);
+    }
+
+    @GetMapping("/reports/institution-board")
+    public ResponseEntity<JsonNode> institutionBoard(@RequestHeader Map<String, String> headers,
+                                                     @RequestParam String organisationId) {
+        return relay(HttpMethod.GET,
+                "/v1/internal/student-applications/reports/institution-board?organisationId="
+                        + organisationId, headers, null);
+    }
+
     // ── The applicant ────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/applications/{applicationId}/sections")

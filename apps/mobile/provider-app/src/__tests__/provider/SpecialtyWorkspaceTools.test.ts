@@ -30,8 +30,8 @@ import { resolveTool, RENDERED_SURFACES } from "../../screens/provider/Specialty
 const ALL_LABELS = SPECIALTY_WORKSPACES.flatMap((w) => w.tools);
 
 describe("every advertised tool is registered", () => {
-  it("covers all 108 advertised labels", () => {
-    expect(ALL_LABELS.length).toBe(108);
+  it("covers all advertised labels", () => {
+    expect(ALL_LABELS.length).toBe(114);
     expect(ALL_LABELS.filter((t) => !resolveTool(t))).toEqual([]);
   });
 
@@ -133,11 +133,27 @@ describe("obstetrics: partograph and CTG resolve to the governed instruments, no
     expect(d?.state === "WIRED" && d.surface).toBe("CtgWorkspace");
   });
 
-  it("leaves Bishop Score with RMNP rather than sweeping it in", () => {
-    // Out of scope for that pass per the mobile contract §6: Bishop lands with the
-    // labour-and-delivery wave, not this one.
+  it("renders the governed maternal near-miss workspace", () => {
+    const d = resolveTool("Maternal Near-Miss Assessment");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("MaternalNearMissWorkspace");
+  });
+
+  it("renders the governed PPH protocol workspace", () => {
+    const d = resolveTool("PPH Protocol");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("PphProtocolWorkspace");
+  });
+
+  it("renders the governed eclampsia protocol workspace", () => {
+    const d = resolveTool("Eclampsia Protocol");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("EclampsiaProtocolWorkspace");
+  });
+
+  it("renders the governed Bishop score workspace", () => {
     const d = resolveTool("Bishop Score");
-    expect(d?.state).toBe("IN_DEVELOPMENT");
-    expect(d?.state === "IN_DEVELOPMENT" && d.owner).toBe("RMNP");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("BishopScoreWorkspace");
   });
 });

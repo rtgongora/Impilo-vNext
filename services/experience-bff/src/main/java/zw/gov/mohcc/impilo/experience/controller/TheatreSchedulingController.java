@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -103,15 +102,14 @@ public class TheatreSchedulingController {
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────────
+    /**
+     * No swallow: an upstream failure must reach the client as a real error so the UI can
+     * distinguish "empty worklist/waitlist/session list" from "service unavailable".
+     */
     private Object getList(String url) {
-        try {
-            ResponseEntity<JsonNode> resp = restTemplate.exchange(
-                    url, HttpMethod.GET, new HttpEntity<>(null), JsonNode.class);
-            return resp.getBody();
-        } catch (Exception e) {
-            log.warn("Theatre-scheduling GET {} failed: {}", url, e.getMessage());
-            return List.of();
-        }
+        ResponseEntity<JsonNode> resp = restTemplate.exchange(
+                url, HttpMethod.GET, new HttpEntity<>(null), JsonNode.class);
+        return resp.getBody();
     }
 
     private Object get(String url) {

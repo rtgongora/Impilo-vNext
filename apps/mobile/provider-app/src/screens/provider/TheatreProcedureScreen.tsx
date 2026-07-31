@@ -1,5 +1,9 @@
 /**
- * TheatreProcedureScreen — Full perioperative case workflow on mobile.
+ * TheatreProcedureScreen — Procedure-episode wizard (pre-op, consent, WHO checklist, intra-op).
+ *
+ * Kept as the episode wizard; theatre board/case actions live on TheatreQueueScreen /
+ * TheatreCaseScreen. Optional episodeId opens a specific episode (e.g. linked from a theatre case —
+ * case id IS the procedure episode id).
  */
 import React, { useState } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
@@ -15,11 +19,17 @@ import {
 
 type Phase = "SIGN_IN" | "TIME_OUT" | "SIGN_OUT";
 
-export function TheatreProcedureScreen() {
+type Props = {
+  /** When set (theatre case → episode), open this episode directly. */
+  episodeId?: string;
+  onBack?: () => void;
+};
+
+export function TheatreProcedureScreen({ episodeId: initialEpisodeId, onBack }: Props = {}) {
   const { activeEncounter } = useEncounterStore();
   const pid = activeEncounter?.patientId ?? "";
   const qc = useQueryClient();
-  const [episodeId, setEpisodeId] = useState<string | null>(null);
+  const [episodeId, setEpisodeId] = useState<string | null>(initialEpisodeId ?? null);
   const [asaClass, setAsaClass] = useState("II");
   const [mallampati, setMallampati] = useState("II");
   const [notes, setNotes] = useState("");
@@ -28,10 +38,10 @@ export function TheatreProcedureScreen() {
   const { data: episodes = [], isLoading } = useQuery({
     queryKey: ["procedure-episodes", pid],
     queryFn: () => listProcedureEpisodes(pid),
-    enabled: !!pid,
+    enabled: !!pid && !initialEpisodeId,
   });
 
-  const { data: episode, refetch } = useQuery({
+  const { data: episode, refetch, isLoading: episodeLoading, isError: episodeError } = useQuery({
     queryKey: ["procedure-episode", episodeId],
     queryFn: () => getProcedureEpisode(episodeId!),
     enabled: !!episodeId,
@@ -63,16 +73,40 @@ export function TheatreProcedureScreen() {
     refresh();
   };
 
-  if (!pid) {
+  // Linked from a theatre case: episode id is known; encounter is optional.
+  if (!pid && !initialEpisodeId) {
     return <Screen><Header title="Theatre Procedure" /><Text style={s.hint}>Select an active patient encounter first.</Text></Screen>;
   }
 
-  if (isLoading) return <Screen><Header title="Theatre Procedure" /><LoadingSpinner /></Screen>;
+  if (isLoading || (episodeId && episodeLoading)) {
+    return <Screen><Header title="Theatre Procedure" /><LoadingSpinner /></Screen>;
+  }
+
+  if (episodeId && episodeError) {
+    return (
+      <Screen>
+        <Header title="Theatre Procedure" />
+        {onBack ? (
+          <TouchableOpacity onPress={onBack} style={{ padding: 16 }}>
+            <Text style={s.back}>← Back to theatre case</Text>
+          </TouchableOpacity>
+        ) : null}
+        <Text testID="theatre-procedure-error" style={s.hint}>
+          Procedure episode could not be loaded. Do not assume pre-op or consent state.
+        </Text>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
       <Header title="Theatre Procedure" />
       <ScrollView style={s.wrap} contentContainerStyle={s.pad}>
+        {onBack ? (
+          <TouchableOpacity onPress={onBack}>
+            <Text style={s.back}>← Back to theatre case</Text>
+          </TouchableOpacity>
+        ) : null}
         {!episodeId ? (
           <View style={s.section}>
             <Text style={s.title}>Procedure cases</Text>

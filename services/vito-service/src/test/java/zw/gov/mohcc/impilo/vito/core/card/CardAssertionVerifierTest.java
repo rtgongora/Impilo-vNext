@@ -18,14 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Verifies the printed-card assertion is genuinely signature-checked: a real
  * Ed25519 signature over the payload (as card-print produces it) verifies; a
- * tampered payload does not.
+ * tampered payload does not. Also proves the verifier fails closed when neither
+ * a public key nor a strong seed is configured.
  */
 class CardAssertionVerifierTest {
 
-    private static final String DEV_SEED = "card-qr-signing-dev-seed-change-me-32b";
+    private static final String TEST_SEED = "card-print-test-signing-seed-at-least-32b";
     private final ObjectMapper mapper = new ObjectMapper();
-    // Default (empty) configs → verifier derives the public key from the dev seed.
-    private final CardAssertionVerifier verifier = new CardAssertionVerifier(mapper, "", "");
+    private final CardAssertionVerifier verifier = new CardAssertionVerifier(mapper, "", TEST_SEED);
 
     private String signedAssertion(String subjectType, String subjectId, String credentialId) throws Exception {
         Map<String, Object> payload = new LinkedHashMap<>();
@@ -36,7 +36,7 @@ class CardAssertionVerifierTest {
         payload.put("issuer", "impilo-card-print-agent");
         String payloadJson = mapper.writeValueAsString(payload);
 
-        byte[] priv = MessageDigest.getInstance("SHA-256").digest(DEV_SEED.getBytes(StandardCharsets.UTF_8));
+        byte[] priv = MessageDigest.getInstance("SHA-256").digest(TEST_SEED.getBytes(StandardCharsets.UTF_8));
         Ed25519Signer signer = new Ed25519Signer();
         signer.init(true, new Ed25519PrivateKeyParameters(priv, 0));
         byte[] data = payloadJson.getBytes(StandardCharsets.UTF_8);
@@ -82,5 +82,16 @@ class CardAssertionVerifierTest {
         assertTrue(verifier.verify("").isEmpty());
         assertTrue(verifier.verify("not-json").isEmpty());
         assertTrue(verifier.verify("{\"payload\":{}}").isEmpty());
+    }
+
+    @Test
+    @DisplayName("blank public key and blank/weak seed → refuse to construct")
+    void failsClosedWithoutKeyMaterial() {
+        assertThrows(IllegalStateException.class,
+                () -> new CardAssertionVerifier(mapper, "", ""));
+        assertThrows(IllegalStateException.class,
+                () -> new CardAssertionVerifier(mapper, "", "too-short"));
+        assertThrows(IllegalStateException.class,
+                () -> new CardAssertionVerifier(mapper, "", "card-qr-signing-dev-seed-change-me-32b"));
     }
 }

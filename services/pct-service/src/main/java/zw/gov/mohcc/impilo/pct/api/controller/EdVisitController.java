@@ -151,6 +151,12 @@ public class EdVisitController {
     }
 
     /** Place a trauma ED diagnostic order on OROS (encounter_ref=episode) + keep the PCT link (G1.9). */
+    @GetMapping("/visits/{visitId}/diagnostics")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listDiagnostics(@PathVariable UUID visitId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(diagnosticsService.listForVisit(visitId), correlationId));
+    }
+
     @PostMapping("/visits/{visitId}/diagnostics")
     public ResponseEntity<ApiResponse<Map<String, Object>>> orderDiagnostic(
             @PathVariable UUID visitId, @RequestBody(required = false) Map<String, Object> body) {

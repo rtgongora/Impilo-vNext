@@ -7,6 +7,8 @@ import zw.gov.mohcc.impilo.pct.persistence.entity.TopAuthorisationEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.TopProcedureEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.TopAuthorisationRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.TopProcedureRepository;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
@@ -91,6 +93,45 @@ class TerminationServiceTest {
         var saved = service.recordProcedure(p);
         assertThat(saved.getProcedureId()).isNotNull();
         assertThat(saved.getAuthorisationStatus()).isEqualTo(TopAuthorisationEntity.STATUS_AUTHORISED);
+    }
+
+    @Test
+    @DisplayName("a DECLINED authorisation is guarded too — the refused request is the more damaging leak")
+    void authorisationsForSubjectAreGuarded() {
+        TopAuthorisationEntity declined = authorised();
+        declined.setAuthorisationId(UUID.randomUUID());
+        declined.setStatus(TopAuthorisationEntity.STATUS_DECLINED);
+        declined.setSensitivityClass("SPECIALLY_PROTECTED");
+        declined.setConfidentialityCategory("SEXUAL_REPRODUCTIVE_HEALTH");
+        when(authorisations.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(TENANT, "CPID-MOTHER"))
+                .thenReturn(java.util.List.of(declined));
+
+        try {
+            // No grant: this table records terminations that never happened, and a request that was
+            // refused is at least as disclosive as a procedure that went ahead.
+            assertThat(service.authorisationsForSubject(TENANT, "CPID-MOTHER")).isEmpty();
+
+            VisibilityContextHolder.set(srhGrant());
+            assertThat(service.authorisationsForSubject(TENANT, "CPID-MOTHER")).hasSize(1);
+        } finally {
+            VisibilityContextHolder.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("authorising stamps the category so the guard above has something to match")
+    void authoriseStampsTheCategory() {
+        var saved = service.authorise(authorised());
+        // The stamp is what makes the read guarded at all: a row with no category is matched by no
+        // grant and, once the class flips, is withheld from everyone rather than from the right people.
+        assertThat(saved.getConfidentialityCategory()).isEqualTo("SEXUAL_REPRODUCTIVE_HEALTH");
+        assertThat(saved.getConfidentialityPolicyVersion()).isNull();
+    }
+
+    private static VisibilityProfile srhGrant() {
+        VisibilityProfile.Builder b = VisibilityProfile.builder(VisibilityProfile.legacyUnrestricted());
+        b.grantConfidentialCategories(java.util.List.of("SEXUAL_REPRODUCTIVE_HEALTH"));
+        return b.build();
     }
 
     @Test

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.clinical.multimorbidity.MultimorbidityContext;
+import zw.gov.mohcc.impilo.clinical.renal.EgfrDerivation;
+import zw.gov.mohcc.impilo.medicine.common.Sex;
 import zw.gov.mohcc.impilo.clinical.multimorbidity.MultimorbidityEngine;
 import zw.gov.mohcc.impilo.clinical.multimorbidity.MultimorbidityShrPublisher;
 import zw.gov.mohcc.impilo.clinical.multimorbidity.MultimorbidityView;
@@ -62,16 +64,18 @@ public class MultimorbidityController {
             @RequestBody JsonNode body,
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantHeader) {
         JsonNode root = body == null ? objectMapper.createObjectNode() : body;
+        Renal renal = renalFunction(root);
         MultimorbidityContext ctx = new MultimorbidityContext(
                 conditions(root.get("conditions")),
                 strings(root.get("medicationCodes")),
                 appointments(root.get("appointments")),
                 investigations(root.get("investigations")),
-                root.hasNonNull("egfr") ? root.get("egfr").asDouble() : null,
+                renal.egfr(),
                 root.hasNonNull("hepaticImpairment") ? root.get("hepaticImpairment").asText() : null,
                 strings(root.get("functionalLimitations")),
                 strings(root.get("patientPriorities")),
-                careTeam(root.get("careTeam")));
+                careTeam(root.get("careTeam")),
+                renal.source());
         LocalDate asOf = date(root.path("asOf").asText(null));
         MultimorbidityView view = engine.assess(ctx, asOf);
 
@@ -82,6 +86,38 @@ public class MultimorbidityController {
                 root.hasNonNull("tenantId") ? root.get("tenantId").asText() : tenantHeader);
 
         return ResponseEntity.ok(Map.of("data", view.toMap()));
+    }
+
+    /** An eGFR and, when this platform worked it out, a note saying so. */
+    private record Renal(Double egfr, String source) {
+    }
+
+    /**
+     * Resolves renal function from what the caller sent.
+     *
+     * <p>A supplied {@code egfr} is used as-is: that is what a laboratory reported, possibly by an
+     * equation this platform does not implement, and it is not second-guessed. Only when none was
+     * sent is one derived from {@code serumCreatinineUmolL} with {@code ageYears} and {@code sex} —
+     * which is the ordinary case for a clinic that measures creatinine and leaves the filtration
+     * rate to be worked out.</p>
+     *
+     * <p>A derivation that refuses returns no eGFR at all. The renal panel then says renal function
+     * is not available, which is true, rather than scoring the patient against a fabricated one.</p>
+     */
+    private static Renal renalFunction(JsonNode root) {
+        if (root.hasNonNull("egfr")) {
+            return new Renal(root.get("egfr").asDouble(), null);
+        }
+        if (!root.hasNonNull("serumCreatinineUmolL")) {
+            return new Renal(null, null);
+        }
+        var derived = EgfrDerivation.fromCreatinine(
+                root.get("serumCreatinineUmolL").decimalValue(),
+                root.hasNonNull("ageYears") ? root.get("ageYears").asInt() : null,
+                Sex.parse(root.path("sex").asText(null)));
+        return derived.present()
+                ? new Renal(derived.asDouble(), EgfrDerivation.DERIVED_SOURCE)
+                : new Renal(null, null);
     }
 
     /** @return null when the key was absent — never an empty list, which would mean "there are none" */

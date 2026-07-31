@@ -142,7 +142,10 @@ snake_case (`cervical_dilation_cm`) — that asymmetry is real and safe.
   computed over a recording with gaps is a confident answer about data that was never captured.
 - **APGAR, in this panel.** A working `APGARScreen` already posts to `/internal/v1/apgar`; the panel
   entry was a duplicate fake beside it and is being deleted rather than reimplemented.
-- **Bishop Score and Fenton.** Bishop lands with the labour and delivery wave in this pack. Fenton is
+- **Bishop Score.** LIVE as of RMNP W14-A — assessment-only cervical favourability via CKP
+  `BishopScoreEngine` and form 22 (`impilo.maternal.bishop.v1`). Blank ≠ zero; nothing persisted
+  on the score path (no new labour SoR).
+- **Fenton.** Fenton is
   preterm growth and belongs to the paediatric lane, which owns the growth engine and the stamped
   standard-and-version discipline; a second growth implementation would give one preterm baby two
   growth histories that disagree the first time either standard is revised.

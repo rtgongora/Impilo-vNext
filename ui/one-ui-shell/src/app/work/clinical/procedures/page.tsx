@@ -29,11 +29,14 @@ import {
   useCatalogueSearch,
   useCatalogueDetail,
   useAppropriatenessCheck,
+  useCompetence,
   useSafetyPauseTemplate,
   useSedationLevel,
   useRecoverySetting,
   useAftercareTemplate,
   useAnalyticsIndicators,
+  useClavienDindoGrades,
+  useComplicationProfile,
   type AppropriatenessRequest,
 } from "@/hooks/queries/useProceduresCatalogue";
 
@@ -173,6 +176,80 @@ function PostProcedurePanels({
   );
 }
 
+
+/**
+ * Wave W4 — P10 complication profile panel. Catalogue risk content for the selected
+ * definition's complicationProfile linkage: anticipated classes, typical Clavien-Dindo
+ * grades, monitoring and escalation. This is NOT surgery pathway grading (an episode
+ * occurrence) and never invents an empty grade list when the grades fetch fails.
+ */
+function ComplicationProfilePanel({ profileCode }: { profileCode: string }) {
+  const profileQ = useComplicationProfile(profileCode);
+  const gradesQ = useClavienDindoGrades();
+
+  const gradeLabel = (code: string | null) => {
+    if (!code) return null;
+    if (gradesQ.isError) return code; // label unavailable — still show the code, never invent emptiness
+    return gradesQ.data?.find((g) => g.gradeCode === code)?.gradeLabel ?? code;
+  };
+
+  return (
+    <div className="mt-4 rounded border border-gray-100 p-2 text-xs" data-testid="procedures-complication-profile-panel">
+      <h5 className="font-semibold uppercase text-muted-foreground">Complication profile</h5>
+      {profileQ.isLoading ? (
+        <p className="mt-1 text-muted-foreground">Loading…</p>
+      ) : profileQ.isError ? (
+        <p className="mt-1 text-danger" role="alert" data-testid="procedures-complication-profile-unavailable">
+          Could not load the complication profile. This is not the same as there being no
+          anticipated complications.
+        </p>
+      ) : profileQ.data ? (
+        <div className="mt-1" data-testid="procedures-complication-profile-content">
+          <p className="font-medium">{profileQ.data.profileName}</p>
+          {profileQ.data.contentMaturity === "ENGINEERING_SEED" && (
+            <p className="mt-0.5 text-[10px] uppercase text-amber-700">
+              Engineering seed content — pending MoHCC ratification of the wording.
+            </p>
+          )}
+          {gradesQ.isError ? (
+            <p className="mt-1 text-danger" role="alert" data-testid="procedures-clavien-grades-unavailable">
+              Could not load Clavien-Dindo grades. Grade labels are unavailable — this is not
+              an empty grade catalogue.
+            </p>
+          ) : null}
+          {profileQ.data.classes.length === 0 ? (
+            <p className="mt-1 text-muted-foreground" data-testid="procedures-complication-classes-empty">
+              This profile has no anticipated complication classes.
+            </p>
+          ) : (
+            <ul className="mt-1 space-y-1" data-testid="procedures-complication-classes">
+              {profileQ.data.classes.map((c) => (
+                <li key={c.complicationType} className="rounded border border-gray-50 p-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{c.complicationType}</span>
+                    <span className="text-muted-foreground">
+                      {c.typicalGradeCode
+                        ? gradeLabel(c.typicalGradeCode)
+                        : "no typical grade"}
+                      {c.neverEvent ? " · never-event" : ""}
+                    </span>
+                  </div>
+                  {c.monitoringRequired && (
+                    <p className="mt-0.5 text-muted-foreground">Monitor: {c.monitoringRequired}</p>
+                  )}
+                  {c.escalationAction && (
+                    <p className="text-muted-foreground">Escalate: {c.escalationAction}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 const COMPUTATION_STATUS_STYLE: Record<string, string> = {
   COMPUTED: "bg-emerald-50 text-emerald-800",
   PARTIAL: "bg-amber-50 text-amber-800",
@@ -283,10 +360,13 @@ export default function ProceduresCataloguePage() {
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [side, setSide] = useState<string>("");
   const [checkRequest, setCheckRequest] = useState<AppropriatenessRequest | null>(null);
+  /** Typed provider id — do not invent a session provider; competence stays unread until entered. */
+  const [providerId, setProviderId] = useState("");
 
   const searchQ = useCatalogueSearch({ specialty, category, q });
   const detailQ = useCatalogueDetail(selectedCode);
   const checkQ = useAppropriatenessCheck(checkRequest);
+  const competenceQ = useCompetence(providerId.trim() || null, selectedCode);
 
   const runCheck = () => {
     if (!selectedCode) return;
@@ -442,6 +522,10 @@ export default function ProceduresCataloguePage() {
                   defaultAftercareTemplateCode={detailQ.data.defaultAftercareTemplateCode}
                 />
 
+                {detailQ.data.complicationProfile && (
+                  <ComplicationProfilePanel profileCode={detailQ.data.complicationProfile} />
+                )}
+
                 {/* Site/side capture — mirrors the closed vocabulary inpatient.procedure_episode.laterality
                     enforces server-side, deliberately, so a value this UI could send is never one the
                     backend gate would reject. Full anatomical-map capture is S16 (surgical graphics); an
@@ -462,6 +546,55 @@ export default function ProceduresCataloguePage() {
                     </select>
                   </div>
                 )}
+
+                <div className="mt-4" data-testid="procedures-competence-panel">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">
+                    Provider competence check
+                  </label>
+                  <input
+                    type="text"
+                    value={providerId}
+                    onChange={(e) => setProviderId(e.target.value)}
+                    placeholder="Provider id (required — not invented from session)"
+                    className="mt-1 block w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                    data-testid="procedures-competence-provider"
+                  />
+                  {!providerId.trim() ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Enter a provider id to check competence for this catalogue entry. Until then,
+                      competence is not established.
+                    </p>
+                  ) : competenceQ.isLoading ? (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Checking competence…
+                    </div>
+                  ) : competenceQ.isError ? (
+                    <p className="mt-2 text-sm text-danger" role="alert" data-testid="procedures-competence-unavailable">
+                      Could not establish competence — do not treat this as permitted.
+                    </p>
+                  ) : competenceQ.data ? (
+                    <div className="mt-2 rounded border border-gray-100 p-2 text-xs" data-testid="procedures-competence-result">
+                      <p className="font-medium">
+                        Capacity:{" "}
+                        <span data-testid="procedures-competence-capacity">{competenceQ.data.capacity}</span>
+                        {competenceQ.data.capacity === "UNKNOWN" || !competenceQ.data.mayProceedAlone ? (
+                          <span className="ml-2 text-danger"> — not established to proceed alone</span>
+                        ) : null}
+                      </p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        May proceed alone: {competenceQ.data.mayProceedAlone ? "yes" : "no"}
+                        {competenceQ.data.countersignatureRequired ? " · countersignature required" : ""}
+                      </p>
+                      {competenceQ.data.reasons?.length ? (
+                        <ul className="mt-1 list-inside list-disc text-muted-foreground">
+                          {competenceQ.data.reasons.map((r) => (
+                            <li key={r}>{r}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
 
                 <button
                   type="button"

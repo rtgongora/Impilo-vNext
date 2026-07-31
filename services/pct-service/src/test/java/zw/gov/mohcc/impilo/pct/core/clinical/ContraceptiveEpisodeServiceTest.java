@@ -43,7 +43,9 @@ class ContraceptiveEpisodeServiceTest {
     void setUp() {
         episodes = mock(ContraceptiveEpisodeRepository.class);
         administrations = mock(ContraceptiveAdministrationRepository.class);
-        service = new ContraceptiveEpisodeService(episodes, administrations);
+        service = new ContraceptiveEpisodeService(episodes, administrations,
+                ReproductiveConfidentialityFixtures.unresolvedPolicy(),
+                new ConfidentialRecordGuard());
         when(episodes.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(administrations.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(administrations.findForEpisode(any())).thenReturn(List.of());

@@ -19,9 +19,10 @@ import Link from "next/link";
 import {
   ArrowLeft, Activity, Stethoscope, Heart, Syringe, Brain,
   Baby, Bone, Eye, Pill, Scissors, Zap, Thermometer,
-  FileText, ClipboardList, AlertTriangle,
+  FileText, ClipboardList, AlertTriangle, ExternalLink,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
+import { findSpecialty } from "@/features/medicine/specialties/specialty-config";
 
 interface SpecialtyConfig {
   label: string;
@@ -66,8 +67,10 @@ const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
     label: "Obstetrics", description: "Pregnancy and delivery management",
     icon: Baby, color: "bg-pink-100 text-pink-600",
     tools: [
-      { label: "Partograph", description: "Labour progress monitoring", icon: Activity },
-      { label: "Fetal Monitoring", description: "CTG interpretation", icon: Heart },
+      { label: "Partograph", description: "Labour progress monitoring", icon: Activity, href: "/ehr/[patientId]/maternity" },
+      { label: "Fetal Monitoring", description: "CTG interpretation", icon: Heart, href: "/ehr/[patientId]/maternity" },
+      { label: "PPH Protocol", description: "Postpartum haemorrhage first-response bundle", icon: AlertTriangle, href: "/ehr/[patientId]/maternity#emergency-bundles" },
+      { label: "Eclampsia Protocol", description: "Eclampsia / severe pre-eclampsia bundle", icon: AlertTriangle, href: "/ehr/[patientId]/maternity#emergency-bundles" },
       { label: "Antenatal Record", description: "Pregnancy summary", icon: FileText },
     ],
     assessments: ["Bishop score", "Apgar score", "Blood loss estimation"],
@@ -128,10 +131,37 @@ export default function SpecialtyWorkspacePage() {
   const { patientId, specialty } = params;
   const config = SPECIALTY_CONFIGS[specialty] ?? DEFAULT_CONFIG;
   const SpecIcon = config.icon;
+  const medicineSpecialty = findSpecialty(specialty);
+  const medicineSpecialtyHref = medicineSpecialty
+    ? `/ehr/${patientId}/medicine/specialty/${medicineSpecialty.key}`
+    : null;
 
   return (
     <EHRLayout>
       <div className="space-y-6">
+        <div
+          className="rounded-lg border border-warning/40 bg-amber-50 p-4 text-sm text-warning-foreground"
+          data-testid="legacy-specialty-banner"
+        >
+          <p className="font-medium">
+            This legacy specialty workspace is a design template. Use Medicine specialty routes.
+          </p>
+          <p className="mt-1 text-warning-foreground/90">
+            Hard-coded tiles below are not wired to production APIs. Disabled tools stay disabled by
+            design — do not treat them as live capabilities.
+          </p>
+          {medicineSpecialtyHref && (
+            <Link
+              href={medicineSpecialtyHref}
+              data-testid="legacy-specialty-medicine-cta"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-hover"
+            >
+              Open {medicineSpecialty.label} in Medicine workspace
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+          )}
+        </div>
+
         <div className="flex items-center gap-3">
           <Link href={`/ehr/${patientId}`} className="text-muted-foreground hover:text-muted-foreground">
             <ArrowLeft className="w-5 h-5" />

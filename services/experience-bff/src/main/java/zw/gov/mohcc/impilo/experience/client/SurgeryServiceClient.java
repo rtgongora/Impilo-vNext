@@ -112,6 +112,221 @@ public class SurgeryServiceClient {
                 baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/decision", String.class);
     }
 
+    /** Reopen for a return to theatre — POST .../{episodeId}/reopen (V010, demonstration 9) */
+    public ResponseEntity<String> reopen(UUID episodeId, String requestBody) {
+        log.info("Surgery: reopening episode {} for a return to theatre", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/reopen", requestBody);
+    }
+
+    /** Every specialty on a shared case — GET .../{episodeId}/specialties (V011, demonstration 4) */
+    public ResponseEntity<String> specialties(UUID episodeId) {
+        log.info("Surgery: listing specialties on episode {}", episodeId);
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/specialties", String.class);
+    }
+
+    /** Add a joining specialty — POST .../{episodeId}/specialties */
+    public ResponseEntity<String> addSpecialty(UUID episodeId, String requestBody) {
+        log.info("Surgery: adding a specialty to episode {}", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/specialties", requestBody);
+    }
+
+    /** Hand the lead over — POST .../{episodeId}/specialties/lead */
+    public ResponseEntity<String> transferLead(UUID episodeId, String requestBody) {
+        log.info("Surgery: transferring the lead specialty on episode {}", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/specialties/lead", requestBody);
+    }
+
+    /**
+     * Remove a joining specialty — DELETE .../{episodeId}/specialties?specialty=...
+     *
+     * <p>The specialty is a query parameter, never a path segment: as a segment it would become
+     * the ext_authz derived resource type and V303's rows could never match it. Encoded through
+     * {@code UriComponentsBuilder} for the same reason the subject-cpid list route is.</p>
+     */
+    public ResponseEntity<String> removeSpecialty(UUID episodeId, String specialty) {
+        log.info("Surgery: removing a specialty from episode {}", episodeId);
+        String url = UriComponentsBuilder
+                .fromUriString(baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/specialties")
+                .queryParam("specialty", specialty)
+                .toUriString();
+        return restTemplate.exchange(url, HttpMethod.DELETE, HttpEntity.EMPTY, String.class);
+    }
+
+    // ── Course-of-care (parity Wave A); gated by V304 ──
+
+    /** Record/refine a prehabilitation item — PUT .../{episodeId}/prehab */
+    public ResponseEntity<String> recordPrehab(UUID episodeId, String requestBody) {
+        log.info("Surgery: recording prehab item for episode {}", episodeId);
+        return exchangeJson(HttpMethod.PUT,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/prehab", requestBody);
+    }
+
+    /** List prehabilitation items — GET .../{episodeId}/prehab */
+    public ResponseEntity<String> prehab(UUID episodeId) {
+        log.info("Surgery: listing prehab items for episode {}", episodeId);
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/prehab", String.class);
+    }
+
+    /** Recognise a complication pathway — POST .../{episodeId}/complications */
+    public ResponseEntity<String> recogniseComplication(UUID episodeId, String requestBody) {
+        log.info("Surgery: recognising complication on episode {}", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/complications", requestBody);
+    }
+
+    /** List complication pathways — GET .../{episodeId}/complications */
+    public ResponseEntity<String> complications(UUID episodeId) {
+        log.info("Surgery: listing complications for episode {}", episodeId);
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/complications", String.class);
+    }
+
+    /** Update a complication pathway — PUT .../{episodeId}/complications/{pathwayId} */
+    public ResponseEntity<String> updateComplication(UUID episodeId, UUID pathwayId, String requestBody) {
+        log.info("Surgery: updating complication {} on episode {}", pathwayId, episodeId);
+        return exchangeJson(HttpMethod.PUT,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/complications/" + pathwayId,
+                requestBody);
+    }
+
+    /** Grade a complication — POST .../complications/{pathwayId}/grade */
+    public ResponseEntity<String> gradeComplication(UUID episodeId, UUID pathwayId, String requestBody) {
+        log.info("Surgery: grading complication {} on episode {}", pathwayId, episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/complications/"
+                        + pathwayId + "/grade",
+                requestBody);
+    }
+
+    /** Disclose a complication — POST .../complications/{pathwayId}/disclose */
+    public ResponseEntity<String> discloseComplication(UUID episodeId, UUID pathwayId, String requestBody) {
+        log.info("Surgery: disclosing complication {} on episode {}", pathwayId, episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/complications/"
+                        + pathwayId + "/disclose",
+                requestBody);
+    }
+
+    /** Close a complication — POST .../complications/{pathwayId}/close */
+    public ResponseEntity<String> closeComplication(UUID episodeId, UUID pathwayId, String requestBody) {
+        log.info("Surgery: closing complication {} on episode {}", pathwayId, episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/complications/"
+                        + pathwayId + "/close",
+                requestBody);
+    }
+
+    /** Place a longitudinal object — POST .../{episodeId}/longitudinal-objects */
+    public ResponseEntity<String> placeLongitudinalObject(UUID episodeId, String requestBody) {
+        log.info("Surgery: placing longitudinal object on episode {}", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/longitudinal-objects",
+                requestBody);
+    }
+
+    /** List longitudinal objects — GET .../{episodeId}/longitudinal-objects */
+    public ResponseEntity<String> longitudinalObjects(UUID episodeId) {
+        log.info("Surgery: listing longitudinal objects for episode {}", episodeId);
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/longitudinal-objects",
+                String.class);
+    }
+
+    /** Remove a longitudinal object — POST .../longitudinal-objects/{objectId}/remove */
+    public ResponseEntity<String> removeLongitudinalObject(UUID episodeId, UUID objectId, String requestBody) {
+        log.info("Surgery: removing longitudinal object {} on episode {}", objectId, episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/longitudinal-objects/"
+                        + objectId + "/remove",
+                requestBody != null ? requestBody : "{}");
+    }
+
+    /** Revise a longitudinal object — POST .../longitudinal-objects/{objectId}/revise */
+    public ResponseEntity<String> reviseLongitudinalObject(UUID episodeId, UUID objectId, String requestBody) {
+        log.info("Surgery: revising longitudinal object {} on episode {}", objectId, episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/longitudinal-objects/"
+                        + objectId + "/revise",
+                requestBody != null ? requestBody : "{}");
+    }
+
+    /** Record/refine follow-up — PUT .../{episodeId}/followup */
+    public ResponseEntity<String> recordFollowup(UUID episodeId, String requestBody) {
+        log.info("Surgery: recording follow-up for episode {}", episodeId);
+        return exchangeJson(HttpMethod.PUT,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/followup", requestBody);
+    }
+
+    /** Read follow-up — GET .../{episodeId}/followup */
+    public ResponseEntity<String> followup(UUID episodeId) {
+        log.info("Surgery: fetching follow-up for episode {}", episodeId);
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/followup", String.class);
+    }
+
+    /** Append a waiting-list revalidation — POST .../{episodeId}/waitlist-revalidation */
+    public ResponseEntity<String> revalidateWaitlist(UUID episodeId, String requestBody) {
+        log.info("Surgery: appending waitlist revalidation for episode {}", episodeId);
+        return exchangeJson(HttpMethod.POST,
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/waitlist-revalidation",
+                requestBody);
+    }
+
+    /** List waiting-list revalidations — GET .../{episodeId}/waitlist-revalidation */
+    public ResponseEntity<String> waitlistRevalidations(UUID episodeId) {
+        log.info("Surgery: listing waitlist revalidations for episode {}", episodeId);
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/episodes/" + episodeId + "/waitlist-revalidation",
+                String.class);
+    }
+
+    // ── Specialty catalogue (SB-4) + surgical analytics (§23); gated by V305 ──
+    // Catalogue lives under /surgery/specialties (NOT /surgery/episodes — that family owns the
+    // SHARED/LEAD roster). Analytics lives under /surgery/analytics (pin keeps it off
+    // /procedures/analytics). Specialty and indicator codes are query parameters from the start.
+
+    /** Specialty indications — GET /internal/v1/surgery/specialties/indications?specialty= */
+    public ResponseEntity<String> specialtyIndications(String specialty) {
+        log.info("Surgery: listing specialty indications");
+        String url = UriComponentsBuilder
+                .fromUriString(baseUrl + "/internal/v1/surgery/specialties/indications")
+                .queryParam("specialty", specialty)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    /** Operative templates — GET /internal/v1/surgery/specialties/templates?specialty= */
+    public ResponseEntity<String> specialtyTemplates(String specialty) {
+        log.info("Surgery: listing specialty operative templates");
+        String url = UriComponentsBuilder
+                .fromUriString(baseUrl + "/internal/v1/surgery/specialties/templates")
+                .queryParam("specialty", specialty)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    /** Indicator catalogue + summary counts — GET /internal/v1/surgery/analytics/indicators */
+    public ResponseEntity<String> analyticsIndicators() {
+        log.info("Surgery: fetching analytics indicator catalogue");
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/analytics/indicators", String.class);
+    }
+
+    /** One indicator — GET /internal/v1/surgery/analytics/indicator?code= */
+    public ResponseEntity<String> analyticsIndicator(String indicatorCode) {
+        log.info("Surgery: fetching analytics indicator={}", indicatorCode);
+        String url = UriComponentsBuilder
+                .fromUriString(baseUrl + "/internal/v1/surgery/analytics/indicator")
+                .queryParam("code", indicatorCode)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
     private ResponseEntity<String> exchangeJson(HttpMethod method, String url, String body) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

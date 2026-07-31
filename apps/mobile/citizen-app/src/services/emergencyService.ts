@@ -1,14 +1,12 @@
 /**
  * Emergency (Daidzai) Service — Citizen one-tap SOS + tracking.
  *
- * Backend: experience-bff (/internal/v1/daidzai/*) → daidzai-service. Daidzai owns the
- * emergency truth; this client only raises the SOS and reads status. Life-safety, low
- * friction: a citizen/caregiver can raise an SOS and is never asked to pay first.
+ * Authenticated citizens use Daidzai; guests use the public gateway SOS lane.
  */
 import { apiClient, publicApiClient } from "@impilo/mobile-api-client";
+import { authStore } from "@impilo/mobile-auth";
 
 const V1 = "/internal/v1/daidzai";
-/** Public, PII-free status-by-reference lane (anonymous). */
 const PUBLIC_SOS = "/internal/v1/public/gateway/sos";
 
 export interface EmergencyRequest {
@@ -19,6 +17,7 @@ export interface EmergencyRequest {
   severity?: string;
   incidentId?: string;
   createdAt?: string;
+  message?: string;
 }
 
 export interface MissionEvent {
@@ -36,10 +35,47 @@ export interface CreateSosInput {
   lat?: number;
   lng?: number;
   locationDescription?: string;
+  /** Required for guest/public gateway SOS (callback before dispatch). */
+  callbackNumber?: string;
+  /** Override auth detection when caller knows session state. */
+  authenticated?: boolean;
 }
 
-/** One-tap SOS — raises a real emergency request. */
+function mapPublicReceipt(body: Record<string, unknown>, fallbackRef?: string): EmergencyRequest {
+  const attrs =
+    body && typeof body === "object" && "data" in body && body.data && typeof body.data === "object"
+      ? (body.data as Record<string, unknown>)
+      : body;
+  const ref = String(attrs.requestReference ?? fallbackRef ?? "");
+  return {
+    id: ref || `public-${Date.now()}`,
+    requestReference: ref || undefined,
+    message: typeof attrs.message === "string" ? attrs.message : undefined,
+    emergencyCategory: typeof attrs.emergencyCategory === "string" ? attrs.emergencyCategory : undefined,
+    severity: typeof attrs.severity === "string" ? attrs.severity : undefined,
+  };
+}
+
+/** One-tap SOS — Daidzai for signed-in users; public gateway for guests. */
 export async function createSos(input: CreateSosInput): Promise<EmergencyRequest> {
+  const authenticated = input.authenticated ?? authStore.getState().isAuthenticated;
+
+  if (!authenticated) {
+    const callbackNumber = input.callbackNumber?.trim();
+    if (!callbackNumber) {
+      throw new Error("Enter a phone number we can call you back on.");
+    }
+    const res = await publicApiClient.post<Record<string, unknown>>(PUBLIC_SOS, {
+      callbackNumber,
+      emergencyCategory: input.emergencyCategory,
+      locationDescription: input.locationDescription,
+      description: input.description,
+      lat: input.lat,
+      lng: input.lng,
+    });
+    return mapPublicReceipt(res.data ?? {});
+  }
+
   const body: Record<string, unknown> = {
     requesterType: input.forSelf ? "CITIZEN" : "CAREGIVER",
     subjectIdentityMode: input.forSelf ? "KNOWN" : "UNKNOWN",
@@ -77,11 +113,6 @@ export interface PublicSosStatus {
   message?: string;
 }
 
-/**
- * Track an anonymously-raised SOS by its human reference (e.g. "SOS-1A2B3C") via the
- * PUBLIC gateway lane — the only handle a guest who submitted without an account has.
- * No PII is exposed. Uses the anonymous client (no session/bearer).
- */
 export async function fetchRequestByReference(reference: string): Promise<PublicSosStatus> {
   const res = await publicApiClient.get<unknown>(`${PUBLIC_SOS}/${encodeURIComponent(reference.trim())}`);
   const body = res.data as Record<string, unknown> | undefined;

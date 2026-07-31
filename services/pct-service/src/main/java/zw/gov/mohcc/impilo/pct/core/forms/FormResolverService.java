@@ -6,6 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.medicine.common.Sex;
+import zw.gov.mohcc.impilo.medicine.renal.EgfrCalculator;
+import zw.gov.mohcc.impilo.medicine.renal.SerumCreatinine;
 import zw.gov.mohcc.impilo.paediatrics.age.AgeCalculator;
 import zw.gov.mohcc.impilo.pct.core.cadre.CadreDecision;
 import zw.gov.mohcc.impilo.pct.core.cadre.CadreEngine;
@@ -22,6 +25,7 @@ import zw.gov.mohcc.impilo.pct.persistence.repository.FormResolverDecisionReposi
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
@@ -197,7 +201,7 @@ public class FormResolverService {
                 ageDays,
                 gestationalAgeWeeks(cpid),
                 latestMeasurement(tenantId, cpid, WEIGHT_CODES, "MEASURED"),
-                latestMeasurement(tenantId, cpid, EGFR_CODES, null),
+                renalFunction(tenantId, cpid, ageMonths, sex),
                 // Hepatic impairment still comes from the governed Child-Pugh instrument this lane
                 // owes, which does not exist yet. Null, not "NONE" — an unstaged liver is not a
                 // healthy one, and a rule needing the stage must decline to score and say why.
@@ -223,6 +227,62 @@ public class FormResolverService {
     private static final List<String> WEIGHT_CODES = List.of("29463-7", "3141-9");
     /** LOINC codes for estimated GFR. */
     private static final List<String> EGFR_CODES = List.of("62238-1", "48642-3", "48643-1", "33914-3");
+
+    /**
+     * Renal function: the laboratory's own eGFR where one was reported, otherwise one derived from
+     * a creatinine.
+     *
+     * <p>The stored value wins. It may come from an equation this service does not implement, and a
+     * laboratory's reported rate is not something to second-guess from its own inputs.</p>
+     *
+     * <p>Deriving only matters because the reported rate is usually missing. A Zimbabwean laboratory
+     * reports a creatinine; computing the filtration rate has been left to whoever is reading the
+     * result. Every rule keyed on {@code egfr} therefore reported the fact unassessed for the
+     * ordinary patient — correct behaviour on missing data, and no use at the bedside.</p>
+     *
+     * <p>The equation is carried in the measurement's {@code source}, which {@code toRuleFacts}
+     * already emits as {@code egfrEquation}, so a consumer can tell a laboratory's figure from one
+     * this platform worked out. The creatinine's own date is kept as the measurement date: a rate
+     * derived from a six-month-old creatinine is six months old, however recently it was computed,
+     * and content that ages facts out must see it that way.</p>
+     *
+     * <p>Package-private so a test can drive it against a mocked observation repository, as
+     * {@code ProgrammeGuidanceService.evaluatePack} is.</p>
+     */
+    DatedMeasurement renalFunction(java.util.UUID tenantId, String cpid,
+                                   Integer ageMonths, String sex) {
+        DatedMeasurement reported = latestMeasurement(tenantId, cpid, EGFR_CODES, null);
+        if (reported != null) {
+            return reported;
+        }
+        DatedMeasurement creatinine = latestMeasurement(
+                tenantId, cpid, SerumCreatinine.LOINC_CODES, null);
+        if (creatinine == null || creatinine.value() == null) {
+            return null;
+        }
+        BigDecimal micromolPerLitre = SerumCreatinine.toMicromolPerLitre(
+                BigDecimal.valueOf(creatinine.value()), creatinine.unit());
+        if (micromolPerLitre == null) {
+            // An unrecognised unit is a data-quality problem. Reading it as µmol/L is how a normal
+            // creatinine recorded in mg/L becomes a diagnosis of renal failure.
+            return null;
+        }
+        var egfr = EgfrCalculator.fromCreatinineMicromolPerLitre(
+                micromolPerLitre,
+                ageMonths == null ? null : ageMonths / 12,
+                Sex.parse(sex));
+        if (!egfr.computed()) {
+            // Unknown, not zero, and not a default. The calculator refuses by name — no age, no sex,
+            // a value outside physiological range — and the fact stays absent so a rule needing it
+            // declines to score rather than scoring against something invented here.
+            return null;
+        }
+        return DatedMeasurement.of(egfr.egfr().doubleValue(), EgfrCalculator.UNIT,
+                creatinine.measuredOn(), DERIVED_EGFR_SOURCE);
+    }
+
+    /** Marks a filtration rate this service computed rather than one a laboratory reported. */
+    static final String DERIVED_EGFR_SOURCE = "CKD-EPI 2021 (derived from serum creatinine)";
 
     /**
      * The most recent observation matching any of the given codes, as a dated measurement.

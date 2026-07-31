@@ -122,3 +122,12 @@ pct:
     live:
       enabled: ${PCT_LIVE_INTEGRATION_ENABLED:true}
       base-url: ${PCT_LIVE_BASE_URL:http://localhost:8380}
+  emergency:
+    # W19 — episode invalidation hints over realtime-gateway (off by default)
+    realtime-enabled: ${PCT_EMERGENCY_REALTIME_ENABLED:false}
+    realtime-topic: ${PCT_EMERGENCY_REALTIME_TOPIC:pct:emergency:realtime}
+    realtime-redis-enabled: ${PCT_EMERGENCY_REALTIME_REDIS_ENABLED:true}
+  confidentiality:
+    # W14-D preview flip (PO 2026-07-31): stamp SPECIALLY_PROTECTED when policy decides protection.
+    # V438 backfills existing category-stamped rows. Set false to revert to shadow category-only.
+    stamp-class: ${PCT_CONFIDENTIALITY_STAMP_CLASS:true}

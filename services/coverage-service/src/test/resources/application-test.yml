@@ -19,6 +19,11 @@ spring:
   flyway:
     enabled: false
 
+# Strong test-only material — EligibilityTokenService refuses to start without it.
+ruvimbo:
+  token:
+    secret: coverage-test-ruvimbo-token-secret-32b!!
+
 impilo:
   security:
     disable-oauth-for-tests: true

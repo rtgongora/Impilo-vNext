@@ -14,7 +14,7 @@
 | A2 | **Port = 8390**; patient-safety takes a different free port | capability-audit §4 | ☐ |
 | A3 | Case-type set (14 types incl. COMPLAINT…SATISFACTION_SURVEY) | design §1.1 | ☐ |
 | A4 | Unified base lifecycle: NEW→TRIAGED→ACKNOWLEDGED→IN_PROGRESS→…→CLOSED→LEARNING (+ ROUTED_OUT, REJECTED) | design §2 | ☐ |
-| A5 | **M&M review** folded into `CLINICAL_QUALITY_INCIDENT` (not a separate service/type) | boundary §6, design §1.1 | ☐ |
+| A5 | **M&M / MPDSR review** — distinct `MPDSR_REVIEW` case type in Rito (not folded into generic clinical quality incident) | boundary §6, design §1.1 | ☑ PO confirmed 2026-07-31; built W14-E |
 | A6 | Grey-zone rule: drug *reaction* → patient-safety; drug *process error/near-miss* → Rito | boundary §2 | ☐ |
 | A7 | Internal quality audit/supervision ≠ tuso/indawo statutory inspection (distinct case records, shared checklists) | boundary §2, audit §2.3 | ☐ |
 | A8 | Single polymorphic `Case` aggregate with typed detail (vs separate aggregates per type) | design §1.1 | ☐ |

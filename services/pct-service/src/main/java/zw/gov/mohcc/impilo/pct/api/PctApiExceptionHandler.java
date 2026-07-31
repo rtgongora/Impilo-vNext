@@ -52,6 +52,37 @@ public class PctApiExceptionHandler {
                 409, correlationId));
     }
 
+    /**
+     * Infrastructure rollback that escaped a domain catch (F9): a callee marked the transaction
+     * rollback-only and the caller returned normally, so commit throws. Mapped to 409 so the
+     * experience layer can reload-and-retry instead of seeing a bare 500. Form extraction itself
+     * isolates items with REQUIRES_NEW so this should be rare there; other write paths still need
+     * a clean envelope.
+     */
+    @ExceptionHandler(org.springframework.transaction.UnexpectedRollbackException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnexpectedRollback(
+            org.springframework.transaction.UnexpectedRollbackException ex) {
+        String correlationId = safeCorrelationId();
+        log.warn("PCT unexpected rollback: {}", ex.getMessage());
+        return ResponseEntity.status(409).body(ApiResponse.error("TRANSACTION_ROLLED_BACK",
+                "The write could not be completed because a related update was rejected. Reload and retry.",
+                409, correlationId));
+    }
+
+    /**
+     * Constraint / integrity failures (duplicate keys, check constraints) that were not mapped to a
+     * domain exception. Surfaced as 409 CONFLICT rather than an unhandled 500.
+     */
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(
+            org.springframework.dao.DataIntegrityViolationException ex) {
+        String correlationId = safeCorrelationId();
+        log.info("PCT data integrity rejection: {}", ex.getMostSpecificCause().getMessage());
+        return ResponseEntity.status(409).body(ApiResponse.error("DATA_INTEGRITY",
+                "The write conflicts with existing data. Reload the latest state and retry.",
+                409, correlationId));
+    }
+
     private String safeCorrelationId() {
         TrustContext ctx = TrustContextHolder.get();
         return ctx != null && ctx.correlationId() != null ? ctx.correlationId().toString() : null;

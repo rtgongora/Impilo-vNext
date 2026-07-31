@@ -21,6 +21,9 @@ const sedationLevelState = vi.fn();
 const recoverySettingState = vi.fn();
 const aftercareTemplateState = vi.fn();
 const analyticsIndicatorsState = vi.fn();
+const competenceState = vi.fn();
+const clavienGradesState = vi.fn();
+const complicationProfileState = vi.fn();
 
 const IDLE = { isLoading: false, isError: false, data: undefined };
 
@@ -38,6 +41,10 @@ vi.mock("@/hooks/queries/useProceduresCatalogue", () => ({
   // SB-3: the analytics indicators panel renders on every page mount; default IDLE below.
   useAnalyticsIndicators: () => analyticsIndicatorsState(),
   useAnalyticsIndicator: () => IDLE,
+  useCompetence: () => competenceState(),
+  // Wave W4 — only called when detail.complicationProfile is set; default IDLE below.
+  useClavienDindoGrades: () => clavienGradesState(),
+  useComplicationProfile: (code: string | null) => complicationProfileState(code),
 }));
 
 beforeEach(() => {
@@ -48,6 +55,9 @@ beforeEach(() => {
   recoverySettingState.mockReturnValue(IDLE);
   aftercareTemplateState.mockReturnValue(IDLE);
   analyticsIndicatorsState.mockReturnValue(IDLE);
+  competenceState.mockReturnValue(IDLE);
+  clavienGradesState.mockReturnValue(IDLE);
+  complicationProfileState.mockReturnValue(IDLE);
 });
 
 function renderPage() {
@@ -390,5 +400,110 @@ describe("ProceduresCataloguePage — Wave P-R2 post-procedure panels (safety pa
     const panel = screen.getByTestId("procedures-aftercare-panel");
     expect(panel).toHaveTextContent(/could not load an aftercare template/i);
     expect(panel).not.toHaveTextContent(/no aftercare template declared/i);
+  });
+});
+
+describe("ProceduresCataloguePage — Wave W4 complication profile (Clavien catalogue)", () => {
+  const DETAIL = {
+    ...ITEM, synonyms: [], anatomicalSite: null, ageMinDays: null, ageMaxDays: null,
+    pregnancyApplicability: "NO_CONSTRAINT", recoveryRequired: true, consentType: "CONSENT-SURGICAL",
+    snomedCtCode: null, status: "PUBLISHED", approvingAuthority: "PENDING_MOHCC_RATIFICATION",
+    sourceCitation: null, requirements: [],
+    safetyPauseTemplate: null, defaultSedationLevelCode: null, defaultRecoverySettingCode: null,
+    aftercareTemplate: null, defaultAftercareTemplateCode: null,
+    complicationProfile: "COMPLICATIONS-LAPAROTOMY",
+  };
+
+  function selectWithProfile() {
+    searchState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { items: [ITEM], matched: 1, catalogueSize: 66 },
+    });
+    detailState.mockReturnValue({ isLoading: false, isError: false, data: DETAIL });
+    checkState.mockReturnValue(IDLE);
+  }
+
+  it("does not render the complication panel when the definition declares no profile", () => {
+    searchState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { items: [ITEM], matched: 1, catalogueSize: 66 },
+    });
+    detailState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { ...DETAIL, complicationProfile: null },
+    });
+    checkState.mockReturnValue(IDLE);
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    expect(screen.queryByTestId("procedures-complication-profile-panel")).not.toBeInTheDocument();
+  });
+
+  it("renders anticipated classes with typical grade labels", () => {
+    selectWithProfile();
+    complicationProfileState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: {
+        profileCode: "COMPLICATIONS-LAPAROTOMY", profileName: "Laparotomy complications",
+        applicableSetting: "THEATRE", description: null, status: "PUBLISHED",
+        approvingAuthority: "PENDING_MOHCC_RATIFICATION", contentMaturity: "ENGINEERING_SEED",
+        classes: [{
+          complicationType: "HAEMORRHAGE", typicalGradeCode: "IIIb",
+          monitoringRequired: "Serial haemoglobin.", escalationAction: "Return to theatre.",
+          neverEvent: false,
+        }],
+      },
+    });
+    clavienGradesState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: [{ gradeCode: "IIIb", gradeLabel: "Grade IIIb", description: "Intervention under GA." }],
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    const panel = screen.getByTestId("procedures-complication-profile-panel");
+    expect(panel).toHaveTextContent("Laparotomy complications");
+    expect(panel).toHaveTextContent("HAEMORRHAGE");
+    expect(panel).toHaveTextContent("Grade IIIb");
+    expect(panel).toHaveTextContent(/engineering seed/i);
+  });
+
+  it("renders a profile fetch failure as unavailable, never as an empty class list", () => {
+    selectWithProfile();
+    complicationProfileState.mockReturnValue({ isLoading: false, isError: true, data: undefined });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    expect(screen.getByTestId("procedures-complication-profile-unavailable")).toBeInTheDocument();
+    expect(screen.queryByTestId("procedures-complication-classes")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("procedures-complication-classes-empty")).not.toBeInTheDocument();
+  });
+
+  it("renders a Clavien grades fetch failure as unavailable, never as an empty grade catalogue", () => {
+    selectWithProfile();
+    complicationProfileState.mockReturnValue({
+      isLoading: false, isError: false,
+      data: {
+        profileCode: "COMPLICATIONS-LAPAROTOMY", profileName: "Laparotomy complications",
+        applicableSetting: "THEATRE", description: null, status: "PUBLISHED",
+        approvingAuthority: "PENDING_MOHCC_RATIFICATION", contentMaturity: "RATIFIED",
+        classes: [{
+          complicationType: "HAEMORRHAGE", typicalGradeCode: "IIIb",
+          monitoringRequired: null, escalationAction: null, neverEvent: false,
+        }],
+      },
+    });
+    clavienGradesState.mockReturnValue({ isLoading: false, isError: true, data: undefined });
+
+    renderPage();
+    fireEvent.click(screen.getByText("Exploratory laparotomy"));
+
+    expect(screen.getByTestId("procedures-clavien-grades-unavailable")).toBeInTheDocument();
+    // Classes still render (with the raw grade code) — grades failure is not "no classes".
+    expect(screen.getByTestId("procedures-complication-classes")).toHaveTextContent("IIIb");
+    expect(screen.getByTestId("procedures-complication-classes")).toHaveTextContent("HAEMORRHAGE");
   });
 });

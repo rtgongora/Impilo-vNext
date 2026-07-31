@@ -167,13 +167,24 @@ override is auditable.
 ## 7. Indicators
 
 The twenty the specification requires, mapped to the six Lancet Commission core indicators and to
-the national strategy. `Y` marks the four with a real projection today.
+the national strategy. `Y` marks the four that are `COMPUTED` today.
 
-surgical volume `Y` · waiting time · cancellation · day-of-surgery cancellation · emergency versus
-elective `Y` · procedure type `Y` · bellwether access · caesarean integration · mortality ·
-complications · unplanned return to theatre · readmission · surgical-site infection · length of
-stay · histology closure · implant outcomes · functional outcomes · patient-reported outcomes ·
-equity · financial protection.
+surgical volume `Y` · waiting time · cancellation `Y` · day-of-surgery cancellation · emergency
+versus elective · procedure type · bellwether access · caesarean integration · mortality ·
+complications `Y` · unplanned return to theatre `Y` · readmission · surgical-site infection ·
+length of stay · histology closure · implant outcomes · functional outcomes · patient-reported
+outcomes · equity · financial protection.
+
+The authoritative per-indicator record is `surgery.analytics_indicator_definition`
+(`V008__analytics_indicator_catalogue.sql`), which carries a `computation_status` of `COMPUTED`,
+`PARTIAL` or `NOT_YET_INSTRUMENTED` per indicator with the gap reason and owning service. Read it
+rather than this paragraph when the two disagree.
+
+Two of the marks in the original version of this list were wrong, and are corrected above.
+`emergency versus elective` cannot be computed at all: `rpt_theatre_case_metric`
+(`reporting-service` `V002__theatre_report_catalog.sql:8`) carries no triage or priority column,
+so there is nothing to stratify on. `procedure type` is `PARTIAL`, not computed. The four that are
+real all come from the `theatre-utilisation` report over that same projection.
 
 Stratification is not optional: `ZW.NSOAS.2022.DISTRICT_ACCESS` makes **facility level** a
 required dimension, because the strategy's own finding is expressed in it.

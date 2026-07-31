@@ -44,6 +44,10 @@ public class TheatreService {
             Set.of("IMMEDIATE", "EMERGENCY", "URGENT", "ELECTIVE", "DAY_CASE");
     private static final List<String> ACTIVE_STATUSES =
             List.of("BOOKED", "PREOP", "READY_FOR_THEATRE", "IN_PROGRESS", "PACU");
+    /** CDC surgical wound classification. Must match chk_procedure_note_wound_classification (V304)
+     *  and surgery-service's chk_operative_template_wound_class, or template linkage is decorative. */
+    private static final Set<String> WOUND_CLASSIFICATIONS =
+            Set.of("CLEAN", "CLEAN_CONTAMINATED", "CONTAMINATED", "DIRTY");
 
     private final ProcedureEpisodeRepository episodeRepository;
     private final ProcedureReadinessCheckRepository readinessRepository;
@@ -811,6 +815,40 @@ public class TheatreService {
         Object counts = body.getOrDefault("countsCorrect", body.get("counts_correct"));
         if (counts != null) note.setCountsCorrect(Boolean.parseBoolean(String.valueOf(counts)));
         note.setPostopPlan(ClinicalPayloadMapper.str(body, "postopPlan", "postop_plan"));
+
+        // ── SB-5 (audit §13) operative depth ──
+        note.setPatientPosition(ClinicalPayloadMapper.str(body, "patientPosition", "patient_position"));
+        note.setSkinPreparation(ClinicalPayloadMapper.str(body, "skinPreparation", "skin_preparation"));
+        note.setIncision(ClinicalPayloadMapper.str(body, "incision"));
+        note.setOperativeSteps(ClinicalPayloadMapper.str(body, "operativeSteps", "operative_steps"));
+        note.setOperativeTechnique(ClinicalPayloadMapper.str(body, "operativeTechnique", "operative_technique"));
+        note.setIntraoperativeFluids(ClinicalPayloadMapper.str(body, "intraoperativeFluids", "intraoperative_fluids"));
+        note.setDrainsPlaced(ClinicalPayloadMapper.str(body, "drainsPlaced", "drains_placed"));
+        note.setStomasFormed(ClinicalPayloadMapper.str(body, "stomasFormed", "stomas_formed"));
+        note.setClosureMethod(ClinicalPayloadMapper.str(body, "closureMethod", "closure_method"));
+        note.setPostoperativeInstructions(
+                ClinicalPayloadMapper.str(body, "postoperativeInstructions", "postoperative_instructions"));
+
+        // Validated here rather than left to the CHECK, so a bad value is a 400 the caller can
+        // act on instead of a 500 from the driver.
+        String woundClass = ClinicalPayloadMapper.str(body, "woundClassification", "wound_classification");
+        if (woundClass != null && !WOUND_CLASSIFICATIONS.contains(woundClass)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "woundClassification must be one of " + WOUND_CLASSIFICATIONS);
+        }
+        note.setWoundClassification(woundClass);
+
+        // A template reference is the pair or it is nothing: the id resolves the row, the code
+        // keeps the note readable when surgery-service is unreachable.
+        UUID templateRef = ClinicalPayloadMapper.uuid(body, "operativeTemplateRef", "operative_template_ref");
+        String templateCode = ClinicalPayloadMapper.str(body, "operativeTemplateCode", "operative_template_code");
+        if ((templateRef == null) != (templateCode == null)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "operativeTemplateRef and operativeTemplateCode must be supplied together");
+        }
+        note.setOperativeTemplateRef(templateRef);
+        note.setOperativeTemplateCode(templateCode);
+
         note.setCreatedBy(actor());
         try {
             note.setNoteJson(objectMapper.writeValueAsString(body));
@@ -961,6 +999,23 @@ public class TheatreService {
         appendOutbox("PROCEDURE", episodeId.toString(), "theatre.returned-to-theatre", Map.of(
                 "episode_id", episodeId.toString(),
                 "reason", nullSafe(ClinicalPayloadMapper.str(body, "reason", "description"))));
+        return result;
+    }
+
+    /**
+     * Wave B3 — confirm marked anatomical site and laterality on the theatre case.
+     * Delegates to {@link ProcedureEpisodeService#confirmSiteAndSide}; emits a theatre-scoped
+     * outbox event so readiness consumers see the confirmation without re-reading the episode.
+     */
+    @Transactional
+    public Map<String, Object> confirmSiteAndSide(UUID episodeId, Map<String, Object> body) {
+        requireEpisode(episodeId);
+        Map<String, Object> result = episodeService.confirmSiteAndSide(episodeId, body);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.site-side.confirmed", Map.of(
+                "episode_id", episodeId.toString(),
+                "laterality", nullSafe(ClinicalPayloadMapper.str(body, "laterality")),
+                "anatomical_site", nullSafe(ClinicalPayloadMapper.str(body, "anatomicalSite", "anatomical_site")),
+                "confirmed_by", actor()));
         return result;
     }
 
@@ -1450,6 +1505,20 @@ public class TheatreService {
         m.put("complications", n.getComplications());
         m.put("counts_correct", n.getCountsCorrect());
         m.put("postop_plan", n.getPostopPlan());
+        m.put("patient_position", n.getPatientPosition());
+        m.put("skin_preparation", n.getSkinPreparation());
+        m.put("incision", n.getIncision());
+        m.put("operative_steps", n.getOperativeSteps());
+        m.put("operative_technique", n.getOperativeTechnique());
+        m.put("intraoperative_fluids", n.getIntraoperativeFluids());
+        m.put("drains_placed", n.getDrainsPlaced());
+        m.put("stomas_formed", n.getStomasFormed());
+        m.put("closure_method", n.getClosureMethod());
+        m.put("wound_classification", n.getWoundClassification());
+        m.put("postoperative_instructions", n.getPostoperativeInstructions());
+        m.put("operative_template_ref",
+                n.getOperativeTemplateRef() != null ? n.getOperativeTemplateRef().toString() : null);
+        m.put("operative_template_code", n.getOperativeTemplateCode());
         m.put("signed_by", n.getSignedBy());
         m.put("signed_provider_id", n.getSignedProviderId());
         m.put("signed_at", n.getSignedAt());
@@ -2044,6 +2113,19 @@ public class TheatreService {
         m.put("acknowledged_at", s.getAcknowledgedAt());
         m.put("acknowledged_by", s.getAcknowledgedBy());
         m.put("butano_document_ref", s.getButanoDocumentRef());
+        // Custody stamps (Wave P8 / B1) — keep list refresh truthful after collect/label/receive/adequacy.
+        m.put("collected_by", s.getCollectedBy());
+        m.put("collected_at", s.getCollectedAt());
+        m.put("container_type", s.getContainerType());
+        m.put("fixative", s.getFixative());
+        m.put("label_confirmed_by", s.getLabelConfirmedBy());
+        m.put("label_confirmed_at", s.getLabelConfirmedAt());
+        m.put("received_by", s.getReceivedBy());
+        m.put("received_at", s.getReceivedAt());
+        m.put("adequacy", s.getAdequacy());
+        m.put("adequacy_assessed_by", s.getAdequacyAssessedBy());
+        m.put("adequacy_assessed_at", s.getAdequacyAssessedAt());
+        m.put("fhir_specimen_ref", s.getFhirSpecimenRef());
         return m;
     }
 

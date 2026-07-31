@@ -38,6 +38,17 @@ class KekProviderTest {
     }
 
     @Test
+    void configKekProvider_rejectsKnownPlaceholders() {
+        assertThatThrownBy(() -> new ConfigKekProvider(props(
+                "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")).getKek())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("placeholder");
+        assertThatThrownBy(() -> new ConfigKekProvider(props("change-me-in-production-use-vault")).getKek())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("placeholder");
+    }
+
+    @Test
     void softwareCustody_worksThroughKekProvider() {
         // Software custody wired via the config KEK provider must still encrypt/sign as before.
         SoftwareKeyCustodyProvider custody =

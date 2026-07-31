@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { ListChecks, Loader2, RefreshCw, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ListChecks, Loader2, RefreshCw, ShieldAlert, ShieldCheck, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 
 interface CountRow {
@@ -37,6 +37,7 @@ function errMessage(e: unknown): string {
 export function TheatreCountPanel({ caseId }: { caseId: string }) {
   const [counts, setCounts] = useState<CountRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listUnavailable, setListUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [kind, setKind] = useState("SWAB");
@@ -48,8 +49,10 @@ export function TheatreCountPanel({ caseId }: { caseId: string }) {
     try {
       const res = await apiClient.get(`/internal/v1/theatre/cases/${caseId}/counts`);
       setCounts(unwrapList<CountRow>(res));
+      setListUnavailable(false);
     } catch {
-      setCounts([]);
+      // Do not collapse unknown → empty: keep last known rows and surface unavailable.
+      setListUnavailable(true);
     } finally {
       setLoading(false);
     }
@@ -94,24 +97,31 @@ export function TheatreCountPanel({ caseId }: { caseId: string }) {
       </div>
 
       {msg && <p className="mb-2 rounded-lg border border-border bg-background p-2 text-xs">{msg}</p>}
+      {listUnavailable && (
+        <p className="mb-2 flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800" data-testid="count-list-unavailable">
+          <AlertTriangle className="h-3.5 w-3.5" /> Count list unavailable — do not treat this as no counts recorded.
+        </p>
+      )}
 
-      {/* WHO Sign-Out gate — always honest about the current state */}
-      {discrepant.length > 0 ? (
+      {/* WHO Sign-Out gate — always honest about the current state (only when list is known) */}
+      {!listUnavailable && discrepant.length > 0 ? (
         <p data-testid="signout-gate-blocked" className="mb-2 flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-medium text-red-700">
           <ShieldAlert className="h-4 w-4" /> WHO Sign-Out BLOCKED — retained-item risk: {discrepant.map((c) => `${c.kind} off by ${c.discrepancy}`).join(", ")}. A RITO case is open until reconciled or overridden.
         </p>
-      ) : signOutClear ? (
+      ) : !listUnavailable && signOutClear ? (
         <p data-testid="signout-gate-clear" className="mb-2 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-xs font-medium text-emerald-700">
           <ShieldCheck className="h-4 w-4" /> Counts reconciled — WHO Sign-Out not blocked by counts.
         </p>
-      ) : (
+      ) : !listUnavailable ? (
         <p className="mb-2 text-xs text-muted-foreground">Record baseline and closing counts to clear the Sign-Out gate.</p>
-      )}
+      ) : null}
 
       {loading ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading counts…</p>
-      ) : counts.length === 0 ? (
+      ) : counts.length === 0 && !listUnavailable ? (
         <p className="text-sm text-muted-foreground">No counts recorded yet.</p>
+      ) : counts.length === 0 && listUnavailable ? (
+        <p className="text-sm text-muted-foreground">Could not load counts for this case.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-left text-xs">

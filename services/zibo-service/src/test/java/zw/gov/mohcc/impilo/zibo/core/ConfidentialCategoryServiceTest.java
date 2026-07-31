@@ -174,13 +174,11 @@ class ConfidentialCategoryServiceTest {
     }
 
     @Test
-    @DisplayName("the shipped map is unratified, so it stamps nothing")
-    void shippedMapIsUnratified() {
-        assertFalse(ConfidentialCategoryService.CATEGORY_MAP_RATIFIED,
-                "the code-to-category map is an engineering seed pending MoHCC ratification. Flip "
-                        + "this only together with the tshepo-authz policy pack and the V048 rule "
-                        + "activation — they are one governance act, not three.");
-        assertFalse(service.isRatified());
+    @DisplayName("the governed map is ratified after W14-D preview flip")
+    void shippedMapIsRatified() {
+        assertTrue(ConfidentialCategoryService.CATEGORY_MAP_RATIFIED,
+                "flip only together with pack ratification and V048/V307 activation");
+        assertTrue(service.isRatified());
     }
 
     @Test

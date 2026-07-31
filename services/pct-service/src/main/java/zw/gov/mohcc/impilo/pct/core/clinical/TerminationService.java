@@ -59,6 +59,27 @@ public class TerminationService {
     }
 
     /**
+     * A subject's termination authorisations, guarded.
+     *
+     * <p>Guarded on the same footing as the procedures above, and for a reason the procedures do not
+     * carry on their own: an authorisation exists for requests that were DECLINED and for grounds
+     * that were REFERRED_OBJECTION, so this table records terminations that never happened. Leaving
+     * it unguarded while guarding the procedures would protect the act and disclose the request —
+     * which for a woman whose request was refused is the more damaging of the two.
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<TopAuthorisationEntity> authorisationsForSubject(java.util.UUID tenantId,
+                                                                          String subjectCpid) {
+        if (tenantId == null || subjectCpid == null || subjectCpid.isBlank()) {
+            return java.util.List.of();
+        }
+        return confidentialRecords.filter(
+                authorisations.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(tenantId, subjectCpid),
+                TopAuthorisationEntity::getSensitivityClass,
+                TopAuthorisationEntity::getConfidentialityCategory);
+    }
+
+    /**
      * A termination record is confidential at any age. The guardian question is not what makes it
      * sensitive — the aggregate-only, no-record-level-emit ruling in V435 is — so the stamp is
      * age-independent and needs no demographics.

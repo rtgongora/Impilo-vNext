@@ -3,7 +3,7 @@
  * in this app actually is.
  *
  * WHY THIS FILE EXISTS. The panel used to decide a tool's form BY ITS POSITION in the
- * workspace array: index >= 4 meant "coming soon", index === 3 meant a generic two-number
+ * workspace array: index >= 4 meant undeveloped, index === 3 meant a generic two-number
  * adder, everything else meant a free-text notes box. Partograph rendered as a notes box
  * because it happened to be first in its list. That mechanism produced a clinical surface
  * whose behaviour had nothing to do with the clinical instrument named on it, and it is the
@@ -63,12 +63,12 @@ export const SPECIALTY_TOOL_REGISTRY: Record<string, ToolDisposition> = {
   "Graft Planning": { state: "IN_DEVELOPMENT", owner: "Emergency", wave: "W1", note: "Not built on this surface. Routed to the Emergency lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "Pain Ladder": { state: "IN_DEVELOPMENT", owner: "Emergency", wave: "W1", note: "Not built on this surface. Routed to the Emergency lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "Nutrition Plan": { state: "IN_DEVELOPMENT", owner: "Emergency", wave: "W1", note: "Not built on this surface. Routed to the Emergency lane at workspace level; that lane may flag individual labels back to the coordinator." },
-  "ECG Interpretation": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
-  "Troponin Tracker": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
-  "ACS Protocol": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
-  "Heart Failure Assessment": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
-  "Anticoagulation Plan": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
-  "Cardiac Rehab": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
+  "ECG Interpretation": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W7+", note: "Not built on mobile. Web spine exists at /ehr/{patientId}/medicine/specialty/cardiology — cardiology workspace + shared problem list; this label is not a separate instrument." },
+  "Troponin Tracker": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W7+", note: "Not built on mobile. Web spine at /ehr/{patientId}/medicine/specialty/cardiology — troponin trending is not a standalone surface on web either." },
+  "ACS Protocol": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W7+", note: "Not built on mobile. Web spine at /ehr/{patientId}/medicine/specialty/cardiology with governed CDS (cvd-risk); ACS order sets stay emergency-scoped." },
+  "Heart Failure Assessment": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; web spine at /ehr/{patientId}/medicine/specialty/cardiology." },
+  "Anticoagulation Plan": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Web spine at /ehr/{patientId}/medicine/specialty/cardiology — anticoagulation tooling listed in specialty notBuilt." },
+  "Cardiac Rehab": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Web spine at /ehr/{patientId}/medicine/specialty/cardiology — cardiac rehab listed in specialty notBuilt." },
   "Chemo Protocol Selection": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "Dose Calculator (BSA)": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "Pre-Chemo Checklist": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
@@ -113,7 +113,8 @@ export const SPECIALTY_TOOL_REGISTRY: Record<string, ToolDisposition> = {
   "Daily ICU Checklist": { state: "IN_DEVELOPMENT", owner: "Emergency", wave: "TBC", note: "Not built on this surface. Routed to the Emergency lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "APGAR Record": { state: "CONSOLIDATED", surface: "APGARScreen", route: "Inpatient → APGAR tab",
     note: "The real APGAR lives in APGARScreen and writes inpatient.apgar_score through POST /internal/v1/apgar. This entry points there rather than keeping a second copy." },
-  "Gestational Age Assessment": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "TBC", note: "Not built on this surface. Routed to the RMNP lane at workspace level; that lane may flag individual labels back to the coordinator." },
+  "Gestational Age Assessment": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "W13-B",
+    note: "Gestational dating lives on the pregnancy-episode booking surface (LMP/ultrasound on clinician and citizen pregnancy UI from W13-B) — not a second SoR here." },
   "Growth Chart (Fenton)": { state: "IN_DEVELOPMENT", owner: "Paediatrics", wave: "Growth standards (backend and web done)",
     note: "Preterm growth charting exists and is not built on this surface. Infants born before 37 weeks are scored against the Fenton 2013 tables in libs/paediatric-domain, read at postmenstrual age, stamped with the standard and engine version at write, and stored in pct.pct_growth_measurements; the chart is drawn on the web clinical workspace. This app will consume the same API rather than grow a second growth calculation, which would be a second answer about the same baby.",
     evidence: "libs/paediatric-domain/.../growth/GrowthStandard.java · pct V400 · GET /internal/v1/growth/reference-curves · ui/one-ui-shell/src/app/ehr/[patientId]/growth-chart" },
@@ -136,10 +137,20 @@ export const SPECIALTY_TOOL_REGISTRY: Record<string, ToolDisposition> = {
     note: "Delivered by the mobile lane against pct-service V056 and the RMNP pack's mobile contract (docs/clinical/rmnp/partograph-ctg-mobile-contract.md). This entry renders the governed workspace itself, so there is no second copy to drift." },
   "CTG Interpretation": { state: "WIRED", surface: "CtgWorkspace",
     note: "Delivered by the mobile lane against pct-service V056 and the RMNP pack's mobile contract (docs/clinical/rmnp/partograph-ctg-mobile-contract.md). This entry renders the governed workspace itself, so there is no second copy to drift." },
-  "Bishop Score": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "TBC", note: "Cervical favourability scoring. No backend today; routed to RMNP." },
-  "PPH Protocol": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "TBC", note: "Not built on this surface. Routed to the RMNP lane at workspace level; that lane may flag individual labels back to the coordinator." },
-  "Eclampsia Protocol": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "TBC", note: "Not built on this surface. Routed to the RMNP lane at workspace level; that lane may flag individual labels back to the coordinator." },
+  "Bishop Score": { state: "WIRED", surface: "BishopScoreWorkspace",
+    note: "Delivered against CKP BishopScoreEngine via experience-bff BishopScoreController (RMNP W14-A). Assessment-only cervical favourability — form 22 (impilo.maternal.bishop.v1); nothing persisted here." },
+  "Maternal Near-Miss Assessment": { state: "WIRED", surface: "MaternalNearMissWorkspace",
+    note: "Delivered against the WHO near-miss engine in clinical-knowledge-platform-service, joined to form 21 (impilo.maternal.nearmiss.assessment.v1) by experience-bff's MaternalNearMissController (docs/clinical/rmnp/chw-community-postnatal-mobile-contract.md's companion RMNP W12 near-miss work). Identification only — nothing is persisted; the confidential MPDSR review is a separate, later instrument. This entry renders the governed workspace itself, so there is no second copy to drift." },
+  "PPH Protocol": { state: "WIRED", surface: "PphProtocolWorkspace",
+    note: "Delivered against CKP EmergencyBundleEngine (rmnp-pph-bundle.json) via experience-bff EmergencyBundleController (RMNP W13-D). Checklist assessment only — episode persistence is caller-owned." },
+  "Eclampsia Protocol": { state: "WIRED", surface: "EclampsiaProtocolWorkspace",
+    note: "Delivered against CKP EmergencyBundleEngine (rmnp-eclampsia-bundle.json) via experience-bff EmergencyBundleController (RMNP W13-D). Checklist assessment only — episode persistence is caller-owned." },
   "Neonatal Resuscitation": { state: "IN_DEVELOPMENT", owner: "RMNP", wave: "TBC", note: "Not built on this surface. Routed to the RMNP lane at workspace level; that lane may flag individual labels back to the coordinator." },
+  "ANC First Contact": { state: "WIRED", surface: "AncFirstContactWorkspace", note: "W13-C — impilo.anc.contact1.v1 forced from catalog." },
+  "ANC Follow-up": { state: "WIRED", surface: "AncFollowUpWorkspace", note: "W13-C — impilo.anc.contact.followup.v1." },
+  "Facility PNC — Mother": { state: "WIRED", surface: "FacilityPncMaternalWorkspace", note: "W13-C — facility PNC; distinct from CHW outreach postnatal." },
+  "Facility PNC — Newborn": { state: "WIRED", surface: "FacilityPncNewbornWorkspace", note: "W13-C — PSBI delegated to young-infant pathway." },
+  "FP Eligibility": { state: "WIRED", surface: "FpEligibilityWorkspace", note: "W13-C — impilo.fp.eligibility.v1 (form 18)." },
   "Staging (TNM)": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "Performance Status (ECOG)": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
   "Treatment Plan": { state: "IN_DEVELOPMENT", owner: "AdultMedicine", wave: "W6+", note: "Not built on this surface. Routed to the AdultMedicine lane at workspace level; that lane may flag individual labels back to the coordinator." },
