@@ -42,7 +42,7 @@ export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: L
   // Surface store-level auth errors (e.g. token-exchange failure after remount)
   const displayError = error ?? (auth.error?.message ?? null);
 
-  const completeAuth = useCallback(async (url: string, expectedState: string) => {
+  const completeAuth = useCallback(async (url: string, expectedState?: string) => {
     if (callbackHandledRef.current) {
       return;
     }
@@ -56,7 +56,7 @@ export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: L
     }
 
     callbackHandledRef.current = true;
-    await auth.handleCallback(code, returnedState, expectedState);
+    await auth.handleCallback(code, returnedState, expectedState ?? returnedState);
     setPendingState(null);
   }, [auth]);
 
@@ -100,11 +100,11 @@ export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: L
   // browser dismisses before the session completes).
   useEffect(() => {
     const handleUrl = (event: { url: string }) => {
-      if (pendingState) {
-        completeAuth(event.url, pendingState).catch((err) => {
-          setError(err instanceof Error ? err.message : "Authentication failed");
-        });
-      }
+      // The secure transaction store is authoritative. pendingState is only an
+      // in-process hint and may be absent after Android/iOS recreates the app.
+      completeAuth(event.url, pendingState ?? undefined).catch((err) => {
+        setError(err instanceof Error ? err.message : "Authentication failed");
+      });
     };
 
     const subscription = Linking.addEventListener("url", handleUrl);

@@ -39,7 +39,7 @@ export function LoginScreen() {
 
   const displayError = error ?? (auth.error?.message ?? null);
 
-  const completeAuth = useCallback(async (url: string, expectedState: string) => {
+  const completeAuth = useCallback(async (url: string, expectedState?: string) => {
     if (callbackHandledRef.current) {
       return;
     }
@@ -53,7 +53,7 @@ export function LoginScreen() {
     }
 
     callbackHandledRef.current = true;
-    await auth.handleCallback(code, returnedState, expectedState);
+    await auth.handleCallback(code, returnedState, expectedState ?? returnedState);
     setPendingState(null);
   }, [auth]);
 
@@ -94,11 +94,11 @@ export function LoginScreen() {
 
   useEffect(() => {
     const handleUrl = (event: { url: string }) => {
-      if (pendingState) {
-        completeAuth(event.url, pendingState).catch((err) => {
-          setError(err instanceof Error ? err.message : "Authentication failed");
-        });
-      }
+      // Secure storage survives process death; React state deliberately does not
+      // participate in callback authenticity or replay protection.
+      completeAuth(event.url, pendingState ?? undefined).catch((err) => {
+        setError(err instanceof Error ? err.message : "Authentication failed");
+      });
     };
 
     const subscription = Linking.addEventListener("url", handleUrl);

@@ -12,6 +12,7 @@ import type { KeycloakConfig, UserInfo } from "./keycloakClient";
 import { TokenManager } from "./tokenManager";
 import type { TokenState } from "./tokenManager";
 import { getSecureStorage, STORAGE_KEYS } from "./secureStorage";
+import type { SecureStorageAdapter } from "./secureStorage";
 import { generateId } from "@impilo/mobile-trust";
 
 export interface AuthState {
@@ -24,7 +25,7 @@ export interface AuthState {
   // Actions
   initialize: () => Promise<void>;
   login: () => Promise<{ authUrl: string; state: string }>;
-  handleCallback: (code: string, state: string, expectedState: string) => Promise<void>;
+  handleCallback: (code: string, state: string, expectedState?: string) => Promise<void>;
   /** Establish session from BFF registration auto-login (password grant token). */
   establishFromTokenResponse: (response: {
     access_token: string;
@@ -60,7 +61,49 @@ export interface AuthState {
 
 let keycloakClient: KeycloakClient | null = null;
 let tokenManager: TokenManager | null = null;
-let pendingCodeVerifier: string | null = null;
+const AUTH_TRANSACTION_TTL_MS = 5 * 60 * 1000;
+
+export interface AuthTransaction {
+  state: string;
+  nonce: string;
+  codeVerifier: string;
+  redirectUri: string;
+  createdAt: number;
+}
+
+/** Validate and atomically consume the persisted OAuth transaction before exchange. */
+export async function consumeAuthTransaction(
+  storage: SecureStorageAdapter,
+  state: string,
+  expectedState?: string,
+  now = Date.now(),
+): Promise<AuthTransaction> {
+  const rawTransaction = await storage.getItem(STORAGE_KEYS.AUTH_TRANSACTION);
+  if (!rawTransaction) {
+    throw new AuthError("CALLBACK_REPLAYED", "No unused OAuth transaction exists for this callback");
+  }
+  let transaction: AuthTransaction;
+  try {
+    transaction = JSON.parse(rawTransaction) as AuthTransaction;
+  } catch {
+    await storage.removeItem(STORAGE_KEYS.AUTH_TRANSACTION);
+    throw new AuthError("INVALID_TRANSACTION", "Stored OAuth transaction is invalid");
+  }
+  if (!transaction.state || !transaction.nonce || !transaction.codeVerifier ||
+      !transaction.redirectUri || !Number.isFinite(transaction.createdAt)) {
+    await storage.removeItem(STORAGE_KEYS.AUTH_TRANSACTION);
+    throw new AuthError("INVALID_TRANSACTION", "Stored OAuth transaction is incomplete");
+  }
+  if (now - transaction.createdAt > AUTH_TRANSACTION_TTL_MS) {
+    await storage.removeItem(STORAGE_KEYS.AUTH_TRANSACTION);
+    throw new AuthError("TRANSACTION_EXPIRED", "OAuth transaction expired; start sign-in again");
+  }
+  if (state !== transaction.state || (expectedState && expectedState !== transaction.state)) {
+    throw new AuthError("STATE_MISMATCH", "OAuth state parameter mismatch — possible CSRF attack");
+  }
+  await storage.removeItem(STORAGE_KEYS.AUTH_TRANSACTION);
+  return transaction;
+}
 
 export function configureAuth(config: KeycloakConfig): void {
   keycloakClient = new KeycloakClient(config);
@@ -155,18 +198,22 @@ export const authStore = createStore<AuthState>((set, get) => ({
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
     const state = generateId();
-    pendingCodeVerifier = codeVerifier;
-    const authUrl = kc.buildAuthorizationUrl(codeChallenge, state);
+    const nonce = generateId();
+    const transaction: AuthTransaction = {
+      state,
+      nonce,
+      codeVerifier,
+      redirectUri: kc.redirectUri,
+      createdAt: Date.now(),
+    };
+    await getSecureStorage().setItem(STORAGE_KEYS.AUTH_TRANSACTION, JSON.stringify(transaction));
+    const authUrl = kc.buildAuthorizationUrl(codeChallenge, state, nonce);
     return { authUrl, state };
   },
 
-  handleCallback: async (code: string, state: string, expectedState: string) => {
-    if (state !== expectedState) {
-      throw new AuthError("STATE_MISMATCH", "OAuth state parameter mismatch — possible CSRF attack");
-    }
-    if (!pendingCodeVerifier) {
-      throw new AuthError("NO_VERIFIER", "No pending PKCE code verifier");
-    }
+  handleCallback: async (code: string, state: string, expectedState?: string) => {
+    const storage = getSecureStorage();
+    const transaction = await consumeAuthTransaction(storage, state, expectedState);
 
     const kc = requireKeycloak();
     const tm = requireTokenManager();
@@ -174,12 +221,12 @@ export const authStore = createStore<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const tokenResponse = await kc.exchangeCode(code, pendingCodeVerifier);
-      pendingCodeVerifier = null;
+      const tokenResponse = await kc.exchangeCode(code, transaction.codeVerifier);
+      if (!tokenResponse.id_token) throw new AuthError("ID_TOKEN_MISSING", "Keycloak did not return an ID token");
+      await kc.validateIdToken(tokenResponse.id_token, transaction.nonce);
 
       const tokens = await tm.setTokens(tokenResponse);
       const userInfo = await kc.getUserInfo(tokens.accessToken);
-      const storage = getSecureStorage();
       const tenantId = (await storage.getItem(STORAGE_KEYS.TENANT_ID)) ?? "tenant-moh-zw";
 
       const resolvedActorType = resolveActorType(userInfo);

@@ -207,6 +207,9 @@ importers:
       '@impilo/mobile-trust':
         specifier: workspace:*
         version: link:../mobile-trust
+      jose:
+        specifier: 6.2.3
+        version: 6.2.3
       zustand:
         specifier: ^4.5.0
         version: 4.5.7(@types/react@19.1.17)(react@19.1.0)

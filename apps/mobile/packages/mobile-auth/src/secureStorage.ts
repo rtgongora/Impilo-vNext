@@ -73,4 +73,5 @@ export const STORAGE_KEYS = {
   SESSION_DATA: "impilo_auth_session_data",
   TENANT_ID: "impilo_auth_tenant_id",
   BIOMETRIC_ENABLED: "impilo_auth_biometric_enabled",
+  AUTH_TRANSACTION: "impilo_auth_transaction",
 } as const;

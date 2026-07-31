@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@impilo/mobile-trust": "workspace:*",
+    "jose": "6.2.3",
     "zustand": "^4.5.0"
   },
   "peerDependencies": {

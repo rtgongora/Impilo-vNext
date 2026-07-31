@@ -12,12 +12,13 @@ describe("KeycloakClient", () => {
 
   it("builds authorization URL with PKCE parameters", () => {
     const kc = new KeycloakClient(config);
-    const url = kc.buildAuthorizationUrl("challenge-abc", "state-123");
+    const url = kc.buildAuthorizationUrl("challenge-abc", "state-123", "nonce-456");
     expect(url).toContain("response_type=code");
     expect(url).toContain("client_id=mobile-app");
     expect(url).toContain("code_challenge=challenge-abc");
     expect(url).toContain("code_challenge_method=S256");
     expect(url).toContain("state=state-123");
+    expect(url).toContain("nonce=nonce-456");
     expect(url).toContain("redirect_uri=");
     expect(url).toContain("/realms/impilo/protocol/openid-connect/auth");
   });

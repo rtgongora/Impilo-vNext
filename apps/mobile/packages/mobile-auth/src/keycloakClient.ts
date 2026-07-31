@@ -12,12 +12,15 @@
  * No implicit grant. No client secret on mobile (public client).
  */
 
+import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
+
 export interface KeycloakConfig {
   realm: string;
   clientId: string;
   baseUrl: string;
   redirectUri: string;
   scopes?: string[];
+  issuer?: string;
 }
 
 export interface TokenResponse {
@@ -77,22 +80,30 @@ export class KeycloakClient {
   private readonly logoutEndpoint: string;
   private readonly userInfoEndpoint: string;
   private readonly revocationEndpoint: string;
+  private readonly issuer: string;
+  private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
 
   constructor(config: KeycloakConfig) {
     this.config = config;
-    const base = `${config.baseUrl}/realms/${config.realm}/protocol/openid-connect`;
+    this.issuer = config.issuer ?? `${config.baseUrl}/realms/${config.realm}`;
+    const base = `${this.issuer}/protocol/openid-connect`;
     this.tokenEndpoint = `${base}/token`;
     this.authEndpoint = `${base}/auth`;
     this.logoutEndpoint = `${base}/logout`;
     this.userInfoEndpoint = `${base}/userinfo`;
     this.revocationEndpoint = `${base}/revoke`;
+    this.jwks = createRemoteJWKSet(new URL(`${this.issuer}/protocol/openid-connect/certs`));
+  }
+
+  get redirectUri(): string {
+    return this.config.redirectUri;
   }
 
   /**
    * Builds the authorization URL for the PKCE flow.
    * The app should open this in a system browser / in-app browser tab.
    */
-  buildAuthorizationUrl(codeChallenge: string, state: string): string {
+  buildAuthorizationUrl(codeChallenge: string, state: string, nonce: string): string {
     const scopes = this.config.scopes?.join(" ") ?? "openid profile email";
     const params = new URLSearchParams({
       response_type: "code",
@@ -102,6 +113,7 @@ export class KeycloakClient {
       code_challenge: codeChallenge,
       code_challenge_method: "S256",
       state,
+      nonce,
     });
     return `${this.authEndpoint}?${params.toString()}`;
   }
@@ -130,6 +142,19 @@ export class KeycloakClient {
     }
 
     return response.json();
+  }
+
+  /** Verify signature and all mobile OIDC binding claims before a session is accepted. */
+  async validateIdToken(idToken: string, expectedNonce: string): Promise<JWTPayload> {
+    const { payload } = await jwtVerify(idToken, this.jwks, {
+      issuer: this.issuer,
+      audience: this.config.clientId,
+      requiredClaims: ["sub", "iat", "exp", "nonce"],
+    });
+    if (typeof payload.nonce !== "string" || payload.nonce !== expectedNonce) {
+      throw new AuthError("NONCE_MISMATCH", "OIDC nonce mismatch — callback was not issued for this login");
+    }
+    return payload;
   }
 
   /**

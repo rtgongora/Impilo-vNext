@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveMobileIdentityContext } from "./identityContext";
+import { resolveMobileIdentityContext } from "../identityContext";
 
 describe("mobile identityContext parity", () => {
   it("citizen without professional access", () => {
