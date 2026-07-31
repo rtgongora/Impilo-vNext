@@ -23,6 +23,7 @@ import { VitalsPartographSection } from "@/features/maternity/partograph/VitalsP
 import { NearMissAssessmentPanel } from "@/features/maternity/nearmiss/NearMissAssessmentPanel";
 import { NearMissIndicatorsPanel } from "@/features/maternity/nearmiss/NearMissIndicatorsPanel";
 import { EmergencyBundlePanel } from "@/features/maternity/emergency-bundles/EmergencyBundlePanel";
+import { BishopScorePanel } from "@/features/maternity/bishop/BishopScorePanel";
 import { MaternitySummaryPanel } from "@/features/maternity/MaternitySummaryPanel";
 import { BirthDestinationPanel } from "@/features/maternity/BirthDestinationPanel";
 import { PregnancyEpisodesPanel } from "@/features/maternity/reproductive/PregnancyEpisodesPanel";
@@ -121,6 +122,17 @@ export default function MaternityMonitoringPage() {
           encounterId={encounterId}
           hasActiveEncounter={Boolean(activeEncounter && encounterId)}
         />
+
+        {isClinical && (
+          <section className="mt-4 rounded-lg border border-pink-200/90 bg-card p-5">
+            <h2 className="text-lg font-semibold text-foreground">Bishop score</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Cervical favourability for induction readiness — assessment only. A blank component is
+              not zero; incomplete assessments say so explicitly.
+            </p>
+            <BishopScorePanel />
+          </section>
+        )}
 
         {isClinical && (
           <section className="mt-4 rounded-lg border border-red-300/90 bg-card p-5" id="emergency-bundles">

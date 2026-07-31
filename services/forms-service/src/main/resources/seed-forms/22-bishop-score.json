@@ -1,0 +1,138 @@
+{
+  "formKey": "impilo.maternal.bishop.v1",
+  "name": "Bishop score \u2014 cervical favourability",
+  "description": "Cervical assessment for induction readiness. A blank component is 'not assessed', never zero \u2014 an invented Bishop score is worse than no score.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": [
+    "INPATIENT",
+    "EMERGENCY",
+    "THEATRE"
+  ],
+  "careStages": [
+    "ASSESSMENT"
+  ],
+  "specialties": [
+    "MIDWIFERY",
+    "OBSTETRICS",
+    "NURSING"
+  ],
+  "encounterTypes": [
+    "MATERNITY",
+    "INPATIENT",
+    "EMERGENCY"
+  ],
+  "encounterContexts": [
+    "inpatient",
+    "emergency"
+  ],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "OPTIONAL",
+  "permittedCadres": [
+    "MIDWIFE",
+    "NURSE",
+    "PHYSICIAN",
+    "CLINICAL_OFFICER"
+  ],
+  "sexApplicability": "FEMALE",
+  "requirePregnant": true,
+  "programmeApplicability": [
+    "MATERNAL_HEALTH"
+  ],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "ROUTINE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "Bishop EH (1964); RMNP labour and delivery pack W14-A",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": []
+  },
+  "indicators": {
+    "indicators": []
+  },
+  "definition": {
+    "id": "bishop-score-v1",
+    "version": "1.0.0",
+    "title": "Bishop score \u2014 cervical favourability",
+    "description": "Assessment-only cervical favourability for induction readiness. Nothing is persisted by the score itself.",
+    "dakReference": "RMNP W14-A engineering seed",
+    "healthDomain": "MATERNAL_HEALTH",
+    "programme": "MATERNAL_HEALTH",
+    "encounterTypes": [
+      "MATERNITY",
+      "INPATIENT"
+    ],
+    "sexApplicability": "FEMALE",
+    "providerRoles": [
+      "MIDWIFE",
+      "NURSE",
+      "PHYSICIAN"
+    ],
+    "offlineCapable": true,
+    "audit": {
+      "dataCustodian": "MOHCC",
+      "sensitivity": "ROUTINE"
+    },
+    "sections": [
+      {
+        "id": "bishop-cervix",
+        "title": "Cervical examination",
+        "fields": [
+          {
+            "id": "bishop.dilation",
+            "label": "Cervical dilation",
+            "kind": "coded_single",
+            "options": [
+              { "code": "CLOSED", "display": "Closed (0 cm)" },
+              { "code": "DIL_1_2", "display": "1\u20132 cm" },
+              { "code": "DIL_3_4", "display": "3\u20134 cm" },
+              { "code": "DIL_5_PLUS", "display": "\u2265 5 cm" }
+            ]
+          },
+          {
+            "id": "bishop.effacement",
+            "label": "Cervical effacement",
+            "kind": "coded_single",
+            "options": [
+              { "code": "EFF_0_30", "display": "0\u201330%" },
+              { "code": "EFF_40_50", "display": "40\u201350%" },
+              { "code": "EFF_60_70", "display": "60\u201370%" },
+              { "code": "EFF_80_PLUS", "display": "\u2265 80%" }
+            ]
+          },
+          {
+            "id": "bishop.station",
+            "label": "Fetal station",
+            "kind": "coded_single",
+            "options": [
+              { "code": "STATION_PLUS3", "display": "+3" },
+              { "code": "STATION_PLUS2", "display": "+2" },
+              { "code": "STATION_MID", "display": "+1 / 0 / \u22121" },
+              { "code": "STATION_MINUS2_PLUS", "display": "\u2264 \u22122" }
+            ]
+          },
+          {
+            "id": "bishop.consistency",
+            "label": "Cervical consistency",
+            "kind": "coded_single",
+            "options": [
+              { "code": "FIRM", "display": "Firm" },
+              { "code": "MEDIUM", "display": "Medium" },
+              { "code": "SOFT", "display": "Soft" }
+            ]
+          },
+          {
+            "id": "bishop.position",
+            "label": "Cervical position",
+            "kind": "coded_single",
+            "options": [
+              { "code": "POSTERIOR", "display": "Posterior" },
+              { "code": "MID", "display": "Mid" },
+              { "code": "ANTERIOR", "display": "Anterior" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

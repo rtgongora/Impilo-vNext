@@ -156,6 +156,20 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /**
+     * Bishop cervical favourability score — assessment only.
+     *
+     * <p>The body is passed through as built. An omitted component must stay omitted; filling absent
+     * fields with zero here would turn "we never assessed effacement" into "0% effacement".
+     */
+    public JsonNode bishopAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/bishop/assess";
+        log.debug("Clinical platform: Bishop score assess");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** The respectful-maternity-care measure set: prompts, scale and which items are reverse-scored. */
     public JsonNode respectfulCareInstrument() {
         String url = baseUrl + "/internal/v1/clinical/maternal/respectful-care/instrument";

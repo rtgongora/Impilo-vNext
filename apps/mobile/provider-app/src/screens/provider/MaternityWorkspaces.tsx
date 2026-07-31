@@ -41,6 +41,7 @@ import {
   addCtgAnnotation,
   classifyNearMissForm,
   computeNearMissIndicators,
+  assessBishopScoreForm,
   assessEmergencyBundle,
   fetchBirthDestination,
   getMaternitySummary,
@@ -49,6 +50,10 @@ import {
   fetchPregnancyLosses,
   fetchTopAuthorisations,
   fetchPatientPregnancyEpisodes,
+  fetchCurrentReproductiveIntention,
+  fetchActivePreconceptionPlan,
+  fetchCurrentFertilityEpisode,
+  fetchDeliveryRecordsForMother,
   type PartographProgress,
   type AddPartographPointResult,
   type CtgChunk,
@@ -355,6 +360,26 @@ export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: 
     queryFn: () => fetchPatientPregnancyEpisodes(patientCpid),
     enabled: patientCpid.trim().length > 0,
   });
+  const intention = useQuery({
+    queryKey: ["confidential-intention", patientCpid],
+    queryFn: () => fetchCurrentReproductiveIntention(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const preconception = useQuery({
+    queryKey: ["confidential-preconception", patientCpid],
+    queryFn: () => fetchActivePreconceptionPlan(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const fertility = useQuery({
+    queryKey: ["confidential-fertility", patientCpid],
+    queryFn: () => fetchCurrentFertilityEpisode(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const deliveryRecords = useQuery({
+    queryKey: ["confidential-deliveries", patientCpid],
+    queryFn: () => fetchDeliveryRecordsForMother(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
 
   if (!patientCpid.trim()) return null;
 
@@ -362,9 +387,22 @@ export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: 
     (contraception.isError && contraception.error instanceof ApiError && contraception.error.code === "PCT_UNAVAILABLE") ||
     (losses.isError && losses.error instanceof ApiError && losses.error.code === "PCT_UNAVAILABLE") ||
     (topAuths.isError && topAuths.error instanceof ApiError && topAuths.error.code === "PCT_UNAVAILABLE") ||
-    (episodes.isError && episodes.error instanceof ApiError && episodes.error.code === "PCT_UNAVAILABLE");
+    (episodes.isError && episodes.error instanceof ApiError && episodes.error.code === "PCT_UNAVAILABLE") ||
+    (intention.isError && intention.error instanceof ApiError && intention.error.code === "PCT_UNAVAILABLE") ||
+    (preconception.isError && preconception.error instanceof ApiError && preconception.error.code === "PCT_UNAVAILABLE") ||
+    (fertility.isError && fertility.error instanceof ApiError && fertility.error.code === "PCT_UNAVAILABLE") ||
+    (deliveryRecords.isError && deliveryRecords.error instanceof ApiError && deliveryRecords.error.code === "PCT_UNAVAILABLE");
 
-  if (contraception.isLoading || losses.isLoading || topAuths.isLoading || episodes.isLoading) {
+  if (
+    contraception.isLoading ||
+    losses.isLoading ||
+    topAuths.isLoading ||
+    episodes.isLoading ||
+    intention.isLoading ||
+    preconception.isLoading ||
+    fertility.isLoading ||
+    deliveryRecords.isLoading
+  ) {
     return <Text style={styles.hint}>Loading confidential reproductive records…</Text>;
   }
 
@@ -412,6 +450,45 @@ export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: 
       {(topAuths.data ?? []).map((a) => (
         <Text key={a.authorisation_id} style={styles.pointLine}>
           {(a.status ?? "Unknown").replace(/_/g, " ").toLowerCase()}
+        </Text>
+      ))}
+
+      <Text style={styles.sectionTitle}>Reproductive intention</Text>
+      {intention.data ? (
+        <Text style={styles.pointLine}>
+          {(intention.data.intention ?? "Not recorded").replace(/_/g, " ").toLowerCase()}
+        </Text>
+      ) : (
+        <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+      )}
+
+      <Text style={styles.sectionTitle}>Preconception</Text>
+      {preconception.data ? (
+        <Text style={styles.pointLine}>
+          {(preconception.data.status ?? "Active").replace(/_/g, " ").toLowerCase()}
+          {preconception.data.folic_acid_started_on
+            ? ` · folic acid ${new Date(preconception.data.folic_acid_started_on).toLocaleDateString()}`
+            : ""}
+        </Text>
+      ) : (
+        <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+      )}
+
+      <Text style={styles.sectionTitle}>Fertility</Text>
+      {fertility.data ? (
+        <Text style={styles.pointLine}>
+          {(fertility.data.status ?? "Active").replace(/_/g, " ").toLowerCase()}
+          {fertility.data.months_trying != null ? ` · ${fertility.data.months_trying} mo trying` : ""}
+        </Text>
+      ) : (
+        <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+      )}
+
+      <Text style={styles.sectionTitle}>Deliveries ({(deliveryRecords.data ?? []).length})</Text>
+      {(deliveryRecords.data ?? []).map((d) => (
+        <Text key={d.delivery_record_id} style={styles.pointLine}>
+          {(d.delivery_mode ?? "Birth").replace(/_/g, " ").toLowerCase()}
+          {d.delivered_at ? ` · ${new Date(d.delivered_at).toLocaleDateString()}` : ""}
         </Text>
       ))}
     </View>
@@ -1494,6 +1571,149 @@ export function EclampsiaProtocolWorkspace() {
       controlLabel="Seizure/control stable and confirmed"
       testIdPrefix="eclampsia-protocol"
     />
+  );
+}
+
+// --- Bishop score workspace ------------------------------------------------------------------
+
+const BISHOP_FORM_KEY = "impilo.maternal.bishop.v1";
+const BISHOP_LINK_PREFIX = "bishop.";
+
+const BISHOP_FIELD_LABELS: Record<string, string> = {
+  dilation: "Cervical dilation",
+  effacement: "Cervical effacement",
+  station: "Fetal station",
+  consistency: "Cervical consistency",
+  position: "Cervical position",
+};
+
+function bishopBareId(linkId: string): string {
+  return linkId.startsWith(BISHOP_LINK_PREFIX) ? linkId.slice(BISHOP_LINK_PREFIX.length) : linkId;
+}
+
+export function BishopScoreWorkspace() {
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [result, setResult] = useState<import("../../services/maternityService").BishopScoreAssessment | null>(null);
+
+  const form = useGovernedForm(BISHOP_FORM_KEY);
+
+  const assess = useMutation({
+    mutationFn: () => assessBishopScoreForm(answers, BISHOP_FORM_KEY),
+    onSuccess: (r) => setResult(r),
+  });
+
+  const labelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const section of form.definition?.sections ?? []) {
+      for (const f of section.fields) {
+        map.set(bishopBareId(f.id), f.label);
+      }
+    }
+    return map;
+  }, [form.definition]);
+
+  const unavailable = assess.isError && assess.error instanceof ApiError && assess.error.status >= 500;
+
+  function handleClear() {
+    setAnswers({});
+    setResult(null);
+    assess.reset();
+  }
+
+  const interpretationLabel: Record<string, string> = {
+    UNFAVOURABLE: "Unfavourable cervix (≤ 6)",
+    INTERMEDIATE: "Intermediate favourability (7–9)",
+    FAVOURABLE: "Favourable cervix (≥ 10)",
+    INCOMPLETE: "Incomplete — not all components assessed",
+  };
+
+  return (
+    <ScrollView style={styles.workspace} testID="bishop-score-workspace">
+      <Text style={styles.workspaceTitle}>Bishop score</Text>
+      <Text style={styles.hint}>
+        Cervical favourability for induction readiness — assessment only, nothing saved. Leave a
+        field blank if it was not assessed; blank is never treated as zero.
+      </Text>
+
+      {form.isLoading && <Text style={styles.hint}>Loading the Bishop score form…</Text>}
+      {!form.isLoading && !form.definition && (
+        <Text style={styles.errorText}>The Bishop score form definition is unavailable.</Text>
+      )}
+
+      {form.definition && (
+        <View style={styles.form} testID="bishop-score-form">
+          <GovernedFormFields definition={form.definition} answers={answers} setAnswers={setAnswers} />
+
+          <Pressable
+            style={[styles.primaryBtn, assess.isPending && styles.primaryBtnDisabled]}
+            disabled={assess.isPending}
+            onPress={() => assess.mutate()}
+            testID="bishop-score-submit"
+          >
+            <Text style={styles.primaryBtnText}>
+              {assess.isPending ? "Assessing…" : "Assess Bishop score"}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.secondaryBtn} onPress={handleClear} testID="bishop-score-clear">
+            <Text style={styles.secondaryBtnText}>Clear form</Text>
+          </Pressable>
+
+          {unavailable && (
+            <View style={styles.unavailableBanner} testID="bishop-score-unavailable" accessibilityRole="alert">
+              <Text style={styles.unavailableTitle}>The Bishop score could not be evaluated</Text>
+              <Text style={styles.unavailableBody}>
+                This is not a statement that the cervix is favourable. Assess clinically and resubmit
+                when the service returns.
+              </Text>
+            </View>
+          )}
+
+          {result && !unavailable && (
+            <View style={styles.sessionBox} testID="bishop-score-outcome">
+              <View
+                style={[
+                  styles.progressBox,
+                  {
+                    backgroundColor:
+                      result.interpretation === "FAVOURABLE"
+                        ? "#D1FAE5"
+                        : result.interpretation === "INCOMPLETE"
+                          ? "#FEE2E2"
+                          : result.interpretation === "INTERMEDIATE"
+                            ? "#FEF3C7"
+                            : "#FFEDD5",
+                    borderColor:
+                      result.interpretation === "FAVOURABLE"
+                        ? "#22C55E"
+                        : result.interpretation === "INCOMPLETE"
+                          ? "#DC2626"
+                          : result.interpretation === "INTERMEDIATE"
+                            ? "#F59E0B"
+                            : "#FB923C",
+                  },
+                ]}
+              >
+                <Text style={styles.progressStatus}>{interpretationLabel[result.interpretation]}</Text>
+                {result.score != null && (
+                  <Text style={styles.progressDetail}>Total score: {result.score} / 13</Text>
+                )}
+              </View>
+
+              {result.missing.length > 0 && (
+                <View style={styles.pointsList} testID="bishop-score-missing">
+                  <Text style={styles.sectionTitle}>Complete these to compute a score</Text>
+                  {result.missing.map((field) => (
+                    <Text key={field} style={styles.pointLine}>
+                      • {labelById.get(field) ?? BISHOP_FIELD_LABELS[field] ?? field}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      )}
+    </ScrollView>
   );
 }
 

@@ -418,6 +418,8 @@ public class SecurityConfig {
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers("/internal/v1/clinical/maternal/emergency-bundles/**")
                             .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers("/internal/v1/clinical/maternal/bishop/**")
+                            .hasAnyRole(CLINICAL_ROLES)
                     // ── National clinical knowledge (EDLIZ-aligned) ───────
                     .requestMatchers("/internal/v1/clinical/**")
                             .authenticated()

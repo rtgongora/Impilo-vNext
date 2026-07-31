@@ -434,6 +434,34 @@ export async function computeNearMissIndicators(
   return response.data.data;
 }
 
+// --- Bishop score (cervical favourability) ---------------------------------------------------
+//
+// Backend: experience-bff `/internal/v1/clinical/maternal/bishop/classify-form`. Assessment only —
+// nothing persisted. Blank components stay omitted so CKP returns INCOMPLETE rather than inventing zero.
+
+export type BishopInterpretation = "UNFAVOURABLE" | "INTERMEDIATE" | "FAVOURABLE" | "INCOMPLETE";
+
+export interface BishopScoreAssessment {
+  score: number | null;
+  interpretation: BishopInterpretation;
+  components: Record<string, number>;
+  missing: string[];
+  content_version: string;
+}
+
+export const BISHOP_FORM_KEY = "impilo.maternal.bishop.v1";
+
+export async function assessBishopScoreForm(
+  answers: Record<string, unknown>,
+  formKey: string = BISHOP_FORM_KEY,
+): Promise<BishopScoreAssessment> {
+  const response = await apiClient.post<{ data: BishopScoreAssessment }>(
+    "/internal/v1/clinical/maternal/bishop/classify-form",
+    { formKey, answers },
+  );
+  return response.data.data;
+}
+
 // --- Emergency bundles (PPH, eclampsia) ------------------------------------------------------
 //
 // Backend: experience-bff `/internal/v1/clinical/maternal/emergency-bundles/{pph|eclampsia}/assess`.
