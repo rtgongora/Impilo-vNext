@@ -89,6 +89,15 @@ public final class TrustHeaders {
 
     // ── Governance (Health OS §11) ────────────────────────────────────────
     public static final String ASSURANCE_LEVEL = "x-assurance-level";
+    // Authentication assurance is derived from the validated token at TSHEPO/edge.
+    // Clients must never be trusted to supply these values.
+    public static final String AUTHENTICATION_AAL = "x-authentication-aal";
+    public static final String AUTHENTICATION_AMR = "x-authentication-amr";
+    public static final String AUTHENTICATION_TIME = "x-authentication-time";
+    public static final String AUTHENTICATION_STEP_UP_TIME = "x-authentication-step-up-time";
+    public static final String AUTHENTICATION_PHISHING_RESISTANT = "x-authentication-phishing-resistant";
+    public static final String AUTHENTICATION_SESSION_ID = "x-authentication-session-id";
+    public static final String AUTHENTICATION_FLOW_ID = "x-authentication-flow-id";
     public static final String SUBJECT_ID      = "x-subject-id";
     public static final String ACCESS_MODE     = "x-access-mode";
     public static final String WORKFLOW_STATE  = "x-workflow-state";

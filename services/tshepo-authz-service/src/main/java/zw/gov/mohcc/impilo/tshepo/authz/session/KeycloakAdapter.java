@@ -16,7 +16,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.time.Instant;
 import java.util.*;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
 
 /**
  * Keycloak OIDC session validation adapter.
@@ -80,6 +82,10 @@ public class KeycloakAdapter implements SessionAssurance {
         try {
             JWTClaimsSet claims = jwtProcessor.process(token, null);
 
+            if (!issuerUri.equals(claims.getIssuer())) {
+                throw new SessionValidationException("ISSUER_MISMATCH", "JWT issuer is not the configured Keycloak realm");
+            }
+
             // Validate expiration
             Date expiration = claims.getExpirationTime();
             if (expiration != null && expiration.before(new Date())) {
@@ -101,14 +107,14 @@ public class KeycloakAdapter implements SessionAssurance {
             // Extract tenant ID from organization claim or azp
             UUID tenantId = extractTenantId(claims);
 
-            // Extract LoA from acr claim
-            int loaLevel = extractLoaLevel(claims);
-
             // Extract session ID
             String sessionId = claims.getStringClaim("sid");
+            AuthenticationAssurance authenticationAssurance = extractAuthenticationAssurance(claims, sessionId);
 
-            return new SessionInfo(actorId, actorType, roles, tenantId, loaLevel,
-                    sessionId, issuerUri);
+            // Keycloak ACR is authentication assurance, never identity proofing. Identity
+            // LoA remains zero here and is resolved independently from the identity plane.
+            return new SessionInfo(actorId, actorType, roles, tenantId, 0,
+                    sessionId, issuerUri, authenticationAssurance);
 
         } catch (SessionValidationException e) {
             throw e;
@@ -179,20 +185,38 @@ public class KeycloakAdapter implements SessionAssurance {
         return null;
     }
 
-    private int extractLoaLevel(JWTClaimsSet claims) {
+    private AuthenticationAssurance extractAuthenticationAssurance(JWTClaimsSet claims, String sessionId) {
         try {
             String acr = claims.getStringClaim("acr");
-            if (acr == null) return 1;
-
-            return switch (acr) {
+            int aal = switch (acr == null ? "" : acr) {
                 case "0" -> 0;
-                case "urn:mace:incommon:iap:bronze", "1" -> 1;
-                case "urn:mace:incommon:iap:silver", "2" -> 2;
-                case "urn:mace:incommon:iap:gold", "3" -> 3;
+                case "urn:mace:incommon:iap:bronze", "1", "urn:impilo:aal1" -> 1;
+                case "urn:mace:incommon:iap:silver", "2", "urn:impilo:aal2" -> 2;
+                case "urn:mace:incommon:iap:gold", "3", "urn:impilo:aal3" -> 3;
                 default -> 1;
             };
+            List<String> methods = Optional.ofNullable(claims.getStringListClaim("amr")).orElse(List.of());
+            Instant authTime = claimInstant(claims.getClaim("auth_time"));
+            Instant stepUpTime = claimInstant(claims.getClaim("impilo_step_up_at"));
+            boolean phishingResistant = methods.stream().anyMatch(method ->
+                    method.equalsIgnoreCase("webauthn") || method.equalsIgnoreCase("hwk"));
+            return new AuthenticationAssurance(aal, methods, authTime, stepUpTime,
+                    phishingResistant, sessionId, claims.getStringClaim("impilo_flow_id"));
         } catch (Exception e) {
-            return 1;
+            log.warn("Authentication-assurance claims could not be classified: {}", e.getMessage());
+            return AuthenticationAssurance.none();
         }
+    }
+
+    private static Instant claimInstant(Object value) {
+        if (value instanceof Date date) return date.toInstant();
+        if (value instanceof Number number) return Instant.ofEpochSecond(number.longValue());
+        if (value instanceof String text) {
+            try { return Instant.ofEpochSecond(Long.parseLong(text)); }
+            catch (NumberFormatException ignored) {
+                try { return Instant.parse(text); } catch (Exception ignoredAgain) { return null; }
+            }
+        }
+        return null;
     }
 }

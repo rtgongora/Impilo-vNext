@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.tshepo.authz.dto;
 
 import java.util.List;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
 
 /**
  * Internal authorization request used by the PolicyEngine.
@@ -26,6 +27,7 @@ public record AuthzInternalRequest(
         int loaLevel,
         String sessionId,
         String bearerToken,
+        AuthenticationAssurance authenticationAssurance,
         // ── 10-dimension access control fields (doctrine alignment) ──────
         String providerId,
         String departmentId,
@@ -45,6 +47,23 @@ public record AuthzInternalRequest(
          */
         DutyContext dutyContext
 ) {
+    /** Compatibility constructor for callers that have not yet supplied token-derived AAL. */
+    public AuthzInternalRequest(
+            UUID tenantId, String actorId, String actorType, List<String> roles,
+            String purposeOfUse, String deviceFingerprint, UUID correlationId,
+            UUID facilityId, UUID workspaceId, String shiftId, String method, String path,
+            String action, String resourceType, String resourceId, int loaLevel,
+            String sessionId, String bearerToken, String providerId, String departmentId,
+            String wardId, String programmeId, String subjectId, String assuranceLevel,
+            String escalationGrantId, String workflowContext, DutyContext dutyContext) {
+        this(tenantId, actorId, actorType, roles, purposeOfUse, deviceFingerprint,
+                correlationId, facilityId, workspaceId, shiftId, method, path, action,
+                resourceType, resourceId, loaLevel, sessionId, bearerToken,
+                AuthenticationAssurance.none(), providerId, departmentId, wardId,
+                programmeId, subjectId, assuranceLevel, escalationGrantId,
+                workflowContext, dutyContext);
+    }
+
     /**
      * Return a copy with the given roles (used to fold the WORK_CONTEXT duty role into
      * the effective role set — additive, never removing a Keycloak-claim role).
@@ -53,7 +72,18 @@ public record AuthzInternalRequest(
         return new AuthzInternalRequest(
                 tenantId, actorId, actorType, newRoles, purposeOfUse, deviceFingerprint,
                 correlationId, facilityId, workspaceId, shiftId, method, path, action,
-                resourceType, resourceId, loaLevel, sessionId, bearerToken, providerId,
+                resourceType, resourceId, loaLevel, sessionId, bearerToken, authenticationAssurance, providerId,
+                departmentId, wardId, programmeId, subjectId, assuranceLevel,
+                escalationGrantId, workflowContext, dutyContext);
+    }
+
+    /** Return a copy carrying assurance derived from a validated authentication token. */
+    public AuthzInternalRequest withAuthenticationAssurance(AuthenticationAssurance assurance) {
+        return new AuthzInternalRequest(
+                tenantId, actorId, actorType, roles, purposeOfUse, deviceFingerprint,
+                correlationId, facilityId, workspaceId, shiftId, method, path, action,
+                resourceType, resourceId, loaLevel, sessionId, bearerToken,
+                assurance == null ? AuthenticationAssurance.none() : assurance, providerId,
                 departmentId, wardId, programmeId, subjectId, assuranceLevel,
                 escalationGrantId, workflowContext, dutyContext);
     }

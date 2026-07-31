@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyDecisionLogEnti
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyRuleEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyDecisionLogRepository;
 import zw.gov.mohcc.impilo.tshepo.authz.service.*;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.ConsentDecision;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.Instant;
 
 import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
 
@@ -149,7 +151,7 @@ class PolicyEngineTest {
         thresholds.setNewDeviceScore(50);
         thresholds.setBlockedDeviceScore(100);
         props.setRiskThresholds(thresholds);
-        props.setStepUpMethods(List.of("MFA", "BIOMETRIC", "SUPERVISOR_APPROVAL"));
+        props.setStepUpMethods(List.of("totp", "webauthn", "recovery"));
         props.setStepUpWindowSeconds(300);
         props.setBreakGlassTtlMinutes(60);
         return props;
@@ -316,6 +318,12 @@ class PolicyEngineTest {
         return breakGlassRequest("PROVIDER", "PUB-PROVIDER-1", FACILITY_ID, "cpid-999", 3, "LOA3");
     }
 
+    private static AuthzInternalRequest withFreshAal2(AuthzInternalRequest request) {
+        return request.withAuthenticationAssurance(new AuthenticationAssurance(
+                2, List.of("pwd", "otp"), Instant.now(), Instant.now(),
+                false, "session-abc", "flow-test"));
+    }
+
     @Test
     @DisplayName("Step 4.5 break-glass: a non-provider (citizen) declaring BREAK_GLASS -> DENY (never mints a health worker)")
     void evaluate_breakGlass_nonProvider_denies() {
@@ -419,30 +427,24 @@ class PolicyEngineTest {
                 .thenReturn(10);
         when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID))
                 .thenReturn(true);
-        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID))
-                .thenReturn(false);
-
         AuthzResponse response = policyEngine.evaluate(request);
 
         assertEquals(Verdict.STEP_UP_REQUIRED, response.verdict(),
                 "BREAK_GLASS without step-up must require STEP_UP");
         assertNotNull(response.stepUpMethods(),
                 "Must return available step-up methods");
-        assertTrue(response.stepUpMethods().contains("MFA"),
-                "Step-up methods must include MFA");
+        assertTrue(response.stepUpMethods().contains("totp"),
+                "Step-up methods must include native TOTP");
     }
 
     @Test
     @DisplayName("evaluate: compliant break-glass with active request + step-up -> ALLOW with ELEVATED logging")
     void evaluate_withBreakGlass_allowsWithStepUp() {
-        AuthzInternalRequest request = compliantBreakGlassRequest();
+        AuthzInternalRequest request = withFreshAal2(compliantBreakGlassRequest());
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID)))
                 .thenReturn(10);
         when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID))
                 .thenReturn(true);
-        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID))
-                .thenReturn(true);
-
         AuthzResponse response = policyEngine.evaluate(request);
 
         assertEquals(Verdict.ALLOW, response.verdict(),
@@ -467,11 +469,9 @@ class PolicyEngineTest {
     void evaluate_breakGlassAllow_alsoCarriesTheEnvelope() {
         when(decisionEnvelopeSigner.sign(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(java.util.Optional.of("header.payload.signature"));
-        AuthzInternalRequest request = compliantBreakGlassRequest();
+        AuthzInternalRequest request = withFreshAal2(compliantBreakGlassRequest());
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
         when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID)).thenReturn(true);
-        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID)).thenReturn(true);
-
         AuthzResponse response = policyEngine.evaluate(request);
 
         assertEquals(Verdict.ALLOW, response.verdict());
@@ -487,11 +487,9 @@ class PolicyEngineTest {
         org.mockito.ArgumentCaptor<String> obligationsSent = org.mockito.ArgumentCaptor.forClass(String.class);
         when(decisionEnvelopeSigner.sign(any(), any(), any(), any(), any(), any(), obligationsSent.capture()))
                 .thenReturn(java.util.Optional.of("header.payload.signature"));
-        AuthzInternalRequest request = compliantBreakGlassRequest();
+        AuthzInternalRequest request = withFreshAal2(compliantBreakGlassRequest());
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
         when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID)).thenReturn(true);
-        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID)).thenReturn(true);
-
         AuthzResponse response = policyEngine.evaluate(request);
 
         // If these two ever diverge, a caller could keep the genuine envelope and widen the
@@ -506,11 +504,9 @@ class PolicyEngineTest {
     void evaluate_whenSigningUnavailable_allowsWithoutTheHeader() {
         when(decisionEnvelopeSigner.sign(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(java.util.Optional.empty());
-        AuthzInternalRequest request = compliantBreakGlassRequest();
+        AuthzInternalRequest request = withFreshAal2(compliantBreakGlassRequest());
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
         when(breakGlassService.hasActiveBreakGlass(TENANT_ID, ACTOR_ID)).thenReturn(true);
-        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID)).thenReturn(true);
-
         AuthzResponse response = policyEngine.evaluate(request);
 
         assertEquals(Verdict.ALLOW, response.verdict(),
@@ -1293,8 +1289,7 @@ class PolicyEngineTest {
     @Test
     @DisplayName("G-CZO-01: ACR LOA1 but assurance upgraded to LOA3 (header) + rule min_loa=3 -> ALLOW")
     void evaluate_assuranceUpgradeReachesPolicy_allows() {
-        // ACR login level is still 1 (token unchanged); identity-assurance upgrade is propagated
-        // via X-Assurance-Level=LOA3. effectiveLoa = max(1,3) = 3 satisfies min_loa=3.
+        // Authentication remains AAL1; identity proofing is independently LOA3.
         AuthzInternalRequest request = requestWithAssurance(1, "LOA3");
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
         when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
@@ -1324,6 +1319,63 @@ class PolicyEngineTest {
 
         assertEquals(Verdict.ALLOW, response.verdict(),
                 "Bare numeric X-Assurance-Level must parse to LOA rank and satisfy min_loa");
+    }
+
+    @Test
+    @DisplayName("authentication AAL never substitutes for identity min_loa")
+    void evaluate_highAal_lowIdentityLoa_deniesIdentityPolicy() {
+        AuthzInternalRequest request = requestWithAssurance(3, "LOA1")
+                .withAuthenticationAssurance(new AuthenticationAssurance(
+                        3, List.of("webauthn"), Instant.now(), Instant.now(), true,
+                        "session-aal3", "flow-aal3"));
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(buildMinLoaAllowRule(3)));
+
+        assertEquals(Verdict.DENY, policyEngine.evaluate(request).verdict());
+    }
+
+    @Test
+    @DisplayName("identity LOA never substitutes for authentication min_aal")
+    void evaluate_highIdentityLoa_lowAal_deniesAuthenticationPolicy() {
+        AuthzInternalRequest request = buildRequest(
+                TENANT_ID, "TREATMENT", "GET:/v1/reports", "reports", null,
+                DEVICE_FP, FACILITY_ID, WORKSPACE_ID, List.of("DOCTOR"), "PROVIDER", 1)
+                .withAuthenticationAssurance(new AuthenticationAssurance(
+                        1, List.of("pwd"), Instant.now(), null, false,
+                        "session-aal1", "flow-aal1"));
+        PolicyRuleEntity rule = buildAllowRuleWithConditions(
+                "reports", "DOCTOR", "GET", "{\"min_aal\":2}");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        assertEquals(Verdict.DENY, policyEngine.evaluate(request).verdict());
+    }
+
+    @Test
+    @DisplayName("fresh native AAL2 satisfies method and recency policy and emits derived headers")
+    void evaluate_freshNativeAal2_allowsAndEmitsAssuranceHeaders() {
+        AuthzInternalRequest request = buildRequest(
+                TENANT_ID, "TREATMENT", "GET:/v1/reports", "reports", null,
+                DEVICE_FP, FACILITY_ID, WORKSPACE_ID, List.of("DOCTOR"), "PROVIDER", 1)
+                .withAuthenticationAssurance(new AuthenticationAssurance(
+                        2, List.of("pwd", "otp"), Instant.now(), Instant.now(), false,
+                        "session-aal2", "flow-aal2"));
+        PolicyRuleEntity rule = buildAllowRuleWithConditions(
+                "reports", "DOCTOR", "GET",
+                "{\"min_aal\":2,\"accepted_amr\":[\"otp\"],\"max_auth_age_seconds\":300}");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict());
+        assertEquals("2", response.headerMutations().get(TrustHeaders.AUTHENTICATION_AAL));
+        assertEquals("pwd,otp", response.headerMutations().get(TrustHeaders.AUTHENTICATION_AMR));
+        assertEquals("session-aal2",
+                response.headerMutations().get(TrustHeaders.AUTHENTICATION_SESSION_ID));
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -1828,9 +1880,6 @@ class PolicyEngineTest {
                 eq(ACTOR_ID), eq("TREATMENT")))
                 .thenReturn(ConsentDecision.permit("consent-step-up", List.of("delete")));
 
-        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID))
-                .thenReturn(false);
-
         AuthzResponse response = policyEngine.evaluate(request);
 
         assertEquals(Verdict.STEP_UP_REQUIRED, response.verdict(),
@@ -1844,16 +1893,14 @@ class PolicyEngineTest {
     @Test
     @DisplayName("evaluate: high risk + sensitive action + recent step-up -> ALLOW")
     void evaluate_withHighRisk_sensitiveAction_recentStepUp_allows() {
-        AuthzInternalRequest request = requestWithAction("DELETE:/v1/patients/abc", "patients");
+        AuthzInternalRequest request = withFreshAal2(
+                requestWithAction("DELETE:/v1/patients/abc", "patients"));
         stubHappyPathDefaults(65);
 
         when(consentClient.evaluateConsent(
                 eq(TENANT_ID), eq("patients"), isNull(),
                 eq(ACTOR_ID), eq("TREATMENT")))
                 .thenReturn(ConsentDecision.permit("consent-step-up", List.of("delete")));
-
-        when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID))
-                .thenReturn(true);
 
         AuthzResponse response = policyEngine.evaluate(request);
 

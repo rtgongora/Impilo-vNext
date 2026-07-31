@@ -14,7 +14,7 @@ public class AuthzProperties {
     private RateLimit rateLimit = new RateLimit();
     private int stepUpWindowSeconds = 300;
     private int maxStepUpAttempts = 5;
-    private List<String> stepUpMethods = List.of("MFA", "BIOMETRIC", "SUPERVISOR_APPROVAL");
+    private List<String> stepUpMethods = List.of("totp", "webauthn", "recovery");
     private int breakGlassTtlMinutes = 60;
     private int breakGlassReviewSlaHours = 24;
     private RiskThresholds riskThresholds = new RiskThresholds();

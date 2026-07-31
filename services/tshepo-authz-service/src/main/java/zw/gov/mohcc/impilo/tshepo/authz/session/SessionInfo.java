@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.tshepo.authz.session;
 
 import java.util.List;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
 
 /**
  * Validated session information extracted from an OIDC token.
@@ -25,5 +26,13 @@ public record SessionInfo(
         UUID tenantId,
         int loaLevel,
         String sessionId,
-        String issuer
-) {}
+        String issuer,
+        AuthenticationAssurance authenticationAssurance
+) {
+    /** Compatibility constructor for non-Keycloak adapters while they adopt AAL claims. */
+    public SessionInfo(String actorId, String actorType, List<String> roles, UUID tenantId,
+                       int loaLevel, String sessionId, String issuer) {
+        this(actorId, actorType, roles, tenantId, loaLevel, sessionId, issuer,
+                AuthenticationAssurance.none());
+    }
+}

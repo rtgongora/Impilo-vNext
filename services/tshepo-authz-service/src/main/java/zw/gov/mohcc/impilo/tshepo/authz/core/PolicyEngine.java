@@ -15,9 +15,11 @@ import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyDecisionLogEnti
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyRuleEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyDecisionLogRepository;
 import zw.gov.mohcc.impilo.tshepo.authz.service.*;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.ConsentDecision;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.Obligations;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.StepUpRequirement;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
@@ -99,6 +101,10 @@ public class PolicyEngine {
      */
     static final Set<String> RECOGNISED_CONDITION_KEYS = Set.of(
             "min_loa",
+            "min_aal",
+            "accepted_amr",
+            "max_auth_age_seconds",
+            "phishing_resistant_required",
             "allowed_facilities",
             "allowed_actor_types",
             "max_risk_score",
@@ -324,8 +330,10 @@ public class PolicyEngine {
         if (riskScore >= properties.getRiskThresholds().getStepUpTrigger()
                 && isHighRiskAction(request.action())) {
 
-            // Check if actor already completed a recent step-up
-            if (!stepUpService.hasRecentStepUp(tenantId, request.actorId())) {
+            // Assurance belongs to this validated token/session. Actor-wide caches can leak a
+            // step-up between devices and are not accepted as authorization proof.
+            if (!meetsAuthenticationRequirement(request, 2,
+                    properties.getStepUpWindowSeconds(), false, List.of())) {
                 return stepUpAndLog(request, riskScore, startTime);
             }
         }
@@ -371,8 +379,9 @@ public class PolicyEngine {
                     riskScore, startTime);
         }
 
-        // Require a completed step-up challenge
-        if (!stepUpService.hasRecentStepUp(tenantId, actorId)) {
+        // Require fresh AAL2 in this token/session, never an actor-wide cached challenge.
+        if (!meetsAuthenticationRequirement(request, 2,
+                properties.getStepUpWindowSeconds(), false, List.of())) {
             return stepUpAndLog(request, riskScore, startTime);
         }
 
@@ -436,7 +445,7 @@ public class PolicyEngine {
                     riskScore, startTime);
         }
         // (1b) Sufficiently verified — break-glass widens a verified identity, never a bare session.
-        if (effectiveLoa(request) < BREAK_GLASS_MIN_LOA) {
+        if (identityLoa(request) < BREAK_GLASS_MIN_LOA) {
             return denyAndLog(request, "BREAK_GLASS_REQUIRES_VERIFIED_PROVIDER",
                     "Break-glass requires a sufficiently-verified provider identity (LOA"
                             + BREAK_GLASS_MIN_LOA + "+).",
@@ -661,12 +670,28 @@ public class PolicyEngine {
             // verification upgrade actually change what policy sees (closes G-CZO-01).
             if (conditions.containsKey("min_loa")) {
                 int minLoa = ((Number) conditions.get("min_loa")).intValue();
-                int effLoa = effectiveLoa(request);
-                if (effLoa < minLoa) {
-                    log.debug("Condition failed: min_loa={} but effectiveLoa={} (acr={}, assuranceHeader={})",
-                            minLoa, effLoa, request.loaLevel(), request.assuranceLevel());
+                int identityLoa = identityLoa(request);
+                if (identityLoa < minLoa) {
+                    log.debug("Condition failed: min_loa={} but identityLoa={}", minLoa, identityLoa);
                     return false;
                 }
+            }
+
+            int minAal = conditions.get("min_aal") instanceof Number n ? n.intValue() : 0;
+            int maxAuthAge = conditions.get("max_auth_age_seconds") instanceof Number n
+                    ? n.intValue() : 0;
+            boolean phishingResistant = Boolean.TRUE.equals(conditions.get("phishing_resistant_required"));
+            List<String> acceptedAmr = conditions.get("accepted_amr") instanceof List<?> values
+                    ? values.stream().filter(String.class::isInstance).map(String.class::cast).toList()
+                    : List.of();
+            if ((minAal > 0 || maxAuthAge > 0 || phishingResistant || !acceptedAmr.isEmpty())
+                    && !meetsAuthenticationRequirement(request, minAal, maxAuthAge,
+                    phishingResistant, acceptedAmr)) {
+                log.debug("Authentication assurance condition failed: requiredAal={}, maxAge={}, "
+                                + "phishingResistant={}, acceptedAmr={}, actual={}",
+                        minAal, maxAuthAge, phishingResistant, acceptedAmr,
+                        request.authenticationAssurance());
+                return false;
             }
 
             // allowed_facilities check
@@ -885,8 +910,21 @@ public class PolicyEngine {
      * it never reduces access below the prior ACR-only behaviour, and lifts it the moment a
      * verification upgrade is recorded.
      */
-    private int effectiveLoa(AuthzInternalRequest request) {
-        return Math.max(request.loaLevel(), parseAssuranceLoa(request.assuranceLevel()));
+    private int identityLoa(AuthzInternalRequest request) {
+        return parseAssuranceLoa(request.assuranceLevel());
+    }
+
+    private boolean meetsAuthenticationRequirement(AuthzInternalRequest request, int minAal,
+                                                     int maxAgeSeconds, boolean phishingResistant,
+                                                     List<String> acceptedMethods) {
+        AuthenticationAssurance assurance = request.authenticationAssurance() == null
+                ? AuthenticationAssurance.none() : request.authenticationAssurance();
+        if (assurance.aal() < minAal) return false;
+        if (phishingResistant && !assurance.phishingResistant()) return false;
+        if (maxAgeSeconds > 0 && !assurance.isFresh(maxAgeSeconds, Instant.now())) return false;
+        if (acceptedMethods != null && !acceptedMethods.isEmpty()
+                && assurance.methods().stream().noneMatch(acceptedMethods::contains)) return false;
+        return true;
     }
 
     /**
@@ -967,7 +1005,7 @@ public class PolicyEngine {
             return DelegationStep.deny(denyAndLog(request, "DELEGATION_NOT_ACTIVE",
                     "No active delegation authorising this actor to act for the subject", riskScore, startTime));
         }
-        if (effectiveLoa(request) < res.assuranceFloor()) {
+        if (identityLoa(request) < res.assuranceFloor()) {
             return DelegationStep.deny(denyAndLog(request, "DELEGATION_ASSURANCE_TOO_LOW",
                     "Delegate assurance below the delegation floor", riskScore, startTime));
         }
@@ -1271,11 +1309,14 @@ public class PolicyEngine {
             Map<String, Object> input = new LinkedHashMap<>();
             input.put("actor_id", request.actorId() != null ? request.actorId() : "");
             input.put("purpose", purpose != null ? purpose.name() : "");
-            input.put("loa", request.loaLevel());
-            input.put("assurance_loa", parseAssuranceLoa(request.assuranceLevel()));
+            input.put("identity_loa", identityLoa(request));
+            input.put("authentication_aal", request.authenticationAssurance().aal());
             Map<String, Object> conditions = parseConditions(matchedRule);
             if (conditions.get("min_loa") instanceof Number n) {
                 input.put("min_loa", n.intValue());
+            }
+            if (conditions.get("min_aal") instanceof Number n) {
+                input.put("min_aal", n.intValue());
             }
             if (Boolean.TRUE.equals(conditions.get("account_assurance_required"))) {
                 input.put("account_assurance_required", true);
@@ -1423,6 +1464,25 @@ public class PolicyEngine {
         if (request.assuranceLevel() != null) {
             headers.put(TrustHeaders.ASSURANCE_LEVEL, request.assuranceLevel());
         }
+        AuthenticationAssurance authentication = request.authenticationAssurance();
+        if (authentication != null && authentication.aal() > 0) {
+            headers.put(TrustHeaders.AUTHENTICATION_AAL, Integer.toString(authentication.aal()));
+            headers.put(TrustHeaders.AUTHENTICATION_AMR, String.join(",", authentication.methods()));
+            if (authentication.authenticationTime() != null) {
+                headers.put(TrustHeaders.AUTHENTICATION_TIME, authentication.authenticationTime().toString());
+            }
+            if (authentication.stepUpTime() != null) {
+                headers.put(TrustHeaders.AUTHENTICATION_STEP_UP_TIME, authentication.stepUpTime().toString());
+            }
+            headers.put(TrustHeaders.AUTHENTICATION_PHISHING_RESISTANT,
+                    Boolean.toString(authentication.phishingResistant()));
+            if (authentication.sessionId() != null) {
+                headers.put(TrustHeaders.AUTHENTICATION_SESSION_ID, authentication.sessionId());
+            }
+            if (authentication.flowId() != null) {
+                headers.put(TrustHeaders.AUTHENTICATION_FLOW_ID, authentication.flowId());
+            }
+        }
 
         if (obligations != null) {
             if (obligations.maxScope() != null) {
@@ -1525,6 +1585,8 @@ public class PolicyEngine {
     private AuthzResponse stepUpAndLog(AuthzInternalRequest request, int riskScore, long startTime) {
         List<String> methods = properties.getStepUpMethods();
         String methodsStr = String.join(",", methods);
+        StepUpRequirement requirement = new StepUpRequirement(
+                2, methods, properties.getStepUpWindowSeconds(), false, UUID.randomUUID().toString());
 
         persistDecision(request, "STEP_UP_REQUIRED", riskScore, null, methodsStr, null, startTime);
         auditPublisher.queueAuditEvent(request, "STEP_UP_REQUIRED", riskScore, null);
@@ -1532,7 +1594,7 @@ public class PolicyEngine {
         log.info("STEP_UP: actor={}, methods={}, correlation={}",
                 request.actorId(), methods, request.correlationId());
 
-        return AuthzResponse.stepUp(methods, riskScore);
+        return AuthzResponse.stepUp(requirement, riskScore);
     }
 
     private void persistDecision(AuthzInternalRequest request, String verdict, int riskScore,

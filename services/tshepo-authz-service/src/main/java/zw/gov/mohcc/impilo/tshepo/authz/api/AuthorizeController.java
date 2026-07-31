@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.tshepo.authz.session.SessionAssuranceRouter;
 import zw.gov.mohcc.impilo.tshepo.authz.session.SessionInfo;
 import zw.gov.mohcc.impilo.tshepo.authz.session.SessionValidationException;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
 
@@ -107,6 +108,7 @@ public class AuthorizeController {
         List<String> roles = List.of();
         int loaLevel = 0;
         String sessionId = null;
+        AuthenticationAssurance authenticationAssurance = AuthenticationAssurance.none();
 
         if (authorization != null && !authorization.isBlank()) {
             try {
@@ -114,6 +116,7 @@ public class AuthorizeController {
                 roles = session.roles();
                 loaLevel = session.loaLevel();
                 sessionId = session.sessionId();
+                authenticationAssurance = session.authenticationAssurance();
 
                 // JWT identity is AUTHORITATIVE over client-supplied headers (TPL-1): a valid
                 // session's sub/type/tenant OVERRIDE any X-Actor-ID/X-Actor-Type/X-Tenant-ID the
@@ -167,6 +170,7 @@ public class AuthorizeController {
                 shiftId, originalMethod, originalPath, action, resourceType,
                 resourceId, loaLevel, sessionId,
                 authorization != null ? authorization : "",
+                authenticationAssurance,
                 providerId, departmentId, wardId, programmeId,
                 subjectId, assuranceLevel,
                 escalationGrantId, workflowContext,

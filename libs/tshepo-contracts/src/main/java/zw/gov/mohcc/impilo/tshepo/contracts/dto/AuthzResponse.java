@@ -23,22 +23,30 @@ public record AuthzResponse(
         String errorMessage,
         List<String> stepUpMethods,
         int riskScore,
-        Map<String, String> headerMutations
+        Map<String, String> headerMutations,
+        StepUpRequirement stepUpRequirement
 ) {
 
     public static AuthzResponse allow(Obligations obligations, int riskScore,
                                        Map<String, String> headerMutations) {
         return new AuthzResponse(Verdict.ALLOW, obligations, null, null, null,
-                riskScore, headerMutations);
+                riskScore, headerMutations, null);
     }
 
     public static AuthzResponse deny(String errorCode, String errorMessage, int riskScore) {
         return new AuthzResponse(Verdict.DENY, null, errorCode, errorMessage, null,
-                riskScore, null);
+                riskScore, null, null);
     }
 
     public static AuthzResponse stepUp(List<String> methods, int riskScore) {
         return new AuthzResponse(Verdict.STEP_UP_REQUIRED, null, "STEP_UP_REQUIRED",
-                "Step-up authentication required", methods, riskScore, null);
+                "Step-up authentication required", methods, riskScore, null,
+                new StepUpRequirement(2, methods, 300, false, null));
+    }
+
+    public static AuthzResponse stepUp(StepUpRequirement requirement, int riskScore) {
+        return new AuthzResponse(Verdict.STEP_UP_REQUIRED, null, "STEP_UP_REQUIRED",
+                "Step-up authentication required", requirement.permittedMethods(), riskScore,
+                null, requirement);
     }
 }
