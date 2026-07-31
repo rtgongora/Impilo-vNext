@@ -16,6 +16,14 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
+vi.mock("@/hooks/useEmergencyRealtime", () => ({
+  useEmergencyRealtime: () => undefined,
+}));
+
+vi.mock("@/features/emergency/offline/EmergencyOfflineOutboxPanel", () => ({
+  EmergencyOfflineOutboxPanel: () => null,
+}));
+
 vi.mock("@/hooks/useFacilityStore", () => ({
   useFacilityStore: (selector: (state: { facility: { id: string; name: string } | null }) => unknown) =>
     selector({ facility: { id: "facility-1", name: "Test Hospital" } }),

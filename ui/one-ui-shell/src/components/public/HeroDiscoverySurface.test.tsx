@@ -85,9 +85,11 @@ describe("HeroDiscoverySurface", () => {
     );
     const { rerender } = render(<HeroDiscoverySurface />);
 
-    await waitFor(() => expect(get).toHaveBeenCalled());
     // Unfiltered: the counts describe the whole blend, so they are meaningful.
-    expect(screen.getByRole("tab", { name: /^Medicines/ })).toHaveTextContent("4");
+    // waitFor covers the render that follows the resolved fetch, not just the call itself.
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: /^Medicines/ })).toHaveTextContent("4"),
+    );
 
     // Filtered: the response holds one lane only, so a "0" on every other chip would
     // claim those lanes are empty when they were simply never asked.

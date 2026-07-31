@@ -89,6 +89,19 @@ vi.mock("@/features/maternity/reproductive/ReproductiveConfidentialPanel", () =>
   ),
 }));
 
+vi.mock("@/features/maternity/reproductive/W14ReproductivePanels", () => ({
+  DeliveryRecordPanel: () => <div data-testid="w14-delivery-record-panel">Delivery record module</div>,
+  FertilityPanel: () => <div data-testid="w14-fertility-panel">Fertility module</div>,
+  PreconceptionPanel: () => <div data-testid="w14-preconception-panel">Preconception module</div>,
+  ReproductiveIntentionPanel: () => (
+    <div data-testid="w14-reproductive-intention-panel">Reproductive intention module</div>
+  ),
+}));
+
+vi.mock("@/features/maternity/bishop/BishopScorePanel", () => ({
+  BishopScorePanel: () => <div data-testid="bishop-score-panel">Bishop score module</div>,
+}));
+
 vi.mock("@/features/maternity/journeys/MaternityClinicalJourneysSection", () => ({
   MaternityClinicalJourneysSection: () => (
     <div data-testid="maternity-clinical-journeys">Clinical journeys module</div>

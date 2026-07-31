@@ -29,6 +29,12 @@ vi.mock("@/hooks/queries/useStructuredHistory", () => ({
     isError: false,
     refetch: vi.fn(),
   }),
+  useRecordFunctionalAssessment: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    isPending: false,
+    isError: false,
+  }),
 }));
 
 describe("FunctionalStatusPage", () => {
