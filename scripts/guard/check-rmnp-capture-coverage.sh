@@ -179,6 +179,8 @@ NO_CAPTURE_PACKS = {
     "rmnp-pph-bundle.json": "an emergency treatment bundle — its inputs are recorded step "
                             "completions (an act log, not a form) and injected temporal facts, so "
                             "there is no clinician-entered finding for a form to capture",
+    "rmnp-bishop-score.json": "a specialty cervical-readiness assess — scored via BishopScore "
+                              "HTTP (CKP + BFF), not a maternity form finding pack",
 }
 
 failed = False
