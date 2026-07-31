@@ -1127,7 +1127,6 @@ export const ROUTES: RouteDefinition[] = [
 // NCZ register materialiser UI (31 Jul 2026): +1 — /work/regulatory/[orgId]/registers. Total 834.
 // NCZ regulatory UI completeness (31 Jul 2026): +5 — student queue/reports, cpd-review,
 // restrictions, audit under /work/regulatory/[orgId]/…. Total 839.
-<<<<<<< HEAD
 // Emergency pack W15 (30 Jul 2026): +6 — /clinical/emergency/activation, .../pre-arrival,
 // .../analytics, .../spine/[episodeId]/disposition, .../spine/[episodeId]/observation, and
 // /ehr/[patientId]/emergency, which had a page and inbound links but no registration and therefore
@@ -1137,13 +1136,10 @@ export const ROUTES: RouteDefinition[] = [
 // operations that had none. Total 847.
 // Merge with staging (31 Jul 2026): route-parity extract (routes.ts literals + admin registry)
 // is 848 — one above the additive comment chain after both lanes landed. Trust the extract.
-export const EXPECTED_ROUTE_COUNT = 848;
-=======
 // Theatre scheduling + report orphans (31 Jul 2026): +5 — /reports/theatre,
 // /scheduling/surgical-waitlist, /scheduling/theatre-lists (+ [sessionId]),
-// /ehr/[patientId]/procedures/[episodeId]. Total 844.
-export const EXPECTED_ROUTE_COUNT = 844;
->>>>>>> 8e930a34e (feat(ui): register orphan theatre scheduling and report routes)
+// /ehr/[patientId]/procedures/[episodeId]. Total 853.
+export const EXPECTED_ROUTE_COUNT = 853;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

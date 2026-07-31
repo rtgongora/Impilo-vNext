@@ -123,3 +123,142 @@ export const listTheatreSafetyEvents = async (caseId: string) =>
 
 export const routeTheatreDeath = async (caseId: string, body: Record<string, unknown> = {}) =>
   (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/death`, body)).data.data;
+
+// ── Wave M2 bedside OR panels (BFF /internal/v1/theatre/** + inventory implant SoR) ──
+
+/** Confirm marked operative site / laterality (gates lateralised start). */
+export const confirmTheatreSiteSide = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/site-side`, body)).data.data;
+
+export const listTheatreSpecimens = async (caseId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/cases/${caseId}/specimens`)).data.data;
+
+export const collectTheatreSpecimen = async (
+  caseId: string,
+  specimenId: string,
+  body: Record<string, unknown> = {},
+) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/specimens/${specimenId}/collect`,
+    body,
+  )).data.data;
+
+export const confirmTheatreSpecimenLabel = async (caseId: string, specimenId: string) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/specimens/${specimenId}/confirm-label`,
+    {},
+  )).data.data;
+
+export const receiveTheatreSpecimen = async (caseId: string, specimenId: string) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/specimens/${specimenId}/receive`,
+    {},
+  )).data.data;
+
+export const assessTheatreSpecimenAdequacy = async (
+  caseId: string,
+  specimenId: string,
+  body: Record<string, unknown>,
+) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/specimens/${specimenId}/adequacy`,
+    body,
+  )).data.data;
+
+export const listTheatreCounts = async (caseId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/cases/${caseId}/counts`)).data.data;
+
+export const recordTheatreCount = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/counts`, body)).data.data;
+
+export const listTheatreImplants = async (caseId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/cases/${caseId}/implants`)).data.data;
+
+export const recordTheatreImplant = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/implants`, body)).data.data;
+
+/** Inventory SoR — never theatre/implants/recall (that path swallows failures to []). */
+const INVENTORY_IMPLANTS = "/internal/v1/inventory/implants";
+
+export const removeTheatreImplant = async (
+  patientImplantId: string,
+  body: Record<string, unknown> = {},
+) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${INVENTORY_IMPLANTS}/${patientImplantId}/remove`,
+    body,
+  )).data.data;
+
+export const reviseTheatreImplant = async (
+  patientImplantId: string,
+  body: Record<string, unknown>,
+) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${INVENTORY_IMPLANTS}/${patientImplantId}/revise`,
+    body,
+  )).data.data;
+
+export const traceImplantRecall = async (params: { udi?: string; lot?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (params.udi) qs.set("udi", params.udi);
+  if (params.lot) qs.set("lot", params.lot);
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  return (await apiClient.get<{ data: unknown[] }>(`${INVENTORY_IMPLANTS}/recall${suffix}`)).data.data;
+};
+
+export const listTheatreBlood = async (caseId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/cases/${caseId}/blood`)).data.data;
+
+export const theatreBloodAction = async (
+  caseId: string,
+  action: "request" | "issue" | "administer" | "resolve",
+  body: Record<string, unknown> = {},
+) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/blood/${action}`,
+    body,
+  )).data.data;
+
+/** Activate a new emergency theatre case (intake path — not in-case mutation). */
+export const activateEmergencyTheatreCase = async (body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: { id: string } }>(`${THEATRE}/cases/emergency`, body)).data.data;
+
+export const recordTheatreEmergencyConsentException = async (
+  caseId: string,
+  body: Record<string, unknown>,
+) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/consent/emergency-exception`,
+    body,
+  )).data.data;
+
+export const recordReturnToTheatre = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/return-to-theatre`,
+    body,
+  )).data.data;
+
+// PACU recovery depth (Aldrete-scored observations + readiness / escalate / discharge)
+export const listTheatrePacuObservations = async (caseId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/cases/${caseId}/pacu/observations`)).data.data;
+
+export const recordTheatrePacuObservation = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/pacu/observations`,
+    body,
+  )).data.data;
+
+export const getTheatrePacuReadiness = async (caseId: string) =>
+  (await apiClient.get<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/pacu/readiness`)).data.data;
+
+export const escalateTheatrePacu = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/pacu/escalate`,
+    body,
+  )).data.data;
+
+export const dischargeTheatrePacu = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(
+    `${THEATRE}/cases/${caseId}/pacu/discharge`,
+    body,
+  )).data.data;
