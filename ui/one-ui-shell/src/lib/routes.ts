@@ -1143,8 +1143,11 @@ export const ROUTES: RouteDefinition[] = [
 // /scheduling/surgical-waitlist, /scheduling/theatre-lists (+ [sessionId]),
 // /ehr/[patientId]/procedures/[episodeId]. Total 853.
 // Work Home real destinations (31 Jul 2026): +1 — /programme/[programmeId], the programme
-// profile page Work Home programme hrefs resolve to. Total 854.
-export const EXPECTED_ROUTE_COUNT = 854;
+// profile page Work Home programme hrefs resolve to.
+// Merge reconcile (31 Jul 2026): actual registry at the staging merge point was 855
+// (753 literals + 102 administration-governance), two above the stated 853 — the comment
+// chain had drifted again. Trust the extract: 855 + 1 = 856.
+export const EXPECTED_ROUTE_COUNT = 856;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
