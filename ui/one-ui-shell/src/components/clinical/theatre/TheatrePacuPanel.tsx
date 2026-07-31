@@ -11,7 +11,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { HeartPulse, Loader2, RefreshCw, TriangleAlert, LogOut } from "lucide-react";
+import { HeartPulse, Loader2, RefreshCw, TriangleAlert, LogOut, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { SCORE_TOOL_LABELS } from "@/lib/anaesthesia-scoring";
 
@@ -64,6 +64,8 @@ export function TheatrePacuPanel({ caseId }: { caseId: string }) {
   const [obs, setObs] = useState<PacuObservation[]>([]);
   const [readiness, setReadiness] = useState<PacuReadiness | null>(null);
   const [loading, setLoading] = useState(true);
+  const [obsUnavailable, setObsUnavailable] = useState(false);
+  const [readinessUnavailable, setReadinessUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -84,16 +86,25 @@ export function TheatrePacuPanel({ caseId }: { caseId: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try {
-      const [o, r] = await Promise.all([
-        apiClient.get(`/internal/v1/theatre/cases/${caseId}/pacu/observations`).catch(() => []),
-        apiClient.get(`/internal/v1/theatre/cases/${caseId}/pacu/readiness`).catch(() => null),
-      ]);
-      setObs(unwrapList<PacuObservation>(o));
-      setReadiness(r ? unwrap<PacuReadiness>(r, {}) : null);
-    } finally {
-      setLoading(false);
+    const [oResult, rResult] = await Promise.allSettled([
+      apiClient.get(`/internal/v1/theatre/cases/${caseId}/pacu/observations`),
+      apiClient.get(`/internal/v1/theatre/cases/${caseId}/pacu/readiness`),
+    ]);
+    if (oResult.status === "fulfilled") {
+      setObs(unwrapList<PacuObservation>(oResult.value));
+      setObsUnavailable(false);
+    } else {
+      // Keep last known observations — never invent an empty recovery timeline.
+      setObsUnavailable(true);
     }
+    if (rResult.status === "fulfilled") {
+      setReadiness(unwrap<PacuReadiness>(rResult.value, {}));
+      setReadinessUnavailable(false);
+    } else {
+      // Keep last known readiness — never invent UNSCORED on transport failure.
+      setReadinessUnavailable(true);
+    }
+    setLoading(false);
   }, [caseId]);
 
   useEffect(() => {
@@ -179,22 +190,40 @@ export function TheatrePacuPanel({ caseId }: { caseId: string }) {
       </div>
       {msg && <p className="mb-2 rounded-lg border border-border bg-background p-2 text-xs">{msg}</p>}
       {loading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading recovery record…</p>}
+      {(obsUnavailable || readinessUnavailable) && (
+        <p className="mb-2 flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800" data-testid="pacu-load-unavailable">
+          <AlertTriangle className="h-3.5 w-3.5" />
+          {obsUnavailable && readinessUnavailable
+            ? "PACU observations and readiness unavailable — do not treat this as unscored or empty."
+            : obsUnavailable
+              ? "PACU observations unavailable — do not treat this as no observations."
+              : "PACU readiness unavailable — do not treat this as unscored."}
+        </p>
+      )}
 
       {/* Discharge-readiness gate (Aldrete-derived) */}
       <div
         className={`mb-4 flex flex-wrap items-center gap-2 rounded-lg border p-3 text-xs ${ready ? "border-emerald-200 bg-emerald-50/50" : "border-amber-200 bg-amber-50/40"}`}
         data-testid={ready ? "pacu-readiness-ready" : "pacu-readiness-blocked"}
       >
-        <span className={`rounded-full px-2 py-0.5 font-medium ${BAND_STYLE[band] ?? BAND_STYLE.UNSCORED}`}>{band}</span>
+        <span className={`rounded-full px-2 py-0.5 font-medium ${BAND_STYLE[band] ?? BAND_STYLE.UNSCORED}`}>
+          {readinessUnavailable && !readiness ? "UNKNOWN" : band}
+        </span>
         {readiness?.aldrete_score != null && <span className="font-medium">Aldrete {readiness.aldrete_score}</span>}
-        <span className="text-muted-foreground">{readiness?.interpretation ?? "No recovery score recorded yet."}</span>
+        <span className="text-muted-foreground">
+          {readinessUnavailable && !readiness
+            ? "Could not load readiness for this case."
+            : (readiness?.interpretation ?? "No recovery score recorded yet.")}
+        </span>
       </div>
 
       {/* Observation timeline */}
       <div className="mb-4 rounded-lg border border-border p-3">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recovery observations</p>
-        {obs.length === 0 ? (
+        {obs.length === 0 && !obsUnavailable ? (
           <p className="text-xs text-muted-foreground">No PACU observations recorded.</p>
+        ) : obs.length === 0 && obsUnavailable ? (
+          <p className="text-xs text-muted-foreground">Could not load PACU observations for this case.</p>
         ) : (
           <ul className="space-y-1">
             {obs.map((o) => (

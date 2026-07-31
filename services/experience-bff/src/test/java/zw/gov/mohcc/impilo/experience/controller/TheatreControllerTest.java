@@ -91,13 +91,6 @@ class TheatreControllerTest {
     }
 
     @Test
-    void listBlood_failsSoftToEmptyList() {
-        ResponseEntity<Map<String, Object>> r = controller().listBlood("boom", "req-b2", "corr-b2");
-        assertEquals(200, r.getStatusCode().value());
-        assertTrue(((java.util.List<?>) r.getBody().get("data")).isEmpty());
-    }
-
-    @Test
     void recordCount_wrapsDiscrepancyGate() {
         ResponseEntity<Map<String, Object>> r = controller().recordCount("c1", "req-c", "corr-c",
                 Map.of("kind", "SWAB", "baselineCount", 10, "closingCount", 9));
@@ -156,10 +149,9 @@ class TheatreControllerTest {
     }
 
     @Test
-    void pacuReadiness_failsSoftToUnscored() {
-        ResponseEntity<Map<String, Object>> r = controller().pacuReadiness("boom", "req-pr2", "corr-pr2");
-        assertEquals(200, r.getStatusCode().value());
-        assertEquals("UNSCORED", ((Map<?, ?>) r.getBody().get("data")).get("band"));
+    void pacuReadiness_failurePropagates_doesNotFabricateUnscored() {
+        assertThrows(RuntimeException.class,
+                () -> controller().pacuReadiness("boom", "req-pr2", "corr-pr2"));
     }
 
     @Test
@@ -171,10 +163,21 @@ class TheatreControllerTest {
     }
 
     @Test
-    void getDischarge_failsSoftToNone() {
-        ResponseEntity<Map<String, Object>> r = controller().getDischarge("boom", "req-g", "corr-g");
-        assertEquals(200, r.getStatusCode().value());
-        assertEquals("NONE", ((Map<?, ?>) r.getBody().get("data")).get("status"));
+    void getDischarge_failurePropagates_doesNotFabricateNone() {
+        assertThrows(RuntimeException.class,
+                () -> controller().getDischarge("boom", "req-g", "corr-g"));
+    }
+
+    @Test
+    void listBlood_failurePropagates_doesNotFabricateEmpty() {
+        assertThrows(RuntimeException.class,
+                () -> controller().listBlood("boom", "req-bl", "corr-bl"));
+    }
+
+    @Test
+    void listCounts_failurePropagates_doesNotFabricateEmpty() {
+        assertThrows(RuntimeException.class,
+                () -> controller().listCounts("boom", "req-ct", "corr-ct"));
     }
 
     @Test
@@ -341,6 +344,11 @@ class TheatreControllerTest {
         }
 
         @Override public JsonNode listTheatreBlood(String caseId) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createArrayNode();
+        }
+
+        @Override public JsonNode listTheatreCounts(String caseId) {
             if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
             return mapper.createArrayNode();
         }

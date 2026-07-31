@@ -758,3 +758,111 @@ export function useAppendWaitlistRevalidation(episodeId: string | null) {
     },
   });
 }
+
+// ── Specialty catalogue (SB-4) + surgical analytics (§23); gated by V305 ──
+// Catalogue URLs live under /surgery/specialties (NOT /surgery/episodes). A failed
+// catalogue or analytics read must never render as empty content.
+
+function catalogueQuery(params: Record<string, string | undefined>): string {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== "") qs.set(k, v);
+  }
+  const s = qs.toString();
+  return s ? `?${s}` : "";
+}
+
+export interface SpecialtyIndication {
+  specialty: string;
+  indicationCode: string;
+  conditionDisplay: string | null;
+  typicalProcedure: string | null;
+  urgencyGuidance: string | null;
+  nonOperativeAlternatives: string | null;
+  notes: string | null;
+  contentMaturity: string;
+  approvingAuthority: string;
+}
+
+export interface OperativeTemplate {
+  id: string | null;
+  specialty: string;
+  templateCode: string;
+  templateName: string;
+  typicalProcedure: string | null;
+  position: string | null;
+  preparation: string | null;
+  incision: string | null;
+  keySteps: string | null;
+  techniqueOptions: string | null;
+  closurePlan: string | null;
+  woundClassification: string | null;
+  postopInstructions: string | null;
+  contentMaturity: string;
+  approvingAuthority: string;
+}
+
+export interface SurgeryIndicatorView {
+  indicatorCode: string;
+  indicatorName: string;
+  numeratorDescription: string | null;
+  denominatorDescription: string | null;
+  /** COMPUTED | PARTIAL | NOT_YET_INSTRUMENTED — render honestly; PARTIAL/NOT_YET are not failures. */
+  computationStatus: string;
+  executableVia: string | null;
+  gapReason: string | null;
+  owningService: string | null;
+  delegatedOutOfScope: boolean;
+  lancetCoreIndicator?: string | null;
+}
+
+export interface SurgeryIndicatorSummary {
+  total: number;
+  computed: number;
+  partial: number;
+  notYetInstrumented: number;
+  indicators: SurgeryIndicatorView[];
+}
+
+/** List contract: isError ≠ "this specialty has no indications". */
+export function useSpecialtyIndications(specialty: string | null) {
+  return useQuery<SpecialtyIndication[]>({
+    queryKey: ["surgery", "specialty-indications", specialty],
+    queryFn: () =>
+      apiClient.get<SpecialtyIndication[]>(
+        `/internal/v1/surgery/specialties/indications${catalogueQuery({ specialty: specialty ?? undefined })}`,
+      ),
+    enabled: !!specialty,
+  });
+}
+
+/** List contract: isError ≠ "this specialty has no templates". */
+export function useSpecialtyTemplates(specialty: string | null) {
+  return useQuery<OperativeTemplate[]>({
+    queryKey: ["surgery", "specialty-templates", specialty],
+    queryFn: () =>
+      apiClient.get<OperativeTemplate[]>(
+        `/internal/v1/surgery/specialties/templates${catalogueQuery({ specialty: specialty ?? undefined })}`,
+      ),
+    enabled: !!specialty,
+  });
+}
+
+export function useSurgeryAnalyticsIndicators() {
+  return useQuery<SurgeryIndicatorSummary>({
+    queryKey: ["surgery", "analytics-indicators"],
+    queryFn: () =>
+      apiClient.get<SurgeryIndicatorSummary>("/internal/v1/surgery/analytics/indicators"),
+  });
+}
+
+export function useSurgeryAnalyticsIndicator(indicatorCode: string | null) {
+  return useQuery<SurgeryIndicatorView>({
+    queryKey: ["surgery", "analytics-indicator", indicatorCode],
+    queryFn: () =>
+      apiClient.get<SurgeryIndicatorView>(
+        `/internal/v1/surgery/analytics/indicator${catalogueQuery({ code: indicatorCode ?? undefined })}`,
+      ),
+    enabled: !!indicatorCode,
+  });
+}

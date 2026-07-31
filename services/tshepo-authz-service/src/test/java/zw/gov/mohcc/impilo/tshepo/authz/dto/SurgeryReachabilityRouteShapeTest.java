@@ -104,6 +104,52 @@ class SurgeryReachabilityRouteShapeTest {
                 .isEqualTo("templates");
     }
 
+    /**
+     * Why V305 pins the catalogue to {@code /surgery/specialties}, not {@code /surgery/episodes}:
+     * the derived types ("indications"/"templates") are unique, but an episode-family pin would
+     * still be the wrong path family — a clinician ALLOW written against the roster route would
+     * never match the catalogue URL, and a catalogue ALLOW pinned to episodes would never fire
+     * for the real catalogue path. Asserted so the pin cannot "tidy" onto the episode family.
+     */
+    @Test
+    void specialtyCataloguePathsContainSpecialtiesNotEpisodes() {
+        String indications = "/internal/v1/surgery/specialties/indications";
+        String templates = "/internal/v1/surgery/specialties/templates";
+        assertThat(indications).contains("/surgery/specialties").doesNotContain("/surgery/episodes");
+        assertThat(templates).contains("/surgery/specialties").doesNotContain("/surgery/episodes");
+        // ?specialty= never reaches the segment walk — same discipline as episode DELETE.
+        assertThat(AuthzInternalRequest.deriveResourceType(indications)).isEqualTo("indications");
+        assertThat(AuthzInternalRequest.deriveResourceType(templates)).isEqualTo("templates");
+    }
+
+    // ── specialty catalogue + surgical analytics (SB-4 / §23), gated by V305 ──
+
+    @Test
+    void surgeryAnalyticsRoutesDeriveIndicatorsAndIndicator() {
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/surgery/analytics/indicators"))
+                .isEqualTo("indicators");
+        // ?code=... is a query string and never reaches the segment walk — the fixed word wins.
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/surgery/analytics/indicator"))
+                .isEqualTo("indicator");
+    }
+
+    /**
+     * Why V305 pins surgery analytics to {@code /surgery/analytics}: the same final segments
+     * already have V302 procedures rows on {@code /procedures/analytics}. Without the pin a
+     * clinician ALLOW on procedures would fire for surgery (or vice versa).
+     */
+    @Test
+    void surgeryAndProceduresAnalyticsShareTheWordButNotThePin() {
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/surgery/analytics/indicators"))
+                .isEqualTo("indicators");
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/procedures/analytics/indicators"))
+                .isEqualTo("indicators");
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/surgery/analytics/indicator"))
+                .isEqualTo("indicator");
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/procedures/analytics/indicator"))
+                .isEqualTo("indicator");
+    }
+
     // ── course-of-care (parity Wave A), gated by V304 ──
 
     @Test

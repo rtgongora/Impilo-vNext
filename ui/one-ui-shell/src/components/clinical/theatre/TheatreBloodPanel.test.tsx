@@ -26,6 +26,20 @@ describe("TheatreBloodPanel (Lane 3 — MADI blood)", () => {
     expect(await screen.findByText(/No blood ordered/i)).toBeInTheDocument();
   });
 
+  it("shows unavailable banner on list GET failure and never clears prior blood rows", async () => {
+    get.mockResolvedValueOnce({
+      data: [{ id: "b-keep", status: "GROUP_SCREEN", component_type: "PRBC", units_requested: 2 }],
+    });
+    render(<TheatreBloodPanel caseId="c-keep" />);
+    expect(await screen.findByText("GROUP_SCREEN")).toBeInTheDocument();
+
+    get.mockRejectedValueOnce({ status: 502, error: { message: "upstream down" } });
+    fireEvent.click(screen.getByText("Refresh"));
+    expect(await screen.findByTestId("blood-list-unavailable")).toHaveTextContent(/do not treat this as no blood ordered/i);
+    expect(screen.getByText("GROUP_SCREEN")).toBeInTheDocument();
+    expect(screen.queryByText("No blood ordered for this case.")).not.toBeInTheDocument();
+  });
+
   it("requests blood against the real POST endpoint with the entered component", async () => {
     get.mockResolvedValue({ data: [] });
     post.mockResolvedValue({ data: { status: "GROUP_SCREEN" } });

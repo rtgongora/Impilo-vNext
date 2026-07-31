@@ -22,6 +22,8 @@ import { HealthOsAppsScreen } from "../screens/provider/HealthOsAppsScreen";
 import { ProviderSocialScreen } from "../screens/provider/ProviderSocialScreen";
 import { WellnessSocialWorkbenchScreen } from "../screens/provider/WellnessSocialWorkbenchScreen";
 import { DiagnosticsScreen } from "../screens/provider/DiagnosticsScreen";
+import { TheatreQueueScreen } from "../screens/provider/TheatreQueueScreen";
+import { SurgeryEpisodesScreen } from "../screens/provider/SurgeryEpisodesScreen";
 import { useAppStore } from "../stores/appStore";
 import { useEncounterStore } from "../stores/encounterStore";
 import type { ProviderTabKey } from "../types";
@@ -102,6 +104,16 @@ export function ProviderTabs() {
       icon: tabIcon(providerTab === "queue" ? "list" : "list-outline", providerTab === "queue"),
     },
     {
+      key: "theatre" as const,
+      label: "Theatre",
+      icon: tabIcon(providerTab === "theatre" ? "medkit" : "medkit-outline", providerTab === "theatre"),
+    },
+    {
+      key: "surgery" as const,
+      label: "Surgery",
+      icon: tabIcon(providerTab === "surgery" ? "medical" : "medical-outline", providerTab === "surgery"),
+    },
+    {
       key: "messaging" as const,
       label: "Messages",
       icon: tabIcon(providerTab === "messaging" ? "chatbubbles" : "chatbubbles-outline", providerTab === "messaging"),
@@ -141,6 +153,10 @@ export function ProviderTabs() {
         return <ResultsViewScreen />;
       case "queue":
         return <QueueManagementScreen />;
+      case "theatre":
+        return <TheatreQueueScreen />;
+      case "surgery":
+        return <SurgeryEpisodesScreen />;
       case "messaging":
         return <MessagingScreen />;
       case "social":

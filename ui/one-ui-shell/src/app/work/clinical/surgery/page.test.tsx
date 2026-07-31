@@ -93,6 +93,18 @@ function routeGets(
   } = {},
 ) {
   get.mockImplementation((url: string) => {
+    if (url.includes("/specialties/indications") || url.includes("/specialties/templates")) {
+      return Promise.resolve([]);
+    }
+    if (url.includes("/analytics/indicators")) {
+      return Promise.resolve({
+        total: 0,
+        computed: 0,
+        partial: 0,
+        notYetInstrumented: 0,
+        indicators: [],
+      });
+    }
     if (url.includes("/specialties")) {
       return specialties instanceof Error ? Promise.reject(specialties) : Promise.resolve(specialties);
     }

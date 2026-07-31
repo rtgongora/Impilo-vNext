@@ -169,12 +169,8 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.listTheatrePacuObservations(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre PACU observation list failed: {}", e.getMessage());
-            return ok(List.of(), requestId, correlationId);
-        }
+        // No swallow: empty list is only what inpatient returns when there are genuinely no observations.
+        return ok(inpatientClient.listTheatrePacuObservations(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/pacu/observations")
@@ -191,12 +187,8 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.theatrePacuReadiness(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre PACU readiness failed: {}", e.getMessage());
-            return ok(Map.of("band", "UNSCORED", "ready", false), requestId, correlationId);
-        }
+        // No swallow: UNSCORED is only what inpatient returns when genuinely unscored.
+        return ok(inpatientClient.theatrePacuReadiness(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/pacu/escalate")
@@ -256,12 +248,9 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.getTheatreDischarge(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre discharge get failed: {}", e.getMessage());
-            return ok(Map.of("status", "NONE"), requestId, correlationId);
-        }
+        // No swallow: "NONE" is only what inpatient returns when there is genuinely no summary.
+        // A 5xx or connection failure must reach the UI as a failure, not as an empty draft.
+        return ok(inpatientClient.getTheatreDischarge(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/discharge")
@@ -338,30 +327,28 @@ public class TheatreController {
             @RequestParam(required = false) String facilityId,
             @RequestParam(required = false) String date,
             @RequestParam(required = false) String room) {
+        // Queue failure must not render as an empty theatre day. Per-case readiness
+        // gaps stay as board_state=Unknown so one bad case does not blank the board.
+        JsonNode queue = inpatientClient.theatreQueue();
+        JsonNode cases = queue != null && queue.has("data") ? queue.get("data") : queue;
         List<Map<String, Object>> rows = new ArrayList<>();
-        try {
-            JsonNode queue = inpatientClient.theatreQueue();
-            JsonNode cases = queue != null && queue.has("data") ? queue.get("data") : queue;
-            if (cases != null && cases.isArray()) {
-                for (JsonNode c : cases) {
-                    String caseId = c.has("episode_id") ? c.get("episode_id").asText()
-                            : (c.has("id") ? c.get("id").asText() : null);
-                    if (caseId == null) {
-                        continue;
-                    }
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("case", c);
-                    try {
-                        row.put("board", inpatientClient.theatreBoardReadiness(caseId, Map.of()));
-                    } catch (Exception e) {
-                        log.warn("board-readiness failed for case {}: {}", caseId, e.getMessage());
-                        row.put("board", Map.of("board_state", "Unknown"));
-                    }
-                    rows.add(row);
+        if (cases != null && cases.isArray()) {
+            for (JsonNode c : cases) {
+                String caseId = c.has("episode_id") ? c.get("episode_id").asText()
+                        : (c.has("id") ? c.get("id").asText() : null);
+                if (caseId == null) {
+                    continue;
                 }
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("case", c);
+                try {
+                    row.put("board", inpatientClient.theatreBoardReadiness(caseId, Map.of()));
+                } catch (Exception e) {
+                    log.warn("board-readiness failed for case {}: {}", caseId, e.getMessage());
+                    row.put("board", Map.of("board_state", "Unknown"));
+                }
+                rows.add(row);
             }
-        } catch (Exception e) {
-            log.warn("Readiness board composition failed: {}", e.getMessage());
         }
         Map<String, Object> board = new LinkedHashMap<>();
         board.put("facility_id", facilityId);
@@ -400,12 +387,8 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.listTheatreBlood(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre blood list failed: {}", e.getMessage());
-            return ok(List.of(), requestId, correlationId);
-        }
+        // No swallow: empty list is only what inpatient returns when no blood is ordered.
+        return ok(inpatientClient.listTheatreBlood(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/blood/{action}")
@@ -495,12 +478,8 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.listTheatreCounts(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre count list failed: {}", e.getMessage());
-            return ok(List.of(), requestId, correlationId);
-        }
+        // No swallow: empty list is only what inpatient returns when no counts are recorded.
+        return ok(inpatientClient.listTheatreCounts(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/counts")
@@ -547,12 +526,8 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.listTheatreImplants(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre implant list failed: {}", e.getMessage());
-            return ok(List.of(), requestId, correlationId);
-        }
+        // No swallow: empty list is only what inpatient returns when no implants are recorded.
+        return ok(inpatientClient.listTheatreImplants(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/implants")
@@ -584,12 +559,8 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.listInstrumentSets(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre instrument-set list failed: {}", e.getMessage());
-            return ok(List.of(), requestId, correlationId);
-        }
+        // No swallow: empty list is only what inpatient returns when no sets are issued.
+        return ok(inpatientClient.listInstrumentSets(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/instrument-sets/issue")
@@ -617,12 +588,8 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.listControlledDrugs(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre controlled-drug list failed: {}", e.getMessage());
-            return ok(List.of(), requestId, correlationId);
-        }
+        // No swallow: empty list is only what inpatient returns when the register is empty.
+        return ok(inpatientClient.listControlledDrugs(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/controlled-drugs")

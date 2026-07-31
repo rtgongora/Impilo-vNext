@@ -49,6 +49,7 @@ const PROVIDER_SUBTABS: Record<string, ProviderTabKey> = {
   patients: "patients",
   queue: "queue",
   worklist: "queue",
+  theatre: "theatre",
   results: "results",
   messaging: "messaging",
   tools: "tools",

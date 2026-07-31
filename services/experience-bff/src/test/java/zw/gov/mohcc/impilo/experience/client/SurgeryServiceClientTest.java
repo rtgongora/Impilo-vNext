@@ -234,4 +234,62 @@ class SurgeryServiceClientTest {
         assertEquals(200, response.getStatusCode().value());
         server.verify();
     }
+
+    // ── Specialty catalogue + analytics (V305) ──
+
+    @Test
+    void specialtyIndicationsSendsSpecialtyAsAQueryParameterOnTheCataloguePath() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/specialties/indications?specialty=COLORECTAL"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).specialtyIndications("COLORECTAL");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void specialtyTemplatesSendsSpecialtyAsAQueryParameterOnTheCataloguePath() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/specialties/templates?specialty=COLORECTAL"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).specialtyTemplates("COLORECTAL");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void analyticsIndicatorsHitsTheSurgeryAnalyticsCatalogue() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/analytics/indicators"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"total\":0,\"indicators\":[]}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).analyticsIndicators();
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void analyticsIndicatorSendsCodeAsAQueryParameter() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/surgery/analytics/indicator?code=SSI_RATE"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"indicatorCode\":\"SSI_RATE\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).analyticsIndicator("SSI_RATE");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
 }

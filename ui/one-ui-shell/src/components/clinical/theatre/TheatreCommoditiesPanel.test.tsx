@@ -98,6 +98,25 @@ describe("TheatreCommoditiesPanel (Lane 2 — implant / instrument-set / control
     );
   });
 
+  it("shows unavailable banner on register GET failure and never clears prior implants", async () => {
+    get.mockImplementation((u: string) => {
+      if (u.endsWith("/implants")) {
+        return Promise.resolve({
+          data: [{ id: "im-keep", udi: "UDI-KEEP", status: "IMPLANTED", inventory_patient_implant_id: "inv-1" }],
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+    render(<TheatreCommoditiesPanel caseId="c-keep" patientCpid="CPID-1" />);
+    expect(await screen.findByText("UDI-KEEP")).toBeInTheDocument();
+
+    get.mockImplementation((u: string) => Promise.reject({ status: 502, error: { message: "upstream down" } }));
+    fireEvent.click(screen.getByText("Refresh"));
+    expect(await screen.findByTestId("commodities-list-unavailable")).toHaveTextContent(/do not treat this as empty registers/i);
+    expect(screen.getByText("UDI-KEEP")).toBeInTheDocument();
+    expect(screen.queryByText(/No implants recorded/i)).not.toBeInTheDocument();
+  });
+
   it("runs recall against inventory SoR and never treats 502 as zero affected", async () => {
     get.mockImplementation((u: string) => {
       if (u.includes("/inventory/implants/recall")) {

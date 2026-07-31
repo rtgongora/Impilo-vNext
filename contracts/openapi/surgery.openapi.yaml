@@ -38,13 +38,14 @@
 #
 # REACHABILITY, by route family rather than as a blanket statement:
 #   * REACHABLE — the episode spine (S1), assessment (S2) and decision (S3) routes,
-#     reopen and episode-specialty routes (tshepo-authz V302/V303), plus the five
+#     reopen and episode-specialty routes (tshepo-authz V302/V303), the five
 #     course-of-care families: prehabilitation, complication pathways (incl.
 #     grade/disclose/close), longitudinal objects (incl. remove/revise), follow-up
 #     and waiting-list revalidation (tshepo-authz V304 + experience-BFF
-#     SurgeryController pass-throughs + clinician surface at /work/clinical/surgery).
-#   * BACKEND-INTERNAL — specialty catalogue (indications/templates) and analytics.
-#     No authz rows, no BFF proxy, no UI.
+#     SurgeryController pass-throughs + clinician surface at /work/clinical/surgery),
+#     plus specialty catalogue (indications/templates) and surgical analytics
+#     (tshepo-authz V305, pinned /surgery/specialties and /surgery/analytics —
+#     NOT /surgery/episodes — + BFF pass-throughs + UI picker/analytics panel).
 # Reachable means a request can traverse the estate to the handler. NOTHING in this
 # contract has been exercised over real HTTP against a deployed stack; the wiring is
 # proven by unit and route-shape tests only.
@@ -1963,6 +1964,12 @@ components:
       type: object
       required: [specialty, templateCode, templateName, contentMaturity, approvingAuthority]
       properties:
+        id:
+          type: string
+          format: uuid
+          description: |
+            Soft-link target for inpatient `procedure_note.operative_template_ref` (SB-5).
+            Travels with `templateCode` as a validated pair — never alone.
         specialty: { $ref: '#/components/schemas/SurgicalSpecialty' }
         templateCode: { type: string }
         templateName: { type: string }

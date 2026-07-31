@@ -29,6 +29,7 @@ import { TheatreReturnToTheatrePanel, type ReturnToTheatreRecord } from "@/compo
 import { TheatreSiteMarkingPanel } from "@/components/clinical/theatre/TheatreSiteMarkingPanel";
 import { EmergencyConsentExceptionPanel } from "@/components/clinical/theatre/EmergencyConsentExceptionPanel";
 import { ObstetricSection } from "@/components/clinical/theatre/ObstetricSection";
+import { OperativeTemplatePicker } from "@/components/clinical/surgery/OperativeTemplatePicker";
 import { apiClient } from "@/lib/api-client";
 
 interface Blocker { code?: string; message?: string }
@@ -147,6 +148,7 @@ export default function TheatreCaseDetailPage() {
   // mode that auto-hides the surrounding sections during active data entry to minimise scrolling.
   const [noteSigned, setNoteSigned] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [templateSpecialty, setTemplateSpecialty] = useState("");
 
   const templatePairIncomplete =
     (note.operativeTemplateRef.trim() === "") !== (note.operativeTemplateCode.trim() === "");
@@ -479,6 +481,19 @@ export default function TheatreCaseDetailPage() {
               </div>
               {/* SB-5 operative depth — typed fields the V304 migration added to procedure_note */}
               <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Operative record depth</p>
+              <OperativeTemplatePicker
+                specialty={templateSpecialty}
+                onSpecialtyChange={setTemplateSpecialty}
+                onPick={(fill) =>
+                  setNote({
+                    ...note,
+                    ...fill,
+                    performedProcedure: fill.performedProcedure?.trim()
+                      ? fill.performedProcedure
+                      : note.performedProcedure,
+                  })
+                }
+              />
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Patient position</span><input type="text" value={note.patientPosition} onChange={(e) => setNote({ ...note, patientPosition: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" data-testid="note-patient-position" /></label>
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Skin preparation</span><input type="text" value={note.skinPreparation} onChange={(e) => setNote({ ...note, skinPreparation: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>

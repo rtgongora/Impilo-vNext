@@ -19,6 +19,20 @@ describe("AnaesthesiaChartPanel (Lane 3 — multi-channel chart)", () => {
     expect(await screen.findByText(/projected · MADI/i)).toBeInTheDocument();
   });
 
+  it("shows unavailable banner on chart GET failure and never clears prior entries", async () => {
+    get.mockResolvedValueOnce({
+      data: { entries: [{ channel: "MEDICATION", label: "Propofol", value_text: "100mg" }] },
+    });
+    render(<AnaesthesiaChartPanel caseId="c-keep" />);
+    expect(await screen.findByText("Propofol")).toBeInTheDocument();
+
+    get.mockRejectedValueOnce({ status: 502, error: { message: "upstream down" } });
+    fireEvent.click(screen.getByText("Refresh"));
+    expect(await screen.findByTestId("anaesthesia-chart-unavailable")).toHaveTextContent(/do not treat this as no chart entries/i);
+    expect(screen.getByText("Propofol")).toBeInTheDocument();
+    expect(screen.queryByText(/No chart entries yet/i)).not.toBeInTheDocument();
+  });
+
   it("adds a chart entry via the real POST endpoint", async () => {
     get.mockResolvedValue({ data: { entries: [] } });
     post.mockResolvedValue({ data: {} });

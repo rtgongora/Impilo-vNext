@@ -165,4 +165,24 @@ public class ProceduresServiceClient {
                 .queryParam("code", indicatorCode).toUriString();
         return restTemplate.getForEntity(url, String.class);
     }
+
+    // ── Wave W4 — P10 Clavien-Dindo grades and complication profiles. Catalogue risk
+    // content (what to monitor for / how to grade), NOT an actual complication occurrence
+    // and NOT surgery pathway grading (.../surgery/episodes/.../complications/.../grade).
+    // Query-param code shape from the start (ComplicationProfileController) — same as P7/P9. ──
+
+    /** Clavien-Dindo severity grades — GET /internal/v1/procedures/clavien-dindo-grades */
+    public ResponseEntity<String> clavienDindoGrades() {
+        log.info("Procedures: fetching Clavien-Dindo grades");
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/procedures/clavien-dindo-grades", String.class);
+    }
+
+    /** Complication profile — GET /internal/v1/procedures/complication-profiles?code= */
+    public ResponseEntity<String> complicationProfile(String profileCode) {
+        log.info("Procedures: fetching complication profile={}", profileCode);
+        String url = UriComponentsBuilder.fromUriString(baseUrl + "/internal/v1/procedures/complication-profiles")
+                .queryParam("code", profileCode).toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
 }

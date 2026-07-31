@@ -4,12 +4,13 @@
  * Theatre blood panel (Lane 3). Reads MADI-backed blood links for a theatre case and drives the
  * request → issue → administer → resolve lifecycle. Reflects MADI status truth by read-through: the
  * reservation/crossmatch state comes from the service, never fabricated here. An empty list is an
- * honest "no blood ordered" state, not a placeholder.
+ * honest "no blood ordered" state only when the GET succeeds. Transport failure shows unavailable
+ * and keeps the last known rows — never "No blood ordered" on error.
  * Binds: GET /internal/v1/theatre/cases/{id}/blood, POST .../blood/{request|issue|administer|resolve}
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { Droplet, Loader2, RefreshCw } from "lucide-react";
+import { Droplet, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 
 interface BloodLink {
@@ -51,6 +52,7 @@ const STATUS_TONE: Record<string, string> = {
 export function TheatreBloodPanel({ caseId }: { caseId: string }) {
   const [links, setLinks] = useState<BloodLink[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listUnavailable, setListUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [units, setUnits] = useState("2");
@@ -63,8 +65,10 @@ export function TheatreBloodPanel({ caseId }: { caseId: string }) {
     try {
       const res = await apiClient.get(`/internal/v1/theatre/cases/${caseId}/blood`);
       setLinks(unwrapList<BloodLink>(res));
+      setListUnavailable(false);
     } catch {
-      setLinks([]);
+      // Do not collapse unknown → empty: keep last known rows and surface unavailable.
+      setListUnavailable(true);
     } finally {
       setLoading(false);
     }
@@ -121,11 +125,18 @@ export function TheatreBloodPanel({ caseId }: { caseId: string }) {
       </div>
 
       {msg && <p className="mb-2 rounded-lg border border-border bg-background p-2 text-xs">{msg}</p>}
+      {listUnavailable && (
+        <p className="mb-2 flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800" data-testid="blood-list-unavailable">
+          <AlertTriangle className="h-3.5 w-3.5" /> Blood list unavailable — do not treat this as no blood ordered.
+        </p>
+      )}
 
       {loading ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading blood…</p>
-      ) : links.length === 0 ? (
+      ) : links.length === 0 && !listUnavailable ? (
         <p className="text-sm text-muted-foreground">No blood ordered for this case.</p>
+      ) : links.length === 0 && listUnavailable ? (
+        <p className="text-sm text-muted-foreground">Could not load blood orders for this case.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-left text-xs">

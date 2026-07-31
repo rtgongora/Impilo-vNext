@@ -300,6 +300,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/scheduling/booking-requests", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Requests", navLabel: "Booking Requests", navZone: "work" },
   { path: "/scheduling/today", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Today's Appointments", navLabel: "Today", navZone: "work" },
   { path: "/scheduling/bookings/config", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Configuration", navLabel: "Booking Config", navZone: "work" },
+  // Theatre scheduling surfaces (existed but were orphan-baseline-allowed).
+  { path: "/scheduling/surgical-waitlist", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Surgical Waitlist", navLabel: "Surgical Waitlist", navZone: "work" },
+  { path: "/scheduling/theatre-lists", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Theatre Lists", navLabel: "Theatre Lists", navZone: "work" },
+  { path: "/scheduling/theatre-lists/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Theatre List Session", navLabel: "Theatre List Session", navZone: "work" },
 
   // â”€â”€ Zone: Communication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Hub", navLabel: "Communication", navZone: "work" },
@@ -363,6 +367,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/discharge", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Discharge", navLabel: "Discharge", navZone: "work" },
   { path: "/ehr/[patientId]/care-plans", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Care Plans", navLabel: "Care Plans", navZone: "work" },
   { path: "/ehr/[patientId]/procedures", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Procedures", navLabel: "Procedures", navZone: "work" },
+  { path: "/ehr/[patientId]/procedures/[episodeId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Procedure Episode", navLabel: "Procedure Episode", navZone: "work" },
   { path: "/ehr/[patientId]/paediatrics", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Paediatric Workspace", navLabel: "Paediatrics", navZone: "work" },
   { path: "/ehr/[patientId]/growth-chart", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Growth Chart", navLabel: "Growth Chart", navZone: "work" },
   { path: "/ehr/[patientId]/imam", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Nutrition Treatment", navLabel: "Nutrition Treatment", navZone: "work" },
@@ -578,6 +583,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/reports/clinical", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Clinical Reports", navLabel: "Clinical Reports", navZone: "professional" },
   { path: "/reports/operational", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Operational Reports", navLabel: "Operational Reports", navZone: "professional" },
   { path: "/reports/custom", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Custom Reports", navLabel: "Custom Reports", navZone: "professional" },
+  { path: "/reports/theatre", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Theatre Utilisation", navLabel: "Theatre Utilisation", navZone: "professional" },
   { path: "/reports/[id]", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Report Details", navLabel: "Report", navZone: "professional" },
 
   // â”€â”€ Zone: Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1130,7 +1136,10 @@ export const ROUTES: RouteDefinition[] = [
 // operations that had none. Total 847.
 // Merge with staging (31 Jul 2026): route-parity extract (routes.ts literals + admin registry)
 // is 848 — one above the additive comment chain after both lanes landed. Trust the extract.
-export const EXPECTED_ROUTE_COUNT = 848;
+// Theatre scheduling + report orphans (31 Jul 2026): +5 — /reports/theatre,
+// /scheduling/surgical-waitlist, /scheduling/theatre-lists (+ [sessionId]),
+// /ehr/[patientId]/procedures/[episodeId]. Total 853.
+export const EXPECTED_ROUTE_COUNT = 853;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

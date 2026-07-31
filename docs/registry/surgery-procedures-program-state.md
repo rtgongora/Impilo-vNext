@@ -1,6 +1,7 @@
 # Surgery + Clinical Procedures — programme state
 
-Last updated: 2026-07-31, after the theatre clinician parity close (Wave D).
+Last updated: 2026-07-31, after mobile M3/M4 surgery+theatre completion (provider Surgery tab,
+Tools → Procedures catalogue, Theatre ops hub / case ops). Deploy and real-HTTP proof still open.
 
 `iatg-surgery-procedures-leases.md` has cited "programme memory
 (`surgery-procedures-program-state.md`)" since the wave index was first written, but the file had
@@ -17,9 +18,12 @@ on `/work/clinical/surgery`, plus theatre **specimen custody**, **implant lifecy
 marking**, and **site/side confirmation** on the theatre case surface. Per-wave detail is in the
 lease §9–§30.
 
-**Course-of-care and theatre parity UI are REACHABLE** (authz + BFF + clinician surface exist;
-Vitest and route-shape proofs pass). They are **still not browser-proven** until an authorised
-preview deploy and smoke. Specialty catalogue and analytics remain BACKEND-INTERNAL.
+**Course-of-care and theatre parity UI are REACHABLE** on web and now on **provider mobile**
+(Surgery tab episodes spine; Tools → Procedures catalogue; Theatre ops hub for board/referrals/
+waitlist/lists/utilisation; case ops for anaesthesia chart / CSSD / controlled drugs). Authz +
+BFF + clinician surfaces exist; Vitest honesty proofs pass. They are **still not browser-
+proven / device-proven** until an authorised preview deploy and smoke. Specialty catalogue and
+analytics remain thinner on mobile than web.
 
 **All twenty demonstrations across both packs are closed or explicitly deferred with an owner.**
 The two traceability documents (`docs/clinical/surgical-domain-pack/demonstrations-traceability.md`

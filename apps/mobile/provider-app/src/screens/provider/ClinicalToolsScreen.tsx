@@ -62,6 +62,7 @@ import { MedicineWorkspaceScreen } from "./MedicineWorkspaceScreen";
 import { MedicineCdsEvaluateScreen } from "./MedicineCdsEvaluateScreen";
 import { ClerkingContinuityScreen } from "./ClerkingContinuityScreen";
 import { ChronicRegistersScreen } from "./ChronicRegistersScreen";
+import { ProceduresCatalogueScreen } from "./ProceduresCatalogueScreen";
 
 type ToolTab =
   | "emergency"
@@ -115,6 +116,7 @@ type ToolTab =
   | "impilo_live"
   | "medicine"
   | "medicine_cds"
+  | "procedures"
   | "clerking_continuity"
   | "chronic_registers";
 
@@ -123,6 +125,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "prehospital_epcr", label: "ePCR" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
   { id: "care", label: "Care Plan" }, { id: "mar", label: "MAR" }, { id: "cds", label: "CDS" },
   { id: "medicine", label: "Medicine" }, { id: "medicine_cds", label: "Med CDS" },
+  { id: "procedures", label: "Procedures" },
   { id: "clerking_continuity", label: "Clerking" }, { id: "chronic_registers", label: "Registers" },
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
   { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "control_tower", label: "Control Tower" }, { id: "place_mode", label: "Place Mode" }, { id: "regulators", label: "Regulators" }, { id: "facility_setup", label: "Setup" }, { id: "queue_definitions", label: "Queues" }, { id: "reports", label: "Reports" },
@@ -197,6 +200,7 @@ export function ClinicalToolsScreen() {
         {tab === "medicine_cds" && (
           <MedicineCdsEvaluateScreen patientId={activeEncounter?.patientId ?? null} />
         )}
+        {tab === "procedures" && <ProceduresCatalogueScreen />}
         {tab === "clerking_continuity" && (
           <ClerkingContinuityScreen
             patientId={activeEncounter?.patientId ?? ""}

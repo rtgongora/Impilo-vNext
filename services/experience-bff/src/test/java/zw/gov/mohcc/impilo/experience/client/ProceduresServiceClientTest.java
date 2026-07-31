@@ -220,4 +220,35 @@ class ProceduresServiceClientTest {
         assertEquals(200, response.getStatusCode().value());
         server.verify();
     }
+
+    // ── Wave W4 — P10 Clavien-Dindo grades and complication profiles. Query-param
+    // code shape from the start (ComplicationProfileController). ──
+
+    @Test
+    void clavienDindoGradesHitsTheFixedListRoute() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/clavien-dindo-grades"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[{\"gradeCode\":\"I\"}]", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).clavienDindoGrades();
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
+
+    @Test
+    void complicationProfileSendsTheCodeAsAQueryParameter() {
+        RestTemplate rt = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(rt).build();
+        server.expect(requestTo(BASE + "/internal/v1/procedures/complication-profiles?code=COMPLICATIONS-LAPAROTOMY"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"profileCode\":\"COMPLICATIONS-LAPAROTOMY\"}", MediaType.APPLICATION_JSON));
+
+        var response = client(rt).complicationProfile("COMPLICATIONS-LAPAROTOMY");
+
+        assertEquals(200, response.getStatusCode().value());
+        server.verify();
+    }
 }
