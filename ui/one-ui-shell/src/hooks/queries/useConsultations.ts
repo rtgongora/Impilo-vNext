@@ -46,6 +46,7 @@ export interface MdtDecision {
   treatment_intent: string | null;
   next_action: string | null;
   responsible_service: string | null;
+  case_item_id?: string | null;
 }
 
 export function useConsultations(patientId: string) {

@@ -83,6 +83,9 @@ vi.mock("@/hooks/queries/usePrograms", () => ({ useProgrammeEnrolments: () => st
 vi.mock("@/features/medicine/clerking/AmbulatoryOrderSetsPanel", () => ({
   AmbulatoryOrderSetsPanel: () => <div data-testid="ambulatory-order-sets-stub" />,
 }));
+vi.mock("@/features/medicine/workspace/JourneyPositionIndicator", () => ({
+  JourneyPositionIndicator: () => <div data-testid="journey-position-stub" />,
+}));
 
 // eslint-disable-next-line import/first
 import { MedicineWorkspaceShell } from "../MedicineWorkspaceShell";

@@ -130,6 +130,11 @@ export default function MdtBoardPage() {
                 </div>
               )}
 
+              <p className="text-[11px] text-muted-foreground">
+                V051 owns the session; V114 owns the decision. Board minutes here are input to a
+                governed decision recorded on the patient&rsquo;s Consultations page.
+              </p>
+
               <ul className="space-y-3" data-testid="mdt-agenda">
                 {board.agenda.length === 0 && (
                   <li className="text-sm italic text-muted-foreground">No cases on the agenda yet.</li>

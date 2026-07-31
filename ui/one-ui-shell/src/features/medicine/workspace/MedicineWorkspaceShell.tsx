@@ -6,6 +6,8 @@ import { useMedicineContext } from "./useMedicineContext";
 import { isConfidential, programmeLabel } from "./medicine-summary";
 import { MEDICINE_SPECIALTIES } from "@/features/medicine/specialties/specialty-config";
 import { AmbulatoryOrderSetsPanel } from "@/features/medicine/clerking/AmbulatoryOrderSetsPanel";
+import { RenalDosingPanel } from "@/features/medicine/pharm/RenalDosingPanel";
+import { JourneyPositionIndicator } from "@/features/medicine/workspace/JourneyPositionIndicator";
 
 /**
  * The adult medicine workspace.
@@ -54,6 +56,8 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
         </div>
       )}
 
+      <JourneyPositionIndicator patientId={patientId} encounterId={patientId} />
+
       <div className="grid gap-4 lg:grid-cols-2">
         <ProgrammesPanel context={context} />
         <ProblemsPanel context={context} />
@@ -62,6 +66,8 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
       <AllergiesStrip context={context} />
 
       <AmbulatoryOrderSetsPanel patientId={patientId} />
+
+      <RenalDosingPanel patientId={patientId} />
 
       {/* brief.md §8's thirteen specialties. Each is a view onto this same record, which is the
           point — thirteen separate screens would be the folder of specialist forms the brief

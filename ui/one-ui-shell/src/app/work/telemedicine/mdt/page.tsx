@@ -66,11 +66,11 @@ export default function MdtLandingPage() {
               You chair the board. Presentation defaults to pseudonymised — panel members see
               &ldquo;Case N&rdquo;, never patient identity; recommendations only, no orders.
             </p>
-            <p className="text-[11px] text-muted-foreground">
-              A board&rsquo;s recommendation is not itself the treatment-intent decision. Once the
-              board has met, record the adopted decision on the patient&rsquo;s own Consultations
-              page, where it is attributed and linked to their problem list.
-            </p>
+        <p className="text-[11px] text-muted-foreground">
+          V051 owns the session; V114 owns the decision. A board&rsquo;s recommendation is not itself
+          the treatment-intent decision. Once the board has met, record the adopted decision on the
+          patient&rsquo;s own Consultations page, where it is attributed and linked to their problem list.
+        </p>
             <button type="button" disabled={busy} onClick={convene}
               className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50">
               {busy ? "Convening…" : "Convene board"}

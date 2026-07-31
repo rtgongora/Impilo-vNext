@@ -1452,6 +1452,24 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    public JsonNode getAdultJourneyPosition(String subjectCpid, String journeyId, String encounterId) {
+        StringBuilder url = new StringBuilder(baseUrl + "/v1/medicine/journey-position?subject_cpid=" + subjectCpid);
+        if (journeyId != null && !journeyId.isBlank()) {
+            url.append("&journey_id=").append(journeyId);
+        }
+        if (encounterId != null && !encounterId.isBlank()) {
+            url.append("&encounter_id=").append(encounterId);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordAdultJourneyPosition(Map<String, Object> body) {
+        String url = baseUrl + "/v1/medicine/journey-position";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode listClerking(String resource, String subjectCpid) {
         String url = baseUrl + "/v1/clerking/" + resource + "?subject_cpid=" + subjectCpid;
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
