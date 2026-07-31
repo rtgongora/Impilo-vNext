@@ -25,6 +25,7 @@ describe("TheatreCaseDetailPage", () => {
         return Promise.resolve({
           id: "c-1", patient_id: "CPID-1", procedure_name: "Appendectomy", status: "BOOKED", triage_priority: "URGENT", surgeon_id: "surgeon-1",
           checklist: [{ id: "i1", phase: "SIGN_IN", item_code: "CONSENT", item_label: "Consent verified", completed: false }],
+          returns_to_theatre: [],
         });
       }
       return Promise.resolve({ data: [] });
@@ -130,7 +131,7 @@ describe("TheatreCaseDetailPage", () => {
       if (url.endsWith("/safety-events")) return Promise.resolve([]);
       if (url.endsWith("/note")) return Promise.resolve({ status: "NONE" });
       if (/\/theatre\/cases\/c-1$/.test(url)) {
-        return Promise.resolve({ id: "c-1", patient_id: "CPID-1", procedure_name: "Emergency Caesarean Section", status: "IN_PROGRESS", triage_priority: "EMERGENCY", emergency_override: true, consent_status: "EMERGENCY_EXCEPTION", checklist: [] });
+        return Promise.resolve({ id: "c-1", patient_id: "CPID-1", procedure_name: "Emergency Caesarean Section", status: "IN_PROGRESS", triage_priority: "EMERGENCY", emergency_override: true, consent_status: "EMERGENCY_EXCEPTION", checklist: [], returns_to_theatre: [] });
       }
       return Promise.resolve({ data: [] });
     });
@@ -187,4 +188,20 @@ describe("TheatreCaseDetailPage", () => {
     expect(screen.getByTestId("note-save")).not.toBeDisabled();
   });
 
+  it("shows the return-to-theatre panel when the case is in PACU", async () => {
+    get.mockImplementation((url: string) => {
+      if (url.endsWith("/safety-events")) return Promise.resolve([]);
+      if (url.endsWith("/note")) return Promise.resolve({ status: "NONE" });
+      if (/\/theatre\/cases\/c-1$/.test(url)) {
+        return Promise.resolve({
+          id: "c-1", patient_id: "CPID-1", procedure_name: "Appendectomy", status: "PACU", triage_priority: "URGENT", checklist: [],
+          returns_to_theatre: [{ id: "r-1", seq: 1, complication_category: "SEPSIS", reason: "Washout", planned: false }],
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByTestId("return-to-theatre-panel")).toBeInTheDocument());
+    expect(screen.getByTestId("return-to-theatre-list")).toHaveTextContent("SEPSIS");
+  });
 });

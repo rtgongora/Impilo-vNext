@@ -25,6 +25,7 @@ import { AnaesthesiaChartPanel } from "@/components/clinical/theatre/Anaesthesia
 import { TheatreCommoditiesPanel } from "@/components/clinical/theatre/TheatreCommoditiesPanel";
 import { TheatrePacuPanel } from "@/components/clinical/theatre/TheatrePacuPanel";
 import { TheatreSurgicalDischargePanel } from "@/components/clinical/theatre/TheatreSurgicalDischargePanel";
+import { TheatreReturnToTheatrePanel, type ReturnToTheatreRecord } from "@/components/clinical/theatre/TheatreReturnToTheatrePanel";
 import { EmergencyConsentExceptionPanel } from "@/components/clinical/theatre/EmergencyConsentExceptionPanel";
 import { ObstetricSection } from "@/components/clinical/theatre/ObstetricSection";
 import { apiClient } from "@/lib/api-client";
@@ -53,6 +54,8 @@ interface TheatreCaseDetail {
   surgical_site?: string;
   surgical_side?: string;
   operative_note_state?: DocumentState;
+  /** V305 — prior returns on this episode; never invent an empty list on a failed case load. */
+  returns_to_theatre?: ReturnToTheatreRecord[];
 }
 
 const WOUND_CLASSIFICATIONS = ["CLEAN", "CLEAN_CONTAMINATED", "CONTAMINATED", "DIRTY"] as const;
@@ -500,6 +503,15 @@ export default function TheatreCaseDetailPage() {
               <TheatrePacuPanel caseId={id} />
             </div>
 
+            {/* V305 return to theatre — reason + closed complication category */}
+            <div className={focusMode ? "hidden" : undefined}>
+              <TheatreReturnToTheatrePanel
+                caseId={id}
+                status={data.status}
+                returns={data.returns_to_theatre ?? []}
+                onRecorded={() => void load()}
+              />
+            </div>
 
             {/* Surgical discharge summary (draft → complete → SHR) */}
             <div className={focusMode ? "hidden" : undefined}>
