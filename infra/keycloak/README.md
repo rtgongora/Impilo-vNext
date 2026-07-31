@@ -1,31 +1,38 @@
-# Keycloak — Impilo production realm
+# Keycloak — Impilo production realm and runtime
 
-This folder holds the **production-oriented** realm export `realm-impilo-production.json` for Keycloak 25.x. It extends the dev-oriented template under `tools/auth/impilo-realm.json` with:
+This folder holds the production-oriented realm export
+`realm-impilo-production.json`. It extends the dev-oriented template under
+`tools/auth/impilo-realm.json` with:
 
-- Hardened realm settings (SSL external, brute-force policy, password policy, session/token lifespans)
-- **8 OIDC clients**: `impilo-ui`, `impilo-ops-console`, `impilo-ehr`, `impilo-portal`, `impilo-mobile-citizen`, `impilo-mobile-provider`, `impilo-bff`, `impilo-admin-cli`
-- **35 realm roles** plus composites `CLINICAL_STAFF`, `ALLIED_HEALTH`, `ADMIN_STAFF`, `COMMUNITY_HEALTH`
-- Optional client scopes `impilo-trust-headers`, `impilo-clinical`, `impilo-admin` (mappers emit claims; map user attributes `actor_id`, `tenant_id`, `pod_id` for trust headers)
-- Disabled **identity provider placeholders** for MOSIP (OIDC) and facility LDAP
+- Hardened realm settings, brute-force policy, password policy, and session/token lifespans.
+- The Impilo web, operations, clinical, portal, mobile, BFF, and administrative OIDC clients.
+- Realm roles and the `CLINICAL_STAFF`, `ALLIED_HEALTH`, `ADMIN_STAFF`, and
+  `COMMUNITY_HEALTH` composites.
+- Optional client scopes for trust-header, clinical, and administrative claims.
+- Disabled identity-provider placeholders for MOSIP and facility LDAP.
 
-Replace all `CHANGE_ME_*` client secrets before use. Clone or extend authentication flows in the admin console for **provider mandatory OTP** and **citizen password-only** variants; this JSON keeps the built-in `browser` / `direct grant` bindings as a baseline.
+The tracked export is evidence and a new-realm seed; it is not an updater for an existing realm.
+Never import it over a realm that contains users.
 
-## Import (Docker)
+## Optimized runtime
+
+`Dockerfile` builds an optimized Keycloak 26.7 runtime with the PostgreSQL provider selected at
+build time. Deploy it by immutable digest. The image deliberately contains no realm, users,
+client secrets, database credentials, SMTP credentials, or environment-specific AAGUID allow-list.
+
+Realm policy is versioned separately and reconciled through
+`scripts/operator/keycloak-mfa-reconcile.sh`. The reconciler is fail-closed, requires the current
+managed-state hash before apply, and does not delete users or credentials.
+
+## New realm import only
+
+For a brand-new, empty environment, import the realm offline. Replace every `CHANGE_ME_*` value
+through the environment/secret mechanism before use:
 
 ```bash
-# Copy the file into the container import path, then:
-docker exec -it keycloak /opt/keycloak/bin/kc.sh import --file /opt/keycloak/data/import/realm-impilo-production.json
+/opt/keycloak/bin/kc.sh import \
+  --file /opt/keycloak/data/import/realm-impilo-production.json
 ```
 
-## Import (Admin REST API)
-
-Obtain an admin access token, then:
-
-```bash
-curl -X POST "http://localhost:8080/admin/realms" \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d @infra/keycloak/realm-impilo-production.json
-```
-
-For an existing realm, prefer a partial import or manual merge via the admin UI to avoid overwriting live users.
+For an existing realm, run the reconciler in `plan` mode and follow the MFA migration runbook.
+Do not use the admin console or a partial import as an unreviewed configuration path.

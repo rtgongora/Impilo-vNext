@@ -94,16 +94,39 @@ kafka:
 
 keycloak:
   enabled: true
-  storageSize: 2Gi
-  # Seed the impilo realm (client experience-ui + users/roles) at FIRST boot.
-  # H2 now lives on the keycloak-data PVC (2026-07-18), so --import-realm only runs
-  # into an empty database; later restarts keep users (incl. citizen signups).
-  realmImport:
-    enabled: true
+  # MFA-PROD: use the optimized in-repo image by immutable digest after the migration
+  # rehearsal. Tag remains only as a local build fallback; release manifests must set digest.
   image:
-    repository: quay.io/keycloak/keycloak
-    tag: "25.0"
+    repository: 127.0.0.1:5000/impilo/keycloak
+    tag: "26.7.0"
+    digest: ""
     pullPolicy: IfNotPresent
+  hostname: "https://impilo.mohcc.gov.zw:8480"
+  database:
+    vendor: postgres
+    host: postgres
+    port: 5432
+    name: keycloak
+    credentialsSecret: impilo-app-secrets
+    usernameKey: keycloak-db-user
+    passwordKey: keycloak-db-password
+  # Kept mounted read-only during the rollback window. The production runtime never
+  # writes H2 after PostgreSQL activation.
+  legacyH2:
+    preservePvc: true
+    storageSize: 2Gi
+  # Existing-realm configuration is reconciled explicitly; startup import is not a
+  # configuration management mechanism.
+  realmImport:
+    enabled: false
+  smtp:
+    enabled: false
+    credentialsSecret: impilo-app-secrets
+    hostKey: keycloak-smtp-host
+    portKey: keycloak-smtp-port
+    usernameKey: keycloak-smtp-username
+    passwordKey: keycloak-smtp-password
+    fromKey: keycloak-smtp-from
   resources:
     requests:
       cpu: 200m

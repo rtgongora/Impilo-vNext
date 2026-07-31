@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Guarded Keycloak 25 H2 -> PostgreSQL preparation. This script deliberately stops
+# before the 26.7 Helm rollout. It never deletes the legacy PVC or namespace.
+
+PHASE="${1:-preflight}"
+NAMESPACE="${NAMESPACE:-impilo-full-preview}"
+EXPECTED_USERS="${EXPECTED_USERS:-42}"
+BACKUP_PVC="${KEYCLOAK_BACKUP_PVC:-keycloak-migration-backup}"
+LEGACY_PVC="${KEYCLOAK_LEGACY_PVC:-keycloak-data}"
+KC25_IMAGE="${KEYCLOAK_25_IMAGE:-quay.io/keycloak/keycloak:25.0}"
+STAMP="${MIGRATION_STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
+
+command -v kubectl >/dev/null || { echo "kubectl is required" >&2; exit 69; }
+
+preflight() {
+  kubectl -n "$NAMESPACE" get pvc "$LEGACY_PVC" >/dev/null
+  kubectl -n "$NAMESPACE" get secret impilo-app-secrets >/dev/null
+  kubectl -n "$NAMESPACE" get secret postgres-credentials >/dev/null
+  users="$(kubectl -n "$NAMESPACE" exec deploy/keycloak -- sh -ec '
+    /opt/keycloak/bin/kcadm.sh config credentials --server http://127.0.0.1:8080 --realm master \
+      --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD" >/dev/null 2>&1 ||
+    /opt/keycloak/bin/kcadm.sh config credentials --server http://127.0.0.1:8080 --realm master \
+      --user "$KEYCLOAK_ADMIN" --password "$KEYCLOAK_ADMIN_PASSWORD" >/dev/null 2>&1
+    /opt/keycloak/bin/kcadm.sh get users/count -r impilo --format csv --noquotes
+  ' | tr -d '\r')"
+  [[ "$users" == "$EXPECTED_USERS" ]] || { echo "expected $EXPECTED_USERS users, found $users" >&2; exit 65; }
+  echo "PRECHECK_OK namespace=$NAMESPACE users=$users legacy_pvc=$LEGACY_PVC"
+}
+
+case "$PHASE" in
+  preflight)
+    preflight
+    ;;
+  prepare)
+    [[ "${MFA_MIGRATION_ACK:-}" == "PRESERVE_${EXPECTED_USERS}_USERS" ]] || {
+      echo "set MFA_MIGRATION_ACK=PRESERVE_${EXPECTED_USERS}_USERS" >&2; exit 64;
+    }
+    preflight
+    kubectl -n "$NAMESPACE" get pvc "$BACKUP_PVC" >/dev/null 2>&1 || kubectl -n "$NAMESPACE" create -f - <<YAML
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: $BACKUP_PVC
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+YAML
+    kubectl -n "$NAMESPACE" scale deploy/keycloak --replicas=0
+    kubectl -n "$NAMESPACE" wait --for=delete pod -l app=keycloak --timeout=180s || true
+    kubectl -n "$NAMESPACE" delete job "keycloak-h2-export-$STAMP" --ignore-not-found
+    kubectl -n "$NAMESPACE" create -f - <<YAML
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-h2-export-$STAMP
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: export
+          image: $KC25_IMAGE
+          args: ["export", "--dir", "/backup/export-$STAMP", "--realm", "impilo", "--users", "realm_file"]
+          volumeMounts:
+            - {name: legacy, mountPath: /opt/keycloak/data, readOnly: true}
+            - {name: backup, mountPath: /backup}
+      volumes:
+        - name: legacy
+          persistentVolumeClaim: {claimName: $LEGACY_PVC}
+        - name: backup
+          persistentVolumeClaim: {claimName: $BACKUP_PVC}
+YAML
+    kubectl -n "$NAMESPACE" wait --for=condition=complete "job/keycloak-h2-export-$STAMP" --timeout=900s
+    kubectl -n "$NAMESPACE" logs "job/keycloak-h2-export-$STAMP"
+    echo "H2_EXPORT_OK stamp=$STAMP backup_pvc=$BACKUP_PVC"
+    echo "Next: inspect the export, run the PostgreSQL import rehearsal, compare counts, and only then deploy 26.7."
+    ;;
+  status)
+    kubectl -n "$NAMESPACE" get pvc "$LEGACY_PVC" "$BACKUP_PVC"
+    kubectl -n "$NAMESPACE" get jobs -l job-name --sort-by=.metadata.creationTimestamp 2>/dev/null || true
+    kubectl -n "$NAMESPACE" get deploy keycloak -o custom-columns=NAME:.metadata.name,REPLICAS:.spec.replicas,READY:.status.readyReplicas,IMAGE:.spec.template.spec.containers[0].image
+    ;;
+  *)
+    echo "usage: $0 preflight|prepare|status" >&2
+    exit 64
+    ;;
+esac

@@ -19,8 +19,6 @@ impilo.io/environment: {{ .Values.global.environment | quote }}
   value: "http://keycloak:8080"
 - name: KEYCLOAK_REALM
   value: "impilo"
-- name: IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS
-  value: "true"
 {{- end }}
 {{- end }}
 

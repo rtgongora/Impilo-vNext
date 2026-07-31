@@ -1,4 +1,14 @@
 {{- if .Values.keycloak.enabled }}
+{{- if (.Values.keycloak.realmImport | default dict).enabled }}
+{{- fail "keycloak.realmImport is a first-boot seed and is forbidden for the managed MFA runtime; use the reconciler" }}
+{{- end }}
+{{- if ne (.Values.keycloak.database.vendor | default "postgres") "postgres" }}
+{{- fail "the managed MFA runtime requires keycloak.database.vendor=postgres" }}
+{{- end }}
+{{- if not .Values.keycloak.hostname }}
+{{- fail "keycloak.hostname must be the exact external HTTPS issuer" }}
+{{- end }}
+{{- if (.Values.keycloak.legacyH2 | default dict).preservePvc }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -6,23 +16,29 @@ metadata:
   name: keycloak-data
   namespace: {{ .Release.Namespace }}
   annotations:
-    # Survives 'helm uninstall' — data volumes are only destroyed by the explicit
-    # FULL_BOOT_WIPE_DATA=1 namespace wipe (see scripts/operator/fullboot.sh).
+    # The former H2 store is a rollback artifact. It is mounted read-only and is
+    # never removed by Helm. Deletion requires a separate, explicit retention decision.
     "helm.sh/resource-policy": keep
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:
     requests:
-      storage: {{ .Values.keycloak.storageSize | default "2Gi" }}
+      storage: {{ .Values.keycloak.legacyH2.storageSize | default "2Gi" }}
+{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: keycloak
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity-provider
 spec:
   strategy:
-    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
+    # Keycloak schema upgrades are deliberately single-writer. A migration backup
+    # is required before a new image is admitted.
+    type: Recreate
   replicas: 1
   selector:
     matchLabels:
@@ -31,111 +47,113 @@ spec:
     metadata:
       labels:
         app: keycloak
+        app.kubernetes.io/name: keycloak
+        impilo.io/security-plane: trust
+      annotations:
+        impilo.io/keycloak-policy-version: "1.0.0"
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: keycloak
-          image: "{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}"
+          image: "{{ include "impilo.image" (dict "root" . "repository" .Values.keycloak.image.repository "tag" .Values.keycloak.image.tag "digest" (.Values.keycloak.image.digest | default "")) }}"
           imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
-          {{- if (.Values.keycloak.realmImport | default dict).enabled }}
-          args: ["start-dev", "--http-port=8080", "--import-realm"]
-          {{- else }}
-          args: ["start-dev", "--http-port=8080"]
-          {{- end }}
+          args:
+            - start
+            - --optimized
+            - --http-enabled=true
+            - --http-port=8080
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 9000
           env:
-            - name: KEYCLOAK_ADMIN
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: impilo-app-secrets
                   key: keycloak-admin-user
-            - name: KEYCLOAK_ADMIN_PASSWORD
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: impilo-app-secrets
                   key: keycloak-admin-password
-            # Client secrets for realm import ${env.*} substitution — never
-            # committed (Secret impilo-app-secrets). Applied only at first import;
-            # rotate an already-imported realm via the admin API (see runbook).
-            - name: KC_CLIENT_SECRET_BFF
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL_HOST
+              value: {{ .Values.keycloak.database.host | quote }}
+            - name: KC_DB_URL_PORT
+              value: {{ .Values.keycloak.database.port | quote }}
+            - name: KC_DB_URL_DATABASE
+              value: {{ .Values.keycloak.database.name | quote }}
+            - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: impilo-app-secrets
-                  key: keycloak-client-secret-bff
-            - name: KC_CLIENT_SECRET_OPS_CONSOLE
+                  name: {{ .Values.keycloak.database.credentialsSecret }}
+                  key: {{ .Values.keycloak.database.usernameKey }}
+            - name: KC_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: impilo-app-secrets
-                  key: keycloak-client-secret-ops-console
-            - name: KC_CLIENT_SECRET_ADMIN_CLI
-              valueFrom:
-                secretKeyRef:
-                  name: impilo-app-secrets
-                  key: keycloak-client-secret-admin-cli
-            - name: KC_CLIENT_SECRET_BACKEND
-              valueFrom:
-                secretKeyRef:
-                  name: impilo-app-secrets
-                  key: keycloak-backend-secret
-            # Traefik terminates TLS at the edge and forwards plain HTTP to this
-            # pod. Without this, Keycloak advertises the scheme it sees on the
-            # wire — `issuer: http://impilo.mohcc.gov.zw/realms/impilo` — and any
-            # client doing strict issuer/`iss` validation (mobile PKCE especially,
-            # and anything building redirect URIs from discovery) fails AFTER a
-            # successful credential check, which misreads as "login broken" while
-            # discovery returns 200. `xforwarded` makes Keycloak honour Traefik's
-            # X-Forwarded-Proto/Host so it advertises https.
+                  name: {{ .Values.keycloak.database.credentialsSecret }}
+                  key: {{ .Values.keycloak.database.passwordKey }}
+            - name: KC_HOSTNAME
+              value: {{ .Values.keycloak.hostname | quote }}
             - name: KC_PROXY_HEADERS
-              value: "xforwarded"
+              value: xforwarded
+            - name: KC_PROXY_TRUSTED_ADDRESSES
+              value: {{ .Values.keycloak.proxyTrustedAddresses | default "10.0.0.0/8" | quote }}
             - name: KC_HEALTH_ENABLED
               value: "true"
             - name: KC_METRICS_ENABLED
               value: "true"
             - name: KC_HTTP_MANAGEMENT_PORT
               value: "9000"
+            - name: KC_CACHE
+              value: local
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
           startupProbe:
-            tcpSocket:
-              port: 8080
-            failureThreshold: 30
-            periodSeconds: 10
+            httpGet:
+              path: /health/started
+              port: management
+            failureThreshold: 60
+            periodSeconds: 5
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: 9000
-            initialDelaySeconds: 90
+              port: management
             periodSeconds: 10
-            failureThreshold: 12
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /health/live
-              port: 9000
-            initialDelaySeconds: 120
+              port: management
             periodSeconds: 20
             failureThreshold: 6
           resources:
             {{- toYaml .Values.keycloak.resources | nindent 12 }}
+          {{- if (.Values.keycloak.legacyH2 | default dict).preservePvc }}
           volumeMounts:
-            # Durable H2 volume (2026-07-18): start-dev keeps its embedded H2 under
-            # /opt/keycloak/data on the container's writable layer, so any pod restart
-            # erased every user (incl. real citizen signups) and session. The realm-import
-            # ConfigMap stays nested below the PVC mount; import only runs into an empty
-            # H2, so the first boot imports and later restarts keep users.
-            - name: data
-              mountPath: /opt/keycloak/data
-            {{- if (.Values.keycloak.realmImport | default dict).enabled }}
-            - name: realm-import
-              mountPath: /opt/keycloak/data/import
+            - name: legacy-h2
+              mountPath: /opt/keycloak/legacy-h2
               readOnly: true
-            {{- end }}
+          {{- end }}
+      {{- if (.Values.keycloak.legacyH2 | default dict).preservePvc }}
       volumes:
-        - name: data
+        - name: legacy-h2
           persistentVolumeClaim:
             claimName: keycloak-data
-        {{- if (.Values.keycloak.realmImport | default dict).enabled }}
-        - name: realm-import
-          configMap:
-            name: keycloak-realm-import
-        {{- end }}
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -146,6 +164,10 @@ spec:
   selector:
     app: keycloak
   ports:
-    - port: 8080
-      targetPort: 8080
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: management
+      port: 9000
+      targetPort: management
 {{- end }}
