@@ -72,4 +72,19 @@ class ProceduresRouteShapeTest {
         String theatreStyle = "/internal/v1/theatre/cases/3f9a1c2e-4b5d-4a6f-9c7e-8d0f1a2b3c4d/blood/request";
         assertThat(AuthzInternalRequest.deriveResourceType(theatreStyle)).isEqualTo("request");
     }
+
+    // ── Wave W4 — P10 Clavien-Dindo grades and complication profiles (V306) ──
+
+    @Test
+    void clavienDindoGradesDerivesResourceTypeClavienDindoGrades() {
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/procedures/clavien-dindo-grades"))
+                .isEqualTo("clavien-dindo-grades");
+    }
+
+    @Test
+    void complicationProfilesWithAQueryParamDerivesResourceTypeComplicationProfiles() {
+        // ?code=... never reaches the segment walk — the fixed word is the resource_type V306 pins.
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/procedures/complication-profiles"))
+                .isEqualTo("complication-profiles");
+    }
 }
