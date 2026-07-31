@@ -186,3 +186,43 @@ export async function fetchPregnancyHistory(): Promise<PregnancyEpisode[]> {
   const raw = Array.isArray(response.data?.data) ? response.data?.data : [];
   return (raw ?? []).map(normalizeEpisode).filter((e): e is PregnancyEpisode => e !== null);
 }
+
+// --- Contraception (W13-B citizen read-only) ---------------------------------------------------
+//
+// Backend: `/internal/v1/confidential/reproductive/contraception/me` — current coverage only.
+// Empty list = withhold. 502 PCT_UNAVAILABLE propagates as ApiError.
+
+const REPRODUCTIVE_BASE = "/internal/v1/confidential/reproductive";
+
+export interface ContraceptionCoverage {
+  contraceptiveEpisodeId: string;
+  methodCode: string | null;
+  methodClass: string | null;
+  coverageStatus: string | null;
+  nextDueOn: string | null;
+  coverageUnknownWhy: string | null;
+}
+
+function normalizeCoverage(raw: unknown): ContraceptionCoverage | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const id = r.contraceptive_episode_id;
+  if (typeof id !== "string") return null;
+  return {
+    contraceptiveEpisodeId: id,
+    methodCode: typeof r.method_code === "string" ? r.method_code : null,
+    methodClass: typeof r.method_class === "string" ? r.method_class : null,
+    coverageStatus: typeof r.coverage_status === "string" ? r.coverage_status : null,
+    nextDueOn: typeof r.next_due_on === "string" ? r.next_due_on : null,
+    coverageUnknownWhy: typeof r.coverage_unknown_why === "string" ? r.coverage_unknown_why : null,
+  };
+}
+
+/** Her current contraceptive methods via the `"me"` sentinel — no raw CPID in the app. */
+export async function fetchCurrentContraception(): Promise<ContraceptionCoverage[]> {
+  const response = await apiClient.get<{ data?: unknown }>(
+    `${REPRODUCTIVE_BASE}/contraception/${SELF}`,
+  );
+  const raw = Array.isArray(response.data?.data) ? response.data?.data : [];
+  return (raw ?? []).map(normalizeCoverage).filter((c): c is ContraceptionCoverage => c !== null);
+}

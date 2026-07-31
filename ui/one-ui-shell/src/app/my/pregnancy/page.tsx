@@ -21,6 +21,7 @@ import { AlertTriangle, Baby, CalendarHeart, CheckCircle2, Loader2 } from "lucid
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { BirthDestinationPanel } from "@/features/maternity/BirthDestinationPanel";
+import { CitizenContraceptionSection } from "@/features/maternity/reproductive/CitizenContraceptionSection";
 import {
   isPregnancyConflict,
   isPregnancyUndatable,
@@ -402,6 +403,8 @@ export default function MyPregnancyPage() {
           ) : (
             <BookPregnancyForm onBooked={() => void current.refetch()} />
           )}
+
+          <CitizenContraceptionSection />
 
           <section>
             <h2 className="text-sm font-medium text-slate-700">

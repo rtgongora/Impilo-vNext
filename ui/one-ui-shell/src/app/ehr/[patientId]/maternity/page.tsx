@@ -22,8 +22,12 @@ import { VitalsCtgSection } from "@/features/maternity/ctg/VitalsCtgSection";
 import { VitalsPartographSection } from "@/features/maternity/partograph/VitalsPartographSection";
 import { NearMissAssessmentPanel } from "@/features/maternity/nearmiss/NearMissAssessmentPanel";
 import { NearMissIndicatorsPanel } from "@/features/maternity/nearmiss/NearMissIndicatorsPanel";
+import { EmergencyBundlePanel } from "@/features/maternity/emergency-bundles/EmergencyBundlePanel";
 import { MaternitySummaryPanel } from "@/features/maternity/MaternitySummaryPanel";
 import { BirthDestinationPanel } from "@/features/maternity/BirthDestinationPanel";
+import { PregnancyEpisodesPanel } from "@/features/maternity/reproductive/PregnancyEpisodesPanel";
+import { ReproductiveConfidentialPanel } from "@/features/maternity/reproductive/ReproductiveConfidentialPanel";
+import { MaternityClinicalJourneysSection } from "@/features/maternity/journeys/MaternityClinicalJourneysSection";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -56,6 +60,13 @@ export default function MaternityMonitoringPage() {
         </div>
 
         <MaternitySummaryPanel patientId={patientId} encounterId={encounterId || undefined} />
+
+        {isClinical && (
+          <>
+            <PregnancyEpisodesPanel patientCpid={patientId} />
+            <ReproductiveConfidentialPanel patientCpid={patientId} />
+          </>
+        )}
 
         <section className="rounded-lg border border-pink-200/90 bg-card p-5">
           <h2 className="text-lg font-semibold text-foreground">Partograph & CTG</h2>
@@ -102,6 +113,35 @@ export default function MaternityMonitoringPage() {
             </p>
             <NearMissAssessmentPanel patientId={patientId} />
             <NearMissIndicatorsPanel />
+          </section>
+        )}
+
+        <MaternityClinicalJourneysSection
+          patientId={patientId}
+          encounterId={encounterId}
+          hasActiveEncounter={Boolean(activeEncounter && encounterId)}
+        />
+
+        {isClinical && (
+          <section className="mt-4 rounded-lg border border-red-300/90 bg-card p-5" id="emergency-bundles">
+            <h2 className="text-lg font-semibold text-foreground">Emergency bundles</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              PPH and eclampsia first-response checklists — assessment only, nothing persisted here.
+              A freshly-triggered bundle shows every mandatory step outstanding; silence on an open
+              episode is escalation, not closure.
+            </p>
+            <EmergencyBundlePanel
+              kind="pph"
+              title="PPH first-response protocol"
+              controlLabel="Bleeding controlled and confirmed"
+              testIdPrefix="pph-protocol"
+            />
+            <EmergencyBundlePanel
+              kind="eclampsia"
+              title="Eclampsia / severe pre-eclampsia protocol"
+              controlLabel="Seizure/control stable and confirmed"
+              testIdPrefix="eclampsia-protocol"
+            />
           </section>
         )}
       </PageShell>

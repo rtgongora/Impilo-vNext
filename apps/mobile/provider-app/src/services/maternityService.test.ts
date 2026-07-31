@@ -12,6 +12,11 @@ import {
   computeNearMissIndicators,
   fetchBirthDestination,
   getMaternitySummary,
+  fetchContraceptionCoverage,
+  fetchContraceptionHistory,
+  fetchPregnancyLosses,
+  fetchTopAuthorisations,
+  fetchPatientPregnancyEpisodes,
 } from "./maternityService";
 
 vi.mock("@impilo/mobile-api-client", async (importOriginal) => {
@@ -308,5 +313,45 @@ describe("getMaternitySummary — never an empty record on failure", () => {
       new ApiError({ code: "maternity_summary_unavailable", message: "down", status: 502, correlationId: "c1" }),
     );
     await expect(getMaternitySummary("P1")).rejects.toMatchObject({ code: "maternity_summary_unavailable" });
+  });
+});
+
+describe("confidential reproductive reads — empty vs 502 (W13-B)", () => {
+  it("fetchContraceptionCoverage returns an empty array when data is null (withhold)", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(ok(null));
+    const rows = await fetchContraceptionCoverage("CP-1");
+    expect(rows).toEqual([]);
+    expect(apiClient.get).toHaveBeenCalledWith("/internal/v1/confidential/reproductive/contraception/CP-1");
+  });
+
+  it("fetchContraceptionHistory passes the patient CPID on the clinician path", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(ok([{ contraceptive_episode_id: "H-1" }]));
+    const rows = await fetchContraceptionHistory("CP-2");
+    expect(rows).toHaveLength(1);
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/internal/v1/confidential/reproductive/contraception/CP-2/history",
+    );
+  });
+
+  it("propagates PCT_UNAVAILABLE rather than collapsing to an empty list", async () => {
+    vi.mocked(apiClient.get).mockRejectedValue(
+      new ApiError({ code: "PCT_UNAVAILABLE", message: "upstream error", status: 502, correlationId: "c1" }),
+    );
+    await expect(fetchPregnancyLosses("CP-3")).rejects.toMatchObject({ code: "PCT_UNAVAILABLE" });
+  });
+
+  it("fetchTopAuthorisations reads the confidential lane for a subject CPID", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(ok([{ authorisation_id: "A-1", status: "APPROVED" }]));
+    const rows = await fetchTopAuthorisations("CP-4");
+    expect(rows[0]?.authorisation_id).toBe("A-1");
+  });
+
+  it("fetchPatientPregnancyEpisodes uses the maternity confidential lane with patient CPID", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(ok([{ pregnancy_episode_id: "E-1", status: "ONGOING" }]));
+    const episodes = await fetchPatientPregnancyEpisodes("CP-5");
+    expect(episodes[0]?.pregnancy_episode_id).toBe("E-1");
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/internal/v1/confidential/maternity/pregnancy-episodes/CP-5",
+    );
   });
 });

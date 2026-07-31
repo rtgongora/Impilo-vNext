@@ -73,6 +73,28 @@ vi.mock("@/features/maternity/BirthDestinationPanel", () => ({
   BirthDestinationPanel: () => <div data-testid="birth-destination-panel">Birth destination module</div>,
 }));
 
+vi.mock("@/features/maternity/emergency-bundles/EmergencyBundlePanel", () => ({
+  EmergencyBundlePanel: ({ testIdPrefix }: { testIdPrefix: string }) => (
+    <div data-testid={`${testIdPrefix}-panel`}>Emergency bundle module</div>
+  ),
+}));
+
+vi.mock("@/features/maternity/reproductive/PregnancyEpisodesPanel", () => ({
+  PregnancyEpisodesPanel: () => <div data-testid="pregnancy-episodes-panel">Pregnancy episodes module</div>,
+}));
+
+vi.mock("@/features/maternity/reproductive/ReproductiveConfidentialPanel", () => ({
+  ReproductiveConfidentialPanel: () => (
+    <div data-testid="reproductive-confidential-panel">Confidential SRH module</div>
+  ),
+}));
+
+vi.mock("@/features/maternity/journeys/MaternityClinicalJourneysSection", () => ({
+  MaternityClinicalJourneysSection: () => (
+    <div data-testid="maternity-clinical-journeys">Clinical journeys module</div>
+  ),
+}));
+
 describe("MaternityMonitoringPage", () => {
   it("mounts the canonical maternity route with partograph, CTG and near-miss sections", () => {
     render(<MaternityMonitoringPage />);
@@ -84,7 +106,11 @@ describe("MaternityMonitoringPage", () => {
     expect(screen.getByTestId("near-miss-panel")).toBeInTheDocument();
     expect(screen.getByTestId("near-miss-indicators-panel")).toBeInTheDocument();
     expect(screen.getByTestId("maternity-summary-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("pregnancy-episodes-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("reproductive-confidential-panel")).toBeInTheDocument();
     expect(screen.getByTestId("birth-destination-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("pph-protocol-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("eclampsia-protocol-panel")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Back to vitals/i })).toHaveAttribute("href", "/ehr/patient-1/vitals");
   });
 });

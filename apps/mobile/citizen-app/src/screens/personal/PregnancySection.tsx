@@ -20,12 +20,15 @@ import {
   bookPregnancy,
   fetchCurrentPregnancy,
   fetchPregnancyHistory,
+  fetchCurrentContraception,
   newClientOfflineId,
   isPregnancyConflict,
   isPregnancyUndatable,
   type DatingMethod,
   type PregnancyEpisode,
+  type ContraceptionCoverage,
 } from "../../services/pregnancyService";
+import { ApiError } from "@impilo/mobile-api-client";
 
 function statusLabel(status: string): string {
   switch (status) {
@@ -309,22 +312,77 @@ function PregnancyHistory({ episodes }: { episodes: PregnancyEpisode[] }) {
   );
 }
 
+function ContraceptionCard({
+  methods,
+  unavailable,
+}: {
+  methods: ContraceptionCoverage[];
+  unavailable: boolean;
+}) {
+  if (unavailable) {
+    return (
+      <Card testID="contraception-unavailable">
+        <CardBody>
+          <Text accessibilityRole="alert" style={styles.errorText}>
+            Your contraception record could not be retrieved — this is not the same as having no method on file.
+          </Text>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  return (
+    <Card testID="contraception-section">
+      <CardHeader title="Your contraception" />
+      <CardBody>
+        {methods.length === 0 ? (
+          <Text style={styles.subText}>
+            Nothing visible right now. That may mean no method is recorded, or the record is not visible to you.
+          </Text>
+        ) : (
+          methods.map((m) => (
+            <View key={m.contraceptiveEpisodeId} style={{ marginBottom: 8 }}>
+              <Text style={styles.value}>
+                {(m.methodCode ?? m.methodClass ?? "Method").replace(/_/g, " ").toLowerCase()}
+              </Text>
+              <Text style={styles.subText}>
+                Coverage: {(m.coverageStatus ?? "unknown").replace(/_/g, " ").toLowerCase()}
+              </Text>
+            </View>
+          ))
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
 export function PregnancySection() {
   const [loading, setLoading] = useState(true);
   const [current, setCurrent] = useState<PregnancyEpisode | null>(null);
   const [history, setHistory] = useState<PregnancyEpisode[]>([]);
+  const [contraception, setContraception] = useState<ContraceptionCoverage[]>([]);
+  const [contraceptionUnavailable, setContraceptionUnavailable] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
+    setContraceptionUnavailable(false);
     try {
-      const [currentEpisode, historyEpisodes] = await Promise.all([
+      const [currentEpisode, historyEpisodes, contraceptionRows] = await Promise.all([
         fetchCurrentPregnancy(),
         fetchPregnancyHistory(),
+        fetchCurrentContraception().catch((err) => {
+          if (err instanceof ApiError && err.code === "PCT_UNAVAILABLE") {
+            setContraceptionUnavailable(true);
+            return [] as ContraceptionCoverage[];
+          }
+          throw err;
+        }),
       ]);
       setCurrent(currentEpisode);
       setHistory(historyEpisodes);
+      setContraception(contraceptionRows);
     } catch {
       setLoadError(true);
     } finally {
@@ -368,6 +426,8 @@ export function PregnancySection() {
         ) : (
           <BookPregnancyForm onBooked={load} />
         )}
+
+        <ContraceptionCard methods={contraception} unavailable={contraceptionUnavailable} />
 
         <PregnancyHistory episodes={history} />
       </View>

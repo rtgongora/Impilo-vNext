@@ -41,8 +41,14 @@ import {
   addCtgAnnotation,
   classifyNearMissForm,
   computeNearMissIndicators,
+  assessEmergencyBundle,
   fetchBirthDestination,
   getMaternitySummary,
+  fetchContraceptionCoverage,
+  fetchContraceptionHistory,
+  fetchPregnancyLosses,
+  fetchTopAuthorisations,
+  fetchPatientPregnancyEpisodes,
   type PartographProgress,
   type AddPartographPointResult,
   type CtgChunk,
@@ -52,6 +58,9 @@ import {
   type BirthDestinationRequiredLevel,
   type BirthDestinationVerdict,
   type MaternitySummary,
+  type EmergencyBundleAssessment,
+  type EmergencyBundleKind,
+  type EmergencyBundleStepStatus,
 } from "../../services/maternityService";
 
 // --- shared governed-form rendering (mirrors EncounterFormsPanel's approach) ---------------
@@ -313,6 +322,98 @@ function MaternitySummaryHeader({ patientId }: { patientId: string }) {
         {data.observation_count} observation{data.observation_count === 1 ? "" : "s"} recorded
         {data.last_observed_at ? ` · last ${new Date(data.last_observed_at).toLocaleString()}` : ""}
       </Text>
+    </View>
+  );
+}
+
+// --- Confidential reproductive reads (W13-B) -------------------------------------------------
+//
+// Backend: `/internal/v1/confidential/reproductive/**` and maternity pregnancy episodes.
+// Empty list = withhold; 502 PCT_UNAVAILABLE must never render as "no records".
+
+const REPRODUCTIVE_EMPTY_HINT =
+  "Nothing visible on this confidential lane. That may mean no record, or records you may not see.";
+
+export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: string }) {
+  const contraception = useQuery({
+    queryKey: ["confidential-contraception", patientCpid],
+    queryFn: () => fetchContraceptionCoverage(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const losses = useQuery({
+    queryKey: ["confidential-losses", patientCpid],
+    queryFn: () => fetchPregnancyLosses(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const topAuths = useQuery({
+    queryKey: ["confidential-top-auths", patientCpid],
+    queryFn: () => fetchTopAuthorisations(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+  const episodes = useQuery({
+    queryKey: ["confidential-pregnancy-episodes", patientCpid],
+    queryFn: () => fetchPatientPregnancyEpisodes(patientCpid),
+    enabled: patientCpid.trim().length > 0,
+  });
+
+  if (!patientCpid.trim()) return null;
+
+  const unavailable =
+    (contraception.isError && contraception.error instanceof ApiError && contraception.error.code === "PCT_UNAVAILABLE") ||
+    (losses.isError && losses.error instanceof ApiError && losses.error.code === "PCT_UNAVAILABLE") ||
+    (topAuths.isError && topAuths.error instanceof ApiError && topAuths.error.code === "PCT_UNAVAILABLE") ||
+    (episodes.isError && episodes.error instanceof ApiError && episodes.error.code === "PCT_UNAVAILABLE");
+
+  if (contraception.isLoading || losses.isLoading || topAuths.isLoading || episodes.isLoading) {
+    return <Text style={styles.hint}>Loading confidential reproductive records…</Text>;
+  }
+
+  if (unavailable) {
+    return (
+      <View style={styles.unavailableBanner} testID="confidential-reproductive-unavailable" accessibilityRole="alert">
+        <Text style={styles.unavailableTitle}>Confidential records could not be retrieved</Text>
+        <Text style={styles.unavailableBody}>
+          This is not the same as there being nothing on file — do not treat it as an empty chart.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.workspace} testID="confidential-reproductive-section">
+      <Text style={styles.workspaceTitle}>Confidential reproductive health</Text>
+      <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+
+      <Text style={styles.sectionTitle}>Pregnancy episodes ({(episodes.data ?? []).length})</Text>
+      {(episodes.data ?? []).slice(0, 3).map((e) => (
+        <Text key={e.pregnancy_episode_id} style={styles.pointLine}>
+          {e.status}
+          {e.estimated_delivery_date ? ` · EDD ${new Date(e.estimated_delivery_date).toLocaleDateString()}` : ""}
+        </Text>
+      ))}
+
+      <Text style={styles.sectionTitle}>Contraception ({(contraception.data ?? []).length})</Text>
+      {(contraception.data ?? []).map((c) => (
+        <Text key={c.contraceptive_episode_id} style={styles.pointLine}>
+          {(c.method_code ?? c.method_class ?? "Method").replace(/_/g, " ").toLowerCase()} ·{" "}
+          {(c.coverage_status ?? "unknown").replace(/_/g, " ").toLowerCase()}
+        </Text>
+      ))}
+
+      <Text style={styles.sectionTitle}>Pregnancy losses ({(losses.data ?? []).length})</Text>
+      {(losses.data ?? []).map((l) => (
+        <Text key={l.loss_record_id} style={styles.pointLine}>
+          {(l.loss_type ?? "Loss").replace(/_/g, " ").toLowerCase()}
+          {l.occurred_on ? ` · ${new Date(l.occurred_on).toLocaleDateString()}` : ""}
+        </Text>
+      ))}
+
+      <Text style={styles.sectionTitle}>TOP authorisations ({(topAuths.data ?? []).length})</Text>
+      {(topAuths.data ?? []).map((a) => (
+        <Text key={a.authorisation_id} style={styles.pointLine}>
+          {(a.status ?? "Unknown").replace(/_/g, " ").toLowerCase()}
+        </Text>
+      ))}
     </View>
   );
 }
@@ -644,6 +745,7 @@ export function PartographWorkspace() {
       )}
 
       <View style={styles.sectionDivider} />
+      <ConfidentialReproductiveSection patientCpid={patientId} />
       <BirthDestinationSection />
     </ScrollView>
   );
@@ -1166,6 +1268,232 @@ function NearMissIndicatorsSection() {
         </View>
       )}
     </View>
+  );
+}
+
+// --- Emergency bundle workspaces (PPH, eclampsia) ----------------------------------------------
+//
+// Backend: experience-bff `/internal/v1/clinical/maternal/emergency-bundles/{pph|eclampsia}/assess`.
+// Stateless checklist verdict — nothing persisted here. A freshly-triggered bundle must show every
+// mandatory step outstanding; LAPSED_UNRESOLVED is the loudest state, never mistaken for closure.
+
+const BUNDLE_STATUS_LABEL: Record<EmergencyBundleAssessment["status"], string> = {
+  ACTIVE: "In progress — mandatory steps may remain",
+  CLOSABLE: "May close — all mandatory steps done and control confirmed",
+  LAPSED_UNRESOLVED: "Escalate — no recent observation on an open episode",
+};
+
+function bundleStepStyle(status: EmergencyBundleStepStatus) {
+  if (status === "OVERDUE" || status === "DUE") {
+    return { bg: "#FEE2E2", border: "#DC2626", text: "#7F1D1D" };
+  }
+  if (status === "DONE") {
+    return { bg: "#D1FAE5", border: "#22C55E", text: "#14532D" };
+  }
+  return { bg: "#F3F4F6", border: colors.gray[300], text: colors.gray[700] };
+}
+
+function EmergencyBundleWorkspace({
+  kind,
+  title,
+  controlLabel,
+  testIdPrefix,
+}: {
+  kind: EmergencyBundleKind;
+  title: string;
+  controlLabel: string;
+  testIdPrefix: string;
+}) {
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [minutesSinceTrigger, setMinutesSinceTrigger] = useState("0");
+  const [minutesSinceLastObservation, setMinutesSinceLastObservation] = useState("0");
+  const [controlConfirmed, setControlConfirmed] = useState<boolean | null>(null);
+  const [clinicianConfirmedClose, setClinicianConfirmedClose] = useState(false);
+  const [result, setResult] = useState<EmergencyBundleAssessment | null>(null);
+
+  const assess = useMutation({
+    mutationFn: () =>
+      assessEmergencyBundle(kind, {
+        completedSteps: [...completed],
+        minutesSinceTrigger: Number(minutesSinceTrigger) || 0,
+        minutesSinceLastObservation: Number(minutesSinceLastObservation) || 0,
+        controlConfirmed,
+        clinicianConfirmedClose,
+      }),
+    onSuccess: (r) => setResult(r),
+  });
+
+  const unavailable = assess.isError && assess.error instanceof ApiError && assess.error.status >= 500;
+
+  function toggleStep(code: string) {
+    setCompleted((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+  }
+
+  const steps = result?.steps ?? [];
+  const statusStyle =
+    result?.status === "LAPSED_UNRESOLVED"
+      ? { bg: "#FEE2E2", border: "#DC2626", text: "#7F1D1D" }
+      : result?.status === "CLOSABLE"
+        ? { bg: "#D1FAE5", border: "#22C55E", text: "#14532D" }
+        : { bg: "#FEF3C7", border: "#F59E0B", text: "#78350F" };
+
+  return (
+    <ScrollView style={styles.workspace} testID={`${testIdPrefix}-workspace`}>
+      <Text style={styles.workspaceTitle}>{title}</Text>
+      <Text style={styles.hint}>
+        Time-critical checklist assessment — nothing is saved here. Mark steps done, set elapsed
+        minutes, then assess. Unknown control is never treated as controlled.
+      </Text>
+
+      <View style={styles.identifierRow}>
+        <TextInput
+          style={[styles.input, { flex: 1 }]}
+          placeholder="Minutes since trigger"
+          value={minutesSinceTrigger}
+          onChangeText={setMinutesSinceTrigger}
+          keyboardType="number-pad"
+          testID={`${testIdPrefix}-minutes-trigger`}
+        />
+        <TextInput
+          style={[styles.input, { flex: 1 }]}
+          placeholder="Minutes since last observation"
+          value={minutesSinceLastObservation}
+          onChangeText={setMinutesSinceLastObservation}
+          keyboardType="number-pad"
+          testID={`${testIdPrefix}-minutes-last-obs`}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <Text style={styles.label}>{controlLabel}</Text>
+        <View style={styles.options}>
+          {(["unknown", "yes", "no"] as const).map((opt) => (
+            <Pressable
+              key={opt}
+              onPress={() =>
+                setControlConfirmed(opt === "unknown" ? null : opt === "yes")
+              }
+              style={[
+                styles.option,
+                (opt === "unknown" && controlConfirmed === null) ||
+                (opt === "yes" && controlConfirmed === true) ||
+                (opt === "no" && controlConfirmed === false)
+                  ? styles.optionSelected
+                  : null,
+              ]}
+              testID={`${testIdPrefix}-control-${opt}`}
+            >
+              <Text style={styles.optionText}>
+                {opt === "unknown" ? "Not assessed" : opt === "yes" ? "Confirmed" : "Not confirmed"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <Pressable
+        style={styles.field}
+        onPress={() => setClinicianConfirmedClose((v) => !v)}
+        testID={`${testIdPrefix}-clinician-close`}
+      >
+        <Text style={styles.label}>
+          Clinician confirmed closure: {clinicianConfirmedClose ? "Yes" : "No"}
+        </Text>
+      </Pressable>
+
+      {steps.length > 0 && (
+        <View style={styles.form} testID={`${testIdPrefix}-checklist`}>
+          <Text style={styles.sectionTitle}>Bundle steps</Text>
+          {steps.map((step) => {
+            const s = bundleStepStyle(step.status);
+            const done = completed.has(step.code);
+            return (
+              <Pressable
+                key={step.code}
+                onPress={() => toggleStep(step.code)}
+                style={[styles.progressBox, { backgroundColor: s.bg, borderColor: s.border, marginBottom: 6 }]}
+                testID={`${testIdPrefix}-step-${step.code}`}
+              >
+                <Text style={[styles.progressStatus, { color: s.text }]}>
+                  {done ? "✓ " : ""}
+                  {step.name}
+                  {step.mandatory ? " *" : ""} — {step.status}
+                </Text>
+                {step.action ? <Text style={styles.progressDetail}>{step.action}</Text> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+
+      <Pressable
+        style={[styles.primaryBtn, assess.isPending && styles.primaryBtnDisabled]}
+        disabled={assess.isPending}
+        onPress={() => assess.mutate()}
+        testID={`${testIdPrefix}-assess`}
+      >
+        <Text style={styles.primaryBtnText}>{assess.isPending ? "Assessing…" : "Assess bundle"}</Text>
+      </Pressable>
+
+      {unavailable && (
+        <View style={styles.unavailableBanner} testID={`${testIdPrefix}-unavailable`} accessibilityRole="alert">
+          <Text style={styles.unavailableTitle}>The bundle could not be evaluated</Text>
+          <Text style={styles.unavailableBody}>
+            This is not a statement that the emergency is resolved. Act clinically and resubmit when
+            the service returns.
+          </Text>
+        </View>
+      )}
+
+      {result && !unavailable && (
+        <View
+          style={[styles.progressBox, { backgroundColor: statusStyle.bg, borderColor: statusStyle.border, marginTop: 8 }]}
+          testID={`${testIdPrefix}-verdict`}
+        >
+          <Text style={[styles.progressStatus, { color: statusStyle.text }]}>
+            {BUNDLE_STATUS_LABEL[result.status]}
+          </Text>
+          <Text style={styles.progressDetail}>{result.note}</Text>
+          {result.outstanding_mandatory.length > 0 && (
+            <View style={styles.outstandingBlock}>
+              <Text style={styles.outstandingTitle}>Outstanding mandatory</Text>
+              {result.outstanding_mandatory.map((code) => (
+                <Text key={code} style={styles.outstandingLine}>
+                  • {code}
+                </Text>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+export function PphProtocolWorkspace() {
+  return (
+    <EmergencyBundleWorkspace
+      kind="pph"
+      title="PPH first-response protocol"
+      controlLabel="Bleeding controlled and confirmed"
+      testIdPrefix="pph-protocol"
+    />
+  );
+}
+
+export function EclampsiaProtocolWorkspace() {
+  return (
+    <EmergencyBundleWorkspace
+      kind="eclampsia"
+      title="Eclampsia / severe pre-eclampsia protocol"
+      controlLabel="Seizure/control stable and confirmed"
+      testIdPrefix="eclampsia-protocol"
+    />
   );
 }
 
