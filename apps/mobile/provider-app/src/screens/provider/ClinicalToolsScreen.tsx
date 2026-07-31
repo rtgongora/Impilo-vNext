@@ -57,6 +57,7 @@ import { PACSViewerScreen } from "./PACSViewerScreen";
 import { DischargeScreen } from "./DischargeScreen";
 import { ReportSafetyScreen } from "../rito/ReportSafetyScreen";
 import { MySafetyCasesScreen } from "../rito/MySafetyCasesScreen";
+import { MpdsrReviewsScreen } from "../rito/MpdsrReviewsScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
 import { MedicineWorkspaceScreen } from "./MedicineWorkspaceScreen";
 import { MedicineCdsEvaluateScreen } from "./MedicineCdsEvaluateScreen";
@@ -107,6 +108,7 @@ type ToolTab =
   | "vashandi"
   | "rito_report"
   | "rito_my_cases"
+  | "rito_mpdsr"
   | "prod_ready"
   | "madi_orders"
   | "madi_transfusion"
@@ -154,6 +156,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "vashandi", label: "Vashandi" },
   { id: "rito_report", label: "Report Safety" },
   { id: "rito_my_cases", label: "My Safety" },
+  { id: "rito_mpdsr", label: "MPDSR" },
   { id: "prod_ready", label: "Prod Ready" },
 ];
 
@@ -248,6 +251,7 @@ export function ClinicalToolsScreen() {
         {tab === "vashandi" && <VashandiWorkforceHubScreen />}
         {tab === "rito_report" && <ReportSafetyScreen />}
         {tab === "rito_my_cases" && <MySafetyCasesScreen />}
+        {tab === "rito_mpdsr" && <MpdsrReviewsScreen />}
         {tab === "prod_ready" && (
           <ProductionReadinessJourneyScreen onNavigateTab={(nextTab) => setTab(nextTab as ToolTab)} />
         )}
