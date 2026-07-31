@@ -1,9 +1,9 @@
 # Citizen pregnancy and home blood pressure — contract for the mobile citizen app
 
 **Audience:** the mobile-recovery lane.
-**Status:** **the backend is BUILT as of W12 (2026-07-30).** The two BFF surfaces this document was
-written to specify now exist; §2 names them. Nothing here needs new server work, but §4 still does —
-those behaviours are the UI's to preserve and no endpoint can enforce them for you.
+**Status:** **BUILT through W13 (2026-07-31).** The BFF surfaces this document was written to
+specify exist; §2 names them and records which channels have LIVE product UI. Nothing here needs new
+server work for the rows marked Yes. §4 behaviours remain the UI's to preserve.
 **Companion:** [`partograph-ctg-mobile-contract.md`](partograph-ctg-mobile-contract.md) is the
 provider-app precedent and the format this follows.
 
@@ -25,15 +25,17 @@ in this file and not a feature to work around.
 
 | Capability | Clinical engine | Record | BFF endpoint | Usable from mobile today |
 |---|---|---|---|---|
-| Birth destination / referral routing | `BirthDestinationService` | — | **`/internal/v1/maternity/birth-destination`** | **Yes** |
-| Maternity summary | — | pct | **`/internal/v1/maternity`** | **Yes** |
+| Birth destination / referral routing | `BirthDestinationService` | — | **`/internal/v1/maternity/birth-destination`** | **Yes (W13-A)** — citizen pregnancy + provider maternity |
+| Maternity summary | — | pct | **`GET /internal/v1/maternity/summary`** | **Yes (W13-A)** — provider / EHR; not a citizen chart |
 | Home BP (SMBP) series verdict | `SmbpEscalationService` + `HomeBpSeriesReducer` (CKP) | telemonitoring `tm_readings` | **`GET /internal/v1/confidential/maternity/smbp/verdict?planId=…`** | **Yes (W12)** |
 | Pregnancy episode booking | `GestationalAgeEngine` | pct | **`POST /internal/v1/confidential/maternity/pregnancy-episodes`** | **Yes (W12)** |
-| Current pregnancy / obstetric history | `GestationalAgeEngine` | pct | **`GET …/pregnancy-episodes/{cpid}/current`**, **`GET …/pregnancy-episodes/{cpid}`** | **Yes (W12)** |
+| Current pregnancy / obstetric history | `GestationalAgeEngine` | pct | **`GET …/pregnancy-episodes/{cpid}/current`**, **`GET …/pregnancy-episodes/{cpid}`** | **Yes (W12)**; clinician CPID UI in **W13-B** |
+| Current contraception | pct confidential | pct | **`GET /internal/v1/confidential/reproductive/contraception/{cpid}`** (`"me"` for citizen) | **Yes (W13-B)** — citizen current plan only |
+| Contraception history / losses / TOP | pct confidential | pct | **`…/contraception/…/history`**, **`…/losses/{motherCpid}`**, **`…/top-authorisations|terminations/{subjectCpid}`** | **Yes (W13-B)** — **clinician-primary**; do not put TOP/loss on citizen |
 | Respectful-care feedback | `RespectfulMaternityCareService` (CKP) | rito | **`GET/POST /internal/v1/maternity/respectful-care/{instrument,feedback}`** | **Yes (W12)** |
 
-**Note the `/confidential/` segment on the SMBP and pregnancy-episode rows.** It is not decoration and
-it is not rewritable: see §6.
+**Note the `/confidential/` segment on the SMBP, pregnancy-episode, and reproductive rows.** It is not
+decoration and it is not rewritable: see §6.
 
 **Submitting readings is still telemonitoring's**, not this surface's. The verdict endpoint composes
 `GET /internal/v1/readings/by-plan/{planId}` and asks CKP what the series means; it deliberately does

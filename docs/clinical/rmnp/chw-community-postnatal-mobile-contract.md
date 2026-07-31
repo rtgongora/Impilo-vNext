@@ -2,8 +2,8 @@
 
 **Audience:** the mobile-recovery lane. Belongs in provider-app's existing **Outreach** mode, not a
 new workspace.
-**Status:** **BUILT as of W12 (2026-07-30)** — the record, the clinical engines and the BFF surface.
-§2 names the endpoints. §4 is still the UI's work, and no endpoint can enforce those behaviours for it.
+**Status:** **BUILT through W13 (2026-07-31)** — CHW community postnatal (W12) plus facility PNC /
+newborn journeys and contraception BFF reads (W13). §2 names the endpoints. §4 is still the UI's work.
 **Companion:** [`partograph-ctg-mobile-contract.md`](partograph-ctg-mobile-contract.md) (format
 precedent) · [`citizen-pregnancy-smbp-mobile-contract.md`](citizen-pregnancy-smbp-mobile-contract.md).
 
@@ -21,11 +21,13 @@ Until pct `V436` there was nowhere to record such a visit at all. There is now.
 
 | Capability | Engine / record | BFF endpoint | Usable today |
 |---|---|---|---|
-| Record a postnatal contact (home / community / virtual first-class) | pct `V436` + `PostnatalContactService` | **`POST /internal/v1/confidential/community/postnatal/contacts`** | **Yes (W12)** |
+| Record a postnatal contact (home / community / virtual first-class) | pct `V436` + `PostnatalContactService` | **`POST /internal/v1/confidential/community/postnatal/contacts`** | **Yes (W12)** — Outreach Postnatal |
 | Read a mother's postnatal contacts | as above | **`GET /internal/v1/confidential/community/postnatal/contacts/{motherCpid}`** | **Yes (W12)** |
-| PNC maternal danger signs | `rmnp-pnc-maternal-danger-signs.json` (CKP) | via clinical proxies | partially |
-| PNC newborn danger signs (delegates PSBI) | `rmnp-pnc-newborn-danger-signs.json` | via clinical proxies | partially |
-| Postpartum family planning | reuses the contraceptive episode (`V430`) | pct serves it guarded at `GET /v1/confidential/reproductive/contraception/{cpid}`, but **no BFF proxy yet** | **No — one proxy method away** |
+| Facility PNC maternal (form 16) | forms seed + encounter submit | forced `impilo.pnc.maternal.contact.v1` + **`POST …/clinical/postnatal/maternal/assess`** | **Yes (W13-C)** — distinct from CHW boolean screen |
+| Facility PNC newborn (form 17) | forms seed; PSBI stays on young-infant | forced `impilo.pnc.newborn.contact.v1` | **Yes (W13-C)** — do not restate PSBI |
+| PNC maternal danger signs | `rmnp-pnc-maternal-danger-signs.json` (CKP) | BFF postnatal assess | **Yes (W13-C)** — gate on `screeningComplete` |
+| PNC newborn danger signs (delegates PSBI) | `rmnp-pnc-newborn-danger-signs.json` | BFF postnatal assess + young-infant path | **Yes (W13-C)** |
+| Postpartum family planning | contraceptive episode (`V430`) | **`GET /internal/v1/confidential/reproductive/contraception/{cpid}`** | **Yes (W13-B)** — BFF proxy on confidential lane |
 
 §6 states why the path segment is `/confidential/` and why it is not rewritable.
 

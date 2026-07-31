@@ -1,4 +1,4 @@
-# RMNP lane — handover, 2026-07-28 (revised 2026-07-30, W12)
+# RMNP lane — handover, 2026-07-28 (revised 2026-07-31, W13)
 
 Companion to `2026-07-28-coordinator-handover.md`. Everything below is **landed on canonical**; nothing
 is unpushed. This document exists so the successor does not have to re-derive it.
@@ -23,9 +23,12 @@ of the code, say so in the line that does it.
 
 ## State
 
-RMNP W0–W11 are done. **W12 is done** (backend) and **W12-UI is done** (product surfaces for
-SMBP, pregnancy booking, CHW postnatal, near-miss classify-form, and respectful maternity care).
-Not yet re-imaged or re-deployed — digests below are still the W11 build.
+RMNP W0–W12 are done. **W13 product completion is done** — every RMNP-owned capability that had a
+reachable backend now has LIVE web and/or mobile product UI (not route theater). Explicit deferrals
+remain listed below; they are not silently “done.”
+
+Not yet re-imaged or re-deployed — digests below are still the W11 build. W13 adds CKP emergency-bundle
+and MEC/PNC assess HTTP plus BFF confidential reproductive proxies; those jars must be in the next image.
 
 **Deployed 2026-07-28, by digest via `kubectl set image` — NEVER helm** (eight services run digests
 the committed values do not name; a `helm upgrade` reverts three lanes and reports success):
@@ -122,12 +125,11 @@ The ordered six-step flip list is in
 | Strip the visibility headers at the edge, then decide when to flip `propagate-obligations` | **cross-lane security + PO — blocks flip step 6 in practice** |
 | Deployed `deploy/helm/.../envoy.yaml` is a third, ungated copy of the Envoy config | **coordinator — the ENVOY-GATE comment names only two files** |
 | Next tshepo-authz migration number: V056 is consumed by the break-glass lane and RMNP's V048–V052 band is full | **coordinator — flip step 5 cannot name a number until this is allocated** |
-| Re-image and re-deploy pct, CKP and experience-bff for W12 (includes the BFF `"me"` subject resolution on pregnancy booking) | RMNP — digests above are the W11 build |
+| Re-image and re-deploy pct, CKP and experience-bff for W12+W13 (pregnancy `"me"`, confidential reproductive reads, MEC/PNC assess, PPH/eclampsia bundles) | RMNP — digests above are the W11 build |
 | `pregnant()` unguarded boolean, PNC mental-health/GBV vocabulary | recorded gaps, need owners |
+| MPDSR review, Bishop score, confidentiality flip, service-only domains (intention / preconception / fertility / delivery writes) | **Deferred** — see coordinator report; not RMNP product UI debt |
 
 ## Landed in W12-UI (frontend parity)
-
-Backend without product UI is not done. These surfaces close the thin-UI gap against the W12 BFF:
 
 | Surface | Web | Mobile |
 |---|---|---|
@@ -138,6 +140,22 @@ Backend without product UI is not done. These surfaces close the thin-UI gap aga
 | CHW community postnatal | — (Outreach is mobile-primary) | provider Outreach → Postnatal tab |
 
 Citizen pregnancy calls use the BFF `"me"` sentinel so the browser never holds a CPID.
+
+## Landed in W13 (product completion)
+
+| Wave | Surface | Web | Mobile |
+|---|---|---|---|
+| W13-A | Birth destination / EmONC | EHR maternity + `/my/pregnancy` | provider maternity + citizen pregnancy |
+| W13-A | Maternity summary | EHR maternity header | provider maternity |
+| W13-A | Near-miss indicators | EHR maternity panel | provider specialty |
+| W13-B | Confidential contraception / losses / TOP | EHR reproductive panel | provider confidential section; citizen contraception only |
+| W13-B | Clinician pregnancy episodes | EHR pregnancy episodes (patient CPID) | provider maternity |
+| W13-C | ANC first + follow-up (`impilo.anc.*`) | dedicated clinical journeys | Obstetrics specialty workspaces |
+| W13-C | Facility PNC maternal / newborn (`impilo.pnc.*`) | journeys + screening-gate honesty | same; newborn does not restate PSBI |
+| W13-C | FP eligibility + MEC assess | form 18 → `/clinical/contraception/mec/assess` | form 18 workspace (MEC post-submit web-primary) |
+| W13-D | PPH / eclampsia emergency bundles | EHR `EmergencyBundlePanel` | specialty tools **WIRED** |
+
+**Honesty rules that must survive the next edit:** 502 ≠ empty chart; empty confidential list ≡ withhold (not proof of absence); `INSUFFICIENT_EVIDENCE` ≠ “cannot”; call-ahead verbatim; indeterminate near-miss cases stay in the bounds; PNC “no danger signs” only behind `screeningComplete`.
 
 ## Working method that earned its place
 
