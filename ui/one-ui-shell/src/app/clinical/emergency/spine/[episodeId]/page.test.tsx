@@ -20,79 +20,17 @@ vi.mock("@/hooks/useAuthStore", () => ({
   useAuthStore: () => ({ user: { id: "actor-1", displayName: "Test Clinician" } }),
 }));
 
-vi.mock("@/hooks/useFacilityStore", () => ({
-  useFacilityStore: (selector: (state: { facility: { id: string; name: string } | null }) => unknown) =>
-    selector({ facility: { id: "facility-1", name: "Test Hospital" } }),
-}));
-
-vi.mock("@/hooks/useEmergencyRealtime", () => ({
-  useEmergencyRealtime: () => undefined,
-}));
-
-vi.mock("@/features/emergency/spine/EpisodeCareActionsPanel", () => ({
-  EpisodeCareActionsPanel: () => null,
-}));
-
-vi.mock("@/features/emergency/spine/IdentityLinkPanel", () => ({
-  IdentityLinkPanel: () => null,
-}));
-
-vi.mock("@/features/emergency/spine/EpisodeAlertsPanel", () => ({
-  EpisodeAlertsPanel: () => null,
-}));
-
-vi.mock("@/features/emergency/spine/OrderSetsAndMedsPanels", () => ({
-  MedicationAdminPanel: () => null,
-  OrderSetsPanel: () => null,
-}));
-
-vi.mock("@/hooks/queries/useMentalHealth", () => ({
-  useIntakeMentalHealthReferral: () => ({
-    mutate: vi.fn(),
-    mutateAsync: vi.fn(),
-    isPending: false,
-  }),
-}));
-
 const mockEpisode = vi.fn();
 const mockHandovers = vi.fn();
-const mockRequestHandover = vi.fn(() => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }));
-const mockAccept = vi.fn(() => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }));
-const mockDecline = vi.fn(() => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }));
-
-const idleMutation = () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false });
-const emptyQuery = () => ({ data: [], isLoading: false, isError: false });
+const mockRequestHandover = vi.fn(() => ({ mutate: vi.fn(), isPending: false }));
+const mockAccept = vi.fn(() => ({ mutate: vi.fn(), isPending: false }));
+const mockDecline = vi.fn(() => ({ mutate: vi.fn(), isPending: false }));
 
 vi.mock("@/hooks/queries/useEmergencyEpisode", () => ({
   useEmergencyEpisode: () => mockEpisode(),
   useEmergencyHandoverHistory: () => mockHandovers(),
-  useEmergencyEpisodeActions: () => ({
-    arrive: idleMutation(),
-    transition: idleMutation(),
-    confirmLocation: idleMutation(),
-    requestHandover: mockRequestHandover(),
-  }),
-  useEmergencyHandoverActions: () => ({
-    accept: mockAccept(),
-    decline: mockDecline(),
-    expire: idleMutation(),
-  }),
-  useEmergencyIdentityLinks: () => emptyQuery(),
-  useLinkEmergencyIdentity: () => idleMutation(),
-  useEmergencyOrderSets: () => emptyQuery(),
-  useEmergencyOrderSetActions: () => ({
-    invoke: idleMutation(),
-    orderItem: idleMutation(),
-    declineItem: idleMutation(),
-  }),
-  useEmergencyMedications: () => emptyQuery(),
-  useRecordEmergencyMedication: () => idleMutation(),
-  useEmergencyEpisodeAlerts: () => emptyQuery(),
-  useEmergencyAlertActions: () => ({
-    acknowledge: idleMutation(),
-    respond: idleMutation(),
-    close: idleMutation(),
-  }),
+  useEmergencyEpisodeActions: () => ({ requestHandover: mockRequestHandover() }),
+  useEmergencyHandoverActions: () => ({ accept: mockAccept(), decline: mockDecline() }),
 }));
 
 const params = { episodeId: "ep-1" };

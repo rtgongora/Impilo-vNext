@@ -24,12 +24,6 @@ vi.mock("@/hooks/queries/useStructuredHistory", () => ({
     isError: false,
     refetch: vi.fn(),
   }),
-  useRecordPastProcedure: () => ({
-    mutate: vi.fn(),
-    mutateAsync: vi.fn(),
-    isPending: false,
-    isError: false,
-  }),
 }));
 
 vi.mock("@/hooks/queries/useProcedureEpisode", () => ({

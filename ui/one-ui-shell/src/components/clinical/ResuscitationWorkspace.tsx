@@ -5,7 +5,7 @@
  * active resuscitation. Rapid, large-target entry of ABCDE phases, CPR cycles,
  * medications and free-text observations, all streamed onto ONE emergency activation
  * and stamped with the canonical trauma episode. Every write hits a real
- * experience-bff endpoint (/internal/v1/ed/resuscitation/{activationId}/*); nothing here is
+ * experience-bff endpoint (/internal/v1/emergency/{activationId}/*); nothing here is
  * mocked. Reused by the ED visit journey (Resus step) and the standalone resus route.
  */
 

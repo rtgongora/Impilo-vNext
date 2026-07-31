@@ -30,7 +30,21 @@ vi.mock("@/hooks/queries/useProviderCouncil", () => ({
     ],
     isLoading: false,
   }),
-  useFundoCpdCandidatesByPublicId: () => ({ data: undefined, isLoading: false }),
+  useFundoCpdCandidatesByPublicId: (publicId?: string) => ({
+    data: publicId
+      ? [
+          {
+            id: 31,
+            courseId: "course-9",
+            courseName: "Cold chain handling",
+            completedAt: "2026-07-01T10:00:00Z",
+            creditsSuggested: 3,
+            verificationState: "PENDING",
+          },
+        ]
+      : undefined,
+    isLoading: false,
+  }),
   useAcceptFundoCpd: () => ({ mutate: acceptMutate, isPending: false }),
   useRejectFundoCpd: () => ({ mutate: rejectMutate, isPending: false }),
 }));
@@ -48,6 +62,13 @@ describe("FundoCpdCandidatePanel", () => {
     expect(screen.getByText(/CPD ledger event #555/)).toBeInTheDocument();
     expect(screen.queryByTestId("fundo-cpd-accept-11")).not.toBeInTheDocument();
     expect(screen.queryByTestId("fundo-cpd-reject-11")).not.toBeInTheDocument();
+  });
+
+  it("public-id lookup renders candidates read-only (pages only grant canDecide with a numeric id)", () => {
+    render(<FundoCpdCandidatePanel providerPublicId="PUB-1" />);
+    expect(screen.getByTestId("fundo-cpd-state-31")).toHaveTextContent("PENDING");
+    expect(screen.queryByTestId("fundo-cpd-accept-31")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("fundo-cpd-reject-31")).not.toBeInTheDocument();
   });
 
   it("decision mode accepts a pending candidate only", async () => {
