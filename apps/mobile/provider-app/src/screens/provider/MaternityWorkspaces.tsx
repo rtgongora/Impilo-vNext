@@ -26,6 +26,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, TextInput, ScrollView, Pressable, StyleSheet } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@impilo/mobile-api-client";
+import { authStore } from "@impilo/mobile-auth";
 import { colors } from "@impilo/mobile-design-system";
 import { getFormCatalog } from "../../services/encounterFormsService";
 import {
@@ -54,6 +55,10 @@ import {
   fetchActivePreconceptionPlan,
   fetchCurrentFertilityEpisode,
   fetchDeliveryRecordsForMother,
+  recordReproductiveIntention,
+  openPreconceptionPlan,
+  startFertilityEpisode,
+  recordDeliveryRecord,
   type PartographProgress,
   type AddPartographPointResult,
   type CtgChunk,
@@ -339,6 +344,25 @@ function MaternitySummaryHeader({ patientId }: { patientId: string }) {
 const REPRODUCTIVE_EMPTY_HINT =
   "Nothing visible on this confidential lane. That may mean no record, or records you may not see.";
 
+const INTENTION_OPTIONS = [
+  { code: "WANTS_PREGNANCY_NOW", label: "Wants pregnancy now" },
+  { code: "WANTS_PREGNANCY_LATER", label: "Wants pregnancy later" },
+  { code: "WANTS_NO_MORE_CHILDREN", label: "No more children" },
+  { code: "UNDECIDED", label: "Undecided" },
+  { code: "DECLINED_TO_STATE", label: "Declined to state" },
+] as const;
+
+const DELIVERY_MODE_OPTIONS = [
+  { code: "SPONTANEOUS_VAGINAL", label: "Spontaneous vaginal" },
+  { code: "CAESAREAN", label: "Caesarean" },
+] as const;
+
+/** The signed-in provider's identity for `recordedBy` — mirrors ritoSafetyService's resolution. */
+function currentRecordedBy(): string {
+  const session = authStore.getState().session;
+  return session?.providerId ?? session?.actorId ?? "unknown";
+}
+
 export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: string }) {
   const contraception = useQuery({
     queryKey: ["confidential-contraception", patientCpid],
@@ -380,6 +404,59 @@ export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: 
     queryFn: () => fetchDeliveryRecordsForMother(patientCpid),
     enabled: patientCpid.trim().length > 0,
   });
+
+  // --- W14-B writes (parity with the web EHR maternity panels) ---
+  const queryClient = useQueryClient();
+  const [intentionChoice, setIntentionChoice] = useState<string | null>(null);
+  const saveIntention = useMutation({
+    mutationFn: (choice: string) =>
+      recordReproductiveIntention({
+        subjectCpid: patientCpid,
+        intention: choice,
+        recordedBy: currentRecordedBy(),
+      }),
+    onSuccess: () => {
+      setIntentionChoice(null);
+      void queryClient.invalidateQueries({ queryKey: ["confidential-intention", patientCpid] });
+    },
+  });
+  const openPlan = useMutation({
+    mutationFn: () =>
+      openPreconceptionPlan({ subjectCpid: patientCpid, recordedBy: currentRecordedBy() }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["confidential-preconception", patientCpid] }),
+  });
+  const [monthsTrying, setMonthsTrying] = useState("");
+  const startFertility = useMutation({
+    mutationFn: () =>
+      startFertilityEpisode({
+        subjectCpid: patientCpid,
+        monthsTrying: /^\d+$/.test(monthsTrying.trim()) ? Number(monthsTrying.trim()) : undefined,
+        recordedBy: currentRecordedBy(),
+      }),
+    onSuccess: () => {
+      setMonthsTrying("");
+      void queryClient.invalidateQueries({ queryKey: ["confidential-fertility", patientCpid] });
+    },
+  });
+  const [deliveryMode, setDeliveryMode] = useState("SPONTANEOUS_VAGINAL");
+  const recordDelivery = useMutation({
+    mutationFn: () =>
+      recordDeliveryRecord({
+        motherCpid: patientCpid,
+        deliveredAt: new Date().toISOString(),
+        deliveryMode,
+        babiesDelivered: 1,
+        recordedBy: currentRecordedBy(),
+      }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["confidential-deliveries", patientCpid] }),
+  });
+  // A 409 is a reconciliation outcome, never a generic failure (DELIVERY_ALREADY_RECORDED).
+  const deliveryConflict =
+    recordDelivery.isError &&
+    recordDelivery.error instanceof ApiError &&
+    recordDelivery.error.status === 409;
 
   if (!patientCpid.trim()) return null;
 
@@ -461,6 +538,35 @@ export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: 
       ) : (
         <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
       )}
+      <View style={styles.options}>
+        {INTENTION_OPTIONS.map((opt) => (
+          <Pressable
+            key={opt.code}
+            onPress={() => setIntentionChoice(opt.code)}
+            style={[styles.option, intentionChoice === opt.code && styles.optionSelected]}
+            testID={`intention-option-${opt.code}`}
+          >
+            <Text style={[styles.optionText, intentionChoice === opt.code && styles.optionTextSelected]}>
+              {opt.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <Pressable
+        style={[styles.primaryBtn, (!intentionChoice || saveIntention.isPending) && styles.primaryBtnDisabled]}
+        disabled={!intentionChoice || saveIntention.isPending}
+        onPress={() => intentionChoice && saveIntention.mutate(intentionChoice)}
+        testID="intention-save"
+      >
+        <Text style={styles.primaryBtnText}>
+          {saveIntention.isPending ? "Saving…" : "Record intention"}
+        </Text>
+      </Pressable>
+      {saveIntention.isError && (
+        <Text style={styles.errorText} accessibilityRole="alert">
+          The intention was not saved — try again.
+        </Text>
+      )}
 
       <Text style={styles.sectionTitle}>Preconception</Text>
       {preconception.data ? (
@@ -471,7 +577,24 @@ export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: 
             : ""}
         </Text>
       ) : (
-        <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+        <>
+          <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+          <Pressable
+            style={[styles.secondaryBtn, openPlan.isPending && styles.primaryBtnDisabled]}
+            disabled={openPlan.isPending}
+            onPress={() => openPlan.mutate()}
+            testID="preconception-open"
+          >
+            <Text style={styles.secondaryBtnText}>
+              {openPlan.isPending ? "Opening…" : "Open preconception plan"}
+            </Text>
+          </Pressable>
+          {openPlan.isError && (
+            <Text style={styles.errorText} accessibilityRole="alert">
+              The plan was not opened — try again.
+            </Text>
+          )}
+        </>
       )}
 
       <Text style={styles.sectionTitle}>Fertility</Text>
@@ -481,7 +604,34 @@ export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: 
           {fertility.data.months_trying != null ? ` · ${fertility.data.months_trying} mo trying` : ""}
         </Text>
       ) : (
-        <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+        <>
+          <Text style={styles.hint}>{REPRODUCTIVE_EMPTY_HINT}</Text>
+          <View style={styles.identifierRow}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Months trying (optional)"
+              value={monthsTrying}
+              onChangeText={setMonthsTrying}
+              keyboardType="number-pad"
+              testID="fertility-months-trying"
+            />
+          </View>
+          <Pressable
+            style={[styles.secondaryBtn, startFertility.isPending && styles.primaryBtnDisabled]}
+            disabled={startFertility.isPending}
+            onPress={() => startFertility.mutate()}
+            testID="fertility-start"
+          >
+            <Text style={styles.secondaryBtnText}>
+              {startFertility.isPending ? "Starting…" : "Start fertility episode"}
+            </Text>
+          </Pressable>
+          {startFertility.isError && (
+            <Text style={styles.errorText} accessibilityRole="alert">
+              The episode was not started — try again.
+            </Text>
+          )}
+        </>
       )}
 
       <Text style={styles.sectionTitle}>Deliveries ({(deliveryRecords.data ?? []).length})</Text>
@@ -491,6 +641,41 @@ export function ConfidentialReproductiveSection({ patientCpid }: { patientCpid: 
           {d.delivered_at ? ` · ${new Date(d.delivered_at).toLocaleDateString()}` : ""}
         </Text>
       ))}
+      <View style={styles.options}>
+        {DELIVERY_MODE_OPTIONS.map((opt) => (
+          <Pressable
+            key={opt.code}
+            onPress={() => setDeliveryMode(opt.code)}
+            style={[styles.option, deliveryMode === opt.code && styles.optionSelected]}
+            testID={`delivery-mode-${opt.code}`}
+          >
+            <Text style={[styles.optionText, deliveryMode === opt.code && styles.optionTextSelected]}>
+              {opt.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <Pressable
+        style={[styles.primaryBtn, recordDelivery.isPending && styles.primaryBtnDisabled]}
+        disabled={recordDelivery.isPending}
+        onPress={() => recordDelivery.mutate()}
+        testID="delivery-record"
+      >
+        <Text style={styles.primaryBtnText}>
+          {recordDelivery.isPending ? "Recording…" : "Record birth (now)"}
+        </Text>
+      </Pressable>
+      {deliveryConflict && (
+        <Text style={styles.errorText} accessibilityRole="alert" testID="delivery-conflict">
+          A delivery is already recorded for this pregnancy. Open the existing record — twins are
+          one delivery with a higher babies-delivered count, not a second row.
+        </Text>
+      )}
+      {recordDelivery.isError && !deliveryConflict && (
+        <Text style={styles.errorText} accessibilityRole="alert">
+          The delivery was not recorded — try again.
+        </Text>
+      )}
     </View>
   );
 }

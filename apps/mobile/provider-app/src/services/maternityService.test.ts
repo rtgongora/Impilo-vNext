@@ -19,6 +19,10 @@ import {
   fetchPatientPregnancyEpisodes,
   fetchCurrentReproductiveIntention,
   fetchDeliveryRecordsForMother,
+  recordReproductiveIntention,
+  openPreconceptionPlan,
+  startFertilityEpisode,
+  recordDeliveryRecord,
 } from "./maternityService";
 
 vi.mock("@impilo/mobile-api-client", async (importOriginal) => {
@@ -383,5 +387,70 @@ describe("W14-B confidential reproductive reads", () => {
     await expect(fetchCurrentReproductiveIntention("CP-8")).rejects.toMatchObject({
       code: "PCT_UNAVAILABLE",
     });
+  });
+});
+
+describe("W14-B confidential reproductive writes", () => {
+  it("recordReproductiveIntention posts to the confidential reproductive lane", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue(
+      ok({ intention_id: "I-1", subject_cpid: "CP-1", intention: "WANTS_PREGNANCY_LATER" }),
+    );
+    const row = await recordReproductiveIntention({
+      subjectCpid: "CP-1",
+      intention: "WANTS_PREGNANCY_LATER",
+      recordedBy: "prov-1",
+    });
+    expect(row.intention).toBe("WANTS_PREGNANCY_LATER");
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/internal/v1/confidential/reproductive/reproductive-intentions",
+      { subjectCpid: "CP-1", intention: "WANTS_PREGNANCY_LATER", recordedBy: "prov-1" },
+    );
+  });
+
+  it("openPreconceptionPlan posts to the confidential reproductive lane", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue(
+      ok({ preconception_plan_id: "PP-1", subject_cpid: "CP-2", status: "ACTIVE" }),
+    );
+    const plan = await openPreconceptionPlan({ subjectCpid: "CP-2", recordedBy: "prov-1" });
+    expect(plan.preconception_plan_id).toBe("PP-1");
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/internal/v1/confidential/reproductive/preconception-plans",
+      { subjectCpid: "CP-2", recordedBy: "prov-1" },
+    );
+  });
+
+  it("startFertilityEpisode posts monthsTrying when supplied", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue(
+      ok({ fertility_episode_id: "FE-1", subject_cpid: "CP-3", status: "OPEN", months_trying: 14 }),
+    );
+    const episode = await startFertilityEpisode({
+      subjectCpid: "CP-3",
+      monthsTrying: 14,
+      recordedBy: "prov-1",
+    });
+    expect(episode.months_trying).toBe(14);
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/internal/v1/confidential/reproductive/fertility-episodes",
+      { subjectCpid: "CP-3", monthsTrying: 14, recordedBy: "prov-1" },
+    );
+  });
+
+  it("recordDeliveryRecord propagates the 409 DELIVERY_ALREADY_RECORDED conflict as-is", async () => {
+    vi.mocked(apiClient.post).mockRejectedValue(
+      new ApiError({
+        code: "DELIVERY_ALREADY_RECORDED",
+        message: "already recorded",
+        status: 409,
+        correlationId: "c1",
+      }),
+    );
+    await expect(
+      recordDeliveryRecord({
+        motherCpid: "CP-4",
+        deliveredAt: "2026-07-31T08:00:00Z",
+        deliveryMode: "SPONTANEOUS_VAGINAL",
+        recordedBy: "prov-1",
+      }),
+    ).rejects.toMatchObject({ status: 409, code: "DELIVERY_ALREADY_RECORDED" });
   });
 });

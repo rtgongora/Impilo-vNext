@@ -814,3 +814,49 @@ export async function recordReproductiveIntention(params: {
   );
   return response.data.data;
 }
+
+export async function openPreconceptionPlan(params: {
+  subjectCpid: string;
+  folicAcidStartedOn?: string;
+  recordedBy: string;
+}): Promise<PreconceptionPlan> {
+  const response = await apiClient.post<{ data: PreconceptionPlan }>(
+    `${REPRODUCTIVE_BASE}/preconception-plans`,
+    params,
+  );
+  return response.data.data;
+}
+
+export async function startFertilityEpisode(params: {
+  subjectCpid: string;
+  monthsTrying?: number;
+  recordedBy: string;
+}): Promise<FertilityEpisode> {
+  const response = await apiClient.post<{ data: FertilityEpisode }>(
+    `${REPRODUCTIVE_BASE}/fertility-episodes`,
+    params,
+  );
+  return response.data.data;
+}
+
+/**
+ * Record a delivery on the confidential lane.
+ *
+ * A 409 (`DELIVERY_ALREADY_RECORDED`) propagates as an ApiError the caller must surface with the
+ * reconciliation guidance — twins are one delivery with a higher babiesDelivered count, never a
+ * second row.
+ */
+export async function recordDeliveryRecord(params: {
+  motherCpid: string;
+  pregnancyEpisodeId?: string;
+  deliveredAt: string;
+  deliveryMode: string;
+  babiesDelivered?: number;
+  recordedBy: string;
+}): Promise<DeliveryRecord> {
+  const response = await apiClient.post<{ data: DeliveryRecord }>(
+    `${REPRODUCTIVE_BASE}/delivery-records`,
+    params,
+  );
+  return response.data.data;
+}
