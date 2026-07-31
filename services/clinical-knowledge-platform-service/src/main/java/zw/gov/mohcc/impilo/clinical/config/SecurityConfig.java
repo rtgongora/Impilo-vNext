@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.clinical.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -17,6 +18,11 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
  *
  * <p>Internal BFF and platform callers must present a valid JWT (Keycloak realm).
  * Companion probe routes remain unauthenticated for mesh health checks.</p>
+ *
+ * <p>Honours the estate-wide {@code impilo.security.disable-oauth-for-tests}
+ * (env {@code IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS}) switch so local/service-layer
+ * demo rigs can reach rules/evaluate without a Keycloak token — same pattern as
+ * procedures/rito/experience-bff. Production keeps oauth2.</p>
  */
 @Configuration
 @EnableWebSecurity
@@ -29,21 +35,30 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            TrustContextFilter trustContextFilter,
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests)
+            throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
-                        .requestMatchers("/internal/v1/health",
-                                "/internal/v1/test-command",
-                                "/internal/v1/test-federation").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
+
+        if (!disableOauthForTests) {
+            http.authorizeHttpRequests(auth -> auth
+                            .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
+                            .requestMatchers("/internal/v1/health",
+                                    "/internal/v1/test-command",
+                                    "/internal/v1/test-federation").permitAll()
+                            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                            .anyRequest().authenticated()
+                    )
+                    .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        } else {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        }
 
         return http.build();
     }

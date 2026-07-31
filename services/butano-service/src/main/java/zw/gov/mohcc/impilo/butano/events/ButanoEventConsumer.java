@@ -1005,6 +1005,52 @@ public class ButanoEventConsumer {
         }
     }
 
+    /**
+     * Retires a previously archived multimorbidity {@link DetectedIssue} when CKP emits
+     * {@code MULTIMORBIDITY_ISSUE_RESOLVED}.
+     *
+     * <p>Status moves to {@code cancelled} — FHIR R4 has no {@code resolved} on DetectedIssue, and
+     * {@code entered-in-error} would mean the original filing was a mistake rather than that the
+     * finding cleared. Only an existing resource is updated; silence and missing patients produce
+     * no create.</p>
+     */
+    @KafkaListener(topics = "impilo.clinical.multimorbidity.issue.resolved", groupId = "butano-shr")
+    public void consumeMultimorbidityIssueResolved(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String correlationId = extractCorrelationId(root);
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull()) {
+                log.warn("BUTANO SHR: multimorbidity resolved event missing payload, skipping "
+                        + "correlationId={}", correlationId);
+                return;
+            }
+
+            String patientCpid = firstNonBlank(
+                    text(payload, "subject_cpid"), text(payload, "subjectCpid"), text(payload, "cpid"));
+            String code = firstNonBlank(text(payload, "code"));
+            if (patientCpid == null || code == null) {
+                log.warn("BUTANO SHR: multimorbidity resolved event missing subject_cpid or code — "
+                        + "skipping correlationId={}", correlationId);
+                return;
+            }
+
+            UUID tenantId = resolveTenantId(root, payload, patientCpid);
+            if (tenantId == null) {
+                log.warn("BUTANO SHR: multimorbidity resolved event missing tenant_id, skipping "
+                        + "code={} correlationId={}", code, correlationId);
+                return;
+            }
+
+            retireDetectedIssue(tenantId, patientCpid, code, correlationId);
+
+        } catch (JsonProcessingException e) {
+            log.error("BUTANO SHR: unreadable multimorbidity resolved event: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("BUTANO SHR: failed to retire multimorbidity issue: {}", e.getMessage(), e);
+        }
+    }
+
     private void archiveDetectedIssue(UUID tenantId, String patientCpid, String code,
                                       JsonNode payload, String correlationId) {
         IFhirResourceDao<Patient> patientDao = daoRegistry.getResourceDao(Patient.class);
@@ -1032,6 +1078,36 @@ public class ButanoEventConsumer {
         dao.create(issue, (RequestDetails) null);
         log.info("BUTANO SHR: archived DetectedIssue code={} patient_cpid={} tenant={} correlationId={}",
                 code, patientCpid, tenantId, correlationId);
+    }
+
+    private void retireDetectedIssue(UUID tenantId, String patientCpid, String code,
+                                     String correlationId) {
+        String issueKey = detectedIssueKey(patientCpid, code);
+        IFhirResourceDao<DetectedIssue> dao = daoRegistry.getResourceDao(DetectedIssue.class);
+        Optional<String> existing = findResourceIdByIdentifier(
+                dao, DetectedIssue.SP_IDENTIFIER, MULTIMORBIDITY_IDENTIFIER_SYSTEM, issueKey, tenantId);
+        if (existing.isEmpty()) {
+            // No create-on-resolve: a resolution without a prior filing is not a DetectedIssue, and
+            // inventing one would put a cancelled issue on the record that was never open.
+            log.warn("BUTANO SHR: no DetectedIssue to retire for code={} patient_cpid={} tenant={} "
+                    + "correlationId={}", code, patientCpid, tenantId, correlationId);
+            return;
+        }
+
+        DetectedIssue issue = dao.read(new IdType("DetectedIssue", existing.get()), (RequestDetails) null);
+        applyDetectedIssueRetirement(issue);
+        dao.update(issue, (RequestDetails) null);
+        log.info("BUTANO SHR: retired DetectedIssue code={} patient_cpid={} tenant={} correlationId={}",
+                code, patientCpid, tenantId, correlationId);
+    }
+
+    /**
+     * Moves an open multimorbidity DetectedIssue to {@code cancelled}.
+     *
+     * <p>Package-private and static so the retirement boundary can be asserted without a FHIR DAO.</p>
+     */
+    static void applyDetectedIssueRetirement(DetectedIssue issue) {
+        issue.setStatus(DetectedIssue.DetectedIssueStatus.CANCELLED);
     }
 
     /**

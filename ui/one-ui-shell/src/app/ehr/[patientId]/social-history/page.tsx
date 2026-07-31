@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { ClipboardList, Edit3, Home, Loader2, Save, Target, Users } from "lucide-react";
+import { ClipboardList, Edit3, Home, Loader2, Plus, Save, Target, Users } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
+import {
+  GOVERNED_SOCIAL_HISTORY_CATEGORIES,
+  labelForSocialCategory,
+} from "@/features/medicine/clerking/socialHistoryCategories";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { SocialHistoryEntry } from "@/hooks/queries/useStructuredHistory";
-import { useSocialHistory } from "@/hooks/queries/useStructuredHistory";
+import { useRecordSocialHistory, useSocialHistory } from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+
+const RISK_LEVELS: Array<"LOW" | "MODERATE" | "HIGH"> = ["LOW", "MODERATE", "HIGH"];
 
 const RISK_STYLES: Record<string, string> = {
   Low: "bg-green-100 text-green-700",
@@ -33,17 +39,38 @@ export default function SocialHistoryPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState("");
   const [editDetail, setEditDetail] = useState("");
+  const [editRiskLevel, setEditRiskLevel] = useState<"LOW" | "MODERATE" | "HIGH">("LOW");
+  const [newCategory, setNewCategory] = useState(GOVERNED_SOCIAL_HISTORY_CATEGORIES[0]?.code ?? "TOBACCO");
+  const [customCategory, setCustomCategory] = useState("");
+  const [newStatus, setNewStatus] = useState("");
+  const [newDetail, setNewDetail] = useState("");
+  const [newRiskLevel, setNewRiskLevel] = useState<"LOW" | "MODERATE" | "HIGH" | "">("");
+  const recordSocialHistory = useRecordSocialHistory(patientId);
+
+  const recordedCodes = useMemo(
+    () => new Set(sections.map((s) => s.category?.toUpperCase())),
+    [sections]
+  );
 
   function startEdit(section: SocialHistoryEntry) {
     setEditingId(section.id);
     setEditStatus(section.status);
     setEditDetail(section.detail);
+    setEditRiskLevel((section.riskLevel?.toUpperCase() as "LOW" | "MODERATE" | "HIGH") || "LOW");
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditStatus("");
     setEditDetail("");
+    recordSocialHistory.reset();
+  }
+
+  function saveEdit(section: SocialHistoryEntry) {
+    recordSocialHistory.mutate(
+      { category: section.category, status: editStatus, detail: editDetail, riskLevel: editRiskLevel },
+      { onSuccess: () => cancelEdit() }
+    );
   }
 
   const highRiskCount = sections.filter((section) => section.riskLevel?.toLowerCase() === "high").length;
@@ -133,6 +160,132 @@ export default function SocialHistoryPage() {
               </div>
             </div>
 
+            <div className="rounded-lg border border-border bg-card p-4 space-y-3" data-testid="social-history-add">
+              <p className="text-sm font-medium text-foreground">Record a social-history category</p>
+              <p className="text-xs text-muted-foreground">
+                Prefer governed categories (occupation, exposures, tobacco/alcohol/substance, diet/activity/sleep,
+                support/housing/food). Unknown categories may still be appended. Clinician-documented lifestyle is
+                not Simba wellness truth.
+              </p>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label htmlFor="new-social-category" className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Category
+                  </label>
+                  <select
+                    id="new-social-category"
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                  >
+                    {GOVERNED_SOCIAL_HISTORY_CATEGORIES.map((c) => (
+                      <option key={c.code} value={c.code} disabled={recordedCodes.has(c.code)}>
+                        {c.label}
+                        {recordedCodes.has(c.code) ? " (already recorded)" : ""}
+                      </option>
+                    ))}
+                    <option value="__OTHER__">Other (custom category)</option>
+                  </select>
+                </div>
+                {newCategory === "__OTHER__" && (
+                  <div>
+                    <label htmlFor="custom-social-category" className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Custom category code
+                    </label>
+                    <input
+                      id="custom-social-category"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      placeholder="e.g. TRANSPORT_BARRIER"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                    />
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="new-social-status" className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Status / finding
+                  </label>
+                  <input
+                    id="new-social-status"
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="new-social-risk" className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Risk level (optional — leave blank if not assessed)
+                  </label>
+                  <select
+                    id="new-social-risk"
+                    value={newRiskLevel}
+                    onChange={(e) => setNewRiskLevel(e.target.value as "LOW" | "MODERATE" | "HIGH" | "")}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                  >
+                    <option value="">Not assessed</option>
+                    {RISK_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label htmlFor="new-social-detail" className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Detail
+                  </label>
+                  <textarea
+                    id="new-social-detail"
+                    value={newDetail}
+                    onChange={(e) => setNewDetail(e.target.value)}
+                    rows={2}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+              {recordSocialHistory.isError && (
+                <p className="text-xs text-danger">
+                  This entry was not saved. Nothing on the patient&rsquo;s record changed — try again.
+                </p>
+              )}
+              <button
+                type="button"
+                disabled={
+                  recordSocialHistory.isPending ||
+                  !newStatus.trim() ||
+                  (newCategory === "__OTHER__" && !customCategory.trim())
+                }
+                onClick={() => {
+                  const category =
+                    newCategory === "__OTHER__" ? customCategory.trim().toUpperCase() : newCategory;
+                  recordSocialHistory.mutate(
+                    {
+                      category,
+                      status: newStatus.trim(),
+                      detail: newDetail.trim(),
+                      riskLevel: newRiskLevel || undefined,
+                    },
+                    {
+                      onSuccess: () => {
+                        setNewStatus("");
+                        setNewDetail("");
+                        setNewRiskLevel("");
+                        setCustomCategory("");
+                      },
+                    }
+                  );
+                }}
+                className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+              >
+                {recordSocialHistory.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Plus className="h-3 w-3" />
+                )}
+                Add social history
+              </button>
+            </div>
+
             {sections.length === 0 ? (
               <div className="rounded-lg border border-border bg-card p-12 text-center">
                 <Home className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
@@ -151,7 +304,9 @@ export default function SocialHistoryPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="mb-1 flex items-center justify-between">
-                            <h3 className="text-sm font-medium text-foreground">{section.category}</h3>
+                            <h3 className="text-sm font-medium text-foreground">
+                              {labelForSocialCategory(section.category)}
+                            </h3>
                             <div className="flex items-center gap-2">
                               <span
                                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -161,7 +316,12 @@ export default function SocialHistoryPage() {
                                 {section.riskLevel} Risk
                               </span>
                               {!isEditing && (
-                                <button onClick={() => startEdit(section)} className="p-1 text-muted-foreground transition-colors hover:text-primary">
+                                <button
+                                  type="button"
+                                  aria-label={`Edit ${section.category}`}
+                                  onClick={() => startEdit(section)}
+                                  className="p-1 text-muted-foreground transition-colors hover:text-primary"
+                                >
                                   <Edit3 className="h-3.5 w-3.5" />
                                 </button>
                               )}
@@ -171,16 +331,42 @@ export default function SocialHistoryPage() {
                           {isEditing ? (
                             <div className="mt-2 space-y-3">
                               <div>
-                                <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
-                                <input type="text" value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                                <label htmlFor={`edit-status-${section.id}`} className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
+                                <input id={`edit-status-${section.id}`} type="text" value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                               </div>
                               <div>
-                                <label className="mb-1 block text-xs font-medium text-muted-foreground">Details</label>
-                                <textarea value={editDetail} onChange={(e) => setEditDetail(e.target.value)} rows={3} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                                <label htmlFor={`edit-detail-${section.id}`} className="mb-1 block text-xs font-medium text-muted-foreground">Details</label>
+                                <textarea id={`edit-detail-${section.id}`} value={editDetail} onChange={(e) => setEditDetail(e.target.value)} rows={3} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                               </div>
+                              <div>
+                                <label htmlFor={`edit-risk-${section.id}`} className="mb-1 block text-xs font-medium text-muted-foreground">Risk Level</label>
+                                <select
+                                  id={`edit-risk-${section.id}`}
+                                  value={editRiskLevel}
+                                  onChange={(e) => setEditRiskLevel(e.target.value as "LOW" | "MODERATE" | "HIGH")}
+                                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                >
+                                  {RISK_LEVELS.map((level) => (<option key={level} value={level}>{level}</option>))}
+                                </select>
+                              </div>
+                              {recordSocialHistory.isError && (
+                                <p className="text-xs text-danger">
+                                  This entry was not saved. Nothing on the patient&rsquo;s record changed — try again.
+                                </p>
+                              )}
                               <div className="flex items-center gap-2">
-                                <button className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover">
-                                  <Save className="h-3 w-3" /> Save
+                                <button
+                                  type="button"
+                                  onClick={() => saveEdit(section)}
+                                  disabled={recordSocialHistory.isPending}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+                                >
+                                  {recordSocialHistory.isPending ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Save className="h-3 w-3" />
+                                  )}
+                                  Save
                                 </button>
                                 <button onClick={cancelEdit} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background">Cancel</button>
                               </div>

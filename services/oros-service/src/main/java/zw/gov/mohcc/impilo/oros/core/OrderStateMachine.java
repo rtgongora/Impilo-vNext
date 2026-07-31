@@ -142,6 +142,7 @@ public class OrderStateMachine {
         order.setSourceRef(sourceRef);
 
         guardNoDuplicateTeleconsultOrder(ctx.tenantId(), order);
+        guardNoDuplicatePatientOrder(ctx.tenantId(), order);
 
         order = orderRepository.save(order);
 
@@ -197,6 +198,7 @@ public class OrderStateMachine {
         order.setSafetyJson(safetyJson);
 
         guardNoDuplicateTeleconsultOrder(ctx.tenantId(), order);
+        guardNoDuplicatePatientOrder(ctx.tenantId(), order);
 
         order = orderRepository.save(order);
         persistItems(orderId, items);
@@ -232,6 +234,96 @@ public class OrderStateMachine {
     private static final Set<OrderStatus> TERMINAL_STATUSES = EnumSet.of(
             OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.FAILED,
             OrderStatus.REVOKED, OrderStatus.REPLACED, OrderStatus.EXPIRED, OrderStatus.ENTERED_IN_ERROR);
+
+    /**
+     * Repeat intervals (days) from clinical-knowledge {@code multimorbidity-rules.json}
+     * {@code repeatIntervals} — embedded statically so OROS does not depend on CKP at runtime.
+     */
+    private static final Map<String, Integer> INVESTIGATION_REPEAT_DAYS = Map.of(
+            "HBA1C", 84,
+            "LIPID_PROFILE", 180,
+            "CREATININE", 7,
+            "FULL_BLOOD_COUNT", 7,
+            "TSH", 42,
+            "VIRAL_LOAD", 84,
+            "CHEST_XRAY", 30);
+
+    /** Default repeat window for unmatched LAB/IMAGING coded orders. */
+    private static final int DEFAULT_LAB_IMAGING_REPEAT_DAYS = 7;
+
+    /**
+     * Patient-level duplicate-order guard (Wave 5.1). When both {@code patientCpid} and
+     * {@code ziboOrderCode} are present on a LAB or IMAGING order, reject if a non-terminal
+     * order for the same tenant + patient + code was placed within the investigation's
+     * repeat interval (from multimorbidity rules, with ZIBO-code aliases).
+     */
+    private void guardNoDuplicatePatientOrder(UUID tenantId, OrderEntity order) {
+        if (order.getPatientCpid() == null || order.getZiboOrderCode() == null) {
+            return;
+        }
+        OrderType type = order.getOrderType();
+        if (type != OrderType.LAB && type != OrderType.IMAGING) {
+            return;
+        }
+
+        int repeatDays = resolveRepeatIntervalDays(order.getZiboOrderCode());
+        OffsetDateTime referenceTime = order.getPlacedAt() != null
+                ? order.getPlacedAt()
+                : OffsetDateTime.now();
+        OffsetDateTime cutoff = referenceTime.minusDays(repeatDays);
+
+        List<OrderEntity> recent = orderRepository
+                .findByTenantIdAndPatientCpidAndZiboOrderCodeAndStatusNotInAndPlacedAtAfter(
+                        tenantId, order.getPatientCpid(), order.getZiboOrderCode(),
+                        TERMINAL_STATUSES, cutoff);
+        if (!recent.isEmpty()) {
+            throw new OrosDomainException("DUPLICATE_PATIENT_ORDER", 409,
+                    "A recent order for this patient and item already exists "
+                            + "(patient=" + order.getPatientCpid()
+                            + ", code=" + order.getZiboOrderCode()
+                            + ", repeatIntervalDays=" + repeatDays + ").");
+        }
+    }
+
+    /**
+     * Maps a ZIBO-like order code to a multimorbidity investigation key, then returns the
+     * configured minimum repeat days (default {@link #DEFAULT_LAB_IMAGING_REPEAT_DAYS}).
+     */
+    static int resolveRepeatIntervalDays(String ziboOrderCode) {
+        String upper = ziboOrderCode.toUpperCase(Locale.ROOT);
+        String investigationKey = resolveInvestigationKey(upper);
+        if (investigationKey != null) {
+            return INVESTIGATION_REPEAT_DAYS.getOrDefault(
+                    investigationKey, DEFAULT_LAB_IMAGING_REPEAT_DAYS);
+        }
+        return DEFAULT_LAB_IMAGING_REPEAT_DAYS;
+    }
+
+    /** Aliases common ZIBO-like codes to multimorbidity {@code repeatIntervals} keys. */
+    private static String resolveInvestigationKey(String upperCode) {
+        if (upperCode.contains("HBA1C") || upperCode.contains("A1C")) {
+            return "HBA1C";
+        }
+        if (upperCode.contains("CREATININE")) {
+            return "CREATININE";
+        }
+        if (upperCode.contains("CBC") || upperCode.contains("FBC") || upperCode.contains("FULL_BLOOD")) {
+            return "FULL_BLOOD_COUNT";
+        }
+        if (upperCode.contains("LIPID")) {
+            return "LIPID_PROFILE";
+        }
+        if (upperCode.contains("TSH")) {
+            return "TSH";
+        }
+        if (upperCode.contains("VIRAL_LOAD")) {
+            return "VIRAL_LOAD";
+        }
+        if (upperCode.contains("CHEST_XRAY") || upperCode.contains("CXR")) {
+            return "CHEST_XRAY";
+        }
+        return null;
+    }
 
     /**
      * Update an existing {@code DRAFT} order. Replaces its items wholesale.

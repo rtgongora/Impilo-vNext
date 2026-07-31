@@ -1291,6 +1291,42 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    // history-writes: pct's StructuredHistoryController has always had these five POST routes;
+    // the BFF simply never called them, so every "Save"/"Add" button above them had nowhere to send
+    // its request. Each is append-only on pct's side — there is no PUT/PATCH, so "editing" an entry
+    // records a new one rather than mutating the old row (see FormResolverService's own read-latest
+    // pattern for the equivalent convention on the read side).
+
+    public JsonNode recordSocialHistory(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/social-history";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordFamilyMember(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/family-history";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordFunctionalAssessment(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/functional-assessments";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordProcedure(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/procedures";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordAdvanceDirective(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ehr/advance-directives";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Care/Emergency/Inpatient (strangler migration) ──────────
 
     public JsonNode listCarePlans(String patientId) {
@@ -1400,6 +1436,68 @@ public class PctServiceClient {
     public JsonNode closePartographSession(String sessionId, Map<String, Object> body) {
         String url = baseUrl + "/v1/maternity/partograph/sessions/" + sessionId + "/close";
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listVisitAttestations(String subjectCpid, String encounterId) {
+        String url = baseUrl + "/v1/clerking/visit-attestations?subject_cpid=" + subjectCpid
+                + "&encounter_id=" + encounterId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordVisitAttestation(Map<String, Object> body) {
+        String url = baseUrl + "/v1/clerking/visit-attestations";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getAdultJourneyPosition(String subjectCpid, String journeyId, String encounterId) {
+        StringBuilder url = new StringBuilder(baseUrl + "/v1/medicine/journey-position?subject_cpid=" + subjectCpid);
+        if (journeyId != null && !journeyId.isBlank()) {
+            url.append("&journey_id=").append(journeyId);
+        }
+        if (encounterId != null && !encounterId.isBlank()) {
+            url.append("&encounter_id=").append(encounterId);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordAdultJourneyPosition(Map<String, Object> body) {
+        String url = baseUrl + "/v1/medicine/journey-position";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listClerking(String resource, String subjectCpid) {
+        String url = baseUrl + "/v1/clerking/" + resource + "?subject_cpid=" + subjectCpid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordClerking(String resource, Map<String, Object> body) {
+        String url = baseUrl + "/v1/clerking/" + resource;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listMedicalEpisodes(String subjectCpid, boolean openOnly) {
+        String url = baseUrl + "/v1/medical-episodes?subject_cpid=" + subjectCpid
+                + "&open_only=" + openOnly;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listMedicationReconciliations(String subjectCpid) {
+        String url = baseUrl + "/v1/medication-reconciliations?subject_cpid=" + subjectCpid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listMedicationReconciliationItems(UUID reconciliationId) {
+        String url = baseUrl + "/v1/medication-reconciliations/" + reconciliationId + "/items";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
 
@@ -1750,6 +1848,35 @@ public class PctServiceClient {
 
     public JsonNode recordMdtDecision(Object body) {
         return extractData(restTemplate.postForEntity(baseUrl + "/v1/consultations/mdt", body, JsonNode.class));
+    }
+
+    // ── Care transfer (brief.md §14 / V116) ─────────────────────
+    // Ownership moves only on accept with accepting_ref. Forward ownership_note unchanged.
+
+    public JsonNode listCareTransfers(String subjectCpid) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/care-transfers?subject_cpid="
+                + java.net.URLEncoder.encode(subjectCpid, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode careTransferInbox(String service) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/care-transfers/inbox?service="
+                + java.net.URLEncoder.encode(service, java.nio.charset.StandardCharsets.UTF_8),
+                JsonNode.class));
+    }
+
+    public JsonNode requestCareTransfer(Object body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/care-transfers", body, JsonNode.class));
+    }
+
+    public JsonNode acceptCareTransfer(String transferId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/care-transfers/" + transferId + "/accept", body, JsonNode.class));
+    }
+
+    public JsonNode declineCareTransfer(String transferId, Object body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/care-transfers/" + transferId + "/decline", body, JsonNode.class));
     }
 
     public JsonNode getProgrammeEnrolment(String enrolmentId) {

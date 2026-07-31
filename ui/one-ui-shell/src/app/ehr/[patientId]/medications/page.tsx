@@ -18,6 +18,7 @@ import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { RenalDosingPanel } from "@/features/medicine/pharm/RenalDosingPanel";
 
 interface PrescriptionResource {
   id: string;
@@ -194,6 +195,8 @@ export default function MedicationsPage() {
                 },
               ]}
             />
+
+            <RenalDosingPanel patientId={patientId} />
 
             {/* Header */}
             <div className="flex items-center justify-between">

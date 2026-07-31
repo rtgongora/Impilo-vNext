@@ -46,6 +46,7 @@ export interface MdtDecision {
   treatment_intent: string | null;
   next_action: string | null;
   responsible_service: string | null;
+  case_item_id?: string | null;
 }
 
 export function useConsultations(patientId: string) {
@@ -102,5 +103,122 @@ export function useAnswerConsultation(patientId: string) {
         body,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["consultations", { patientId }] }),
+  });
+}
+
+/** Meeting types pct accepts for an MDT decision (V114). */
+export const MDT_MEETING_TYPES = [
+  "ONCOLOGY",
+  "CANCER_SITE_SPECIFIC",
+  "COMPLEX_MEDICINE",
+  "MORBIDITY_AND_MORTALITY",
+  "PALLIATIVE",
+  "TRANSPLANT",
+  "INFECTION",
+  "OTHER",
+] as const;
+
+export type MdtMeetingType = (typeof MDT_MEETING_TYPES)[number];
+
+export const MDT_TREATMENT_INTENTS = [
+  "CURATIVE",
+  "LIFE_PROLONGING",
+  "SYMPTOM_DIRECTED",
+  "DIAGNOSTIC",
+  "NOT_SET",
+] as const;
+
+export interface RecordMdtDecision {
+  subject_cpid: string;
+  journey_id?: string;
+  encounter_id?: string;
+  episode_id?: string;
+  meeting_type: MdtMeetingType | string;
+  participants: string;
+  chaired_by: string;
+  decision: string;
+  met_on?: string;
+  treatment_intent?: string | null;
+  rationale?: string;
+  next_action?: string;
+  responsible_service?: string;
+  problem_ids?: string[];
+}
+
+export function useRecordMdtDecision(patientId: string) {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<MdtDecision>, unknown, RecordMdtDecision>({
+    mutationFn: (body) =>
+      apiClient.post<ApiResponse<MdtDecision>>("/internal/v1/consultations/mdt", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["mdt-decisions", { patientId }] }),
+  });
+}
+
+/** Transfer of care (V116). Ownership moves only on accept with accepting_ref. */
+export type CareTransferStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "WITHDRAWN";
+
+export interface CareTransfer {
+  transfer_id: string;
+  subject_cpid: string;
+  consultation_id: string | null;
+  from_service: string;
+  to_service: string;
+  reason: string;
+  status: CareTransferStatus;
+  accepting_ref: string | null;
+  ownership_note: string;
+  requested_at: string;
+}
+
+export function useCareTransfers(patientId: string) {
+  return useQuery<ApiResponse<CareTransfer[]>>({
+    queryKey: ["care-transfers", { patientId }],
+    queryFn: () =>
+      apiClient.get<ApiResponse<CareTransfer[]>>(
+        `/internal/v1/care-transfers?patient_id=${encodeURIComponent(patientId)}`,
+      ),
+    enabled: !!patientId,
+  });
+}
+
+export function useRequestCareTransfer(patientId: string) {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<CareTransfer>,
+    unknown,
+    {
+      subject_cpid: string;
+      journey_id?: string;
+      consultation_id?: string;
+      from_service: string;
+      to_service: string;
+      reason: string;
+    }
+  >({
+    mutationFn: (body) =>
+      apiClient.post<ApiResponse<CareTransfer>>("/internal/v1/care-transfers", body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["care-transfers", { patientId }] });
+      qc.invalidateQueries({ queryKey: ["consultations", { patientId }] });
+    },
+  });
+}
+
+export function useAcceptCareTransfer(patientId: string) {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<CareTransfer>,
+    unknown,
+    { transferId: string; accepting_ref: string }
+  >({
+    mutationFn: ({ transferId, accepting_ref }) =>
+      apiClient.post<ApiResponse<CareTransfer>>(
+        `/internal/v1/care-transfers/${transferId}/accept`,
+        { accepting_ref },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["care-transfers", { patientId }] });
+      qc.invalidateQueries({ queryKey: ["consultations", { patientId }] });
+    },
   });
 }

@@ -146,4 +146,96 @@ describe("ExaminationShell — nothing defaults to normal", () => {
 
     expect(screen.getByTestId("examination-save-failed")).toHaveTextContent(/not.*saved/i);
   });
+
+  it("an examined region with a V113 graphic shows the diagram", () => {
+    // The eleven graphics were modelled but never drawn — this is the draw.
+    render(<ExaminationShell patientId="p1" />);
+    expect(screen.queryByTestId("graphic-panel-ABDOMEN")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId("state-ABDOMEN"), { target: { value: "NORMAL" } });
+
+    expect(screen.getByTestId("graphic-panel-ABDOMEN")).toBeInTheDocument();
+    expect(screen.getByTestId("body-map-ABDOMEN")).toBeInTheDocument();
+  });
+
+  it("a diagram mark is submitted as graphic/site/laterality, not dropped", () => {
+    // The previous submit path kept only region/state/detail; V113 columns never left the UI.
+    const mutate = vi.fn();
+    state.record = { ...state.record, mutate };
+    render(<ExaminationShell patientId="p1" />);
+
+    fireEvent.change(screen.getByTestId("state-ABDOMEN"), { target: { value: "ABNORMAL" } });
+    fireEvent.change(screen.getByTestId("detail-ABDOMEN"), { target: { value: "Tender RIF" } });
+    fireEvent.click(screen.getByTestId("body-map-region-right-iliac"));
+    fireEvent.click(screen.getByTestId("save-examination"));
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        findings: [
+          expect.objectContaining({
+            region: "ABDOMEN",
+            state: "ABNORMAL",
+            detail: "Tender RIF",
+            graphic: "ABDOMINAL_REGIONS",
+            site: "right-iliac",
+            laterality: "RIGHT",
+          }),
+        ],
+      }),
+    );
+  });
+
+  it("an examined region without a pin does not invent a graphic", () => {
+    const mutate = vi.fn();
+    state.record = { ...state.record, mutate };
+    render(<ExaminationShell patientId="p1" />);
+
+    fireEvent.change(screen.getByTestId("state-ABDOMEN"), { target: { value: "NORMAL" } });
+    fireEvent.click(screen.getByTestId("save-examination"));
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        findings: [{ region: "ABDOMEN", state: "NORMAL", detail: undefined }],
+      }),
+    );
+  });
+
+  it("a stored graphic is redrawn read-only on the history detail", () => {
+    state.detail = {
+      data: {
+        data: {
+          examination_id: "e1",
+          subject_cpid: "p1",
+          examined_at: "2026-07-28",
+          examined_by: "clin-1",
+          context_note: null,
+          findings: [
+            {
+              region: "ABDOMEN",
+              state: "ABNORMAL",
+              was_examined: true,
+              detail: "Tender",
+              finding_code: null,
+              graphic: "ABDOMINAL_REGIONS",
+              site: "epigastrium",
+              laterality: "MIDLINE",
+            },
+          ],
+          coverage: {
+            examined: ["ABDOMEN"],
+            recorded_not_examined: [],
+            never_considered: ["NEUROLOGY"],
+            note: "1 of 22 regions were examined.",
+          },
+        },
+      },
+      isError: false,
+      isLoading: false,
+    };
+    render(<ExaminationShell patientId="p1" />);
+
+    expect(screen.getByTestId("finding-graphic-ABDOMEN")).toHaveTextContent(/Abdominal regions/);
+    expect(screen.getByTestId("body-map-read-ABDOMEN")).toBeInTheDocument();
+    expect(screen.getByTestId("body-map-region-epigastrium").getAttribute("data-marked")).toBe("true");
+  });
 });

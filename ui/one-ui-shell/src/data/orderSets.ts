@@ -1,15 +1,17 @@
 /**
- * Order Sets — pre-configured bundles of orders for common clinical scenarios.
+ * Ambulatory order sets — OROS SoR (V018) + BFF `/internal/v1/order-sets` batch place.
+ * EncounterCart / OrderSetPicker may mount when this flag is true.
+ * ED emergency order sets remain PCT/CKP scoped — a different surface.
  *
- * Health OS doctrine: "faster to edit than to type one thing after another."
+ * @see docs/clinical/adult-medicine-domain-pack/completion-register.md §11
+ */
+
+export const AMBULATORY_ORDER_SETS_BUILT = true as const;
+
+/**
+ * Design-sketch catalogue only — not served to clinicians as a live feature.
  *
- * Each order set contains:
- * - Investigations to order
- * - Medications to prescribe
- * - Nursing observations to initiate
- * - Diet/activity orders
- *
- * Users select an order set → review → edit → submit as a batch.
+ * Each sketch set may contain investigations, medications, nursing observations, diet/activity.
  */
 
 export interface OrderSetItem {

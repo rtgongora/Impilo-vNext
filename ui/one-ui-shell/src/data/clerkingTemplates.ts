@@ -1,4 +1,8 @@
 // Comprehensive Clerking Templates by Specialty and Cadre Level
+//
+// Legacy design templates only. ClerkingFormEditor / ClerkingTemplateSelector are not mounted on
+// any shipped route (AssessmentSection is unused). Production clerking lives at
+// /ehr/[patientId]/history via ClerkingContinuityShell and NEW_PCT V117 — not these static forms.
 
 export type CadreLevel = 'student' | 'intern' | 'registrar' | 'consultant';
 export type Specialty =

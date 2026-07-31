@@ -164,8 +164,13 @@ public class MultimorbidityEngine {
         List<String> entries = new ArrayList<>();
         if (c.egfr() == null) {
             entries.add("Renal function: not available. Renal dose adjustments cannot be checked.");
-        } else {
+        } else if (c.egfrSource() == null || c.egfrSource().isBlank()) {
             entries.add("eGFR " + c.egfr() + " mL/min/1.73m².");
+        } else {
+            // Where the figure was worked out here rather than reported by a laboratory, say so on
+            // the same line as the number. A derived rate is a legitimate basis for dose adjustment
+            // and a poor basis for a diagnosis, and the reader cannot tell the two apart afterwards.
+            entries.add("eGFR " + c.egfr() + " mL/min/1.73m² — " + c.egfrSource() + ".");
         }
         if (c.hepaticImpairment() == null || c.hepaticImpairment().isBlank()) {
             // Honest about a known estate gap rather than rendering a reassuring blank: no governed

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import SocialHistoryPage from "./page";
 
@@ -8,6 +8,9 @@ vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children:
 vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { children: ReactNode; title: string }) => <div><h1>{title}</h1>{children}</div> }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central" } }) }));
 vi.mock("@/hooks/queries/useEncounters", () => ({ useEncounters: () => ({ data: { data: [{ id: "enc-1", attributes: { status: "IN_PROGRESS", encounterType: "OUTPATIENT", startedAt: "2026-04-08T09:00:00.000Z" } }] } }) }));
+
+const { recordSocialHistoryMutate } = vi.hoisted(() => ({ recordSocialHistoryMutate: vi.fn() }));
+
 vi.mock("@/hooks/queries/useStructuredHistory", () => ({
   __esModule: true,
   useSocialHistory: () => ({
@@ -28,6 +31,12 @@ vi.mock("@/hooks/queries/useStructuredHistory", () => ({
     isError: false,
     refetch: vi.fn(),
   }),
+  useRecordSocialHistory: () => ({
+    mutate: recordSocialHistoryMutate,
+    reset: vi.fn(),
+    isPending: false,
+    isError: false,
+  }),
 }));
 
 describe("SocialHistoryPage", () => {
@@ -39,5 +48,18 @@ describe("SocialHistoryPage", () => {
     expect(screen.getByText("Moderate risk")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Care Plans" })).toHaveAttribute("href", "/ehr/patient-1/care-plans");
     expect(screen.getByRole("link", { name: "Goals" })).toHaveAttribute("href", "/ehr/patient-1/goals");
+  });
+
+  it("wires the Save button to the record mutation with the edited fields", () => {
+    render(<SocialHistoryPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit Smoking" }));
+    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "Current Smoker" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(recordSocialHistoryMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ category: "Smoking", status: "Current Smoker", riskLevel: "MODERATE" }),
+      expect.anything()
+    );
   });
 });

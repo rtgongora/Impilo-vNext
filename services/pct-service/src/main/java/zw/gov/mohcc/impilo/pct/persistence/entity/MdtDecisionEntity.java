@@ -69,6 +69,10 @@ public class MdtDecisionEntity {
     @Column(name = "responsible_service")
     private String responsibleService;
 
+    /** Nullable link to pct_mdt_case_items when a telemedicine board case produced this decision. */
+    @Column(name = "case_item_id")
+    private UUID caseItemId;
+
     @Column(name = "recorded_by", nullable = false)
     private String recordedBy;
 
@@ -119,6 +123,8 @@ public class MdtDecisionEntity {
     public void setNextAction(String v) { this.nextAction = v; }
     public String getResponsibleService() { return responsibleService; }
     public void setResponsibleService(String v) { this.responsibleService = v; }
+    public UUID getCaseItemId() { return caseItemId; }
+    public void setCaseItemId(UUID v) { this.caseItemId = v; }
     public String getRecordedBy() { return recordedBy; }
     public void setRecordedBy(String v) { this.recordedBy = v; }
 }

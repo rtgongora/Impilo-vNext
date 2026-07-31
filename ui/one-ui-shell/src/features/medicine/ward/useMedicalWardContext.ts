@@ -5,6 +5,10 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useActiveAdmission, useWardRounds } from "@/hooks/queries/useInpatient";
 import { useConditions, type ConditionResource } from "@/hooks/queries/useConditions";
 import { useProgrammeEnrolments, type ProgrammeEnrolment } from "@/hooks/queries/usePrograms";
+import { useAllergies } from "@/hooks/queries/useAllergies";
+import { usePrescriptions, type PrescriptionResource } from "@/hooks/queries/usePharmacy";
+import { useConsultations, type Consultation } from "@/hooks/queries/useConsultations";
+import { useFluidBalance, type FluidBalanceRow, type FluidBalanceSummary } from "@/hooks/queries/useFluidBalance";
 import { groupProblems, openEnrolments, type ProblemGroups } from "../workspace/medicine-summary";
 
 /**
@@ -14,13 +18,18 @@ import { groupProblems, openEnrolments, type ProblemGroups } from "../workspace/
  * third: **PCT owns the admission decision, inpatient-service owns the physical census** (the split
  * is written into pct V018 and inpatient V013/V014). This reads both and joins nothing.
  *
- * The gap it closes: the existing inpatient round surfaces are ward-centred and show free-text
- * assessment/plan with **no sight of the problem list**. A medical round is a review of the
- * patient's problems, so the problems belong on the same screen as the entry being written.
+ * Wave 5.3 extends the compose to brief.md §13's eighteen ward concerns. Items without an existing
+ * read hook are left honestly uncomposed — never shown as empty.
  */
 
 /** Distinguishes "this patient is not admitted" from "we could not read whether they are". */
 export type AdmissionState = "ADMITTED" | "NOT_ADMITTED" | "UNKNOWN";
+
+export interface ActiveProblemSeverity {
+  id: string;
+  conditionName: string;
+  severity: string;
+}
 
 export interface MedicalWardContext {
   patientId: string;
@@ -30,7 +39,17 @@ export interface MedicalWardContext {
   admission: Record<string, unknown> | null;
   rounds: unknown[];
   problems: ProblemGroups;
+  /** Active problems with severity from the condition record (same SoR as the problem list). */
+  activeSeverity: ActiveProblemSeverity[];
   openProgrammes: ProgrammeEnrolment[];
+  allergyLabels: string[];
+  prescriptions: PrescriptionResource[];
+  consultations: Consultation[];
+  fluidBalance: {
+    entries: FluidBalanceRow[];
+    summary: FluidBalanceSummary | null;
+    date: string;
+  };
   unavailable: string[];
   isLoading: boolean;
 }
@@ -41,13 +60,31 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function activeSeverityFromConditions(conditions: ConditionResource[]): ActiveProblemSeverity[] {
+  const { active } = groupProblems(conditions);
+  return active.map((c) => ({
+    id: c.id,
+    conditionName: c.attributes.conditionName,
+    severity: c.attributes.severity || "—",
+  }));
+}
+
 export function useMedicalWardContext(patientId: string): MedicalWardContext {
   const facility = useFacilityStore((s) => s.facility);
   const facilityId = facility?.id ?? null;
+  const fluidDate = todayIsoDate();
 
   const admission = useActiveAdmission(patientId, facilityId ?? undefined);
   const conditions = useConditions(patientId);
   const programmes = useProgrammeEnrolments(patientId);
+  const allergies = useAllergies(patientId);
+  const prescriptions = usePrescriptions({ patientId });
+  const consultations = useConsultations(patientId);
+  const fluidBalance = useFluidBalance(patientId, fluidDate);
 
   const admissionRecord = asRecord(admission.data?.data);
   const admissionRef =
@@ -63,10 +100,11 @@ export function useMedicalWardContext(patientId: string): MedicalWardContext {
     if (conditions.isError) unavailable.push("problem list");
     if (programmes.isError) unavailable.push("care programmes");
     if (rounds.isError) unavailable.push("ward rounds");
+    if (allergies.isError) unavailable.push("allergies");
+    if (prescriptions.isError) unavailable.push("current medicines");
+    if (consultations.isError) unavailable.push("consultations");
+    if (fluidBalance.isError) unavailable.push("fluid balance");
 
-    // Three states, not two. A failed admission read must never render as "not admitted" — that
-    // would send a doctor away from a patient who is in a bed. And with no facility in context we
-    // have not asked the question at all, which is also not an answer.
     let admissionState: AdmissionState;
     if (admission.isError || !facilityId) {
       admissionState = "UNKNOWN";
@@ -79,6 +117,18 @@ export function useMedicalWardContext(patientId: string): MedicalWardContext {
     }
 
     const roundList = Array.isArray(rounds.data?.data) ? (rounds.data?.data as unknown[]) : [];
+    const conditionList = (conditions.data?.data ?? []) as ConditionResource[];
+
+    const allergyLabels = (allergies.data?.data ?? [])
+      .map((entry) => {
+        const attrs = (entry as { attributes?: Record<string, unknown> }).attributes;
+        const allergen = attrs?.allergen ?? attrs?.substance;
+        const severity = attrs?.severity;
+        const label = typeof allergen === "string" ? allergen : null;
+        if (!label) return null;
+        return typeof severity === "string" && severity ? `${label} (${severity})` : label;
+      })
+      .filter((label): label is string => Boolean(label));
 
     return {
       patientId,
@@ -87,16 +137,54 @@ export function useMedicalWardContext(patientId: string): MedicalWardContext {
       admissionRef,
       admission: admissionRecord,
       rounds: roundList,
-      problems: groupProblems((conditions.data?.data ?? []) as ConditionResource[]),
+      problems: groupProblems(conditionList),
+      activeSeverity: conditions.isError ? [] : activeSeverityFromConditions(conditionList),
       openProgrammes: openEnrolments(programmes.data?.data ?? []),
+      allergyLabels,
+      prescriptions: (prescriptions.data?.data ?? []) as PrescriptionResource[],
+      consultations: (consultations.data?.data ?? []) as Consultation[],
+      fluidBalance: {
+        entries: fluidBalance.data?.data ?? [],
+        summary: fluidBalance.data?.summary ?? null,
+        date: fluidDate,
+      },
       unavailable,
-      isLoading: admission.isLoading || conditions.isLoading || programmes.isLoading,
+      isLoading:
+        admission.isLoading ||
+        conditions.isLoading ||
+        programmes.isLoading ||
+        allergies.isLoading ||
+        prescriptions.isLoading ||
+        consultations.isLoading ||
+        fluidBalance.isLoading,
     };
   }, [
-    patientId, facilityId, admissionRecord, admissionRef,
-    admission.isError, admission.isLoading,
-    conditions.data, conditions.isError, conditions.isLoading,
-    programmes.data, programmes.isError, programmes.isLoading,
-    rounds.data, rounds.isError,
+    patientId,
+    facilityId,
+    fluidDate,
+    admissionRecord,
+    admissionRef,
+    admission.isError,
+    admission.isLoading,
+    conditions.data,
+    conditions.isError,
+    conditions.isLoading,
+    programmes.data,
+    programmes.isError,
+    programmes.isLoading,
+    rounds.data,
+    rounds.isError,
+    allergies.data,
+    allergies.isError,
+    allergies.isLoading,
+    prescriptions.data,
+    prescriptions.isError,
+    prescriptions.isLoading,
+    consultations.data,
+    consultations.isError,
+    consultations.isLoading,
+    fluidBalance.data,
+    fluidBalance.isError,
+    fluidBalance.isLoading,
   ]);
 }

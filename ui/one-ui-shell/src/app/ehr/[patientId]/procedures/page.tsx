@@ -9,7 +9,10 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { PatientProcedure } from "@/hooks/queries/useStructuredHistory";
-import { usePatientProcedures } from "@/hooks/queries/useStructuredHistory";
+import {
+  usePatientProcedures,
+  useRecordPastProcedure,
+} from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useCreateProcedureEpisode } from "@/hooks/queries/useProcedureEpisode";
 
@@ -31,6 +34,7 @@ export default function ProceduresPage() {
   const createEpisode = useCreateProcedureEpisode(patientId);
 
   const { data, isLoading, isError, refetch } = usePatientProcedures(patientId);
+  const recordPast = useRecordPastProcedure(patientId);
   const procedures: PatientProcedure[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
@@ -44,6 +48,40 @@ export default function ProceduresPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [showPast, setShowPast] = useState(false);
+  const [pastName, setPastName] = useState("");
+  const [pastType, setPastType] = useState("");
+  const [pastDate, setPastDate] = useState("");
+  const [pastPrecision, setPastPrecision] = useState<"EXACT" | "MONTH" | "YEAR" | "APPROXIMATE">(
+    "APPROXIMATE",
+  );
+  const [pastFacility, setPastFacility] = useState("");
+  const [pastNotes, setPastNotes] = useState("");
+
+  function savePastProcedure() {
+    if (pastName.trim() === "") return;
+    recordPast.mutate(
+      {
+        name: pastName.trim(),
+        procedureType: pastType.trim() || undefined,
+        procedureDate: pastDate || undefined,
+        datePrecision: pastPrecision,
+        facility: pastFacility.trim() || facility?.name || undefined,
+        notes: pastNotes.trim() || undefined,
+        status: "COMPLETED",
+      },
+      {
+        onSuccess: () => {
+          setShowPast(false);
+          setPastName("");
+          setPastType("");
+          setPastDate("");
+          setPastFacility("");
+          setPastNotes("");
+        },
+      },
+    );
+  }
 
   const filtered = procedures.filter((procedure) => {
     if (typeFilter !== "All" && procedure.type !== typeFilter) return false;
@@ -147,6 +185,14 @@ export default function ProceduresPage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setShowPast((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
+                  data-testid="past-procedure-toggle"
+                >
+                  {showPast ? "Cancel" : "Record past procedure"}
+                </button>
+                <button
+                  type="button"
                   onClick={() => setShowFilters((prev) => !prev)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                 >
@@ -155,6 +201,91 @@ export default function ProceduresPage() {
                 </button>
               </div>
             </div>
+
+            {showPast && (
+              <div
+                className="rounded-lg border border-border bg-card p-4 space-y-2"
+                data-testid="past-procedure-new"
+              >
+                <p className="text-sm text-muted-foreground">
+                  Clerking history on the patient record (V106) — not a new procedures-service
+                  episode. Use &quot;New procedure case&quot; when the procedure will run through the
+                  shared pipeline.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
+                    placeholder="Procedure name"
+                    value={pastName}
+                    onChange={(e) => setPastName(e.target.value)}
+                    data-testid="past-procedure-name"
+                  />
+                  <input
+                    type="text"
+                    className="rounded border border-border px-2 py-1 text-sm w-40"
+                    placeholder="Type (e.g. Endoscopy)"
+                    value={pastType}
+                    onChange={(e) => setPastType(e.target.value)}
+                    data-testid="past-procedure-type"
+                  />
+                  <input
+                    type="date"
+                    className="rounded border border-border px-2 py-1 text-sm"
+                    value={pastDate}
+                    onChange={(e) => setPastDate(e.target.value)}
+                    data-testid="past-procedure-date"
+                  />
+                  <select
+                    className="rounded border border-border px-2 py-1 text-sm"
+                    value={pastPrecision}
+                    onChange={(e) =>
+                      setPastPrecision(e.target.value as typeof pastPrecision)
+                    }
+                    data-testid="past-procedure-precision"
+                  >
+                    <option value="EXACT">Exact date</option>
+                    <option value="MONTH">Month only</option>
+                    <option value="YEAR">Year only</option>
+                    <option value="APPROXIMATE">Approximate</option>
+                  </select>
+                  <input
+                    type="text"
+                    className="rounded border border-border px-2 py-1 text-sm w-40"
+                    placeholder="Facility"
+                    value={pastFacility}
+                    onChange={(e) => setPastFacility(e.target.value)}
+                    data-testid="past-procedure-facility"
+                  />
+                  <input
+                    type="text"
+                    className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
+                    placeholder="Notes (optional)"
+                    value={pastNotes}
+                    onChange={(e) => setPastNotes(e.target.value)}
+                    data-testid="past-procedure-notes"
+                  />
+                  <button
+                    type="button"
+                    onClick={savePastProcedure}
+                    disabled={recordPast.isPending || pastName.trim() === ""}
+                    className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-60"
+                    data-testid="past-procedure-save"
+                  >
+                    {recordPast.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin inline" />
+                    ) : (
+                      "Save past procedure"
+                    )}
+                  </button>
+                </div>
+                {recordPast.isError && (
+                  <p className="text-sm text-danger" data-testid="past-procedure-save-failed">
+                    The past procedure was <strong>not</strong> saved. Nothing has been recorded.
+                  </p>
+                )}
+              </div>
+            )}
 
             {showFilters && (
               <div className="rounded-lg border border-border bg-card p-4">

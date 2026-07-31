@@ -570,6 +570,17 @@ fullBootServices:
   butano-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  # brief.md Wave 1 item 1: clinical-knowledge-platform-service's outbox relay
+  # (ClinicalKafkaConfig / ClinicalKafkaOutboxRelay) is @ConditionalOnProperty on
+  # impilo.clinical.kafka.relay-enabled, which defaults false — so §9 multimorbidity
+  # DetectedIssue findings sat in clinical.event_outbox and never reached the
+  # impilo.clinical.multimorbidity.issue.detected topic butano-service listens on above.
+  # Proven against a real embedded broker in ClinicalKafkaOutboxRelayIT before this line
+  # was added. Rollback = remove the env line (rows keep accumulating in the outbox either
+  # way — nothing is lost by rolling back).
+  clinical-knowledge-platform-service:
+    env:
+      CLINICAL_KAFKA_RELAY_ENABLED: "true"
   analytics-pipeline-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
