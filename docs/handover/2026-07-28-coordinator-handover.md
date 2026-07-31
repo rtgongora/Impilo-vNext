@@ -18,8 +18,8 @@ being wrong.
 | Site | `/` **200**, `/auth/login` **200** |
 | Change-safety gate | **PASSED** (19 guards + 3 new) |
 | My work | **fully landed**, 0 ahead / 0 dirty |
-| Canonical tip | `14392439c` (2026-07-29, after the fortnight merge pass) |
-| Branch consolidation | 10 merged + retired; ⚠️ **9 conflicted, UNFINISHED — see §3.7** |
+| Branch consolidation | ✅ **CLOSED** — 19 fortnight lanes merged + retired across two passes; 8 non-fortnight `claude/*` remain (§3.7, §8.1) |
+| ⚠️ Newly escalated | **F6** dev crypto seeds live in prod; **F9** form submit returns 500 and loses the clinician's work — both need an owner call, see §8.1 |
 | Estate pinning | ⚠️ **8 services UNPINNED — see §3.1** |
 
 ---
@@ -276,9 +276,14 @@ is green, `CANONICAL_GATE_EXIT=0`):
 post-push `merge-base --is-ancestor` check on each branch returned NOT-ANCESTOR. Recovered from
 reflog (`0a5e4c18c`). **Always re-verify the remote tip moved after a push; `PUSH OK` is not proof.**
 
-#### ⛔ Still unmerged — 9 fortnight branches, all CONFLICTED (successor's queue)
+#### ✅ CLOSED 2026-07-31 — the 9 below were all merged and retired by a later pass
 
-Each was attempted and cleanly aborted; the working tree is unmodified. File counts are conflicting
+**This list is historical.** The `coord/merge-catchup-20260729` lane merged all nine into canonical;
+all nine remote refs were deleted 2026-07-31. See
+[`2026-07-29-branch-retirement-recommendations.md`](2026-07-29-branch-retirement-recommendations.md)
+and §8.1. Unmerged `claude/*` is now **8**, none of them fortnight lanes.
+
+Retained for the record — each was attempted by me and cleanly aborted. File counts are conflicting
 files, not commits.
 
     files  branch                                    notes
@@ -480,29 +485,57 @@ second worktree over detaching mid-sequence. Full note: `memory/push-ok-is-not-p
 Do not start Category B's remaining 67 before Phase D unless the PO overrides — a public stack with
 auth disabled outranks any individual dead button.
 
-### 8.1 Finishing §3.7 — the merge queue, in the order I would take it
+### 8.1 ✅ SUPERSEDED 2026-07-31 — the nine are DONE. Do not re-run this queue.
 
-I stopped on these deliberately: they are substantive test and doctrine changes, and at the budget
-remaining I could not verify a resolution to the standard the other ten received. Landing them
-unverified would have been worse than leaving an accurate queue. **None is blocked — all are simply
-unstarted.** Each was attempted then cleanly aborted; no working tree is left modified.
+**A later pass completed every branch I left conflicted.** The `coord/merge-catchup-20260729` lane
+merged all nine into canonical and the product owner authorised retirement; **all nine remote refs
+were deleted on 2026-07-31**. Verified: each `git rev-parse origin/claude/<name>` now fails, and
+canonical contains every one of them.
 
-Recommended order — cheapest and most-likely-mechanical first, so the pattern is established before
-the two large ones:
+**Read [`2026-07-29-branch-retirement-recommendations.md`](2026-07-29-branch-retirement-recommendations.md)
+instead of this section.** It is far more thorough than the queue below and supersedes it entirely.
 
-| # | branch | conflicts | why this position |
-|---|---|---|---|
-| 1 | `nervous-fermi-22e321` | 1 file | smallest possible; use it to shake out the recipe |
-| 2 | `trusting-chaplygin-48ca17` | 2 files | |
-| 3 | `ruvimbo-product-Yypyl` | 2 files | +7 commits, product-front work |
-| 4 | `youthful-montalcini-536fee` | 3 files | S2S trust — `SERVICE_TO_SERVICE_TRUST_PATTERN.md`, `ServiceClientConfigTest`, `StaffingReadServiceTest`. **Strong prior that this is the same both-lanes-fixed-it-independently shape** resolved twice already; verify with `mvn -pl services/experience-bff -Dtest=ServiceClientConfigTest test` |
-| 5 | `khuluma-hub-Yypyl` | 3 files | comms hub; cross-check `memory/khuluma-comms-hub-state.md` |
-| 6 | `post-deploy-bugfix-Yypyl` | 3 files | |
-| 7 | `affectionate-joliot-aef493` | 4 files | |
-| 8 | `unruffled-cartwright-a85b36` | 5 files | **+91 commits** — by far the largest history; read the log before resolving anything |
-| 9 | `hungry-mestorf-a5cc9b` | 11 files | most conflicts; +9 commits |
+Branch consolidation is therefore **closed**. Unmerged `claude/*` is down to **8**, and they are a
+different population — not fortnight lanes:
 
-**The recipe that worked for the ten that landed:**
+    origin/claude/frosty-mirzakhani-811614        origin/claude/nervous-haibt-bd9758
+    origin/claude/impilo-masvingo-summary-pD8bx   origin/claude/peaceful-shamir-e6f86e
+    origin/claude/impilo-vnext-coordination-75fzl0 origin/claude/staging-ux-orchestration-remediation-jb5O0
+    origin/claude/vigorous-grothendieck-165d2f    origin/claude/workcontext-phase-d
+
+⚠️ **Two ESCALATIONS from that pass need an owner decision and are not in my §3 list** — do not let
+them get lost between the two documents:
+
+- **F6 — four dev cryptographic seeds silently apply in production.** `vito-service` encrypts Impilo
+  IDs and **signs** QR codes with source-visible dev seeds; `CardAssertionVerifier` will accept a card
+  signed with the public dev seed as genuine; `coverage-service` HMACs Ruvimbo eligibility tokens with
+  a secret readable in this repo, with **no warning at all**. Only one seed in the estate was ever
+  provisioned — the only one that refuses to start without it. Fixing this is deploy-affecting: the
+  four must be provisioned via `secretKeyRef` *before* they fail closed, and anything already signed
+  needs rotating. **This is the sharper half of §1b and outranks most of §3.**
+- **F9 — a rejected form extraction returns 500 and destroys the clinician's whole submission.** A
+  duplicate problem (routine for any chronic condition) marks the shared transaction rollback-only, so
+  the catch that exists to preserve the form response cannot. Reproduction is three steps.
+
+Also worth carrying: that pass found **canonical had been unbuildable for a day** (F12) while lint,
+type-check and unit tests were all green — `next build` is the only thing that enforces the App Router
+page-export constraint, and it was itself failing earlier on a missing env var. Two instruments broken
+in series.
+
+---
+
+#### The recipe, retained — it is reusable, and it is what both passes used
+
+Recorded because the next consolidation will want it, not because there is a queue left to run.
+
+**One correction from the later pass, and it matters:** taking the **union** is right when both lanes
+fixed the *same* defect, but **wrong when the lanes disagreed** — then the later decision wins. Their
+F7 case: a union of test-fixture base-url registrations re-imported a retired stub and silently turned
+canonical's honest `502 INPATIENT_UNAVAILABLE` assertion back into a `200`. It compiled and the guards
+passed. **Before taking a union in a test fixture, check whether the two sides are additive or
+contradictory.**
+
+**The recipe that worked for the ten I landed:**
 
 1. Work in a **scratch worktree** on a throwaway branch — never in the shared checkout (§7.2).
 2. `git merge --no-edit origin/<branch>`; on conflict, read **both sides before choosing**. Twice out
