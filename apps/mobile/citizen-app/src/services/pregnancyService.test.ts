@@ -27,6 +27,8 @@ import {
   bookPregnancy,
   fetchCurrentPregnancy,
   fetchPregnancyHistory,
+  fetchMyReproductiveIntention,
+  recordMyReproductiveIntention,
   newClientOfflineId,
   isPregnancyConflict,
   isPregnancyUndatable,
@@ -143,5 +145,39 @@ describe("pregnancyService", () => {
     expect(mockApiClient.get).toHaveBeenCalledWith("/internal/v1/confidential/maternity/pregnancy-episodes/me");
     expect(history).toHaveLength(1);
     expect(history[0].status).toBe("DELIVERED");
+  });
+
+  it("fetches her reproductive intention via the 'me' sentinel — no raw CPID sent", async () => {
+    mockApiClient.get.mockResolvedValue({
+      data: { data: { intention_id: "int-1", intention: "WANTS_PREGNANCY_LATER", timeframe_months: 12 } },
+    });
+    const intention = await fetchMyReproductiveIntention();
+    expect(mockApiClient.get).toHaveBeenCalledWith(
+      "/internal/v1/confidential/reproductive/reproductive-intentions/me/current",
+    );
+    expect(intention?.intention).toBe("WANTS_PREGNANCY_LATER");
+    expect(intention?.timeframeMonths).toBe(12);
+  });
+
+  it("returns null for an absent intention — withhold and absence are indistinguishable", async () => {
+    mockApiClient.get.mockResolvedValue({ data: { data: null } });
+    expect(await fetchMyReproductiveIntention()).toBeNull();
+  });
+
+  it("records her intention with the 'me' sentinel as subject", async () => {
+    mockApiClient.post.mockResolvedValue({
+      data: { data: { intention_id: "int-2", intention: "UNDECIDED" } },
+    });
+    const saved = await recordMyReproductiveIntention("UNDECIDED");
+    expect(mockApiClient.post).toHaveBeenCalledWith(
+      "/internal/v1/confidential/reproductive/reproductive-intentions",
+      { subjectCpid: "me", intention: "UNDECIDED", recordedBy: "citizen-self" },
+    );
+    expect(saved.intention).toBe("UNDECIDED");
+  });
+
+  it("propagates PCT_UNAVAILABLE on the intention read — never rendered as 'none recorded'", async () => {
+    mockApiClient.get.mockRejectedValue(new MockApiError(502, "PCT_UNAVAILABLE"));
+    await expect(fetchMyReproductiveIntention()).rejects.toMatchObject({ code: "PCT_UNAVAILABLE" });
   });
 });

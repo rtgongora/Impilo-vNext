@@ -21,12 +21,15 @@ import {
   fetchCurrentPregnancy,
   fetchPregnancyHistory,
   fetchCurrentContraception,
+  fetchMyReproductiveIntention,
+  recordMyReproductiveIntention,
   newClientOfflineId,
   isPregnancyConflict,
   isPregnancyUndatable,
   type DatingMethod,
   type PregnancyEpisode,
   type ContraceptionCoverage,
+  type ReproductiveIntention,
 } from "../../services/pregnancyService";
 import { ApiError } from "@impilo/mobile-api-client";
 
@@ -356,20 +359,124 @@ function ContraceptionCard({
   );
 }
 
+const INTENTION_CHOICES = [
+  { code: "WANTS_PREGNANCY_NOW", label: "I want a pregnancy now" },
+  { code: "WANTS_PREGNANCY_LATER", label: "I want one later" },
+  { code: "WANTS_NO_MORE_CHILDREN", label: "No (more) children" },
+  { code: "UNDECIDED", label: "Undecided" },
+  { code: "DECLINED_TO_STATE", label: "I'd rather not say" },
+] as const;
+
+function IntentionCard({
+  intention,
+  unavailable,
+  onRecorded,
+}: {
+  intention: ReproductiveIntention | null;
+  unavailable: boolean;
+  onRecorded: () => void;
+}) {
+  const [choice, setChoice] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+
+  if (unavailable) {
+    return (
+      <Card testID="intention-unavailable">
+        <CardBody>
+          <Text accessibilityRole="alert" style={styles.errorText}>
+            Your reproductive intention could not be retrieved — this is not the same as having none
+            on file.
+          </Text>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  const save = async () => {
+    if (!choice || saving) return;
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await recordMyReproductiveIntention(choice);
+      setChoice(null);
+      onRecorded();
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card testID="intention-section">
+      <CardHeader title="Your reproductive intention" />
+      <CardBody>
+        <Text style={styles.subText}>
+          What you want for your own fertility — only what you choose to record, never inferred.
+        </Text>
+        {intention ? (
+          <Text style={styles.value} testID="intention-current">
+            Currently recorded: {(intention.intention ?? "not stated").replace(/_/g, " ").toLowerCase()}
+          </Text>
+        ) : (
+          <Text style={styles.subText}>
+            Nothing visible right now — that may mean nothing is recorded, or that it is not visible
+            to you here.
+          </Text>
+        )}
+
+        <View style={styles.methodRow2}>
+          {INTENTION_CHOICES.map((opt) => (
+            <TouchableOpacity
+              key={opt.code}
+              style={[styles.methodChip, choice === opt.code && styles.methodChipActive]}
+              onPress={() => setChoice(opt.code)}
+              testID={`intention-choice-${opt.code}`}
+            >
+              <Text style={[styles.methodChipText, choice === opt.code && styles.methodChipTextActive]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {saveError ? (
+          <Text accessibilityRole="alert" style={styles.errorText} testID="intention-save-error">
+            We couldn&apos;t save this right now. Please try again in a moment.
+          </Text>
+        ) : null}
+
+        <Button
+          title={saving ? "Saving…" : "Save my intention"}
+          variant="secondary"
+          onPress={save}
+          disabled={!choice || saving}
+          loading={saving}
+          testID="intention-save"
+        />
+      </CardBody>
+    </Card>
+  );
+}
+
 export function PregnancySection() {
   const [loading, setLoading] = useState(true);
   const [current, setCurrent] = useState<PregnancyEpisode | null>(null);
   const [history, setHistory] = useState<PregnancyEpisode[]>([]);
   const [contraception, setContraception] = useState<ContraceptionCoverage[]>([]);
   const [contraceptionUnavailable, setContraceptionUnavailable] = useState(false);
+  const [intention, setIntention] = useState<ReproductiveIntention | null>(null);
+  const [intentionUnavailable, setIntentionUnavailable] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     setContraceptionUnavailable(false);
+    setIntentionUnavailable(false);
     try {
-      const [currentEpisode, historyEpisodes, contraceptionRows] = await Promise.all([
+      const [currentEpisode, historyEpisodes, contraceptionRows, intentionRow] = await Promise.all([
         fetchCurrentPregnancy(),
         fetchPregnancyHistory(),
         fetchCurrentContraception().catch((err) => {
@@ -379,10 +486,18 @@ export function PregnancySection() {
           }
           throw err;
         }),
+        fetchMyReproductiveIntention().catch((err) => {
+          if (err instanceof ApiError && err.code === "PCT_UNAVAILABLE") {
+            setIntentionUnavailable(true);
+            return null;
+          }
+          throw err;
+        }),
       ]);
       setCurrent(currentEpisode);
       setHistory(historyEpisodes);
       setContraception(contraceptionRows);
+      setIntention(intentionRow);
     } catch {
       setLoadError(true);
     } finally {
@@ -429,6 +544,8 @@ export function PregnancySection() {
 
         <ContraceptionCard methods={contraception} unavailable={contraceptionUnavailable} />
 
+        <IntentionCard intention={intention} unavailable={intentionUnavailable} onRecorded={load} />
+
         <PregnancyHistory episodes={history} />
       </View>
     </ScrollView>
@@ -453,6 +570,7 @@ const styles = StyleSheet.create({
   noticeText: { fontSize: 13, color: "#92400E" },
   noticeSubText: { fontSize: 12, color: "#92400E" },
   methodRow: { flexDirection: "row", gap: 8 },
+  methodRow2: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginVertical: 10 },
   methodChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: colors.gray[100] },
   methodChipActive: { backgroundColor: colors.ui.success.light },
   methodChipText: { fontSize: 12, color: colors.gray[500] },

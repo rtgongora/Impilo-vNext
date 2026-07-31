@@ -226,3 +226,53 @@ export async function fetchCurrentContraception(): Promise<ContraceptionCoverage
   const raw = Array.isArray(response.data?.data) ? response.data?.data : [];
   return (raw ?? []).map(normalizeCoverage).filter((c): c is ContraceptionCoverage => c !== null);
 }
+
+// --- Reproductive intention (W14-B citizen "me" lane) ------------------------------------------
+//
+// Backend: `/internal/v1/confidential/reproductive/reproductive-intentions/me/current` (read) and
+// POST `/reproductive-intentions` with the `"me"` sentinel (the BFF resolves her CPID server-side).
+// null = withhold-or-absent, indistinguishable by design. 502 PCT_UNAVAILABLE propagates as
+// ApiError and must never render as "nothing recorded".
+
+export interface ReproductiveIntention {
+  intentionId: string;
+  intention: string | null;
+  timeframeMonths: number | null;
+  recordedAt: string | null;
+}
+
+function normalizeIntention(raw: unknown): ReproductiveIntention | null {
+  const r = asRecord(raw);
+  if (!r) return null;
+  const id = r.intention_id;
+  if (typeof id !== "string") return null;
+  return {
+    intentionId: id,
+    intention: typeof r.intention === "string" ? r.intention : null,
+    timeframeMonths: typeof r.timeframe_months === "number" ? r.timeframe_months : null,
+    recordedAt: typeof r.recorded_at === "string" ? r.recorded_at : null,
+  };
+}
+
+/** Her current reproductive intention, or null when none is recorded (or none is visible). */
+export async function fetchMyReproductiveIntention(): Promise<ReproductiveIntention | null> {
+  const response = await apiClient.get<{ data?: unknown }>(
+    `${REPRODUCTIVE_BASE}/reproductive-intentions/${SELF}/current`,
+  );
+  return normalizeIntention(response.data?.data);
+}
+
+/** Records her own intention — only what she chooses to state, never inferred. */
+export async function recordMyReproductiveIntention(
+  intention: string,
+): Promise<ReproductiveIntention> {
+  const response = await apiClient.post<{ data?: unknown }>(
+    `${REPRODUCTIVE_BASE}/reproductive-intentions`,
+    { subjectCpid: SELF, intention, recordedBy: "citizen-self" },
+  );
+  const saved = normalizeIntention(response.data?.data);
+  if (!saved) {
+    throw new Error("The intention response could not be read.");
+  }
+  return saved;
+}
