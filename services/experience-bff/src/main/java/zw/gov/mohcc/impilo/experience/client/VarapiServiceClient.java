@@ -861,6 +861,25 @@ public class VarapiServiceClient {
     }
 
     /**
+     * Operator browse of the professional registers materialised for the council regulated by
+     * this organisation (NCZ task #97). Returns provenance (source, config version, retired).
+     */
+    public JsonNode professionalRegistersForOrganisation(String organizationId) {
+        String url = baseUrl + "/v1/internal/organizations/"
+                + URLEncoder.encode(organizationId, StandardCharsets.UTF_8) + "/registers";
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
+    /**
+     * Idempotent reconcile of that council's registers against its ACTIVE configuration pack.
+     */
+    public JsonNode reconcileProfessionalRegisters(String organizationId) {
+        String url = baseUrl + "/v1/internal/organizations/"
+                + URLEncoder.encode(organizationId, StandardCharsets.UTF_8) + "/registers/reconcile";
+        return restTemplate.postForEntity(url, null, JsonNode.class).getBody();
+    }
+
+    /**
      * Resolve a council registration number to its provider reference
      * (anti-enumeration: a miss is an empty resolution, not a 404).
      */
