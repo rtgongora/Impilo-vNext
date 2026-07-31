@@ -312,8 +312,9 @@ Recorded here so they cannot be quietly dropped:
   changing the shared derivation logic, which is estate-wide and not this programme's to change
   alone.
 - MADI's ~40 entities share an undefaulted-jurisdiction pattern (trauma-owned).
-- Theatre carry-forwards: two amber elective-completeness board assertions, commodities UI panels
-  backend-only.
+- Theatre carry-forwards: two amber elective-completeness board assertions remain. Specimen
+  custody, implant lifecycle, site-marking body maps, and site/side confirmation are now
+  clinician-reachable on the theatre case surface (Wave D — see §30); still not browser-proven.
 - **PCT keeps TWO MDT systems of record**, and the completion wave had to choose between them
   rather than resolve them: `pct_mdt_sessions` case items (`V051`, telemedicine lane) and
   `pct_mdt_decisions` (`V114`, Adult Medicine lane). Surgery's `surgical_decision.mdt_decision_ref`
@@ -1367,3 +1368,22 @@ and after the inpatient changes); `surgery-reoperation-journeys.sh`,
 `surgery-shared-specialty-journeys.sh`, `surgery-decision-forum-journeys.sh` and
 `procedures-operative-record-journeys.sh` on real Postgres; `page.test.tsx` (9) and the route
 parity test (32) in `one-ui-shell`; `tsc --noEmit` clean; `check-backend-frontend-parity.sh` PASS.
+
+## 30. Wave D — course-of-care + theatre clinician parity close (done, not browser-proven)
+
+Post-completion clinician parity. Tip at close: `3c87c0f37`.
+
+**Course-of-care was BACKEND-INTERNAL after SB-3** for the five families SB-1/SB-2 built
+(prehab, complication pathways, longitudinal objects, follow-up, waiting-list revalidation):
+authz/BFF/UI stopped at episode/assessment/decision. That gap is **closed** by
+`tshepo-authz V304` + experience-BFF `SurgeryController` pass-throughs + the course-of-care
+panels on `/work/clinical/surgery` (`e00d64d70` and prior authz/BFF/contract commits). Contract
+header now marks those families REACHABLE; specialty catalogue and analytics stay
+BACKEND-INTERNAL.
+
+**Theatre clinician surfaces** (same tip): specimen custody and implant lifecycle wired on the
+theatre case (`TheatreSpecimenPanel` / `TheatreCommoditiesPanel`); surgical site-marking body
+maps (`TheatreSiteMarkingPanel`); inpatient site/side confirmation + BFF proxy
+(`ProcedureSiteSideConfirmTest`, `TheatreControllerTest`). Vitest: surgery page + three theatre
+panels green; `tsc --noEmit` clean. Still **not** exercised in a browser or over Envoy — deploy
+request `reports/deployment/surgery-procedures-deploy-request-20260731.md`.

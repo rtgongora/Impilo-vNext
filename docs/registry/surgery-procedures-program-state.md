@@ -1,6 +1,6 @@
 # Surgery + Clinical Procedures — programme state
 
-Last updated: 2026-07-30, at the close of the completion wave.
+Last updated: 2026-07-31, after the theatre clinician parity close (Wave D).
 
 `iatg-surgery-procedures-leases.md` has cited "programme memory
 (`surgery-procedures-program-state.md`)" since the wave index was first written, but the file had
@@ -11,8 +11,15 @@ found nothing. This is that file. It is the short version; the lease is the long
 
 **Every named wave is closed.** Phase 0 (audit and baseline), Wave P-R and P-R2 (reachability),
 Phase P (P0–P15, the clinical procedures pipeline), Phase S (S0–S3), the backlog-clearing batches
-SB-1 through SB-6, and the completion wave that closed the gate run, SB-5 and the last three
-demonstrations. Per-wave detail is in the lease §9–§29.
+SB-1 through SB-6, the completion wave that closed the gate run, SB-5 and the last three
+demonstrations, and the post-completion clinician parity close: surgery **course-of-care** panels
+on `/work/clinical/surgery`, plus theatre **specimen custody**, **implant lifecycle**, **site
+marking**, and **site/side confirmation** on the theatre case surface. Per-wave detail is in the
+lease §9–§30.
+
+**Course-of-care and theatre parity UI are REACHABLE** (authz + BFF + clinician surface exist;
+Vitest and route-shape proofs pass). They are **still not browser-proven** until an authorised
+preview deploy and smoke. Specialty catalogue and analytics remain BACKEND-INTERNAL.
 
 **All twenty demonstrations across both packs are closed or explicitly deferred with an owner.**
 The two traceability documents (`docs/clinical/surgical-domain-pack/demonstrations-traceability.md`
@@ -21,9 +28,10 @@ demonstration with its mechanism and its proof.
 
 **Nothing has ever been deployed or hit over real HTTP.** Wave P-R's definition of done is still
 unmet. Everything above is verified by unit tests, route-shape tests against the real PDP
-derivation, and rigs against real Postgres. No browser has loaded a surgery surface and no request
-has crossed Envoy into surgery-service. Do not let "reachable" be read as "working" — the
-distinction is the single most important thing in this document.
+derivation, and rigs against real Postgres. No browser has loaded a surgery or theatre parity
+surface and no request has crossed Envoy into surgery-service for these families. Do not let
+"reachable" be read as "working" — the distinction is the single most important thing in this
+document. Deploy request: `reports/deployment/surgery-procedures-deploy-request-20260731.md`.
 
 ## Services and migration bands owned
 
@@ -31,7 +39,7 @@ distinction is the single most important thing in this document.
 |---|---|---|
 | `surgery-service` | all | V012 |
 | `inpatient-service` | V300+ | V305 |
-| `tshepo-authz-service` | V300–V329 | V303 |
+| `tshepo-authz-service` | V300–V329 | V304 |
 | `clinical-knowledge-platform-service` | V300 | V300 |
 | `procedures-service` | all | see lease §3 |
 
