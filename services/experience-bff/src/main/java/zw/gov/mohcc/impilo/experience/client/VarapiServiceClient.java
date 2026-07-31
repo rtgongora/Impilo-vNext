@@ -879,6 +879,12 @@ public class VarapiServiceClient {
         return restTemplate.postForEntity(url, null, JsonNode.class).getBody();
     }
 
+    /** Read-only register-entry restrictions for one council. */
+    public JsonNode registerEntryRestrictionsForCouncil(long councilId) {
+        String url = baseUrl + "/v1/internal/councils/" + councilId + "/register-entry-restrictions";
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
     /**
      * Resolve a council registration number to its provider reference
      * (anti-enumeration: a miss is an empty resolution, not a 404).
