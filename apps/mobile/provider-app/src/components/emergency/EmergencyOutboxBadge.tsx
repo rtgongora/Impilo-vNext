@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Button, Badge, colors } from "@impilo/mobile-design-system";
-import { useAppStore } from "../../stores/appStore";
+import { appStore, useAppStore } from "../../stores/appStore";
 import { countPendingEmergencyWrites, flushEmergencyOutbox } from "../../services/emergencyOutboxService";
 
 export function EmergencyOutboxBadge({ onFlushComplete }: { onFlushComplete?: () => void }) {
@@ -9,7 +9,7 @@ export function EmergencyOutboxBadge({ onFlushComplete }: { onFlushComplete?: ()
   const [flushing, setFlushing] = useState(false);
 
   const refresh = useCallback(async () => {
-    await countPendingEmergencyWrites().then((n) => useAppStore.getState().setPendingSyncCount(n));
+    await countPendingEmergencyWrites().then((n) => appStore.getState().setPendingSyncCount(n));
   }, []);
 
   useEffect(() => {
