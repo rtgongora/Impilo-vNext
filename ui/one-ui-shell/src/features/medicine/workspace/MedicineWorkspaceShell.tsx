@@ -56,7 +56,7 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
         </div>
       )}
 
-      <JourneyPositionIndicator patientId={patientId} encounterId={patientId} />
+      <JourneyPositionIndicator patientId={patientId} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ProgrammesPanel context={context} />
