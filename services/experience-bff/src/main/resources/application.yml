@@ -319,3 +319,13 @@ logging:
     zw.gov.mohcc.impilo: INFO
     org.springframework.web: INFO
     io.github.resilience4j: INFO
+
+# ── Experience trust / visibility obligation propagation ─────────────────────
+# PREREQUISITE: Envoy must strip visibility headers on /internal/v1/public/ AND the
+# authenticated BFF routes (see infra/envoy/*.yaml + deploy/helm/.../envoy.yaml) BEFORE
+# enabling this — otherwise clients can forge x-confidential-categories grants.
+# @Value default in VisibilityObligationPropagator stays false; this env default is true
+# for preview after W14-C edge strip lands (PO 2026-07-31).
+experience:
+  trust:
+    propagate-obligations: ${EXPERIENCE_TRUST_PROPAGATE_OBLIGATIONS:true}

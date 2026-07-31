@@ -94,6 +94,13 @@ public final class VisibilityObligationComposer {
             vis.grantConfidentialCategories(grantedConfidentialCategories);
         }
 
+        // Mandatory reporting path (PO 2026-07-31): REGULATORY_DUTY and PUBLIC_HEALTH must never
+        // inherit SRH confidential-category grants from rule overlays — the clinical stamp stays
+        // on the record; the report route uses operational/public-health visibility only.
+        if (purpose == PurposeOfUse.REGULATORY_DUTY || purpose == PurposeOfUse.PUBLIC_HEALTH) {
+            vis.revokeConfidentialCategories();
+        }
+
         VisibilityProfile profile = vis.build();
         Obligations o = new Obligations(
                 base.maxScope,

@@ -137,11 +137,17 @@ static_resources:
                             - "x-aal"
                             - "x-record-link-confidence"
                             - "x-session-assurance"
-                            - "x-escalation-grant-id"
+                            - "x-obligations"
                             - "x-visibility-tier"
                             - "x-pii-access"
                             - "x-clinical-access"
-                            - "x-obligations"
+                            - "x-aggregate-only"
+                            - "x-resource-sensitivity"
+                            - "x-escalation-grant-id"
+                            - "x-export-policy"
+                            - "x-suppress-fields"
+                            - "x-drill-down-allowed"
+                            - "x-confidential-categories"
                             - "x-work-context-token"
                           typed_per_filter_config:
                             envoy.filters.http.ext_authz:
@@ -151,6 +157,18 @@ static_resources:
                         # ── v1.1 internal paths → Experience BFF ──
                         - match: { prefix: "/internal/v1/" }
                           route: { cluster: experience_bff }
+                          request_headers_to_remove:
+                            - "x-obligations"
+                            - "x-visibility-tier"
+                            - "x-pii-access"
+                            - "x-clinical-access"
+                            - "x-aggregate-only"
+                            - "x-resource-sensitivity"
+                            - "x-escalation-grant-id"
+                            - "x-export-policy"
+                            - "x-suppress-fields"
+                            - "x-drill-down-allowed"
+                            - "x-confidential-categories"
                         # RESIDUAL: /external/v1/ has NO single split-out owner — it is served
                         # across data-governance/channels/indawo/asset-registry/data-warehouse at
                         # distinct sub-paths, none of them a tshepo split-out. Re-pointing to any

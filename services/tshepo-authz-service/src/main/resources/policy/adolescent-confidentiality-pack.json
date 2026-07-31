@@ -4,8 +4,15 @@
   "approvalStatus": "ENGINEERING_SEED",
   "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
   "effective": false,
-  "provenance": "Category list and the guardian-confidentiality age thresholds below are an ENGINEERING SEED authored to give the confidentiality mechanism something to load. They are NOT law, NOT national policy, and NOT a legal determination. Every age value carries verificationStatus UNVERIFIED and a legalBasisToVerify pointing at the instrument that would settle it. Zimbabwean consent ages are not uniform across services — independent consent for HIV testing, contraception and mental health care are governed by different instruments and have been amended at different times — which is exactly why this cannot be an engineering call. See docs/clinical-governance/adolescent-confidentiality-seed-policy.md.",
+  "provenance": "Category list and the guardian-confidentiality age thresholds below are an ENGINEERING SEED authored to give the confidentiality mechanism something to load. They are NOT law, NOT national policy, and NOT a legal determination. PO ruling 2026-07-31 (preview): contraception confidential-from-guardian age 18 (verificationStatus UNVERIFIED — legal instruments still listed); STI and TOP assessmentMode CASE_BY_CASE with null age thresholds. Mandatory reporting: the stamp stays on the clinical record; the report path uses REGULATORY_DUTY or PUBLIC_HEALTH purpose and must NOT inherit SRH confidential-category grants from rule overlays. See docs/clinical-governance/adolescent-confidentiality-seed-policy.md and docs/clinical-governance/rmnp/srh-confidentiality-stamping.md.",
   "inertnessNote": "effective=false and approvalStatus!=RATIFIED mean this pack grants nothing and withholds nothing. The mechanism that reads it is fully built and tested; it changes no behaviour until someone with the authority to decide sets these values and ratifies the pack. This is deliberate: a record must never carry a protection label that does not protect it.",
+
+  "mandatoryReportingRuling": {
+    "poDate": "2026-07-31",
+    "summary": "Mandatory reporting of sexual offences against minors uses REGULATORY_DUTY or PUBLIC_HEALTH purpose-of-use. The clinical SRH stamp remains on the record; the reporting path must not receive confidential-category grants from PDP rule overlays — VisibilityObligationComposer revokes categories for those purposes.",
+    "reportPurposes": ["REGULATORY_DUTY", "PUBLIC_HEALTH"],
+    "stampUnchanged": true
+  },
 
   "consumers": {
     "protectedCategories": "tshepo-authz PDP — the vocabulary of confidential-category grants carried on the VisibilityProfile obligation.",
@@ -35,14 +42,36 @@
     },
     {
       "category": "SEXUAL_REPRODUCTIVE_HEALTH",
-      "confidentialFromGuardianAgeYears": null,
+      "treatment": "CONTRACEPTION",
+      "confidentialFromGuardianAgeYears": 18,
       "verificationStatus": "UNVERIFIED",
-      "legalBasisToVerify": "Age of independent access to contraception and sexual health services. Check the Constitution of Zimbabwe s.76 (health care) and s.81 (rights of children), the Children's Act [Chapter 5:06], the Marriages Act (2022), and the National Adolescent and Youth Sexual and Reproductive Health Strategy in force.",
+      "legalBasisToVerify": "PO ruling 2026-07-31 (preview): contraception confidential from guardian below age 18. Legal instruments to verify: Constitution of Zimbabwe s.76 (health care) and s.81 (rights of children), the Children's Act [Chapter 5:06], the Marriages Act (2022), and the National Adolescent and Youth Sexual and Reproductive Health Strategy in force.",
+      "openQuestions": [],
+      "sourceRefs": ["PO ruling 2026-07-31 — preview engineering seed; MoHCC legal review pending"]
+    },
+    {
+      "category": "SEXUAL_REPRODUCTIVE_HEALTH",
+      "treatment": "STI",
+      "confidentialFromGuardianAgeYears": null,
+      "assessmentMode": "CASE_BY_CASE",
+      "verificationStatus": "UNVERIFIED",
+      "legalBasisToVerify": "PO ruling 2026-07-31: STI treatment confidentiality from guardian is CASE_BY_CASE — no single age threshold until MoHCC/clinical governance settles per-service rules. Check Constitution s.76/s.81, Children's Act [Chapter 5:06], and MoHCC adolescent SRH strategy.",
       "openQuestions": [
-        "Contraception, STI treatment and termination of pregnancy may each carry a different threshold — should this be one rule or three?",
-        "How does the mandatory-reporting duty for a sexual offence against a minor interact with confidentiality from the guardian? This is the sharpest conflict in the whole pack and must be resolved before any threshold is set."
+        "Per-facility mature-minor assessment vs a national age threshold — which instrument governs STI specifically?"
       ],
-      "sourceRefs": ["TO BE SUPPLIED BY MoHCC / legal review"]
+      "sourceRefs": ["PO ruling 2026-07-31 — CASE_BY_CASE; MoHCC legal review pending"]
+    },
+    {
+      "category": "SEXUAL_REPRODUCTIVE_HEALTH",
+      "treatment": "TOP",
+      "confidentialFromGuardianAgeYears": null,
+      "assessmentMode": "CASE_BY_CASE",
+      "verificationStatus": "UNVERIFIED",
+      "legalBasisToVerify": "PO ruling 2026-07-31: termination-of-pregnancy confidentiality from guardian is CASE_BY_CASE — TOP records are always category-stamped (RECORD_TYPE_ALWAYS) but guardian-age gating for non-TOP SRH must not assume the contraception age applies. Check Termination of Pregnancy Act and MoHCC TOP protocol.",
+      "openQuestions": [
+        "TOP rows use RECORD_TYPE_ALWAYS for the stamp; this rule governs guardian-age questions on related SRH episodes only."
+      ],
+      "sourceRefs": ["PO ruling 2026-07-31 — CASE_BY_CASE; MoHCC legal review pending"]
     },
     {
       "category": "MENTAL_HEALTH",

@@ -151,25 +151,24 @@ Step **4b** is new in W12 and it is not optional dressing: with the flag false, 
 BFF-mediated read; with the flag true and the edge unstripped, a client can mint its own grant. Both
 orderings fail, which is why the edge strip has to precede the choice.
 
-**Step 5's migration number is not yet answerable, and the earlier "V056" was wrong.** V056 is now
-`V056__break_glass_governance_policy_rules.sql` from another lane. The obvious repair — take V057 —
-is also wrong: RMNP's registered tshepo-authz band is **V048–V052**
-([`docs/registry/iatg-rmnp-leases.md`](../../registry/iatg-rmnp-leases.md) §2), and every number in it
-is consumed. V053–V056 are other lanes' and V057 sits outside any band this lane holds. Taking it
-unilaterally is how two sessions cut the same number, which is the failure
-`check-migration-version-collisions.sh` exists to catch. **Ask the coordinator for a number or a band
-extension before writing step 5.** pct V438 in step 6 remains correct: it is inside RMNP's V430–V459
-band and free.
+**Step 5's migration number:** PO lease **2026-07-31** authorizes **V307** outside the V048–V052
+band for `UPDATE policy_rule SET active = true` on the V048 confidential-lane rows.
 
 ### Blocking issues that must be resolved *before* step 1
 
-1. **Mandatory reporting versus confidentiality.** The adolescent pack calls this "the sharpest
-   conflict in the whole pack and must be resolved before any threshold is set". A confidential SRH
-   record for a minor whose care discloses a sexual offence may be legally required to reach someone
-   the stamp hides it from. **Nothing in this implementation resolves it.**
-2. **One SRH age or three?** Contraception, STI treatment and termination may each carry a different
-   threshold. This ships one parameter. Three would need no schema change but would re-split the
-   decision table.
+**PO-resolved 2026-07-31 (W14-C/W14-D preview flip).** The two blockers below are settled for
+preview engineering; legal instruments remain cited and verification stays explicit until MoHCC
+formal ratification beyond the preview flip.
+
+1. **Mandatory reporting versus confidentiality — RESOLVED for preview.** PO ruling: the clinical
+   SRH stamp stays on the record; mandatory reporting uses `REGULATORY_DUTY` or `PUBLIC_HEALTH`
+   purpose and **must not** inherit SRH `confidentialCategories` grants from PDP rule overlays.
+   `VisibilityObligationComposer` revokes categories for those purposes; the report path is
+   outside the stamp.
+2. **One SRH age or three? — RESOLVED for preview.** Three treatment rules under
+   `SEXUAL_REPRODUCTIVE_HEALTH`: **CONTRACEPTION** age **18** (`UNVERIFIED` until legal sign-off);
+   **STI** and **TOP** `assessmentMode: CASE_BY_CASE` with null age thresholds. CKP parameter
+   `SRH_CONFIDENTIAL_FROM_GUARDIAN_AGE_YEARS` carries the contraception age for pct stamping.
 
 ## 8. Known, bounded gaps — recorded rather than silently guarded
 
@@ -229,13 +228,17 @@ covering every header the parser reads, and `check-confidential-lane-routing.sh`
 `services/experience-bff/**`, resolving per **method** rather than per class so a controller that only
 calls the ordinary routes on a mixed client is not flagged.
 
-**Why the flag ships false, and why that is blocking rather than merely pending.** The deployed Envoy
+**Why the flag ships false in Java, and why application.yml defaults true after W14-C.** The deployed Envoy
 renders `ext_authz` **off** with no `request_headers_to_remove` for the visibility headers, so on every
 route except `/internal/v1/public/` a client-supplied `x-obligations` is not stripped at the edge and
-the ext_authz response only overwrites it when the PDP emits one. Today the BFF's refusal to forward is
-the only thing standing between a forged `x-confidential-categories` and pct's guard. **Enabling
-propagation before the edge strips these headers converts a fail-closed bug into a
-forge-your-own-grant bug**, which is strictly worse. Order: strip at the edge, then flip.
+the ext_authz response only overwrites it when the PDP emits one. **W14-C** adds the strip on public
+and authenticated BFF routes in all three Envoy copies; `experience.trust.propagate-obligations` then
+defaults `${EXPERIENCE_TRUST_PROPAGATE_OBLIGATIONS:true}` in experience-bff `application.yml` (Java
+`@Value` default remains `false`). Order: strip at the edge, then propagate.
+
+**Mandatory reporting outside the stamp (PO 2026-07-31).** `VisibilityObligationComposer` revokes
+`confidentialCategories` when purpose is `REGULATORY_DUTY` or `PUBLIC_HEALTH`, so mandatory-report
+routes never inherit SRH grants from rule overlays while the clinical stamp remains on the record.
 
 Note also that `deploy/helm/impilo-vnext/templates/envoy.yaml` is a **third** copy of the Envoy config;
 the `ENVOY-GATE: both files change together` comment names only two, so a header-strip rule added to

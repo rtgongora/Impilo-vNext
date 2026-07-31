@@ -73,9 +73,34 @@ class ConfidentialityPolicyPackTest {
     }
 
     @Test
-    @DisplayName("every age threshold ships unset and unverified")
-    void ageThresholdsAreUnsetAndUnverified() {
-        for (String category : List.of("HIV", "SEXUAL_REPRODUCTIVE_HEALTH", "MENTAL_HEALTH",
+    @DisplayName("SRH treatment rules carry PO 2026-07-31 ages — contraception 18, STI/TOP CASE_BY_CASE")
+    void srhTreatmentRulesReflectPoRuling() {
+        ConfidentialityPolicyPack.AgeRule contraception = pack.ageRules().stream()
+                .filter(r -> "SEXUAL_REPRODUCTIVE_HEALTH".equals(r.category())
+                        && "CONTRACEPTION".equals(r.treatment()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(18, contraception.confidentialFromGuardianAgeYears());
+        assertEquals("UNVERIFIED", contraception.verificationStatus());
+        assertFalse(contraception.usable());
+
+        for (String treatment : List.of("STI", "TOP")) {
+            ConfidentialityPolicyPack.AgeRule rule = pack.ageRules().stream()
+                    .filter(r -> "SEXUAL_REPRODUCTIVE_HEALTH".equals(r.category())
+                            && treatment.equals(r.treatment()))
+                    .findFirst()
+                    .orElseThrow();
+            assertNull(rule.confidentialFromGuardianAgeYears(), treatment + " age must stay unset");
+            assertEquals("CASE_BY_CASE", rule.assessmentMode());
+            assertEquals("UNVERIFIED", rule.verificationStatus());
+            assertFalse(rule.usable());
+        }
+    }
+
+    @Test
+    @DisplayName("non-SRH age thresholds ship unset and unverified")
+    void nonSrhAgeThresholdsAreUnsetAndUnverified() {
+        for (String category : List.of("HIV", "MENTAL_HEALTH",
                 "SAFEGUARDING", "SUBSTANCE_USE", "GENDER_BASED_VIOLENCE")) {
             ConfidentialityPolicyPack.AgeRule rule = pack.ageRuleFor(category);
             assertNotNull(rule, "the pack must declare an age rule slot for " + category

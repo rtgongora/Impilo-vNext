@@ -44,6 +44,21 @@ adolescent being told their record is confidential. It is worse than leaving the
 This is why the switches are gated together and why zibo withholds the stampable class rather than
 just the enforcement.
 
+## SRH treatment rules (PO 2026-07-31)
+
+The pack splits `SEXUAL_REPRODUCTIVE_HEALTH` guardian confidentiality into three **treatment**
+rules (same category, field `treatment`):
+
+| Treatment | Age threshold | Mode | Status |
+|---|---|---|---|
+| **CONTRACEPTION** | 18 years | fixed age | `UNVERIFIED` — PO preview ruling; legal instruments listed |
+| **STI** | null | `CASE_BY_CASE` | `UNVERIFIED` — per-assessment until MoHCC settles |
+| **TOP** | null | `CASE_BY_CASE` | `UNVERIFIED` — TOP rows still `RECORD_TYPE_ALWAYS` at stamp |
+
+**Mandatory reporting:** the clinical stamp stays; report routes use `REGULATORY_DUTY` or
+`PUBLIC_HEALTH` and must not inherit SRH confidential-category grants (see
+`srh-confidentiality-stamping.md` §7).
+
 ## Requirements before production use
 
 1. **Legal review** of each `guardianConfidentialityRules` entry: set
@@ -52,8 +67,8 @@ just the enforcement.
    - Does independent consent to HIV testing imply confidentiality of the result from a guardian, or
      are those separate determinations?
    - How does the mandatory-reporting duty for a sexual offence against a minor interact with
-     confidentiality from the guardian? **This is the sharpest conflict in the pack** and must be
-     resolved before any SRH threshold is set.
+     confidentiality from the guardian? **PO-resolved 2026-07-31 for preview:** stamp stays;
+     report path uses `REGULATORY_DUTY`/`PUBLIC_HEALTH` without SRH confidential grants.
    - `SAFEGUARDING` and `GENDER_BASED_VIOLENCE` are not age-derived at all — the person the record
      must be confidential *from* is frequently the guardian. These likely need a relational rule
      shape (confidential from a **named** person regardless of age) that the current pack does not

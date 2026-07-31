@@ -49,6 +49,7 @@ CHECKS=(
   check-top-no-record-level-emit.sh
   check-confidential-lane-routing.sh
   check-visibility-obligation-propagation.sh
+  check-visibility-header-strip.sh
   check-source-text-integrity.sh
   check-migration-version-collisions.sh
   check-butano-data-durability.sh

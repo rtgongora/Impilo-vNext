@@ -70,6 +70,17 @@ data:
                                 - "x-ward-id"
                                 - "x-programme-id"
                                 - "x-provider-id"
+                                - "x-obligations"
+                                - "x-visibility-tier"
+                                - "x-pii-access"
+                                - "x-clinical-access"
+                                - "x-aggregate-only"
+                                - "x-resource-sensitivity"
+                                - "x-escalation-grant-id"
+                                - "x-export-policy"
+                                - "x-suppress-fields"
+                                - "x-drill-down-allowed"
+                                - "x-confidential-categories"
                               {{- if .Values.envoy.extAuthz.enabled }}
                               typed_per_filter_config:
                                 envoy.filters.http.ext_authz:
@@ -80,6 +91,18 @@ data:
                             - match: { prefix: "/" }
                               route:
                                 cluster: experience_bff
+                              request_headers_to_remove:
+                                - "x-obligations"
+                                - "x-visibility-tier"
+                                - "x-pii-access"
+                                - "x-clinical-access"
+                                - "x-aggregate-only"
+                                - "x-resource-sensitivity"
+                                - "x-escalation-grant-id"
+                                - "x-export-policy"
+                                - "x-suppress-fields"
+                                - "x-drill-down-allowed"
+                                - "x-confidential-categories"
                     http_filters:
                       {{- if .Values.envoy.extAuthz.enabled }}
                       # ---------------------------------------------------------------
