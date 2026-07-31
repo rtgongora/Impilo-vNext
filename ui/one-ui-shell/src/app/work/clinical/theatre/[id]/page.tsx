@@ -26,6 +26,7 @@ import { TheatreCommoditiesPanel } from "@/components/clinical/theatre/TheatreCo
 import { TheatrePacuPanel } from "@/components/clinical/theatre/TheatrePacuPanel";
 import { TheatreSurgicalDischargePanel } from "@/components/clinical/theatre/TheatreSurgicalDischargePanel";
 import { TheatreReturnToTheatrePanel, type ReturnToTheatreRecord } from "@/components/clinical/theatre/TheatreReturnToTheatrePanel";
+import { TheatreSiteMarkingPanel } from "@/components/clinical/theatre/TheatreSiteMarkingPanel";
 import { EmergencyConsentExceptionPanel } from "@/components/clinical/theatre/EmergencyConsentExceptionPanel";
 import { ObstetricSection } from "@/components/clinical/theatre/ObstetricSection";
 import { apiClient } from "@/lib/api-client";
@@ -53,6 +54,11 @@ interface TheatreCaseDetail {
   no_known_allergies?: boolean;
   surgical_site?: string;
   surgical_side?: string;
+  /** Wave B3 — structured site/side on procedure_episode (banner aliases surgical_*). */
+  anatomical_site?: string;
+  laterality?: string;
+  site_side_confirmed_by?: string;
+  site_side_confirmed_at?: string;
   operative_note_state?: DocumentState;
   /** V305 — prior returns on this episode; never invent an empty list on a failed case load. */
   returns_to_theatre?: ReturnToTheatreRecord[];
@@ -311,8 +317,8 @@ export default function TheatreCaseDetailPage() {
               status={data.status}
               allergies={data.allergies}
               noKnownAllergies={data.no_known_allergies}
-              surgicalSite={data.surgical_site}
-              surgicalSide={data.surgical_side}
+              surgicalSite={data.surgical_site ?? data.anatomical_site}
+              surgicalSide={data.surgical_side ?? data.laterality}
             />
 
             {/* Secondary identity chips + focus-mode toggle */}
@@ -339,6 +345,18 @@ export default function TheatreCaseDetailPage() {
                 {focusMode ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
                 {focusMode ? "Show all sections" : "Focus mode"}
               </button>
+            </div>
+
+            {/* Wave B3 — site/side marking early, before WHO Sign-In / start */}
+            <div className={focusMode ? "hidden" : undefined}>
+              <TheatreSiteMarkingPanel
+                caseId={id}
+                laterality={data.laterality ?? data.surgical_side}
+                anatomicalSite={data.anatomical_site ?? data.surgical_site}
+                siteSideConfirmedBy={data.site_side_confirmed_by}
+                siteSideConfirmedAt={data.site_side_confirmed_at}
+                onConfirmed={() => void load()}
+              />
             </div>
 
             {/* Readiness + booking */}
