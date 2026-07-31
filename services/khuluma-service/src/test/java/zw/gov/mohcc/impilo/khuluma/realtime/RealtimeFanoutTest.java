@@ -53,7 +53,8 @@ class RealtimeFanoutTest {
     void listener_skipsOwnEvents_deliversRemote() throws Exception {
         RealtimeHub hub = new RealtimeHub();
         RealtimeInstance instance = new RealtimeInstance();
-        RealtimeRedisConfig config = new RealtimeRedisConfig(hub, instance, mapper, "khuluma:realtime");
+        RealtimeRedisConfig config = new RealtimeRedisConfig(
+                hub, instance, mapper, "khuluma:realtime", "pct:emergency:realtime");
 
         UUID tenant = UUID.randomUUID();
         List<RealtimeEvent> received = new ArrayList<>();
