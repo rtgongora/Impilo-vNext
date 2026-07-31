@@ -1,0 +1,73 @@
+apiVersion: security.impilo.mohcc.gov.zw/v1
+kind: MultiFactorPolicy
+metadata:
+  name: impilo-mfa
+  version: "1.0.0"
+spec:
+  issuerOwnedBy: keycloak
+  policyOwnedBy: tshepo
+  assurance:
+    AAL1:
+      methods: [pwd]
+    AAL2:
+      combinations:
+        - [pwd, otp]
+        - [pwd, recovery]
+        - [webauthn]
+      phishingResistantMethods: [webauthn]
+    AAL3:
+      combinations:
+        - [webauthn]
+      requireUserVerification: true
+      requireDirectAttestation: true
+      approvedAaguidsFrom: IMPILO_AAL3_APPROVED_AAGUIDS
+  personas:
+    citizen:
+      exclusiveRoles: [CITIZEN, CAREGIVER, CARE_PARTNER]
+      loginAal: AAL1
+      enrollment: progressive
+    workforce:
+      classification: any-impilo-business-role-not-exclusive-to-citizen
+      loginAal: AAL2
+      enrollment: required-at-next-login
+      gracePeriodSeconds: 0
+    privileged:
+      roles:
+        - SYSTEM_ADMIN
+        - SUPER_ADMIN
+        - PLATFORM_ORIGIN_ADMINISTRATOR
+        - NATIONAL_ADMINISTRATOR
+        - DEVELOPER
+      sensitiveActionAal: AAL3
+  methods:
+    totp:
+      enabled: true
+      algorithm: HmacSHA256
+      digits: 6
+      periodSeconds: 30
+      lookAheadWindow: 1
+    passkey:
+      enabled: true
+      residentKey: required
+      userVerification: required
+    recoveryCodes:
+      enabled: true
+      count: 12
+      oneUse: true
+    messagingOtp:
+      enabled: false
+    trustedDeviceBypass:
+      enabled: false
+  claims:
+    acr: [urn:impilo:aal1, urn:impilo:aal2, urn:impilo:aal3]
+    amr: [pwd, otp, webauthn, recovery]
+    required: [acr, amr, auth_time, impilo_step_up_at, impilo_flow_id]
+  recovery:
+    temporaryBypassAllowed: false
+    terminateAllSessionsOnExecution: true
+    twoPersonApproval: true
+    requesterMayApprove: false
+  publicClients:
+    requirePkceMethod: S256
+    allowImplicitGrant: false
+    allowDirectAccessGrant: false
