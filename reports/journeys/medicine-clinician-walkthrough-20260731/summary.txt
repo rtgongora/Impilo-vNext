@@ -1,13 +1,13 @@
 # Adult medicine §23 clinician walkthrough — 2026-07-31
 branch=claude/adult-medicine-waves-0-2
-workspace_head=56d5deb347b26d2674c3d2281db711613193065d
+workspace_head=92e0e8166
 preview_url=https://impilo.mohcc.gov.zw
 preview_internal_probe=http://127.0.0.1 Host:impilo.mohcc.gov.zw
 preview_commit_observed=fe0ba72d97957016b50d637be32bc88d149b0ecc
 preview_branch_observed=claude/staging-ux-orchestration-remediation-Yypyl
 public_https=UNREACHABLE (connection refused / failed on :443)
 deploy_authorized=no
-gates_at_head=PENDING (run started 2026-07-31T00:27:58Z; previous summary stale for 33c275fd)
+gates_at_head=RUNNING_OR_PARTIAL (product-truth/phase6 baseline FAIL observed mid-run; not adult-medicine pack-owned)
 
 # Protocol: docs/clinical/adult-medicine-domain-pack/clinician-walkthrough.md
 # Verdict policy: do not execute product journeys against a preview that is not
@@ -27,3 +27,6 @@ journey=10 result=BLOCKED blocker=Same — transfer-of-care accept path not at H
 clinician_walkthrough=INCOMPLETE
 incomplete_reason=Requires AUTHORIZE DEPLOY WITH VM GATES (GitHub CI infrastructure failure), successful preview deploy of 56d5deb34 (or later Wave-3 HEAD), /health/version commit match, then re-run this protocol.
 pack_section_25=NOT_MET
+
+wave3_code_complete=yes
+wave3_head=92e0e8166
