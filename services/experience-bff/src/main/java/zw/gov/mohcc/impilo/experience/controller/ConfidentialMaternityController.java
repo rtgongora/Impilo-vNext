@@ -19,6 +19,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TelemonitoringServiceClient;
+import zw.gov.mohcc.impilo.experience.service.SubjectResolutionService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,6 +50,14 @@ import java.util.Map;
  * Observations. This surface reads the series from telemonitoring and hands it to CKP for the verdict.
  * A second reading store here would guarantee two answers to "what was her blood pressure last
  * Tuesday", and the disagreement would surface between her phone and her midwife's chart.
+ *
+ * <h2>The browser holds neither HID nor CPID (Identity Contract §12)</h2>
+ * <p>{@code {subjectCpid}} exists as a real path segment so a clinician who already resolved a
+ * patient's CPID can call this lane directly — but a citizen calling for herself never learns her
+ * own CPID. She sends the sentinel {@code "me"} (or omits {@code subjectCpid} from the booking
+ * body), and {@link #resolveSubject} resolves it server-side from her authenticated actor identity
+ * via {@link SubjectResolutionService}, exactly as {@code CitizenConsentCenterController} resolves
+ * the access-log subject. The path itself never changes.
  */
 @RestController
 @RequestMapping("/internal/v1/confidential/maternity")
@@ -71,15 +80,18 @@ public class ConfidentialMaternityController {
     private final ClinicalKnowledgePlatformClient ckp;
     private final TelemonitoringServiceClient telemonitoring;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final SubjectResolutionService subjectResolution;
 
     public ConfidentialMaternityController(PctServiceClient pct,
                                            ClinicalKnowledgePlatformClient ckp,
                                            TelemonitoringServiceClient telemonitoring,
-                                           com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
+                                           com.fasterxml.jackson.databind.ObjectMapper objectMapper,
+                                           SubjectResolutionService subjectResolution) {
         this.pct = pct;
         this.ckp = ckp;
         this.telemonitoring = telemonitoring;
         this.objectMapper = objectMapper;
+        this.subjectResolution = subjectResolution;
     }
 
     // ── pregnancy episode ─────────────────────────────────────────────────────
@@ -89,34 +101,95 @@ public class ConfidentialMaternityController {
      *
      * <p>Statuses are pct's, forwarded unchanged: 201 created, 200 replayed offline packet, 409 already
      * booked with the id to reconcile against, 422 undatable.
+     *
+     * <p>{@code subjectCpid} in the body is optional for a citizen booking her own pregnancy — the
+     * browser never holds her CPID (Identity Contract §12), so she omits it (or sends {@code "me"})
+     * and it is resolved from her actor identity below. A clinician booking on a patient's behalf
+     * supplies the real CPID and this is a no-op.
      */
     @PostMapping("/pregnancy-episodes")
     public ResponseEntity<?> openPregnancyEpisode(
             @RequestBody Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return forward(() -> pct.openPregnancyEpisode(body), "pregnancy booking",
+        // Copy — Spring may hand us an unmodifiable map, and a citizen's body must never be mutated
+        // in place for a clinician who shared the same request object in a test or filter chain.
+        Map<String, Object> booking = body == null ? new HashMap<>() : new HashMap<>(body);
+        Object requested = booking.get("subjectCpid");
+        String cpid = resolveSubject(requested == null ? null : String.valueOf(requested), actorId);
+        if (cpid == null) {
+            return unresolvedSubject(requestId, correlationId);
+        }
+        booking.put("subjectCpid", cpid);
+        return forward(() -> pct.openPregnancyEpisode(booking), "pregnancy booking",
                 requestId, correlationId);
     }
 
-    /** Her current pregnancy, or an empty body. Never a 404: absence and withholding read alike. */
+    /**
+     * Her current pregnancy, or an empty body. Never a 404: absence and withholding read alike.
+     *
+     * <p>{@code subjectCpid} is the sentinel {@code "me"} for a citizen reading her own record; see
+     * {@link #resolveSubject}.
+     */
     @GetMapping("/pregnancy-episodes/{subjectCpid}/current")
     public ResponseEntity<?> currentPregnancyEpisode(
             @PathVariable String subjectCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return forward(() -> pct.getCurrentPregnancyEpisode(subjectCpid), "current pregnancy",
+        String cpid = resolveSubject(subjectCpid, actorId);
+        if (cpid == null) {
+            // Map.of() rejects null values, and null IS the answer here (absence and withholding
+            // read alike) — a HashMap says that correctly where Map.of cannot.
+            Map<String, Object> body = new HashMap<>();
+            body.put("data", null);
+            body.put("meta", meta(requestId, correlationId));
+            return ResponseEntity.ok(body);
+        }
+        return forward(() -> pct.getCurrentPregnancyEpisode(cpid), "current pregnancy",
                 requestId, correlationId);
     }
 
-    /** Her obstetric history. */
+    /** Her obstetric history. {@code subjectCpid} is {@code "me"} for a citizen's own record. */
     @GetMapping("/pregnancy-episodes/{subjectCpid}")
     public ResponseEntity<?> pregnancyEpisodes(
             @PathVariable String subjectCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return forward(() -> pct.getPregnancyEpisodes(subjectCpid), "pregnancy history",
+        String cpid = resolveSubject(subjectCpid, actorId);
+        if (cpid == null) {
+            return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
+        }
+        return forward(() -> pct.getPregnancyEpisodes(cpid), "pregnancy history",
                 requestId, correlationId);
+    }
+
+    /**
+     * Resolve the path/body subject to a real CPID without ever asking the browser to hold one.
+     *
+     * <p>A caller that already knows the real CPID (a clinician booking on a patient's behalf, or
+     * reading a patient's history) passes it directly and this is a no-op. A citizen calling for
+     * herself sends the sentinel {@code "me"} — or, on the booking body, nothing at all — and it is
+     * resolved from her authenticated actor identity ({@code X-Actor-ID == healthId} for a citizen;
+     * see {@code CitizenConsentCenterController}). Resolution failure (no actor header, or
+     * tshepo-identity unreachable) returns {@code null}; callers decide what an unresolved subject
+     * means for their response rather than forwarding a null CPID to pct.
+     */
+    private String resolveSubject(String requested, String actorId) {
+        if (requested != null && !requested.isBlank() && !"me".equalsIgnoreCase(requested)) {
+            return requested;
+        }
+        return actorId == null ? null : subjectResolution.cpidForHealthId(actorId);
+    }
+
+    private static ResponseEntity<?> unresolvedSubject(String requestId, String correlationId) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("code", "SUBJECT_UNRESOLVED");
+        data.put("message", "Could not resolve which person this booking is for.");
+        return ResponseEntity.unprocessableEntity()
+                .body(Map.of("data", data, "meta", meta(requestId, correlationId)));
     }
 
     // ── home blood pressure ───────────────────────────────────────────────────
