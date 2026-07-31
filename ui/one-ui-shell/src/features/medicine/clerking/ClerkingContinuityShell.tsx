@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { useClerkingContinuityContext } from "./useClerkingContinuityContext";
+import { ClerkingExtensionsPanel } from "./ClerkingExtensionsPanel";
 
 function Panel({
   title,
@@ -371,6 +372,8 @@ export function ClerkingContinuityShell({ patientId }: { patientId: string }) {
           </p>
         </Panel>
       </div>
+
+      <ClerkingExtensionsPanel patientId={patientId} />
     </div>
   );
 }

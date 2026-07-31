@@ -1439,6 +1439,18 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    public JsonNode listClerking(String resource, String subjectCpid) {
+        String url = baseUrl + "/v1/clerking/" + resource + "?subject_cpid=" + subjectCpid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordClerking(String resource, Map<String, Object> body) {
+        String url = baseUrl + "/v1/clerking/" + resource;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode listMedicalEpisodes(String subjectCpid, boolean openOnly) {
         String url = baseUrl + "/v1/medical-episodes?subject_cpid=" + subjectCpid
                 + "&open_only=" + openOnly;
