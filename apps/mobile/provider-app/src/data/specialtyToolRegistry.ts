@@ -3,7 +3,7 @@
  * in this app actually is.
  *
  * WHY THIS FILE EXISTS. The panel used to decide a tool's form BY ITS POSITION in the
- * workspace array: index >= 4 meant "coming soon", index === 3 meant a generic two-number
+ * workspace array: index >= 4 meant undeveloped, index === 3 meant a generic two-number
  * adder, everything else meant a free-text notes box. Partograph rendered as a notes box
  * because it happened to be first in its list. That mechanism produced a clinical surface
  * whose behaviour had nothing to do with the clinical instrument named on it, and it is the
