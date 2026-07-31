@@ -244,7 +244,8 @@ export interface RecordSocialHistoryInput {
   category: string;
   status: string;
   detail?: string;
-  riskLevel: "LOW" | "MODERATE" | "HIGH";
+  /** Omit when not assessed — never invent LOW. */
+  riskLevel?: "LOW" | "MODERATE" | "HIGH";
 }
 
 export function useRecordSocialHistory(patientId: string) {
