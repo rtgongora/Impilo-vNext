@@ -1,7 +1,13 @@
 /**
  * OutreachTabs — Tab navigator for Outreach mode.
  *
- * Tabs: Dashboard, Households, Screenings, Schedule
+ * Tabs: Dashboard, Households, Screenings, Postnatal, Schedule
+ *
+ * Postnatal is the CHW community postnatal contact (day-3/week-6-style home and community visits)
+ * — see `PostnatalContactScreen` and docs/clinical/rmnp/chw-community-postnatal-mobile-contract.md.
+ * It lives here rather than under Households or the provider specialty panel because it is a
+ * distinct, offline-first recording flow a CHW returns to repeatedly, the same reason Screenings
+ * has its own tab rather than living inside Households.
  */
 
 import React, { useState, useCallback } from "react";
@@ -11,15 +17,17 @@ import { TabBar, useOptionalTheme, colors } from "@impilo/mobile-design-system";
 import { OutreachDashboardScreen } from "../screens/outreach/OutreachDashboardScreen";
 import { HouseholdListScreen } from "../screens/outreach/HouseholdListScreen";
 import { ScreeningScreen } from "../screens/outreach/ScreeningScreen";
+import { PostnatalContactScreen } from "../screens/outreach/PostnatalContactScreen";
 import { PublicHealthFieldTasksScreen } from "../screens/provider/PublicHealthFieldTasksScreen";
 
 
-type TabKey = "dashboard" | "households" | "screenings" | "schedule";
+type TabKey = "dashboard" | "households" | "screenings" | "postnatal" | "schedule";
 
 const TABS: Array<{ key: TabKey; label: string; activeIcon: string; inactiveIcon: string }> = [
   { key: "dashboard", label: "Dashboard", activeIcon: "map", inactiveIcon: "map-outline" },
   { key: "households", label: "Households", activeIcon: "home", inactiveIcon: "home-outline" },
   { key: "screenings", label: "Screenings", activeIcon: "clipboard", inactiveIcon: "clipboard-outline" },
+  { key: "postnatal", label: "Postnatal", activeIcon: "heart", inactiveIcon: "heart-outline" },
   { key: "schedule", label: "Schedule", activeIcon: "calendar", inactiveIcon: "calendar-outline" },
 ];
 
@@ -41,6 +49,8 @@ export function OutreachTabs() {
         return <HouseholdListScreen />;
       case "screenings":
         return <ScreeningScreen />;
+      case "postnatal":
+        return <PostnatalContactScreen />;
       case "schedule":
         return <PublicHealthFieldTasksScreen />;
       default:
