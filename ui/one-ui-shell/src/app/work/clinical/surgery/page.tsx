@@ -4,22 +4,28 @@
  * Surgical episodes — S1 episode spine, S2 general surgical assessment, S3 decision record.
  * Route: /work/clinical/surgery | Zone: operations
  *
- * The clinician surface that makes three waves of surgery-service capability reachable: find a
- * patient's surgical episodes, open a new episode (CC-5-anchored: journey/encounter + operative
- * indication), and work the episode's assessment and decision panels via the real PUT routes.
+ * The clinician surface that makes surgery-service capability reachable: find a patient's
+ * surgical episodes, open a new episode (CC-5-anchored: journey/encounter + operative
+ * indication), work assessment/decision, and the course-of-care panels (prehab, complications,
+ * longitudinal objects, follow-up, waitlist revalidation) via the real BFF routes.
  *
  * EMPTY VS UNKNOWN VS UNAVAILABLE, rendered as three distinct states, never collapsed:
  *   - isError                → "could not read the surgical record" (an error banner, never an
  *                              empty list — the "no conditions for every patient" bug class)
  *   - resolved []            → the patient genuinely has no surgical episodes
- *   - 404 on assessment/decision (isNotRecorded) → "not recorded yet", an honest gap that is
- *                              NOT a failure and NOT rendered as one
+ *   - 404 on assessment/decision/followup (isNotRecorded) → "not recorded yet", an honest gap
+ *                              that is NOT a failure and NOT rendered as one
  */
 
 import { useState } from "react";
 import { AlertTriangle, Loader2, Search } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { ComplicationPathwayPanel } from "@/components/clinical/surgery/ComplicationPathwayPanel";
+import { FollowupPanel } from "@/components/clinical/surgery/FollowupPanel";
+import { LongitudinalObjectsPanel } from "@/components/clinical/surgery/LongitudinalObjectsPanel";
+import { PrehabPanel } from "@/components/clinical/surgery/PrehabPanel";
+import { WaitlistRevalidationPanel } from "@/components/clinical/surgery/WaitlistRevalidationPanel";
 import {
   isNotRecorded,
   useAddEpisodeSpecialty,
@@ -1082,6 +1088,11 @@ export default function SurgicalEpisodesPage() {
                 <ReopenPanel episode={selected} />
                 <AssessmentPanel episodeId={selected.id} />
                 <DecisionPanel episodeId={selected.id} />
+                <PrehabPanel episodeId={selected.id} />
+                <ComplicationPathwayPanel episodeId={selected.id} />
+                <LongitudinalObjectsPanel episodeId={selected.id} />
+                <FollowupPanel episodeId={selected.id} />
+                <WaitlistRevalidationPanel episodeId={selected.id} />
               </div>
             )}
           </div>

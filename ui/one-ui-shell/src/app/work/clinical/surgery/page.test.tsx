@@ -1,15 +1,16 @@
 /**
  * The completion wave's clinician surface: shared-specialty care (V011), the audited reopen
- * (V010) and the MDT decision forum (V012).
+ * (V010), the MDT decision forum (V012), and Wave A course-of-care (prehab, complications,
+ * longitudinal objects, follow-up, waitlist revalidation).
  *
  * What these tests exist to protect is the honesty of three states that a careless render
  * collapses into two:
- *   - a failed specialty read must NOT show an empty roster — on a theatre surface that reads
- *     as "no second team is coming";
+ *   - a failed specialty / course-of-care list read must NOT show an empty roster;
  *   - REOPENED must not be offered as a plain transition, because the server refuses it and
  *     because a reopen with no recorded reason is not a record of anything;
  *   - an unverified MDT reference must not render as either a confirmed board decision or an
- *     absent one.
+ *     absent one;
+ *   - a failed write must not claim success.
  */
 
 import type { ReactNode } from "react";
@@ -76,11 +77,46 @@ async function openEpisode() {
   await waitFor(() => expect(screen.getByTestId("surgery-episode-detail")).toBeInTheDocument());
 }
 
-/** Route the four verbs by URL so each test states only the responses it cares about. */
-function routeGets(specialties: unknown) {
+/**
+ * Route GETs by URL so each test states only the responses it cares about.
+ * Course-of-care lists default to [] (honest empty); follow-up/assessment/decision 404 =
+ * not recorded. Override via `overrides` for the Wave A honesty tests.
+ */
+function routeGets(
+  specialties: unknown,
+  overrides: {
+    prehab?: unknown;
+    complications?: unknown;
+    longitudinal?: unknown;
+    waitlist?: unknown;
+    followup?: unknown;
+  } = {},
+) {
   get.mockImplementation((url: string) => {
     if (url.includes("/specialties")) {
       return specialties instanceof Error ? Promise.reject(specialties) : Promise.resolve(specialties);
+    }
+    if (url.includes("/prehab")) {
+      const v = overrides.prehab ?? [];
+      return v instanceof Error ? Promise.reject(v) : Promise.resolve(v);
+    }
+    if (url.includes("/complications")) {
+      const v = overrides.complications ?? [];
+      return v instanceof Error ? Promise.reject(v) : Promise.resolve(v);
+    }
+    if (url.includes("/longitudinal-objects")) {
+      const v = overrides.longitudinal ?? [];
+      return v instanceof Error ? Promise.reject(v) : Promise.resolve(v);
+    }
+    if (url.includes("/waitlist-revalidation")) {
+      const v = overrides.waitlist ?? [];
+      return v instanceof Error ? Promise.reject(v) : Promise.resolve(v);
+    }
+    if (url.includes("/followup")) {
+      const v = overrides.followup ?? notRecorded;
+      return v instanceof Error || (v && typeof v === "object" && "status" in (v as object))
+        ? Promise.reject(v)
+        : Promise.resolve(v);
     }
     if (url.includes("/assessment") || url.includes("/decision")) return Promise.reject(notRecorded);
     return Promise.resolve([EPISODE]);
@@ -188,7 +224,17 @@ describe("SurgicalEpisodesPage — shared specialties, reopen and MDT forum", ()
   it("offers no reopen at all on an episode that never reached theatre", async () => {
     get.mockImplementation((url: string) => {
       if (url.includes("/specialties")) return Promise.resolve([]);
-      if (url.includes("/assessment") || url.includes("/decision")) return Promise.reject(notRecorded);
+      if (
+        url.includes("/prehab") ||
+        url.includes("/complications") ||
+        url.includes("/longitudinal-objects") ||
+        url.includes("/waitlist-revalidation")
+      ) {
+        return Promise.resolve([]);
+      }
+      if (url.includes("/assessment") || url.includes("/decision") || url.includes("/followup")) {
+        return Promise.reject(notRecorded);
+      }
       return Promise.resolve([{ ...EPISODE, status: "ASSESSMENT" }]);
     });
     await openEpisode();
@@ -199,7 +245,17 @@ describe("SurgicalEpisodesPage — shared specialties, reopen and MDT forum", ()
   it("shows the reopen trail on an episode that has been back to theatre", async () => {
     get.mockImplementation((url: string) => {
       if (url.includes("/specialties")) return Promise.resolve([]);
-      if (url.includes("/assessment") || url.includes("/decision")) return Promise.reject(notRecorded);
+      if (
+        url.includes("/prehab") ||
+        url.includes("/complications") ||
+        url.includes("/longitudinal-objects") ||
+        url.includes("/waitlist-revalidation")
+      ) {
+        return Promise.resolve([]);
+      }
+      if (url.includes("/assessment") || url.includes("/decision") || url.includes("/followup")) {
+        return Promise.reject(notRecorded);
+      }
       return Promise.resolve([
         {
           ...EPISODE,
@@ -232,8 +288,16 @@ describe("SurgicalEpisodesPage — shared specialties, reopen and MDT forum", ()
     };
     get.mockImplementation((url: string) => {
       if (url.includes("/specialties")) return Promise.resolve([]);
+      if (
+        url.includes("/prehab") ||
+        url.includes("/complications") ||
+        url.includes("/longitudinal-objects") ||
+        url.includes("/waitlist-revalidation")
+      ) {
+        return Promise.resolve([]);
+      }
       if (url.includes("/decision")) return Promise.resolve(decision);
-      if (url.includes("/assessment")) return Promise.reject(notRecorded);
+      if (url.includes("/assessment") || url.includes("/followup")) return Promise.reject(notRecorded);
       return Promise.resolve([EPISODE]);
     });
     await openEpisode();
@@ -277,5 +341,62 @@ describe("SurgicalEpisodesPage — shared specialties, reopen and MDT forum", ()
         }),
       ),
     );
+  });
+
+  it("records a prehab item via PUT to the course-of-care path", async () => {
+    routeGets([]);
+    put.mockResolvedValue({
+      id: "p-1",
+      surgicalEpisodeId: EPISODE.id,
+      domain: "SMOKING_CESSATION",
+      status: "PLANNED",
+    });
+    await openEpisode();
+
+    fireEvent.change(screen.getByTestId("surgery-prehab-domain"), {
+      target: { value: "SMOKING_CESSATION" },
+    });
+    fireEvent.change(screen.getByTestId("surgery-prehab-status"), {
+      target: { value: "PLANNED" },
+    });
+    fireEvent.click(screen.getByTestId("surgery-prehab-save"));
+
+    await waitFor(() =>
+      expect(put).toHaveBeenCalledWith(
+        `/internal/v1/surgery/episodes/${EPISODE.id}/prehab`,
+        expect.objectContaining({
+          domain: "SMOKING_CESSATION",
+          status: "PLANNED",
+        }),
+      ),
+    );
+  });
+
+  it("renders a failed prehab list as unavailable, never as an empty optimisation roster", async () => {
+    routeGets([], { prehab: new Error("surgery-service unreachable") });
+    await openEpisode();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("surgery-prehab-unavailable")).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId("surgery-prehab-empty")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("surgery-prehab-list")).not.toBeInTheDocument();
+  });
+
+  it("does not claim success when a prehab write fails", async () => {
+    routeGets([]);
+    put.mockRejectedValue(new Error("write refused"));
+    await openEpisode();
+
+    fireEvent.change(screen.getByTestId("surgery-prehab-domain"), {
+      target: { value: "NUTRITION" },
+    });
+    fireEvent.click(screen.getByTestId("surgery-prehab-save"));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("surgery-prehab-write-failed")).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId("surgery-prehab-write-ok")).not.toBeInTheDocument();
+    expect(screen.getByTestId("surgery-prehab-write-failed")).toHaveTextContent("NOT saved");
   });
 });
