@@ -323,3 +323,65 @@ export async function addCtgAnnotation(
   );
   return response.data.data;
 }
+
+// --- Maternal near-miss ----------------------------------------------------------------------
+//
+// Backend: experience-bff `/internal/v1/clinical/maternal/near-miss/classify-form`, NOT under
+// `${BASE}` — near-miss identification is ordinary clinical classification, deliberately not on
+// the confidential lane the rest of this module's postnatal-adjacent siblings might be, and it
+// composes CKP rather than pct-service. See `MaternalNearMissController.java`.
+//
+// The contract this function must not break, straight from that controller's doc comment:
+// blank ≠ ABSENT ≠ unrecognised. `answers` should be exactly the linkId → value map the governed
+// `impilo.maternal.nearmiss.assessment.v1` form (form 21) collected — a field the clinician left
+// blank must be OMITTED from the map, never sent as "ABSENT", or a near-miss becomes a normal
+// birth in the register. An answer the BFF cannot read comes back as a 422
+// (`ApiError.code === "unrecognised_form_answer"`) naming which one; that must reach the
+// clinician, not be swallowed.
+
+export interface NearMissClassification {
+  classification_code: string | null;
+  classification_name: string | null;
+  /** One of the classification engine's four states: CLASSIFIED, NOT_APPLICABLE, NOT_ASSESSED, INDETERMINATE. */
+  status: string;
+  is_near_miss: boolean;
+  /** True when a more severe row above this one could not be excluded — a floor, not a conclusion. */
+  provisional: boolean;
+  unresolved_criteria: string[];
+  missing_inputs: string[];
+  rationale: string | null;
+  review_required: boolean;
+  review_note: string | null;
+}
+
+export interface NearMissClassifyMeta {
+  request_id?: string;
+  correlation_id?: string;
+  form_key?: string;
+  criteria_recorded?: number;
+  /** Bare field names (no `nearMiss.` prefix) left blank — named, not just counted. */
+  criteria_left_blank?: string[];
+}
+
+export interface NearMissClassifyResult {
+  data: NearMissClassification;
+  meta: NearMissClassifyMeta;
+}
+
+const NEAR_MISS_FORM_KEY = "impilo.maternal.nearmiss.assessment.v1";
+
+/**
+ * Classifies a woman from form-21 answers. Never called with a `formKey` other than form 21's own
+ * unless a caller has a specific reason to override it — the BFF defaults to it anyway, but this
+ * makes the request self-describing on the wire.
+ */
+export async function classifyNearMissForm(
+  answers: Record<string, unknown>,
+  formKey: string = NEAR_MISS_FORM_KEY,
+): Promise<NearMissClassifyResult> {
+  const response = await apiClient.post<NearMissClassifyResult>(
+    "/internal/v1/clinical/maternal/near-miss/classify-form",
+    { formKey, answers },
+  );
+  return response.data;
+}

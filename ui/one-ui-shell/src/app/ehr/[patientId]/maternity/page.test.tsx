@@ -57,14 +57,19 @@ vi.mock("@/features/maternity/ctg/VitalsCtgSection", () => ({
   VitalsCtgSection: () => <div data-testid="ctg-section">CTG module</div>,
 }));
 
+vi.mock("@/features/maternity/nearmiss/NearMissAssessmentPanel", () => ({
+  NearMissAssessmentPanel: () => <div data-testid="near-miss-panel">Near-miss module</div>,
+}));
+
 describe("MaternityMonitoringPage", () => {
-  it("mounts the canonical maternity route with partograph and CTG sections", () => {
+  it("mounts the canonical maternity route with partograph, CTG and near-miss sections", () => {
     render(<MaternityMonitoringPage />);
 
     expect(screen.getByRole("heading", { level: 1, name: /Maternity Monitoring/i })).toBeInTheDocument();
     expect(screen.getByText(/Active encounter: enc-1/i)).toBeInTheDocument();
     expect(screen.getByTestId("partograph-section")).toBeInTheDocument();
     expect(screen.getByTestId("ctg-section")).toBeInTheDocument();
+    expect(screen.getByTestId("near-miss-panel")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Back to vitals/i })).toHaveAttribute("href", "/ehr/patient-1/vitals");
   });
 });
