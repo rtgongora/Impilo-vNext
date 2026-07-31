@@ -50,10 +50,17 @@ interface Council {
   description?: string;
   website?: string;
 }
+interface PublicRegister {
+  registerCode?: string;
+  name?: string;
+  status?: string;
+  description?: string;
+}
 
 export function PublicRegulatoryExplorer() {
   const [req, setReq] = useState<Requirements | null>(null);
   const [councils, setCouncils] = useState<Council[] | null>(null);
+  const [registersByCouncil, setRegistersByCouncil] = useState<Record<string, PublicRegister[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -67,9 +74,34 @@ export function PublicRegulatoryExplorer() {
           apiClient.get<Requirements>("/internal/v1/public/gateway/regulatory/requirements"),
           apiClient.get<Council[]>("/internal/v1/public/gateway/regulatory/councils"),
         ]);
+        const councilList = Array.isArray(c) ? c : [];
+        const registerEntries = await Promise.all(
+          councilList.map(async (council): Promise<[string | null, PublicRegister[]]> => {
+            const code = council.councilCode;
+            if (!code) return [null, []];
+            try {
+              const registers = await apiClient.get<PublicRegister[] | { registers?: PublicRegister[] }>(
+                `/internal/v1/public/gateway/regulatory/councils/${encodeURIComponent(code)}/registers`,
+              );
+              const list: PublicRegister[] = Array.isArray(registers)
+                ? registers
+                : Array.isArray(registers?.registers)
+                  ? registers.registers
+                  : [];
+              return [code, list];
+            } catch {
+              return [code, []];
+            }
+          }),
+        );
         if (!cancelled) {
           setReq(r ?? {});
-          setCouncils(Array.isArray(c) ? c : []);
+          setCouncils(councilList);
+          const map: Record<string, PublicRegister[]> = {};
+          for (const [code, list] of registerEntries) {
+            if (code) map[code] = list;
+          }
+          setRegistersByCouncil(map);
         }
       } catch {
         if (!cancelled) setError("Regulatory information is temporarily unavailable. Please try again shortly.");
@@ -177,18 +209,47 @@ export function PublicRegulatoryExplorer() {
           <Scale className="h-5 w-5 text-emerald-600" aria-hidden /> Professional councils
         </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {(councils ?? []).map((c) => (
-            <div key={c.councilCode} className="rounded-xl border border-slate-200 bg-white p-4">
-              <p className="font-semibold text-slate-900">{c.name}</p>
-              {c.councilType && <p className="text-xs text-slate-500">{c.councilType}</p>}
-              {c.description && <p className="mt-1 text-[13px] leading-relaxed text-slate-600">{c.description}</p>}
-              {c.website && (
-                <a href={c.website} className="mt-2 inline-block text-sm font-medium text-emerald-700 hover:text-emerald-800">
-                  Council website →
-                </a>
-              )}
-            </div>
-          ))}
+          {(councils ?? []).map((c) => {
+            const registers = c.councilCode ? registersByCouncil[c.councilCode] ?? [] : [];
+            return (
+              <div key={c.councilCode} className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="font-semibold text-slate-900">{c.name}</p>
+                {c.councilType && <p className="text-xs text-slate-500">{c.councilType}</p>}
+                {c.description && <p className="mt-1 text-[13px] leading-relaxed text-slate-600">{c.description}</p>}
+                {registers.length > 0 ? (
+                  <ul className="mt-3 space-y-1.5" data-testid={`reg-registers-${c.councilCode}`}>
+                    {registers.map((reg) => (
+                      <li
+                        key={reg.registerCode ?? reg.name}
+                        className="flex flex-wrap items-baseline justify-between gap-2 text-[13px]"
+                      >
+                        <span className="text-slate-800">
+                          {reg.name ?? reg.registerCode}
+                          {reg.registerCode ? (
+                            <span className="ml-1 font-mono text-[11px] text-slate-500">
+                              {reg.registerCode}
+                            </span>
+                          ) : null}
+                        </span>
+                        {reg.status ? (
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
+                            {reg.status}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-[12px] text-slate-500">No public registers listed yet.</p>
+                )}
+                {c.website && (
+                  <a href={c.website} className="mt-2 inline-block text-sm font-medium text-emerald-700 hover:text-emerald-800">
+                    Council website →
+                  </a>
+                )}
+              </div>
+            );
+          })}
           {(councils ?? []).length === 0 && (
             <p className="text-sm text-slate-600">No councils are published yet.</p>
           )}

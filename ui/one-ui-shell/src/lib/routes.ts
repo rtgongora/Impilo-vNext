@@ -250,7 +250,12 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/regulatory/[orgId]/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory dashboards", navLabel: "Dashboards", navZone: "work" },
   { path: "/work/regulatory/[orgId]/configuration", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory configuration", navLabel: "Configuration", navZone: "work" },
   { path: "/work/regulatory/[orgId]/registers", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Professional registers", navLabel: "Registers", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/student-applications", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Student applications", navLabel: "Student applications", navZone: "work" },
   { path: "/work/regulatory/[orgId]/student-applications/[applicationId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Student registration review", navLabel: "Student registration", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/student-reports", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Student registration reports", navLabel: "Student reports", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/cpd-review", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "CPD review", navLabel: "CPD review", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/restrictions", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Register restrictions", navLabel: "Restrictions", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/audit", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory audit", navLabel: "Audit", navZone: "work" },
   { path: "/work/regulatory/hpa/oversight", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "HPA oversight", navLabel: "HPA oversight", navZone: "work" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
@@ -1096,7 +1101,9 @@ export const ROUTES: RouteDefinition[] = [
 // RMNP W12 citizen pregnancy booking (31 Jul 2026): +1 — /my/pregnancy, the citizen
 // pregnancy booking + current-pregnancy view over the confidential maternity lane. Total 833.
 // NCZ register materialiser UI (31 Jul 2026): +1 — /work/regulatory/[orgId]/registers. Total 834.
-export const EXPECTED_ROUTE_COUNT = 834;
+// NCZ regulatory UI completeness (31 Jul 2026): +5 — student queue/reports, cpd-review,
+// restrictions, audit under /work/regulatory/[orgId]/…. Total 839.
+export const EXPECTED_ROUTE_COUNT = 839;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
