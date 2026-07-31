@@ -918,6 +918,7 @@ export const ROUTES: RouteDefinition[] = [
   // Work Home (Phase F1/F3) — guard is "auth", not "facility": oversight, programme,
   // regulatory and support contexts have no facility anchor and must still land here.
   { path: "/work", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Work", navLabel: "Work", navZone: "work" },
+  { path: "/programme/[programmeId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Programme profile", navLabel: "Programme", navZone: "work" },
   { path: "/work/rito/my-reputation", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Reputation", navLabel: "My Reputation", navZone: "professional" },
   { path: "/work/facility/rito/reputation", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Reputation & Moderation", navLabel: "Reputation", navZone: "work" },
   { path: "/work/facility/rito", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Facility Quality & Safety", navLabel: "Quality & Safety", navZone: "work" },
@@ -1083,7 +1084,7 @@ export const ROUTES: RouteDefinition[] = [
 // MCI casualty tagging (W15b, 28 Jul 2026): +1 — /work/daidzai/disasters/[id]/casualties. Total 827.
 // Surgery SB-3 reachability (28 Jul 2026): +2 — /work/clinical/procedures (existed but was
 // unregistered/orphaned) and /work/clinical/surgery (S1-S3 surgical episode workspace). Total 829.
-export const EXPECTED_ROUTE_COUNT = 829;
+export const EXPECTED_ROUTE_COUNT = 830;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

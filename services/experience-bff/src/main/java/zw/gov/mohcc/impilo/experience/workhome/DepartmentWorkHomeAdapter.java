@@ -58,7 +58,7 @@ public class DepartmentWorkHomeAdapter implements WorkHomeFamilyAdapter {
                 if (departmentId != null && !departmentId.isBlank() && !departmentId.equals(id)) {
                     continue;
                 }
-                return WorkHomeSection.ok(SECTION_ID, TITLE, List.of(toItem(dept)), Map.of("total", 1));
+                return WorkHomeSection.ok(SECTION_ID, TITLE, List.of(toItem(dept, facilityUuid)), Map.of("total", 1));
             }
             return WorkHomeSection.empty(SECTION_ID, TITLE, "Department not found in the facility registry");
         } catch (Exception e) {
@@ -67,7 +67,7 @@ public class DepartmentWorkHomeAdapter implements WorkHomeFamilyAdapter {
         }
     }
 
-    private Map<String, Object> toItem(JsonNode dept) {
+    private Map<String, Object> toItem(JsonNode dept, String facilityUuid) {
         String id = WorkHomeJson.text(dept, "id");
         String status = WorkHomeJson.text(dept, "operatingStatus", "UNKNOWN");
         Map<String, Object> item = new LinkedHashMap<>();
@@ -80,7 +80,7 @@ public class DepartmentWorkHomeAdapter implements WorkHomeFamilyAdapter {
         item.put("priority", "MEDIUM");
         item.put("department_type", WorkHomeJson.text(dept, "departmentType"));
         item.put("head_person_health_id", WorkHomeJson.text(dept, "headPersonHealthId"));
-        item.put("href", "/facility/departments/" + id);
+        item.put("href", "/facility/" + facilityUuid + "/departments");
         return item;
     }
 }

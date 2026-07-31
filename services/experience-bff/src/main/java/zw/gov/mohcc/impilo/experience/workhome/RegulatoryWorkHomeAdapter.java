@@ -74,7 +74,7 @@ public class RegulatoryWorkHomeAdapter implements WorkHomeFamilyAdapter {
         item.put("status", WorkHomeJson.text(a, "status", "UNKNOWN"));
         item.put("priority", "MEDIUM");
         item.put("person_health_id", WorkHomeJson.text(a, "personHealthId"));
-        item.put("href", "/regulatory/appointments");
+        item.put("href", "/work/regulatory");
         return item;
     }
 }

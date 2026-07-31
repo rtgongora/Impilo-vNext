@@ -70,7 +70,7 @@ public class OversightWorkHomeAdapter implements WorkHomeFamilyAdapter {
         item.put("description", "Type: " + WorkHomeJson.text(j, "jurisdictionType", "UNKNOWN"));
         item.put("status", WorkHomeJson.text(j, "status", "UNKNOWN"));
         item.put("priority", "MEDIUM");
-        item.put("href", "/oversight/jurisdiction");
+        item.put("href", "/public-health/oversight");
         return item;
     }
 }

@@ -62,7 +62,7 @@ public class ProgrammeWorkHomeAdapter implements WorkHomeFamilyAdapter {
         item.put("description", "Type: " + WorkHomeJson.text(programme, "programmeType", "UNKNOWN"));
         item.put("status", WorkHomeJson.text(programme, "status", "UNKNOWN"));
         item.put("priority", "MEDIUM");
-        item.put("href", "/programme/profile");
+        item.put("href", "/programme/" + id);
         return item;
     }
 }

@@ -128,6 +128,21 @@ public class WorkforceGovernanceController {
         }
     }
 
+    @GetMapping("/programmes/{id}")
+    public ResponseEntity<Map<String, Object>> getProgramme(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
+        try {
+            JsonNode data = workforceGovernanceClient.getJson("/v1/internal/governance/programmes/" + id);
+            return ok(requestId, correlationId, data);
+        } catch (Exception e) {
+            log.warn("getProgramme failed: {}", e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("success", false, "error", e.getMessage(), "requestId", requestId, "correlationId", correlationId));
+        }
+    }
+
     private static ResponseEntity<Map<String, Object>> ok(String requestId, String correlationId, JsonNode data) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("success", true);

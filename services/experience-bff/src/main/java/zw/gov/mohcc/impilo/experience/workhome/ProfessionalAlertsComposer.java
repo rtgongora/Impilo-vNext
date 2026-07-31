@@ -112,7 +112,7 @@ public class ProfessionalAlertsComposer {
         item.put("status", alertStatus);
         item.put("priority", priority);
         item.put("due_at", WorkHomeJson.text(l, "validTo"));
-        item.put("href", "/my-professional/licence");
+        item.put("href", "/professional");
         return item;
     }
 
@@ -140,7 +140,7 @@ public class ProfessionalAlertsComposer {
             item.put("status", "OUTSTANDING");
             item.put("priority", "HIGH");
             item.put("due_at", endDate);
-            item.put("href", "/my-professional/cpd");
+            item.put("href", "/professional");
             out.add(item);
         } catch (Exception e) {
             log.debug("professional-alerts CPD composition failed: {}", e.getMessage());
@@ -164,7 +164,7 @@ public class ProfessionalAlertsComposer {
                 // see WorkHomeBucketing's comment on the reverse-reading convention.
                 item.put("status", "PENDING_MY_ACCEPTANCE");
                 item.put("priority", "HIGH");
-                item.put("href", "/my-professional/assignments");
+                item.put("href", "/professional");
                 out.add(item);
             }
         } catch (Exception e) {

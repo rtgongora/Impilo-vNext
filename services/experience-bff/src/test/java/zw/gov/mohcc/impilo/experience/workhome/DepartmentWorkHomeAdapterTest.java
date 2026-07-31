@@ -80,6 +80,7 @@ class DepartmentWorkHomeAdapterTest {
         assertThat(item.get("id")).isEqualTo("department:dept-1");
         assertThat(item.get("title")).isEqualTo("Oncology Ward B");
         assertThat(item.get("status")).isEqualTo("OPEN");
+        assertThat(item.get("href")).isEqualTo("/facility/facility-uuid-1/departments");
     }
 
     @Test

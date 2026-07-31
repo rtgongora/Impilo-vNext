@@ -63,7 +63,7 @@ public class FacilityManagementWorkHomeAdapter implements WorkHomeFamilyAdapter 
             item.put("description", WorkHomeJson.text(composite, "legitimacyStatus", status));
             item.put("status", status);
             item.put("priority", "MEDIUM");
-            item.put("href", "/facility/status");
+            item.put("href", "/facility/" + facilityUuid + "/mode");
             return WorkHomeSection.ok("facility-status", "Facility status", List.of(item), Map.of("total", 1));
         } catch (Exception e) {
             log.debug("work-home facility-status composition failed: {}", e.getMessage());
@@ -108,7 +108,7 @@ public class FacilityManagementWorkHomeAdapter implements WorkHomeFamilyAdapter 
         item.put("priority", "HIGH");
         item.put("person_health_id", WorkHomeJson.text(a, "personHealthId"));
         item.put("created_at", WorkHomeJson.text(a, "createdAt", Instant.now().toString()));
-        item.put("href", "/facility/admin-claims");
+        item.put("href", "/facility/" + facilityUuid + "/mode");
         return item;
     }
 }

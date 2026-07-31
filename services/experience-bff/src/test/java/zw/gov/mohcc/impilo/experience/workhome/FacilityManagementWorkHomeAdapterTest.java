@@ -78,6 +78,21 @@ class FacilityManagementWorkHomeAdapterTest {
         // "awaiting the viewer", the opposite of what an admin claim awaiting approval means.
         assertThat(item.get("status")).isEqualTo("PENDING_MY_APPROVAL");
         assertThat(item.get("priority")).isEqualTo("HIGH");
+        assertThat(item.get("href")).isEqualTo("/facility/" + FACILITY_UUID + "/mode");
+    }
+
+    @Test
+    void facilityStatus_hrefTargetsFacilityModeDashboard() {
+        ObjectNode composite = objectMapper.createObjectNode()
+                .put("operatingStatus", "OPEN")
+                .put("legitimacyStatus", "VERIFIED");
+        when(tusoClient.getFacilityStatusComposite(FACILITY_UUID)).thenReturn(composite);
+
+        WorkHomeSection section = sectionTask(adapter.sectionTasks(context()), "facility-status");
+
+        assertThat(section.status()).isEqualTo("OK");
+        assertThat(section.items()).hasSize(1);
+        assertThat(section.items().get(0).get("href")).isEqualTo("/facility/" + FACILITY_UUID + "/mode");
     }
 
     @Test
