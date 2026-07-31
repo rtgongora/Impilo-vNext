@@ -81,6 +81,16 @@ function specialEnv(serviceId) {
       TSHEPO_WORK_CONTEXT_MODE: "SHADOW",
     };
   }
+  if (serviceId === "tshepo-audit-service") {
+    return {
+      IMPILO_KEYCLOAK_EVENTS_ENABLED: "true",
+      IMPILO_KEYCLOAK_BASE_URL: "http://keycloak:8080",
+      IMPILO_KEYCLOAK_REALM: "impilo",
+      IMPILO_KEYCLOAK_EVENTS_CLIENT_ID: "impilo-event-reader",
+      IMPILO_KEYCLOAK_EVENTS_OVERLAP_SECONDS: "120",
+      IMPILO_KEYCLOAK_EVENTS_BATCH_SIZE: "200",
+    };
+  }
   if (serviceId === "vito-service") {
     // VITO_HMAC_PEPPER (PII pseudonymization pepper) is injected from Secret
     // impilo-app-secrets via specialSecretEnv — never committed. Rotating it is
@@ -239,6 +249,14 @@ function specialSecretEnv(serviceId) {
   if (serviceId === "tshepo-keys-service") {
     return {
       TSHEPO_KEYS_KEK: { name: SECRET, key: "tshepo-keys-kek" },
+    };
+  }
+  if (serviceId === "tshepo-audit-service") {
+    return {
+      IMPILO_KEYCLOAK_EVENTS_CLIENT_SECRET: {
+        name: SECRET,
+        key: "keycloak-event-reader-secret",
+      },
     };
   }
   if (serviceId === "rtc-gateway-service") {

@@ -434,6 +434,17 @@ fullBootServices:
     enabled: true
     port: 8183
     database: tshepo_audit
+    env:
+      IMPILO_KEYCLOAK_EVENTS_ENABLED: 'true'
+      IMPILO_KEYCLOAK_BASE_URL: http://keycloak:8080
+      IMPILO_KEYCLOAK_REALM: impilo
+      IMPILO_KEYCLOAK_EVENTS_CLIENT_ID: impilo-event-reader
+      IMPILO_KEYCLOAK_EVENTS_OVERLAP_SECONDS: '120'
+      IMPILO_KEYCLOAK_EVENTS_BATCH_SIZE: '200'
+    secretEnv:
+      IMPILO_KEYCLOAK_EVENTS_CLIENT_SECRET:
+        name: impilo-app-secrets
+        key: keycloak-event-reader-secret
   tshepo-authz-service:
     enabled: true
     port: 8081
