@@ -95,6 +95,19 @@ vi.mock("@/features/maternity/journeys/MaternityClinicalJourneysSection", () => 
   ),
 }));
 
+vi.mock("@/features/maternity/bishop/BishopScorePanel", () => ({
+  BishopScorePanel: () => <div data-testid="bishop-score-panel">Bishop score module</div>,
+}));
+
+// W14-B panels call useQuery/useMutation directly; unmocked they demand a QueryClient the
+// page test deliberately does not provide (every panel here is mocked to keep this a route test).
+vi.mock("@/features/maternity/reproductive/W14ReproductivePanels", () => ({
+  ReproductiveIntentionPanel: () => <div data-testid="intention-panel">Intention module</div>,
+  PreconceptionPanel: () => <div data-testid="preconception-panel">Preconception module</div>,
+  FertilityPanel: () => <div data-testid="fertility-panel">Fertility module</div>,
+  DeliveryRecordPanel: () => <div data-testid="delivery-panel">Delivery module</div>,
+}));
+
 describe("MaternityMonitoringPage", () => {
   it("mounts the canonical maternity route with partograph, CTG and near-miss sections", () => {
     render(<MaternityMonitoringPage />);
@@ -111,6 +124,11 @@ describe("MaternityMonitoringPage", () => {
     expect(screen.getByTestId("birth-destination-panel")).toBeInTheDocument();
     expect(screen.getByTestId("pph-protocol-panel")).toBeInTheDocument();
     expect(screen.getByTestId("eclampsia-protocol-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("bishop-score-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("intention-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("preconception-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("fertility-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("delivery-panel")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Back to vitals/i })).toHaveAttribute("href", "/ehr/patient-1/vitals");
   });
 });
