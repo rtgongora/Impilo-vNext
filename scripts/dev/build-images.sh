@@ -4,8 +4,26 @@ REPO_PATH="${REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 TAG="${TAG:-preview-$(git -C "$REPO_PATH" rev-parse --short HEAD 2>/dev/null || echo local)}"
 cd "$REPO_PATH"
 
+SOURCE_COMMIT="$(git rev-parse HEAD)"
+SOURCE_BRANCH="$(git branch --show-current)"
+SOURCE_TREE="$(git rev-parse HEAD^{tree})"
+if git diff --quiet && git diff --cached --quiet; then
+  SOURCE_DIRTY=false
+else
+  SOURCE_DIRTY=true
+fi
+BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+echo "Source provenance: commit=${SOURCE_COMMIT} tree=${SOURCE_TREE} dirty=${SOURCE_DIRTY}"
+
 echo "Building experience-bff image: impilo/experience-bff:${TAG}"
 docker build -f services/experience-bff/Dockerfile \
+  --build-arg SOURCE_COMMIT="$SOURCE_COMMIT" \
+  --build-arg SOURCE_BRANCH="$SOURCE_BRANCH" \
+  --build-arg SOURCE_TREE="$SOURCE_TREE" \
+  --build-arg SOURCE_DIRTY="$SOURCE_DIRTY" \
+  --build-arg BUILD_DATE="$BUILD_DATE" \
+  --build-arg CACHE_BUST="$SOURCE_COMMIT" \
   -t "impilo/experience-bff:${TAG}" \
   -t impilo/experience-bff:preview \
   services/experience-bff

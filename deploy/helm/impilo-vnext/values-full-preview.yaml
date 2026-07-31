@@ -381,15 +381,27 @@ experienceBff:
     KEYCLOAK_BACKEND_SECRET:
       name: impilo-app-secrets
       key: keycloak-backend-secret
+    KEYCLOAK_CLIENT_SECRET:
+      name: impilo-app-secrets
+      key: keycloak-client-secret-bff
+    IMPILO_AUTH_SESSION_ENCRYPTION_KEY:
+      name: impilo-app-secrets
+      key: web-session-encryption-key
   env:
     REDIS_HOST: redis
     REDIS_PORT: "6379"
     KEYCLOAK_URL: http://keycloak:8080
+    KEYCLOAK_ISSUER_URI: https://impilo.mohcc.gov.zw:8480/realms/impilo
+    KEYCLOAK_INTERNAL_ISSUER: http://keycloak:8080/realms/impilo
     KEYCLOAK_REALM: impilo
     KEYCLOAK_CLIENT_ID: experience-ui
     KEYCLOAK_BACKEND_CLIENT_ID: impilo-backend
     AUTH_FALLBACK_ENABLED: "false"
-    IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
+    IMPILO_SECURITY_ALLOW_ANONYMOUS: "false"
+    IMPILO_AUTH_WEB_SESSION_ENABLED: "false"
+    IMPILO_AUTH_WEB_SESSION_COOKIE_SECURE: "true"
+    IMPILO_AUTH_REDIRECT_URI: https://impilo.mohcc.gov.zw/internal/v1/auth/oidc/callback
+    IMPILO_AUTH_POST_LOGOUT_REDIRECT_URI: https://impilo.mohcc.gov.zw/
     IMPILO_BOOTSTRAP_ENABLED: "true"
     IMPILO_BOOTSTRAP_ENVIRONMENT: "preview"
     IMPILO_BOOTSTRAP_REQUIRE_MFA: "false"

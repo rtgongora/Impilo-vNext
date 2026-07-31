@@ -17,6 +17,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import zw.gov.mohcc.impilo.experience.auth.session.SessionBearerTokenResolver;
+import zw.gov.mohcc.impilo.experience.auth.session.SessionCsrfFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -145,6 +147,12 @@ public class SecurityConfig {
     @Autowired
     private org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource;
 
+    @Autowired
+    private SessionBearerTokenResolver sessionBearerTokenResolver;
+
+    @Autowired
+    private SessionCsrfFilter sessionCsrfFilter;
+
     @Value("${impilo.security.allow-anonymous:false}")
     private boolean allowAnonymous;
 
@@ -162,7 +170,21 @@ public class SecurityConfig {
                     // ── CORS preflight ───────────────────────────────────
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // ── Public endpoints ──────────────────────────────────
-                    .requestMatchers("/internal/v1/auth/**").permitAll()
+                    // Only endpoints that initiate or complete an OIDC transaction are anonymous.
+                    // The previous blanket /auth/** permit exposed session, action and logout APIs.
+                    .requestMatchers(HttpMethod.GET,
+                            "/internal/v1/auth/oidc/authorize",
+                            "/internal/v1/auth/oidc/callback",
+                            "/internal/v1/auth/readiness").permitAll()
+                    .requestMatchers("/internal/v1/auth/contact/otp/**").permitAll()
+                    // Legacy web/mobile bootstrap endpoints remain explicit during the ROPC cutover.
+                    .requestMatchers(HttpMethod.POST,
+                            "/internal/v1/auth/login",
+                            "/internal/v1/auth/register",
+                            "/internal/v1/auth/refresh",
+                            "/internal/v1/auth/passkey/initiate",
+                            "/internal/v1/auth/passkey/callback",
+                            "/internal/v1/auth/biometric/identify").permitAll()
                     // Zero-to-one bootstrap: no national admin exists yet — policy enforced in BootstrapService/OPA
                     .requestMatchers(HttpMethod.GET, "/internal/v1/bootstrap/status").permitAll()
                     .requestMatchers(HttpMethod.POST, "/internal/v1/bootstrap/validate-token").permitAll()
@@ -562,8 +584,11 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
+                    .bearerTokenResolver(sessionBearerTokenResolver)
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter()))
                 );
+            http.addFilterBefore(sessionCsrfFilter,
+                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
             // PII Wave 0.3: once the bearer token is validated, force X-Actor-ID to the JWT's
             // health_id claim so the actor is server-authoritative (un-spoofable) and the browser
             // no longer needs to send its own Health ID.

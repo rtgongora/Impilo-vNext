@@ -33,7 +33,7 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
 
 management:
   endpoints:
@@ -99,6 +99,21 @@ impilo:
     allow-anonymous: false
   auth:
     fallback-enabled: ${AUTH_FALLBACK_ENABLED:false}
+    # Browser OIDC is a BFF-held session: tokens are encrypted in Redis and never
+    # persisted by browser JavaScript. Disabled until the client, secret and issuer
+    # are reconciled and the replacement login journey is runtime-proven.
+    web-session:
+      enabled: ${IMPILO_AUTH_WEB_SESSION_ENABLED:false}
+      cookie-secure: ${IMPILO_AUTH_WEB_SESSION_COOKIE_SECURE:true}
+      session-ttl-seconds: ${IMPILO_AUTH_WEB_SESSION_TTL_SECONDS:28800}
+      transaction-ttl-seconds: ${IMPILO_AUTH_TRANSACTION_TTL_SECONDS:300}
+      encryption-key: ${IMPILO_AUTH_SESSION_ENCRYPTION_KEY:}
+      public-issuer: ${KEYCLOAK_ISSUER_URI:https://impilo.mohcc.gov.zw:8480/realms/impilo}
+      internal-issuer: ${KEYCLOAK_INTERNAL_ISSUER:http://keycloak:8080/realms/impilo}
+      client-id: ${KEYCLOAK_CLIENT_ID:experience-ui}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+      redirect-uri: ${IMPILO_AUTH_REDIRECT_URI:https://impilo.mohcc.gov.zw/internal/v1/auth/oidc/callback}
+      post-logout-redirect-uri: ${IMPILO_AUTH_POST_LOGOUT_REDIRECT_URI:https://impilo.mohcc.gov.zw/}
     # Service workload credential (preview==prod auth wave, stage 2 slice 1): the BFF's own
     # client_credentials token, attached to downstream calls that carry no inbound user token.
     # Secret intentionally defaults to empty — absent secret degrades to "no token" with a
