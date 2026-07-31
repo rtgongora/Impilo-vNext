@@ -1867,6 +1867,46 @@ public class PctServiceClient {
                 + "/v1/confidential/reproductive/postnatal-contacts/" + motherCpid, JsonNode.class);
     }
 
+    /**
+     * The methods she is currently using, with coverage resolved as at a date.
+     *
+     * <p>{@code asOf} is optional and forwarded only when present — pct defaults to today when the
+     * query param is absent, and sending an empty value here would override that default with pct's
+     * own "no value" handling rather than leaving the decision to pct.
+     */
+    public ResponseEntity<JsonNode> getContraceptionCoverage(String subjectCpid, String asOf) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl
+                + "/v1/confidential/reproductive/contraception/" + subjectCpid);
+        if (asOf != null && !asOf.isBlank()) {
+            builder.queryParam("asOf", asOf);
+        }
+        return restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+    }
+
+    /** Every contraceptive method she has ever been recorded on, current and stopped. */
+    public ResponseEntity<JsonNode> getContraceptionHistory(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/contraception/" + subjectCpid + "/history", JsonNode.class);
+    }
+
+    /** Pregnancy losses for a mother. Mother-anchored: a loss mints no person. */
+    public ResponseEntity<JsonNode> getPregnancyLosses(String motherCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/losses/" + motherCpid, JsonNode.class);
+    }
+
+    /** Termination authorisations for a subject, including requests that were declined. */
+    public ResponseEntity<JsonNode> getTopAuthorisations(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/top-authorisations/" + subjectCpid, JsonNode.class);
+    }
+
+    /** Termination procedures for a subject. */
+    public ResponseEntity<JsonNode> getTerminations(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/terminations/" + subjectCpid, JsonNode.class);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

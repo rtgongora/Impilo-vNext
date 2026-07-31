@@ -120,6 +120,15 @@ public class SecurityConfig {
     private static final String[] CONFIDENTIAL_MATERNITY_ROLES =
             mergeRoleSets(CITIZEN_ROLES, CLINICAL_ROLES);
 
+    // The confidential reproductive READ lane (W13-B): contraception, losses, TOP authorisations
+    // and terminations. Every read on this lane resolves the "me" sentinel the same way the
+    // maternity lane does (ConfidentialReproductiveReadController#resolveSubject), so a citizen
+    // reading her own contraception coverage or her own TOP/termination/loss history needs the same
+    // reach as the maternity lane grants — same coarse-authentication caveat: this is reach to the
+    // route, never sight of a protected record, which stays TSHEPO's (V048) per-request decision.
+    private static final String[] CONFIDENTIAL_REPRODUCTIVE_READ_ROLES =
+            mergeRoleSets(CITIZEN_ROLES, CLINICAL_ROLES);
+
     // The CHW postnatal visit, plus the clinical roles who staff the facility end of the same
     // schedule. CHW is included deliberately: V048 seeds no CHW write rule for the confidential lane,
     // which is reported to the coordinator as a gap rather than worked around here — reaching the
@@ -279,6 +288,11 @@ public class SecurityConfig {
                             .hasAnyRole(CONFIDENTIAL_MATERNITY_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/confidential/maternity/**")
                             .hasAnyRole(CONFIDENTIAL_MATERNITY_ROLES)
+                    // The confidential reproductive READ lane (W13-B): contraception coverage and
+                    // history, pregnancy losses, TOP authorisations, terminations. Read-only for now —
+                    // pct has no write surface on this lane yet — so only GET is matched.
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/confidential/reproductive/**")
+                            .hasAnyRole(CONFIDENTIAL_REPRODUCTIVE_READ_ROLES)
                     .requestMatchers(HttpMethod.GET, "/internal/v1/confidential/community/postnatal/**")
                             .hasAnyRole(COMMUNITY_POSTNATAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/confidential/community/postnatal/**")
