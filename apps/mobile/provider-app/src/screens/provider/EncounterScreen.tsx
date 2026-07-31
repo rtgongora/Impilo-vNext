@@ -20,6 +20,9 @@ import { LabOrderPanel } from "./LabOrderPanel";
 import { ReferralPanel } from "./ReferralPanel";
 import { NotesPanel } from "./NotesPanel";
 import { TriageScreen } from "./TriageScreen";
+import { MedicineWorkspaceScreen } from "./MedicineWorkspaceScreen";
+import { MedicineCdsEvaluateScreen } from "./MedicineCdsEvaluateScreen";
+import { ClerkingContinuityScreen } from "./ClerkingContinuityScreen";
 
 const TABS = [
   { key: "cockpit", label: "Cockpit" },
@@ -30,6 +33,8 @@ const TABS = [
   { key: "labs", label: "Labs" },
   { key: "referrals", label: "Referrals" },
   { key: "notes", label: "Notes" },
+  { key: "medicine", label: "Medicine" },
+  { key: "clerking", label: "Clerking" },
   { key: "triage", label: "Triage" },
   { key: "billing", label: "Billing" },
 ];
@@ -171,6 +176,21 @@ export function EncounterScreen() {
         );
       case "notes":
         return <NotesPanel encounterId={activeEncounter.id} />;
+      case "medicine":
+        return (
+          <View style={{ gap: 16 }}>
+            <MedicineWorkspaceScreen patientId={activeEncounter.patientId} embedded />
+            <MedicineCdsEvaluateScreen patientId={activeEncounter.patientId} embedded />
+          </View>
+        );
+      case "clerking":
+        return (
+          <ClerkingContinuityScreen
+            patientId={activeEncounter.patientId}
+            encounterId={activeEncounter.id}
+            embedded
+          />
+        );
       case "triage":
         return <TriageScreen embedded />;
       case "billing":
