@@ -26,9 +26,10 @@ import java.util.UUID;
 
 /**
  * Extracts structured clinical resources from a submitted form response, driven by the locked definition's
- * {@code resourceMappings}. In-process sinks (problems, care plans) commit in the submit transaction and are
- * fully wired; external sinks (OROS orders) are eventually consistent; Observation writes to BUTANO are
- * emitted as events for the SHR bridge (deferred write). Every extraction writes a provenance row tying the
+ * {@code resourceMappings}. Per-item business writes run in their own {@code REQUIRES_NEW} transaction
+ * (see {@link FormExtractionItemRunner}) so a rejected item cannot poison the submit transaction and
+ * lose the clinician's form. External sinks (OROS orders) are eventually consistent; Observation writes
+ * to BUTANO go through the observation registry. Every extraction writes a provenance row tying the
  * resource back to (response, form version, source field). Idempotent per response.
  */
 @Service
@@ -45,6 +46,7 @@ public class FormExtractionService implements FormExtractionHook {
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final zw.gov.mohcc.impilo.pct.core.clinical.ObservationService observationService;
+    private final FormExtractionItemRunner itemRunner;
 
     public FormExtractionService(FormsCatalogIntegration formsCatalogIntegration,
                                  ProblemService problemService,
@@ -54,7 +56,8 @@ public class FormExtractionService implements FormExtractionHook {
                                  FormResponseRepository responseRepository,
                                  EventOutboxRepository outboxRepository,
                                  ObjectMapper objectMapper,
-                                 zw.gov.mohcc.impilo.pct.core.clinical.ObservationService observationService) {
+                                 zw.gov.mohcc.impilo.pct.core.clinical.ObservationService observationService,
+                                 FormExtractionItemRunner itemRunner) {
         this.formsCatalogIntegration = formsCatalogIntegration;
         this.problemService = problemService;
         this.carePlanService = carePlanService;
@@ -64,6 +67,7 @@ public class FormExtractionService implements FormExtractionHook {
         this.outboxRepository = outboxRepository;
         this.observationService = observationService;
         this.objectMapper = objectMapper;
+        this.itemRunner = itemRunner;
     }
 
     /**
@@ -105,19 +109,8 @@ public class FormExtractionService implements FormExtractionHook {
                 continue;
             }
             String resourceType = upper(str(m.get("resourceType")));
-            try {
-                switch (resourceType) {
-                    case "CONDITION" -> extractCondition(r, m, linkId, value);
-                    case "CARE_PLAN" -> extractCarePlan(r, m, linkId, value);
-                    case "SERVICE_REQUEST" -> extractServiceRequest(r, m, linkId, value);
-                    case "MEDICATION_REQUEST" -> extractMedicationRequest(r, m, linkId, value, answers);
-                    case "OBSERVATION", "PROCEDURE" -> extractObservation(r, m, linkId, value, resourceType);
-                    case "SAFETY_EVENT" -> extractSafetyEvent(r, m, linkId, value);
-                    default -> log.debug("Unmapped resource type {} for linkId {}", resourceType, linkId);
-                }
+            if (itemRunner.runItem(r, m, linkId, value, resourceType, answers, this::dispatchItem)) {
                 extracted++;
-            } catch (RuntimeException e) {
-                recordFailure(r, m, linkId, resourceType, e.getMessage());
             }
         }
 
@@ -135,6 +128,20 @@ public class FormExtractionService implements FormExtractionHook {
                 "formKey", r.getFormKey(),
                 "extractedCount", extracted));
         log.info("pct.form.extracted id={} formKey={} resources={}", r.getResponseId(), r.getFormKey(), extracted);
+    }
+
+    /** Dispatched inside {@link FormExtractionItemRunner}'s REQUIRES_NEW transaction. */
+    void dispatchItem(FormResponseEntity r, Map<String, Object> m, String linkId, JsonNode value,
+                      String resourceType, JsonNode answers) {
+        switch (resourceType) {
+            case "CONDITION" -> extractCondition(r, m, linkId, value);
+            case "CARE_PLAN" -> extractCarePlan(r, m, linkId, value);
+            case "SERVICE_REQUEST" -> extractServiceRequest(r, m, linkId, value);
+            case "MEDICATION_REQUEST" -> extractMedicationRequest(r, m, linkId, value, answers);
+            case "OBSERVATION", "PROCEDURE" -> extractObservation(r, m, linkId, value, resourceType);
+            case "SAFETY_EVENT" -> extractSafetyEvent(r, m, linkId, value);
+            default -> log.debug("Unmapped resource type {} for linkId {}", resourceType, linkId);
+        }
     }
 
     private void extractCondition(FormResponseEntity r, Map<String, Object> m, String linkId, JsonNode value) {
@@ -309,18 +316,13 @@ public class FormExtractionService implements FormExtractionHook {
         payload.put("value", value.isNumber() ? value.numberValue() : value.asText());
         payload.put("unit", str(m.get("unit")));
 
-        try {
-            var saved = observationService.record(body);
-            payload.put("observation_id", saved.getObservationId().toString());
-            record(r, m, linkId, resourceType, "BUTANO", "ROUTED",
-                    saved.getObservationId().toString(), null, payload);
-        } catch (RuntimeException e) {
-            // The form response itself must survive a rejected extraction — losing the clinician's
-            // answers because one derived observation was malformed would be a far worse outcome.
-            log.warn("Form {} field {} could not be extracted as an observation: {}",
-                    r.getFormKey(), linkId, e.getMessage());
-            record(r, m, linkId, resourceType, "BUTANO", "FAILED", null, e.getMessage(), payload);
-        }
+        // Let rejections bubble to FormExtractionItemRunner: an inner catch that wrote FAILED
+        // provenance into the same poisoned transaction lost both the observation and the audit
+        // trail. The runner's REQUIRES_NEW + FailureRecorder keeps the form and the FAILED row.
+        var saved = observationService.record(body);
+        payload.put("observation_id", saved.getObservationId().toString());
+        record(r, m, linkId, resourceType, "BUTANO", "ROUTED",
+                saved.getObservationId().toString(), null, payload);
         writeOutbox(r, "pct.form.observation.extracted", payload);
     }
 
@@ -371,23 +373,6 @@ public class FormExtractionService implements FormExtractionHook {
         e.setStatus(status);
         e.setAttempts(1);
         extractedRepository.save(e);
-    }
-
-    private void recordFailure(FormResponseEntity r, Map<String, Object> m, String linkId,
-                               String resourceType, String reason) {
-        FormExtractedResourceEntity e = new FormExtractedResourceEntity();
-        e.setTenantId(r.getTenantId());
-        e.setResponseId(r.getResponseId());
-        e.setFormSchemaVersionId(r.getFormSchemaVersionId());
-        e.setResourceType(resourceType == null ? "UNKNOWN" : resourceType);
-        e.setRouteTarget(upper(str(m.get("routeTarget"))));
-        e.setSourceLinkIds(toJson(List.of(linkId)));
-        e.setStatus("FAILED");
-        e.setAttempts(1);
-        e.setFailureReason(reason);
-        extractedRepository.save(e);
-        log.warn("pct.form.extraction.item.failed id={} linkId={} type={}: {}",
-                r.getResponseId(), linkId, resourceType, reason);
     }
 
     // ------------------------------------------------------------------
