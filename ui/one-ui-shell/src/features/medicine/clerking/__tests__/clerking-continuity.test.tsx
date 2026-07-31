@@ -6,6 +6,14 @@ vi.mock("../useClerkingContinuityContext", () => ({
   useClerkingContinuityContext: vi.fn(),
 }));
 
+vi.mock("../ConditionalClerkingPanel", () => ({
+  ConditionalClerkingPanel: () => <div data-testid="conditional-clerking-stub" />,
+}));
+
+vi.mock("../ClerkingExtensionsPanel", () => ({
+  ClerkingExtensionsPanel: () => <div data-testid="clerking-extensions-stub" />,
+}));
+
 import { useClerkingContinuityContext } from "../useClerkingContinuityContext";
 
 const mocked = vi.mocked(useClerkingContinuityContext);
