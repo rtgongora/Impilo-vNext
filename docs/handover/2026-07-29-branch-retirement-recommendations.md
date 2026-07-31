@@ -739,8 +739,8 @@ this pass** — the decision is the product owner's.
 ## Decision record (close-seven-open-issues pass)
 
 **Decision:** Retire all nine refs. Contained on canonical; no unique history remains on the branch tips.
-**Action (2026-07-31):** delete the nine remote refs with `git push origin --delete <branch>` after this
-document lands on canonical. History remains reachable from canonical either way.
+**Actioned 2026-07-31:** all nine remote refs deleted via `git push origin --delete`. History remains
+reachable from canonical.
 
 | Branch | Decision | Date |
 |--------|----------|------|
