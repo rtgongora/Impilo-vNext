@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { BodyMapField } from "@/features/body-map/BodyMapField";
+import type { MarkedRegionFinding } from "@/features/body-map/core/types";
 import {
   useExamination,
   useExaminationVocabulary,
@@ -9,6 +11,11 @@ import {
   useRecordExamination,
   type ExaminationState,
 } from "@/hooks/queries/useExaminations";
+import {
+  REGION_GRAPHICS,
+  findingToMarks,
+  marksToGraphicFields,
+} from "./v113-graphics";
 
 /**
  * The structured examination form and read (brief.md §7).
@@ -18,6 +25,10 @@ import {
  * examination from a clinician who touched three fields, and it does it silently. Every region
  * starts unset, and a region left unset is simply not submitted — which the record distinguishes
  * from NOT_EXAMINED, where the examiner looked at the list and chose.</p>
+ *
+ * <p>The eleven V113 graphics ride the same finding row as {@code graphic}/{@code site}/
+ * {@code laterality}. Diagrams are body-map instruments keyed by those codes; marks are collapsed
+ * to the three columns on submit and never stored as a parallel JSON shape.</p>
  */
 
 const STATE_LABEL: Record<ExaminationState, string> = {
@@ -32,6 +43,9 @@ const STATE_LABEL: Record<ExaminationState, string> = {
 const REGION_LABEL = (region: string) =>
   region.charAt(0) + region.slice(1).toLowerCase().replace(/_/g, " ");
 
+const GRAPHIC_LABEL = (graphic: string) =>
+  graphic.charAt(0) + graphic.slice(1).toLowerCase().replace(/_/g, " ");
+
 export function ExaminationShell({ patientId, journeyId }: { patientId: string; journeyId?: string }) {
   const vocabulary = useExaminationVocabulary();
   const history = useExaminations(patientId);
@@ -41,21 +55,40 @@ export function ExaminationShell({ patientId, journeyId }: { patientId: string; 
 
   const [states, setStates] = useState<Record<string, ExaminationState | "">>({});
   const [details, setDetails] = useState<Record<string, string>>({});
+  /** Selected V113 graphic per examination region (defaults to the region's first option). */
+  const [graphics, setGraphics] = useState<Record<string, string>>({});
+  /** Interactive marks keyed by examination region — collapsed to site/laterality on submit. */
+  const [marksByRegion, setMarksByRegion] = useState<Record<string, MarkedRegionFinding[]>>({});
 
   const vocab = vocabulary.data?.data;
   const needsDetail = (s: ExaminationState | "") =>
     !!s && (vocab?.states_needing_detail ?? []).includes(s as ExaminationState);
+  const wasExamined = (s: ExaminationState | "") =>
+    !!s && (vocab?.examined_states ?? []).includes(s as ExaminationState);
+
+  const graphicFor = (region: string): string | undefined => {
+    const options = REGION_GRAPHICS[region];
+    if (!options?.length) return undefined;
+    return graphics[region] ?? options[0];
+  };
 
   const submit = () => {
     const findings = Object.entries(states)
       // A region left unset is not submitted. It is not NORMAL, and it is not NOT_EXAMINED either —
       // the examiner never reached it, and the record says so by its absence.
       .filter(([, s]) => s !== "")
-      .map(([region, s]) => ({
-        region,
-        state: s as ExaminationState,
-        detail: details[region]?.trim() || undefined,
-      }));
+      .map(([region, s]) => {
+        const graphic = graphicFor(region);
+        const marks = marksByRegion[region] ?? [];
+        const graphicFields =
+          graphic && marks.length > 0 ? marksToGraphicFields(graphic, marks) : {};
+        return {
+          region,
+          state: s as ExaminationState,
+          detail: details[region]?.trim() || undefined,
+          ...graphicFields,
+        };
+      });
     if (findings.length === 0) return;
     record.mutate({
       subject_cpid: patientId,
@@ -100,40 +133,80 @@ export function ExaminationShell({ patientId, journeyId }: { patientId: string; 
       <section className="space-y-2">
         <h3 className="text-sm font-semibold">Record an examination</h3>
         <div className="grid gap-2">
-          {vocab.regions.map((region) => (
-            <div key={region} className="flex flex-wrap items-center gap-2" data-testid={`region-${region}`}>
-              <span className="w-48 text-sm">{REGION_LABEL(region)}</span>
-              <select
-                className="rounded border border-border px-2 py-1 text-sm"
-                value={states[region] ?? ""}
-                onChange={(e) =>
-                  setStates((s) => ({ ...s, [region]: e.target.value as ExaminationState | "" }))
-                }
-                data-testid={`state-${region}`}
-              >
-                <option value="">Not recorded</option>
-                {vocab.states.map((s) => (
-                  <option key={s} value={s}>
-                    {STATE_LABEL[s] ?? s}
-                  </option>
-                ))}
-              </select>
-              {needsDetail(states[region] ?? "") && (
-                <input
-                  type="text"
-                  className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
-                  placeholder={
-                    (vocab.examined_states ?? []).includes(states[region] as ExaminationState)
-                      ? "What did you find?"
-                      : "Why not?"
-                  }
-                  value={details[region] ?? ""}
-                  onChange={(e) => setDetails((d) => ({ ...d, [region]: e.target.value }))}
-                  data-testid={`detail-${region}`}
-                />
-              )}
-            </div>
-          ))}
+          {vocab.regions.map((region) => {
+            const options = REGION_GRAPHICS[region];
+            const selectedGraphic = graphicFor(region);
+            const showDiagram = wasExamined(states[region] ?? "") && !!selectedGraphic;
+
+            return (
+              <div key={region} className="space-y-2 rounded-md border border-transparent p-1" data-testid={`region-${region}`}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="w-48 text-sm">{REGION_LABEL(region)}</span>
+                  <select
+                    className="rounded border border-border px-2 py-1 text-sm"
+                    value={states[region] ?? ""}
+                    onChange={(e) =>
+                      setStates((s) => ({ ...s, [region]: e.target.value as ExaminationState | "" }))
+                    }
+                    data-testid={`state-${region}`}
+                  >
+                    <option value="">Not recorded</option>
+                    {vocab.states.map((s) => (
+                      <option key={s} value={s}>
+                        {STATE_LABEL[s] ?? s}
+                      </option>
+                    ))}
+                  </select>
+                  {needsDetail(states[region] ?? "") && (
+                    <input
+                      type="text"
+                      className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
+                      placeholder={
+                        (vocab.examined_states ?? []).includes(states[region] as ExaminationState)
+                          ? "What did you find?"
+                          : "Why not?"
+                      }
+                      value={details[region] ?? ""}
+                      onChange={(e) => setDetails((d) => ({ ...d, [region]: e.target.value }))}
+                      data-testid={`detail-${region}`}
+                    />
+                  )}
+                </div>
+
+                {showDiagram && options && (
+                  <div className="ml-0 sm:ml-48 space-y-2" data-testid={`graphic-panel-${region}`}>
+                    {options.length > 1 && (
+                      <select
+                        className="rounded border border-border px-2 py-1 text-sm"
+                        value={selectedGraphic}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          setGraphics((g) => ({ ...g, [region]: next }));
+                          // Switching diagram clears pins that belong to the previous map.
+                          setMarksByRegion((m) => ({ ...m, [region]: [] }));
+                        }}
+                        data-testid={`graphic-select-${region}`}
+                      >
+                        {options.map((g) => (
+                          <option key={g} value={g}>
+                            {GRAPHIC_LABEL(g)}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <BodyMapField
+                      instrumentId={selectedGraphic!}
+                      value={marksByRegion[region] ?? []}
+                      onChange={(findings) =>
+                        setMarksByRegion((m) => ({ ...m, [region]: findings }))
+                      }
+                      data-testid={`body-map-${region}`}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {incomplete && (
@@ -192,12 +265,31 @@ export function ExaminationShell({ patientId, journeyId }: { patientId: string; 
           <div className="rounded-lg border border-border bg-card p-4 space-y-2" data-testid="examination-detail">
             <ul className="space-y-1">
               {detail.data.data.findings.map((f) => (
-                <li key={f.region} className="text-sm" data-testid={`finding-${f.region}`}>
-                  <span className="font-medium">{REGION_LABEL(f.region)}</span>{" "}
-                  <span className={f.was_examined ? "" : "text-warning-foreground"}>
-                    {STATE_LABEL[f.state] ?? f.state}
-                  </span>
-                  {f.detail ? ` — ${f.detail}` : ""}
+                <li key={f.region} className="space-y-2 text-sm" data-testid={`finding-${f.region}`}>
+                  <div>
+                    <span className="font-medium">{REGION_LABEL(f.region)}</span>{" "}
+                    <span className={f.was_examined ? "" : "text-warning-foreground"}>
+                      {STATE_LABEL[f.state] ?? f.state}
+                    </span>
+                    {f.detail ? ` — ${f.detail}` : ""}
+                    {f.graphic ? (
+                      <span className="text-muted-foreground" data-testid={`finding-graphic-${f.region}`}>
+                        {" "}
+                        · {GRAPHIC_LABEL(f.graphic)}
+                        {f.site ? ` @ ${f.site}` : ""}
+                        {f.laterality ? ` (${f.laterality.toLowerCase()})` : ""}
+                      </span>
+                    ) : null}
+                  </div>
+                  {f.graphic && f.site ? (
+                    <BodyMapField
+                      instrumentId={f.graphic}
+                      value={findingToMarks(f)}
+                      onChange={() => undefined}
+                      readOnly
+                      data-testid={`body-map-read-${f.region}`}
+                    />
+                  ) : null}
                 </li>
               ))}
             </ul>

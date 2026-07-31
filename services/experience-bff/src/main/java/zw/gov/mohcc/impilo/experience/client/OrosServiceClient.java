@@ -672,6 +672,18 @@ public class OrosServiceClient {
         return extractData(response);
     }
 
+    public JsonNode listOrderSets() {
+        String url = baseUrl + "/v1/order-sets";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode placeOrderSet(String setId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/order-sets/" + setId + "/place";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

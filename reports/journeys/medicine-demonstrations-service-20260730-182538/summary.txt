@@ -1,0 +1,6 @@
+medicine §23 demonstrations — SERVICE layer
+pass=30 fail=0 skip=0 cannot_yet=7
+
+Proves: services execute these journeys over HTTP (BFF + pct).
+Does NOT prove: clinician walkthrough in the product.
+Companion: scripts/runtime-proof/medicine-demonstrations.sh (record layer).

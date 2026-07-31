@@ -37,6 +37,7 @@ import { CriticalResultsPanel } from "@/components/clinical/CriticalResultsPanel
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useEdVisits, useOpenEdVisit } from "@/hooks/queries/useEdVisit";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { EmergencyOfflineOutboxPanel } from "@/features/emergency/offline/EmergencyOfflineOutboxPanel";
 
 const PROTOCOL_OPTIONS = ["CODE_BLUE", "TRAUMA", "RSI", "MATERNITY", "TOXICOLOGY", "OTHER"] as const;
 
@@ -146,13 +147,27 @@ export default function EmergencyDepartmentPage() {
         subtitle="ED trackboard, full patient journey, critical event activations"
       >
         <div className="space-y-6">
-          <div className="flex justify-end">
-            <Link href="/clinical/emergency/board" className="text-sm text-primary underline">
-              Emergency episode board →
+          <div className="flex flex-wrap justify-end gap-x-4 gap-y-1 text-sm">
+            <Link href="/clinical/emergency/command" className="text-primary underline">
+              Emergency command
+            </Link>
+            <Link href="/clinical/emergency/board" className="text-primary underline">
+              Emergency episode board
+            </Link>
+            <Link href="/clinical/emergency/activation" className="text-primary underline">
+              Open an episode
+            </Link>
+            <Link href="/clinical/emergency/pre-arrival" className="text-primary underline">
+              Pre-arrival
+            </Link>
+            <Link href="/clinical/emergency/analytics" className="text-primary underline">
+              Analytics
             </Link>
           </div>
 
           <CriticalResultsPanel />
+
+          <EmergencyOfflineOutboxPanel />
 
           <EdPreArrivalBoard facilityId={facility?.id} />
 

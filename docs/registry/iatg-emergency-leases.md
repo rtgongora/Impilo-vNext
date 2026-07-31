@@ -218,8 +218,8 @@ Sub-ranges marked **✅landed** are consumed; do not re-issue them.
 | `tuso-service` | **V052** | surgery **V044–V049** — **overrun on disk**: the facility-readiness lane landed V050/V051/V052 above that ceiling with no lease covering them (flagged to coordinator 2026-07-28) | **V200–V219** | ✅landed 2026-07-28 (W10): `space_type` widen (`ED_RESUS_BAY` added to `chk_clinical_space_type`; `ClinicalSpaceService.list(tenantId, spaceType)` and its controller already supported any value — zero code change beyond the migration) + `facility_emergency_capability` (hand-declared per-facility booleans — has_24h_theatre/has_blood_bank/has_ct_scan/has_icu/has_massive_transfusion_protocol — deliberately NOT a "trauma centre Level I-IV" classification; no Zimbabwe national accreditation scheme was found to exist) **V200**. Reserve V201–19. |
 | `oros-service` | **V300** (surgery) | trauma V015–V024 · surgery V018–V024 **and V300–V329** | **V200–V219** | `results.acted_at` V200. **⚠ Surgery's V300 sits ABOVE this band — see the DDL rule below.** |
 | `inventory-service` (Dura) | V014 | surgery V015–V020 **and V300–V329** | **V200–V219** | ✅landed 2026-07-28 (W10): `inv_emergency_kit` (a kit/trolley tracked as a unit, `contents_manifest` JSONB) + `inv_emergency_kit_check` (completeness checks; `chk_iekc_discrepancies_required` — a discrepancy check with no recorded discrepancy detail is refused, same value-or-reason discipline as the rest of this pack) **V200**. Reserve V201–19. |
-| `reporting-service` | V003 | surgery V300–V329 | **V200–V219** | W17 indicators/DSEC mapping V200–02 (band claimed 2026-07-28; §3 previously omitted this service) |
-| `rito-quality-safety-service` | V007 | trauma V010–V019 | **V200–V219** | after-action linkage V200 |
+| `reporting-service` | **V201** | surgery V300–V329 | **V200–V219** | ✅landed 2026-07-30 (W17): Theatre-pattern projection `rpt_emergency_episode_metric` **V200** + report catalog (`emergency-episode-summary` / disposition-mix / acuity-distribution / register) **V201** · DSEC 47+31 mapping in `docs/clinical/emergency-domain-pack/dsec-element-mapping.json` · reserve V202–19 |
+| `rito-quality-safety-service` | **V200** | trauma V010–V019 | **V200–V219** | ✅landed 2026-07-30 (W17): after-action linkage **V200** (`EMERGENCY_EPISODE` / `AFTER_ACTION` / `DISASTER_INCIDENT` link types + auto-link from `metadata.episodeId`) · reserve V201–19 |
 | `notification-service` | **V018** | surgery V018–V020 **and V300–V329** | **V200–V219** | emergency templates V200 |
 | `vashandi-workforce-service` | V008 | trauma V015–V024 (pre-convention anomaly — migrates to a hundred band at trauma's next wave) · surgery V300–V329 (surgery's own lease is authoritative; the V009–V012 previously recorded here was a stale pre-band draft — corrected by coordinator 2026-07-26) · core workforce keeps the low sequential band V001–V0xx (V009 on-call/swaps landed 2026-07-26) | **V200–V219** | emergency roster view V200 |
 | `vito-service` | V048 | trauma V035–V044 | **V200–V219** | provisional-identity hardening V200 |
@@ -849,6 +849,53 @@ attempted. **This is an honest gap, not a silent drop**: engines, content schema
 exist ready to receive real tranche content the moment source documents are available: only the
 content itself is missing. Must be carried into the W18 honest-gap register by name, with the
 sourcing blocker stated explicitly, not omitted.
+
+**Corrections to this file's own earlier claims, verified 2026-07-30 at the start of the W15–W19
+completion lane.** Three statements above are now wrong, and one omission matters:
+
+1. **`EdVisitIT.java` is no longer excluded from the build.** W15's record says `EdVisitService`'s
+   "sole other test, `EdVisitIT`, is a `*IT.java` excluded from the build". A peer's estate-wide
+   `*IT` → `*Test` rename has since landed; the file is `EdVisitTest.java` and surefire runs it. The
+   coverage complaint recorded at W15 no longer holds.
+2. **`contracts/openapi/mental-health.openapi.yaml` was hand-authored by a peer, not by this pack.**
+   W13's record implies the contract came with the service; it did not. Do not treat it as this
+   pack's artefact when reconciling contract drift.
+3. **`mental-health-service` has never been deployed.** W13 landed the service, the migrations, the
+   registry entry, the BFF client/controller and the referral-queue page — and no image was ever
+   built and no Deployment exists in `impilo-full-preview`. `kubectl get deploy mental-health-service
+   -n impilo-full-preview` returns NotFound. Every mental-health surface in this pack is therefore
+   unreachable at runtime today. This is deliberately **not** being papered over by quietly building
+   an image: it is carried by name into the W18 honest-gap register.
+4. **`test:query-honesty` fails at HEAD on a file this pack does not own** —
+   `ui/one-ui-shell/src/app/work/regulatory/[orgId]/student-applications/[applicationId]/page.tsx`,
+   from the regulatory lane's `21b9444c3`. Recorded so a later wave does not mistake a pre-existing
+   peer failure for its own regression. Not fixed here: it is another lane's file.
+
+**W15c landed 2026-07-30 — BFF reachability, the fourth instance of this pack's own "built, never
+wired" failure class.** Seven surfaces pct-service had been serving reached nothing at all:
+`EmergencyOrderSetController` (all five routes, live since W7b), `EmergencyMedicationAdminController`
+(both routes, live since W8a), observation-stay create/list/end, identity-link create/history, alert
+**close**, the ED diagnostics `act`/`close`/`reconcile-critical` transitions, and the ED
+`POST /v1/ed/pre-arrival` and `/arrival` writes — the pre-arrival board was readable but not
+writable. Closed by extending `PctServiceClient` and the existing BFF `EmergencyEpisodeController` /
+`EdWorkflowController` rather than forking a second client path to one truth. Three of these are
+clinically load-bearing: alert **close** is what lifts pct's partial unique index on open alerts, so
+until now a suppressed hazard could never re-raise; an order-set item decline carries a mandatory
+reason, which is the entire point of the table; and `pct.ed.critical_result`, the estate's only ED
+safety event, had no route by which the clinician who acted on it could record that they did. Every
+new route surfaces pct's own 4xx as-is — a refusal to close an unacted critical result must read as a
+refusal, not as an outage that invites a retry. Verified: experience-bff 1518/1518 green.
+
+**W15 honesty contract landed 2026-07-30 (no migration).** `support/EmergencyHonesty.java` emits the
+flat register envelope (`{error, message, meta}`, **no `data` key at all**, logged at `error`) so a
+failed read has no empty list for a panel to render as "no alerts"; the message clause "Do not treat
+this as an absence of &lt;subject&gt;" is built from a caller-supplied subject rather than a
+caller-supplied sentence, and a subjectless failure is refused. `EmergencyHonesty.Composite` returns
+`items` + `failures` so one blind upstream costs one board tile rather than the board.
+`ui/one-ui-shell/src/lib/bff-errors.ts` reads **both** that flat envelope and the nested `HTTP_ERROR`
+shape `ResponseStatusException` still produces on the ED lane's 31 routes, and never synthesises a
+message it was not given. **Open**: those 31 ED routes still emit the nested shape; migrating them is
+a separate change and is not claimed here.
 
 **Not started, genuinely large remaining scope**: W15 the rest of the experience layer (resus timer,
 acuity board, serial-reassessment timeline primitives, plus mental-health's own fuller

@@ -18,7 +18,7 @@ class QrSigningServiceTest {
     }
 
     private QrSigningService instance(String seed, String previousSeed) throws Exception {
-        QrSigningService s = new QrSigningService(seed, previousSeed);
+        QrSigningService s = new QrSigningService("seed", seed, previousSeed);
         s.init();
         return s;
     }
@@ -139,5 +139,15 @@ class QrSigningServiceTest {
         assertNotNull(jwk);
         assertTrue(jwk.contains("\"kty\":\"OKP\""));
         assertTrue(jwk.contains("\"crv\":\"Ed25519\""));
+    }
+
+    @Test
+    void failsClosedOnBlankOrWeakSeed() {
+        assertThrows(IllegalStateException.class,
+                () -> new QrSigningService("seed", "", ""));
+        assertThrows(IllegalStateException.class,
+                () -> new QrSigningService("seed", "too-short", ""));
+        assertThrows(IllegalStateException.class,
+                () -> new QrSigningService("seed", "vito-qr-signing-dev-seed-change-me-32b", ""));
     }
 }

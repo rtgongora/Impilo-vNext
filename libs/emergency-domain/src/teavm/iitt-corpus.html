@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>IITT corpus — TeaVM spike</title>
+</head>
+<body>
+  <p id="status">running…</p>
+  <!--
+    W16a headless harness. TeaVM UMD build exports main() on the global object.
+    IittBrowserCorpusMain writes window.__IITT_CORPUS_RESULT__ and document.title.
+  -->
+  <script src="iitt-corpus.js"></script>
+  <script>
+    (function () {
+      var started = performance.now();
+      try {
+        if (typeof main !== "function") {
+          throw new Error("TeaVM main() not exported");
+        }
+        main([]);
+      } catch (e) {
+        // FAIL path throws after publishing; PASS does not.
+        if (!window.__IITT_CORPUS_RESULT__) {
+          window.__IITT_CORPUS_RESULT__ = "FAIL bootstrap=" + (e && e.message ? e.message : String(e));
+          document.title = window.__IITT_CORPUS_RESULT__;
+        }
+      }
+      window.__IITT_CORPUS_COLD_START_MS__ = Math.round(performance.now() - started);
+      var el = document.getElementById("status");
+      if (el) {
+        el.textContent = window.__IITT_CORPUS_RESULT__ + " coldStartMs=" + window.__IITT_CORPUS_COLD_START_MS__;
+      }
+    })();
+  </script>
+</body>
+</html>

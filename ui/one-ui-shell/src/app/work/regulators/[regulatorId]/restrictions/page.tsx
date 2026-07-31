@@ -1,7 +1,11 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { ScopedAdministrationSurface } from "@/components/administration-governance/ScopedAdministrationSurface";
-
-export default function Page() {
-  return <ScopedAdministrationSurface surfaceId="regulators" />;
+/** Legacy stub path — real restrictions list lives under the regulatory org tree. */
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ regulatorId: string }>;
+}) {
+  const { regulatorId } = await params;
+  redirect(`/work/regulatory/${encodeURIComponent(regulatorId)}/restrictions`);
 }

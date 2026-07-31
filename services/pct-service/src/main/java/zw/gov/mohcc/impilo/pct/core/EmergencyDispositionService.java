@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -145,10 +146,17 @@ public class EmergencyDispositionService {
         return disposition;
     }
 
+    /**
+     * The disposition for an episode, if one has been recorded.
+     *
+     * <p>Absence is not an error. A clinician opens this surface precisely because they are about
+     * to record the first disposition; returning 404 for that case forces the UI to treat "nothing
+     * yet" the same as "could not be read", and the honest-degradation rule then refuses to show
+     * the form — locking the clinician out of the write they came to make.
+     */
     @Transactional(readOnly = true)
-    public EmergencyDispositionEntity forEpisode(UUID episodeId, UUID tenantId) {
-        return dispositionRepository.findByEpisodeIdAndTenantId(episodeId, tenantId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No disposition recorded for this episode"));
+    public Optional<EmergencyDispositionEntity> forEpisode(UUID episodeId, UUID tenantId) {
+        return dispositionRepository.findByEpisodeIdAndTenantId(episodeId, tenantId);
     }
 
     private static String str(Map<String, Object> body, String... keys) {

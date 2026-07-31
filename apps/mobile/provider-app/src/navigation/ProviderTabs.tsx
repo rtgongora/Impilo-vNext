@@ -15,6 +15,7 @@ import { ResultsViewScreen } from "../screens/provider/ResultsViewScreen";
 import { ProfessionalProfileScreen } from "../screens/provider/ProfessionalProfileScreen";
 import { QueueManagementScreen } from "../screens/provider/QueueManagementScreen";
 import { ClinicalToolsScreen } from "../screens/provider/ClinicalToolsScreen";
+import { EmergencyHubScreen } from "../screens/provider/EmergencyHubScreen";
 import { EncounterScreen } from "../screens/provider/EncounterScreen";
 import { MessagingScreen } from "../screens/provider/MessagingScreen";
 import { HealthOsAppsScreen } from "../screens/provider/HealthOsAppsScreen";
@@ -54,6 +55,11 @@ export function ProviderTabs() {
       key: "workhome" as const,
       label: "Work Home",
       icon: tabIcon(providerTab === "workhome" ? "home" : "home-outline", providerTab === "workhome"),
+    },
+    {
+      key: "emergency" as const,
+      label: "Emergency",
+      icon: tabIcon(providerTab === "emergency" ? "medkit" : "medkit-outline", providerTab === "emergency"),
     },
     {
       key: "dashboard" as const,
@@ -121,6 +127,8 @@ export function ProviderTabs() {
     switch (providerTab) {
       case "workhome":
         return <WorkHomeScreen />;
+      case "emergency":
+        return <EmergencyHubScreen />;
       case "dashboard":
         return <ProviderDashboardScreen />;
       case "patients":

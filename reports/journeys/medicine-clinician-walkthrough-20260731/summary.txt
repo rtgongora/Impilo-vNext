@@ -1,0 +1,32 @@
+# Adult medicine §23 clinician walkthrough — 2026-07-31
+branch=claude/adult-medicine-waves-0-2
+workspace_head=92e0e8166
+preview_url=https://impilo.mohcc.gov.zw
+preview_internal_probe=http://127.0.0.1 Host:impilo.mohcc.gov.zw
+preview_commit_observed=fe0ba72d97957016b50d637be32bc88d149b0ecc
+preview_branch_observed=claude/staging-ux-orchestration-remediation-Yypyl
+public_https=UNREACHABLE (connection refused / failed on :443)
+deploy_authorized=no
+gates_at_head=RUNNING_OR_PARTIAL (product-truth/phase6 baseline FAIL observed mid-run; not adult-medicine pack-owned)
+
+# Protocol: docs/clinical/adult-medicine-domain-pack/clinician-walkthrough.md
+# Verdict policy: do not execute product journeys against a preview that is not
+# branch HEAD — a PASS on stale UI would invent §23 evidence.
+
+journey=1 result=BLOCKED blocker=Preview not at adult-medicine HEAD (fe0ba72d vs 56d5deb34); public HTTPS down; deploy not authorized
+journey=2 result=BLOCKED blocker=Same — preview generation mismatch; cannot prove HIV confidential lane on this branch's UI
+journey=3 result=BLOCKED blocker=Same — cardiology specialty spineLinks not on deployed shell
+journey=4 result=BLOCKED blocker=Same — nephrology notBuilt honesty not on deployed shell
+journey=5 result=BLOCKED blocker=Same — exam/care-plan surfaces not at HEAD
+journey=6 result=BLOCKED blocker=Same — result-action path not at HEAD
+journey=7 result=BLOCKED blocker=Same — MDT record form not on deployed shell
+journey=8 result=BLOCKED blocker=Same — multimorbidity / functional write path not at HEAD
+journey=9 result=BLOCKED blocker=Same — pregnancy-aware CDS wiring not at HEAD
+journey=10 result=BLOCKED blocker=Same — transfer-of-care accept path not at HEAD
+
+clinician_walkthrough=INCOMPLETE
+incomplete_reason=Requires AUTHORIZE DEPLOY WITH VM GATES (GitHub CI infrastructure failure), successful preview deploy of 56d5deb34 (or later Wave-3 HEAD), /health/version commit match, then re-run this protocol.
+pack_section_25=NOT_MET
+
+wave3_code_complete=yes
+wave3_head=92e0e8166

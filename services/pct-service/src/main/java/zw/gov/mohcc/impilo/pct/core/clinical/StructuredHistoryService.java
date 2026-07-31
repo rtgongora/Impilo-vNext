@@ -99,7 +99,8 @@ public class StructuredHistoryService {
         e.setTenantId(ctx.tenantId());
         e.setSubjectCpid(required(body, "subject_cpid", "subjectCpid"));
         accessGuard.requireCareRelationship(ctx, e.getSubjectCpid(), null, null);
-        e.setCategory(upper(required(body, "category", "category")));
+        // Governed codes preferred; unknown categories still append (normalised to upper case).
+        e.setCategory(SocialHistoryVocabulary.normaliseCategory(required(body, "category", "category")));
         e.setStatus(required(body, "status", "status"));
         e.setDetail(str(body.get("detail")));
         // Never defaulted: an unassessed risk stays null. "Low" is the value that stops a reader.

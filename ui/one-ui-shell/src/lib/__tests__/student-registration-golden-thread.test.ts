@@ -74,4 +74,28 @@ describe("student registration — three sides", () => {
     expect(page).toContain("nothing is waived");
     expect(page.toLowerCase()).not.toContain("no fee payable");
   });
+
+  it("wires admit through the student-registration admit hook, not a stub", () => {
+    const hooks = read(HOOKS);
+    expect(hooks).toContain("useAdmitStudentApplication");
+    expect(hooks).toContain("/applications/");
+    expect(hooks).toContain("/admit");
+    const page = read(REGULATOR);
+    expect(page).toContain("useAdmitStudentApplication");
+    expect(page).toContain("Admit student");
+    expect(page).toContain("indexNumber");
+  });
+
+  it("requires non-empty section content before the applicant resubmits", () => {
+    const page = read(STUDENT);
+    expect(page).not.toContain("content: {}");
+    expect(page).toContain("Enter the corrected information");
+    expect(page).toMatch(/disabled=\{!canResubmit/);
+  });
+
+  it("registers the student applications queue and reports routes", () => {
+    const paths = ROUTES.map((r) => r.path);
+    expect(paths).toContain("/work/regulatory/[orgId]/student-applications");
+    expect(paths).toContain("/work/regulatory/[orgId]/student-reports");
+  });
 });

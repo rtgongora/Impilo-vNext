@@ -52,6 +52,10 @@ fullBootServices:
     enabled: true
     port: 8291
     database: card_print_agent
+    secretEnv:
+      CARD_PRINT_QR_SIGNING_KEY_SEED:
+        name: impilo-app-secrets
+        key: card-print-qr-signing-key-seed
   channels-service:
     enabled: true
     port: 8130
@@ -76,6 +80,10 @@ fullBootServices:
     enabled: true
     port: 8140
     database: coverage
+    secretEnv:
+      RUVIMBO_TOKEN_SECRET:
+        name: impilo-app-secrets
+        key: ruvimbo-token-secret
   credential-verification-service:
     enabled: true
     port: 8094
@@ -220,6 +228,10 @@ fullBootServices:
     enabled: true
     port: 8126
     database: mushe_wallet
+    secretEnv:
+      WALLET_CARD_ENCRYPTION_MASTER_KEY:
+        name: impilo-app-secrets
+        key: wallet-card-encryption-master-key
   mushex-service:
     enabled: true
     port: 8102
@@ -443,6 +455,10 @@ fullBootServices:
     enabled: true
     port: 8184
     database: tshepo_keys
+    secretEnv:
+      TSHEPO_KEYS_KEK:
+        name: impilo-app-secrets
+        key: tshepo-keys-kek
   tshepo-offline-service:
     enabled: true
     port: 8185
@@ -473,6 +489,18 @@ fullBootServices:
       VITO_HMAC_PEPPER:
         name: impilo-app-secrets
         key: vito-hmac-pepper
+      VITO_IMPILO_ID_ENCRYPTION_KEY:
+        name: impilo-app-secrets
+        key: vito-impilo-id-encryption-key
+      VITO_QR_SIGNING_KEY_SEED:
+        name: impilo-app-secrets
+        key: vito-qr-signing-key-seed
+      CARD_PRINT_QR_SIGNING_KEY_SEED:
+        name: impilo-app-secrets
+        key: card-print-qr-signing-key-seed
+      CARD_PRINT_QR_PUBLIC_KEY:
+        name: impilo-app-secrets
+        key: card-print-qr-public-key
   wellness-service:
     enabled: true
     port: 8161

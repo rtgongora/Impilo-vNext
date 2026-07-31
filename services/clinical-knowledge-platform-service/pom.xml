@@ -71,6 +71,13 @@
             <groupId>zw.gov.mohcc.impilo</groupId>
             <artifactId>paediatric-domain</artifactId>
         </dependency>
+        <!-- Adult-medicine calculators: the arithmetic behind /internal/v1/clinical/calculators
+             and behind the renal thresholds the rules engine and deprescribing gates read;
+             treatment burden arithmetic lives in medicine-domain -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>medicine-domain</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
@@ -104,6 +111,13 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- @EmbeddedKafka for ClinicalKafkaOutboxRelayIT: proves the relay-enabled producer path
+             against a real broker, not a mock. -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

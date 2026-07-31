@@ -93,6 +93,27 @@ export function useEdVisitActions(visitId: string) {
         apiClient.post(`${BASE}/pathways/sessions/${sessionId}/advance`, { answers }),
       onSuccess: invalidate,
     }),
+    /** Place a trauma ED diagnostic order (OROS + pct link). */
+    orderDiagnostic: useMutation({
+      mutationFn: (body: Record<string, unknown>) =>
+        apiClient.post<{ data: Record<string, unknown> }>(`${BASE}/visits/${visitId}/diagnostics`, body),
+      onSuccess: invalidate,
+    }),
+    actOnDiagnostic: useMutation({
+      mutationFn: ({ linkId, ...body }: { linkId: string } & Record<string, unknown>) =>
+        apiClient.post(`${BASE}/diagnostics/${linkId}/act`, body),
+      onSuccess: invalidate,
+    }),
+    closeDiagnostic: useMutation({
+      mutationFn: ({ linkId, ...body }: { linkId: string } & Record<string, unknown>) =>
+        apiClient.post(`${BASE}/diagnostics/${linkId}/close`, body),
+      onSuccess: invalidate,
+    }),
+    reconcileCritical: useMutation({
+      mutationFn: (body: Record<string, unknown>) =>
+        apiClient.post(`${BASE}/diagnostics/reconcile-critical`, body),
+      onSuccess: invalidate,
+    }),
   };
 }
 

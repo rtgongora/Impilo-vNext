@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.telemonitoring.domain.ConsentStatus;
 import zw.gov.mohcc.impilo.telemonitoring.domain.PlanStatus;
 import zw.gov.mohcc.impilo.telemonitoring.events.TelemonitoringEventEmitter;
+import zw.gov.mohcc.impilo.telemonitoring.integration.PctProblemContributionClient;
+import zw.gov.mohcc.impilo.telemonitoring.integration.PctProblemContributionClient.ContributionResult;
 import zw.gov.mohcc.impilo.telemonitoring.integration.PctTaskClient;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.entity.MonitoringPlanEntity;
 import zw.gov.mohcc.impilo.telemonitoring.persistence.entity.MonitoringProgrammeEntity;
@@ -54,6 +56,7 @@ public class MonitoringPlanService {
     private final ThresholdProfileRepository thresholdRepository;
     private final TelemonitoringEventEmitter eventEmitter;
     private final PctTaskClient pctTaskClient;
+    private final PctProblemContributionClient pctProblemClient;
     private final ObjectMapper objectMapper;
 
     public MonitoringPlanService(MonitoringPlanRepository planRepository,
@@ -61,12 +64,14 @@ public class MonitoringPlanService {
                                  ThresholdProfileRepository thresholdRepository,
                                  TelemonitoringEventEmitter eventEmitter,
                                  PctTaskClient pctTaskClient,
+                                 PctProblemContributionClient pctProblemClient,
                                  ObjectMapper objectMapper) {
         this.planRepository = planRepository;
         this.programmeRepository = programmeRepository;
         this.thresholdRepository = thresholdRepository;
         this.eventEmitter = eventEmitter;
         this.pctTaskClient = pctTaskClient;
+        this.pctProblemClient = pctProblemClient;
         this.objectMapper = objectMapper;
     }
 
@@ -204,6 +209,9 @@ public class MonitoringPlanService {
      *       {@code telemonitoring.plan.task_requested.v1} outbox event is written in this
      *       transaction and PCT's generic task lane ({@code POST /v1/tasks}) is pushed
      *       best-effort — a degraded PCT never rolls back a clinician's activation.</li>
+     *   <li><b>Problem-list anchor</b> — when a clinical indication or programme is present,
+     *       a best-effort contribution into {@code pct_problems} is attempted and
+     *       {@code pct_problem_ref} stores the pointer when PCT accepts it.</li>
      * </ul>
      */
     @Transactional
@@ -244,8 +252,42 @@ public class MonitoringPlanService {
         payload.put("consentReference", plan.getConsentReference());
         eventEmitter.emitPlanEvent("activated", plan.getId(), plan.getPatientCpid(), payload, plan.getTenantId());
 
+        contributePctProblemIfNeeded(plan);
         requestChwTaskIfBound(plan, approvedBy);
         return plan;
+    }
+
+    /**
+     * Side-effect (b): contribute the monitoring indication into pct_problems when the plan
+     * carries a clinical indication or programme code. Fail-open — activation is never rolled
+     * back when PCT is unavailable; {@code idx_tm_plans_uncontributed} reconciles later.
+     */
+    private void contributePctProblemIfNeeded(MonitoringPlanEntity plan) {
+        if (plan.getPctProblemRef() != null) {
+            return;
+        }
+        String display = resolveProblemDisplay(plan);
+        if (display == null) {
+            return;
+        }
+        String evidence = "Telemonitoring plan " + plan.getId() + " (programme " + plan.getProgrammeCode() + ")";
+        ContributionResult result = pctProblemClient.contributeCondition(
+                plan.getPatientCpid(), null, null, display, "PROVISIONAL", evidence);
+        if (result.contributed()) {
+            plan.setPctProblemRef(result.problemId());
+            plan.setPctProblemContributedAt(OffsetDateTime.now());
+            planRepository.save(plan);
+        }
+    }
+
+    private static String resolveProblemDisplay(MonitoringPlanEntity plan) {
+        if (plan.getClinicalIndication() != null && !plan.getClinicalIndication().isBlank()) {
+            return plan.getClinicalIndication();
+        }
+        if (plan.getProgrammeCode() != null && !plan.getProgrammeCode().isBlank()) {
+            return plan.getProgrammeCode();
+        }
+        return null;
     }
 
     /**

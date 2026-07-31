@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import FamilyHistoryPage from "./page";
+
+const { recordFamilyMemberMutate } = vi.hoisted(() => ({ recordFamilyMemberMutate: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useParams: () => ({ patientId: "patient-1" }) }));
 vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
@@ -39,6 +41,12 @@ vi.mock("@/hooks/queries/useStructuredHistory", () => ({
     isError: false,
     refetch: vi.fn(),
   }),
+  useRecordFamilyMember: () => ({
+    mutate: recordFamilyMemberMutate,
+    reset: vi.fn(),
+    isPending: false,
+    isError: false,
+  }),
 }));
 
 describe("FamilyHistoryPage", () => {
@@ -50,5 +58,28 @@ describe("FamilyHistoryPage", () => {
     expect(screen.getByText("Risk clusters")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Conditions" })).toHaveAttribute("href", "/ehr/patient-1/conditions");
     expect(screen.getByRole("link", { name: "Care Plans" })).toHaveAttribute("href", "/ehr/patient-1/care-plans");
+  });
+
+  it("wires Add Member to the record mutation with the entered relationship, name and age", () => {
+    render(<FamilyHistoryPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add Family Member" }));
+    fireEvent.change(screen.getByLabelText("Relationship"), { target: { value: "Mother" } });
+    fireEvent.change(screen.getByLabelText("Name / Initials"), { target: { value: "J.M." } });
+    fireEvent.change(screen.getByLabelText("Current Age"), { target: { value: "70" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add Member" }));
+
+    expect(recordFamilyMemberMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ relationship: "Mother", distinguisher: "J.M.", age: 70 }),
+      expect.anything()
+    );
+  });
+
+  it("does not enable Add Member until a relationship is chosen", () => {
+    render(<FamilyHistoryPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add Family Member" }));
+
+    expect(screen.getByRole("button", { name: "Add Member" })).toBeDisabled();
   });
 });

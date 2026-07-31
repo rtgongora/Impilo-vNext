@@ -55,4 +55,13 @@ class ImpiloIdCipherTest {
         ImpiloIdCipher other = new ImpiloIdCipher("a-DIFFERENT-strong-key-of-32-bytes++");
         assertThrows(IllegalStateException.class, () -> other.decrypt(enc));
     }
+
+    @Test
+    @DisplayName("blank or placeholder key → refuse to construct")
+    void failsClosedOnBlankOrWeakKey() {
+        assertThrows(IllegalStateException.class, () -> new ImpiloIdCipher(""));
+        assertThrows(IllegalStateException.class, () -> new ImpiloIdCipher("too-short"));
+        assertThrows(IllegalStateException.class,
+                () -> new ImpiloIdCipher("vito-impilo-id-dev-key-change-me-32b!!"));
+    }
 }

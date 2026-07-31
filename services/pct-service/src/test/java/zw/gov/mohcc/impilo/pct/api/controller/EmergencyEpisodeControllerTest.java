@@ -48,7 +48,7 @@ class EmergencyEpisodeControllerTest {
         var repo = new EmergencyEpisodeServiceTest.InMemoryRepo();
         var handoverRepo = new EmergencyEpisodeServiceTest.InMemoryHandoverRepo();
         var outbox = new EmergencyEpisodeServiceTest.CountingOutbox();
-        EmergencyEpisodeService service = new EmergencyEpisodeService(repo, handoverRepo, outbox, new ObjectMapper());
+        EmergencyEpisodeService service = new EmergencyEpisodeService(repo, handoverRepo, outbox, new ObjectMapper(), org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class));
         EmergencyDispositionService dispositionService = new EmergencyDispositionService(
                 repo, new EmergencyDispositionServiceTest.InMemoryDispositionRepo(), service);
         EmergencyObservationStayService observationStayService = new EmergencyObservationStayService(

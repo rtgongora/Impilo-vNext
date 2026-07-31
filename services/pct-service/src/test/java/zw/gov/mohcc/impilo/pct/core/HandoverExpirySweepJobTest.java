@@ -39,7 +39,7 @@ class HandoverExpirySweepJobTest {
         episodeRepo = new EmergencyEpisodeServiceTest.InMemoryRepo();
         handoverRepo = new EmergencyEpisodeServiceTest.InMemoryHandoverRepo();
         var outbox = new EmergencyEpisodeServiceTest.CountingOutbox();
-        episodeService = new EmergencyEpisodeService(episodeRepo, handoverRepo, outbox, new ObjectMapper());
+        episodeService = new EmergencyEpisodeService(episodeRepo, handoverRepo, outbox, new ObjectMapper(), org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class));
         ritoClient = new StubRitoSafetyClient();
         job = new HandoverExpirySweepJob(handoverRepo, episodeService, ritoClient);
     }

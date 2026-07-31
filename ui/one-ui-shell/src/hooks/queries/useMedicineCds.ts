@@ -21,7 +21,7 @@ import type { ProgrammeGuidance } from "./usePrograms";
  * screen says which. The BFF returns 502 precisely so this cannot be mistaken for an all-clear.
  */
 
-/** The eight topics the CKP evaluator serves. Kebab-case is the wire form the BFF path expects. */
+/** Topics the CKP evaluator serves. Kebab-case is the wire form the BFF path expects. */
 export const MEDICINE_CDS_TOPICS = [
   "cvd-risk",
   "deprescribing",
@@ -31,6 +31,9 @@ export const MEDICINE_CDS_TOPICS = [
   "antimicrobial-stewardship",
   "palliative",
   "oncology",
+  "malaria",
+  "sickle-cell",
+  "rhd",
 ] as const;
 
 export type MedicineCdsTopic = (typeof MEDICINE_CDS_TOPICS)[number];

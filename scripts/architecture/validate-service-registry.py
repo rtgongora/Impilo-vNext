@@ -325,6 +325,32 @@ def main():
         if d not in registry_names:
             structural_errors.append(f'Missing library coverage: {d} from libs/')
 
+    # Registry libraries → Maven reactor (docs/registry/services-registry.yaml).
+    # The check above is the reverse direction (libs/ on disk → architecture registry).
+    # medicine-domain was registered but never listed in services/pom.xml modules, so its
+    # tests ran in no CI job. Fail when a registry library is absent from the reactor.
+    prod_registry = ROOT / 'docs/registry/services-registry.yaml'
+    pom_path = ROOT / 'services/pom.xml'
+    if prod_registry.exists() and pom_path.exists():
+        try:
+            prod = yaml.safe_load(prod_registry.read_text(encoding='utf-8')) or {}
+            pom_text = pom_path.read_text(encoding='utf-8')
+            for lib in prod.get('libraries') or []:
+                module = lib.get('maven_module')
+                if not module:
+                    continue
+                # shared-core lives under services/; other libs under ../libs/<module>
+                if f'<module>../libs/{module}</module>' not in pom_text and f'<module>{module}</module>' not in pom_text:
+                    # Some registry libs are not Maven reactor members by design (mocks, harnesses).
+                    path = lib.get('path') or ''
+                    if path.startswith('libs/') and (ROOT / path / 'pom.xml').exists():
+                        structural_errors.append(
+                            f"Registry library '{module}' has a pom at {path} but is not a "
+                            f"<module> in services/pom.xml — it will never build or test in the reactor."
+                        )
+        except Exception as e:
+            warnings.append(f'Could not cross-check registry libraries against Maven reactor: {e}')
+
     # Infra hint checks
     infra_hints = ['docker-compose.yml', 'infra/envoy/envoy.yaml', 'ops/runtime/docker-compose.observability.yml']
     for h in infra_hints:

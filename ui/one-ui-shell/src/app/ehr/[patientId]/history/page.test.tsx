@@ -39,6 +39,7 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
           id: "enc-1",
           attributes: {
             status: "IN_PROGRESS",
+            isOpen: true,
             encounterType: "OUTPATIENT",
             startedAt: "2026-04-08T09:00:00.000Z",
             chief_complaint: "Persistent chest pain",
@@ -50,44 +51,10 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: ({ queryKey }: { queryKey: [string] }) => {
-    const [resource] = queryKey;
-    if (resource === "conditions") {
-      return {
-        data: {
-          data: [
-            { id: "cond-1", attributes: { clinicalStatus: "ACTIVE", conditionName: "Hypertension", severity: "MODERATE" } },
-          ],
-        },
-        isLoading: false,
-      };
-    }
-    if (resource === "allergies") {
-      return {
-        data: {
-          data: [
-            { id: "alg-1", attributes: { status: "ACTIVE", allergen: "Penicillin", severity: "SEVERE" } },
-          ],
-        },
-        isLoading: false,
-      };
-    }
-    if (resource === "prescriptions") {
-      return {
-        data: {
-          data: [
-            { id: "rx-1", attributes: { status: "ACTIVE", medicationName: "Amlodipine", dosage: "5mg", frequency: "OD" } },
-          ],
-        },
-        isLoading: false,
-      };
-    }
-    return {
-      data: { data: [] },
-      isLoading: false,
-    };
-  },
+vi.mock("@/features/medicine/clerking/ClerkingContinuityShell", () => ({
+  ClerkingContinuityShell: ({ patientId }: { patientId: string }) => (
+    <div data-testid="clerking-continuity-shell">Clerking for {patientId}</div>
+  ),
 }));
 
 vi.mock("@/lib/api-client", () => ({
@@ -98,13 +65,21 @@ vi.mock("@/lib/api-client", () => ({
 }));
 
 describe("ClinicalHistoryPage", () => {
-  it("surfaces longitudinal review orchestration above the history workspace", () => {
+  it("keeps HPI narrative and mounts clerking continuity compose", () => {
     render(<ClinicalHistoryPage />);
 
-    expect(screen.getByText("Review the active story, then branch into conditions, medications, and allergies without losing encounter context")).toBeInTheDocument();
-    expect(screen.getByText("Active problems")).toBeInTheDocument();
-    expect(screen.getByText("Medication review")).toBeInTheDocument();
-    expect(screen.getByText("Allergy alerts")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Conditions" })).toHaveAttribute("href", "/ehr/patient-1/conditions");
+    expect(
+      screen.getByText(
+        /Review the active story, then branch into structured continuity/
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText("Presenting Complaint")).toBeInTheDocument();
+    expect(screen.getByText("Persistent chest pain")).toBeInTheDocument();
+    expect(screen.getByText("History of Present Illness")).toBeInTheDocument();
+    expect(screen.getByTestId("clerking-continuity-shell")).toHaveTextContent("Clerking for patient-1");
+    expect(screen.getByRole("link", { name: "Conditions" })).toHaveAttribute(
+      "href",
+      "/ehr/patient-1/conditions"
+    );
   });
 });

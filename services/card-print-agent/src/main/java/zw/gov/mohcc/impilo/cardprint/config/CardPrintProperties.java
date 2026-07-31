@@ -175,15 +175,31 @@ public class CardPrintProperties {
         }
     }
 
+    /**
+     * QR signing configuration. Bound for visibility and validation only — {@code QrAssertionService}
+     * reads the seed via {@code @Value} because it must fail closed in its own constructor. The
+     * retired {@code hmac-secret} was removed with the symmetric scheme it belonged to (X4 replaced
+     * it with Ed25519); it had no readers, but a stale placeholder next to a real secret is how
+     * operators learn to ignore both.
+     */
     public static class Qr {
-        private String hmacSecret = "changeme-not-for-production";
+        private String signingKeySeed = "";
+        private String signingSource = "seed";
 
-        public String getHmacSecret() {
-            return hmacSecret;
+        public String getSigningKeySeed() {
+            return signingKeySeed;
         }
 
-        public void setHmacSecret(String hmacSecret) {
-            this.hmacSecret = hmacSecret;
+        public void setSigningKeySeed(String signingKeySeed) {
+            this.signingKeySeed = signingKeySeed;
+        }
+
+        public String getSigningSource() {
+            return signingSource;
+        }
+
+        public void setSigningSource(String signingSource) {
+            this.signingSource = signingSource;
         }
     }
 

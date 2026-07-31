@@ -735,3 +735,25 @@ were fixed in the code rather than recorded as accepted debt.
 
 All nine are ancestors of canonical, so retiring the refs loses no history. **Nothing was deleted in
 this pass** — the decision is the product owner's.
+
+## Decision record (close-seven-open-issues pass)
+
+**Decision:** Retire all nine refs. Contained on canonical; no unique history remains on the branch tips.
+**Actioned 2026-07-31:** all nine remote refs deleted via `git push origin --delete`. History remains
+reachable from canonical.
+
+| Branch | Decision | Date |
+|--------|----------|------|
+| `claude/nervous-fermi-22e321` | Retire | 2026-07-31 |
+| `claude/trusting-chaplygin-48ca17` | Retire | 2026-07-31 |
+| `claude/ruvimbo-product-Yypyl` | Retire | 2026-07-31 |
+| `claude/youthful-montalcini-536fee` | Retire | 2026-07-31 |
+| `claude/khuluma-hub-Yypyl` | Retire | 2026-07-31 |
+| `claude/post-deploy-bugfix-Yypyl` | Retire | 2026-07-31 |
+| `claude/affectionate-joliot-aef493` | Retire | 2026-07-31 |
+| `claude/unruffled-cartwright-a85b36` | Retire | 2026-07-31 |
+| `claude/hungry-mestorf-a5cc9b` | Retire | 2026-07-31 |
+
+F4 (CI branch gating) is closed in the same pass by `backend-diff-scoped-tests` in `.github/workflows/ci.yml`
+(diff-scoped `-pl -am` on non-canonical branches; full reactor remains on canonical push).
+

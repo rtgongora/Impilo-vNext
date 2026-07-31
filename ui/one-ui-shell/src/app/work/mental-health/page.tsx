@@ -4,13 +4,11 @@
  * Mental Health — psychiatric emergency referral queue.
  * Route: /work/mental-health
  *
- * The accepting side of a psychiatric emergency handover (pct's emergency_handover,
- * target_type=MENTAL_HEALTH): lists PENDING referrals and lets a clinician accept or decline,
- * which writes the decision back onto pct's handover. The fuller clinical-record surface
- * (assessment, safety plan, involuntary episode, restraint events, admission requests, follow-up)
- * is deferred to W15's experience layer — this page covers the W13 acceptance surface only.
+ * Lists PENDING referrals for accept/decline, and ACCEPTED referrals so clinicians
+ * can rediscover the clinical record after acceptance.
  */
 
+import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Brain, Check, X } from "lucide-react";
@@ -18,12 +16,14 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 
+type ReferralStatus = "PENDING" | "ACCEPTED" | "DECLINED";
+
 interface Referral {
   id: string;
   episode_id: string;
   handover_id: string;
   subject_cpid: string | null;
-  status: "PENDING" | "ACCEPTED" | "DECLINED";
+  status: ReferralStatus;
   request_reason: string | null;
   requested_by: string;
   requested_at: string;
@@ -31,16 +31,19 @@ interface Referral {
 
 export default function MentalHealthQueuePage() {
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState<"PENDING" | "ACCEPTED">("PENDING");
   const [decliningId, setDecliningId] = useState<string | null>(null);
   const [declineReason, setDeclineReason] = useState("");
 
   const { data, isLoading, isError } = useQuery<{ data: Referral[] }>({
-    queryKey: ["mental-health-referrals", "PENDING"],
-    queryFn: () => apiClient.get(`/internal/v1/mental-health/referrals?status=PENDING`),
+    queryKey: ["mental-health-referrals", tab],
+    queryFn: () =>
+      apiClient.get(`/internal/v1/mental-health/referrals?status=${tab}`),
   });
 
   const accept = useMutation({
-    mutationFn: (id: string) => apiClient.post(`/internal/v1/mental-health/referrals/${id}/accept`, {}),
+    mutationFn: (id: string) =>
+      apiClient.post(`/internal/v1/mental-health/referrals/${id}/accept`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["mental-health-referrals"] }),
   });
 
@@ -60,8 +63,37 @@ export default function MentalHealthQueuePage() {
     <AppLayout>
       <PageShell
         title="Mental Health"
-        subtitle="Psychiatric emergency referrals awaiting acceptance"
+        subtitle={
+          tab === "PENDING"
+            ? "Psychiatric emergency referrals awaiting acceptance"
+            : "Accepted referrals — open the clinical record"
+        }
       >
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+          <div className="flex gap-1 rounded-lg border border-border p-0.5" role="tablist">
+            {(["PENDING", "ACCEPTED"] as const).map((status) => (
+              <button
+                key={status}
+                type="button"
+                role="tab"
+                aria-selected={tab === status}
+                data-testid={`mh-queue-tab-${status.toLowerCase()}`}
+                className={
+                  tab === status
+                    ? "rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white"
+                    : "rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted"
+                }
+                onClick={() => setTab(status)}
+              >
+                {status === "PENDING" ? "Pending" : "Accepted"}
+              </button>
+            ))}
+          </div>
+          <Link href="/work/mental-health/restraint-review" className="text-primary underline">
+            Restraint review backlog
+          </Link>
+        </div>
+
         {isLoading ? (
           <div className="flex items-center gap-2 py-12 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading referrals…
@@ -74,7 +106,9 @@ export default function MentalHealthQueuePage() {
         ) : referrals.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             <Brain className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-            No referrals pending acceptance.
+            {tab === "PENDING"
+              ? "No referrals pending acceptance."
+              : "No accepted referrals in this facility queue."}
           </div>
         ) : (
           <ul className="space-y-3">
@@ -92,27 +126,36 @@ export default function MentalHealthQueuePage() {
                     <div className="mt-1 text-xs text-muted-foreground">
                       Requested by {r.requested_by} · {new Date(r.requested_at).toLocaleString()}
                     </div>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      type="button"
-                      disabled={accept.isPending}
-                      onClick={() => accept.mutate(r.id)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
+                    <Link
+                      href={`/work/mental-health/${r.id}`}
+                      className="mt-1 inline-block text-xs text-primary underline"
+                      data-testid="mh-open-clinical-record"
                     >
-                      <Check className="h-3.5 w-3.5" /> Accept
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDecliningId(decliningId === r.id ? null : r.id)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted"
-                    >
-                      <X className="h-3.5 w-3.5" /> Decline
-                    </button>
+                      Open the clinical record
+                    </Link>
                   </div>
+                  {tab === "PENDING" ? (
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        disabled={accept.isPending}
+                        onClick={() => accept.mutate(r.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
+                      >
+                        <Check className="h-3.5 w-3.5" /> Accept
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDecliningId(decliningId === r.id ? null : r.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted"
+                      >
+                        <X className="h-3.5 w-3.5" /> Decline
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
 
-                {decliningId === r.id && (
+                {tab === "PENDING" && decliningId === r.id && (
                   <div className="mt-3 flex gap-2 border-t border-border pt-3">
                     <input
                       type="text"

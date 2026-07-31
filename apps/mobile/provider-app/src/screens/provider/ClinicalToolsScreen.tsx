@@ -51,14 +51,20 @@ import { MadiCentralBankScreen } from "../madi/MadiCentralBankScreen";
 import { ProviderLiveHubScreen } from "../live/ProviderLiveHubScreen";
 import { TriageScreen } from "./TriageScreen";
 import { PrehospitalEpcrScreen } from "./PrehospitalEpcrScreen";
+import { EmergencyHubScreen } from "./EmergencyHubScreen";
 import { BillingScreen } from "./BillingScreen";
 import { PACSViewerScreen } from "./PACSViewerScreen";
 import { DischargeScreen } from "./DischargeScreen";
 import { ReportSafetyScreen } from "../rito/ReportSafetyScreen";
 import { MySafetyCasesScreen } from "../rito/MySafetyCasesScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
+import { MedicineWorkspaceScreen } from "./MedicineWorkspaceScreen";
+import { MedicineCdsEvaluateScreen } from "./MedicineCdsEvaluateScreen";
+import { ClerkingContinuityScreen } from "./ClerkingContinuityScreen";
+import { ChronicRegistersScreen } from "./ChronicRegistersScreen";
 
 type ToolTab =
+  | "emergency"
   | "soap"
   | "triage"
   | "prehospital_epcr"
@@ -106,11 +112,18 @@ type ToolTab =
   | "madi_drives"
   | "madi_reactions"
   | "madi_central_bank"
-  | "impilo_live";
+  | "impilo_live"
+  | "medicine"
+  | "medicine_cds"
+  | "clerking_continuity"
+  | "chronic_registers";
 
 const TABS: { id: ToolTab; label: string }[] = [
+  { id: "emergency", label: "Emergency" },
   { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "prehospital_epcr", label: "ePCR" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
   { id: "care", label: "Care Plan" }, { id: "mar", label: "MAR" }, { id: "cds", label: "CDS" },
+  { id: "medicine", label: "Medicine" }, { id: "medicine_cds", label: "Med CDS" },
+  { id: "clerking_continuity", label: "Clerking" }, { id: "chronic_registers", label: "Registers" },
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
   { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "control_tower", label: "Control Tower" }, { id: "place_mode", label: "Place Mode" }, { id: "regulators", label: "Regulators" }, { id: "facility_setup", label: "Setup" }, { id: "queue_definitions", label: "Queues" }, { id: "reports", label: "Reports" },
   { id: "finance", label: "Finance" }, { id: "billing", label: "Billing" }, { id: "pacs", label: "PACS" },
@@ -144,6 +157,7 @@ const TABS: { id: ToolTab; label: string }[] = [
 export function ClinicalToolsScreen() {
   const [tab, setTab] = useState<ToolTab>("soap");
   const { clinicalToolsInitialTab } = useAppStore();
+  const { activeEncounter } = useEncounterStore();
 
   useEffect(() => {
     if (clinicalToolsInitialTab) {
@@ -167,6 +181,7 @@ export function ClinicalToolsScreen() {
         ))}
       </ScrollView>
       <ScrollView style={styles.content} contentContainerStyle={styles.contentPad}>
+        {tab === "emergency" && <EmergencyHubScreen />}
         {tab === "soap" && <SOAPPanel />}
         {tab === "triage" && <TriageScreen />}
         {tab === "prehospital_epcr" && <PrehospitalEpcrScreen />}
@@ -176,6 +191,19 @@ export function ClinicalToolsScreen() {
         {tab === "care" && <CarePlanPanel />}
         {tab === "mar" && <MARPanel />}
         {tab === "cds" && <CDSPanel />}
+        {tab === "medicine" && (
+          <MedicineWorkspaceScreen patientId={activeEncounter?.patientId ?? ""} />
+        )}
+        {tab === "medicine_cds" && (
+          <MedicineCdsEvaluateScreen patientId={activeEncounter?.patientId ?? null} />
+        )}
+        {tab === "clerking_continuity" && (
+          <ClerkingContinuityScreen
+            patientId={activeEncounter?.patientId ?? ""}
+            encounterId={activeEncounter?.id ?? ""}
+          />
+        )}
+        {tab === "chronic_registers" && <ChronicRegistersScreen />}
         {tab === "paging" && <PagingPanel />}
         {tab === "barcode" && <BarcodePanel />}
         {tab === "workspaces" && <SpecialtyPanel />}

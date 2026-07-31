@@ -702,6 +702,7 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      PCT_EMERGENCY_REALTIME_ENABLED: ${PCT_EMERGENCY_REALTIME_ENABLED:-true}
     mem_limit: 768m
     ports:
       - "8088:8088"
@@ -714,6 +715,40 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8088/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 45s
+
+  # ── Mental health — psychiatric emergency accepting side (port 8397) ─
+  mental-health:
+    build:
+      context: ./services/mental-health-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      SERVER_PORT: 8397
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      PCT_BASE_URL: http://pct:8088
+    mem_limit: 768m
+    ports:
+      - "8397:8397"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      pct:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8397/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 15
@@ -921,6 +956,8 @@ services:
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
       GUIDANCE_BASE_URL: http://guidance:8260
       CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL: http://clinical-knowledge-platform:8270
+      MENTAL_HEALTH_BASE_URL: http://mental-health:8397
+      MENTAL_HEALTH_SERVICE_BASE_URL: http://mental-health:8397
     mem_limit: 768m
     ports:
       - "8160:8160"
@@ -930,6 +967,8 @@ services:
       kafka:
         condition: service_healthy
       clinical-knowledge-platform:
+        condition: service_healthy
+      mental-health:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8160/actuator/health || exit 1"]
@@ -946,9 +985,13 @@ services:
       args:
         NEXT_PUBLIC_BFF_URL: http://localhost:8160
         NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
+        NEXT_PUBLIC_REALTIME_WS: ws://localhost:10000/internal/v1/khuluma/stream/ws
+        NEXT_PUBLIC_KHULUMA_WS: ws://localhost:10000/internal/v1/khuluma/stream/ws
     environment:
       NEXT_PUBLIC_BFF_URL: http://localhost:8160
       NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
+      NEXT_PUBLIC_REALTIME_WS: ws://localhost:10000/internal/v1/khuluma/stream/ws
+      NEXT_PUBLIC_KHULUMA_WS: ws://localhost:10000/internal/v1/khuluma/stream/ws
       API_GATEWAY_URL: http://envoy:10000
       BFF_URL: http://experience-bff:8160
       HOSTNAME: "0.0.0.0"

@@ -39,7 +39,7 @@ public class EmergencyEpisodeServiceTest {
         repo = new InMemoryRepo();
         handoverRepo = new InMemoryHandoverRepo();
         outbox = new CountingOutbox();
-        service = new EmergencyEpisodeService(repo, handoverRepo, outbox, new com.fasterxml.jackson.databind.ObjectMapper());
+        service = new EmergencyEpisodeService(repo, handoverRepo, outbox, new com.fasterxml.jackson.databind.ObjectMapper(), org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class));
     }
 
     /** An episode in OPEN_IN_CARE, ready to have a handover requested against it. */

@@ -1,0 +1,34 @@
+{
+  "version": "emergency-offline-w16b-1",
+  "cacheName": "impilo-emergency-w16b-1",
+  "description": "Per-feature offline enrollment. Only listed route prefixes may be cached by impilo-sw.js; everything else is network-only passthrough.",
+  "features": {
+    "emergency": {
+      "enrolled": true,
+      "pagePrefixes": [
+        "/clinical/emergency",
+        "/ehr/"
+      ],
+      "pagePrefixNotes": "ehr/[patientId]/emergency is under /ehr/; SW matches pathname containing /emergency for that tree.",
+      "staticAssets": [
+        "/offline-feature-manifest.json",
+        "/impilo-sw.js",
+        "/emergency/iitt-engine.js"
+      ],
+      "apiQueuePrefixes": [
+        "/internal/v1/emergency",
+        "/internal/v1/ed",
+        "/internal/v1/pct/emergency"
+      ],
+      "neverQueueApiSuffixes": [
+        "/triage",
+        "/triage/score"
+      ],
+      "neverCache": [
+        "_rsc",
+        "text/x-component",
+        "application/x-ndjson"
+      ]
+    }
+  }
+}

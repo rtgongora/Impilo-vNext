@@ -26,7 +26,7 @@ class QrAssertionServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        service = new QrAssertionService(mapper, SEED);
+        service = new QrAssertionService(mapper, "seed", SEED);
         service.init();
     }
 
@@ -53,11 +53,11 @@ class QrAssertionServiceTest {
     @Test
     @DisplayName("kid is stable across restarts for the same seed and changes with the seed")
     void kidVersionedBySeed() throws Exception {
-        QrAssertionService restarted = new QrAssertionService(mapper, SEED);
+        QrAssertionService restarted = new QrAssertionService(mapper, "seed", SEED);
         restarted.init();
         assertEquals(service.getKeyId(), restarted.getKeyId());
 
-        QrAssertionService rotated = new QrAssertionService(mapper, "a-DIFFERENT-card-qr-seed-of-32-bytes+");
+        QrAssertionService rotated = new QrAssertionService(mapper, "seed", "a-DIFFERENT-card-qr-seed-of-32-bytes+");
         rotated.init();
         assertNotEquals(service.getKeyId(), rotated.getKeyId());
     }
@@ -78,5 +78,16 @@ class QrAssertionServiceTest {
         verifier.init(false, new Ed25519PublicKeyParameters(publicKey, 0));
         verifier.update(payloadBytes, 0, payloadBytes.length);
         assertFalse(verifier.verifySignature(signature));
+    }
+
+    @Test
+    @DisplayName("blank or placeholder seed → refuse to construct")
+    void failsClosedOnBlankOrWeakSeed() {
+        assertThrows(IllegalStateException.class,
+                () -> new QrAssertionService(mapper, "seed", ""));
+        assertThrows(IllegalStateException.class,
+                () -> new QrAssertionService(mapper, "seed", "too-short"));
+        assertThrows(IllegalStateException.class,
+                () -> new QrAssertionService(mapper, "seed", "card-qr-signing-dev-seed-change-me-32b"));
     }
 }

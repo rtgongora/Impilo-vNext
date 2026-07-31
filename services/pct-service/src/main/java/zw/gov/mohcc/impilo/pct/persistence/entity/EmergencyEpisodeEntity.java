@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -71,6 +73,11 @@ public class EmergencyEpisodeEntity {
     @Column(name = "entry_source_ref")
     private String entrySourceRef;
 
+    // Without this, Postgres refuses the insert outright: "column entry_context_json is of type
+    // jsonb but expression is of type character varying". Every other jsonb column in this
+    // service carries it; this one did not, so opening an episode failed against a real database
+    // however well it behaved in tests.
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "entry_context_json", columnDefinition = "jsonb")
     private String entryContextJson;
 

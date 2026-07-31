@@ -23,6 +23,11 @@ spring:
         jwt:
           issuer-uri: ""
 
+tshepo:
+  keys:
+    # Strong test-only KEK — ConfigKekProvider rejects blanks and known placeholders.
+    kek: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
 impilo:
   security:
     disable-oauth-for-tests: true

@@ -142,6 +142,33 @@ export function useEdPreArrival(facilityId?: string) {
   });
 }
 
+/**
+ * Record an inbound pre-arrival notification, and convert one into a real ED visit on arrival.
+ *
+ * pct has served both writes since the ED lane was built; neither had a BFF route until W15c, so the
+ * board above could only ever show rows some other path had created. A pre-arrival called in by
+ * radio had nowhere to be typed.
+ */
+export function useEdPreArrivalActions(facilityId?: string) {
+  const qc = useQueryClient();
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ["ed-pre-arrival", facilityId] });
+    void qc.invalidateQueries({ queryKey: ["ed-pre-arrival"] });
+  };
+
+  return {
+    notify: useMutation({
+      mutationFn: (body: Record<string, unknown>) => apiClient.post(`${ED}/pre-arrival`, body),
+      onSuccess: invalidate,
+    }),
+    /** Converts a notification into an ED visit. The patient is now here. */
+    arrive: useMutation({
+      mutationFn: (body: Record<string, unknown>) => apiClient.post(`${ED}/arrival`, body),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
 // ── SOS call-taker intake + triage (WU5) ──────────────────────────────────────
 
 export type SosRequest = Record<string, unknown> & {

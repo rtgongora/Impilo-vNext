@@ -1,6 +1,6 @@
 # Web ↔ Mobile Parity Matrix — Impilo & Impilo Provider
 
-**Date:** 2026-07-23 · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
+**Date:** 2026-07-31 · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
 **Method:** Three independent static audits (citizen app, provider app, shared platform) reading actual screen/service/navigation code and cross-checking every endpoint against `services/experience-bff` controllers — **not** name-matching. Runtime evidence (emulator install/launch/screenshots) is recorded in `docs/mobile/MOBILE_RECOVERY_REPORT.md`; where a row says *static-verified*, the code is fully wired but end-to-end runtime completion has not been individually proven.
 
 **Statuses:** `Verified parity` (wired + runtime-consistent evidence) · `Partial parity` · `Mobile redesign required` · `Missing` · `Broken` · `Orphaned` (built but unreachable — a mobile-specific failure class) · `Build-blocked` · `API-blocked` · `Permission-blocked` · `N/A`.
@@ -16,7 +16,7 @@ Navigation truth: store-driven (Zustand), `AuthGuard` → `CitizenTabs` (8 tabs)
 | Capability | Status | Key evidence / gap |
 |---|---|---|
 | Find care / Ndila | Partial parity (static-verified) | ProviderDiscovery + FacilityDirectory/Detail + guest gateway; `/internal/v1/facilities`, `/public/gateway/facilities`; deep link `/welcome/find-care`; Maestro tier3. **Map canvas renders blank on Android** (no Google Maps API key — see §3). |
-| Emergency SOS / Daidzai | Partial parity | SosScreen + tracking + floating SOS button wired to `/mobile/citizen/sos`, `/public/gateway/sos`. Gap: **anonymous SOS raise missing** — guests can only track by reference; raising requires login although the public endpoint exists. |
+| Emergency SOS / Daidzai | Partial parity (static-verified) | SosScreen + FAB collect **callback phone** for guests → `POST /internal/v1/public/gateway/sos`; authenticated → Daidzai. Track-by-reference on public lane. Runtime Maestro guest raise not yet proven on 218. |
 | Nompilo | Partial parity | Global assistant bottom-sheet + guidance sections → `/internal/v1/nompilo/*`, `/internal/v1/llm/chat`. Gap: **no anonymous lane** — pre-login users silently get canned fallback, never the model (web has anonymous Q&A). |
 | Appointments / scheduling | Partial parity (static-verified) | AppointmentsSection (cancel/check-in) + BookingsSection (create); deep link `/appointments` (note: that path has no web top-level route — link drift). |
 | Virtual care (telemedicine + Impilo Live) | Partial parity (static-verified) | TelehealthList/Session (LiveKit via `mobile-session`, waiting room, token refresh) + Live discover/event screens; Maestro waiting-room flow. Gaps: telehealth **not deep-linkable** (code comment claims it is); preview media over `ws://:7880` cleartext; no TURN/TLS until `turn.*` DNS lands. |
@@ -61,14 +61,15 @@ Navigation truth: `AuthGuard` → login → ProviderActivation → SelectFacilit
 | Referrals | Partial parity (thin) | Encounter panel only; **no standalone referral inbox/worklist** like web. |
 | Admissions / inpatient | Partial parity | InpatientScreen + APGAR/NEWS2/Resus/Trauma/CriticalEvent/WardAlerts/CarePlan/ShiftHandoff/DischargeClearance. **BedManagementScreen orphaned; ConfirmDeathScreen orphaned → mobile cannot complete inpatient death workflow.** |
 | Theatre | Partial parity (thin) | TheatreProcedureScreen via Inpatient only; no standalone theatre list. |
-| Emergency / ED / ePCR | Partial parity | EdVisit/Trauma/Resus + PrehospitalEpcr (Maestro flow exists); ED screens reachable only via Inpatient; DaidzaiFieldMissionScreen orphaned. |
+| Emergency / ED / ePCR | Partial parity (static-verified) | **Emergency tab** (1 tap) → hub: Episodes | ED | Trauma | Resus | MH. Episode spine service wraps all `/internal/v1/emergency-episodes/**`; ED depth (zone, diagnostics, protocol, page, trauma ack/escalate); resus on `/internal/v1/ed/resuscitation/*`; offline outbox for ED/episode writes; `NOT_TRIAGEABLE_OFFLINE` on triage. Also in Clinical Tools + Inpatient legacy tabs. ePCR Maestro flow exists. DaidzaiFieldMissionScreen still orphaned. |
+| Mental health (provider) | Partial parity (API-blocked in preview) | `mentalHealthService` + queue (PENDING/ACCEPTED) + referral clinical record (assessment, risk, safety, involuntary, restraint, admission, follow-up) in Emergency hub. Reads fail honestly when mental-health-service undeployed — same as web. |
 | Khuluma (provider) | Partial parity (static-verified) | MessagingScreen → provider messaging + communication dashboard + notifications; realtime via channels. |
 | Impilo Live (provider) | Partial parity (static-verified) | TelemedicineScreen/CallScreen + ProviderLiveHub → teleconsult + live room/token; Maestro waiting-admit flow. |
 | Ruvimbo Provider (coverage) | Partial parity (buried) | Full eligibility/claims/preauth/remittance/appeals service — surfaced only inside FinanceOverview under Tools→Finance; no dedicated coverage workspace. |
 | Vashandi shifts / roster | Partial parity (static-verified) | Workforce hub + attendance/availability/roster/facility-staff → ProviderVashandiController. No Maestro flow. |
 | Rito (safety/quality) | Partial parity (static-verified) | ReportSafety + MySafetyCases → work rito cases. |
 | Tuso (premises self-service) | **Missing** | No screens; service card redirects to Professional tab. |
-| Regulatory self-service | Partial parity (thin) | FacilityRegulators (read/ack) + facility-registry applications; thinner than web regulatory module. |
+| Regulatory self-service | Partial parity (static-verified) | My Regulatory Affairs under Professional (`/internal/v1/me/regulatory/*`, practice establishments, student sections/resubmit, contributor invite redeem + deep link). Citizen public explore (councils+registers via public gateway). Operator desks (register reconcile, student review, W1D boards, config authoring) stay **WEB_ONLY**. |
 | Learning (Fundo CPD) | Partial parity (static-verified) | Fundo shell + classroom + Training tab; Maestro classroom flow. |
 | Madi (provider) | Partial parity (static-verified) | Orders/Transfusion/DriveCapture/ReactionReport/CentralBank + offline drive sync. |
 | Budgets | **Orphaned** | BudgetSummaryScreen + budgetService fully built, never imported. |
@@ -77,6 +78,10 @@ Navigation truth: `AuthGuard` → login → ProviderActivation → SelectFacilit
 | Supervisor mode | Partial parity (static-verified) | Team/metrics + inventory (stock/alerts/requisitions/dispatch) + escalations; zero Maestro coverage. |
 | Offline mode | Partial parity (static-verified) | Real sync engine, local queue, conflict review, break-glass activate/deactivate; zero Maestro coverage. |
 | Courier mode | Partial parity (thin) | 2 screens over nhume/deliveries; skeletal vs web Nhume logistics. |
+| Adult medicine workspace | **Partial parity** | Encounter → Medicine + Tools → Medicine: programmes/problems/allergies via shared BFF (`/internal/v1/programmes`, `/conditions`, `/allergies`); unavailable ≠ empty. Examination, specialty §8 tools, order sets **NOT BUILT**. See `docs/mobile/adult-medicine-parity.md`. |
+| Medicine CDS (8 topics) | **Partial parity** | Tools → Med CDS + Encounter Medicine embed: `POST /internal/v1/medicine/cds/{topic}/evaluate`; 502 surfaced as failure not all-clear. Legacy Tools → CDS tab is a different endpoint. |
+| Clerking continuity | **Partial parity** | Encounter → Clerking + Tools → Clerking: read-only problems + visit attestations; extensions/exam write **NOT BUILT**. |
+| Chronic registers | **Partial parity** | Tools → Registers: `GET /internal/v1/programmes/register` facility worklist; no control assessment write on mobile. |
 
 ## Section 3 — Shared mobile platform
 

@@ -207,8 +207,12 @@ public class EmergencyEpisodeController {
     @GetMapping("/episodes/{episodeId}/disposition")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDisposition(@PathVariable UUID episodeId) {
         TrustContext ctx = TrustContextHolder.require();
-        var disposition = dispositionService.forEpisode(episodeId, ctx.tenantId());
-        return ResponseEntity.ok(ApiResponse.ok(dispositionRow(disposition), ctx.correlationId().toString()));
+        // Null data means "not recorded yet". Throwing 404 here used to make the shell treat absence
+        // as unreadability and refuse to show the form — see EmergencyDispositionService.forEpisode.
+        Map<String, Object> row = dispositionService.forEpisode(episodeId, ctx.tenantId())
+                .map(this::dispositionRow)
+                .orElse(null);
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
     }
 
     // ── Observation / short-stay (W9b) ──────────────────────────────────────────────────────

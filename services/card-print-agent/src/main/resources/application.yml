@@ -60,7 +60,13 @@ card-print:
     base-url: ${VITO_SERVICE_URL:http://localhost:8082}
     actor-id: card-print-agent
   qr:
-    hmac-secret: ${CARD_PRINT_QR_HMAC_SECRET:changeme-not-for-production}
+    # Card assertion signing seed (X4 key ceremony). Deterministic Ed25519 key so the kid and
+    # signatures survive restarts. REQUIRED unless card-print.qr.signing-source=tshepo-keys,
+    # where the private key stays in the sovereign key service. Provisioned into
+    # impilo-app-secrets by scripts/secrets/bootstrap-secrets.sh; vito-service receives the
+    # same seed so CardAssertionVerifier can derive the matching verify key.
+    signing-key-seed: ${CARD_PRINT_QR_SIGNING_KEY_SEED:}
+    signing-source: ${CARD_PRINT_QR_SIGNING_SOURCE:seed}
   processor:
     poll-interval-ms: 5000
     batch-size: 10

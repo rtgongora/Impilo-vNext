@@ -39,8 +39,10 @@ spring:
 tshepo:
   keys:
     # Key Encryption Key (KEK) for AES-256-GCM private key encryption at rest.
-    # In production, this MUST come from Vault or a KMS — never hardcode.
-    kek: ${TSHEPO_KEYS_KEK:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f}
+    # REQUIRED: 64-char hex (32 bytes). Provisioned into impilo-app-secrets by
+    # scripts/secrets/bootstrap-secrets.sh. ConfigKekProvider rejects blanks and
+    # the former committed defaults — never hardcode.
+    kek: ${TSHEPO_KEYS_KEK:}
     key-algorithm: Ed25519
     rotation-interval-days: ${TSHEPO_KEYS_ROTATION_DAYS:90}
     token-default-ttl-seconds: ${TSHEPO_KEYS_TOKEN_TTL:300}

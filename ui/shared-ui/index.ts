@@ -112,5 +112,18 @@ export {
 } from "./lib/finance/tariff-library-groups";
 export type { CostaTariffListRow, TariffListSectionKey } from "./lib/finance/tariff-library-groups";
 
+// Time-critical care primitives — nothing of this kind existed anywhere in the repo before the
+// emergency pack's W15. Promoted here rather than left in one-ui-shell because resuscitation,
+// theatre, inpatient deterioration and the mobile provider app all need the same three ideas:
+// how long has this been running, what happened in order, and how old is what I am looking at.
+export { ElapsedTimer, elapsedSecondsAt } from "./components/ElapsedTimer";
+export type { ElapsedTimerProps, TimerInterval } from "./components/ElapsedTimer";
+
+export { EventTimeline, gapSinceLatest } from "./components/EventTimeline";
+export type { EventTimelineProps, TimelineEntry } from "./components/EventTimeline";
+
+export { StalenessBadge, classifyStaleness, describeAge } from "./components/StalenessBadge";
+export type { StalenessBadgeProps, StalenessState } from "./components/StalenessBadge";
+
 // Tailwind preset (for workspace tailwind.config.ts)
 export { default as impiloPreset } from "./tailwind-preset";

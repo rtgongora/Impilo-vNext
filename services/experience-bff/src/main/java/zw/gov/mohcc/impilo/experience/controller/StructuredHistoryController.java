@@ -18,12 +18,17 @@ import java.util.*;
 /**
  * Patient structured history for EHR continuity pages.
  * <ul>
- *   <li>GET /internal/v1/ehr/social-history?patient_id=</li>
- *   <li>GET /internal/v1/ehr/family-history?patient_id=</li>
- *   <li>GET /internal/v1/ehr/functional-assessments?patient_id=</li>
- *   <li>GET /internal/v1/ehr/procedures?patient_id=</li>
- *   <li>GET /internal/v1/ehr/advance-directives?patient_id=</li>
+ *   <li>GET/POST /internal/v1/ehr/social-history</li>
+ *   <li>GET/POST /internal/v1/ehr/family-history</li>
+ *   <li>GET/POST /internal/v1/ehr/functional-assessments</li>
+ *   <li>GET/POST /internal/v1/ehr/procedures</li>
+ *   <li>GET/POST /internal/v1/ehr/advance-directives</li>
  * </ul>
+ *
+ * <p>The five POST routes forward straight to pct-service's own {@code StructuredHistoryController},
+ * which has served all five since the pack that built it — this layer had simply never called them,
+ * so the Save/Add buttons on the corresponding EHR pages had nowhere to send a request (history-writes,
+ * brief.md §6).</p>
  */
 @RestController
 @RequestMapping("/internal/v1/ehr")
@@ -222,6 +227,113 @@ public class StructuredHistoryController {
                     + "of a directive.", requestId, correlationId);
         }
         return emptyHistory(requestId, correlationId);
+    }
+
+    private static ResponseEntity<Map<String, Object>> recordFailed(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", code, "message", message, "meta", meta(requestId, correlationId)));
+    }
+
+    @PostMapping("/social-history")
+    public ResponseEntity<Map<String, Object>> recordSocialHistory(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode created = pctClient.recordSocialHistory(body);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("data", created);
+            out.put("meta", meta(requestId, correlationId));
+            return ResponseEntity.status(HttpStatus.CREATED).body(out);
+        } catch (Exception e) {
+            log.error("PCT recordSocialHistory failed: {}", e.getMessage());
+            return recordFailed("social_history_not_recorded",
+                    "The social history entry was not saved. Nothing on the patient's record changed.",
+                    requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/family-history")
+    public ResponseEntity<Map<String, Object>> recordFamilyMember(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode created = pctClient.recordFamilyMember(body);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("data", created);
+            out.put("meta", meta(requestId, correlationId));
+            return ResponseEntity.status(HttpStatus.CREATED).body(out);
+        } catch (IllegalArgumentException e) {
+            // e.g. a cause/age of death given for a relative not marked deceased — a caller mistake,
+            // not an outage, so it is a 400 the form can act on rather than a 502 it cannot.
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "family_member_invalid", "message", e.getMessage(),
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.error("PCT recordFamilyMember failed: {}", e.getMessage());
+            return recordFailed("family_member_not_recorded",
+                    "The family member was not saved. Nothing on the patient's record changed.",
+                    requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/functional-assessments")
+    public ResponseEntity<Map<String, Object>> recordFunctionalAssessment(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode created = pctClient.recordFunctionalAssessment(body);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("data", created);
+            out.put("meta", meta(requestId, correlationId));
+            return ResponseEntity.status(HttpStatus.CREATED).body(out);
+        } catch (Exception e) {
+            log.error("PCT recordFunctionalAssessment failed: {}", e.getMessage());
+            return recordFailed("functional_assessment_not_recorded",
+                    "The functional assessment was not saved. Nothing on the patient's record changed.",
+                    requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/procedures")
+    public ResponseEntity<Map<String, Object>> recordProcedure(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode created = pctClient.recordProcedure(body);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("data", created);
+            out.put("meta", meta(requestId, correlationId));
+            return ResponseEntity.status(HttpStatus.CREATED).body(out);
+        } catch (Exception e) {
+            log.error("PCT recordProcedure failed: {}", e.getMessage());
+            return recordFailed("procedure_not_recorded",
+                    "The procedure was not saved. Nothing on the patient's record changed.",
+                    requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/advance-directives")
+    public ResponseEntity<Map<String, Object>> recordAdvanceDirective(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode created = pctClient.recordAdvanceDirective(body);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("data", created);
+            out.put("meta", meta(requestId, correlationId));
+            return ResponseEntity.status(HttpStatus.CREATED).body(out);
+        } catch (Exception e) {
+            log.error("PCT recordAdvanceDirective failed: {}", e.getMessage());
+            return recordFailed("advance_directive_not_recorded",
+                    "The advance directive was not saved. Nothing on the patient's record changed.",
+                    requestId, correlationId);
+        }
     }
 
     private static boolean pctPayloadMissingOrEmpty(JsonNode pctData) {

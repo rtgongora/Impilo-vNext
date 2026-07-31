@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pct.domain.EmergencyEpisodeState;
@@ -13,6 +14,7 @@ import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EmergencyEpisodeRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EmergencyHandoverRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.pct.realtime.EmergencyRealtimePublisher;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -59,20 +61,26 @@ public class EmergencyEpisodeService {
     private final EmergencyHandoverRepository handoverRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final ObjectProvider<EmergencyRealtimePublisher> realtimePublisher;
 
     /**
      * All three collaborators are PCT's own tables. The outbox is a local write in the same
      * transaction — it is what lets this service tell peers what happened WITHOUT calling them,
      * which is how care-first and cross-service correlation coexist.
+     *
+     * <p>Realtime invalidation is optional ({@code pct.emergency.realtime-enabled}); when off the
+     * Kafka outbox remains the only fan-out path.
      */
     public EmergencyEpisodeService(EmergencyEpisodeRepository repository,
                                    EmergencyHandoverRepository handoverRepository,
                                    EventOutboxRepository outboxRepository,
-                                   ObjectMapper objectMapper) {
+                                   ObjectMapper objectMapper,
+                                   ObjectProvider<EmergencyRealtimePublisher> realtimePublisher) {
         this.repository = repository;
         this.handoverRepository = handoverRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.realtimePublisher = realtimePublisher;
     }
 
     /** What was asked for. Peers are absent from this record on purpose — see the class comment. */
@@ -446,15 +454,19 @@ public class EmergencyEpisodeService {
 
     private void emitHandover(EmergencyHandoverEntity h, String eventType) {
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("event_type", eventType);
         payload.put("handoverId", h.getHandoverId() != null ? h.getHandoverId().toString() : null);
         payload.put("episodeId", h.getEpisodeId().toString());
+        payload.put("episode_id", h.getEpisodeId().toString());
         payload.put("tenantId", h.getTenantId().toString());
+        payload.put("tenant_id", h.getTenantId().toString());
         payload.put("targetType", h.getTargetType());
         payload.put("targetService", h.getTargetService());
         payload.put("status", h.getStatus());
         payload.put("acceptingRef", h.getAcceptingRef());
         payload.put("acceptingService", h.getAcceptingService());
         payload.put("ritoCaseRef", h.getRitoCaseRef());
+        payload.put("rito_case_ref", h.getRitoCaseRef());
 
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("EMERGENCY_HANDOVER");
@@ -511,10 +523,16 @@ public class EmergencyEpisodeService {
      */
     private void emit(EmergencyEpisodeEntity e, String eventType, String previousState) {
         Map<String, Object> payload = new LinkedHashMap<>();
+        // event_type is required on the wire: OutboxPublisher sends the payload as-is, and
+        // reporting-service's EmergencyReportingConsumer keys off it (Theatre pattern).
+        payload.put("event_type", eventType);
         payload.put("episodeId", e.getEpisodeId().toString());
+        payload.put("episode_id", e.getEpisodeId().toString());
         payload.put("episodeReference", e.getEpisodeReference());
         payload.put("tenantId", e.getTenantId().toString());
+        payload.put("tenant_id", e.getTenantId().toString());
         payload.put("facilityId", e.getFacilityId().toString());
+        payload.put("facility_id", e.getFacilityId().toString());
         payload.put("state", e.getState());
         payload.put("previousState", previousState);
         payload.put("entryRoute", e.getEntryRoute());
@@ -526,6 +544,10 @@ public class EmergencyEpisodeService {
         payload.put("identityMode", e.getIdentityMode());
         payload.put("sensitive", e.isSensitive());
         payload.put("outcome", e.getOutcome());
+        if (e.getArrivedAt() != null) {
+            payload.put("arrivedAt", e.getArrivedAt().toString());
+            payload.put("openedAt", e.getArrivedAt().toString());
+        }
 
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("EMERGENCY_EPISODE");
@@ -542,6 +564,12 @@ public class EmergencyEpisodeService {
             outbox.setPayload("{\"episodeId\":\"" + e.getEpisodeId() + "\"}");
         }
         outboxRepository.save(outbox);
+
+        // Optional invalidation hint (env-gated). Never replaces the Kafka outbox.
+        EmergencyRealtimePublisher publisher = realtimePublisher.getIfAvailable();
+        if (publisher != null) {
+            publisher.publishEpisodeHint(e.getTenantId(), e.getEpisodeId(), eventType);
+        }
     }
 
     /** Reported to the caller so a clinician sees what could not be consulted. Never thrown. */

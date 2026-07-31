@@ -119,3 +119,10 @@ vendor/models/
 
 # Mobile build artifacts (APKs, screenshots, logs) — regenerated per commit
 artifacts/
+
+# Build-id stamp left by some image/build helpers under a service dir. Not source;
+# it has already skewed incremental rebuild calculations (see
+# docs/runbooks/deploy-optimization-program.md).
+**/id_file
+services/oros-service/id_file
+

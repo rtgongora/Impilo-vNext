@@ -50,7 +50,9 @@ public final class CaseClassification {
             "CLIENT", "HEALTH_ID", "VISIT", "ENCOUNTER", "ORDER", "LAB_RESULT", "RADIOLOGY_STUDY",
             "MEDICATION", "PROVIDER", "CADRE", "FACILITY", "PUBLIC_HEALTH_SITE", "PROGRAMME",
             "DISTRICT", "PROVINCE", "ORGANISATION", "REGULATOR", "PAYMENT", "BILLING_CLAIM",
-            "LEARNING_ASSIGNMENT");
+            "LEARNING_ASSIGNMENT",
+            // W17 — emergency / disaster after-action reverse links (PCT / Daidzai → RITO).
+            "EMERGENCY_EPISODE", "AFTER_ACTION", "DISASTER_INCIDENT");
 
     /**
      * Sensitive categories: when a case carries one of these, client and provider identity

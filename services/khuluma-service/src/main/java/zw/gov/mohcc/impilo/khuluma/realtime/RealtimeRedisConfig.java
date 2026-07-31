@@ -1,5 +1,9 @@
 package zw.gov.mohcc.impilo.khuluma.realtime;
 
+import zw.gov.mohcc.impilo.realtime.RealtimeEvent;
+import zw.gov.mohcc.impilo.realtime.RealtimeHub;
+import zw.gov.mohcc.impilo.realtime.RealtimeInstance;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +34,16 @@ public class RealtimeRedisConfig {
     private final RealtimeInstance instance;
     private final ObjectMapper objectMapper;
     private final String topic;
+    private final String emergencyTopic;
 
     public RealtimeRedisConfig(RealtimeHub hub, RealtimeInstance instance, ObjectMapper objectMapper,
-                               @Value("${impilo.khuluma.realtime.redis-topic:khuluma:realtime}") String topic) {
+                               @Value("${impilo.khuluma.realtime.redis-topic:khuluma:realtime}") String topic,
+                               @Value("${impilo.khuluma.realtime.emergency-topic:pct:emergency:realtime}") String emergencyTopic) {
         this.hub = hub;
         this.instance = instance;
         this.objectMapper = objectMapper;
         this.topic = topic;
+        this.emergencyTopic = emergencyTopic;
     }
 
     /** Listener that deserializes a fanned-out event and re-dispatches it locally. */
@@ -68,7 +75,14 @@ public class RealtimeRedisConfig {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(khulumaRealtimeListenerAdapter, new ChannelTopic(topic));
-        log.info("Khuluma realtime Redis fan-out enabled on topic '{}'", topic);
+        // W19 bridge: PCT publishes episode invalidation hints on a separate topic; Khuluma hosts
+        // the only browser WS/SSE, so it must listen here or the UI never sees them.
+        if (emergencyTopic != null && !emergencyTopic.isBlank() && !emergencyTopic.equals(topic)) {
+            container.addMessageListener(khulumaRealtimeListenerAdapter, new ChannelTopic(emergencyTopic));
+            log.info("Khuluma realtime Redis fan-out enabled on topics '{}' and '{}'", topic, emergencyTopic);
+        } else {
+            log.info("Khuluma realtime Redis fan-out enabled on topic '{}'", topic);
+        }
         return container;
     }
 }

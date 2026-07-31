@@ -14,6 +14,7 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import {
   useAcceptFundoCpd,
   useFundoCpdCandidates,
+  useFundoCpdCandidatesByPublicId,
   useRejectFundoCpd,
 } from "@/hooks/queries/useProviderCouncil";
 
@@ -38,12 +39,21 @@ function stateBadge(state: string) {
 
 export function FundoCpdCandidatePanel({
   providerId,
+  providerPublicId,
   canDecide = false,
 }: {
-  providerId: string | undefined;
+  /** Varapi numeric provider id — preferred when accepting/rejecting. */
+  providerId?: string | undefined;
+  /** Fundo/learning public identifier — used when the numeric id is not known. */
+  providerPublicId?: string | undefined;
   canDecide?: boolean;
 }) {
-  const { data, isLoading } = useFundoCpdCandidates(providerId);
+  const byNumeric = useFundoCpdCandidates(providerId);
+  const byPublic = useFundoCpdCandidatesByPublicId(
+    providerId ? undefined : providerPublicId,
+  );
+  const data = providerId ? byNumeric.data : byPublic.data;
+  const isLoading = providerId ? byNumeric.isLoading : byPublic.isLoading;
   const accept = useAcceptFundoCpd(providerId);
   const reject = useRejectFundoCpd(providerId);
   const [rejectingId, setRejectingId] = useState<number | null>(null);

@@ -1,7 +1,11 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { ScopedAdministrationSurface } from "@/components/administration-governance/ScopedAdministrationSurface";
-
-export default function Page() {
-  return <ScopedAdministrationSurface surfaceId="regulators" />;
+/** Legacy stub — disciplinary / cases live under registration-adjacent regulator surfaces. */
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ regulatorId: string }>;
+}) {
+  const { regulatorId } = await params;
+  redirect(`/work/regulators/${encodeURIComponent(regulatorId)}/disciplinary`);
 }
