@@ -1,6 +1,6 @@
 # Web ↔ Mobile Parity Matrix — Impilo & Impilo Provider
 
-**Date:** 2026-07-23 · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
+**Date:** 2026-07-31 · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
 **Method:** Three independent static audits (citizen app, provider app, shared platform) reading actual screen/service/navigation code and cross-checking every endpoint against `services/experience-bff` controllers — **not** name-matching. Runtime evidence (emulator install/launch/screenshots) is recorded in `docs/mobile/MOBILE_RECOVERY_REPORT.md`; where a row says *static-verified*, the code is fully wired but end-to-end runtime completion has not been individually proven.
 
 **Statuses:** `Verified parity` (wired + runtime-consistent evidence) · `Partial parity` · `Mobile redesign required` · `Missing` · `Broken` · `Orphaned` (built but unreachable — a mobile-specific failure class) · `Build-blocked` · `API-blocked` · `Permission-blocked` · `N/A`.

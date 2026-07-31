@@ -135,6 +135,16 @@ verified; forbidden token recorded).
 
 ---
 
+## Status note (2026-07-31)
+
+NCZ task **#97 register materialiser** and the **regulatory UI completeness** pass (student
+queue/admit/reports, public registers, CPD/restrictions/audit desks, stub redirects, mobile
+person self-service) are on the shared tip. Operator desks stay web-only; config write studio
+and council-wide CPD queue remain non-goals. Handover:
+[`docs/handover/2026-07-31-ncz-register-materialiser-and-regulatory-ui.md`](../../handover/2026-07-31-ncz-register-materialiser-and-regulatory-ui.md).
+
+---
+
 ## Risks / coordination
 
 - **Identity WORK_CONTEXT flip in flight** — ROM dimensions land SHADOW-only; ROM ENFORCE

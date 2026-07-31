@@ -43,9 +43,13 @@ Two consumers now depend on `impilo.org-registry.events` and neither has ever re
    duty token when their appointment ends. **Security-critical**: if it does not run, a revoked
    regulator keeps working until the 15-minute TTL expires on its own.
 2. **`ConfigReleaseActivatedListener`** (varapi, NCZ #97) — reconciles a council's registers from
-   its activated configuration. **Recoverable**: the operator endpoint
-   `POST /v1/internal/councils/{councilId}/registers/reconcile` does the same work, and the
-   reconcile is idempotent.
+   its activated configuration. **Recoverable**: the operator endpoints
+   `POST /v1/internal/councils/{councilId}/registers/reconcile` and
+   `POST /v1/internal/organizations/{organizationId}/registers/reconcile` (shell:
+   `/work/regulatory/[orgId]/registers`) do the same work, and the reconcile is idempotent.
+   UI completeness for that surface landed 2026-07-31 — see
+   [`2026-07-31-ncz-register-materialiser-and-regulatory-ui.md`](2026-07-31-ncz-register-materialiser-and-regulatory-ui.md).
+   First-flight of the **event** path remains open until outbox rows appear after an activation.
 
 Both are "wired" only in the sense that the code compiles and its unit tests pass. A topic carrying
 zero traffic cannot distinguish a working consumer from a broken one, and both failure modes are
