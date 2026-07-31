@@ -115,6 +115,15 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /** Renal dosing awareness — advisory bands from {@code RenalDosingAdvisor}, not dose arithmetic. */
+    public JsonNode renalDosingAdvise(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/medicine/renal-dosing/advise";
+        log.debug("Clinical platform: renal dosing advise");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";
