@@ -6,9 +6,10 @@ The Provider App operates in four distinct modes, each scoped to a specific heal
 
 | Mode | Required Roles | Available Tabs | Key Features | Offline Capable |
 |---|---|---|---|---|
-| Provider | `PROVIDER` | Worklist, Patients, Activity, Alerts | Full clinical workflow: encounters, vitals, diagnosis, prescriptions, labs, referrals | Limited |
-| Outreach | `OUTREACH` | Dashboard, Households, Screenings, Schedule | Community health: household visits, screenings, immunizations, GPS tagging, follow-ups | Full |
-| Supervisor | `SUPERVISOR` | Dashboard, Team, Stock, Escalations | Facility management: KPIs, team oversight, stock control, dispatch, escalation handling | Limited |
+| Provider | `PROVIDER` | Work Home, Worklist, Patients, Tools, Professional | Full clinical workflow; Work Home composes from minted work-context | Limited |
+| Outreach | Proven `COMMUNITY_OUTREACH` context | Dashboard, Households, Screenings, Follow-Up, Field tasks | Community health: household visits (real GPS), screenings, follow-ups | Full |
+| Supervisor | Proven management WorkModes | Work Home, Dashboard, Team, Stock, Inventory, Escalations | Facility/jurisdiction/programme management; Work Home first tab | Limited |
+| Courier | Proven `SPECIMEN_TRANSPORT` context | Deliveries, Proof | PoD with OTP or photo evidence_ref (never fabricated) | Limited |
 | Offline Edge | Any role | Status, Queue, Conflicts, Emergency | Sync management: queue inspection, conflict resolution, edge snapshots, break-glass access | Native |
 
 ## Mode Details
@@ -57,9 +58,11 @@ Supervisor mode provides facility and team management capabilities. It surfaces 
 
 | Tab | Purpose |
 |---|---|
+| Work Home | Context-aware composition from BFF work-home (same as web `/work`) |
 | Dashboard | Facility KPIs, visit volumes, wait times, outcome metrics |
 | Team | Staff roster, attendance, task assignment, performance |
 | Stock | Pharmaceutical and consumable inventory levels and adjustments |
+| Inventory | Inventory ops and alerts |
 | Escalations | Unresolved issues, support tickets, exception workflows |
 
 **Offline behavior:** Limited. Dashboard metrics are cached for offline viewing. Stock adjustments can be queued offline. Team management and escalation handling require connectivity.
@@ -83,14 +86,14 @@ Offline Edge mode is a system management interface available to all users. It pr
 
 ## Mode Switching
 
-Mode switching is handled by the `ModeSwitcher` component. The component reads the authenticated user's role assignments from the Keycloak token and filters the available modes accordingly.
+Mode switching is handled by the `ModeSwitcher` / `useSwitchAppMode` path. Available modes are derived from **proven resolved work contexts** (and Keycloak roles where applicable). Governed modes (`outreach`, `courier`, supervisor families) mint a duty-scoped work-context token before the UI switches — local mode flags alone are not authority.
 
 **Switching rules:**
 
-- A user may have access to multiple modes if they hold multiple roles (e.g., a supervisor with `PROVIDER` and `SUPERVISOR` roles can switch between both).
+- A user may unlock multiple modes when resolved contexts grant matching WorkModes (e.g. `COMMUNITY_OUTREACH`, `SPECIMEN_TRANSPORT`, `FACILITY_MANAGEMENT`).
 - Offline Edge mode is always available regardless of role assignment.
-- The default mode on login is determined by the user's primary role.
-- Switching modes does not require re-authentication; the existing session and trust context are preserved.
+- The default provider landing is Work Home (minted session composition), not the bare worklist.
+- Facility/workspace changes remint with `previousJti` so two duty tokens are never live.
 - Mode switches are logged for audit purposes.
 
 ## Authentication Requirements

@@ -73,10 +73,10 @@ Navigation truth: `AuthGuard` → login → ProviderActivation → SelectFacilit
 | Madi (provider) | Partial parity (static-verified) | Orders/Transfusion/DriveCapture/ReactionReport/CentralBank + offline drive sync. |
 | Budgets | **Orphaned** | BudgetSummaryScreen + budgetService fully built, never imported. |
 | Equipment | **Orphaned** | EquipmentToolsScreen + 3 children built with service, unreachable. |
-| Outreach mode | Partial parity | Dashboard/households/screening/field-tasks wired; FollowUpScreen orphaned; zero Maestro coverage. |
-| Supervisor mode | Partial parity (static-verified) | Team/metrics + inventory (stock/alerts/requisitions/dispatch) + escalations; zero Maestro coverage. |
+| Outreach mode | Partial parity | Dashboard/households/screening/field-tasks wired; FollowUpScreen on OutreachTabs (Start Visit records visit + GPS); zero Maestro coverage. |
+| Supervisor mode | Partial parity (static-verified) | Work Home + Team/metrics + inventory (stock/alerts/requisitions/dispatch) + escalations; zero Maestro coverage. |
 | Offline mode | Partial parity (static-verified) | Real sync engine, local queue, conflict review, break-glass activate/deactivate; zero Maestro coverage. |
-| Courier mode | Partial parity (thin) | 2 screens over nhume/deliveries; skeletal vs web Nhume logistics. |
+| Courier mode | Partial parity (thin) | Proof screen requires real photo evidence_ref (no fabricated signature/stamp literals); OTP path real. |
 
 ## Section 3 — Shared mobile platform
 
