@@ -17,7 +17,8 @@ describe("useEmergencyBundleAssess", () => {
   beforeEach(() => post.mockReset());
 
   it("posts PPH assessment with control omitted when not assessed", async () => {
-    post.mockResolvedValue({ data: { data: { status: "ACTIVE", steps: [], outstanding_mandatory: ["PPH_MASSAGE"], may_close: false, note: "" } } });
+    // apiClient.post resolves the parsed body itself: `{ data: assessment, meta }`.
+    post.mockResolvedValue({ data: { status: "ACTIVE", steps: [], outstanding_mandatory: ["PPH_MASSAGE"], may_close: false, note: "" } });
     const { result } = renderHook(() => useEmergencyBundleAssess("pph"), { wrapper });
     result.current.mutate({ completedSteps: [], minutesSinceTrigger: 0, minutesSinceLastObservation: 0, controlConfirmed: null });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));

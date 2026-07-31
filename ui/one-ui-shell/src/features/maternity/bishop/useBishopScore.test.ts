@@ -17,6 +17,7 @@ describe("useBishopScoreClassifyForm", () => {
   beforeEach(() => post.mockReset());
 
   it("posts classify-form with blank components omitted", async () => {
+    // apiClient.post resolves the parsed body itself: `{ data: assessment, meta }`.
     post.mockResolvedValue({
       data: {
         score: null,
