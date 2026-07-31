@@ -90,7 +90,9 @@ export function TraumaScreen() {
               let vid = visitId;
               if (!vid) {
                 const created = await openEdVisit({ patientCpid: "MOBILE-TRAUMA", chiefComplaint: mechanism, arrivalMode: "AMBULANCE" });
-                vid = String(created.data?.visit_id ?? "");
+                const payload = (created as { data?: Record<string, unknown> }).data ?? {};
+                const nested = (payload.data as Record<string, unknown> | undefined) ?? {};
+                vid = String(payload.visit_id ?? nested.visit_id ?? "");
                 setVisitId(vid);
               }
               const res = await edActivateTrauma(vid, { traumaLevel: Number(traumaLevel), mechanism, teamAssignments: team });

@@ -32,7 +32,7 @@
     },
     {
       "standardId": "EMS.DSEC.MINIMUM_DATASET",
-      "decision": "SHIPPED_PARTIAL",
+      "decision": "DEFERRED",
       "plannedWave": "W17",
       "landedWave": "W17",
       "reason": "W17 landed the Theatre-pattern projection (reporting V200/V201), four report definitions that query only rpt_emergency_episode_metric, and the DSEC 47+31 element mapping. 17/47 core elements are MAPPED, 8 PARTIAL, 22 UNMAPPED; three indicators are IMPLEMENTED, two PARTIAL, three NOT_COMPUTABLE. Permitted value lists remain a zibo ENGINEERING_SEED dependency.",

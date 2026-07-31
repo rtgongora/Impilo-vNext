@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Adult medicine journey position (brief.md §5) — where the patient is on the 17-step pathway.

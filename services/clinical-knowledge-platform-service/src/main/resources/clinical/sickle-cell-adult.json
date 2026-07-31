@@ -27,7 +27,7 @@
       "explanation": "Bone and soft-tissue pain in a person with sickle-cell disease is a vaso-occlusive crisis until proven otherwise. Untreated pain prolongs admission; missed infection, dehydration or hypoxia turns a manageable crisis into acute chest syndrome.",
       "requiredAction": "Start analgesia per protocol (including strong opioids if required), give IV fluids if dehydrated, check temperature and oxygen saturation, and screen for infection. Reassess within one hour of initial analgesia.",
       "sourceRefs": ["WHO sickle-cell handbook — pain crisis", "Sickle-cell crisis management — analgesia and triggers"],
-      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "WHO.SCD.VOC", "row": "voc recognition"},
+      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "", "row": "voc recognition"},
       "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Vaso-occlusive pain should be treated promptly with effective analgesia.", "nationalStatement": "Adopted as published; analgesia ladder is a national protocol decision.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO sickle-cell handbook"]},
       "testCases": [
         {"name": "SCD with VOC pain — recognition fires", "facts": {"sickleCellDiagnosis": "YES", "vocPainPresent": "YES"}, "expectFires": true},
@@ -50,7 +50,7 @@
       "explanation": "Acute chest syndrome — new pulmonary infiltrate with fever, cough, chest pain or hypoxia in sickle-cell disease — is the leading cause of death in adults. It overlaps with pneumonia and fat embolism and progresses within hours.",
       "requiredAction": "Give supplemental oxygen to target saturation per protocol, start broad-spectrum antibiotics and incentive spirometry if tolerated, and arrange urgent haematology / high-dependency care. Consider exchange transfusion via Madi referral where national protocol indicates.",
       "sourceRefs": ["WHO sickle-cell handbook — acute chest syndrome", "National haemoglobinopathy emergency guidance"],
-      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "WHO.SCD.ACS", "row": "acute chest emergency"},
+      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "", "row": "acute chest emergency"},
       "adaptation": {"type": "STRENGTHENED", "whoStatement": "Acute chest syndrome requires prompt treatment including oxygen and antibiotics.", "nationalStatement": "Exchange transfusion referral routed to Madi — transfusion execution is not owned by this pack.", "rationale": "Adds explicit Madi referral language without building transfusion SoR.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO sickle-cell handbook"]},
       "testCases": [
         {"name": "SCD with acute chest — emergency fires", "facts": {"sickleCellDiagnosis": "YES", "acuteChestSyndrome": "YES"}, "expectFires": true},
@@ -72,7 +72,7 @@
       "explanation": "Functional asplenia and bone infarction make bacteraemia and osteomyelitis common and rapidly fatal in sickle-cell disease. A febrile patient needs blood cultures, prompt antibiotics and admission — not outpatient analgesia alone.",
       "requiredAction": "Take blood cultures, start empiric parenteral antibiotics per local sepsis protocol, and admit for monitoring. Do not discharge on oral antibiotics alone without a clear source and improvement.",
       "sourceRefs": ["WHO sickle-cell handbook — infection", "Sepsis in sickle-cell disease — functional asplenia"],
-      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "WHO.SCD.FEVER", "row": "fever sepsis screen"},
+      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "", "row": "fever sepsis screen"},
       "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Fever in sickle-cell disease should be treated as potentially life-threatening infection.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO sickle-cell handbook"]},
       "testCases": [
         {"name": "SCD with fever — sepsis screen fires", "facts": {"sickleCellDiagnosis": "YES", "feverPresent": "YES"}, "expectFires": true},
@@ -93,8 +93,8 @@
       "explanation": "Hydroxyurea raises fetal haemoglobin, reduces crisis frequency and may protect against acute chest syndrome. It is under-prescribed in African adult cohorts despite strong evidence. The threshold here is a review prompt, not an automatic start — cytopenias and pregnancy must be excluded first.",
       "requiredAction": "Discuss hydroxyurea with the patient: baseline FBC and renal function, contraception in women of childbearing potential, and haematology follow-up. Document shared decision and monitoring plan.",
       "sourceRefs": ["WHO sickle-cell handbook — hydroxyurea", "Hydroxyurea for sickle-cell disease — evidence summary"],
-      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "WHO.SCD.HYDROXYUREA", "row": "hydroxyurea indication"},
-      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "Hydroxyurea is recommended for patients with recurrent vaso-occlusive crises.", "nationalStatement": "Three crises in 12 months used as the review threshold pending national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO sickle-cell handbook"]},
+      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "", "row": "hydroxyurea indication"},
+      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "Hydroxyurea is recommended for patients with recurrent vaso-occlusive crises.", "nationalStatement": "Three crises in 12 months used as the review threshold pending national ratification.", "rationale": "Uses three VOC episodes in 12 months as a national review threshold pending MOHCC ratification of the hydroxyurea start criterion.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO sickle-cell handbook"]},
       "testCases": [
         {"name": "three crises in 12 months — hydroxyurea prompt fires", "facts": {"sickleCellDiagnosis": "YES", "vocEpisodesPast12Months": 3}, "expectFires": true},
         {"name": "two crises — below threshold", "facts": {"sickleCellDiagnosis": "YES", "vocEpisodesPast12Months": 2}, "expectFires": false},
@@ -116,8 +116,8 @@
       "explanation": "Symptomatic severe anaemia, acute stroke, or refractory acute chest syndrome may require simple or exchange transfusion. Blood product issue, cross-match and transfusion documentation are owned by Madi — the national transfusion rail — not by adult medicine or this content pack.",
       "requiredAction": "Initiate Madi transfusion referral with indication, haemoglobin, and urgency. Continue supportive care while awaiting product. Do not attempt to record transfusion as complete in this workspace — execution belongs to Madi.",
       "sourceRefs": ["Madi transfusion rail — referral handoff", "WHO sickle-cell handbook — transfusion indications"],
-      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "WHO.SCD.TRANSFUSION", "row": "transfusion refer"},
-      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "Transfusion may be required for severe anaemia, stroke or acute chest syndrome in sickle-cell disease.", "nationalStatement": "Referral routed to Madi; no transfusion SoR is built in CKP or adult medicine.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO sickle-cell handbook", "Impilo Madi integration doctrine"]},
+      "dakRef": {"dak": "WHO SCD", "dakVersion": "2015", "id": "", "row": "transfusion refer"},
+      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "Transfusion may be required for severe anaemia, stroke or acute chest syndrome in sickle-cell disease.", "nationalStatement": "Referral routed to Madi; no transfusion SoR is built in CKP or adult medicine.", "rationale": "Routes transfusion/exchange to Madi as the governed transfusion rail rather than creating a transfusion SoR in this pack.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO sickle-cell handbook", "Impilo Madi integration doctrine"]},
       "testCases": [
         {"name": "SCD with transfusion indicated — Madi referral fires", "facts": {"sickleCellDiagnosis": "YES", "transfusionIndicated": "YES"}, "expectFires": true},
         {"name": "SCD without transfusion need — does not fire", "facts": {"sickleCellDiagnosis": "YES", "transfusionIndicated": "NO"}, "expectFires": false},
