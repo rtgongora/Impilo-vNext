@@ -23,10 +23,9 @@ of the code, say so in the line that does it.
 
 ## State
 
-RMNP W0–W11 are done. **W12 is done**: the two unimplemented stamp rows, the obligation-propagation
-capability and its two guards, the pct confidential read and intake routes, both owed BFF surfaces,
-near-miss end to end, and the RMC instrument. Not yet re-imaged or re-deployed — W12 is on canonical
-but the digests below are still the W11 build.
+RMNP W0–W11 are done. **W12 is done** (backend) and **W12-UI is done** (product surfaces for
+SMBP, pregnancy booking, CHW postnatal, near-miss classify-form, and respectful maternity care).
+Not yet re-imaged or re-deployed — digests below are still the W11 build.
 
 **Deployed 2026-07-28, by digest via `kubectl set image` — NEVER helm** (eight services run digests
 the committed values do not name; a `helm upgrade` reverts three lanes and reports success):
@@ -123,10 +122,22 @@ The ordered six-step flip list is in
 | Strip the visibility headers at the edge, then decide when to flip `propagate-obligations` | **cross-lane security + PO — blocks flip step 6 in practice** |
 | Deployed `deploy/helm/.../envoy.yaml` is a third, ungated copy of the Envoy config | **coordinator — the ENVOY-GATE comment names only two files** |
 | Next tshepo-authz migration number: V056 is consumed by the break-glass lane and RMNP's V048–V052 band is full | **coordinator — flip step 5 cannot name a number until this is allocated** |
-| Re-image and re-deploy pct, CKP and experience-bff for W12 | RMNP — digests above are the W11 build |
-| Form 21 renders through the generic DAK renderer, but nothing calls `/classify-form` after submit, so the classification is reachable by API and not yet by a click | RMNP / experience |
-| No RMC feedback screen — the BFF and CKP lanes exist and are tested; the citizen-facing form does not | RMNP / experience |
+| Re-image and re-deploy pct, CKP and experience-bff for W12 (includes the BFF `"me"` subject resolution on pregnancy booking) | RMNP — digests above are the W11 build |
 | `pregnant()` unguarded boolean, PNC mental-health/GBV vocabulary | recorded gaps, need owners |
+
+## Landed in W12-UI (frontend parity)
+
+Backend without product UI is not done. These surfaces close the thin-UI gap against the W12 BFF:
+
+| Surface | Web | Mobile |
+|---|---|---|
+| SMBP series verdict | `/my/monitoring` (hypertension plans) | citizen Personal → Monitoring |
+| Pregnancy booking / current | `/my/pregnancy` | citizen Personal → Pregnancy |
+| Near-miss form 21 → classify-form | EHR `/ehr/[patientId]/maternity` panel | provider maternity specialty tool (WIRED) |
+| Respectful maternity care | `/my-life/feedback/respectful-maternity` | citizen Personal → RMC |
+| CHW community postnatal | — (Outreach is mobile-primary) | provider Outreach → Postnatal tab |
+
+Citizen pregnancy calls use the BFF `"me"` sentinel so the browser never holds a CPID.
 
 ## Working method that earned its place
 
