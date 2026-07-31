@@ -69,6 +69,10 @@ class OrderStateMachineTest {
                         org.mockito.Mockito.mock(
                                 zw.gov.mohcc.impilo.oros.persistence.repository.OrderVersionRepository.class),
                         orderItemRepository, objectMapper));
+        lenient().when(orderRepository
+                .findByTenantIdAndPatientCpidAndZiboOrderCodeAndStatusNotInAndPlacedAtAfter(
+                        any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
     }
 
     private OrderEntity createOrderInStatus(OrderStatus status) {
@@ -497,6 +501,108 @@ class OrderStateMachineTest {
                 assertThat(order.getRequestSource()).isEqualTo(RequestSource.TELECONSULT);
                 assertThat(order.getSourceRef()).isEqualTo("REF-1");
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("Patient duplicate order guard")
+    class PatientDuplicateOrderGuard {
+
+        @Test
+        @DisplayName("placeOrder rejects duplicate within repeat interval")
+        void placeOrderRejectsDuplicateWithinRepeatInterval() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                OrderEntity existing = new OrderEntity();
+                existing.setOrderId("PRIOR-CREAT");
+                when(orderRepository.findByTenantIdAndPatientCpidAndZiboOrderCodeAndStatusNotInAndPlacedAtAfter(
+                        eq(TENANT_ID), eq("CPID-001"), eq("ZIBO-CREATININE"), any(), any()))
+                        .thenReturn(List.of(existing));
+
+                assertThatThrownBy(() -> stateMachine.placeOrder(
+                        FACILITY_ID, "CPID-001", OrderType.LAB, null,
+                        "ZIBO-CREATININE", null, null, null, null, null))
+                        .isInstanceOf(OrosDomainException.class)
+                        .satisfies(ex -> {
+                            OrosDomainException ode = (OrosDomainException) ex;
+                            assertThat(ode.getCode()).isEqualTo("DUPLICATE_PATIENT_ORDER");
+                            assertThat(ode.getStatus()).isEqualTo(409);
+                            assertThat(ode.getMessage()).contains("patient=CPID-001");
+                            assertThat(ode.getMessage()).contains("ZIBO-CREATININE");
+                        });
+                verify(orderRepository, never()).save(any(OrderEntity.class));
+            }
+        }
+
+        @Test
+        @DisplayName("placeOrder allows duplicate when outside repeat interval")
+        void placeOrderAllowsWhenOutsideRepeatInterval() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+                when(orderRepository.findByTenantIdAndPatientCpidAndZiboOrderCodeAndStatusNotInAndPlacedAtAfter(
+                        eq(TENANT_ID), eq("CPID-001"), eq("ZIBO-HBA1C"), any(), any()))
+                        .thenReturn(List.of());
+                when(orderRepository.save(any(OrderEntity.class)))
+                        .thenAnswer(invocation -> invocation.getArgument(0));
+
+                OrderEntity order = stateMachine.placeOrder(
+                        FACILITY_ID, "CPID-001", OrderType.LAB, null,
+                        "ZIBO-HBA1C", null, null, null, null, null);
+
+                assertThat(order.getZiboOrderCode()).isEqualTo("ZIBO-HBA1C");
+                verify(orderRepository).save(any(OrderEntity.class));
+            }
+        }
+
+        @Test
+        @DisplayName("placeOrder allows when no prior order exists")
+        void placeOrderAllowsWhenNoPriorOrder() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+                when(orderRepository.findByTenantIdAndPatientCpidAndZiboOrderCodeAndStatusNotInAndPlacedAtAfter(
+                        eq(TENANT_ID), eq("CPID-002"), eq("ZIBO-CBC"), any(), any()))
+                        .thenReturn(List.of());
+                when(orderRepository.save(any(OrderEntity.class)))
+                        .thenAnswer(invocation -> invocation.getArgument(0));
+
+                OrderEntity order = stateMachine.placeOrder(
+                        FACILITY_ID, "CPID-002", OrderType.LAB, null,
+                        "ZIBO-CBC", null, null, null, null, null);
+
+                assertThat(order.getPatientCpid()).isEqualTo("CPID-002");
+            }
+        }
+
+        @Test
+        @DisplayName("createDraft rejects duplicate within repeat interval")
+        void createDraftRejectsDuplicateWithinRepeatInterval() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                OrderEntity existing = new OrderEntity();
+                existing.setOrderId("PRIOR-XR");
+                when(orderRepository.findByTenantIdAndPatientCpidAndZiboOrderCodeAndStatusNotInAndPlacedAtAfter(
+                        eq(TENANT_ID), eq("CPID-IMG-001"), eq("ZIBO-CXR"), any(), any()))
+                        .thenReturn(List.of(existing));
+
+                assertThatThrownBy(() -> stateMachine.createDraft(
+                        FACILITY_ID, "CPID-IMG-001", OrderType.IMAGING, null,
+                        RequestSource.INTERNAL, null, "ZIBO-CXR", null, null,
+                        null, null, null, null, null))
+                        .isInstanceOf(OrosDomainException.class)
+                        .extracting(ex -> ((OrosDomainException) ex).getCode())
+                        .isEqualTo("DUPLICATE_PATIENT_ORDER");
+            }
+        }
+
+        @Test
+        @DisplayName("resolveRepeatIntervalDays maps aliases from multimorbidity rules")
+        void resolveRepeatIntervalDaysUsesAliases() {
+            assertThat(OrderStateMachine.resolveRepeatIntervalDays("LAB-HBA1C")).isEqualTo(84);
+            assertThat(OrderStateMachine.resolveRepeatIntervalDays("ZIBO-CREATININE")).isEqualTo(7);
+            assertThat(OrderStateMachine.resolveRepeatIntervalDays("ZIBO-LIPID-PANEL")).isEqualTo(180);
+            assertThat(OrderStateMachine.resolveRepeatIntervalDays("ZIBO-UNKNOWN-LAB")).isEqualTo(7);
         }
     }
 
