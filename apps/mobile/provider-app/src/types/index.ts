@@ -42,6 +42,7 @@ export type ProviderTabKey =
   | "encounter"
   | "results"
   | "queue"
+  | "theatre"
   | "messaging"
   | "social"
   | "wellnessSocial"

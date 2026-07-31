@@ -9,7 +9,7 @@ const mockApiClient = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 vi.mock("@impilo/mobile-api-client", () => ({ apiClient: mockApiClient }));
 
 import {
-  listTheatreQueue, intakeTheatreCase, setTheatreTriage, evaluateTheatreReadiness,
+  listTheatreQueue, getTheatreCase, intakeTheatreCase, setTheatreTriage, evaluateTheatreReadiness,
   bookTheatreCase, startTheatreCase, draftTheatreNote, signTheatreNote,
   recordTheatrePacuDisposition, cancelTheatreCase, reportTheatreSafetyEvent,
   listTheatreSafetyEvents, routeTheatreDeath,
@@ -23,6 +23,15 @@ describe("theatre service (provider mobile)", () => {
     const q = await listTheatreQueue();
     expect(q).toHaveLength(1);
     expect(mockApiClient.get).toHaveBeenCalledWith("/internal/v1/theatre/queue");
+  });
+
+  it("loads theatre case detail (case id = procedure episode id)", async () => {
+    mockApiClient.get.mockResolvedValue({
+      data: { data: { id: "c1", procedure_name: "Appendectomy", status: "READY" } },
+    });
+    const c = await getTheatreCase("c1");
+    expect((c as { procedure_name: string }).procedure_name).toBe("Appendectomy");
+    expect(mockApiClient.get).toHaveBeenCalledWith("/internal/v1/theatre/cases/c1");
   });
 
   it("intakes an OROS PROCEDURE order as a theatre case", async () => {

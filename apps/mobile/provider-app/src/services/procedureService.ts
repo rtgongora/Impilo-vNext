@@ -78,6 +78,10 @@ const THEATRE = "/internal/v1/theatre";
 export const listTheatreQueue = async () =>
   (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/queue`)).data.data;
 
+/** Theatre case detail — case id IS the procedure episode id (BFF GET /cases/{id}). */
+export const getTheatreCase = async (caseId: string) =>
+  (await apiClient.get<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}`)).data.data;
+
 export const intakeTheatreCase = async (body: Record<string, unknown>) =>
   (await apiClient.post<{ data: { id: string } }>(`${THEATRE}/cases`, body)).data.data;
 
