@@ -1964,6 +1964,12 @@ components:
       type: object
       required: [specialty, templateCode, templateName, contentMaturity, approvingAuthority]
       properties:
+        id:
+          type: string
+          format: uuid
+          description: |
+            Soft-link target for inpatient `procedure_note.operative_template_ref` (SB-5).
+            Travels with `templateCode` as a validated pair — never alone.
         specialty: { $ref: '#/components/schemas/SurgicalSpecialty' }
         templateCode: { type: string }
         templateName: { type: string }

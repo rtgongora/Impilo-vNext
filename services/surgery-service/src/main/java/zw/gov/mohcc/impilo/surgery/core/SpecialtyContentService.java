@@ -77,6 +77,9 @@ public class SpecialtyContentService {
 
     private Map<String, Object> templateView(SurgicalOperativeTemplateEntity e) {
         Map<String, Object> m = new LinkedHashMap<>();
+        // Soft-link target for inpatient procedure_note.operative_template_ref (SB-5): the pair
+        // (id, templateCode) travels together; without the id the theatre note cannot bind.
+        m.put("id", e.getId() == null ? null : e.getId().toString());
         m.put("specialty", e.getSpecialty());
         m.put("templateCode", e.getTemplateCode());
         m.put("templateName", e.getTemplateName());

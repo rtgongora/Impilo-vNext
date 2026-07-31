@@ -285,6 +285,48 @@ public class SurgeryServiceClient {
                 String.class);
     }
 
+    // ── Specialty catalogue (SB-4) + surgical analytics (§23); gated by V305 ──
+    // Catalogue lives under /surgery/specialties (NOT /surgery/episodes — that family owns the
+    // SHARED/LEAD roster). Analytics lives under /surgery/analytics (pin keeps it off
+    // /procedures/analytics). Specialty and indicator codes are query parameters from the start.
+
+    /** Specialty indications — GET /internal/v1/surgery/specialties/indications?specialty= */
+    public ResponseEntity<String> specialtyIndications(String specialty) {
+        log.info("Surgery: listing specialty indications");
+        String url = UriComponentsBuilder
+                .fromUriString(baseUrl + "/internal/v1/surgery/specialties/indications")
+                .queryParam("specialty", specialty)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    /** Operative templates — GET /internal/v1/surgery/specialties/templates?specialty= */
+    public ResponseEntity<String> specialtyTemplates(String specialty) {
+        log.info("Surgery: listing specialty operative templates");
+        String url = UriComponentsBuilder
+                .fromUriString(baseUrl + "/internal/v1/surgery/specialties/templates")
+                .queryParam("specialty", specialty)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    /** Indicator catalogue + summary counts — GET /internal/v1/surgery/analytics/indicators */
+    public ResponseEntity<String> analyticsIndicators() {
+        log.info("Surgery: fetching analytics indicator catalogue");
+        return restTemplate.getForEntity(
+                baseUrl + "/internal/v1/surgery/analytics/indicators", String.class);
+    }
+
+    /** One indicator — GET /internal/v1/surgery/analytics/indicator?code= */
+    public ResponseEntity<String> analyticsIndicator(String indicatorCode) {
+        log.info("Surgery: fetching analytics indicator={}", indicatorCode);
+        String url = UriComponentsBuilder
+                .fromUriString(baseUrl + "/internal/v1/surgery/analytics/indicator")
+                .queryParam("code", indicatorCode)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
     private ResponseEntity<String> exchangeJson(HttpMethod method, String url, String body) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
