@@ -205,6 +205,22 @@ public class KeycloakAdminClient {
         return sendExecuteActionsEmail(userId, actions, adminHeaders(adminToken));
     }
 
+    public boolean sendExecuteActionsEmail(String userId, List<String> actions, int lifespanSeconds) {
+        String adminToken = getServiceAccountToken();
+        if (adminToken == null || userId == null || userId.isBlank() || lifespanSeconds <= 0) {
+            return false;
+        }
+        return sendExecuteActionsEmail(userId, actions, lifespanSeconds, adminHeaders(adminToken));
+    }
+
+    /** Assign governed realm roles only after the caller has completed its activation checks. */
+    public boolean assignRealmRoles(String userId, List<String> roles) {
+        String adminToken = getServiceAccountToken();
+        if (adminToken == null || !safeId(userId) || roles == null || roles.isEmpty()) return false;
+        HttpHeaders headers = adminHeaders(adminToken);
+        return roles.stream().allMatch(role -> assignRealmRoleStrict(userId, role, headers));
+    }
+
     public boolean setUserEnabled(String userId, boolean enabled) {
         String adminToken = getServiceAccountToken();
         if (adminToken == null || userId == null || userId.isBlank()) {
@@ -308,8 +324,14 @@ public class KeycloakAdminClient {
     }
 
     private boolean sendExecuteActionsEmail(String userId, List<String> actions, HttpHeaders adminHeaders) {
+        return sendExecuteActionsEmail(userId, actions, null, adminHeaders);
+    }
+
+    private boolean sendExecuteActionsEmail(String userId, List<String> actions,
+                                            Integer lifespanSeconds, HttpHeaders adminHeaders) {
         try {
             String url = usersUrl() + "/" + userId + "/execute-actions-email";
+            if (lifespanSeconds != null) url += "?lifespan=" + lifespanSeconds;
             restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(actions, adminHeaders), Void.class);
             return true;
         } catch (Exception e) {

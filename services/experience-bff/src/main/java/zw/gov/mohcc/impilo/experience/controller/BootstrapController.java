@@ -1,10 +1,13 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.bootstrap.BootstrapDtos;
 import zw.gov.mohcc.impilo.experience.bootstrap.BootstrapService;
+import zw.gov.mohcc.impilo.experience.auth.session.SessionBearerTokenResolver;
+import zw.gov.mohcc.impilo.experience.auth.session.WebAuthSessionStore;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -15,9 +18,11 @@ import java.util.UUID;
 public class BootstrapController {
 
     private final BootstrapService bootstrapService;
+    private final WebAuthSessionStore sessionStore;
 
-    public BootstrapController(BootstrapService bootstrapService) {
+    public BootstrapController(BootstrapService bootstrapService, WebAuthSessionStore sessionStore) {
         this.bootstrapService = bootstrapService;
+        this.sessionStore = sessionStore;
     }
 
     @GetMapping("/status")
@@ -48,11 +53,15 @@ public class BootstrapController {
 
     @PostMapping("/activate")
     public ResponseEntity<Map<String, Object>> activate(
+            HttpServletRequest httpRequest,
             @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
             @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
             @RequestBody BootstrapDtos.BootstrapActivateRequest body) {
-        return ok(requestId, correlationId, bootstrapService.activate(tenantId, body));
+        String sessionId = SessionBearerTokenResolver.cookie(
+                httpRequest, WebAuthSessionStore.SESSION_COOKIE);
+        WebAuthSessionStore.SessionData session = sessionStore.findSession(sessionId).orElse(null);
+        return ok(requestId, correlationId, bootstrapService.activate(tenantId, body, session));
     }
 
     @PostMapping("/close")

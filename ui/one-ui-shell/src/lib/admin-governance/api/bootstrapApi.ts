@@ -10,6 +10,7 @@ export interface BootstrapStatus {
   activeNationalAdminExists: boolean;
   recoveryMode: boolean;
   allowedBootstrapMethods: string[];
+  pendingBootstrapAccountId?: string;
   friendlyMessage: string;
 }
 

@@ -25,8 +25,6 @@ export function FirstNationalAdministratorWizard() {
     organisation: "Ministry of Health and Child Care",
     approvalReference: "",
   });
-  const [password, setPassword] = useState("");
-  const [mfaConfigured, setMfaConfigured] = useState(false);
   const [bootstrapAccountId, setBootstrapAccountId] = useState<string | null>(null);
   const [result, setResult] = useState<AdminGovernanceActionResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +32,13 @@ export function FirstNationalAdministratorWizard() {
 
   useEffect(() => {
     void getBootstrapStatus()
-      .then(setStatus)
+      .then((nextStatus) => {
+        setStatus(nextStatus);
+        if (nextStatus.pendingBootstrapAccountId) {
+          setBootstrapAccountId(nextStatus.pendingBootstrapAccountId);
+          setStep(4);
+        }
+      })
       .catch(() => setError("Bootstrap status unavailable."))
       .finally(() => setLoading(false));
   }, []);
@@ -74,7 +78,7 @@ export function FirstNationalAdministratorWizard() {
 
   async function handleActivate() {
     if (!bootstrapAccountId) return;
-    const response = await activateBootstrapAdmin({ bootstrapAccountId, password, mfaConfigured });
+    const response = await activateBootstrapAdmin({ bootstrapAccountId });
     setResult({
       status: (response.status ?? "completed") as AdminGovernanceActionResponse["status"],
       friendlyTitle: response.friendlyTitle ?? "Bootstrap complete",
@@ -83,7 +87,13 @@ export function FirstNationalAdministratorWizard() {
       bootstrapClosed: response.bootstrapClosed,
       auditStatus: response.auditStatus as AdminGovernanceActionResponse["auditStatus"],
     });
-    setStep(5);
+    if (response.status === "completed") setStep(5);
+  }
+
+  function beginAal3Authentication() {
+    const returnTo = `${window.location.pathname}?activate=1`;
+    const query = new URLSearchParams({ returnTo, acr: "urn:impilo:aal3" });
+    window.location.assign(`/internal/v1/auth/oidc/authorize?${query.toString()}`);
   }
 
   return (
@@ -140,15 +150,22 @@ export function FirstNationalAdministratorWizard() {
 
       {step === 4 ? (
         <section className="space-y-3">
-          <h3 className="font-semibold text-foreground">4. Activate with MFA</h3>
-          <input className="w-full rounded-lg border px-3 py-2 text-sm" type="password" placeholder="Set password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={mfaConfigured} onChange={(e) => setMfaConfigured(e.target.checked)} />
-            MFA configured
-          </label>
-          <button type="button" className="rounded-lg bg-primary px-4 py-2 text-sm text-white" onClick={() => void handleActivate()}>
-            Activate and close bootstrap
-          </button>
+          <h3 className="font-semibold text-foreground">4. Complete secure setup and verify AAL3</h3>
+          <p className="text-sm text-muted-foreground">
+            Open the time-limited Keycloak action sent to the nominated official email. Keycloak—not Impilo—will collect the password,
+            register the approved hardware security key, and display the one-use recovery codes. Return here afterwards.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="rounded-lg border border-primary px-4 py-2 text-sm text-primary" onClick={beginAal3Authentication}>
+              Authenticate with hardware key
+            </button>
+            <button type="button" className="rounded-lg bg-primary px-4 py-2 text-sm text-white" onClick={() => void handleActivate()}>
+              Verify credentials and close bootstrap
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Activation fails closed unless this browser has a fresh AAL3 session for the nominated account and Keycloak confirms both an approved hardware credential and recovery codes.
+          </p>
         </section>
       ) : null}
 

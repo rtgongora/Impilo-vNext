@@ -14,6 +14,7 @@ public final class BootstrapDtos {
             boolean activeNationalAdminExists,
             boolean recoveryMode,
             List<String> allowedBootstrapMethods,
+            String pendingBootstrapAccountId,
             String friendlyMessage
     ) {}
 
@@ -73,9 +74,7 @@ public final class BootstrapDtos {
     ) {}
 
     public record BootstrapActivateRequest(
-            String bootstrapAccountId,
-            String password,
-            Boolean mfaConfigured
+            String bootstrapAccountId
     ) {}
 
     public record BootstrapRecoveryRequest(String ceremonyReference, String notes) {}

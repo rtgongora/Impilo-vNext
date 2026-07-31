@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.admingovernance.GovernanceInvitationService;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
+import zw.gov.mohcc.impilo.experience.auth.session.WebAuthSessionStore;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -20,6 +21,7 @@ public class BootstrapService {
     private final BootstrapAuditService auditService;
     private final GovernanceInvitationService governanceInvitationService;
     private final WorkforceGovernanceClient workforceGovernanceClient;
+    private final BootstrapActivationVerifier activationVerifier;
 
     public BootstrapService(BootstrapProperties properties,
                             BootstrapStateRepository stateRepository,
@@ -27,7 +29,8 @@ public class BootstrapService {
                             BootstrapPolicyService policyService,
                             BootstrapAuditService auditService,
                             GovernanceInvitationService governanceInvitationService,
-                            WorkforceGovernanceClient workforceGovernanceClient) {
+                            WorkforceGovernanceClient workforceGovernanceClient,
+                            BootstrapActivationVerifier activationVerifier) {
         this.properties = properties;
         this.stateRepository = stateRepository;
         this.tokenService = tokenService;
@@ -35,6 +38,7 @@ public class BootstrapService {
         this.auditService = auditService;
         this.governanceInvitationService = governanceInvitationService;
         this.workforceGovernanceClient = workforceGovernanceClient;
+        this.activationVerifier = activationVerifier;
     }
 
     public BootstrapDtos.BootstrapStatusResponse status(String tenantId) {
@@ -56,6 +60,7 @@ public class BootstrapService {
                 activeNationalAdminExists,
                 state.recoveryMode(),
                 properties.getAllowedMethods(),
+                state.bootstrapAccountId(),
                 message
         );
     }
@@ -118,6 +123,18 @@ public class BootstrapService {
         accountBody.put("status", "PENDING");
         workforceGovernanceClient.postJson("/v1/internal/governance/bootstrap/accounts", accountBody);
 
+        GovernanceInvitationService.InvitationDeliveryResult delivery =
+                governanceInvitationService.deliverBootstrapActivation(
+                        email, str(request.nominatedPerson().get("fullName")), properties.isRequireMfa());
+        if (!delivery.activated()) {
+            var audit = auditService.emit("bootstrap.denied", email, bootstrapAccountId, Map.of(
+                    "reason", delivery.status(), "auditStatus", delivery.auditStatus()));
+            return deniedResponse(
+                    new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(),
+                            List.of(), List.of(delivery.friendlyMessage())),
+                    audit, delivery.friendlyMessage());
+        }
+
         stateRepository.markTokenUsed(tid, tokenResult.fingerprint());
         String roleExpiry = OffsetDateTime.now().plusHours(properties.getBootstrapRoleTtlHours()).toString();
         BootstrapDtos.BootstrapStateRecord updated = new BootstrapDtos.BootstrapStateRecord(
@@ -138,7 +155,10 @@ public class BootstrapService {
                 Map.of(
                         "organisationId", organisationId,
                         "nominatedEmail", email,
-                        "nominatedFullName", str(request.nominatedPerson().get("fullName"))
+                        "nominatedFullName", str(request.nominatedPerson().get("fullName")),
+                        "keycloakUserId", delivery.keycloakUserId(),
+                        "invitationId", delivery.invitationId(),
+                        "invitationExpiresAt", delivery.expiresAt()
                 )
         );
         stateRepository.save(tid, updated);
@@ -146,11 +166,11 @@ public class BootstrapService {
 
         return new BootstrapDtos.BootstrapFirstAdminResponse(
                 "pending",
-                bootstrapAccountId,
+                delivery.invitationId(),
                 organisationId,
                 bootstrapAccountId,
                 "Pending bootstrap administrator created",
-                "Complete password setup and MFA to activate the first national administrator.",
+                "Use the time-limited Keycloak action to set a password, register an approved hardware key, and confirm recovery codes. Then authenticate at AAL3 to activate.",
                 false,
                 roleExpiry,
                 audit.auditStatus(),
@@ -159,52 +179,55 @@ public class BootstrapService {
         );
     }
 
-    public BootstrapDtos.BootstrapFirstAdminResponse activate(String tenantId, BootstrapDtos.BootstrapActivateRequest request) {
+    public BootstrapDtos.BootstrapFirstAdminResponse activate(String tenantId,
+            BootstrapDtos.BootstrapActivateRequest request,
+            WebAuthSessionStore.SessionData authenticatedSession) {
         String tid = tenantId != null ? tenantId : DEFAULT_TENANT;
         BootstrapDtos.BootstrapStateRecord state = stateRepository.getOrInit(tid);
         if (state.bootstrapClosed()) {
             var audit = auditService.emit("bootstrap.denied", null, tid, Map.of("reason", "bootstrap_closed"));
             return deniedResponse(new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(), List.of(), List.of("Bootstrap is closed.")), audit, "Bootstrap Mode is closed.");
         }
-        if (properties.isRequireMfa() && (request.mfaConfigured() == null || !request.mfaConfigured())) {
-            var audit = auditService.emit("bootstrap.denied", null, tid, Map.of("reason", "mfa_required"));
-            return deniedResponse(new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(), List.of(), List.of("MFA required.")), audit, "MFA setup is required before activation.");
+        if (request == null || request.bootstrapAccountId() == null
+                || !request.bootstrapAccountId().equals(state.bootstrapAccountId())) {
+            var audit = auditService.emit("bootstrap.denied", null, tid,
+                    Map.of("reason", "bootstrap_account_mismatch"));
+            return deniedResponse(new BootstrapDtos.BootstrapPolicyDecision(false,
+                    UUID.randomUUID().toString(), List.of(), List.of("Bootstrap account mismatch.")),
+                    audit, "Bootstrap account does not match the open ceremony.");
         }
-
-        String email = emailFromState(state);
-        String fullName = str(state.metadata() != null ? state.metadata().get("nominatedFullName") : null);
-        if (email.isBlank()) {
-            var audit = auditService.emit("bootstrap.denied", null, tid, Map.of("reason", "missing_email"));
-            return deniedResponse(new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(), List.of(), List.of("Nominated email missing.")), audit, "Bootstrap account email is missing.");
-        }
-
-        GovernanceInvitationService.InvitationDeliveryResult delivery = governanceInvitationService.deliverBootstrapActivation(
-                email,
-                fullName.isBlank() ? email : fullName,
-                request.password(),
-                properties.isRequireMfa());
-        if (!delivery.activated()) {
-            var audit = auditService.emit("bootstrap.denied", null, tid, Map.of(
-                    "reason", delivery.status(),
-                    "auditStatus", delivery.auditStatus()));
+        String keycloakUserId = str(state.metadata() != null
+                ? state.metadata().get("keycloakUserId") : null);
+        BootstrapActivationVerifier.Verification verification =
+                activationVerifier.verify(keycloakUserId, authenticatedSession);
+        if (!verification.allowed()) {
+            var audit = auditService.emit("bootstrap.denied", keycloakUserId, tid,
+                    Map.of("reason", verification.message()));
             return deniedResponse(
-                    new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(), List.of(), List.of(delivery.friendlyMessage())),
-                    audit,
-                    delivery.friendlyMessage());
+                    new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(),
+                            List.of(), List.of(verification.message())), audit, verification.message());
+        }
+        if (!governanceInvitationService.activateBootstrapRoles(keycloakUserId)) {
+            var audit = auditService.emit("bootstrap.denied", keycloakUserId, tid,
+                    Map.of("reason", "keycloak_role_assignment_failed"));
+            return deniedResponse(new BootstrapDtos.BootstrapPolicyDecision(false,
+                    UUID.randomUUID().toString(), List.of(),
+                    List.of("Governed administrator roles could not be assigned.")), audit,
+                    "Administrator activation is pending because Keycloak role assignment failed.");
         }
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("bootstrapAccountId", request.bootstrapAccountId());
-        body.put("password", request.password() != null ? request.password() : "");
-        body.put("mfaConfigured", request.mfaConfigured() != null && request.mfaConfigured());
+        body.put("authenticationAssurance", "AAL3");
+        body.put("credentialCount", verification.credentialCount());
         body.put("status", "ACTIVE");
-        body.put("keycloakUserId", delivery.keycloakUserId());
-        body.put("invitationId", delivery.invitationId());
+        body.put("keycloakUserId", keycloakUserId);
+        body.put("invitationId", str(state.metadata() != null ? state.metadata().get("invitationId") : null));
         JsonNode activated = workforceGovernanceClient.postJson(
                 "/v1/internal/governance/bootstrap/accounts/" + request.bootstrapAccountId() + "/activate", body);
         String userId = activated != null && activated.has("keycloakUserId")
-                ? activated.path("keycloakUserId").asText(delivery.keycloakUserId())
-                : delivery.keycloakUserId();
+                ? activated.path("keycloakUserId").asText(keycloakUserId)
+                : keycloakUserId;
 
         BootstrapDtos.BootstrapStateRecord closed = new BootstrapDtos.BootstrapStateRecord(
                 state.id(),

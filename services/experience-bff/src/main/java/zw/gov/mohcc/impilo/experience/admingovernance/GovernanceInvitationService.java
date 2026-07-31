@@ -34,7 +34,6 @@ public class GovernanceInvitationService {
     public InvitationDeliveryResult deliverBootstrapActivation(
             String email,
             String displayName,
-            String password,
             boolean mfaRequired) {
         if (!keycloakAdminClient.isReady()) {
             return InvitationDeliveryResult.blocked(
@@ -47,12 +46,12 @@ public class GovernanceInvitationService {
                 new KeycloakAdminClient.CreateUserCommand(
                         email,
                         displayName,
-                        password,
-                        false,
+                        null,
                         true,
-                        List.of("SYSTEM_ADMIN"),
+                        true,
+                        List.of(),
                         false,
-                        mfaRequired
+                        false
                 ));
 
         if (!keycloak.created()) {
@@ -64,6 +63,16 @@ public class GovernanceInvitationService {
 
         String invitationId = UUID.randomUUID().toString();
         String expiresAt = OffsetDateTime.now().plusHours(invitationExpiryHours).toString();
+        List<String> requiredActions = mfaRequired
+                ? List.of("UPDATE_PASSWORD", "webauthn-register", "CONFIGURE_RECOVERY_AUTHN_CODES")
+                : List.of("UPDATE_PASSWORD");
+        if (!keycloakAdminClient.sendExecuteActionsEmail(keycloak.userId(), requiredActions,
+                Math.toIntExact(Math.multiplyExact(invitationExpiryHours, 3600L)))) {
+            keycloakAdminClient.setUserEnabled(keycloak.userId(), false);
+            return InvitationDeliveryResult.blocked(
+                    invitationId, "failed_non_blocking",
+                    "The secure Keycloak setup action could not be delivered; the staged account was disabled.");
+        }
         NotificationAttempt notification = sendOnboardingNotification(
                 invitationId,
                 email,
@@ -81,6 +90,10 @@ public class GovernanceInvitationService {
                 expiresAt,
                 notification.auditStatus(),
                 notification.friendlyMessage());
+    }
+
+    public boolean activateBootstrapRoles(String keycloakUserId) {
+        return keycloakAdminClient.assignRealmRoles(keycloakUserId, List.of("SYSTEM_ADMIN"));
     }
 
     public InvitationDeliveryResult deliverOrganisationInvitation(

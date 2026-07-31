@@ -39,7 +39,7 @@ class GovernanceInvitationServiceTest {
     void bootstrapActivationBlockedWhenKeycloakUnavailable() {
         when(keycloakAdminClient.isReady()).thenReturn(false);
 
-        var result = service.deliverBootstrapActivation("admin@mohcc.gov.zw", "Admin User", "Secret123!", true);
+        var result = service.deliverBootstrapActivation("admin@mohcc.gov.zw", "Admin User", true);
 
         assertFalse(result.activated());
         assertEquals("blocked", result.status());
@@ -53,7 +53,7 @@ class GovernanceInvitationServiceTest {
         when(keycloakAdminClient.createUser(any())).thenReturn(
                 KeycloakAdminClient.KeycloakUserResult.failed("CREATE_FAILED", "Keycloak user creation failed."));
 
-        var result = service.deliverBootstrapActivation("admin@mohcc.gov.zw", "Admin User", "Secret123!", true);
+        var result = service.deliverBootstrapActivation("admin@mohcc.gov.zw", "Admin User", true);
 
         assertFalse(result.activated());
         assertEquals("blocked", result.status());
@@ -63,16 +63,39 @@ class GovernanceInvitationServiceTest {
     @Test
     void bootstrapActivationReportsSentOnlyAfterKeycloakCreatesUser() {
         when(keycloakAdminClient.isReady()).thenReturn(true);
-        when(keycloakAdminClient.createUser(any())).thenReturn(
-                KeycloakAdminClient.KeycloakUserResult.created("kc-user-1"));
+        when(keycloakAdminClient.createUser(any())).thenAnswer(invocation -> {
+            KeycloakAdminClient.CreateUserCommand command = invocation.getArgument(0);
+            assertNull(command.password(), "Impilo must never receive or set the bootstrap password");
+            assertTrue(command.realmRoles().isEmpty(), "Administrator authority is assigned only after AAL3 verification");
+            return KeycloakAdminClient.KeycloakUserResult.created("kc-user-1");
+        });
+        when(keycloakAdminClient.sendExecuteActionsEmail(eq("kc-user-1"),
+                eq(List.of("UPDATE_PASSWORD", "webauthn-register", "CONFIGURE_RECOVERY_AUTHN_CODES")),
+                eq(604800))).thenReturn(true);
         when(notificationServiceClient.sendNotification(any())).thenReturn(mock(JsonNode.class));
 
-        var result = service.deliverBootstrapActivation("admin@mohcc.gov.zw", "Admin User", "Secret123!", true);
+        var result = service.deliverBootstrapActivation("admin@mohcc.gov.zw", "Admin User", true);
 
         assertTrue(result.activated());
         assertEquals("invitation_sent", result.status());
         assertEquals("kc-user-1", result.keycloakUserId());
         assertNotNull(result.invitationId());
+    }
+
+    @Test
+    void bootstrapActivationDisablesAccountWhenNativeActionCannotBeDelivered() {
+        when(keycloakAdminClient.isReady()).thenReturn(true);
+        when(keycloakAdminClient.createUser(any())).thenReturn(
+                KeycloakAdminClient.KeycloakUserResult.created("kc-user-1"));
+        when(keycloakAdminClient.sendExecuteActionsEmail(eq("kc-user-1"), anyList(), anyInt()))
+                .thenReturn(false);
+        when(keycloakAdminClient.setUserEnabled("kc-user-1", false)).thenReturn(true);
+
+        var result = service.deliverBootstrapActivation("admin@mohcc.gov.zw", "Admin User", true);
+
+        assertFalse(result.activated());
+        verify(keycloakAdminClient).setUserEnabled("kc-user-1", false);
+        verifyNoInteractions(notificationServiceClient);
     }
 
     @Test
