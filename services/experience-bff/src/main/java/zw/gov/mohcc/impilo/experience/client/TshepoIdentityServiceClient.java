@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.http.HttpHeaders;
 
 /**
  * HTTP client for the Tshepo Identity sovereign service (CPID, MOSIP links,
@@ -227,6 +228,43 @@ public class TshepoIdentityServiceClient {
         ResponseEntity<JsonNode> response =
                 restTemplate.postForEntity(url, new HttpEntity<>(request, h), JsonNode.class);
         return extractData(response);
+    }
+
+    public JsonNode createRecoveryCase(String tenantId, String actorId, Map<String,Object> request) {
+        return postRecovery("", tenantId, actorId, request);
+    }
+
+    public JsonNode getRecoveryCase(String tenantId, UUID caseId) {
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                baseUrl + "/internal/v1/identity/recovery-cases/" + caseId, HttpMethod.GET,
+                new HttpEntity<>(recoveryHeaders(tenantId, null)), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode approveRecoveryCase(String tenantId, String actorId, UUID caseId,
+            Map<String,Object> request) {
+        return postRecovery("/" + caseId + "/approval", tenantId, actorId, request);
+    }
+
+    public JsonNode recordRecoveryExecution(String tenantId, UUID caseId, Map<String,Object> request) {
+        return postRecovery("/" + caseId + "/execution", tenantId, null, request);
+    }
+
+    private JsonNode postRecovery(String suffix, String tenantId, String actorId, Map<String,Object> request) {
+        HttpHeaders headers = recoveryHeaders(tenantId, actorId);
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                baseUrl + "/internal/v1/identity/recovery-cases" + suffix, HttpMethod.POST,
+                new HttpEntity<>(request, headers), JsonNode.class);
+        return extractData(response);
+    }
+
+    private static HttpHeaders recoveryHeaders(String tenantId, String actorId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Tenant-ID", tenantId);
+        headers.set("X-Service-ID", "experience-bff");
+        if (actorId != null) headers.set("X-Actor-ID", actorId);
+        return headers;
     }
 
     private JsonNode extractData(ResponseEntity<JsonNode> response) {

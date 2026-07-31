@@ -260,6 +260,23 @@ public class KeycloakAdminClient {
         }
     }
 
+    public UserMetadata user(String userId) {
+        if (!safeId(userId)) return null;
+        String token = getServiceAccountToken();
+        if (token == null) return null;
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(usersUrl() + "/" + userId,
+                    HttpMethod.GET, new HttpEntity<>(adminHeaders(token)), JsonNode.class);
+            JsonNode body = response.getBody();
+            return body == null ? null : new UserMetadata(body.path("id").asText(),
+                    body.path("email").asText(""), body.path("username").asText(""),
+                    body.path("enabled").asBoolean(false));
+        } catch (Exception e) {
+            log.warn("Keycloak user metadata lookup failed for {}: {}", userId, e.getMessage());
+            return null;
+        }
+    }
+
     public List<SessionMetadata> sessions(String userId) {
         String token = getServiceAccountToken();
         if (token == null || userId == null || userId.isBlank()) return List.of();
@@ -454,6 +471,7 @@ public class KeycloakAdminClient {
     ) {}
 
     public record CredentialMetadata(String id, String type, String userLabel, Long createdDate) {}
+    public record UserMetadata(String id, String email, String username, boolean enabled) {}
 
     public record SessionMetadata(String id, String ipAddress, long startedAt,
                                   long lastAccessAt, JsonNode clients) {}

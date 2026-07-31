@@ -481,6 +481,11 @@ public class SecurityConfig {
                     // ── Privacy & display preferences ───────────────────
                     .requestMatchers("/internal/v1/settings/privacy/**").authenticated()
                     .requestMatchers("/internal/v1/settings/display/**").authenticated()
+                    // Lost-device recovery can revoke authenticators and sessions. It is
+                    // restricted to platform-governance roles; the controller also requires
+                    // a fresh AAL3 token before either actor may mutate a case.
+                    .requestMatchers("/internal/v1/settings/security/recovery-cases/**")
+                            .hasAnyRole(PLATFORM_OVERRIDES)
 
                     // ── Patient-mediated external provider collaboration (VITO-backed) ──
                     .requestMatchers("/internal/v1/public/patient-shares/**").permitAll()
