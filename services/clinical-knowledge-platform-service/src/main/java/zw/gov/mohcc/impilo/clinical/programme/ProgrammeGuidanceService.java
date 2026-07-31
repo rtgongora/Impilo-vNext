@@ -57,6 +57,10 @@ public class ProgrammeGuidanceService {
     static final String AMS_PATH = "clinical/antimicrobial-stewardship-rules.json";
     static final String PALLIATIVE_PATH = "clinical/palliative-rules.json";
     static final String ONCOLOGY_PATH = "clinical/oncology-early-diagnosis-rules.json";
+    // W5.11 African / Zimbabwean adult content — malaria, sickle-cell, RHD.
+    static final String MALARIA_ADULT_PATH = "clinical/malaria-adult.json";
+    static final String SICKLE_CELL_ADULT_PATH = "clinical/sickle-cell-adult.json";
+    static final String RHEUMATIC_HEART_DISEASE_PATH = "clinical/rheumatic-heart-disease.json";
 
     private final RuleContentLoader contentLoader;
     private final MedicationFactDeriver medicationFactDeriver;
@@ -91,6 +95,9 @@ public class ProgrammeGuidanceService {
             case "ANTIMICROBIAL_STEWARDSHIP", "AMS" -> AMS_PATH;
             case "PALLIATIVE", "PALLIATIVE_CARE" -> PALLIATIVE_PATH;
             case "ONCOLOGY", "CANCER" -> ONCOLOGY_PATH;
+            case "MALARIA" -> MALARIA_ADULT_PATH;
+            case "SICKLE_CELL", "SICKLE" -> SICKLE_CELL_ADULT_PATH;
+            case "RHEUMATIC_HEART_DISEASE", "RHD" -> RHEUMATIC_HEART_DISEASE_PATH;
             default -> null;
         };
     }

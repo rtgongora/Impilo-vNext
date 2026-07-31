@@ -75,7 +75,7 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     ],
     problemMatchers: ["I10", "I11", "I20", "I21", "I25", "I34", "I42", "I48", "I50", "R55",
       "HYPERTENS", "HEART FAILURE", "ISCHAEMIC HEART", "ANGINA", "ATRIAL FIBRILLATION", "SYNCOPE"],
-    cdsTopics: ["cvd-risk", "deprescribing"],
+    cdsTopics: ["cvd-risk", "deprescribing", "rhd"],
     registers: ["HYPERTENSION"],
     examinationRegions: ["CARDIOVASCULAR", "VITAL_SIGNS", "OEDEMA", "PERIPHERAL_VASCULAR", "GENERAL_CONDITION"],
     spineLinks: [
@@ -129,6 +129,11 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
       {
         label: "Bronchoscopy catalogue",
         href: () => "/work/clinical/procedures",
+      },
+      {
+        label: "Tobacco cessation (Simba coaching)",
+        href: () => "/wellness/coaching",
+        note: "simba-service owns PLAN-TOBACCO-QUIT — link, do not fork a respiratory SoR.",
       },
     ],
     notBuilt: [
@@ -223,7 +228,13 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     cdsTopics: ["cvd-risk", "deprescribing"],
     registers: ["DIABETES"],
     examinationRegions: ["FEET", "EYES", "ENDOCRINE", "ANTHROPOMETRY", "PERIPHERAL_VASCULAR"],
-    spineLinks: [],
+    spineLinks: [
+      {
+        label: "Glucose monitoring and device data (telemonitoring)",
+        href: () => "/work/telemonitoring",
+        note: "§15 SoR for home metrics and DIABETES programme bands — not an endocrinology-owned table.",
+      },
+    ],
     notBuilt: [
       "Glucose monitoring and device data", "HbA1c trend", "Hypoglycaemia tracking",
       "Complication screening schedule (eye, renal, foot, cardiovascular)",
@@ -267,7 +278,7 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     ],
     problemMatchers: ["B20", "B21", "B22", "B23", "B24", "A15", "A16", "B50", "B54", "A41", "B18",
       "HIV", "TUBERCULOSIS", "MALARIA", "SEPSIS", "HEPATITIS"],
-    cdsTopics: ["antimicrobial-stewardship"],
+    cdsTopics: ["antimicrobial-stewardship", "malaria"],
     registers: [],
     examinationRegions: ["GENERAL_CONDITION", "VITAL_SIGNS", "LYMPH_NODES", "SKIN", "ABDOMEN"],
     spineLinks: [],
@@ -311,7 +322,7 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
     ],
     problemMatchers: ["D50", "D57", "D64", "D66", "D69", "I26", "I82", "C91", "C92",
       "ANAEMIA", "SICKLE", "THROMB", "LEUKAEMIA"],
-    cdsTopics: ["procedure-indication", "oncology"],
+    cdsTopics: ["procedure-indication", "oncology", "sickle-cell"],
     registers: [],
     examinationRegions: ["PALLOR", "LYMPH_NODES", "ABDOMEN", "SKIN", "GENERAL_CONDITION"],
     spineLinks: [
@@ -319,6 +330,11 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
         label: "Bone-marrow biopsy catalogue",
         href: () => "/work/clinical/procedures",
         note: "PROC-BONE-MARROW-BIOPSY — shared spine, not a haematology SoR.",
+      },
+      {
+        label: "Transfusion episodes (Madi)",
+        href: () => "/madi/transfusion",
+        note: "madi-service owns orders, crossmatch, issue and haemovigilance — not a haematology SoR.",
       },
     ],
     notBuilt: [

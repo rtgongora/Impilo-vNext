@@ -50,7 +50,10 @@ class HivTbProgrammeRuleContentTest {
             ProgrammeGuidanceService.MHGAP_PATH,
             ProgrammeGuidanceService.AMS_PATH,
             ProgrammeGuidanceService.PALLIATIVE_PATH,
-            ProgrammeGuidanceService.ONCOLOGY_PATH);
+            ProgrammeGuidanceService.ONCOLOGY_PATH,
+            ProgrammeGuidanceService.MALARIA_ADULT_PATH,
+            ProgrammeGuidanceService.SICKLE_CELL_ADULT_PATH,
+            ProgrammeGuidanceService.RHEUMATIC_HEART_DISEASE_PATH);
 
     @TestFactory
     List<DynamicTest> everyRulesOwnFixturesBehaveAsDescribed() {
@@ -117,7 +120,10 @@ class HivTbProgrammeRuleContentTest {
             "clinical/mhgap-rules.json",
             "clinical/antimicrobial-stewardship-rules.json",
             "clinical/palliative-rules.json",
-            "clinical/oncology-early-diagnosis-rules.json"})
+            "clinical/oncology-early-diagnosis-rules.json",
+            "clinical/malaria-adult.json",
+            "clinical/sickle-cell-adult.json",
+            "clinical/rheumatic-heart-disease.json"})
     void thePackDeclaresItsPrimaryTextIsNotYetVendored(String pack) throws IOException {
         JsonNode verification = readPack(pack).path("provenance").path("sourceVerification");
         // Not an assertion that it IS vendored — it is not. An assertion that the pack says so where a

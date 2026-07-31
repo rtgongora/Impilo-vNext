@@ -1,0 +1,112 @@
+{
+  "packId": "rheumatic-heart-disease",
+  "version": "1.0.0",
+  "approvalStatus": "ENGINEERING_SEED",
+  "adaptationAuthority": "PENDING_MOHCC_RATIFICATION",
+  "provenance": {
+    "title": "Rheumatic heart disease — secondary prophylaxis, echo referral and ARF recognition",
+    "primarySource": "WHO Technical Report Series — Rheumatic fever and rheumatic heart disease; WHF criteria for acute rheumatic fever; Zimbabwe RHD programme guidance (published summaries)",
+    "why": "Rheumatic heart disease remains prevalent in Zimbabwe. Recurrent streptococcal pharyngitis without benzathine penicillin prophylaxis progresses valve damage silently. Echo quantifies severity and guides referral for valve intervention — this pack prompts prophylaxis adherence and echo referral, not surgical scheduling.",
+    "sourceVerification": {
+      "primaryTextVendored": false,
+      "blocksRatification": true,
+      "note": "WHO RHD guidance is NOT vendored under docs/reference/who-dak/MANIFEST.json. Authored against published WHO/WHF RHD and secondary-prophylaxis recommendations; ships ENGINEERING_SEED until primary text is vendored and MOHCC ratifies prophylaxis interval and echo referral thresholds."
+    }
+  },
+  "rules": [
+    {
+      "code": "RHD_PROPHYLAXIS_DUE",
+      "name": "Secondary prophylaxis due — benzathine penicillin G",
+      "layer": "CARDIOLOGY",
+      "ruleType": "TREATMENT",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["rhdDiagnosis", "daysSinceLastBenzathinePenicillin"],
+      "appliesWhen": {"input": "rhdDiagnosis", "op": "eq", "value": "YES"},
+      "logic": {"input": "daysSinceLastBenzathinePenicillin", "op": "gte", "value": 28},
+      "message": "Secondary prophylaxis overdue — give benzathine penicillin G now.",
+      "explanation": "Secondary prophylaxis with benzathine penicillin G every 3–4 weeks prevents recurrent acute rheumatic fever and slows valve destruction. Missing a dose opens a window for streptococcal infection and further scarring — the commonest preventable cause of RHD progression in adolescents and young adults.",
+      "requiredAction": "Administer intramuscular benzathine penicillin G at the ratified weight-based dose now, record the date, and register the patient on the RHD prophylaxis schedule with recall.",
+      "sourceRefs": ["WHO RHD guideline — secondary prophylaxis", "Benzathine penicillin G every 3–4 weeks"],
+      "dakRef": {"dak": "WHO RHD", "dakVersion": "2004", "id": "WHO.RHD.PROPHYLAXIS", "row": "benzathine due"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Patients with established RHD should receive regular benzathine penicillin to prevent recurrent ARF.", "nationalStatement": "28-day overdue threshold is a placeholder pending national recall interval ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO RHD technical report"]},
+      "testCases": [
+        {"name": "RHD and 30 days since last dose — prophylaxis due fires", "facts": {"rhdDiagnosis": "YES", "daysSinceLastBenzathinePenicillin": 30}, "expectFires": true},
+        {"name": "RHD and 14 days since last dose — not due", "facts": {"rhdDiagnosis": "YES", "daysSinceLastBenzathinePenicillin": 14}, "expectFires": false},
+        {"name": "no RHD — gate excludes", "facts": {"rhdDiagnosis": "NO", "daysSinceLastBenzathinePenicillin": 30}, "expectFires": false},
+        {"name": "days since last dose not supplied — must not fire", "facts": {"rhdDiagnosis": "YES"}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "RHD_PENICILLIN_ALLERGY_ALTERNATIVE",
+      "name": "Penicillin allergy — use the ratified alternative prophylaxis regimen",
+      "layer": "CARDIOLOGY",
+      "ruleType": "TREATMENT",
+      "severity": "MEDIUM",
+      "requiredInputs": ["rhdDiagnosis", "penicillinAllergy", "daysSinceLastBenzathinePenicillin"],
+      "appliesWhen": {"all": [
+        {"input": "rhdDiagnosis", "op": "eq", "value": "YES"},
+        {"input": "penicillinAllergy", "op": "eq", "value": "YES"}
+      ]},
+      "logic": {"input": "daysSinceLastBenzathinePenicillin", "op": "gte", "value": 28},
+      "message": "Penicillin allergy with overdue prophylaxis — use the national alternative (e.g. azithromycin).",
+      "explanation": "True penicillin allergy excludes benzathine penicillin. Erythromycin or azithromycin prophylaxis is less effective but better than none — stopping prophylaxis entirely because of allergy without an alternative is a common failure mode.",
+      "requiredAction": "Confirm allergy history, start the ratified non-penicillin secondary prophylaxis regimen, and document the reason benzathine penicillin is contraindicated.",
+      "sourceRefs": ["WHO RHD guideline — penicillin allergy alternatives", "National RHD prophylaxis policy"],
+      "dakRef": {"dak": "WHO RHD", "dakVersion": "2004", "id": "WHO.RHD.ALLERGY", "row": "alternative prophylaxis"},
+      "adaptation": {"type": "STRENGTHENED", "whoStatement": "Alternative antibiotics may be used when penicillin is contraindicated.", "nationalStatement": "Prompt fires when prophylaxis is overdue AND allergy documented — avoids silent gap in allergic patients.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO RHD technical report"]},
+      "testCases": [
+        {"name": "RHD allergic and overdue — alternative fires", "facts": {"rhdDiagnosis": "YES", "penicillinAllergy": "YES", "daysSinceLastBenzathinePenicillin": 35}, "expectFires": true},
+        {"name": "RHD allergic but prophylaxis recent — does not fire", "facts": {"rhdDiagnosis": "YES", "penicillinAllergy": "YES", "daysSinceLastBenzathinePenicillin": 10}, "expectFires": false},
+        {"name": "no allergy — benzathine rule owns this", "facts": {"rhdDiagnosis": "YES", "penicillinAllergy": "NO", "daysSinceLastBenzathinePenicillin": 35}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "RHD_ECHO_REFERRAL",
+      "name": "Known RHD without recent echo — refer for echocardiography",
+      "layer": "CARDIOLOGY",
+      "ruleType": "REFERRAL",
+      "severity": "MEDIUM",
+      "referralRequired": true,
+      "requiredInputs": ["rhdDiagnosis", "monthsSinceLastEcho"],
+      "appliesWhen": {"input": "rhdDiagnosis", "op": "eq", "value": "YES"},
+      "logic": {"any": [
+        {"input": "monthsSinceLastEcho", "op": "gte", "value": 12},
+        {"input": "monthsSinceLastEcho", "op": "eq", "value": "NEVER"}
+      ]},
+      "message": "Rheumatic heart disease — echocardiography overdue or never performed.",
+      "explanation": "Valve severity in RHD changes silently. Echocardiography quantifies regurgitation or stenosis, guides prophylaxis intensity, anticoagulation for atrial fibrillation, and timing of valve intervention referral. Clinical examination alone misses moderate disease.",
+      "requiredAction": "Refer for transthoracic echocardiography and cardiology review. If symptoms (dyspnoea, palpitations, syncope) are present, expedite referral regardless of interval.",
+      "sourceRefs": ["WHO RHD programme — echo surveillance", "WHF RHD echo recommendations"],
+      "dakRef": {"dak": "WHO RHD", "dakVersion": "2004", "id": "WHO.RHD.ECHO", "row": "echo referral"},
+      "adaptation": {"type": "ADDED_NATIONAL", "whoStatement": "Regular echocardiographic surveillance is recommended in RHD.", "nationalStatement": "12-month echo interval and NEVER sentinel encoded pending national ratification.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO RHD programme"]},
+      "testCases": [
+        {"name": "RHD echo 14 months ago — referral fires", "facts": {"rhdDiagnosis": "YES", "monthsSinceLastEcho": 14}, "expectFires": true},
+        {"name": "RHD echo never — referral fires", "facts": {"rhdDiagnosis": "YES", "monthsSinceLastEcho": "NEVER"}, "expectFires": true},
+        {"name": "RHD echo 6 months ago — not due", "facts": {"rhdDiagnosis": "YES", "monthsSinceLastEcho": 6}, "expectFires": false},
+        {"name": "no RHD — gate excludes", "facts": {"rhdDiagnosis": "NO", "monthsSinceLastEcho": 14}, "expectFires": false}
+      ]
+    },
+    {
+      "code": "RHD_ARF_RECOGNITION",
+      "name": "Acute rheumatic fever suspected — treat streptococcus and start prophylaxis planning",
+      "layer": "CARDIOLOGY",
+      "ruleType": "RECOGNITION",
+      "severity": "HIGH",
+      "interruptive": true,
+      "requiredInputs": ["acuteRheumaticFeverSuspected"],
+      "logic": {"input": "acuteRheumaticFeverSuspected", "op": "eq", "value": "YES"},
+      "message": "Acute rheumatic fever suspected — treat streptococcal infection and plan secondary prophylaxis.",
+      "explanation": "Acute rheumatic fever after group A streptococcal pharyngitis is the upstream event that causes RHD. Treating the acute episode with penicillin and enrolling the patient on long-term benzathine prophylaxis prevents the first or recurrent valve injury.",
+      "requiredAction": "Treat acute streptococcal infection per protocol, manage carditis/arthritis/chorea as indicated, and register for benzathine penicillin secondary prophylaxis before discharge.",
+      "sourceRefs": ["WHO ARF/RHD guideline — acute treatment", "Revised Jones criteria — WHF"],
+      "dakRef": {"dak": "WHO RHD", "dakVersion": "2004", "id": "WHO.RHD.ARF", "row": "arf recognition"},
+      "adaptation": {"type": "ADOPTED_VERBATIM", "whoStatement": "Acute rheumatic fever requires antibiotic treatment of streptococcal infection and initiation of secondary prophylaxis.", "nationalStatement": "Adopted as published.", "approvingAuthority": "PENDING_MOHCC_RATIFICATION", "evidenceRefs": ["WHO RHD technical report", "WHF Jones criteria"]},
+      "testCases": [
+        {"name": "ARF suspected — recognition fires", "facts": {"acuteRheumaticFeverSuspected": "YES"}, "expectFires": true},
+        {"name": "ARF not suspected — does not fire", "facts": {"acuteRheumaticFeverSuspected": "NO"}, "expectFires": false},
+        {"name": "ARF not assessed — must not fire", "facts": {}, "expectFires": false}
+      ]
+    }
+  ]
+}
