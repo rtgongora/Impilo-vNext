@@ -67,8 +67,10 @@ const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
     label: "Obstetrics", description: "Pregnancy and delivery management",
     icon: Baby, color: "bg-pink-100 text-pink-600",
     tools: [
-      { label: "Partograph", description: "Labour progress monitoring", icon: Activity },
-      { label: "Fetal Monitoring", description: "CTG interpretation", icon: Heart },
+      { label: "Partograph", description: "Labour progress monitoring", icon: Activity, href: "/ehr/[patientId]/maternity" },
+      { label: "Fetal Monitoring", description: "CTG interpretation", icon: Heart, href: "/ehr/[patientId]/maternity" },
+      { label: "PPH Protocol", description: "Postpartum haemorrhage first-response bundle", icon: AlertTriangle, href: "/ehr/[patientId]/maternity#emergency-bundles" },
+      { label: "Eclampsia Protocol", description: "Eclampsia / severe pre-eclampsia bundle", icon: AlertTriangle, href: "/ehr/[patientId]/maternity#emergency-bundles" },
       { label: "Antenatal Record", description: "Pregnancy summary", icon: FileText },
     ],
     assessments: ["Bishop score", "Apgar score", "Blood loss estimation"],

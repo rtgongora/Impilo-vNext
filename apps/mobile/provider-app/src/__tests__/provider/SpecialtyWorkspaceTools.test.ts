@@ -139,6 +139,18 @@ describe("obstetrics: partograph and CTG resolve to the governed instruments, no
     expect(d?.state === "WIRED" && d.surface).toBe("MaternalNearMissWorkspace");
   });
 
+  it("renders the governed PPH protocol workspace", () => {
+    const d = resolveTool("PPH Protocol");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("PphProtocolWorkspace");
+  });
+
+  it("renders the governed eclampsia protocol workspace", () => {
+    const d = resolveTool("Eclampsia Protocol");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("EclampsiaProtocolWorkspace");
+  });
+
   it("leaves Bishop Score with RMNP rather than sweeping it in", () => {
     // Out of scope for that pass per the mobile contract §6: Bishop lands with the
     // labour-and-delivery wave, not this one.

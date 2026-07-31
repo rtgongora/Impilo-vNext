@@ -416,6 +416,8 @@ public class SecurityConfig {
                     // confidentiality stamp, and stamping it would make the ratio uncomputable.
                     .requestMatchers("/internal/v1/clinical/maternal/near-miss/**")
                             .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers("/internal/v1/clinical/maternal/emergency-bundles/**")
+                            .hasAnyRole(CLINICAL_ROLES)
                     // ── National clinical knowledge (EDLIZ-aligned) ───────
                     .requestMatchers("/internal/v1/clinical/**")
                             .authenticated()

@@ -122,6 +122,22 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /** PPH first-response bundle checklist verdict. Stateless — caller persists the episode. */
+    public JsonNode emergencyBundleAssessPph(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/emergency-bundles/pph/assess";
+        log.debug("Clinical platform: PPH emergency bundle assess");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Eclampsia first-response bundle checklist verdict. Stateless — caller persists the episode. */
+    public JsonNode emergencyBundleAssessEclampsia(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/emergency-bundles/eclampsia/assess";
+        log.debug("Clinical platform: eclampsia emergency bundle assess");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** The respectful-maternity-care measure set: prompts, scale and which items are reverse-scored. */
     public JsonNode respectfulCareInstrument() {
         String url = baseUrl + "/internal/v1/clinical/maternal/respectful-care/instrument";
