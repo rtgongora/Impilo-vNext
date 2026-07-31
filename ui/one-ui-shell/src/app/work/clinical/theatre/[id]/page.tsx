@@ -55,6 +55,59 @@ interface TheatreCaseDetail {
   operative_note_state?: DocumentState;
 }
 
+const WOUND_CLASSIFICATIONS = ["CLEAN", "CLEAN_CONTAMINATED", "CONTAMINATED", "DIRTY"] as const;
+
+const EMPTY_NOTE = {
+  performedProcedure: "",
+  findings: "",
+  complications: "",
+  postopPlan: "",
+  signedProviderId: "",
+  patientPosition: "",
+  skinPreparation: "",
+  incision: "",
+  operativeSteps: "",
+  operativeTechnique: "",
+  intraoperativeFluids: "",
+  drainsPlaced: "",
+  stomasFormed: "",
+  closureMethod: "",
+  woundClassification: "",
+  postoperativeInstructions: "",
+  operativeTemplateRef: "",
+  operativeTemplateCode: "",
+};
+
+type NoteForm = typeof EMPTY_NOTE;
+
+/** Map inpatient noteRow (snake_case) into the form; absent/NONE leaves an empty draft. */
+function noteFromResponse(raw: unknown): NoteForm {
+  const n = ((raw as { data?: Record<string, unknown> }).data ?? raw) as Record<string, unknown>;
+  if (!n || n.status === "NONE") return { ...EMPTY_NOTE };
+  const s = (k: string, camel: string) => String(n[k] ?? n[camel] ?? "");
+  return {
+    ...EMPTY_NOTE,
+    performedProcedure: s("performed_procedure", "performedProcedure"),
+    findings: s("findings", "findings"),
+    complications: s("complications", "complications"),
+    postopPlan: s("postop_plan", "postopPlan"),
+    signedProviderId: s("signed_provider_id", "signedProviderId"),
+    patientPosition: s("patient_position", "patientPosition"),
+    skinPreparation: s("skin_preparation", "skinPreparation"),
+    incision: s("incision", "incision"),
+    operativeSteps: s("operative_steps", "operativeSteps"),
+    operativeTechnique: s("operative_technique", "operativeTechnique"),
+    intraoperativeFluids: s("intraoperative_fluids", "intraoperativeFluids"),
+    drainsPlaced: s("drains_placed", "drainsPlaced"),
+    stomasFormed: s("stomas_formed", "stomasFormed"),
+    closureMethod: s("closure_method", "closureMethod"),
+    woundClassification: s("wound_classification", "woundClassification"),
+    postoperativeInstructions: s("postoperative_instructions", "postoperativeInstructions"),
+    operativeTemplateRef: s("operative_template_ref", "operativeTemplateRef"),
+    operativeTemplateCode: s("operative_template_code", "operativeTemplateCode"),
+  };
+}
+
 function errMessage(e: unknown): string {
   if (e && typeof e === "object") {
     const obj = e as { error?: { message?: string }; blockers?: Blocker[]; status?: number };
@@ -76,7 +129,8 @@ export default function TheatreCaseDetailPage() {
   const [readiness, setReadiness] = useState<ReadinessResult | null>(null);
   const [safety, setSafety] = useState<SafetyEvent[]>([]);
   const [overrideReason, setOverrideReason] = useState("");
-  const [note, setNote] = useState({ performedProcedure: "", findings: "", complications: "", postopPlan: "", signedProviderId: "" });
+  const [note, setNote] = useState<NoteForm>({ ...EMPTY_NOTE });
+  const [noteUnavailable, setNoteUnavailable] = useState(false);
   const [cancelReasonCode, setCancelReasonCode] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [safetyForm, setSafetyForm] = useState({ category: "NEAR_MISS", severity: "MODERATE", description: "" });
@@ -85,15 +139,29 @@ export default function TheatreCaseDetailPage() {
   const [noteSigned, setNoteSigned] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
 
+  const templatePairIncomplete =
+    (note.operativeTemplateRef.trim() === "") !== (note.operativeTemplateCode.trim() === "");
+
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError(null);
+    setNoteUnavailable(false);
     try {
       const res = await apiClient.get<TheatreCaseDetail>(`/internal/v1/theatre/cases/${id}`);
       setData((res as { data?: TheatreCaseDetail }).data ?? (res as TheatreCaseDetail));
       const s = await apiClient.get<SafetyEvent[]>(`/internal/v1/theatre/cases/${id}/safety-events`);
       setSafety(Array.isArray(s) ? s : (s as { data?: SafetyEvent[] }).data ?? []);
+      try {
+        const noteRes = await apiClient.get<Record<string, unknown>>(`/internal/v1/theatre/cases/${id}/note`);
+        const hydrated = noteFromResponse(noteRes);
+        setNote(hydrated);
+        const raw = ((noteRes as { data?: Record<string, unknown> }).data ?? noteRes) as Record<string, unknown>;
+        if (raw?.status === "SIGNED") setNoteSigned(true);
+      } catch {
+        // A failed note read must not look like "no note yet" — leave the form alone and flag it.
+        setNoteUnavailable(true);
+      }
     } catch (e) {
       setError(errMessage(e));
     } finally {
@@ -144,12 +212,33 @@ export default function TheatreCaseDetailPage() {
 
   const draftAndSign = () =>
     act(async () => {
-      await apiClient.post(`/internal/v1/theatre/cases/${id}/note`, {
+      const payload: Record<string, string> = {
         performedProcedure: note.performedProcedure,
         findings: note.findings,
         complications: note.complications,
         postopPlan: note.postopPlan,
-      });
+      };
+      // SB-5 depth — send only non-empty values so a blank refinement does not erase a stored field.
+      const depthKeys: Array<keyof NoteForm> = [
+        "patientPosition",
+        "skinPreparation",
+        "incision",
+        "operativeSteps",
+        "operativeTechnique",
+        "intraoperativeFluids",
+        "drainsPlaced",
+        "stomasFormed",
+        "closureMethod",
+        "woundClassification",
+        "postoperativeInstructions",
+        "operativeTemplateRef",
+        "operativeTemplateCode",
+      ];
+      for (const k of depthKeys) {
+        const v = note[k].trim();
+        if (v) payload[k] = v;
+      }
+      await apiClient.post(`/internal/v1/theatre/cases/${id}/note`, payload);
       if (note.signedProviderId) {
         await apiClient.post(`/internal/v1/theatre/cases/${id}/note/sign`, { signedProviderId: note.signedProviderId });
         setNoteSigned(true);
@@ -356,14 +445,52 @@ export default function TheatreCaseDetailPage() {
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold"><FileText className="h-4 w-4" /> Operative note</h3>
                 <DocumentStateBadge state={noteState} />
               </div>
+              {noteUnavailable && (
+                <p className="mb-3 text-sm text-danger" role="alert" data-testid="operative-note-unavailable">
+                  Could not read the operative note. This is not the same as no note being recorded.
+                </p>
+              )}
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Procedure performed</span><input type="text" value={note.performedProcedure} onChange={(e) => setNote({ ...note, performedProcedure: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Procedure performed</span><input type="text" value={note.performedProcedure} onChange={(e) => setNote({ ...note, performedProcedure: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" data-testid="note-performed-procedure" /></label>
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Findings</span><input type="text" value={note.findings} onChange={(e) => setNote({ ...note, findings: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Complications</span><input type="text" value={note.complications} onChange={(e) => setNote({ ...note, complications: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Post-op plan</span><input type="text" value={note.postopPlan} onChange={(e) => setNote({ ...note, postopPlan: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+              </div>
+              {/* SB-5 operative depth — typed fields the V304 migration added to procedure_note */}
+              <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Operative record depth</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Patient position</span><input type="text" value={note.patientPosition} onChange={(e) => setNote({ ...note, patientPosition: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" data-testid="note-patient-position" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Skin preparation</span><input type="text" value={note.skinPreparation} onChange={(e) => setNote({ ...note, skinPreparation: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Incision</span><input type="text" value={note.incision} onChange={(e) => setNote({ ...note, incision: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Operative steps</span><textarea rows={2} value={note.operativeSteps} onChange={(e) => setNote({ ...note, operativeSteps: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Operative technique</span><textarea rows={2} value={note.operativeTechnique} onChange={(e) => setNote({ ...note, operativeTechnique: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Intraoperative fluids</span><input type="text" value={note.intraoperativeFluids} onChange={(e) => setNote({ ...note, intraoperativeFluids: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Drains placed</span><input type="text" value={note.drainsPlaced} onChange={(e) => setNote({ ...note, drainsPlaced: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Stomas formed</span><input type="text" value={note.stomasFormed} onChange={(e) => setNote({ ...note, stomasFormed: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Closure method</span><input type="text" value={note.closureMethod} onChange={(e) => setNote({ ...note, closureMethod: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Wound classification</span>
+                  <select value={note.woundClassification} onChange={(e) => setNote({ ...note, woundClassification: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" data-testid="note-wound-classification">
+                    <option value="">Not recorded</option>
+                    {WOUND_CLASSIFICATIONS.map((w) => <option key={w} value={w}>{w}</option>)}
+                  </select>
+                </label>
+                <label className="block text-sm sm:col-span-2"><span className="mb-1 block text-xs font-medium text-muted-foreground">Postoperative instructions</span><textarea rows={2} value={note.postoperativeInstructions} onChange={(e) => setNote({ ...note, postoperativeInstructions: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Operative template ref (UUID)</span><input type="text" value={note.operativeTemplateRef} onChange={(e) => setNote({ ...note, operativeTemplateRef: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" data-testid="note-template-ref" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Operative template code</span><input type="text" value={note.operativeTemplateCode} onChange={(e) => setNote({ ...note, operativeTemplateCode: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" data-testid="note-template-code" /></label>
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Sign as (surgeon provider id)</span><input type="text" value={note.signedProviderId} onChange={(e) => setNote({ ...note, signedProviderId: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
               </div>
-              <button type="button" disabled={busy || !note.performedProcedure} onClick={() => void draftAndSign()} className="mt-3 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50">
+              {templatePairIncomplete && (
+                <p className="mt-2 text-xs text-muted-foreground" data-testid="note-template-pair-required">
+                  Template ref and code must be supplied together, or both left blank.
+                </p>
+              )}
+              <button
+                type="button"
+                disabled={busy || !note.performedProcedure || templatePairIncomplete}
+                onClick={() => void draftAndSign()}
+                className="mt-3 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                data-testid="note-save"
+              >
                 {note.signedProviderId ? "Save & sign note" : "Save draft note"}
               </button>
             </section>
@@ -372,6 +499,7 @@ export default function TheatreCaseDetailPage() {
             <div className={focusMode ? "hidden" : undefined}>
               <TheatrePacuPanel caseId={id} />
             </div>
+
 
             {/* Surgical discharge summary (draft → complete → SHR) */}
             <div className={focusMode ? "hidden" : undefined}>
