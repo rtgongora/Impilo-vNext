@@ -122,6 +122,24 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    public JsonNode mecAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/contraception/mec/assess";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode pncMaternalAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/pnc/maternal/assess";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode pncNewbornAssess(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/maternal/pnc/newborn/assess";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** PPH first-response bundle checklist verdict. Stateless — caller persists the episode. */
     public JsonNode emergencyBundleAssessPph(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/maternal/emergency-bundles/pph/assess";

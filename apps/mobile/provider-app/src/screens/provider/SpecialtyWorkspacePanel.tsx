@@ -20,6 +20,13 @@ import { colors } from "@impilo/mobile-design-system";
 import { dispositionForTool, type ToolDisposition } from "../../data/specialtyToolRegistry";
 import { APGARScreen } from "./APGARScreen";
 import { PartographWorkspace, CtgWorkspace, MaternalNearMissWorkspace, PphProtocolWorkspace, EclampsiaProtocolWorkspace } from "./MaternityWorkspaces";
+import {
+  AncFirstContactWorkspace,
+  AncFollowUpWorkspace,
+  FacilityPncMaternalWorkspace,
+  FacilityPncNewbornWorkspace,
+  FpEligibilityWorkspace,
+} from "./ClinicalJourneyWorkspaces";
 
 type Props = {
   workspace: SpecialtyWorkspaceDef;
@@ -42,6 +49,11 @@ export const RENDERED_SURFACES: Record<string, () => React.ReactElement> = {
   MaternalNearMissWorkspace: () => <MaternalNearMissWorkspace />,
   PphProtocolWorkspace: () => <PphProtocolWorkspace />,
   EclampsiaProtocolWorkspace: () => <EclampsiaProtocolWorkspace />,
+  AncFirstContactWorkspace: () => <AncFirstContactWorkspace />,
+  AncFollowUpWorkspace: () => <AncFollowUpWorkspace />,
+  FacilityPncMaternalWorkspace: () => <FacilityPncMaternalWorkspace />,
+  FacilityPncNewbornWorkspace: () => <FacilityPncNewbornWorkspace />,
+  FpEligibilityWorkspace: () => <FpEligibilityWorkspace />,
 };
 
 /**
