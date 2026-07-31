@@ -24,6 +24,21 @@ describe("TheatreCountPanel (Lane 3 — surgical counts + WHO Sign-Out gate)", (
     expect(await screen.findByTestId("signout-gate-clear")).toBeInTheDocument();
   });
 
+  it("shows unavailable banner on list GET failure and never clears prior counts", async () => {
+    get.mockResolvedValueOnce({
+      data: [{ id: "c-keep", kind: "SWAB", seq: 1, baseline_count: 10, closing_count: 10, discrepancy: 0, reconciled: true }],
+    });
+    render(<TheatreCountPanel caseId="c-keep" />);
+    expect(await screen.findByTestId("signout-gate-clear")).toBeInTheDocument();
+
+    get.mockRejectedValueOnce({ status: 502, error: { message: "upstream down" } });
+    fireEvent.click(screen.getByText("Refresh"));
+    expect(await screen.findByTestId("count-list-unavailable")).toHaveTextContent(/do not treat this as no counts recorded/i);
+    expect(screen.getByText(/SWAB #1/)).toBeInTheDocument();
+    expect(screen.queryByText("No counts recorded yet.")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("signout-gate-clear")).not.toBeInTheDocument();
+  });
+
   it("records a count against the real endpoint", async () => {
     get.mockResolvedValue({ data: [] });
     post.mockResolvedValue({ data: { discrepancy: 0 } });

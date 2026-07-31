@@ -51,6 +51,9 @@ export function TheatreCommoditiesPanel({ caseId, patientCpid }: { caseId: strin
   const [sets, setSets] = useState<InstrumentSet[]>([]);
   const [drugs, setDrugs] = useState<ControlledDrug[]>([]);
   const [loading, setLoading] = useState(true);
+  const [implantsUnavailable, setImplantsUnavailable] = useState(false);
+  const [setsUnavailable, setSetsUnavailable] = useState(false);
+  const [drugsUnavailable, setDrugsUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -77,18 +80,31 @@ export function TheatreCommoditiesPanel({ caseId, patientCpid }: { caseId: strin
 
   const load = useCallback(async () => {
     setLoading(true);
-    try {
-      const [i, s, d] = await Promise.all([
-        apiClient.get(`/internal/v1/theatre/cases/${caseId}/implants`).catch(() => []),
-        apiClient.get(`/internal/v1/theatre/cases/${caseId}/instrument-sets`).catch(() => []),
-        apiClient.get(`/internal/v1/theatre/cases/${caseId}/controlled-drugs`).catch(() => []),
-      ]);
-      setImplants(unwrapList<Implant>(i));
-      setSets(unwrapList<InstrumentSet>(s));
-      setDrugs(unwrapList<ControlledDrug>(d));
-    } finally {
-      setLoading(false);
+    const results = await Promise.allSettled([
+      apiClient.get(`/internal/v1/theatre/cases/${caseId}/implants`),
+      apiClient.get(`/internal/v1/theatre/cases/${caseId}/instrument-sets`),
+      apiClient.get(`/internal/v1/theatre/cases/${caseId}/controlled-drugs`),
+    ]);
+    // Preserve last good rows for failed GETs — never invent empty registers on transport failure.
+    if (results[0].status === "fulfilled") {
+      setImplants(unwrapList<Implant>(results[0].value));
+      setImplantsUnavailable(false);
+    } else {
+      setImplantsUnavailable(true);
     }
+    if (results[1].status === "fulfilled") {
+      setSets(unwrapList<InstrumentSet>(results[1].value));
+      setSetsUnavailable(false);
+    } else {
+      setSetsUnavailable(true);
+    }
+    if (results[2].status === "fulfilled") {
+      setDrugs(unwrapList<ControlledDrug>(results[2].value));
+      setDrugsUnavailable(false);
+    } else {
+      setDrugsUnavailable(true);
+    }
+    setLoading(false);
   }, [caseId]);
 
   useEffect(() => {
@@ -192,13 +208,20 @@ export function TheatreCommoditiesPanel({ caseId, patientCpid }: { caseId: strin
         </button>
       </div>
       {msg && <p className="mb-2 rounded-lg border border-border bg-background p-2 text-xs" data-testid="commodities-msg">{msg}</p>}
+      {(implantsUnavailable || setsUnavailable || drugsUnavailable) && (
+        <p className="mb-2 flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800" data-testid="commodities-list-unavailable">
+          <AlertTriangle className="h-3.5 w-3.5" /> Commodity registers unavailable — do not treat this as empty registers.
+        </p>
+      )}
       {loading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading registers…</p>}
 
       {/* Implants */}
       <div className="mb-4 rounded-lg border border-border p-3">
         <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><ScanLine className="h-3.5 w-3.5" /> Implants (UDI / serial / lot)</p>
-        {implants.length === 0 ? (
+        {implants.length === 0 && !implantsUnavailable ? (
           <p className="text-xs text-muted-foreground">No implants recorded.</p>
+        ) : implants.length === 0 && implantsUnavailable ? (
+          <p className="text-xs text-muted-foreground">Could not load implants for this case.</p>
         ) : (
           <ul className="space-y-2">
             {implants.map((im) => {
@@ -326,8 +349,10 @@ export function TheatreCommoditiesPanel({ caseId, patientCpid }: { caseId: strin
       {/* Instrument sets */}
       <div className="mb-4 rounded-lg border border-border p-3">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sterile instrument sets (TUSO CSSD)</p>
-        {sets.length === 0 ? (
+        {sets.length === 0 && !setsUnavailable ? (
           <p className="text-xs text-muted-foreground">No instrument sets issued.</p>
+        ) : sets.length === 0 && setsUnavailable ? (
+          <p className="text-xs text-muted-foreground">Could not load instrument sets for this case.</p>
         ) : (
           <ul className="space-y-1">
             {sets.map((s) => (
@@ -352,8 +377,10 @@ export function TheatreCommoditiesPanel({ caseId, patientCpid }: { caseId: strin
       {/* Controlled drugs */}
       <div className="rounded-lg border border-border p-3">
         <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><Pill className="h-3.5 w-3.5" /> Controlled-drug register (two-person witness)</p>
-        {drugs.length === 0 ? (
+        {drugs.length === 0 && !drugsUnavailable ? (
           <p className="text-xs text-muted-foreground">No controlled-drug entries.</p>
+        ) : drugs.length === 0 && drugsUnavailable ? (
+          <p className="text-xs text-muted-foreground">Could not load controlled-drug entries for this case.</p>
         ) : (
           <ul className="space-y-1">
             {drugs.map((d) => (

@@ -18,6 +18,20 @@ describe("TheatreSurgicalDischargePanel (draft → complete, pending histopath)"
     expect(await screen.findByText(/No discharge summary started/i)).toBeInTheDocument();
   });
 
+  it("distinguishes GET failure from genuine {status:NONE} and preserves last good record", async () => {
+    get.mockResolvedValueOnce({
+      data: { status: "DRAFT", final_diagnosis: "Kept diagnosis" },
+    });
+    render(<TheatreSurgicalDischargePanel caseId="c-keep" />);
+    expect(await screen.findByDisplayValue("Kept diagnosis")).toBeInTheDocument();
+
+    get.mockRejectedValueOnce({ status: 502, error: { message: "upstream down" } });
+    fireEvent.click(screen.getByText("Refresh"));
+    expect(await screen.findByTestId("discharge-load-unavailable")).toHaveTextContent(/do not treat this as no summary started/i);
+    expect(screen.getByDisplayValue("Kept diagnosis")).toBeInTheDocument();
+    expect(screen.queryByText(/No discharge summary started/i)).not.toBeInTheDocument();
+  });
+
   it("saves a draft carrying the structured summary against the real endpoint", async () => {
     get.mockResolvedValue({ data: { status: "NONE" } });
     post.mockResolvedValue({ data: { status: "DRAFT" } });

@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, Loader2, RefreshCw } from "lucide-react";
+import { Activity, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 
 interface ChartEntry {
@@ -48,6 +48,7 @@ function errMessage(e: unknown): string {
 export function AnaesthesiaChartPanel({ caseId }: { caseId: string }) {
   const [entries, setEntries] = useState<ChartEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listUnavailable, setListUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [channel, setChannel] = useState<string>("MEDICATION");
@@ -61,8 +62,10 @@ export function AnaesthesiaChartPanel({ caseId }: { caseId: string }) {
       const res = await apiClient.get(`/internal/v1/procedures/${caseId}/anaesthesia/chart`);
       const chart = unwrap<{ entries?: ChartEntry[] }>(res);
       setEntries(Array.isArray(chart?.entries) ? chart.entries : []);
+      setListUnavailable(false);
     } catch {
-      setEntries([]);
+      // Do not collapse unknown → empty: keep last known rows and surface unavailable.
+      setListUnavailable(true);
     } finally {
       setLoading(false);
     }
@@ -104,11 +107,18 @@ export function AnaesthesiaChartPanel({ caseId }: { caseId: string }) {
       </div>
 
       {msg && <p className="mb-2 rounded-lg border border-border bg-background p-2 text-xs">{msg}</p>}
+      {listUnavailable && (
+        <p className="mb-2 flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800" data-testid="anaesthesia-chart-unavailable">
+          <AlertTriangle className="h-3.5 w-3.5" /> Anaesthesia chart unavailable — do not treat this as no chart entries.
+        </p>
+      )}
 
       {loading ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading chart…</p>
-      ) : entries.length === 0 ? (
+      ) : entries.length === 0 && !listUnavailable ? (
         <p className="text-sm text-muted-foreground">No chart entries yet. Blood administered on this case will appear here automatically (projected from MADI).</p>
+      ) : entries.length === 0 && listUnavailable ? (
+        <p className="text-sm text-muted-foreground">Could not load the anaesthesia chart for this case.</p>
       ) : (
         <ol className="space-y-1">
           {entries.map((e, i) => (
