@@ -77,6 +77,10 @@ Navigation truth: `AuthGuard` → login → ProviderActivation → SelectFacilit
 | Supervisor mode | Partial parity (static-verified) | Team/metrics + inventory (stock/alerts/requisitions/dispatch) + escalations; zero Maestro coverage. |
 | Offline mode | Partial parity (static-verified) | Real sync engine, local queue, conflict review, break-glass activate/deactivate; zero Maestro coverage. |
 | Courier mode | Partial parity (thin) | 2 screens over nhume/deliveries; skeletal vs web Nhume logistics. |
+| Adult medicine workspace | **Partial parity** | Encounter → Medicine + Tools → Medicine: programmes/problems/allergies via shared BFF (`/internal/v1/programmes`, `/conditions`, `/allergies`); unavailable ≠ empty. Examination, specialty §8 tools, order sets **NOT BUILT**. See `docs/mobile/adult-medicine-parity.md`. |
+| Medicine CDS (8 topics) | **Partial parity** | Tools → Med CDS + Encounter Medicine embed: `POST /internal/v1/medicine/cds/{topic}/evaluate`; 502 surfaced as failure not all-clear. Legacy Tools → CDS tab is a different endpoint. |
+| Clerking continuity | **Partial parity** | Encounter → Clerking + Tools → Clerking: read-only problems + visit attestations; extensions/exam write **NOT BUILT**. |
+| Chronic registers | **Partial parity** | Tools → Registers: `GET /internal/v1/programmes/register` facility worklist; no control assessment write on mobile. |
 
 ## Section 3 — Shared mobile platform
 
