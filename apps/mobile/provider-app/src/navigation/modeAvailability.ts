@@ -1,30 +1,10 @@
 /**
- * Phase G3 (increment 1) — augments ModeSwitcher's role-based mode gating
- * with real resolved work contexts, without replacing it.
+ * Phase G3 — augments ModeSwitcher's role-based mode gating with real resolved
+ * work contexts, without replacing it.
  *
- * `ModeSwitcher`'s existing `MODE_ROLES` gate matches raw Keycloak realm
- * roles — a different, frequently out-of-sync vocabulary from the
- * WGV/VASHANDI role templates and resolved assignments the BFF's work-context
- * resolver actually proves (Phase B's role_template_catalog work established
- * this split — canonical roles and Keycloak roles have never been the same
- * list in this codebase). This module lets a REAL proven assignment unlock
- * "provider" or "supervisor" even when the Keycloak role string hasn't
- * caught up.
- *
- * Deliberately ADDITIVE ONLY: a mode present in `roleBasedModes` is never
- * removed here, and resolved-context evidence is used only to ADD modes, not
- * to withhold them — because work-context resolution is async/best-effort
- * (see useAutoResolveWorkContext), a slow or empty resolution must never look
- * like "you no longer have this role" to a session that had it a moment ago.
- * The actual security boundary stays server-side (PolicyEngine's
- * clinicalDataAccess-gated role folding, Phase B4) — this only changes which
- * buttons are offered, never what a token can do once minted.
- *
- * `outreach`, `courier`, and `offline` have no WorkMode analogue in the
- * resolver yet (confirmed absent from the BFF's 10-mode catalog against this
- * app's 5-mode AppMode enum) — they are left untouched by this function,
- * still gated purely by the existing role match, honestly reflecting that no
- * real backend assignment exists yet to confirm or extend them.
+ * Additive only: a mode present in `roleBasedModes` is never removed here.
+ * Resolved-context evidence ADDS modes — including outreach and courier once
+ * those WorkModes exist on a proven context.
  */
 import type { ResolvedWorkContextView } from "@impilo/mobile-trust";
 import type { AppMode, GovernedAppMode } from "../types";
@@ -36,23 +16,13 @@ const SUPERVISORY_WORK_MODES = new Set([
   "JURISDICTION_OPERATIONS",
   "PROGRAMME_MANAGEMENT",
 ]);
+const OUTREACH_WORK_MODES = new Set(["COMMUNITY_OUTREACH"]);
+const COURIER_WORK_MODES = new Set(["SPECIMEN_TRANSPORT"]);
 
 /**
  * Which governed WorkModes an AppMode may be entered under, most-preferred
- * first. An AppMode absent from this map has NO WorkMode analogue in the
- * resolver — now only `offline`, which is connectivity state rather than a kind
- * of work — and stays a local navigation choice; see useSwitchAppMode.
- *
- * This is what makes "supervisor grants no automatic patient access" structural
- * rather than cosmetic: entering supervisor mints a management-mode token, and
- * the PDP's clinicalDataAccess gate (Phase B4) then declines to fold the
- * clinical role every clinical policy rule matches on.
- *
- * The same gate is what makes `courier` meaningful: SPECIMEN_TRANSPORT carries
- * clinicalDataAccess NONE, so a courier can prove custody of a specimen and
- * cannot read a result. `outreach` is the opposite case — COMMUNITY_OUTREACH is
- * IDENTIFIED, because recording a screening or an immunization against a named
- * person is the work.
+ * first. An AppMode absent from this map has NO WorkMode analogue — now only
+ * `offline`, which is connectivity state rather than a kind of work.
  */
 export const WORK_MODES_FOR_APP_MODE: Record<GovernedAppMode, string[]> = {
   provider: ["CLINICAL_CARE", "VIRTUAL_CARE"],
@@ -61,26 +31,10 @@ export const WORK_MODES_FOR_APP_MODE: Record<GovernedAppMode, string[]> = {
   courier: ["SPECIMEN_TRANSPORT"],
 };
 
-/**
- * True when entering this AppMode must be backed by a freshly minted duty token.
- *
- * A type predicate, not a plain boolean, so the compiler carries the answer to
- * the call site: the ungoverned branch narrows to `UngovernedAppMode` (the only
- * thing `appStore.setMode` accepts) and the governed branch narrows to
- * `GovernedAppMode` (the only thing `setGrantedMode` accepts). Adding a mode to
- * `WORK_MODES_FOR_APP_MODE` without widening `GovernedAppMode` is a compile
- * error, and vice versa — the map and the type cannot drift apart.
- */
 export function requiresWorkContextMint(appMode: AppMode): appMode is GovernedAppMode {
   return appMode in WORK_MODES_FOR_APP_MODE;
 }
 
-/**
- * Picks the context + WorkMode to enter `appMode` under, preferring to stay in
- * the context the person is already working in. Returns null when no resolved
- * assignment grants the mode — the caller must refuse, never fall back to a
- * mode the backend has not granted.
- */
 export function selectContextForAppMode(
   appMode: GovernedAppMode,
   contexts: ResolvedWorkContextView[] | null,
@@ -117,6 +71,12 @@ export function deriveAvailableAppModes(
     }
     if (anyContextGrants(resolvedContexts, SUPERVISORY_WORK_MODES)) {
       modes.add("supervisor");
+    }
+    if (anyContextGrants(resolvedContexts, OUTREACH_WORK_MODES)) {
+      modes.add("outreach");
+    }
+    if (anyContextGrants(resolvedContexts, COURIER_WORK_MODES)) {
+      modes.add("courier");
     }
   }
 

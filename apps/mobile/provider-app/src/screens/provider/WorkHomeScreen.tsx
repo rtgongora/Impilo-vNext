@@ -1,15 +1,10 @@
 /**
- * Work Home (Phase G4) — the mobile counterpart of web's /work page, rendering
- * the same governed BFF composition, plus the one-tap workplace switcher web
- * carries in ActiveWorkContextBar.
- *
- * Section status is rendered honestly: a DEGRADED section says so and offers a
- * retry, and is never collapsed into an innocuous "nothing to do" — the BFF
- * always answers 200 and expresses downstream failure in-band, so treating a
- * successful response as healthy would silently hide an outage.
+ * Work Home (Phase G4) — mobile counterpart of web's /work page.
+ * Renders governed BFF composition with actionable items, restrictions, and
+ * honest friendlyState / DEGRADED handling.
  */
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
 import type { ResolvedWorkContextView } from "@impilo/mobile-trust";
 import {
@@ -27,7 +22,16 @@ import {
 } from "@impilo/mobile-design-system";
 import { useAppStore } from "../../stores/appStore";
 import { useSwitchWorkContext } from "../../hooks/useSwitchWorkContext";
-import { getWorkHome, getWorkHomeSection, type WorkHome, type WorkHomeSection } from "../../services/workHomeService";
+import {
+  getWorkHome,
+  getWorkHomeSection,
+  type WorkHome,
+  type WorkHomeItem,
+  type WorkHomeSection,
+} from "../../services/workHomeService";
+import { describeWorkContextRestrictions } from "../../lib/restrictionCopy";
+
+const PREVIEW_WEB = process.env.EXPO_PUBLIC_WEB_BASE_URL ?? "https://impilo.mohcc.gov.zw";
 
 const GROUP_LABELS: Array<{ key: string; label: string }> = [
   { key: "today", label: "Today" },
@@ -38,6 +42,36 @@ const GROUP_LABELS: Array<{ key: string; label: string }> = [
   { key: "personal", label: "Personal" },
 ];
 
+function openWorkHomeHref(href: string) {
+  const url = href.startsWith("http") ? href : `${PREVIEW_WEB}${href.startsWith("/") ? "" : "/"}${href}`;
+  void Linking.openURL(url);
+}
+
+function ItemRow({ item }: { item: WorkHomeItem }) {
+  const body = (
+    <View style={styles.item}>
+      <Text style={[styles.itemTitle, item.href ? styles.itemLink : null]}>{item.title ?? "Untitled"}</Text>
+      {item.description ? <Text style={styles.itemBody}>{item.description}</Text> : null}
+      <View style={styles.itemMeta}>
+        {item.priority ? <Text style={styles.metaText}>{item.priority}</Text> : null}
+        {item.due_at ? <Text style={styles.metaText}>Due {item.due_at}</Text> : null}
+      </View>
+    </View>
+  );
+  if (item.href) {
+    return (
+      <Pressable
+        onPress={() => openWorkHomeHref(item.href as string)}
+        testID={`work-home-item-${item.id ?? "x"}`}
+        accessibilityRole="link"
+      >
+        {body}
+      </Pressable>
+    );
+  }
+  return <View testID={`work-home-item-${item.id ?? "x"}`}>{body}</View>;
+}
+
 function SectionCard({
   section,
   onRetry,
@@ -47,6 +81,11 @@ function SectionCard({
   onRetry: (sectionId: string) => void;
   retrying: boolean;
 }) {
+  const buckets = Object.entries(section.buckets ?? {}).filter(([, items]) => items.length > 0);
+  const items = buckets.length > 0
+    ? buckets.flatMap(([, list]) => list).slice(0, 12)
+    : (section.items ?? []).slice(0, 12);
+
   return (
     <Card>
       <CardBody>
@@ -72,20 +111,35 @@ function SectionCard({
                 />
               </View>
             </View>
-          ) : section.items.length === 0 ? (
+          ) : items.length === 0 ? (
             <Text style={styles.emptyBody}>{section.note ?? "Nothing here right now."}</Text>
           ) : (
-            section.items.map((item, index) => (
-              <View key={item.id ?? String(index)} style={styles.item} testID={`work-home-item-${item.id ?? index}`}>
-                <Text style={styles.itemTitle}>{item.title ?? "Untitled"}</Text>
-                {item.description ? <Text style={styles.itemBody}>{item.description}</Text> : null}
-              </View>
-            ))
+            items.map((item, index) => <ItemRow key={item.id ?? String(index)} item={item} />)
           )}
         </View>
       </CardBody>
     </Card>
   );
+}
+
+function friendlyMessage(state: string | undefined): { title: string; message: string } | null {
+  if (!state) return null;
+  if (state === "work_mode_unavailable") {
+    return {
+      title: "Mode unavailable",
+      message: "This workplace isn't available in the requested mode right now.",
+    };
+  }
+  if (state === "work_context_unavailable") {
+    return {
+      title: "Workplace unavailable",
+      message: "The assignment could not be re-proven from its source. Try another workplace.",
+    };
+  }
+  return {
+    title: "Work unavailable",
+    message: "Your work context isn't available right now.",
+  };
 }
 
 export function WorkHomeScreen() {
@@ -135,7 +189,7 @@ export function WorkHomeScreen() {
             : current
         );
       } catch {
-        // Leave the section DEGRADED — a failed retry must not look like success.
+        // Leave DEGRADED
       } finally {
         setRetryingSection(null);
       }
@@ -181,27 +235,37 @@ export function WorkHomeScreen() {
         groups.map((group) => (
           <View key={group.key}>
             <CardHeader>{group.label}</CardHeader>
-            {group.items.map((context) => (
-              <Card key={context.contextId}>
-                <CardBody>
-                  <View style={styles.contextRow} testID={`work-context-${context.contextId}`}>
-                    <View style={styles.contextInfo}>
-                      <Text style={styles.contextLabel}>{context.label}</Text>
-                      {context.defaultMode ? (
-                        <Text style={styles.contextMeta}>{context.defaultMode.replace(/_/g, " ").toLowerCase()}</Text>
-                      ) : null}
+            {group.items.map((context) => {
+              const restrictions = describeWorkContextRestrictions(context.restrictions);
+              return (
+                <Card key={context.contextId}>
+                  <CardBody>
+                    <View style={styles.contextRow} testID={`work-context-${context.contextId}`}>
+                      <View style={styles.contextInfo}>
+                        <Text style={styles.contextLabel}>{context.label}</Text>
+                        {context.defaultMode ? (
+                          <Text style={styles.contextMeta}>
+                            {context.defaultMode.replace(/_/g, " ").toLowerCase()}
+                          </Text>
+                        ) : null}
+                        {restrictions.map((line) => (
+                          <Text key={line} style={styles.restriction}>
+                            {line}
+                          </Text>
+                        ))}
+                      </View>
+                      <Button
+                        title={context.contextId === contextId ? "Current" : switching ? "Switching…" : "Select"}
+                        variant={context.contextId === contextId ? "outline" : "primary"}
+                        size="sm"
+                        onPress={() => handleSelectContext(context)}
+                        testID={`select-context-${context.contextId}`}
+                      />
                     </View>
-                    <Button
-                      title={context.contextId === contextId ? "Current" : switching ? "Switching…" : "Select"}
-                      variant={context.contextId === contextId ? "outline" : "primary"}
-                      size="sm"
-                      onPress={() => handleSelectContext(context)}
-                      testID={`select-context-${context.contextId}`}
-                    />
-                  </View>
-                </CardBody>
-              </Card>
-            ))}
+                  </CardBody>
+                </Card>
+              );
+            })}
           </View>
         ))
       )}
@@ -216,6 +280,8 @@ export function WorkHomeScreen() {
       </Screen>
     );
   }
+
+  const friendly = friendlyMessage(workHome?.friendlyState);
 
   return (
     <Screen>
@@ -237,6 +303,8 @@ export function WorkHomeScreen() {
           <LoadingSpinner size="lg" />
         ) : error ? (
           <ErrorState title="Could not load your work" message={error} onRetry={load} />
+        ) : friendly ? (
+          <EmptyState title={friendly.title} message={friendly.message} />
         ) : !workHome || workHome.sections.length === 0 ? (
           <EmptyState title="Nothing to show" message="No work sections are available for this workplace." />
         ) : (
@@ -264,10 +332,14 @@ const styles = StyleSheet.create({
   emptyBody: { fontSize: 14, color: colors.gray[500], marginTop: 6 },
   item: { marginTop: 10 },
   itemTitle: { fontSize: 14, fontWeight: "600" },
+  itemLink: { color: colors.primary[600], textDecorationLine: "underline" },
   itemBody: { fontSize: 13, color: colors.gray[700], marginTop: 2 },
+  itemMeta: { flexDirection: "row", gap: 8, marginTop: 2 },
+  metaText: { fontSize: 11, color: colors.gray[500] },
   contextRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  contextInfo: { flex: 1 },
+  contextInfo: { flex: 1, paddingRight: 8 },
   contextLabel: { fontSize: 15, fontWeight: "600" },
   contextMeta: { fontSize: 12, color: colors.gray[500], marginTop: 2 },
+  restriction: { fontSize: 11, color: "#B45309", marginTop: 4 },
   switchError: { fontSize: 14, color: colors.ui.error.main },
 });

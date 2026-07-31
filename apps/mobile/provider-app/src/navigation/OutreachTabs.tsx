@@ -11,15 +11,17 @@ import { TabBar, useOptionalTheme, colors } from "@impilo/mobile-design-system";
 import { OutreachDashboardScreen } from "../screens/outreach/OutreachDashboardScreen";
 import { HouseholdListScreen } from "../screens/outreach/HouseholdListScreen";
 import { ScreeningScreen } from "../screens/outreach/ScreeningScreen";
+import { FollowUpScreen } from "../screens/outreach/FollowUpScreen";
 import { PublicHealthFieldTasksScreen } from "../screens/provider/PublicHealthFieldTasksScreen";
 
 
-type TabKey = "dashboard" | "households" | "screenings" | "schedule";
+type TabKey = "dashboard" | "households" | "screenings" | "followups" | "schedule";
 
 const TABS: Array<{ key: TabKey; label: string; activeIcon: string; inactiveIcon: string }> = [
   { key: "dashboard", label: "Dashboard", activeIcon: "map", inactiveIcon: "map-outline" },
   { key: "households", label: "Households", activeIcon: "home", inactiveIcon: "home-outline" },
   { key: "screenings", label: "Screenings", activeIcon: "clipboard", inactiveIcon: "clipboard-outline" },
+  { key: "followups", label: "Follow-ups", activeIcon: "walk", inactiveIcon: "walk-outline" },
   { key: "schedule", label: "Schedule", activeIcon: "calendar", inactiveIcon: "calendar-outline" },
 ];
 
@@ -41,6 +43,8 @@ export function OutreachTabs() {
         return <HouseholdListScreen />;
       case "screenings":
         return <ScreeningScreen />;
+      case "followups":
+        return <FollowUpScreen />;
       case "schedule":
         return <PublicHealthFieldTasksScreen />;
       default:

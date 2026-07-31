@@ -59,4 +59,14 @@ describe("deriveAvailableAppModes", () => {
     const result = deriveAvailableAppModes(["provider"], [ctx({ availableModes: ["CLINICAL_CARE"] })]);
     expect(result.filter((m) => m === "provider")).toHaveLength(1);
   });
+
+  it("adds outreach when a resolved context grants COMMUNITY_OUTREACH", () => {
+    const result = deriveAvailableAppModes([], [ctx({ availableModes: ["COMMUNITY_OUTREACH"] })]);
+    expect(result).toContain("outreach");
+  });
+
+  it("adds courier when a resolved context grants SPECIMEN_TRANSPORT", () => {
+    const result = deriveAvailableAppModes([], [ctx({ availableModes: ["SPECIMEN_TRANSPORT"] })]);
+    expect(result).toContain("courier");
+  });
 });
