@@ -38,11 +38,12 @@
 #
 # REACHABILITY, by route family rather than as a blanket statement:
 #   * REACHABLE — the episode spine (S1), assessment (S2) and decision (S3) routes,
-#     plus reopen and the episode-specialty routes: tshepo-authz V302/V303 rows,
-#     an experience-BFF proxy (SurgeryController) and a clinician surface at
-#     /work/clinical/surgery.
-#   * BACKEND-INTERNAL — prehabilitation, complication pathways, longitudinal
-#     objects, follow-up, waiting-list revalidation, specialty content and analytics.
+#     reopen and episode-specialty routes (tshepo-authz V302/V303), plus the five
+#     course-of-care families: prehabilitation, complication pathways (incl.
+#     grade/disclose/close), longitudinal objects (incl. remove/revise), follow-up
+#     and waiting-list revalidation (tshepo-authz V304 + experience-BFF
+#     SurgeryController pass-throughs + clinician surface at /work/clinical/surgery).
+#   * BACKEND-INTERNAL — specialty catalogue (indications/templates) and analytics.
 #     No authz rows, no BFF proxy, no UI.
 # Reachable means a request can traverse the estate to the handler. NOTHING in this
 # contract has been exercised over real HTTP against a deployed stack; the wiring is
