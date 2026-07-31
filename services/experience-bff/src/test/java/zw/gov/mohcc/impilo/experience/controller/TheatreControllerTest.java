@@ -258,6 +258,24 @@ class TheatreControllerTest {
                         Map.of("reason", "x", "complicationCategory", "OTHER")));
     }
 
+    @Test
+    void confirmSiteAndSide_passesThrough() {
+        ResponseEntity<Map<String, Object>> r = controller().confirmSiteAndSide("c1", "req-ss", "corr-ss",
+                Map.of("laterality", "LEFT", "anatomicalSite", "Left inguinal canal"));
+        assertEquals(200, r.getStatusCode().value());
+        JsonNode data = (JsonNode) r.getBody().get("data");
+        assertEquals("LEFT", data.get("laterality").asText());
+        assertEquals("Left inguinal canal", data.get("anatomical_site").asText());
+        assertEquals("LEFT", data.get("surgical_side").asText());
+    }
+
+    @Test
+    void confirmSiteAndSide_failurePropagates_doesNotFabricateUnmarked() {
+        assertThrows(RuntimeException.class,
+                () -> controller().confirmSiteAndSide("boom", "req-ss2", "corr-ss2",
+                        Map.of("laterality", "LEFT")));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -298,6 +316,15 @@ class TheatreControllerTest {
                     .put("reason", String.valueOf(body.get("reason")))
                     .put("complication_category", String.valueOf(body.get("complicationCategory")))
                     .put("planned", Boolean.TRUE.equals(body.get("planned")));
+        }
+
+        @Override public JsonNode confirmTheatreCaseSiteSide(String caseId, Map<String, Object> body) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode()
+                    .put("laterality", String.valueOf(body.get("laterality")))
+                    .put("anatomical_site", String.valueOf(body.get("anatomicalSite")))
+                    .put("surgical_side", String.valueOf(body.get("laterality")))
+                    .put("surgical_site", String.valueOf(body.get("anatomicalSite")));
         }
 
         @Override public JsonNode routeTheatreDeath(String caseId, Map<String, Object> body) {

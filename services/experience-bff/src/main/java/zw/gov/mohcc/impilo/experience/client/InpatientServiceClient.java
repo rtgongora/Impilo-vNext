@@ -905,6 +905,15 @@ public class InpatientServiceClient {
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
     }
 
+    /**
+     * Wave B3 — confirm marked anatomical site and laterality. Body must carry closed-vocab
+     * {@code laterality}; optional {@code anatomicalSite}. Authz resource {@code site-side}.
+     */
+    public JsonNode confirmTheatreCaseSiteSide(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/site-side";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
     // ── Surgical discharge summary (draft → complete, FHIR Composition → Butano) ───────────────────
     public JsonNode getTheatreDischarge(String caseId) {
         return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/discharge", JsonNode.class).getBody();

@@ -234,6 +234,21 @@ public class TheatreController {
                 requestId, correlationId);
     }
 
+    /**
+     * Wave B3 — confirm marked anatomical site and laterality. Pass-through only — a downstream
+     * failure must propagate, never render as "unmarked". Authz: tshepo V304 SURGEON/NURSE/CONSULTANT
+     * on resource {@code site-side}.
+     */
+    @PostMapping("/cases/{id}/site-side")
+    public ResponseEntity<Map<String, Object>> confirmSiteAndSide(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return ok(inpatientClient.confirmTheatreCaseSiteSide(id, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
     // ── Surgical discharge summary: draft → complete (FHIR Composition → Butano) ──────────────────
 
     @GetMapping("/cases/{id}/discharge")
