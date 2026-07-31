@@ -43,6 +43,7 @@ export type ProviderTabKey =
   | "results"
   | "queue"
   | "theatre"
+  | "surgery"
   | "messaging"
   | "social"
   | "wellnessSocial"
