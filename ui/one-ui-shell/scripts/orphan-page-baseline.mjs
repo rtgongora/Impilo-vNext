@@ -82,8 +82,6 @@ export const ORPHAN_PAGE_BASELINE = [
   "/scheduling/theatre-lists",
   "/scheduling/theatre-lists/[sessionId]",
   "/tuso",
-  "/work/clinical/theatre/board",
-  "/work/clinical/theatre/referrals",
   "/work/daidzai/triage",
   "/work/telemedicine",
   "/work/telemedicine/mdt",

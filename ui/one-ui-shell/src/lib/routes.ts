@@ -960,6 +960,8 @@ export const ROUTES: RouteDefinition[] = [
 
   // WS#6 — Theatre & Perioperative Depth (provider theatre surfaces).
   { path: "/work/clinical/theatre", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre", navLabel: "Theatre", navZone: "work" },
+  { path: "/work/clinical/theatre/board", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre Readiness Board", navLabel: "Theatre Board", navZone: "work" },
+  { path: "/work/clinical/theatre/referrals", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Surgical Referrals", navLabel: "Surgical Referrals", navZone: "work" },
   { path: "/work/clinical/theatre/[id]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre Case", navLabel: "Theatre Case", navZone: "work" },
 
   // Surgery + Procedures pipeline (SB-3 reachability wave). The procedures catalogue page
@@ -1083,7 +1085,9 @@ export const ROUTES: RouteDefinition[] = [
 // MCI casualty tagging (W15b, 28 Jul 2026): +1 — /work/daidzai/disasters/[id]/casualties. Total 827.
 // Surgery SB-3 reachability (28 Jul 2026): +2 — /work/clinical/procedures (existed but was
 // unregistered/orphaned) and /work/clinical/surgery (S1-S3 surgical episode workspace). Total 829.
-export const EXPECTED_ROUTE_COUNT = 829;
+// Surgery parity close (31 Jul 2026): +2 — /work/clinical/theatre/board and
+// /work/clinical/theatre/referrals (existed but were orphan-baseline-allowed). Total 831.
+export const EXPECTED_ROUTE_COUNT = 831;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
