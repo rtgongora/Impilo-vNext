@@ -68,7 +68,7 @@ Navigation truth: `AuthGuard` → login → ProviderActivation → SelectFacilit
 | Vashandi shifts / roster | Partial parity (static-verified) | Workforce hub + attendance/availability/roster/facility-staff → ProviderVashandiController. No Maestro flow. |
 | Rito (safety/quality) | Partial parity (static-verified) | ReportSafety + MySafetyCases → work rito cases. |
 | Tuso (premises self-service) | **Missing** | No screens; service card redirects to Professional tab. |
-| Regulatory self-service | Partial parity (thin) | FacilityRegulators (read/ack) + facility-registry applications; thinner than web regulatory module. |
+| Regulatory self-service | Partial parity (static-verified) | My Regulatory Affairs under Professional (`/internal/v1/me/regulatory/*`, practice establishments, student sections/resubmit, contributor invite redeem + deep link). Citizen public explore (councils+registers via public gateway). Operator desks (register reconcile, student review, W1D boards, config authoring) stay **WEB_ONLY**. |
 | Learning (Fundo CPD) | Partial parity (static-verified) | Fundo shell + classroom + Training tab; Maestro classroom flow. |
 | Madi (provider) | Partial parity (static-verified) | Orders/Transfusion/DriveCapture/ReactionReport/CentralBank + offline drive sync. |
 | Budgets | **Orphaned** | BudgetSummaryScreen + budgetService fully built, never imported. |

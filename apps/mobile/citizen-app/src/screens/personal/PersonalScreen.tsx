@@ -52,6 +52,7 @@ import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneySc
 import { ProviderDiscoveryScreen } from "../discover/ProviderDiscoveryScreen";
 import { MadiDonorHubScreen } from "../madi/MadiDonorHubScreen";
 import { LiveDiscoverScreen } from "../live/LiveDiscoverScreen";
+import { PublicRegulatoryExploreScreen } from "./PublicRegulatoryExploreScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
 
 type PersonalTab =
@@ -104,7 +105,8 @@ type PersonalTab =
   | "prod-ready"
   | "madi-donor"
   | "marketplace-store"
-  | "impilo-live";
+  | "impilo-live"
+  | "regulatory-explore";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -157,6 +159,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "delegated-pickup", label: "Pickup", icon: "car" },
   { id: "nhume-track", label: "Track Delivery", icon: "navigate" },
   { id: "marketplace-store", label: "Marketplace", icon: "storefront" },
+  { id: "regulatory-explore", label: "Councils", icon: "library-outline" },
   { id: "privacy", label: "Privacy", icon: "lock-closed" },
   { id: "terms", label: "Terms", icon: "document-text" },
 ];
@@ -211,6 +214,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   "nhume-track": NhumeTrackingScreen,
   privacy: PrivacyPolicyScreen,
   terms: TermsOfUseScreen,
+  "regulatory-explore": PublicRegulatoryExploreScreen,
 };
 
 export function PersonalScreen() {
