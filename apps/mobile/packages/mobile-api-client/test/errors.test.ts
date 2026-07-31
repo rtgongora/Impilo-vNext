@@ -66,9 +66,78 @@ describe("ApiError", () => {
     expect(err.message).toBe("Request failed with status 500");
   });
 
-  it("ignores non-object error fields", () => {
+  it("ignores non-object error fields with no sibling message", () => {
     const err = ApiError.fromResponse(500, "corr-bad", { error: "boom" });
     expect(err.code).toBe("HTTP_500");
+  });
+
+  it("creates from a proxied upstream refusal nested under `data` (ConfidentialCommunityPostnatalController forwarding pct-service's 422 verbatim)", () => {
+    const err = ApiError.fromResponse(422, "corr-pnc", {
+      data: {
+        code: "PNC_SETTING_REQUIRED",
+        message:
+          "A postnatal contact must say where it happened. HOME, COMMUNITY and VIRTUAL are " +
+          "first-class settings; defaulting to FACILITY would relabel a community visit as a clinic attendance.",
+      },
+      meta: { correlation_id: "corr-pnc" },
+    });
+    expect(err.status).toBe(422);
+    expect(err.code).toBe("PNC_SETTING_REQUIRED");
+    expect(err.message).toContain("must say where it happened");
+  });
+
+  it("captures sibling fields on a `data` envelope conflict (pct-service's 409 existing_pregnancy_episode_id/reconciliation_task) into details", () => {
+    const err = ApiError.fromResponse(409, "corr-preg", {
+      data: {
+        code: "PREGNANCY_ALREADY_BOOKED",
+        message: "This person already has an ongoing pregnancy episode.",
+        existing_pregnancy_episode_id: "11111111-2222-4333-8444-555555555555",
+        reconciliation_task: "Open the existing pregnancy episode and reconcile this booking against it.",
+      },
+      meta: { correlation_id: "corr-preg" },
+    });
+    expect(err.status).toBe(409);
+    expect(err.code).toBe("PREGNANCY_ALREADY_BOOKED");
+    expect(err.details?.existing_pregnancy_episode_id).toBe("11111111-2222-4333-8444-555555555555");
+    expect(err.details?.reconciliation_task).toBe(
+      "Open the existing pregnancy episode and reconcile this booking against it.",
+    );
+  });
+
+  it("prefers the `error` envelope over a `data` envelope when both are present", () => {
+    const err = ApiError.fromResponse(422, "corr-both", {
+      error: { code: "FROM_ERROR", message: "from error" },
+      data: { code: "FROM_DATA", message: "from data" },
+    });
+    expect(err.code).toBe("FROM_ERROR");
+  });
+
+  it("creates from MaternalNearMissController's flat string-code envelope with a sibling message (502 near_miss_unavailable)", () => {
+    const err = ApiError.fromResponse(502, "corr-nm", {
+      error: "near_miss_unavailable",
+      message:
+        "The near-miss criteria could not be evaluated. This is not a finding of 'no near-miss'. " +
+        "Classify clinically and resubmit when the service returns.",
+      meta: { request_id: "req-1", correlation_id: "corr-nm" },
+    });
+    expect(err.status).toBe(502);
+    expect(err.code).toBe("near_miss_unavailable");
+    expect(err.message).toContain("not a finding of 'no near-miss'");
+  });
+
+  it("captures extra top-level fields (unrecognised_answers, accepted_codes) into details for MaternalNearMissController's 422", () => {
+    const err = ApiError.fromResponse(422, "corr-nm2", {
+      error: "unrecognised_form_answer",
+      message: "These answers could not be read, and were not treated as negatives.",
+      unrecognised_answers: ["nearMiss.shock=MAYBE"],
+      accepted_codes: ["PRESENT", "ABSENT"],
+      meta: { request_id: "req-2", correlation_id: "corr-nm2" },
+    });
+    expect(err.code).toBe("unrecognised_form_answer");
+    expect(err.message).toContain("could not be read");
+    expect(err.details?.unrecognised_answers).toEqual(["nearMiss.shock=MAYBE"]);
+    expect(err.details?.accepted_codes).toEqual(["PRESENT", "ABSENT"]);
+    expect(err.details?.meta).toBeUndefined();
   });
 });
 
