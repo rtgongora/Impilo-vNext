@@ -5,18 +5,11 @@
  * selected facility, else the BFF's `recommendedContextId`, else the first
  * resolved context; mode = `context.defaultMode ?? context.availableModes[0]`).
  *
- * Deliberately best-effort and non-blocking: this app has no resolved-context
- * picker UI yet (that is Phase G3/G4), and several existing `AppMode`s
- * (`outreach`, `courier`) have no `WorkMode` analogue in the resolver today,
- * so a session that resolves to zero contexts is an expected case for some
- * accounts, not a hard failure — the app must keep working exactly as before
- * when no context resolves or the mint fails. On success, every subsequent
- * `apiClient` call carries a real `x-work-context-token`; on failure, mobile
- * simply continues without one, same as it always has.
+ * When facility/workspace changes, remints with previousJti so the old duty
+ * token is revoked — never keeps a stale token for a different workplace.
  *
- * Also persists the full resolved-contexts list to `appStore` (independent of
- * whether the preferred context's mint succeeds) so `ModeSwitcher` (Phase G3)
- * can unlock a mode button from a real proven assignment.
+ * Deliberately best-effort and non-blocking: a session that resolves to zero
+ * contexts is an expected case for some accounts, not a hard failure.
  */
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@impilo/mobile-auth";
@@ -56,7 +49,9 @@ export function useAutoResolveWorkContext(): WorkContextResolutionStatus {
 
   useEffect(() => {
     const readyKey = facilityId && workspaceId ? `${facilityId}:${workspaceId}` : null;
-    if (!readyKey || auth.session?.workContextToken || attemptedFor.current === readyKey) {
+    // Remint whenever facility+workspace identity changes — including when a
+    // prior token exists for a different workplace (pass previousJti below).
+    if (!readyKey || attemptedFor.current === readyKey) {
       return;
     }
     attemptedFor.current = readyKey;
@@ -86,7 +81,8 @@ export function useAutoResolveWorkContext(): WorkContextResolutionStatus {
           return;
         }
 
-        const minted = await mintWorkContextSession(preferred.contextId, workMode);
+        const previousJti = auth.session?.workContextJti ?? undefined;
+        const minted = await mintWorkContextSession(preferred.contextId, workMode, previousJti);
         if (cancelled) return;
 
         if (!minted.token || !minted.jti) {

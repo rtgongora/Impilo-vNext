@@ -5,7 +5,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { Screen, Header, Card, CardBody, Button, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
-import { getHouseholds, getVisitsForHousehold } from "../../services/householdService";
+import { captureCurrentLocation } from "@impilo/mobile-ndila";
+import { getHouseholds, recordCommunityVisit } from "../../services/householdService";
 import { useAppStore } from "../../stores/appStore";
 import { useSwitchAppMode } from "../../hooks/useSwitchAppMode";
 import type { Household, CommunityVisit } from "../../types";
@@ -18,14 +19,13 @@ interface ScheduleItem {
 
 export function FollowUpScreen() {
   const { facilityId } = useAppStore();
-  // Outreach is a governed mode (COMMUNITY_OUTREACH), so starting a visit mints
-  // a duty token before the workspace changes. It used to call setMode directly,
-  // which moved the UI into an outreach posture while the person still held
-  // whatever token they had.
+  // Outreach is a governed mode (COMMUNITY_OUTREACH). Start Visit remints if needed
+  // and records a real community visit for the household — never mode-switch alone.
   const { switching, error: switchError, switchAppMode } = useSwitchAppMode();
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [startingId, setStartingId] = useState<string | null>(null);
 
   const loadSchedule = useCallback(async () => {
     if (!facilityId) return;
@@ -53,6 +53,36 @@ export function FollowUpScreen() {
   useEffect(() => {
     loadSchedule();
   }, [loadSchedule]);
+
+  const handleStartVisit = useCallback(async (household: Household) => {
+    setStartingId(household.id);
+    setError(null);
+    try {
+      await switchAppMode("outreach");
+      let lat = household.gpsLatitude;
+      let lng = household.gpsLongitude;
+      try {
+        const fix = await captureCurrentLocation({ highAccuracy: true, timeoutMs: 8000 });
+        lat = fix.coordinate.latitude;
+        lng = fix.coordinate.longitude;
+      } catch {
+        if (lat == null || lng == null || (lat === 0 && lng === 0)) {
+          throw new Error("Location is required to start a visit. Enable GPS and try again.");
+        }
+      }
+      await recordCommunityVisit({
+        householdId: household.id,
+        visitType: "FOLLOW_UP",
+        gpsLatitude: lat,
+        gpsLongitude: lng,
+      });
+      await loadSchedule();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start visit");
+    } finally {
+      setStartingId(null);
+    }
+  }, [switchAppMode, loadSchedule]);
 
   return (
     <Screen>
@@ -91,12 +121,12 @@ export function FollowUpScreen() {
                     </View>
                   </View>
                   <Button
-                    title={switching ? "Starting…" : "Start Visit"}
+                    title={startingId === household.id || switching ? "Starting…" : "Start Visit"}
                     variant="primary"
                     size="sm"
-                    disabled={switching}
+                    disabled={switching || startingId != null}
                     onPress={() => {
-                      void switchAppMode("outreach");
+                      void handleStartVisit(household);
                     }}
                     testID={`start-followup-${household.id}`}
                   />

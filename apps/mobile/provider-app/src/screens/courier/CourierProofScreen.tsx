@@ -1,14 +1,14 @@
 /**
  * CourierProofScreen — capture proof of delivery & custody events.
  *
- * Lets a courier capture OTP / signature / facility-stamp proof and record
- * chain-of-custody events (seal IDs, temperature readings, exception flags)
- * in line with the delivery policy. The screen lists the active deliveries
- * and reveals an OTP form when one is selected.
+ * OTP uses a recipient-entered code. Signature and facility-stamp require a
+ * real camera/library image URI as evidence_ref — never fabricated literals.
  */
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TextInput, Alert, TouchableOpacity } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { captureCurrentLocation } from "@impilo/mobile-ndila";
 import {
   Screen,
   Header,
@@ -26,7 +26,43 @@ import {
   recordCustody,
   reportFailure,
   type NhumeCourierDelivery,
+  type NhumeProofPayload,
 } from "../../services/nhumeService";
+
+async function pickEvidencePhoto(): Promise<string | null> {
+  const permission = await ImagePicker.requestCameraPermissionsAsync();
+  if (!permission.granted) {
+    const library = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!library.granted) {
+      Alert.alert("Permission needed", "Camera or photo library access is required to capture proof.");
+      return null;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets?.[0]?.uri) return null;
+    return result.assets[0].uri;
+  }
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ["images"],
+    quality: 0.7,
+  });
+  if (result.canceled || !result.assets?.[0]?.uri) return null;
+  return result.assets[0].uri;
+}
+
+async function optionalGps(): Promise<{ captured_lat?: number; captured_lng?: number }> {
+  try {
+    const fix = await captureCurrentLocation({ highAccuracy: true, timeoutMs: 5000 });
+    if (fix?.coordinate?.latitude != null && fix?.coordinate?.longitude != null) {
+      return { captured_lat: fix.coordinate.latitude, captured_lng: fix.coordinate.longitude };
+    }
+  } catch {
+    // GPS is additive for PoD — do not block proof on location failure.
+  }
+  return {};
+}
 
 export function CourierProofScreen() {
   const [rows, setRows] = useState<NhumeCourierDelivery[]>([]);
@@ -35,6 +71,7 @@ export function CourierProofScreen() {
   const [otp, setOtp] = useState("");
   const [recipient, setRecipient] = useState("");
   const [busy, setBusy] = useState(false);
+  const [evidenceUri, setEvidenceUri] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const list = await listAssignedDeliveries();
@@ -49,39 +86,61 @@ export function CourierProofScreen() {
   const submitOtp = useCallback(async () => {
     if (!activeId || !otp) return;
     setBusy(true);
-    const ok = await captureProof(activeId, { method: "OTP", proof_stage: "DELIVERY", mark_delivered: true, otp_code: otp, recipient_name: recipient || undefined });
+    const gps = await optionalGps();
+    const ok = await captureProof(activeId, {
+      method: "OTP",
+      proof_stage: "DELIVERY",
+      mark_delivered: true,
+      otp_code: otp,
+      recipient_name: recipient || undefined,
+      ...gps,
+    });
     setBusy(false);
     if (ok) {
       Alert.alert("Delivered", "Proof captured and delivery marked as delivered.");
       setOtp("");
       setRecipient("");
       setActiveId(null);
+      setEvidenceUri(null);
       await load();
     } else {
       Alert.alert("Couldn't capture proof", "Please verify the OTP and try again.");
     }
   }, [activeId, otp, recipient, load]);
 
-  const submitSignature = useCallback(async () => {
+  const captureEvidence = useCallback(async () => {
+    const uri = await pickEvidencePhoto();
+    if (uri) setEvidenceUri(uri);
+  }, []);
+
+  const submitPhotoProof = useCallback(async (method: "RECIPIENT_SIGNATURE" | "FACILITY_STAMP") => {
     if (!activeId) return;
+    if (!evidenceUri) {
+      Alert.alert("Photo required", "Capture a photo of the signature or facility stamp before submitting.");
+      return;
+    }
     setBusy(true);
-    const ok = await captureProof(activeId, { method: "RECIPIENT_SIGNATURE", proof_stage: "DELIVERY", mark_delivered: true, recipient_name: recipient || undefined, evidence_ref: "signature-captured" });
+    const gps = await optionalGps();
+    const payload: NhumeProofPayload = {
+      method,
+      proof_stage: "DELIVERY",
+      mark_delivered: true,
+      recipient_name: recipient || undefined,
+      evidence_ref: evidenceUri,
+      ...gps,
+    };
+    const ok = await captureProof(activeId, payload);
     setBusy(false);
     if (ok) {
-      Alert.alert("Delivered", "Signature recorded and delivery marked as delivered.");
+      Alert.alert("Delivered", "Proof recorded and delivery marked as delivered.");
       setActiveId(null);
+      setEvidenceUri(null);
+      setRecipient("");
       await load();
     } else {
       Alert.alert("Couldn't capture proof", "Please retry.");
     }
-  }, [activeId, recipient, load]);
-
-  const submitFacilityStamp = useCallback(async () => {
-    if (!activeId) return;
-    const ok = await captureProof(activeId, { method: "FACILITY_STAMP", proof_stage: "DELIVERY", mark_delivered: true, evidence_ref: "facility-stamp" });
-    if (ok) { Alert.alert("Delivered", "Facility stamp recorded."); setActiveId(null); await load(); }
-    else Alert.alert("Couldn't capture proof", "Please retry.");
-  }, [activeId, load]);
+  }, [activeId, evidenceUri, recipient, load]);
 
   const recordTempBreach = useCallback(async () => {
     if (!activeId) return;
@@ -142,7 +201,7 @@ export function CourierProofScreen() {
       <Header
         title="Capture proof"
         subtitle={active?.reference}
-        onBack={() => setActiveId(null)}
+        onBack={() => { setActiveId(null); setEvidenceUri(null); }}
       />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Card>
@@ -156,11 +215,29 @@ export function CourierProofScreen() {
         </Card>
 
         <Card>
-          <CardHeader title="Other proof methods" />
+          <CardHeader title="Photo proof (signature / stamp)" />
           <CardBody>
-            <View style={{ gap: 8 }}>
-              <Button variant="outline" onPress={submitSignature} title="Recipient signature" />
-              <Button variant="outline" onPress={submitFacilityStamp} title="Facility stamp / sign-off" />
+            <Text style={styles.muted}>
+              Capture a photo of the recipient signature or facility stamp. A photo is required —
+              fabricated evidence references are not accepted.
+            </Text>
+            <View style={{ gap: 8, marginTop: 8 }}>
+              <Button variant="outline" onPress={captureEvidence} title={evidenceUri ? "Retake evidence photo" : "Capture evidence photo"} />
+              {evidenceUri ? (
+                <Text style={styles.muted} numberOfLines={1}>Evidence ready: {evidenceUri}</Text>
+              ) : null}
+              <Button
+                variant="outline"
+                onPress={() => void submitPhotoProof("RECIPIENT_SIGNATURE")}
+                disabled={!evidenceUri || busy}
+                title="Submit as recipient signature"
+              />
+              <Button
+                variant="outline"
+                onPress={() => void submitPhotoProof("FACILITY_STAMP")}
+                disabled={!evidenceUri || busy}
+                title="Submit as facility stamp"
+              />
             </View>
           </CardBody>
         </Card>

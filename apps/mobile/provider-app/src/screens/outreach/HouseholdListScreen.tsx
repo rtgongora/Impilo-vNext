@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { Screen, Header, Card, CardBody, Button, TextField, Badge, LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
+import { captureCurrentLocation } from "@impilo/mobile-ndila";
 import { getHouseholds, registerHousehold, recordCommunityVisit } from "../../services/householdService";
 import { useAppStore } from "../../stores/appStore";
 import { useOfflineStore } from "@impilo/mobile-offline";
@@ -54,11 +55,12 @@ export function HouseholdListScreen() {
     setSaving(true);
     setError(null);
     try {
+      const fix = await captureCurrentLocation({ highAccuracy: true, timeoutMs: 10000 });
       const household = await registerHousehold({
         headOfHousehold: registerForm.headOfHousehold,
         address: registerForm.address,
-        gpsLatitude: 0,
-        gpsLongitude: 0,
+        gpsLatitude: fix.coordinate.latitude,
+        gpsLongitude: fix.coordinate.longitude,
         facilityId,
         members: [],
       });
@@ -66,7 +68,13 @@ export function HouseholdListScreen() {
       setShowRegister(false);
       setRegisterForm({ headOfHousehold: "", address: "" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(
+        err instanceof Error
+          ? err.message.includes("Geolocation") || err.message.includes("Location")
+            ? "Location is required to register a household. Enable GPS and try again."
+            : err.message
+          : "Registration failed",
+      );
     } finally {
       setSaving(false);
     }
@@ -74,11 +82,22 @@ export function HouseholdListScreen() {
 
   const handleStartVisit = useCallback(async (household: Household) => {
     try {
+      let lat = household.gpsLatitude;
+      let lng = household.gpsLongitude;
+      try {
+        const fix = await captureCurrentLocation({ highAccuracy: true, timeoutMs: 8000 });
+        lat = fix.coordinate.latitude;
+        lng = fix.coordinate.longitude;
+      } catch {
+        if (lat == null || lng == null || (lat === 0 && lng === 0)) {
+          throw new Error("Location is required to start a visit. Enable GPS and try again.");
+        }
+      }
       await recordCommunityVisit({
         householdId: household.id,
         visitType: "GENERAL",
-        gpsLatitude: household.gpsLatitude,
-        gpsLongitude: household.gpsLongitude,
+        gpsLatitude: lat,
+        gpsLongitude: lng,
       });
       loadHouseholds();
     } catch (err) {

@@ -39,7 +39,7 @@ export interface AppState {
   /** When opening Clinical Tools, select this tab once then clear (e.g. telemedicine). */
   clinicalToolsInitialTab: string | null;
   /** When switching to Supervisor mode, open this tab once then clear (e.g. escalations). */
-  supervisorEntryTab: "dashboard" | "team" | "stock" | "inventory" | "escalations" | null;
+  supervisorEntryTab: "workhome" | "dashboard" | "team" | "stock" | "inventory" | "escalations" | null;
   /** Optional focus to carry into Apps surface (e.g. Fundo overdue). */
   appsFocus: "required" | "overdue" | "cpd" | null;
   /** Active learning subject identity for Fundo parity flows. */

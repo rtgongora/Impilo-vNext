@@ -53,6 +53,7 @@
     "expo-crypto": "~15.0.9",
     "expo-linking": "~8.0.12",
     "expo-location": "~19.0.8",
+    "expo-image-picker": "~16.1.4",
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-sqlite": "~16.0.10",

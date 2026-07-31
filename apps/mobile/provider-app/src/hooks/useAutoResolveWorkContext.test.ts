@@ -68,3 +68,15 @@ describe("selectPreferredWorkContext", () => {
     expect(selectPreferredWorkContext(resolved, null)?.contextId).toBe("ctx-nofac");
   });
 });
+
+describe("useAutoResolveWorkContext remint contract", () => {
+  it("remints on facility/workspace change using previousJti (no early-return on existing token)", () => {
+    const { readFileSync } = require("node:fs") as typeof import("node:fs");
+    const { join } = require("node:path") as typeof import("node:path");
+    const src = readFileSync(join(__dirname, "useAutoResolveWorkContext.ts"), "utf8");
+    expect(src).not.toContain("auth.session?.workContextToken || attemptedFor");
+    expect(src).toContain("previousJti");
+    expect(src).toContain("workContextJti");
+    expect(src).toContain("mintWorkContextSession(preferred.contextId, workMode, previousJti)");
+  });
+});
