@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TheatreCaseDetailPage from "./page";
 
@@ -14,6 +15,17 @@ vi.mock("@/components/PageShell", () => ({
 vi.mock("@/components/intelligent/NompiloContextualGuidance", () => ({ NompiloContextualGuidance: () => <div data-testid="nompilo" /> }));
 vi.mock("@/lib/api-client", () => ({ apiClient: { get, post } }));
 
+function renderPage() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={client}>
+      <TheatreCaseDetailPage />
+    </QueryClientProvider>,
+  );
+}
+
 describe("TheatreCaseDetailPage", () => {
   beforeEach(() => {
     get.mockReset();
@@ -21,6 +33,7 @@ describe("TheatreCaseDetailPage", () => {
     get.mockImplementation((url: string) => {
       if (url.endsWith("/safety-events")) return Promise.resolve([]);
       if (url.endsWith("/note")) return Promise.resolve({ status: "NONE" });
+      if (url.includes("/surgery/specialties/templates")) return Promise.resolve([]);
       if (/\/theatre\/cases\/c-1$/.test(url)) {
         return Promise.resolve({
           id: "c-1", patient_id: "CPID-1", procedure_name: "Appendectomy", status: "BOOKED", triage_priority: "URGENT", surgeon_id: "surgeon-1",
@@ -33,7 +46,7 @@ describe("TheatreCaseDetailPage", () => {
   });
 
   it("renders the real case with status, triage and the WHO checklist", async () => {
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     // §19: the persistent banner shows the human stage label for the status
     expect(screen.getByTestId("banner-stage")).toHaveTextContent("Booked");
@@ -42,7 +55,7 @@ describe("TheatreCaseDetailPage", () => {
   });
 
   it("§19 shows the persistent context banner with an unconfirmed-allergy safety flag", async () => {
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByTestId("theatre-case-banner")).toBeInTheDocument());
     expect(screen.getByTestId("theatre-case-banner").className).toContain("sticky");
     expect(screen.getByTestId("banner-allergies")).toHaveTextContent(/unconfirmed/i);
@@ -50,7 +63,7 @@ describe("TheatreCaseDetailPage", () => {
   });
 
   it("§19 the operative note carries a DRAFT document-state badge until signed", async () => {
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByTestId("doc-state-badge")).toBeInTheDocument());
     expect(screen.getByTestId("doc-state-badge")).toHaveAttribute("data-state", "DRAFT");
   });
@@ -58,7 +71,7 @@ describe("TheatreCaseDetailPage", () => {
   it("§19 focus mode auto-hides surrounding sections when a note field is focused", async () => {
     // NB: jsdom does not load Tailwind CSS, so the `hidden` utility (display:none) is asserted
     // via the class rather than computed visibility.
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     const whoSection = () => screen.getByText(/WHO Surgical Safety Checklist/).closest("section")!;
     // the WHO checklist section is shown before entering data
@@ -74,7 +87,7 @@ describe("TheatreCaseDetailPage", () => {
 
   it("evaluate readiness calls the BFF and shows owner blockers (no fake READY)", async () => {
     post.mockResolvedValueOnce({ bookable: false, checks: [{ domain: "ROOM", owner_service: "inpatient", status: "BLOCKED" }], blockers: [{ code: "NO_ROOM", message: "No theatre room assigned" }] });
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     await userEvent.click(screen.getByRole("button", { name: /Evaluate readiness/ }));
     await waitFor(() => expect(screen.getByText(/Not bookable yet/)).toBeInTheDocument());
@@ -84,7 +97,7 @@ describe("TheatreCaseDetailPage", () => {
 
   it("booking with an override sends the audited reason (no dead button)", async () => {
     post.mockResolvedValue({ status: "BOOKED" });
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     await userEvent.type(screen.getByText("Emergency override reason").parentElement!.querySelector("input")!, "Life-threatening");
     await userEvent.click(screen.getByRole("button", { name: /Book with override/ }));
@@ -95,7 +108,7 @@ describe("TheatreCaseDetailPage", () => {
 
   it("cancellation sends a structured reason code (§15 cancelled case → rescheduling)", async () => {
     post.mockResolvedValue({ status: "CANCELLED", reason_code: "NO_BLOOD", reschedulable: true });
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     await userEvent.selectOptions(screen.getByText("Reason code").parentElement!.querySelector("select")!, "NO_BLOOD");
     await userEvent.type(screen.getByText("Notes").parentElement!.querySelector("input")!, "cross-match not ready");
@@ -106,7 +119,7 @@ describe("TheatreCaseDetailPage", () => {
   });
 
   it("mounts the Lane 2/3 management panels bound to their real endpoints", async () => {
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     expect(screen.getByTestId("blood-panel")).toBeInTheDocument();
     expect(screen.getByTestId("specimen-panel")).toBeInTheDocument();
@@ -120,7 +133,7 @@ describe("TheatreCaseDetailPage", () => {
   });
 
   it("gates Lane 1 surfaces: no obstetric/emergency-consent panel for an elective non-obstetric case", async () => {
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     expect(screen.queryByTestId("obstetric-section")).not.toBeInTheDocument();
     expect(screen.queryByTestId("emergency-consent-panel")).not.toBeInTheDocument();
@@ -135,7 +148,7 @@ describe("TheatreCaseDetailPage", () => {
       }
       return Promise.resolve({ data: [] });
     });
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     expect(screen.getByTestId("obstetric-section")).toBeInTheDocument();
     expect(screen.getByTestId("emergency-consent-panel")).toBeInTheDocument();
@@ -143,7 +156,7 @@ describe("TheatreCaseDetailPage", () => {
 
   it("SB-5 draft note POST includes operative depth fields", async () => {
     post.mockResolvedValue({});
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     await userEvent.type(screen.getByTestId("note-performed-procedure"), "Appendicectomy");
     await userEvent.type(screen.getByTestId("note-patient-position"), "Supine");
@@ -172,13 +185,13 @@ describe("TheatreCaseDetailPage", () => {
       }
       return Promise.resolve({ data: [] });
     });
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByTestId("operative-note-unavailable")).toBeInTheDocument());
     expect(screen.getByTestId("operative-note-unavailable")).toHaveTextContent(/Could not read the operative note/);
   });
 
   it("disables save when the operative template pair is half-set", async () => {
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     await userEvent.type(screen.getByTestId("note-performed-procedure"), "Appendicectomy");
     await userEvent.type(screen.getByTestId("note-template-ref"), "3f9a1c2e-4b5d-4a6f-9c7e-8d0f1a2b3c4d");
@@ -200,7 +213,7 @@ describe("TheatreCaseDetailPage", () => {
       }
       return Promise.resolve({ data: [] });
     });
-    render(<TheatreCaseDetailPage />);
+    renderPage();
     await waitFor(() => expect(screen.getByTestId("return-to-theatre-panel")).toBeInTheDocument());
     expect(screen.getByTestId("return-to-theatre-list")).toHaveTextContent("SEPSIS");
   });
