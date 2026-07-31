@@ -119,7 +119,12 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
       {
         label: "Spirometry / PFT procedure worklist",
         href: () => "/diagnostics/procedure-worklist",
-        note: "OROS PROCEDURE workflow names spirometry; peak flow and inhaler technique remain unbuilt.",
+        note: "OROS PROCEDURE workflow names spirometry; inhaler technique remains unbuilt.",
+      },
+      {
+        label: "Home respiratory monitoring (telemonitoring)",
+        href: () => "/work/telemonitoring",
+        note: "§15 SoR for home metrics. Peak-flow instrument type is still an extension inside telemonitoring — do not invent a rival adult-medicine table.",
       },
       {
         label: "Bronchoscopy catalogue",
@@ -127,7 +132,7 @@ export const MEDICINE_SPECIALTIES: SpecialtyDefinition[] = [
       },
     ],
     notBuilt: [
-      "Peak flow", "Inhaler technique assessment", "Symptom-control scores",
+      "Peak flow instrument inside telemonitoring", "Inhaler technique assessment", "Symptom-control scores",
       "Exacerbation history", "Tobacco cessation (simba owns cessation — integrate, do not fork)",
       "Oxygen eligibility",
     ],
