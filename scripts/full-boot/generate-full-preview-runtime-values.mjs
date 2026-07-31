@@ -211,7 +211,35 @@ function specialEnv(serviceId) {
 function specialSecretEnv(serviceId) {
   const SECRET = "impilo-app-secrets";
   if (serviceId === "vito-service") {
-    return { VITO_HMAC_PEPPER: { name: SECRET, key: "vito-hmac-pepper" } };
+    // Cryptographic seeds are fail-closed (no DEV fallback). Shared card-print
+    // seed (or derived public key) lets CardAssertionVerifier match printed cards.
+    return {
+      VITO_HMAC_PEPPER: { name: SECRET, key: "vito-hmac-pepper" },
+      VITO_IMPILO_ID_ENCRYPTION_KEY: { name: SECRET, key: "vito-impilo-id-encryption-key" },
+      VITO_QR_SIGNING_KEY_SEED: { name: SECRET, key: "vito-qr-signing-key-seed" },
+      CARD_PRINT_QR_SIGNING_KEY_SEED: { name: SECRET, key: "card-print-qr-signing-key-seed" },
+      CARD_PRINT_QR_PUBLIC_KEY: { name: SECRET, key: "card-print-qr-public-key" },
+    };
+  }
+  if (serviceId === "card-print-agent") {
+    return {
+      CARD_PRINT_QR_SIGNING_KEY_SEED: { name: SECRET, key: "card-print-qr-signing-key-seed" },
+    };
+  }
+  if (serviceId === "coverage-service") {
+    return {
+      RUVIMBO_TOKEN_SECRET: { name: SECRET, key: "ruvimbo-token-secret" },
+    };
+  }
+  if (serviceId === "mushe-wallet-service") {
+    return {
+      WALLET_CARD_ENCRYPTION_MASTER_KEY: { name: SECRET, key: "wallet-card-encryption-master-key" },
+    };
+  }
+  if (serviceId === "tshepo-keys-service") {
+    return {
+      TSHEPO_KEYS_KEK: { name: SECRET, key: "tshepo-keys-kek" },
+    };
   }
   if (serviceId === "rtc-gateway-service") {
     return { LIVEKIT_API_SECRET: { name: SECRET, key: "livekit-api-secret" } };

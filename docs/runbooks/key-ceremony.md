@@ -61,8 +61,34 @@ the purpose is not provisioned (`KEY_LOOKUP_FAILED_CLOSED` outbox event emitted)
 | `impilo.keys.pkcs11.config` | *(unset)* | path | SunPKCS11 config; unset ⇒ HSM provider inert |
 | `vito.qr.signing-source` | `seed` | `tshepo-keys` | VITO QR: local seed vs sovereign key service |
 | `card-print.qr.signing-source` | `seed` | `tshepo-keys` | card assertions: local seed vs sovereign |
-| `vito.tshepo-keys.base-url` | `http://tshepo-keys-service:8081` | — | VITO → tshepo-keys endpoint |
-| `card-print.tshepo-keys.base-url` | `http://tshepo-keys-service:8081` | — | card-print → tshepo-keys endpoint |
+| `vito.tshepo-keys.base-url` | `http://tshepo-keys-service:8184` | — | VITO → tshepo-keys endpoint (**8184**, not 8081) |
+| `card-print.tshepo-keys.base-url` | `http://tshepo-keys-service:8184` | — | card-print → tshepo-keys endpoint (**8184**, not 8081) |
+
+**Fail-closed seed path (F6, landed):** the five local cryptographic secrets
+(`vito.identity.impilo-id-encryption-key`, `vito.qr.signing-key-seed`,
+`card-print.qr.signing-key-seed` / `card-print.qr.public-key`, `ruvimbo.token.secret`,
+and `tshepo.keys.kek`) refuse to start on blank/placeholder values. They are provisioned
+into `impilo-app-secrets` by `scripts/secrets/bootstrap-secrets.sh` and injected via
+`specialSecretEnv` — never committed. The wallet master key
+(`WALLET_CARD_ENCRYPTION_MASTER_KEY`) follows the same pattern.
+
+**Custody target (follow-on wave — record only here, do not build in F6):**
+
+1. Key ceremony: provision purpose-scoped `QR_SIGNING` and `CARD_ASSERTION` keys in
+   tshepo-keys (admin API / dual control per §4).
+2. Flip `vito.qr.signing-source=tshepo-keys` and `card-print.qr.signing-source=tshepo-keys`.
+3. Fix both clients' default base URL from the stale `8081` to the real port **`8184`**.
+4. Extend `CardAssertionVerifier` to verify by `kid` via JWKS (as
+   `CapabilityTokenService` already does for offline capability tokens) so cards signed
+   under tshepo-keys verify without holding the shared seed.
+5. Keep the seed path available for one release as fallback, then remove.
+
+**Coverage HMAC primitive decision:** `EligibilityTokenService` uses HS256 with a
+shared secret. That is defensible **only** while issue and verify both happen
+in-process inside coverage-service (`EligibilityV2Service` issue path and
+`EligibilityV2Controller` verify). If a payer is ever to verify a token independently
+(offline claim), this must become Ed25519 via tshepo-keys — handing the verifier the
+HMAC secret hands it the ability to mint.
 
 **Migration order (per environment):** provision `QR_SIGNING` / `CARD_ASSERTION` keys in
 tshepo-keys → flip `*.qr.signing-source=tshepo-keys` on VITO / card-print → confirm new QRs/cards

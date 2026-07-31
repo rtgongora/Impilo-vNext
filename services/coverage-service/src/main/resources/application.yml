@@ -78,6 +78,14 @@ impilo:
   services:
     mushex-base-url: ${MUSHEX_BASE_URL:http://localhost:8102}
 
+# Ruvimbo eligibility tokens (spec §12.3). The secret signs decisions a facility carries
+# offline and claims against later, so it is REQUIRED: >=32 chars, provisioned into
+# impilo-app-secrets by scripts/secrets/bootstrap-secrets.sh. EligibilityTokenService refuses
+# to start without it.
+ruvimbo:
+  token:
+    secret: ${RUVIMBO_TOKEN_SECRET:}
+
 coverage:
   security:
   outbox:

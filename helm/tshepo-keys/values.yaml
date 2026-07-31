@@ -14,7 +14,8 @@ env:
   SPRING_DATASOURCE_USERNAME: impilo
   SPRING_DATASOURCE_PASSWORD: impilo
   SPRING_DATA_REDIS_HOST: redis
-  TSHEPO_KEYS_KEK: change-me-in-production-use-vault
+  # TSHEPO_KEYS_KEK is deliberately absent: it is required key material and must
+  # arrive from the impilo-app-secrets Secret, never from a values file in git.
 
 resources:
   requests:

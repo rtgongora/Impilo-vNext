@@ -479,10 +479,8 @@ fullBootServices:
   ai-model-registry-service:
     env:
       AIR_SECURITY_ALLOW_INSECURE_PERMIT_ALL: "true"
-  mushe-wallet-service:
-    env:
-      # Preview-only key material — NOT production key management.
-      WALLET_CARD_ENCRYPTION_MASTER_KEY: "preview-only-card-master-key-0123456789abcdef01"
+  # mushe-wallet-service: WALLET_CARD_ENCRYPTION_MASTER_KEY comes from
+  # impilo-app-secrets via specialSecretEnv (bootstrap-secrets.sh) — never committed.
   tuso-service:
     env:
       # Diagnostic rider for the silent import row-approve 403 (task #9):
