@@ -9,7 +9,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageSquarePlus, Search } from "lucide-react";
+import { HeartHandshake, MessageSquarePlus, Search } from "lucide-react";
 import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -37,6 +37,21 @@ export default function MyFeedbackPage() {
               <div className="font-semibold text-teal-900">Share feedback</div>
               <div className="text-sm text-teal-800">
                 A complaint, compliment, suggestion or safety concern
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/my-life/feedback/respectful-maternity"
+            className="flex items-center gap-3 rounded-2xl border border-rose-300 bg-rose-50 p-5 transition-all hover:shadow-sm"
+          >
+            <div className="rounded-xl bg-rose-600 p-2.5">
+              <HeartHandshake className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="font-semibold text-rose-900">Respectful maternity care</div>
+              <div className="text-sm text-rose-800">
+                How you were treated during labour, birth or right after — anonymous by default
               </div>
             </div>
           </Link>
