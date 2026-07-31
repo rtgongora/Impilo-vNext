@@ -2096,6 +2096,19 @@ public class TheatreService {
         m.put("acknowledged_at", s.getAcknowledgedAt());
         m.put("acknowledged_by", s.getAcknowledgedBy());
         m.put("butano_document_ref", s.getButanoDocumentRef());
+        // Custody stamps (Wave P8 / B1) — keep list refresh truthful after collect/label/receive/adequacy.
+        m.put("collected_by", s.getCollectedBy());
+        m.put("collected_at", s.getCollectedAt());
+        m.put("container_type", s.getContainerType());
+        m.put("fixative", s.getFixative());
+        m.put("label_confirmed_by", s.getLabelConfirmedBy());
+        m.put("label_confirmed_at", s.getLabelConfirmedAt());
+        m.put("received_by", s.getReceivedBy());
+        m.put("received_at", s.getReceivedAt());
+        m.put("adequacy", s.getAdequacy());
+        m.put("adequacy_assessed_by", s.getAdequacyAssessedBy());
+        m.put("adequacy_assessed_at", s.getAdequacyAssessedAt());
+        m.put("fhir_specimen_ref", s.getFhirSpecimenRef());
         return m;
     }
 

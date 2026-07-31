@@ -435,7 +435,7 @@ export default function TheatreCaseDetailPage() {
 
             {/* Commodities & traceability (Lane 2): implants, instrument sets, controlled drugs */}
             <div className={focusMode ? "hidden" : undefined}>
-              <TheatreCommoditiesPanel caseId={id} />
+              <TheatreCommoditiesPanel caseId={id} patientCpid={data.patient_id} />
             </div>
 
             {/* Operative note — data-entry surface; focusing a field auto-enables focus mode */}
