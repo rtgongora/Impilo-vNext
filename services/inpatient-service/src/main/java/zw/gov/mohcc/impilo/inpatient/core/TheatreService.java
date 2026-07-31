@@ -1003,6 +1003,23 @@ public class TheatreService {
     }
 
     /**
+     * Wave B3 — confirm marked anatomical site and laterality on the theatre case.
+     * Delegates to {@link ProcedureEpisodeService#confirmSiteAndSide}; emits a theatre-scoped
+     * outbox event so readiness consumers see the confirmation without re-reading the episode.
+     */
+    @Transactional
+    public Map<String, Object> confirmSiteAndSide(UUID episodeId, Map<String, Object> body) {
+        requireEpisode(episodeId);
+        Map<String, Object> result = episodeService.confirmSiteAndSide(episodeId, body);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.site-side.confirmed", Map.of(
+                "episode_id", episodeId.toString(),
+                "laterality", nullSafe(ClinicalPayloadMapper.str(body, "laterality")),
+                "anatomical_site", nullSafe(ClinicalPayloadMapper.str(body, "anatomicalSite", "anatomical_site")),
+                "confirmed_by", actor()));
+        return result;
+    }
+
+    /**
      * The PACU discharge decision (§12) → destination + a REAL NHUME movement + (for WARD/ICU/HDU) a
      * create-or-link inpatient admission so postop orders/observations/outcome tie back to the case.
      * Aldrete discharge-readiness gates a ward discharge unless explicitly overridden with justification.

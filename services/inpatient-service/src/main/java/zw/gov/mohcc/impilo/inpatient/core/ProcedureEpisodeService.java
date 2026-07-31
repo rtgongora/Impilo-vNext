@@ -50,6 +50,13 @@ public class ProcedureEpisodeService {
             "OBSTRUCTION", "RETAINED_ITEM", "DEVICE_OR_IMPLANT_FAILURE", "ORGAN_INJURY",
             "PLANNED_SECOND_LOOK", "OTHER");
 
+    /**
+     * Closed laterality vocabulary (V300 chk_procedure_episode_laterality). Free text fails open
+     * for wrong-site prevention — every writer must use these exact tokens.
+     */
+    private static final Set<String> LATERALITY_VOCAB = Set.of(
+            "LEFT", "RIGHT", "BILATERAL", "MIDLINE", "NOT_APPLICABLE", "MULTIPLE");
+
     private static final Map<String, List<String[]>> WHO_CHECKLIST = Map.of(
             "SIGN_IN", List.of(
                     new String[]{"ID_CONFIRM", "Patient identity confirmed"},
@@ -424,6 +431,58 @@ public class ProcedureEpisodeService {
                     "Site and side must be confirmed before a lateralised procedure starts. "
                     + "This cannot be waived by an emergency override.");
         }
+    }
+
+    /**
+     * Wave B3 — table-side confirmation of marked anatomical site and laterality.
+     *
+     * <p>Writes {@code laterality} (required, closed vocab), optional {@code anatomical_site},
+     * and the confirmation pair ({@code site_side_confirmed_by}/{@code site_side_confirmed_at})
+     * from the trust actor. Optionally completes the WHO Sign-In {@code SITE_MARKED} checklist
+     * item so the start gate and the checklist stay aligned.</p>
+     */
+    @Transactional
+    public Map<String, Object> confirmSiteAndSide(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity episode = requireEpisode(episodeId);
+        String laterality = ClinicalPayloadMapper.str(body, "laterality");
+        if (laterality == null || laterality.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "laterality is required — confirming site and side without a side is the "
+                            + "failure this gate exists to prevent");
+        }
+        laterality = laterality.trim().toUpperCase(Locale.ROOT);
+        if (!LATERALITY_VOCAB.contains(laterality)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "laterality must be one of " + LATERALITY_VOCAB);
+        }
+        String anatomicalSite = ClinicalPayloadMapper.str(body, "anatomicalSite", "anatomical_site");
+        if (anatomicalSite != null && anatomicalSite.isBlank()) {
+            anatomicalSite = null;
+        }
+
+        episode.setLaterality(laterality);
+        if (anatomicalSite != null) {
+            episode.setAnatomicalSite(anatomicalSite.length() > 128
+                    ? anatomicalSite.substring(0, 128) : anatomicalSite);
+        }
+        episode.setSiteSideConfirmedBy(currentActor());
+        episode.setSiteSideConfirmedAt(OffsetDateTime.now());
+        episodeRepository.save(episode);
+
+        autoCompleteSiteMarkedChecklist(episodeId);
+        return episodeDetail(episodeId);
+    }
+
+    private void autoCompleteSiteMarkedChecklist(UUID episodeId) {
+        checklistRepository.findByEpisodeIdAndPhaseOrderByItemCodeAsc(episodeId, "SIGN_IN").stream()
+                .filter(item -> "SITE_MARKED".equals(item.getItemCode()) && !item.isCompleted())
+                .forEach(item -> {
+                    item.setCompleted(true);
+                    item.setCompletedBy(currentActor());
+                    item.setCompletedAt(OffsetDateTime.now());
+                    checklistRepository.save(item);
+                });
+        maybeAdvanceToReady(episodeId);
     }
 
     /**
@@ -1313,6 +1372,14 @@ public class ProcedureEpisodeService {
         m.put("booking_id", e.getBookingId());
         // Wave 4 §13 — theatre→inpatient continuity: the case references its inpatient admission episode.
         m.put("admission_ref", e.getAdmissionRef() != null ? e.getAdmissionRef().toString() : null);
+        // Wave B3 — structured site/side + confirmation pair (V300). Banner aliases
+        // surgical_site / surgical_side match what TheatreCaseBanner already reads.
+        m.put("anatomical_site", e.getAnatomicalSite());
+        m.put("laterality", e.getLaterality());
+        m.put("site_side_confirmed_by", e.getSiteSideConfirmedBy());
+        m.put("site_side_confirmed_at", e.getSiteSideConfirmedAt());
+        m.put("surgical_site", e.getAnatomicalSite());
+        m.put("surgical_side", e.getLaterality());
         return m;
     }
 
