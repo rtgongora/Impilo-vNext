@@ -42,7 +42,7 @@ export default function RegulatoryOrgWorkspacePage() {
   const workspace = roleWorkspaceFor(configuration, roleCode);
 
   const surfaces: SurfaceLink[] = [
-    { capability: "REGISTER_ENTRIES", label: "Registers", description: "Professional registers, entries, restrictions and good standing.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W3" },
+    { capability: "REGISTER_ENTRIES", label: "Registers", description: "Statutory professional registers materialised from the activated configuration pack.", href: `/work/regulatory/${encodeURIComponent(orgId)}/registers`, wave: "NCZ-W1" },
     { capability: "APPLICATION_QUEUE", label: "Applications", description: "Registration, renewal and scope applications + correspondence.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W4" },
     { capability: "CPD_REVIEW", label: "CPD", description: "Continuing professional development adjudication.", href: `/work/regulators/${encodeURIComponent(orgId)}/cpd-review`, wave: "W5" },
     { capability: "DISCIPLINARY_CASES", label: "Complaints & discipline", description: "Complaints, investigations and disciplinary proceedings.", href: `/work/regulators/${encodeURIComponent(orgId)}/disciplinary`, wave: "W7" },

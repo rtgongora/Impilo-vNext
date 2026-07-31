@@ -249,6 +249,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/regulators/[regulatorId]/bulk-import", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Bulk import", navLabel: "Bulk import", navZone: "work" },
   { path: "/work/regulatory/[orgId]/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory dashboards", navLabel: "Dashboards", navZone: "work" },
   { path: "/work/regulatory/[orgId]/configuration", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory configuration", navLabel: "Configuration", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/registers", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Professional registers", navLabel: "Registers", navZone: "work" },
   { path: "/work/regulatory/[orgId]/student-applications/[applicationId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Student registration review", navLabel: "Student registration", navZone: "work" },
   { path: "/work/regulatory/hpa/oversight", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "HPA oversight", navLabel: "HPA oversight", navZone: "work" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
@@ -1094,7 +1095,8 @@ export const ROUTES: RouteDefinition[] = [
 // /my-life/feedback/respectful-maternity. Total 832.
 // RMNP W12 citizen pregnancy booking (31 Jul 2026): +1 — /my/pregnancy, the citizen
 // pregnancy booking + current-pregnancy view over the confidential maternity lane. Total 833.
-export const EXPECTED_ROUTE_COUNT = 833;
+// NCZ register materialiser UI (31 Jul 2026): +1 — /work/regulatory/[orgId]/registers. Total 834.
+export const EXPECTED_ROUTE_COUNT = 834;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
