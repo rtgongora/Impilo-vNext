@@ -288,6 +288,8 @@ public class ConsultationService {
         e.setRationale(str(body.get("rationale")));
         e.setNextAction(str(body.get("next_action"), body.get("nextAction")));
         e.setResponsibleService(str(body.get("responsible_service"), body.get("responsibleService")));
+        String caseItemRaw = str(body.get("case_item_id"), body.get("caseItemId"));
+        e.setCaseItemId(caseItemRaw == null ? null : UUID.fromString(caseItemRaw));
         e.setRecordedBy(ctx.actorId());
         mdtRepository.save(e);
 
@@ -346,6 +348,7 @@ public class ConsultationService {
         out.put("rationale", e.getRationale());
         out.put("next_action", e.getNextAction());
         out.put("responsible_service", e.getResponsibleService());
+        out.put("case_item_id", e.getCaseItemId() == null ? null : e.getCaseItemId().toString());
         out.put("problem_ids", problems);
         if (e.getTreatmentIntent() == null) {
             out.put("treatment_intent_note",

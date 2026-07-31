@@ -143,6 +143,7 @@ public class ConsultationController {
         m.put("treatment_intent", e.getTreatmentIntent());
         m.put("next_action", e.getNextAction());
         m.put("responsible_service", e.getResponsibleService());
+        m.put("case_item_id", e.getCaseItemId() == null ? null : e.getCaseItemId().toString());
         return m;
     }
 
