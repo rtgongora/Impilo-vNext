@@ -307,6 +307,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my/orders/[requestId]/offers", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Compare Offers", navLabel: "Offers", navZone: "life" },
   // OF-B27 — citizen remote-monitoring home (my plan, my readings, my device, alert notices).
   { path: "/my/monitoring", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Monitoring", navLabel: "My Monitoring", navZone: "life" },
+  // W12 — citizen pregnancy booking + current pregnancy view (confidential maternity lane).
+  { path: "/my/pregnancy", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Pregnancy", navLabel: "My Pregnancy", navZone: "life" },
 
   // â”€â”€ Zone: Queue (Clinical) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/queue", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient Queue", navLabel: "Queue", navZone: "work" },
@@ -914,6 +916,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my-life/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Feedback", navLabel: "Feedback & Safety", navZone: "life" },
   { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },
   { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
+  { path: "/my-life/feedback/respectful-maternity", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Respectful Maternity Care", navLabel: "Respectful Maternity Care", navZone: "life" },
   { path: "/feedback/visit/[encounterRef]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Rate your visit", navLabel: "Rate your visit", navZone: "life" },
   // Work Home (Phase F1/F3) — guard is "auth", not "facility": oversight, programme,
   // regulatory and support contexts have no facility anchor and must still land here.
@@ -1087,7 +1090,11 @@ export const ROUTES: RouteDefinition[] = [
 // unregistered/orphaned) and /work/clinical/surgery (S1-S3 surgical episode workspace). Total 829.
 // Surgery parity close (31 Jul 2026): +2 — /work/clinical/theatre/board and
 // /work/clinical/theatre/referrals (existed but were orphan-baseline-allowed). Total 831.
-export const EXPECTED_ROUTE_COUNT = 831;
+// RMNP W12 respectful maternity care citizen feedback (31 Jul 2026): +1 —
+// /my-life/feedback/respectful-maternity. Total 832.
+// RMNP W12 citizen pregnancy booking (31 Jul 2026): +1 — /my/pregnancy, the citizen
+// pregnancy booking + current-pregnancy view over the confidential maternity lane. Total 833.
+export const EXPECTED_ROUTE_COUNT = 833;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
