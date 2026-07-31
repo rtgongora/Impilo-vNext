@@ -149,6 +149,22 @@ describe("SpecialtyWorkspaceShell", () => {
     expect(screen.getByTestId("specialty-spine")).toHaveTextContent(/Volume status/);
   });
 
+  it("respiratory, endocrinology and haematology expose handover spine links", () => {
+    const respiratory = findSpecialty("respiratory")!;
+    const endocrinology = findSpecialty("endocrinology")!;
+    const haematology = findSpecialty("haematology")!;
+
+    expect(respiratory.spineLinks.find((l) => l.label.includes("Tobacco"))?.href("p1")).toBe(
+      "/wellness/coaching",
+    );
+    expect(
+      endocrinology.spineLinks.find((l) => l.label.includes("Glucose monitoring"))?.href("p1"),
+    ).toBe("/work/telemonitoring");
+    expect(
+      haematology.spineLinks.find((l) => l.label.includes("Transfusion"))?.href("p1"),
+    ).toBe("/madi/transfusion");
+  });
+
   it("every specialty has a spineLinks array (may be empty)", () => {
     for (const s of MEDICINE_SPECIALTIES) {
       expect(Array.isArray(s.spineLinks), s.key).toBe(true);
