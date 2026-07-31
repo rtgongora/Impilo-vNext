@@ -92,11 +92,17 @@ export default function MaternityMonitoringPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-foreground">Preconception</h3>
-                  <PreconceptionPanel patientCpid={patientId} />
+                  <PreconceptionPanel
+                    patientCpid={patientId}
+                    recordedBy={user?.id ?? user?.displayName ?? "unknown"}
+                  />
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-foreground">Fertility</h3>
-                  <FertilityPanel patientCpid={patientId} />
+                  <FertilityPanel
+                    patientCpid={patientId}
+                    recordedBy={user?.id ?? user?.displayName ?? "unknown"}
+                  />
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-foreground">Delivery records</h3>

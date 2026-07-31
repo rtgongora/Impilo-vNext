@@ -13,12 +13,14 @@ import {
   useCurrentFertilityEpisode,
   useCurrentReproductiveIntention,
   useDeliveryRecordsForMother,
+  useOpenPreconceptionPlan,
   useRecordDelivery,
   useRecordReproductiveIntention,
+  useStartFertilityEpisode,
+  useUpdatePreconceptionPlan,
   type DeliveryRecordView,
   type FertilityEpisodeView,
   type PreconceptionPlanView,
-  type ReproductiveIntentionView,
 } from "@/hooks/queries/useConfidentialReproductive";
 import {
   REPRODUCTIVE_EMPTY_HINT,
@@ -128,8 +130,22 @@ export function ReproductiveIntentionPanel({
   );
 }
 
-export function PreconceptionPanel({ patientCpid }: { patientCpid: string }) {
+function writeErrorMessage(err: unknown): string {
+  const e = err as { error?: { message?: string }; message?: string } | null;
+  return e?.error?.message ?? e?.message ?? "The record was not saved — try again.";
+}
+
+export function PreconceptionPanel({
+  patientCpid,
+  recordedBy,
+}: {
+  patientCpid: string;
+  recordedBy: string;
+}) {
   const active = useActivePreconceptionPlan(patientCpid);
+  const open = useOpenPreconceptionPlan();
+  const update = useUpdatePreconceptionPlan();
+  const [folicAcidToday, setFolicAcidToday] = useState(false);
 
   if (active.isLoading) {
     return (
@@ -143,12 +159,75 @@ export function PreconceptionPanel({ patientCpid }: { patientCpid: string }) {
   }
 
   const plan = active.data;
+  const today = new Date().toISOString().slice(0, 10);
+
   return (
     <div data-testid="preconception-panel">
       {plan ? (
-        <PreconceptionRow plan={plan} />
+        <>
+          <PreconceptionRow plan={plan} />
+          {!plan.folic_acid_started_on && (
+            <button
+              type="button"
+              disabled={update.isPending}
+              onClick={() =>
+                void update.mutateAsync({
+                  planId: plan.preconception_plan_id,
+                  subjectCpid: patientCpid,
+                  folicAcidStartedOn: today,
+                  updatedBy: recordedBy,
+                })
+              }
+              className="mt-2 rounded border border-violet-300 px-3 py-1.5 text-xs font-medium text-violet-800 hover:bg-violet-50 disabled:opacity-50"
+              data-testid="preconception-folic-acid-start"
+            >
+              {update.isPending ? "Saving…" : "Record folic acid started today"}
+            </button>
+          )}
+          {update.isError && (
+            <p className="mt-2 text-xs text-red-700" role="alert">
+              {writeErrorMessage(update.error)}
+            </p>
+          )}
+        </>
       ) : (
-        <p className="text-xs text-muted-foreground">{REPRODUCTIVE_EMPTY_HINT}</p>
+        <>
+          <p className="text-xs text-muted-foreground">{REPRODUCTIVE_EMPTY_HINT}</p>
+          <form
+            className="mt-3 flex flex-wrap items-center gap-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void open.mutateAsync({
+                subjectCpid: patientCpid,
+                folicAcidStartedOn: folicAcidToday ? today : undefined,
+                recordedBy,
+              });
+            }}
+          >
+            <label className="flex items-center gap-1.5 text-xs text-foreground">
+              <input
+                type="checkbox"
+                checked={folicAcidToday}
+                onChange={(ev) => setFolicAcidToday(ev.target.checked)}
+                data-testid="preconception-folic-acid-checkbox"
+              />
+              Folic acid started today
+            </label>
+            <button
+              type="submit"
+              disabled={open.isPending}
+              className="rounded bg-violet-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+              data-testid="preconception-open-submit"
+            >
+              {open.isPending ? "Opening…" : "Open preconception plan"}
+            </button>
+          </form>
+          {open.isError && (
+            <p className="mt-2 text-xs text-red-700" role="alert">
+              {writeErrorMessage(open.error)}
+            </p>
+          )}
+        </>
       )}
     </div>
   );
@@ -167,8 +246,16 @@ function PreconceptionRow({ plan }: { plan: PreconceptionPlanView }) {
   );
 }
 
-export function FertilityPanel({ patientCpid }: { patientCpid: string }) {
+export function FertilityPanel({
+  patientCpid,
+  recordedBy,
+}: {
+  patientCpid: string;
+  recordedBy: string;
+}) {
   const current = useCurrentFertilityEpisode(patientCpid);
+  const start = useStartFertilityEpisode();
+  const [monthsTrying, setMonthsTrying] = useState("");
 
   if (current.isLoading) {
     return (
@@ -187,7 +274,46 @@ export function FertilityPanel({ patientCpid }: { patientCpid: string }) {
       {episode ? (
         <FertilityRow episode={episode} />
       ) : (
-        <p className="text-xs text-muted-foreground">{REPRODUCTIVE_EMPTY_HINT}</p>
+        <>
+          <p className="text-xs text-muted-foreground">{REPRODUCTIVE_EMPTY_HINT}</p>
+          <form
+            className="mt-3 flex flex-wrap items-end gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const months = monthsTrying.trim();
+              void start.mutateAsync({
+                subjectCpid: patientCpid,
+                monthsTrying: /^\d+$/.test(months) ? Number(months) : undefined,
+                recordedBy,
+              });
+            }}
+          >
+            <label className="text-xs font-medium text-foreground">
+              Months trying
+              <input
+                type="number"
+                min={0}
+                value={monthsTrying}
+                onChange={(ev) => setMonthsTrying(ev.target.value)}
+                className="mt-1 block w-28 rounded border border-border px-2 py-1 text-sm"
+                data-testid="fertility-months-trying"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={start.isPending}
+              className="rounded bg-violet-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+              data-testid="fertility-start-submit"
+            >
+              {start.isPending ? "Starting…" : "Start fertility episode"}
+            </button>
+          </form>
+          {start.isError && (
+            <p className="mt-2 text-xs text-red-700" role="alert">
+              {writeErrorMessage(start.error)}
+            </p>
+          )}
+        </>
       )}
     </div>
   );

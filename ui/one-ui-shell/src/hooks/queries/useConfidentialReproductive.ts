@@ -434,6 +434,108 @@ export function useRecordReproductiveIntention() {
   });
 }
 
+export interface OpenPreconceptionPlanInput {
+  subjectCpid: string;
+  openedOn?: string;
+  folicAcidStartedOn?: string;
+  recordedBy: string;
+  clientOfflineId?: string;
+}
+
+export function useOpenPreconceptionPlan() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: OpenPreconceptionPlanInput) =>
+      apiClient.post<{ data: PreconceptionPlanView & { replayed?: boolean } }>(
+        `${BASE}/preconception-plans`,
+        {
+          subjectCpid: input.subjectCpid,
+          openedOn: input.openedOn,
+          folicAcidStartedOn: input.folicAcidStartedOn,
+          recordedBy: input.recordedBy,
+          clientOfflineId: input.clientOfflineId,
+        },
+      ),
+    onSuccess: (_data, input) => {
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.activePreconception(input.subjectCpid),
+      });
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.preconceptionHistory(input.subjectCpid),
+      });
+    },
+  });
+}
+
+export interface UpdatePreconceptionPlanInput {
+  planId: string;
+  /** For cache invalidation only — the PATCH path carries the plan id. */
+  subjectCpid: string;
+  status?: string;
+  closedOn?: string;
+  closureReason?: string;
+  folicAcidStartedOn?: string;
+  updatedBy: string;
+}
+
+export function useUpdatePreconceptionPlan() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdatePreconceptionPlanInput) =>
+      apiClient.patch<{ data: PreconceptionPlanView }>(
+        `${BASE}/preconception-plans/${encodeURIComponent(input.planId)}`,
+        {
+          status: input.status,
+          closedOn: input.closedOn,
+          closureReason: input.closureReason,
+          folicAcidStartedOn: input.folicAcidStartedOn,
+          updatedBy: input.updatedBy,
+        },
+      ),
+    onSuccess: (_data, input) => {
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.activePreconception(input.subjectCpid),
+      });
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.preconceptionHistory(input.subjectCpid),
+      });
+    },
+  });
+}
+
+export interface StartFertilityEpisodeInput {
+  subjectCpid: string;
+  monthsTrying?: number;
+  openedOn?: string;
+  recordedBy: string;
+  clientOfflineId?: string;
+}
+
+export function useStartFertilityEpisode() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: StartFertilityEpisodeInput) =>
+      apiClient.post<{ data: FertilityEpisodeView & { replayed?: boolean } }>(
+        `${BASE}/fertility-episodes`,
+        {
+          subjectCpid: input.subjectCpid,
+          monthsTrying: input.monthsTrying,
+          openedOn: input.openedOn,
+          recordedBy: input.recordedBy,
+          clientOfflineId: input.clientOfflineId,
+        },
+      ),
+    onSuccess: (_data, input) => {
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.currentFertility(input.subjectCpid),
+      });
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.fertilityHistory(input.subjectCpid),
+      });
+    },
+  });
+}
+
 export interface RecordDeliveryInput {
   motherCpid: string;
   pregnancyEpisodeId?: string;
