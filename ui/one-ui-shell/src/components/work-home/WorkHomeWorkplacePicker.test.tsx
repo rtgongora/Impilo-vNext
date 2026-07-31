@@ -89,4 +89,42 @@ describe("WorkHomeWorkplacePicker", () => {
       expect(onSelect).toHaveBeenCalledWith(ctx, "DEPARTMENT_MANAGEMENT");
     });
   });
+
+  it("filters to prefer_mode matches and mints that mode on select", async () => {
+    const onSelect = vi.fn().mockResolvedValue(undefined);
+    const contexts = [
+      context({
+        contextId: "clinical",
+        label: "Clinical ward",
+        availableModes: ["CLINICAL_CARE"],
+        defaultMode: "CLINICAL_CARE",
+      }),
+      context({
+        contextId: "virtual",
+        label: "Virtual clinic",
+        availableModes: ["VIRTUAL_CARE", "CLINICAL_CARE"],
+        defaultMode: "VIRTUAL_CARE",
+        groupHint: "virtual",
+      }),
+    ];
+    render(
+      <WorkHomeWorkplacePicker
+        contexts={contexts}
+        onSelect={onSelect}
+        preferMode="VIRTUAL_CARE"
+      />,
+    );
+
+    expect(screen.getByText(/Looking for workplaces that grant/)).toBeTruthy();
+    expect(screen.getByText("Virtual clinic")).toBeTruthy();
+    expect(screen.queryByText("Clinical ward")).toBeNull();
+
+    fireEvent.click(screen.getByText("Virtual clinic"));
+    await waitFor(() => {
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({ contextId: "virtual" }),
+        "VIRTUAL_CARE",
+      );
+    });
+  });
 });

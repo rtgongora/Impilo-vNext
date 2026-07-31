@@ -18,6 +18,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
+import { useRequireRegulatorySession } from "@/hooks/useRequireRegulatorySession";
 
 type ReportClass =
   | "OPERATIONAL"
@@ -123,6 +124,7 @@ function renderCell(value: unknown): string {
 export default function RegulatoryDashboardPage() {
   const params = useParams<{ orgId: string }>();
   const orgId = decodeURIComponent(String(params?.orgId ?? ""));
+  const sessionOk = useRequireRegulatorySession(orgId);
   const { organisation } = useRegulatoryOrganisations();
   const org = organisation(orgId);
 
@@ -156,6 +158,18 @@ export default function RegulatoryDashboardPage() {
 
   const activeReport = REPORTS.find((r) => r.key === activeKey);
   const columns = columnsOf(rows);
+
+  if (!sessionOk) {
+    return (
+      <AppLayout>
+        <PageShell title="Regulatory dashboards" serviceSlug="varapi">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Checking regulatory session…
+          </div>
+        </PageShell>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

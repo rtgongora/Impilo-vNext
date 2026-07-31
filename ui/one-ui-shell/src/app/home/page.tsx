@@ -39,7 +39,6 @@ import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
-import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import {
   useFacilities,
   type FacilityOperatingModel,
@@ -640,29 +639,18 @@ export default function HomePage() {
     );
   }
 
-  function enterFacilityFreeMode(mode: "clinical" | "admin" | "finance", nextPath: string) {
-    useOperationalContextStore.getState().setOperationalMode(
-      mode === "clinical" ? "facility_work" : "organization_admin"
-    );
-    enterMode(mode, nextPath);
-  }
-
-  function enterIndependentMode(mode: "independent_practice" | "emergency_response") {
-    useOperationalContextStore.getState().setOperationalMode("facility_work");
-    useWorkModeStore.getState().setMode(mode, {
-      licenseNumber: licenses[0]?.licenseNumber ?? "",
-      licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
-    });
-    router.push("/queue");
-  }
-
   /**
-   * Community outreach is a governed WorkMode (COMMUNITY_OUTREACH). Do not set a local
-   * UI mode and route to /queue — that invents authority. Send the person to /work so they
-   * mint against a proven context that offers the mode.
+   * Facility-free / independent modes are governed WorkModes. Do not set a local UI mode
+   * and invent authority — send the person to /work so they mint against a proven context.
+   * Optional prefer_mode highlights matching contexts in the picker.
    */
+  function enterViaWorkHome(preferMode?: string) {
+    const qs = preferMode ? `?prefer_mode=${encodeURIComponent(preferMode)}` : "";
+    router.push(`/work${qs}`);
+  }
+
   function enterCommunityOutreachViaWorkHome() {
-    router.push("/work");
+    enterViaWorkHome("COMMUNITY_OUTREACH");
   }
 
   // Fetch recent encounters — the encounters endpoint requires a patient_id
@@ -895,23 +883,23 @@ export default function HomePage() {
                 ...(isAdmin
                   ? [{
                       label: "Production Command Centre",
-                      description: "Browse Health OS services and demo paths without binding to a facility first.",
+                      description: "Choose a workplace that grants admin or support duty, then open Health OS services.",
                       icon: LayoutGrid,
-                      onClick: () => enterFacilityFreeMode("admin", "/production-command-centre"),
+                      onClick: () => enterViaWorkHome(),
                     },
                     {
                       label: "Administration",
-                      description: "Enter the operational oversight surface without binding to a facility first.",
+                      description: "Mint a work session for an admin-capable workplace before entering oversight.",
                       icon: Shield,
-                      onClick: () => enterFacilityFreeMode("admin", "/admin"),
+                      onClick: () => enterViaWorkHome("FACILITY_MANAGEMENT"),
                     }]
                   : []),
                 ...(isFinance
                   ? [{
                       label: "Finance",
-                      description: "Jump into claims, billing, and payment orchestration from a finance-first workflow.",
+                      description: "Choose a workplace that grants finance-capable duty before claims and billing.",
                       icon: Receipt,
-                      onClick: () => enterFacilityFreeMode("finance", "/finance"),
+                      onClick: () => enterViaWorkHome(),
                     }]
                   : []),
                 {
@@ -1437,18 +1425,18 @@ export default function HomePage() {
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {/* Telemedicine & Virtual */}
-                    <button onClick={() => enterFacilityFreeMode("clinical", "/telemedicine")}
+                    <button onClick={() => enterViaWorkHome("VIRTUAL_CARE")}
                       className="text-left bg-green-50 rounded-lg border border-green-200 p-4 hover:border-green-400 transition-all group">
                       <Video className="w-5 h-5 text-green-600 mb-2" />
                       <p className="text-sm font-medium text-foreground group-hover:text-green-700">Telemedicine & Virtual</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Video/voice consultations, remote patient monitoring, e-prescribing</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Choose a workplace that grants virtual care, then mint that duty session</p>
                     </button>
                     {/* Independent Practice */}
-                    <button onClick={() => enterIndependentMode("independent_practice")}
+                    <button onClick={() => enterViaWorkHome()}
                       className="text-left bg-warning-soft rounded-lg border border-warning/35 p-4 hover:border-amber-400 transition-all group">
                       <Briefcase className="w-5 h-5 text-amber-600 mb-2" />
                       <p className="text-sm font-medium text-foreground group-hover:text-warning-foreground">Independent Practice</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Work under your own licence without facility context</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Mint against a proven workplace — never a local mode flag alone</p>
                     </button>
                     {/* Field Work — governed: mint via Work Home, never a local mode flag */}
                     <button onClick={() => enterCommunityOutreachViaWorkHome()}
@@ -1460,25 +1448,25 @@ export default function HomePage() {
                       </p>
                     </button>
                     {/* Emergency Response */}
-                    <button onClick={() => enterIndependentMode("emergency_response")}
+                    <button onClick={() => enterViaWorkHome()}
                       className="text-left bg-danger-soft rounded-lg border border-danger/28 p-4 hover:border-red-400 transition-all group">
                       <Siren className="w-5 h-5 text-red-600 mb-2" />
                       <p className="text-sm font-medium text-foreground group-hover:text-danger">Emergency Response</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Disaster, outbreak, mass casualty — elevated trust, break-glass access</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Choose a proven workplace for elevated-trust duty — no local authority invent</p>
                     </button>
                     {/* Above Site */}
-                    <button onClick={() => enterFacilityFreeMode("admin", "/reports")}
+                    <button onClick={() => enterViaWorkHome("JURISDICTION_OPERATIONS")}
                       className="text-left bg-info-soft rounded-lg border border-info/25 p-4 hover:border-indigo-400 transition-all group">
                       <Layers className="w-5 h-5 text-indigo-600 mb-2" />
                       <p className="text-sm font-medium text-foreground group-hover:text-primary-hover">Above-Site & Programme</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">District/provincial oversight, programme management, surveillance, reporting</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Mint jurisdiction or programme duty via Work Home</p>
                     </button>
                     {/* Maintenance & Configuration */}
-                    <button onClick={() => enterFacilityFreeMode("admin", "/admin")}
+                    <button onClick={() => enterViaWorkHome("TECHNICAL_SUPPORT")}
                       className="text-left bg-background rounded-lg border border-border p-4 hover:border-gray-400 transition-all group">
                       <Wrench className="w-5 h-5 text-muted-foreground mb-2" />
                       <p className="text-sm font-medium text-foreground group-hover:text-foreground">Maintenance & Configuration</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">System setup, master data, user management, integrations, troubleshooting</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Mint technical support duty before system setup and integrations</p>
                     </button>
                   </div>
                 </div>
@@ -1966,15 +1954,30 @@ function TimelineFeed({ userId }: { userId?: string }) {
             <span className="text-xs text-muted-foreground">{post.likes > 0 ? `${post.likes} likes` : ""}</span>
             <span className="text-xs text-muted-foreground">{post.comments > 0 ? `${post.comments} comments` : ""}</span>
           </div>
-          {/* Action buttons */}
+          {/* Action buttons — engagement mutations not wired on this home feed yet */}
           <div className="flex border-t border-border">
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground hover:bg-background transition-colors">
+            <button
+              type="button"
+              disabled
+              title="Like is not available on this feed yet"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground opacity-60 cursor-not-allowed"
+            >
               <ThumbsUp className="w-4 h-4" /> Like
             </button>
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground hover:bg-background transition-colors">
+            <button
+              type="button"
+              disabled
+              title="Comment is not available on this feed yet"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground opacity-60 cursor-not-allowed"
+            >
               <MessageCircle className="w-4 h-4" /> Comment
             </button>
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground hover:bg-background transition-colors">
+            <button
+              type="button"
+              disabled
+              title="Share is not available on this feed yet"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground opacity-60 cursor-not-allowed"
+            >
               <Send className="w-4 h-4" /> Share
             </button>
           </div>

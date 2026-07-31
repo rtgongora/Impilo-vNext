@@ -29,6 +29,8 @@ export interface WorkSession {
   // it. `contextId` is what `useWorkHome` needs to compose the right family's sections.
   contextId?: string;
   workMode?: string;
+  /** Org-scoped regulatory duty (POST with organisationId). */
+  organisationId?: string;
 }
 
 interface WorkSessionState {

@@ -1,12 +1,15 @@
 "use client";
 
 /**
- * Inline work-context chooser on /work when no single context is recommended (F3).
+ * Inline work-context chooser on /work when no duty session is minted.
  * Selection mints a duty token via useSwitchWorkContext — never React-state-only —
  * so the authority envelope matches the workplace the person just chose.
+ *
+ * Optional preferMode filters/highlights contexts that offer that WorkMode
+ * (e.g. from /home Other Ways → /work?prefer_mode=VIRTUAL_CARE).
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { ResolvedWorkContextView } from "@/lib/trust";
 import { useSwitchWorkContext } from "@/hooks/queries/useSwitchWorkContext";
@@ -14,6 +17,7 @@ import {
   describeWorkContextRestrictions,
   describeWorkMode,
 } from "@/lib/work-home/restriction-copy";
+import { WORK_MODES, type WorkMode } from "../../../../../contracts/trust/types/work-mode";
 
 const GROUP_ORDER: Array<{ key: ResolvedWorkContextView["groupHint"]; label: string }> = [
   { key: "today", label: "Today" },
@@ -24,17 +28,43 @@ const GROUP_ORDER: Array<{ key: ResolvedWorkContextView["groupHint"]; label: str
   { key: "personal", label: "Personal" },
 ];
 
+export function parsePreferMode(raw: string | null | undefined): WorkMode | null {
+  if (!raw) return null;
+  return (WORK_MODES as readonly string[]).includes(raw) ? (raw as WorkMode) : null;
+}
+
+function contextOffersMode(ctx: ResolvedWorkContextView, mode: WorkMode): boolean {
+  if (ctx.availableModes?.includes(mode)) return true;
+  return ctx.defaultMode === mode;
+}
+
 interface WorkHomeWorkplacePickerProps {
   contexts: ResolvedWorkContextView[];
   /** Optional override — tests inject this; production uses the mint hook. */
   onSelect?: (context: ResolvedWorkContextView, mode: string) => Promise<void> | void;
+  /** Canonical WorkMode from ?prefer_mode= — filters/highlights matching contexts. */
+  preferMode?: string | null;
 }
 
-export function WorkHomeWorkplacePicker({ contexts, onSelect }: WorkHomeWorkplacePickerProps) {
+export function WorkHomeWorkplacePicker({
+  contexts,
+  onSelect,
+  preferMode: preferModeRaw,
+}: WorkHomeWorkplacePickerProps) {
+  const preferMode = parsePreferMode(preferModeRaw);
   const switchWorkContext = useSwitchWorkContext();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  const matchingContexts = useMemo(() => {
+    if (!preferMode) return contexts;
+    return contexts.filter((c) => contextOffersMode(c, preferMode));
+  }, [contexts, preferMode]);
+
+  const visibleContexts =
+    preferMode && matchingContexts.length > 0 && !showAll ? matchingContexts : contexts;
 
   if (contexts.length === 0) {
     return (
@@ -50,7 +80,7 @@ export function WorkHomeWorkplacePicker({ contexts, onSelect }: WorkHomeWorkplac
 
   const groups = GROUP_ORDER.map((g) => ({
     ...g,
-    items: contexts.filter((c) => c.groupHint === g.key),
+    items: visibleContexts.filter((c) => c.groupHint === g.key),
   })).filter((g) => g.items.length > 0);
 
   async function choose(context: ResolvedWorkContextView, mode: string) {
@@ -80,6 +110,10 @@ export function WorkHomeWorkplacePicker({ contexts, onSelect }: WorkHomeWorkplac
       setError("This workplace has no permitted work mode right now.");
       return;
     }
+    if (preferMode && modes.includes(preferMode)) {
+      void choose(ctx, preferMode);
+      return;
+    }
     if (modes.length === 1) {
       void choose(ctx, modes[0]);
       return;
@@ -93,6 +127,27 @@ export function WorkHomeWorkplacePicker({ contexts, onSelect }: WorkHomeWorkplac
         Choose where you&apos;re working right now. Starting a workplace issues a duty session for
         that place and mode — you can switch at any time.
       </p>
+      {preferMode && (
+        <div className="rounded-md border border-border bg-card px-3 py-2 text-sm">
+          <p className="text-foreground">
+            Looking for workplaces that grant{" "}
+            <span className="font-medium">{describeWorkMode(preferMode)}</span>.
+          </p>
+          {matchingContexts.length === 0 ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              None of your assignments currently offer that mode. Showing all workplaces.
+            </p>
+          ) : matchingContexts.length < contexts.length && !showAll ? (
+            <button
+              type="button"
+              className="mt-1 text-xs text-muted-foreground underline hover:text-foreground"
+              onClick={() => setShowAll(true)}
+            >
+              Show all workplaces
+            </button>
+          ) : null}
+        </div>
+      )}
       {error && (
         <p className="rounded-md border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger" role="alert">
           {error}
@@ -111,11 +166,14 @@ export function WorkHomeWorkplacePicker({ contexts, onSelect }: WorkHomeWorkplac
               const restrictionLines = describeWorkContextRestrictions(ctx.restrictions);
               const busy = pendingKey?.startsWith(`${ctx.contextId}:`) ?? false;
               const expanded = expandedId === ctx.contextId;
+              const preferred = preferMode ? contextOffersMode(ctx, preferMode) : false;
 
               return (
                 <div
                   key={ctx.contextId}
-                  className="rounded-lg border border-border bg-card text-sm transition hover:border-primary"
+                  className={`rounded-lg border bg-card text-sm transition hover:border-primary ${
+                    preferred ? "border-primary ring-1 ring-primary/30" : "border-border"
+                  }`}
                 >
                   <button
                     type="button"
@@ -154,7 +212,9 @@ export function WorkHomeWorkplacePicker({ contexts, onSelect }: WorkHomeWorkplac
                           type="button"
                           disabled={!!pendingKey}
                           onClick={() => void choose(ctx, mode)}
-                          className="rounded-md border border-border px-2 py-1 text-xs hover:bg-background disabled:opacity-60"
+                          className={`rounded-md border px-2 py-1 text-xs hover:bg-background disabled:opacity-60 ${
+                            preferMode === mode ? "border-primary font-medium" : "border-border"
+                          }`}
                         >
                           {pendingKey === `${ctx.contextId}:${mode}` ? (
                             <Loader2 className="inline h-3 w-3 animate-spin" />

@@ -19,11 +19,12 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileWarning, History, Lock, PackageCheck, TriangleAlert } from "lucide-react";
+import { ArrowLeft, FileWarning, History, Loader2, Lock, PackageCheck, TriangleAlert } from "lucide-react";
 import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
+import { useRequireRegulatorySession } from "@/hooks/useRequireRegulatorySession";
 import {
   useConfigVersionHistory,
   useRegulatoryConfiguration,
@@ -228,9 +229,22 @@ function PackCard({ pack }: { pack: ConfigPackSummary }) {
 export default function RegulatoryConfigurationPage() {
   const params = useParams<{ orgId: string }>();
   const orgId = decodeURIComponent(String(params?.orgId ?? ""));
+  const sessionOk = useRequireRegulatorySession(orgId);
   const { organisation } = useRegulatoryOrganisations();
   const org = organisation(orgId);
   const { data, isLoading, isError } = useRegulatoryConfiguration(orgId);
+
+  if (!sessionOk) {
+    return (
+      <AppLayout>
+        <PageShell title="Configuration" serviceSlug="varapi">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Checking regulatory session…
+          </div>
+        </PageShell>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

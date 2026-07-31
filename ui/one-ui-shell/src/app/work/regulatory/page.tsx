@@ -19,6 +19,7 @@ import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { type RegulatoryAppointment, roleLabel } from "@/lib/regulatory/organisations";
 import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
+import { useWorkSessionStore } from "@/hooks/useWorkSessionStore";
 
 function unwrapAppointments(payload: unknown): RegulatoryAppointment[] {
   const attrs = (payload as { data?: { attributes?: { appointments?: unknown } } })?.data?.attributes;
@@ -26,9 +27,25 @@ function unwrapAppointments(payload: unknown): RegulatoryAppointment[] {
   return Array.isArray(list) ? (list as RegulatoryAppointment[]) : [];
 }
 
+interface RegulatorySessionAttributes {
+  token?: string;
+  jti?: string;
+  expiresAt?: string | null;
+  organisationId?: string;
+  roleCode?: string;
+  jurisdictionCode?: string;
+}
+
+function unwrapSession(payload: unknown): RegulatorySessionAttributes {
+  const attrs = (payload as { data?: { attributes?: RegulatorySessionAttributes } })?.data?.attributes;
+  return attrs ?? {};
+}
+
 export default function RegulatoryWorkspacePickerPage() {
   const router = useRouter();
   const { organisation } = useRegulatoryOrganisations();
+  const setSession = useWorkSessionStore((s) => s.setSession);
+  const current = useWorkSessionStore((s) => s.session);
   const [appointments, setAppointments] = useState<RegulatoryAppointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +72,25 @@ export default function RegulatoryWorkspacePickerPage() {
     setEntering(a.id);
     setError(null);
     try {
-      await apiClient.post<unknown>("/internal/v1/work-context/session", { organisationId: a.organizationId });
+      const body: Record<string, unknown> = { organisationId: a.organizationId };
+      if (current?.jti) body.previousJti = current.jti;
+      const res = await apiClient.post<unknown>("/internal/v1/work-context/session", body);
+      const attrs = unwrapSession(res);
+      if (!attrs.token || !attrs.jti) {
+        setError("Regulatory workspace access is currently unavailable for that organisation.");
+        setEntering(null);
+        return;
+      }
+      setSession({
+        jti: attrs.jti,
+        token: attrs.token,
+        facilityId: "",
+        workspaceId: null,
+        roleTemplateId: attrs.roleCode ?? a.roleCode ?? null,
+        expiresAt: attrs.expiresAt ?? null,
+        workMode: "REGULATORY_OPERATIONS",
+        organisationId: attrs.organisationId ?? a.organizationId,
+      });
       router.push(`/work/regulatory/${encodeURIComponent(a.organizationId)}`);
     } catch {
       setError("Regulatory workspace access is currently unavailable for that organisation.");

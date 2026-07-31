@@ -11,7 +11,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Building2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, Loader2, ShieldCheck } from "lucide-react";
 import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -19,6 +19,7 @@ import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganis
 import { useRegulatoryConfiguration } from "@/hooks/queries/useRegulatoryConfiguration";
 import { capabilityVerdict, roleWorkspaceFor } from "@/lib/regulatory/roleWorkspace";
 import { useWorkSessionStore } from "@/hooks/useWorkSessionStore";
+import { useRequireRegulatorySession } from "@/hooks/useRequireRegulatorySession";
 
 interface SurfaceLink {
   label: string;
@@ -35,11 +36,24 @@ interface SurfaceLink {
 export default function RegulatoryOrgWorkspacePage() {
   const params = useParams<{ orgId: string }>();
   const orgId = decodeURIComponent(String(params?.orgId ?? ""));
+  const sessionOk = useRequireRegulatorySession(orgId);
   const { organisation } = useRegulatoryOrganisations();
   const org = organisation(orgId);
   const roleCode = useWorkSessionStore((state) => state.session?.roleTemplateId ?? null);
   const { data: configuration } = useRegulatoryConfiguration(orgId);
   const workspace = roleWorkspaceFor(configuration, roleCode);
+
+  if (!sessionOk) {
+    return (
+      <AppLayout>
+        <PageShell title="Regulatory workspace" serviceSlug="varapi">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Checking regulatory session…
+          </div>
+        </PageShell>
+      </AppLayout>
+    );
+  }
 
   const surfaces: SurfaceLink[] = [
     { capability: "REGISTER_ENTRIES", label: "Registers", description: "Professional registers, entries, restrictions and good standing.", href: `/work/regulators/${encodeURIComponent(orgId)}/registration-review`, wave: "W3" },

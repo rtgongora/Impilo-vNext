@@ -12,6 +12,7 @@
  */
 
 import { Loader2, RefreshCw } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
@@ -44,14 +45,14 @@ function friendlyWorkHomeMessage(state: string | undefined): { title: string; bo
 }
 
 export default function WorkHomePage() {
+  const searchParams = useSearchParams();
+  const preferMode = searchParams.get("prefer_mode");
   const { contract, isLoading: contractLoading } = useSessionExperienceContract();
   const resolvedContexts = contract?.resolvedWorkContexts ?? [];
   const session = useWorkSessionStore((s) => s.session);
 
-  // Prefer the minted session's context — that is what the duty token proves. Fall back to
-  // the resolver's recommendation only when no session has been minted yet (first paint
-  // after login may still recommend before the person chooses).
-  const activeContextId = session?.contextId || contract?.recommendedContextId || undefined;
+  // Compose only on a minted duty session — never on recommendedContextId alone.
+  const activeContextId = session?.contextId || undefined;
   const activeMode = session?.workMode || undefined;
   const activeContext = resolvedContexts.find((c) => c.contextId === activeContextId);
   const restrictionLines = describeWorkContextRestrictions(activeContext?.restrictions);
@@ -82,7 +83,7 @@ export default function WorkHomePage() {
     return (
       <AppLayout>
         <PageShell title="Work" density="compact">
-          <WorkHomeWorkplacePicker contexts={resolvedContexts} />
+          <WorkHomeWorkplacePicker contexts={resolvedContexts} preferMode={preferMode} />
         </PageShell>
       </AppLayout>
     );

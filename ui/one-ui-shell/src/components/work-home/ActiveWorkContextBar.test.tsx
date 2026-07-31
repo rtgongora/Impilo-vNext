@@ -6,10 +6,16 @@ import type { ResolvedWorkContextView } from "@/lib/trust";
 
 afterEach(() => cleanup());
 
-const { pathnameState, contractState, switchMock } = vi.hoisted(() => ({
+const { pathnameState, contractState, switchMock, sessionState } = vi.hoisted(() => ({
   pathnameState: { value: "/work" },
   contractState: { contract: undefined as unknown },
   switchMock: vi.fn(),
+  sessionState: {
+    session: null as null | {
+      contextId: string;
+      workMode?: string;
+    },
+  },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -22,7 +28,8 @@ vi.mock("@/hooks/queries/useSwitchWorkContext", () => ({
   useSwitchWorkContext: () => switchMock,
 }));
 vi.mock("@/hooks/useWorkSessionStore", () => ({
-  useWorkSessionStore: (sel: (s: { session: null }) => unknown) => sel({ session: null }),
+  useWorkSessionStore: (sel: (s: { session: typeof sessionState.session }) => unknown) =>
+    sel({ session: sessionState.session }),
 }));
 
 function context(overrides: Partial<ResolvedWorkContextView>): ResolvedWorkContextView {
@@ -44,6 +51,7 @@ describe("ActiveWorkContextBar", () => {
     switchMock.mockReset();
     pathnameState.value = "/work";
     contractState.contract = undefined;
+    sessionState.session = null;
   });
 
   it("renders nothing outside the work nav zone", () => {
@@ -63,15 +71,25 @@ describe("ActiveWorkContextBar", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("shows the active context's label inside the work zone", () => {
+  it("shows Choose your workplace when only a recommendation exists (no minted session)", () => {
     contractState.contract = { resolvedWorkContexts: [context({})], recommendedContextId: "ctx-1" };
 
     render(<ActiveWorkContextBar />);
 
-    expect(screen.getByText("Parirenyatwa — Oncology Ward B")).toBeTruthy();
+    expect(screen.getByText("Choose your workplace")).toBeTruthy();
+  });
+
+  it("shows the minted session context's label inside the work zone", () => {
+    sessionState.session = { contextId: "ctx-1", workMode: "CLINICAL_CARE" };
+    contractState.contract = { resolvedWorkContexts: [context({})], recommendedContextId: "ctx-1" };
+
+    render(<ActiveWorkContextBar />);
+
+    expect(screen.getByText(/Parirenyatwa — Oncology Ward B/)).toBeTruthy();
   });
 
   it("opens the switcher grouped by groupHint on click", () => {
+    sessionState.session = { contextId: "a", workMode: "CLINICAL_CARE" };
     const contexts = [
       context({ contextId: "a", groupHint: "today", label: "Today's post" }),
       context({ contextId: "b", groupHint: "oversight", label: "District office" }),
@@ -88,6 +106,7 @@ describe("ActiveWorkContextBar", () => {
 
   it("calls switchWorkContext with the chosen context and its default mode", async () => {
     switchMock.mockResolvedValue(undefined);
+    sessionState.session = { contextId: "a", workMode: "CLINICAL_CARE" };
     const contexts = [
       context({ contextId: "a", label: "Current post" }),
       context({ contextId: "b", label: "Other post", defaultMode: "FACILITY_MANAGEMENT", availableModes: ["FACILITY_MANAGEMENT"], groupHint: "other" }),
@@ -104,12 +123,30 @@ describe("ActiveWorkContextBar", () => {
     ));
   });
 
-  it("does not re-trigger a switch when selecting the already-active context", async () => {
+  it("mints when selecting a recommended context without a session (no fake already-active short-circuit)", async () => {
+    switchMock.mockResolvedValue(undefined);
     contractState.contract = { resolvedWorkContexts: [context({})], recommendedContextId: "ctx-1" };
 
     render(<ActiveWorkContextBar />);
     fireEvent.click(screen.getByTestId("active-work-context-trigger"));
     const matches = screen.getAllByText("Parirenyatwa — Oncology Ward B");
+    fireEvent.click(matches[matches.length - 1]);
+
+    await waitFor(() =>
+      expect(switchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ contextId: "ctx-1" }),
+        "CLINICAL_CARE",
+      ),
+    );
+  });
+
+  it("does not re-trigger a switch when selecting the already-minted active context", async () => {
+    sessionState.session = { contextId: "ctx-1", workMode: "CLINICAL_CARE" };
+    contractState.contract = { resolvedWorkContexts: [context({})], recommendedContextId: "ctx-1" };
+
+    render(<ActiveWorkContextBar />);
+    fireEvent.click(screen.getByTestId("active-work-context-trigger"));
+    const matches = screen.getAllByText(/Parirenyatwa — Oncology Ward B/);
     fireEvent.click(matches[matches.length - 1]);
 
     expect(switchMock).not.toHaveBeenCalled();

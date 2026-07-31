@@ -14,7 +14,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { AlertTriangle, Undo2 } from "lucide-react";
+import { AlertTriangle, Loader2, Undo2 } from "lucide-react";
 import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -23,11 +23,13 @@ import {
   useFeeVerdict,
   useReturnSection,
 } from "@/hooks/queries/useStudentRegistration";
+import { useRequireRegulatorySession } from "@/hooks/useRequireRegulatorySession";
 
 export default function RegulatorStudentApplicationPage() {
   const params = useParams<{ orgId: string; applicationId: string }>();
   const orgId = decodeURIComponent(String(params?.orgId ?? ""));
   const applicationId = decodeURIComponent(String(params?.applicationId ?? ""));
+  const sessionOk = useRequireRegulatorySession(orgId);
 
   const { data: sections, isLoading } = useApplicationSections(applicationId);
   const { data: fee } = useFeeVerdict(orgId, "STUDENT_INDEX");
@@ -35,6 +37,18 @@ export default function RegulatorStudentApplicationPage() {
   const [reasons, setReasons] = useState<Record<string, string>>({});
 
   const outstanding = (sections ?? []).filter((s) => s.state !== "COMPLETE");
+
+  if (!sessionOk) {
+    return (
+      <AppLayout>
+        <PageShell title="Student application" serviceSlug="varapi">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Checking regulatory session…
+          </div>
+        </PageShell>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

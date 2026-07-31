@@ -30,7 +30,11 @@ describe("ROM-W2 regulatory workspace", () => {
     expect(page).toContain("/internal/v1/work-context/regulatory/appointments");
     expect(page).toContain("/internal/v1/work-context/session");
     expect(page).toContain("organisationId");
-    expect(page).not.toContain("facilityId");
+    expect(page).toContain("setSession");
+    expect(page).toContain("REGULATORY_OPERATIONS");
+    // Org-scoped mint stores an empty facilityId — never a facility workplace id.
+    expect(page).toContain('facilityId: ""');
+    expect(page).not.toMatch(/facilityId:\s*a\./);
   });
 
   it("no longer keeps its own copy of the nine organisations", () => {

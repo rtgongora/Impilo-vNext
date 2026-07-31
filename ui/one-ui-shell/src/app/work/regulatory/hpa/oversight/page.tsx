@@ -16,6 +16,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { useRegulatoryOrganisations } from "@/hooks/queries/useRegulatoryOrganisations";
+import { useRequireRegulatorySession } from "@/hooks/useRequireRegulatorySession";
 
 // The HPA organisation is resolved from org-registry rather than restated here. The deterministic
 // V007 literal remains only as the pre-load fallback: this page addresses HPA before the registry
@@ -181,6 +182,19 @@ export default function HpaOversightPage() {
   const columns = useMemo(() => columnsOf(rows), [rows]);
   const { councils, authority } = useRegulatoryOrganisations();
   const HPA_ORG_ID = authority?.id ?? HPA_ORG_ID_FALLBACK;
+  const sessionOk = useRequireRegulatorySession(HPA_ORG_ID);
+
+  if (!sessionOk) {
+    return (
+      <AppLayout>
+        <PageShell title="HPA oversight" serviceSlug="varapi">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Checking regulatory session…
+          </div>
+        </PageShell>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

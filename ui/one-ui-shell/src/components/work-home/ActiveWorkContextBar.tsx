@@ -41,7 +41,8 @@ export function ActiveWorkContextBar() {
   const isWorkZone = routeInfo?.navZone === "work";
 
   const contexts = contract?.resolvedWorkContexts ?? [];
-  const activeContextId = session?.contextId ?? contract?.recommendedContextId ?? undefined;
+  // Active means minted — never treat recommendedContextId as selected without a token.
+  const activeContextId = session?.contextId ?? undefined;
   const active = contexts.find((c) => c.contextId === activeContextId);
   const restrictionLines = describeWorkContextRestrictions(active?.restrictions);
 
