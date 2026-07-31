@@ -21,6 +21,7 @@ import { WellnessJourneysSection } from "./WellnessJourneysSection";
 import { WalletSection } from "./WalletSection";
 import { EmergencySOSSection } from "./EmergencySOSSection";
 import { MonitoringSection } from "./MonitoringSection";
+import { PregnancySection } from "./PregnancySection";
 import { QueueStatusSection } from "./QueueStatusSection";
 import { FinanceSection } from "./FinanceSection";
 import { ChallengesScreen } from "./ChallengesScreen";
@@ -45,6 +46,7 @@ import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
 import { FeedbackScreen } from "../rito/FeedbackScreen";
 import { TrackFeedbackScreen } from "../rito/TrackFeedbackScreen";
+import { RespectfulMaternityCareScreen } from "../rito/RespectfulMaternityCareScreen";
 import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
 import { ProviderDiscoveryScreen } from "../discover/ProviderDiscoveryScreen";
@@ -78,6 +80,7 @@ type PersonalTab =
   | "programs"
   | "wallet"
   | "monitoring"
+  | "pregnancy"
   | "queue"
   | "sos"
   | "coverage"
@@ -97,6 +100,7 @@ type PersonalTab =
   | "support"
   | "rito-feedback"
   | "rito-track"
+  | "rito-respectful-maternity-care"
   | "prod-ready"
   | "madi-donor"
   | "marketplace-store"
@@ -133,6 +137,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "programs", label: "Programs", icon: "ribbon" },
   { id: "wallet", label: "Wallet", icon: "wallet" },
   { id: "monitoring", label: "Monitoring", icon: "pulse" },
+  { id: "pregnancy", label: "Pregnancy", icon: "heart-half" },
   { id: "queue", label: "Queue", icon: "location" },
   { id: "sos", label: "Emergency", icon: "warning" },
   { id: "coverage", label: "Coverage", icon: "shield" },
@@ -141,6 +146,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "support", label: "Help", icon: "help-circle" },
   { id: "rito-feedback", label: "Feedback", icon: "chatbox-ellipses" },
   { id: "rito-track", label: "Track Feedback", icon: "search-circle" },
+  { id: "rito-respectful-maternity-care", label: "Maternity Care Experience", icon: "heart-circle" },
   { id: "settings", label: "Settings", icon: "settings" },
   { id: "assessments", label: "Assessments", icon: "duplicate" },
   { id: "care-team", label: "Care Team", icon: "people" },
@@ -184,6 +190,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   programs: ProgramsScreen,
   wallet: WalletSection,
   monitoring: MonitoringSection,
+  pregnancy: PregnancySection,
   queue: QueueStatusSection,
   sos: EmergencySOSSection,
   coverage: CoverageSection,
@@ -192,6 +199,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   support: SupportScreen,
   "rito-feedback": FeedbackScreen,
   "rito-track": TrackFeedbackScreen,
+  "rito-respectful-maternity-care": RespectfulMaternityCareScreen,
   settings: SettingsSection,
   assessments: AssessmentsSection,
   "care-team": CareTeamSection,
@@ -228,6 +236,7 @@ export function PersonalScreen() {
     "discover-providers": "discover-providers",
     "nhume-track": "nhume-track",
     monitoring: "monitoring",
+    pregnancy: "pregnancy",
     records: "records",
   };
 
