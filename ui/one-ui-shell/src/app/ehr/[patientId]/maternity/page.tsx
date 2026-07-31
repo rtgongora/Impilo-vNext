@@ -21,6 +21,9 @@ import { PageShell } from "@/components/PageShell";
 import { VitalsCtgSection } from "@/features/maternity/ctg/VitalsCtgSection";
 import { VitalsPartographSection } from "@/features/maternity/partograph/VitalsPartographSection";
 import { NearMissAssessmentPanel } from "@/features/maternity/nearmiss/NearMissAssessmentPanel";
+import { NearMissIndicatorsPanel } from "@/features/maternity/nearmiss/NearMissIndicatorsPanel";
+import { MaternitySummaryPanel } from "@/features/maternity/MaternitySummaryPanel";
+import { BirthDestinationPanel } from "@/features/maternity/BirthDestinationPanel";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -52,6 +55,8 @@ export default function MaternityMonitoringPage() {
           </span>
         </div>
 
+        <MaternitySummaryPanel patientId={patientId} encounterId={encounterId || undefined} />
+
         <section className="rounded-lg border border-pink-200/90 bg-card p-5">
           <h2 className="text-lg font-semibold text-foreground">Partograph & CTG</h2>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -77,6 +82,18 @@ export default function MaternityMonitoringPage() {
         </section>
 
         {isClinical && (
+          <section className="mt-4 rounded-lg border border-pink-200/90 bg-card p-5">
+            <h2 className="text-lg font-semibold text-foreground">Birth destination</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Checks whether a facility is a confirmed maternity destination for the level of
+              emergency obstetric care a woman needs — composed from tuso&apos;s facility status
+              and EmONC readiness.
+            </p>
+            <BirthDestinationPanel />
+          </section>
+        )}
+
+        {isClinical && (
           <section className="mt-4 rounded-lg border border-red-200/90 bg-card p-5">
             <h2 className="text-lg font-semibold text-foreground">Near-miss identification</h2>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -84,6 +101,7 @@ export default function MaternityMonitoringPage() {
               confidential lane; the confidential MPDSR review is a separate, later instrument.
             </p>
             <NearMissAssessmentPanel patientId={patientId} />
+            <NearMissIndicatorsPanel />
           </section>
         )}
       </PageShell>

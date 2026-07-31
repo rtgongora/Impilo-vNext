@@ -165,3 +165,132 @@ export function useClassifyMaternalNearMiss() {
       ),
   });
 }
+
+// ── Severe maternal outcome indicators ─────────────────────────────────────────────────────────
+//
+// Backend: `POST /internal/v1/clinical/maternal/near-miss/indicators`, a thin BFF proxy
+// (`MaternalNearMissController#indicators`) straight through to CKP's `IndicatorEngine` — see
+// `MaternalNearMissController.java` (CKP side) for the ratio/index math. Two laws this hook and its
+// callers must not break:
+//
+//   1. An unrecognised or absent case outcome is CKP's 422 (`unclassifiable_outcome`), forwarded
+//      intact by the BFF's generic proxy. Unlike `classify-form`'s refusal (a flat `{error,message}`
+//      the BFF builds itself), the indicators proxy wraps CKP's whole response as
+//      `{ upstream_status, upstream_body, meta }` — `upstream_body` is CKP's own
+//      `{"data":{"error":"unclassifiable_outcome",...}}` response, serialised to a string, and must
+//      be parsed to recover which case was rejected. See `parseIndicatorsRejection` below.
+//   2. `near_miss_to_death_ratio` and `mortality_index` are `null` when there are zero deaths /
+//      zero severe outcomes — the ratio is mathematically undefined, not zero. A null ratio must
+//      never render as "0.00", and the indeterminate count must never be dropped from the counts
+//      display just because it does not feed the ratio's numerator or denominator.
+
+export type NearMissIndicatorOutcome =
+  | "NEAR_MISS"
+  | "MATERNAL_DEATH"
+  | "NEAR_MISS_INDETERMINATE"
+  | "NOT_SEVERE";
+
+export interface NearMissIndicatorCase {
+  outcome: NearMissIndicatorOutcome;
+}
+
+export interface NearMissIndicatorsRequest {
+  indicatorPeriod: string;
+  cases: NearMissIndicatorCase[];
+}
+
+/** Exactly the CKP `IndicatorEngine`'s field set, as forwarded by the BFF untouched. */
+export interface NearMissIndicatorsResult {
+  indicator_period: string | null;
+  near_miss_count: number;
+  maternal_death_count: number;
+  indeterminate_count: number;
+  severe_maternal_outcome_count: number;
+  near_miss_to_death_ratio: number | null;
+  near_miss_to_death_ratio_upper_bound: number | null;
+  mortality_index: number | null;
+  mortality_index_lower_bound: number | null;
+  mortality_index_direction: string;
+  note: string | null;
+}
+
+export interface NearMissIndicatorsResponse {
+  data: NearMissIndicatorsResult;
+  meta: Record<string, unknown>;
+}
+
+/**
+ * The indicators proxy's refusal shape — distinct from `NearMissRefusal` because the BFF's generic
+ * `proxy()` helper (not the classify-form-specific 422 builder) produced it. A 502 still carries the
+ * familiar flat `{error: "near_miss_unavailable", message}`; a 422 does not — see
+ * `parseIndicatorsRejection`.
+ */
+export interface NearMissIndicatorsRefusal {
+  status: number;
+  error?: string;
+  message?: string;
+  upstream_status?: number;
+  upstream_body?: string;
+}
+
+export function isIndicatorsRefusal(err: unknown): err is NearMissIndicatorsRefusal {
+  return typeof err === "object" && err !== null && "status" in err;
+}
+
+/** True for a transport-level failure to reach CKP — an outage, not "nothing was submitted". */
+export function isIndicatorsUnavailable(err: unknown): boolean {
+  return isIndicatorsRefusal(err) && err.status >= 500;
+}
+
+/** True for CKP's 422 — one or more cases carried an outcome value nobody can count. */
+export function isIndicatorsRejected(err: unknown): boolean {
+  return isIndicatorsRefusal(err) && err.status === 422;
+}
+
+export interface ParsedIndicatorsRejection {
+  message: string;
+  rejectedCases: string[];
+  acceptedValues: string[];
+}
+
+/**
+ * Recovers CKP's actual refusal — which case, and what values it would have accepted — from the
+ * BFF's forwarded `upstream_body` string. Returns `null` (never a fabricated rejection) when the
+ * body is missing or not in the expected shape, so a caller falls back to a generic message rather
+ * than inventing case details that were never in the response.
+ */
+export function parseIndicatorsRejection(err: NearMissIndicatorsRefusal): ParsedIndicatorsRejection | null {
+  if (!err.upstream_body) return null;
+  try {
+    const parsed = JSON.parse(err.upstream_body) as { data?: Record<string, unknown> };
+    const data = parsed.data;
+    if (!data) return null;
+    return {
+      message:
+        typeof data.message === "string"
+          ? data.message
+          : "Some cases carried an outcome that could not be classified.",
+      rejectedCases: Array.isArray(data.rejected_cases) ? (data.rejected_cases as string[]) : [],
+      acceptedValues: Array.isArray(data.accepted_values) ? (data.accepted_values as string[]) : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Computes the near-miss-to-death ratio and mortality index for a reporting period's cases.
+ *
+ * `cases` is forwarded exactly as given — this hook invents no default outcome for an unlabelled
+ * case, because the only two "reasonable" defaults (NOT_SEVERE or NEAR_MISS_INDETERMINATE) are
+ * exactly the two failure modes the CKP engine's own 422 exists to prevent a caller from committing.
+ */
+export function useNearMissIndicators() {
+  return useMutation({
+    mutationFn: (request: NearMissIndicatorsRequest) =>
+      apiClient.post<NearMissIndicatorsResponse>(
+        "/internal/v1/clinical/maternal/near-miss/indicators",
+        request,
+      ),
+  });
+}

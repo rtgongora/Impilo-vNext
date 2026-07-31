@@ -40,10 +40,18 @@ import {
   getCtgChunks,
   addCtgAnnotation,
   classifyNearMissForm,
+  computeNearMissIndicators,
+  fetchBirthDestination,
+  getMaternitySummary,
   type PartographProgress,
   type AddPartographPointResult,
   type CtgChunk,
   type NearMissClassifyResult,
+  type NearMissIndicatorOutcome,
+  type NearMissIndicatorsResult,
+  type BirthDestinationRequiredLevel,
+  type BirthDestinationVerdict,
+  type MaternitySummary,
 } from "../../services/maternityService";
 
 // --- shared governed-form rendering (mirrors EncounterFormsPanel's approach) ---------------
@@ -254,6 +262,154 @@ function PatientIdentifiers({
   );
 }
 
+// --- Maternity summary header ---------------------------------------------------------------
+//
+// Backend: `GET /internal/v1/maternity/summary` — see `getMaternitySummary`'s doc comment in
+// maternityService.ts. A 502 (`maternity_summary_unavailable`) renders as its own banner here,
+// never as "no maternity record" — the same discipline `UnavailableBanner` already applies to
+// PCT_UNAVAILABLE for the partograph and CTG queries above.
+
+/** The header area for a known patientId: is a partograph/CTG session open, how many labour
+ * observations exist, and when the last one was recorded. Shown once patientId is known — the
+ * summary is a real-time cross-cut of the same record the workspace below is about to open. */
+function MaternitySummaryHeader({ patientId }: { patientId: string }) {
+  const summary = useQuery({
+    queryKey: ["maternity-summary", patientId],
+    queryFn: () => getMaternitySummary(patientId),
+    enabled: patientId.trim().length > 0,
+  });
+
+  if (!patientId.trim()) return null;
+
+  if (summary.isLoading) {
+    return <Text style={styles.hint}>Loading maternity summary…</Text>;
+  }
+
+  if (summary.isError) {
+    const unavailable = summary.error instanceof ApiError && summary.error.code === "maternity_summary_unavailable";
+    return (
+      <View style={styles.unavailableBanner} testID="maternity-summary-unavailable" accessibilityRole="alert">
+        <Text style={styles.unavailableTitle}>The maternity summary could not be retrieved</Text>
+        <Text style={styles.unavailableBody}>
+          {unavailable
+            ? "This is not the same as this patient having no maternity record — do not treat it as an empty chart."
+            : "Please try again."}
+        </Text>
+      </View>
+    );
+  }
+
+  const data: MaternitySummary | undefined = summary.data;
+  if (!data) return null;
+
+  return (
+    <View style={styles.summaryHeader} testID="maternity-summary-header">
+      <Text style={styles.summaryLine}>
+        Partograph: {data.partograph_active ? "Active" : "No open session"}
+        {data.partograph_active && data.progress?.status ? ` (${data.progress.status})` : ""}
+      </Text>
+      <Text style={styles.summaryLine}>CTG: {data.ctg_active ? "Active" : "No open session"}</Text>
+      <Text style={styles.summaryLine}>
+        {data.observation_count} observation{data.observation_count === 1 ? "" : "s"} recorded
+        {data.last_observed_at ? ` · last ${new Date(data.last_observed_at).toLocaleString()}` : ""}
+      </Text>
+    </View>
+  );
+}
+
+// --- Birth destination -----------------------------------------------------------------------
+//
+// Backend: `GET /internal/v1/maternity/birth-destination` — see `fetchBirthDestination`'s doc
+// comment. `CAPABILITY_UNKNOWN` renders distinctly from `BELOW_REQUIRED_LEVEL`: the former is
+// "nobody has assessed this yet" (call ahead), the latter is "assessed, and it does not meet the
+// level needed" — collapsing them turns the common unassessed case into a false refusal.
+
+const REQUIRED_LEVEL_OPTIONS: BirthDestinationRequiredLevel[] = ["UNKNOWN", "BEMONC", "CEMONC"];
+
+const DESTINATION_STATUS_LABEL: Record<BirthDestinationVerdict["status"], string> = {
+  MEETS_REQUIRED_LEVEL: "Meets the level of care needed",
+  BELOW_REQUIRED_LEVEL: "Assessed below the level of care needed",
+  CAPABILITY_UNKNOWN: "Emergency obstetric capability not yet assessed",
+  NOT_OPERATIONAL: "Not a confirmed operating maternity destination",
+  REQUIRED_LEVEL_UNKNOWN: "Level of care needed has not been established",
+  UNAVAILABLE: "Could not be determined",
+};
+
+export function BirthDestinationSection() {
+  const [facilityId, setFacilityId] = useState("");
+  const [requiredLevel, setRequiredLevel] = useState<BirthDestinationRequiredLevel>("UNKNOWN");
+
+  const assess = useMutation({
+    mutationFn: () => fetchBirthDestination(Number(facilityId), requiredLevel),
+  });
+
+  const canAssess = /^\d+$/.test(facilityId.trim());
+  const unavailable = assess.isError && assess.error instanceof ApiError && assess.error.status === 502;
+
+  return (
+    <View style={styles.workspace} testID="birth-destination-section">
+      <Text style={styles.workspaceTitle}>Birth destination check</Text>
+      <View style={styles.identifierRow}>
+        <TextInput
+          style={[styles.input, { flex: 1 }]}
+          placeholder="Facility ID"
+          value={facilityId}
+          onChangeText={setFacilityId}
+          keyboardType="number-pad"
+          testID="birth-destination-facility-id"
+        />
+      </View>
+      <View style={styles.options}>
+        {REQUIRED_LEVEL_OPTIONS.map((level) => (
+          <Pressable
+            key={level}
+            onPress={() => setRequiredLevel(level)}
+            style={[styles.option, requiredLevel === level && styles.optionSelected]}
+            testID={`birth-destination-level-${level}`}
+          >
+            <Text style={[styles.optionText, requiredLevel === level && styles.optionTextSelected]}>{level}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Pressable
+        style={[styles.primaryBtn, (!canAssess || assess.isPending) && styles.primaryBtnDisabled]}
+        disabled={!canAssess || assess.isPending}
+        onPress={() => assess.mutate()}
+        testID="birth-destination-assess"
+      >
+        <Text style={styles.primaryBtnText}>{assess.isPending ? "Assessing…" : "Assess"}</Text>
+      </Pressable>
+
+      {unavailable && (
+        <View style={styles.unavailableBanner} testID="birth-destination-unavailable" accessibilityRole="alert">
+          <Text style={styles.unavailableTitle}>The facility&apos;s status could not be retrieved</Text>
+          <Text style={styles.unavailableBody}>
+            Do not treat this as either a safe or an unsafe destination — it is unknown. Confirm by
+            phone before directing her here.
+          </Text>
+        </View>
+      )}
+
+      {assess.isError && !unavailable && (
+        <Text style={styles.errorText}>Could not assess this facility. Try again.</Text>
+      )}
+
+      {assess.data && !unavailable && (
+        <View style={styles.progressBox} testID="birth-destination-verdict">
+          <Text style={styles.progressStatus}>{DESTINATION_STATUS_LABEL[assess.data.status]}</Text>
+          <Text style={styles.progressDetail}>{assess.data.message}</Text>
+          <Text style={styles.progressDetail}>{assess.data.guidance}</Text>
+          {assess.data.call_ahead && (
+            <Text style={styles.progressAction} testID="birth-destination-call-ahead">
+              Call ahead
+            </Text>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
+
 // --- Progress display (partograph) ---------------------------------------------------------
 
 const STATUS_LABEL: Record<PartographProgress["status"], string> = {
@@ -380,6 +536,8 @@ export function PartographWorkspace() {
         setEncounterId={setEncounterId}
       />
 
+      <MaternitySummaryHeader patientId={patientId} />
+
       {!patientId.trim() && <Text style={styles.hint}>Enter a patient ID to open or view a labour chart.</Text>}
 
       {patientId.trim().length > 0 && active.isLoading && (
@@ -484,6 +642,9 @@ export function PartographWorkspace() {
           </Pressable>
         </View>
       )}
+
+      <View style={styles.sectionDivider} />
+      <BirthDestinationSection />
     </ScrollView>
   );
 }
@@ -881,7 +1042,130 @@ export function MaternalNearMissWorkspace() {
           )}
         </View>
       )}
+
+      <View style={styles.sectionDivider} />
+      <NearMissIndicatorsSection />
     </ScrollView>
+  );
+}
+
+// --- Severe maternal outcome indicators -------------------------------------------------------
+//
+// Backend: `POST /internal/v1/clinical/maternal/near-miss/indicators` — see
+// `computeNearMissIndicators`'s doc comment in maternityService.ts. A null ratio/index is
+// undefined, not zero, and the indeterminate count is always shown even though it feeds neither.
+
+const INDICATOR_OUTCOME_OPTIONS: NearMissIndicatorOutcome[] = [
+  "NEAR_MISS",
+  "MATERNAL_DEATH",
+  "NEAR_MISS_INDETERMINATE",
+  "NOT_SEVERE",
+];
+
+function formatIndicatorValue(value: number | null, suffix: string): string {
+  return value === null ? "Not computable (undefined)" : `${value.toFixed(2)}${suffix}`;
+}
+
+function NearMissIndicatorsSection() {
+  const [period, setPeriod] = useState("");
+  const [outcomes, setOutcomes] = useState<NearMissIndicatorOutcome[]>(["NEAR_MISS"]);
+
+  const compute = useMutation({
+    mutationFn: () => computeNearMissIndicators(period, outcomes.map((outcome) => ({ outcome }))),
+  });
+
+  function addCase() {
+    setOutcomes((prev) => [...prev, "NEAR_MISS"]);
+  }
+
+  function setCaseOutcome(index: number, outcome: NearMissIndicatorOutcome) {
+    setOutcomes((prev) => prev.map((o, i) => (i === index ? outcome : o)));
+  }
+
+  function removeCase(index: number) {
+    setOutcomes((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
+  }
+
+  const result: NearMissIndicatorsResult | undefined = compute.data;
+  const isUnavailable = compute.isError && compute.error instanceof ApiError && compute.error.status >= 500;
+
+  return (
+    <View style={styles.workspace} testID="near-miss-indicators-section">
+      <Text style={styles.workspaceTitle}>Severe maternal outcome indicators</Text>
+      <Text style={styles.hint}>
+        The near-miss-to-death ratio and mortality index for a reporting period. Computed over
+        zero deaths, the ratio is undefined — never rendered as zero.
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Reporting period, e.g. 2026-Q2"
+        value={period}
+        onChangeText={setPeriod}
+        testID="near-miss-indicators-period"
+      />
+
+      {outcomes.map((outcome, idx) => (
+        <View key={idx} style={styles.identifierRow} testID={`near-miss-indicators-row-${idx}`}>
+          <View style={[styles.options, { flex: 1 }]}>
+            {INDICATOR_OUTCOME_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt}
+                onPress={() => setCaseOutcome(idx, opt)}
+                style={[styles.option, outcome === opt && styles.optionSelected]}
+                testID={`near-miss-indicators-outcome-${idx}-${opt}`}
+              >
+                <Text style={[styles.optionText, outcome === opt && styles.optionTextSelected]}>{opt}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Pressable onPress={() => removeCase(idx)} disabled={outcomes.length === 1} testID={`near-miss-indicators-remove-${idx}`}>
+            <Text style={styles.secondaryBtnText}>Remove</Text>
+          </Pressable>
+        </View>
+      ))}
+
+      <Pressable style={styles.secondaryBtn} onPress={addCase} testID="near-miss-indicators-add-row">
+        <Text style={styles.secondaryBtnText}>Add case</Text>
+      </Pressable>
+
+      <Pressable
+        style={[styles.primaryBtn, compute.isPending && styles.primaryBtnDisabled]}
+        disabled={compute.isPending}
+        onPress={() => compute.mutate()}
+        testID="near-miss-indicators-compute"
+      >
+        <Text style={styles.primaryBtnText}>{compute.isPending ? "Computing…" : "Compute"}</Text>
+      </Pressable>
+
+      {isUnavailable && (
+        <View style={styles.unavailableBanner} testID="near-miss-indicators-unavailable" accessibilityRole="alert">
+          <Text style={styles.unavailableTitle}>The near-miss criteria service could not be reached</Text>
+          <Text style={styles.unavailableBody}>Nothing was computed. This is not a ratio of zero.</Text>
+        </View>
+      )}
+
+      {compute.isError && !isUnavailable && (
+        <Text style={styles.errorText}>Some cases could not be classified. Try again.</Text>
+      )}
+
+      {result && !isUnavailable && (
+        <View style={styles.pointsList} testID="near-miss-indicators-result">
+          <Text style={styles.pointLine}>Near-miss: {result.near_miss_count}</Text>
+          <Text style={styles.pointLine}>Maternal death: {result.maternal_death_count}</Text>
+          {/* Never dropped, even though it feeds neither ratio below. */}
+          <Text style={styles.pointLine}>Indeterminate: {result.indeterminate_count}</Text>
+          <Text style={styles.pointLine}>Severe maternal outcomes: {result.severe_maternal_outcome_count}</Text>
+          <Text style={styles.progressStatus} testID="near-miss-indicators-ratio">
+            Near-miss-to-death ratio: {formatIndicatorValue(result.near_miss_to_death_ratio, ":1")}
+          </Text>
+          <Text style={styles.progressStatus} testID="near-miss-indicators-mortality-index">
+            Mortality index: {formatIndicatorValue(result.mortality_index, "%")}
+          </Text>
+          {result.note && <Text style={styles.progressDetail}>{result.note}</Text>}
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -890,6 +1174,16 @@ const styles = StyleSheet.create({
   workspaceTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900], marginBottom: 8 },
   identifierRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
   hint: { fontSize: 13, color: colors.gray[500], marginTop: 4 },
+  sectionDivider: { height: 1, backgroundColor: colors.gray[200], marginVertical: 16 },
+  summaryHeader: {
+    borderWidth: 1,
+    borderColor: colors.gray[200],
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
+    gap: 2,
+  },
+  summaryLine: { fontSize: 12, color: colors.gray[700] },
   errorText: { fontSize: 13, color: "#B91C1C", marginTop: 6 },
   section: { marginBottom: 10 },
   sectionTitle: { fontSize: 13, fontWeight: "600", color: colors.gray[700], marginBottom: 6, marginTop: 8 },

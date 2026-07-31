@@ -385,3 +385,138 @@ export async function classifyNearMissForm(
   );
   return response.data;
 }
+
+// --- Severe maternal outcome indicators ------------------------------------------------------
+//
+// Backend: `POST /internal/v1/clinical/maternal/near-miss/indicators` — the near-miss-to-death
+// ratio and mortality index for a reporting period's cases. A ratio computed over zero deaths (or
+// an index over zero severe outcomes) is `null` — mathematically undefined, not zero — and must
+// never be rendered as 0 or dropped from what is shown. An unrecognised outcome value is CKP's
+// 422 (`ApiError.code === "unclassifiable_outcome"` when the BFF surfaces its own refusal shape;
+// this proxy forwards CKP's whole response, so callers reading `error.details` may instead need
+// `error.message`/`error.status` — see `MaternalNearMissController.java`'s `indicators` doc
+// comment) and must not be silently bucketed into NOT_SEVERE or NEAR_MISS_INDETERMINATE.
+
+export type NearMissIndicatorOutcome =
+  | "NEAR_MISS"
+  | "MATERNAL_DEATH"
+  | "NEAR_MISS_INDETERMINATE"
+  | "NOT_SEVERE";
+
+export interface NearMissIndicatorsResult {
+  indicator_period: string | null;
+  near_miss_count: number;
+  maternal_death_count: number;
+  indeterminate_count: number;
+  severe_maternal_outcome_count: number;
+  near_miss_to_death_ratio: number | null;
+  near_miss_to_death_ratio_upper_bound: number | null;
+  mortality_index: number | null;
+  mortality_index_lower_bound: number | null;
+  mortality_index_direction: string;
+  note: string | null;
+}
+
+/**
+ * Computes the ratio/index for a period. `cases` is forwarded exactly as given — this function
+ * invents no outcome for a case the caller did not label, because the two "reasonable" defaults
+ * (NOT_SEVERE or NEAR_MISS_INDETERMINATE) are precisely the failure modes CKP's 422 exists to
+ * refuse rather than let a caller guess.
+ */
+export async function computeNearMissIndicators(
+  indicatorPeriod: string,
+  cases: { outcome: NearMissIndicatorOutcome }[],
+): Promise<NearMissIndicatorsResult> {
+  const response = await apiClient.post<{ data: NearMissIndicatorsResult }>(
+    "/internal/v1/clinical/maternal/near-miss/indicators",
+    { indicatorPeriod, cases },
+  );
+  return response.data.data;
+}
+
+// --- Birth destination -------------------------------------------------------------------------
+//
+// Backend: `GET /internal/v1/maternity/birth-destination`, NOT under `${BASE}` — it composes
+// tuso's facility status-summary and EmONC readiness rather than pct-service. See
+// `BirthDestinationService.java`'s three honesty rules, which this function must not launder:
+//
+//   1. `NOT_OPERATIONAL` covers both "assessed closed" and "operational status unknown" — an
+//      unconfirmed facility is never a safe destination by default.
+//   2. `CAPABILITY_UNKNOWN` ("nobody has assessed this") must render distinctly from
+//      `BELOW_REQUIRED_LEVEL` ("assessed, and it cannot") — collapsing the two turns the common
+//      case (unassessed) into a false refusal.
+//   3. A 502 (`status: "UNAVAILABLE"`) means tuso could not be reached. This function does not
+//      catch that failure — it propagates as a thrown `ApiError`, the same discipline as
+//      `getActivePartograph`'s PCT_UNAVAILABLE case, because a birth destination is not a place to
+//      render a network error as a clinical verdict in either direction.
+
+export type BirthDestinationRequiredLevel = "CEMONC" | "BEMONC" | "UNKNOWN";
+
+export type BirthDestinationStatus =
+  | "MEETS_REQUIRED_LEVEL"
+  | "BELOW_REQUIRED_LEVEL"
+  | "CAPABILITY_UNKNOWN"
+  | "NOT_OPERATIONAL"
+  | "REQUIRED_LEVEL_UNKNOWN"
+  | "UNAVAILABLE";
+
+/** Exactly `BirthDestinationController#toMap`'s field set. */
+export interface BirthDestinationVerdict {
+  facility_id: number;
+  required_level: BirthDestinationRequiredLevel;
+  status: BirthDestinationStatus;
+  operational_gate_passed: boolean;
+  emonc_verdict: string | null;
+  call_ahead: boolean;
+  message: string;
+  guidance: string;
+}
+
+export async function fetchBirthDestination(
+  facilityId: number,
+  requiredLevel: BirthDestinationRequiredLevel = "UNKNOWN",
+): Promise<BirthDestinationVerdict> {
+  const qs = new URLSearchParams({ facilityId: String(facilityId), requiredLevel });
+  const response = await apiClient.get<{ data: BirthDestinationVerdict }>(
+    `/internal/v1/maternity/birth-destination?${qs.toString()}`,
+  );
+  return response.data.data;
+}
+
+// --- Maternity summary ---------------------------------------------------------------------------
+//
+// Backend: `GET ${BASE}/summary`, a pure proxy to PCT's `MaternityController#summary` — see
+// `MaternityService.summary`. A 502 (`ApiError.code === "maternity_summary_unavailable"`) is an
+// outage, not "no maternity record for this woman" — this function propagates it exactly like
+// `getActivePartograph` propagates `PCT_UNAVAILABLE`, so a caller cannot render it as an empty
+// dashboard.
+
+export interface MaternitySummaryProgress {
+  status: string;
+  latest_dilation_cm: number | null;
+  expected_dilation_cm: number | null;
+  hours_behind_alert_line: number | null;
+  outstanding_observations: string[];
+  observations: string[];
+  recommended_action: string | null;
+  content_version: string;
+  content_source: string;
+}
+
+/** Exactly `MaternityService#summary`'s field set. */
+export interface MaternitySummary {
+  patient_id: string;
+  partograph_active: boolean;
+  partograph_session_id?: string;
+  progress?: MaternitySummaryProgress;
+  ctg_active: boolean;
+  ctg_session_id?: string;
+  observation_count: number;
+  last_observed_at: string | null;
+}
+
+export async function getMaternitySummary(patientId: string, encounterId?: string): Promise<MaternitySummary> {
+  const qs = new URLSearchParams({ patientId, ...(encounterId ? { encounterId } : {}) });
+  const response = await apiClient.get<{ data: MaternitySummary }>(`${BASE}/summary?${qs.toString()}`);
+  return response.data.data;
+}

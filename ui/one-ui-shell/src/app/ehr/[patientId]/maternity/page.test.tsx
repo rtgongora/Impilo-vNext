@@ -61,6 +61,18 @@ vi.mock("@/features/maternity/nearmiss/NearMissAssessmentPanel", () => ({
   NearMissAssessmentPanel: () => <div data-testid="near-miss-panel">Near-miss module</div>,
 }));
 
+vi.mock("@/features/maternity/nearmiss/NearMissIndicatorsPanel", () => ({
+  NearMissIndicatorsPanel: () => <div data-testid="near-miss-indicators-panel">Near-miss indicators module</div>,
+}));
+
+vi.mock("@/features/maternity/MaternitySummaryPanel", () => ({
+  MaternitySummaryPanel: () => <div data-testid="maternity-summary-panel">Maternity summary module</div>,
+}));
+
+vi.mock("@/features/maternity/BirthDestinationPanel", () => ({
+  BirthDestinationPanel: () => <div data-testid="birth-destination-panel">Birth destination module</div>,
+}));
+
 describe("MaternityMonitoringPage", () => {
   it("mounts the canonical maternity route with partograph, CTG and near-miss sections", () => {
     render(<MaternityMonitoringPage />);
@@ -70,6 +82,9 @@ describe("MaternityMonitoringPage", () => {
     expect(screen.getByTestId("partograph-section")).toBeInTheDocument();
     expect(screen.getByTestId("ctg-section")).toBeInTheDocument();
     expect(screen.getByTestId("near-miss-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("near-miss-indicators-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("maternity-summary-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("birth-destination-panel")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Back to vitals/i })).toHaveAttribute("href", "/ehr/patient-1/vitals");
   });
 });

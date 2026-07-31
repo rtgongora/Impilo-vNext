@@ -20,6 +20,7 @@ import Link from "next/link";
 import { AlertTriangle, Baby, CalendarHeart, CheckCircle2, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { BirthDestinationPanel } from "@/features/maternity/BirthDestinationPanel";
 import {
   isPregnancyConflict,
   isPregnancyUndatable,
@@ -401,6 +402,20 @@ export default function MyPregnancyPage() {
           ) : (
             <BookPregnancyForm onBooked={() => void current.refetch()} />
           )}
+
+          <section>
+            <h2 className="text-sm font-medium text-slate-700">
+              Checking a facility before you travel to give birth
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              If your care team has told you a facility ID, you can check here whether it is a
+              confirmed maternity destination for the level of care you need — the same check your
+              care team uses.
+            </p>
+            <div className="mt-2">
+              <BirthDestinationPanel />
+            </div>
+          </section>
 
           <PregnancyHistory />
         </div>
