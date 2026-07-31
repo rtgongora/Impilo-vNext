@@ -17,6 +17,8 @@ import {
   fetchPregnancyLosses,
   fetchTopAuthorisations,
   fetchPatientPregnancyEpisodes,
+  fetchCurrentReproductiveIntention,
+  fetchDeliveryRecordsForMother,
 } from "./maternityService";
 
 vi.mock("@impilo/mobile-api-client", async (importOriginal) => {
@@ -353,5 +355,33 @@ describe("confidential reproductive reads — empty vs 502 (W13-B)", () => {
     expect(apiClient.get).toHaveBeenCalledWith(
       "/internal/v1/confidential/maternity/pregnancy-episodes/CP-5",
     );
+  });
+});
+
+describe("W14-B confidential reproductive reads", () => {
+  it("fetchCurrentReproductiveIntention hits the confidential reproductive lane", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(
+      ok({ intention_id: "I-1", subject_cpid: "CP-6", intention: "UNDECIDED" }),
+    );
+    const row = await fetchCurrentReproductiveIntention("CP-6");
+    expect(row?.intention).toBe("UNDECIDED");
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/internal/v1/confidential/reproductive/reproductive-intentions/CP-6/current",
+    );
+  });
+
+  it("fetchDeliveryRecordsForMother treats null data as empty withhold list", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(ok(null));
+    const rows = await fetchDeliveryRecordsForMother("CP-7");
+    expect(rows).toEqual([]);
+  });
+
+  it("propagates PCT_UNAVAILABLE on W14 reads", async () => {
+    vi.mocked(apiClient.get).mockRejectedValue(
+      new ApiError({ code: "PCT_UNAVAILABLE", message: "upstream error", status: 502, correlationId: "c1" }),
+    );
+    await expect(fetchCurrentReproductiveIntention("CP-8")).rejects.toMatchObject({
+      code: "PCT_UNAVAILABLE",
+    });
   });
 });

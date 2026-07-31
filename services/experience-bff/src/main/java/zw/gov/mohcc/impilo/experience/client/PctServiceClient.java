@@ -2186,6 +2186,94 @@ public class PctServiceClient {
                 + "/v1/confidential/reproductive/terminations/" + subjectCpid, JsonNode.class);
     }
 
+    /** Her current stated reproductive intention, or null. */
+    public ResponseEntity<JsonNode> getCurrentReproductiveIntention(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/reproductive-intentions/" + subjectCpid + "/current",
+                JsonNode.class);
+    }
+
+    /** Reproductive intention history for a subject. */
+    public ResponseEntity<JsonNode> getReproductiveIntentionHistory(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/reproductive-intentions/" + subjectCpid + "/history",
+                JsonNode.class);
+    }
+
+    /** Active preconception plan for a subject, or null. */
+    public ResponseEntity<JsonNode> getActivePreconceptionPlan(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/preconception-plans/" + subjectCpid + "/active",
+                JsonNode.class);
+    }
+
+    /** Preconception plan history for a subject. */
+    public ResponseEntity<JsonNode> getPreconceptionPlanHistory(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/preconception-plans/" + subjectCpid + "/history",
+                JsonNode.class);
+    }
+
+    /** Open fertility episode for a subject, or null. */
+    public ResponseEntity<JsonNode> getCurrentFertilityEpisode(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/fertility-episodes/" + subjectCpid + "/current",
+                JsonNode.class);
+    }
+
+    /** Fertility episode history for a subject. */
+    public ResponseEntity<JsonNode> getFertilityEpisodeHistory(String subjectCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/fertility-episodes/" + subjectCpid + "/history",
+                JsonNode.class);
+    }
+
+    /** Delivery records for a mother. */
+    public ResponseEntity<JsonNode> getDeliveryRecordsForMother(String motherCpid) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/delivery-records/mother/" + motherCpid, JsonNode.class);
+    }
+
+    /** Delivery record for a pregnancy episode, or null. */
+    public ResponseEntity<JsonNode> getDeliveryRecordForPregnancy(UUID pregnancyEpisodeId) {
+        return restTemplate.getForEntity(baseUrl
+                + "/v1/confidential/reproductive/delivery-records/pregnancy/" + pregnancyEpisodeId,
+                JsonNode.class);
+    }
+
+    /** Record a reproductive intention. 201 new, 200 replayed. */
+    public ResponseEntity<JsonNode> recordReproductiveIntention(Map<String, Object> body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/reproductive-intentions", body, JsonNode.class);
+    }
+
+    /** Open a preconception plan. 201 new, 200 replayed, 422 refused. */
+    public ResponseEntity<JsonNode> openPreconceptionPlan(Map<String, Object> body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/preconception-plans", body, JsonNode.class);
+    }
+
+    /** Update a preconception plan. */
+    public ResponseEntity<JsonNode> updatePreconceptionPlan(UUID planId, Map<String, Object> body) {
+        return restTemplate.exchange(
+                baseUrl + "/v1/confidential/reproductive/preconception-plans/" + planId,
+                org.springframework.http.HttpMethod.PATCH,
+                new org.springframework.http.HttpEntity<>(body),
+                JsonNode.class);
+    }
+
+    /** Start a fertility episode. 201 new, 200 replayed, 422 refused. */
+    public ResponseEntity<JsonNode> startFertilityEpisode(Map<String, Object> body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/fertility-episodes", body, JsonNode.class);
+    }
+
+    /** Record a delivery. 201 new, 200 replayed, 409 duplicate pregnancy delivery. */
+    public ResponseEntity<JsonNode> recordDeliveryRecord(Map<String, Object> body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/confidential/reproductive/delivery-records", body, JsonNode.class);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

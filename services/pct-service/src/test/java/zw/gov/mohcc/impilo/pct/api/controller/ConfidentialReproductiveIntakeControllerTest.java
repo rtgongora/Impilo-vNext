@@ -12,17 +12,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import zw.gov.mohcc.impilo.pct.core.clinical.ConfidentialCarePolicyProvider;
 import zw.gov.mohcc.impilo.pct.core.clinical.ConfidentialRecordGuard;
 import zw.gov.mohcc.impilo.pct.core.clinical.ConfidentialityStamper;
+import zw.gov.mohcc.impilo.pct.core.clinical.DeliveryRecordService;
+import zw.gov.mohcc.impilo.pct.core.clinical.FertilityEpisodeService;
 import zw.gov.mohcc.impilo.pct.core.clinical.PostnatalContactService;
+import zw.gov.mohcc.impilo.pct.core.clinical.PreconceptionService;
 import zw.gov.mohcc.impilo.pct.core.clinical.PregnancyEpisodeService;
+import zw.gov.mohcc.impilo.pct.core.clinical.ReproductiveIntentionService;
+import zw.gov.mohcc.impilo.pct.persistence.entity.DeliveryRecordEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.PostnatalContactEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.PregnancyEpisodeEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.ReproductiveIntentionEntity;
+import zw.gov.mohcc.impilo.pct.persistence.repository.DeliveryRecordRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.FertilityEpisodeRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.PostnatalContactRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.PreconceptionPlanRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.PregnancyDatingRevisionRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.PregnancyEpisodeRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.ReproductiveIntentionRepository;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +64,10 @@ class ConfidentialReproductiveIntakeControllerTest {
 
     private PregnancyEpisodeRepository episodes;
     private PostnatalContactRepository contacts;
+    private ReproductiveIntentionRepository intentions;
+    private PreconceptionPlanRepository preconceptionPlans;
+    private FertilityEpisodeRepository fertilityEpisodes;
+    private DeliveryRecordRepository deliveries;
     private ConfidentialReproductiveIntakeController controller;
 
     @BeforeEach
@@ -69,10 +84,33 @@ class ConfidentialReproductiveIntakeControllerTest {
         when(contacts.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(contacts.findByTenantIdAndClientOfflineId(any(), any())).thenReturn(Optional.empty());
 
+        intentions = mock(ReproductiveIntentionRepository.class);
+        when(intentions.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(intentions.findCurrent(any(), any())).thenReturn(Optional.empty());
+        when(intentions.findByTenantIdAndClientOfflineId(any(), any())).thenReturn(Optional.empty());
+        when(intentions.history(any(), any())).thenReturn(java.util.List.of());
+
+        preconceptionPlans = mock(PreconceptionPlanRepository.class);
+        when(preconceptionPlans.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(preconceptionPlans.findByTenantIdAndClientOfflineId(any(), any())).thenReturn(Optional.empty());
+
+        fertilityEpisodes = mock(FertilityEpisodeRepository.class);
+        when(fertilityEpisodes.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(fertilityEpisodes.findByTenantIdAndClientOfflineId(any(), any())).thenReturn(Optional.empty());
+
+        deliveries = mock(DeliveryRecordRepository.class);
+        when(deliveries.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(deliveries.findByTenantIdAndClientOfflineId(any(), any())).thenReturn(Optional.empty());
+        when(deliveries.findForPregnancy(any(), any())).thenReturn(Optional.empty());
+
         controller = new ConfidentialReproductiveIntakeController(
                 new PregnancyEpisodeService(episodes, revisions, inertPolicy(),
                         new ConfidentialRecordGuard()),
-                new PostnatalContactService(contacts, inertPolicy(), new ConfidentialRecordGuard()));
+                new PostnatalContactService(contacts, inertPolicy(), new ConfidentialRecordGuard()),
+                new ReproductiveIntentionService(intentions),
+                new PreconceptionService(preconceptionPlans),
+                new FertilityEpisodeService(fertilityEpisodes),
+                new DeliveryRecordService(deliveries));
 
         TrustContextHolder.set(new TrustContext(TENANT, "chw-1", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
@@ -307,6 +345,47 @@ class ConfidentialReproductiveIntakeControllerTest {
         assertThat(data(withFp).get("sensitivity_class"))
                 .as("SHADOW until the flip, or the CHW who recorded it could not read it back")
                 .isEqualTo("FULL_CLINICAL");
+    }
+
+    // ── W14-B: intention and delivery ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("recording reproductive intention from camelCase JSON returns 201 snake_case")
+    void intentionFromTheWire() throws Exception {
+        var request = json.readValue("""
+                {"subjectCpid": "CPID-WOMAN-1", "intention": "WANTS_PREGNANCY_LATER",
+                 "timeframeMonths": 24, "recordedBy": "nurse-1"}
+                """, ConfidentialReproductiveIntakeController.RecordIntentionRequest.class);
+
+        var response = controller.recordIntention(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(data(response).get("intention")).isEqualTo("WANTS_PREGNANCY_LATER");
+        assertThat(data(response)).containsKey("intention_id").doesNotContainKey("intentionId");
+    }
+
+    @Test
+    @DisplayName("a duplicate delivery for the same pregnancy is 409 with the existing id, never 500")
+    void duplicateDeliveryIsAConflict() throws Exception {
+        UUID pregnancyId = UUID.randomUUID();
+        DeliveryRecordEntity existing = new DeliveryRecordEntity();
+        existing.setDeliveryRecordId(UUID.randomUUID());
+        existing.setDeliveredAt(OffsetDateTime.now().minusDays(1));
+        when(deliveries.findForPregnancy(TENANT, pregnancyId)).thenReturn(Optional.of(existing));
+
+        var request = json.readValue("""
+                {"motherCpid": "CPID-WOMAN-1", "pregnancyEpisodeId": "%s",
+                 "deliveredAt": "2026-03-01T08:00:00Z", "deliveryMode": "SPONTANEOUS_VAGINAL",
+                 "recordedBy": "midwife-1"}
+                """.formatted(pregnancyId),
+                ConfidentialReproductiveIntakeController.RecordDeliveryRequest.class);
+
+        var response = controller.recordDelivery(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(data(response).get("code")).isEqualTo("DELIVERY_ALREADY_RECORDED");
+        assertThat(data(response).get("existing_delivery_record_id"))
+                .isEqualTo(existing.getDeliveryRecordId().toString());
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

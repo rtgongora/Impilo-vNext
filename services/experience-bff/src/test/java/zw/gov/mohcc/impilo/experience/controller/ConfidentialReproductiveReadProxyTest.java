@@ -198,6 +198,28 @@ class ConfidentialReproductiveReadProxyTest {
         assertTrue(data == null || data.isNull(), "expected null data, got: " + data);
     }
 
+    @Test
+    @DisplayName("W14-B: current reproductive intention resolves 'me' and returns 200")
+    void currentIntentionResolvesMe() {
+        StubPct pct = new StubPct();
+        ResponseEntity<?> r = controller(pct).currentReproductiveIntention(
+                "me", "HID-citizen-1", "r", "c");
+
+        assertEquals(200, r.getStatusCode().value());
+        assertEquals("CPID-FROM-HID-citizen-1", pct.lastIntentionCpid);
+    }
+
+    @Test
+    @DisplayName("W14-B: unresolved 'me' on current intention is null body in 200, not 404")
+    void unresolvedMeOnCurrentIntentionIsNullNot404() {
+        StubPct pct = new StubPct();
+        ResponseEntity<?> r = controller(pct).currentReproductiveIntention("me", null, "r", "c");
+
+        assertEquals(200, r.getStatusCode().value());
+        assertEquals(null, pct.lastIntentionCpid);
+        assertTrue(((Map<?, ?>) r.getBody()).containsKey("data"));
+    }
+
     // ────────────────────────────────────────────────────────────────────────
 
     private static ConfidentialReproductiveReadController controller(StubPct pct) {
@@ -227,6 +249,7 @@ class ConfidentialReproductiveReadProxyTest {
         String lastLossesCpid;
         String lastTopAuthCpid;
         String lastTerminationsCpid;
+        String lastIntentionCpid;
 
         StubPct() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints(), mapper);
@@ -301,6 +324,18 @@ class ConfidentialReproductiveReadProxyTest {
             maybeFail();
             lastTerminationsCpid = subjectCpid;
             return answer(mapper.createArrayNode());
+        }
+
+        @Override
+        public ResponseEntity<JsonNode> getCurrentReproductiveIntention(String subjectCpid) {
+            lastIntentionCpid = null;
+            maybeFail();
+            lastIntentionCpid = subjectCpid;
+            if (nullData) {
+                return ResponseEntity.ok(mapper.createObjectNode().putNull("data"));
+            }
+            return ResponseEntity.ok(mapper.createObjectNode().set("data",
+                    mapper.createObjectNode().put("intention", "UNDECIDED")));
         }
     }
 }

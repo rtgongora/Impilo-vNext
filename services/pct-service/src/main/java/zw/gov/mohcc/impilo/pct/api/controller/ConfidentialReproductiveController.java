@@ -8,14 +8,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.pct.core.clinical.ContraceptiveEpisodeService;
+import zw.gov.mohcc.impilo.pct.core.clinical.DeliveryRecordService;
+import zw.gov.mohcc.impilo.pct.core.clinical.FertilityEpisodeService;
 import zw.gov.mohcc.impilo.pct.core.clinical.PostnatalContactService;
+import zw.gov.mohcc.impilo.pct.core.clinical.PreconceptionService;
 import zw.gov.mohcc.impilo.pct.core.clinical.PregnancyEpisodeService;
 import zw.gov.mohcc.impilo.pct.core.clinical.PregnancyLossRecordService;
+import zw.gov.mohcc.impilo.pct.core.clinical.ReproductiveIntentionService;
 import zw.gov.mohcc.impilo.pct.core.clinical.TerminationService;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ContraceptiveEpisodeEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.DeliveryRecordEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.FertilityEpisodeEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.PostnatalContactEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.PreconceptionPlanEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.PregnancyEpisodeEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.PregnancyLossRecordEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.ReproductiveIntentionEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.TopAuthorisationEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.TopProcedureEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -26,6 +34,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * The confidential reproductive-health disclosure lane.
@@ -50,12 +59,12 @@ import java.util.Map;
  * confidentiality was protecting. An empty list here means "nothing you may see", and the caller
  * cannot tell that from "nothing exists".
  *
- * <h2>All six stamped record types, on one lane</h2>
+ * <h2>Stamped and unstamped reproductive records, on one lane</h2>
  * <p>Losses, postnatal contacts, TOP procedures, TOP authorisations, contraceptive episodes and
- * pregnancy episodes — the six tables pct {@code V437} added the stamp to. They are here together
- * because the alternative is worse than duplication: a stamped record type with no guarded route is
- * a route the first reader who needs it writes unguarded, on an ordinary path, which is exactly the
- * failure the routing guard exists to prevent. The safe read has to exist before anyone needs it.
+ * pregnancy episodes — the six tables pct {@code V437} added the stamp to — share this lane with
+ * reproductive intention, preconception plans, fertility episodes and delivery records, which carry
+ * no stamp columns yet. Those four are mounted here so tshepo-authz classifies the path before the
+ * decision-table extension adds stamping hooks; their views deliberately omit stamp fields until then.
  *
  * <h2>Currently inert, by design</h2>
  * <p>The PDP runs in SHADOW and no record carries the protected class yet
@@ -73,17 +82,29 @@ public class ConfidentialReproductiveController {
     private final TerminationService terminations;
     private final ContraceptiveEpisodeService contraception;
     private final PregnancyEpisodeService pregnancies;
+    private final ReproductiveIntentionService intentions;
+    private final PreconceptionService preconception;
+    private final FertilityEpisodeService fertility;
+    private final DeliveryRecordService deliveries;
 
     public ConfidentialReproductiveController(PregnancyLossRecordService losses,
                                               PostnatalContactService postnatalContacts,
                                               TerminationService terminations,
                                               ContraceptiveEpisodeService contraception,
-                                              PregnancyEpisodeService pregnancies) {
+                                              PregnancyEpisodeService pregnancies,
+                                              ReproductiveIntentionService intentions,
+                                              PreconceptionService preconception,
+                                              FertilityEpisodeService fertility,
+                                              DeliveryRecordService deliveries) {
         this.losses = losses;
         this.postnatalContacts = postnatalContacts;
         this.terminations = terminations;
         this.contraception = contraception;
         this.pregnancies = pregnancies;
+        this.intentions = intentions;
+        this.preconception = preconception;
+        this.fertility = fertility;
+        this.deliveries = deliveries;
     }
 
     /** Pregnancy losses for a mother. Mother-anchored: a loss mints no person. */
@@ -202,6 +223,99 @@ public class ConfidentialReproductiveController {
         TrustContext ctx = TrustContextHolder.require();
         Map<String, Object> body = pregnancies.currentPregnancy(ctx.tenantId(), subjectCpid)
                 .map(ConfidentialReproductiveController::pregnancyView)
+                .orElse(null);
+        return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
+    }
+
+    /**
+     * Her current stated reproductive intention, or nothing.
+     *
+     * <p>No stamp columns on {@code pct_reproductive_intentions} yet — stamping waits for the
+     * decision-table extension documented in the SRH confidentiality pack.
+     */
+    @GetMapping("/reproductive-intentions/{subjectCpid}/current")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> currentIntention(
+            @PathVariable String subjectCpid) {
+        TrustContext ctx = TrustContextHolder.require();
+        Map<String, Object> body = intentions.current(ctx.tenantId(), subjectCpid)
+                .map(ConfidentialReproductiveController::intentionView)
+                .orElse(null);
+        return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
+    }
+
+    /** Every reproductive intention she has ever stated. */
+    @GetMapping("/reproductive-intentions/{subjectCpid}/history")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> intentionHistory(
+            @PathVariable String subjectCpid) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<Map<String, Object>> body = intentions.history(ctx.tenantId(), subjectCpid).stream()
+                .map(ConfidentialReproductiveController::intentionView)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
+    }
+
+    /** Her active preconception plan, or nothing. */
+    @GetMapping("/preconception-plans/{subjectCpid}/active")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> activePreconceptionPlan(
+            @PathVariable String subjectCpid) {
+        TrustContext ctx = TrustContextHolder.require();
+        Map<String, Object> body = preconception.active(ctx.tenantId(), subjectCpid)
+                .map(ConfidentialReproductiveController::preconceptionView)
+                .orElse(null);
+        return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
+    }
+
+    /** Every preconception plan recorded for her. */
+    @GetMapping("/preconception-plans/{subjectCpid}/history")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> preconceptionHistory(
+            @PathVariable String subjectCpid) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<Map<String, Object>> body = preconception.history(ctx.tenantId(), subjectCpid).stream()
+                .map(ConfidentialReproductiveController::preconceptionView)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
+    }
+
+    /** Her open fertility episode, or nothing — {@code open()} mapped to current. */
+    @GetMapping("/fertility-episodes/{subjectCpid}/current")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> currentFertilityEpisode(
+            @PathVariable String subjectCpid) {
+        TrustContext ctx = TrustContextHolder.require();
+        Map<String, Object> body = fertility.open(ctx.tenantId(), subjectCpid)
+                .map(ConfidentialReproductiveController::fertilityView)
+                .orElse(null);
+        return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
+    }
+
+    /** Every fertility episode recorded for her. */
+    @GetMapping("/fertility-episodes/{subjectCpid}/history")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> fertilityHistory(
+            @PathVariable String subjectCpid) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<Map<String, Object>> body = fertility.history(ctx.tenantId(), subjectCpid).stream()
+                .map(ConfidentialReproductiveController::fertilityView)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
+    }
+
+    /** Every delivery recorded for a mother. */
+    @GetMapping("/delivery-records/mother/{motherCpid}")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> deliveriesForMother(
+            @PathVariable String motherCpid) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<Map<String, Object>> body = deliveries.forMother(ctx.tenantId(), motherCpid).stream()
+                .map(ConfidentialReproductiveController::deliveryView)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
+    }
+
+    /** The delivery for a pregnancy episode, or nothing. */
+    @GetMapping("/delivery-records/pregnancy/{pregnancyEpisodeId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> deliveryForPregnancy(
+            @PathVariable UUID pregnancyEpisodeId) {
+        TrustContext ctx = TrustContextHolder.require();
+        Map<String, Object> body = deliveries.forPregnancy(ctx.tenantId(), pregnancyEpisodeId)
+                .map(ConfidentialReproductiveController::deliveryView)
                 .orElse(null);
         return ResponseEntity.ok(ApiResponse.ok(body, String.valueOf(ctx.correlationId())));
     }
@@ -343,6 +457,93 @@ public class ConfidentialReproductiveController {
      * {@code AGE_UNRESOLVED} and {@code POLICY_UNAVAILABLE}, which say the stamp degraded openly
      * rather than that the record is ordinary.
      */
+    private static Map<String, Object> intentionView(ReproductiveIntentionEntity e) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("intention_id", str(e.getIntentionId()));
+        m.put("subject_cpid", e.getSubjectCpid());
+        m.put("intention", e.getIntention());
+        m.put("timeframe_months", e.getTimeframeMonths());
+        m.put("desired_family_size", e.getDesiredFamilySize());
+        m.put("partner_intention", e.getPartnerIntention());
+        m.put("fertility_concern", e.getFertilityConcern());
+        m.put("contraception_desired", e.getContraceptionDesired());
+        m.put("unmet_need", e.getUnmetNeed());
+        m.put("notes", e.getNotes());
+        m.put("status", e.getStatus());
+        m.put("recorded_at", str(e.getRecordedAt()));
+        m.put("recorded_by", e.getRecordedBy());
+        m.put("client_offline_id", e.getClientOfflineId());
+        return m;
+    }
+
+    private static Map<String, Object> preconceptionView(PreconceptionPlanEntity e) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("preconception_plan_id", str(e.getPreconceptionPlanId()));
+        m.put("subject_cpid", e.getSubjectCpid());
+        m.put("status", e.getStatus());
+        m.put("opened_on", str(e.getOpenedOn()));
+        m.put("closed_on", str(e.getClosedOn()));
+        m.put("closure_reason", e.getClosureReason());
+        m.put("folic_acid_started_on", str(e.getFolicAcidStartedOn()));
+        m.put("folic_acid_dose_mg", e.getFolicAcidDoseMg());
+        m.put("folic_acid_high_dose_reason", e.getFolicAcidHighDoseReason());
+        m.put("teratogenic_medication_found", e.getTeratogenicMedicationFound());
+        m.put("teratogenic_medication_action", e.getTeratogenicMedicationAction());
+        m.put("diabetes_control_optimised", e.getDiabetesControlOptimised());
+        m.put("hypertension_control_optimised", e.getHypertensionControlOptimised());
+        m.put("rubella_immunity_status", e.getRubellaImmunityStatus());
+        m.put("hiv_status_known", e.getHivStatusKnown());
+        m.put("hiv_art_optimised", e.getHivArtOptimised());
+        m.put("recorded_at", str(e.getRecordedAt()));
+        m.put("recorded_by", e.getRecordedBy());
+        m.put("client_offline_id", e.getClientOfflineId());
+        return m;
+    }
+
+    private static Map<String, Object> fertilityView(FertilityEpisodeEntity e) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("fertility_episode_id", str(e.getFertilityEpisodeId()));
+        m.put("subject_cpid", e.getSubjectCpid());
+        m.put("partner_cpid", e.getPartnerCpid());
+        m.put("partner_linkage_consent", e.getPartnerLinkageConsent());
+        m.put("status", e.getStatus());
+        m.put("opened_on", str(e.getOpenedOn()));
+        m.put("closed_on", str(e.getClosedOn()));
+        m.put("outcome", e.getOutcome());
+        m.put("months_trying", e.getMonthsTrying());
+        m.put("investigation_threshold_met", e.getInvestigationThresholdMet());
+        m.put("primary_or_secondary", e.getPrimaryOrSecondary());
+        m.put("female_factor_assessed", e.getFemaleFactorAssessed());
+        m.put("female_factor_findings", e.getFemaleFactorFindings());
+        m.put("male_factor_assessed", e.getMaleFactorAssessed());
+        m.put("male_factor_findings", e.getMaleFactorFindings());
+        m.put("recorded_at", str(e.getRecordedAt()));
+        m.put("recorded_by", e.getRecordedBy());
+        m.put("client_offline_id", e.getClientOfflineId());
+        return m;
+    }
+
+    private static Map<String, Object> deliveryView(DeliveryRecordEntity e) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("delivery_record_id", str(e.getDeliveryRecordId()));
+        m.put("mother_cpid", e.getMotherCpid());
+        m.put("pregnancy_episode_id", str(e.getPregnancyEpisodeId()));
+        m.put("status", e.getStatus());
+        m.put("delivered_at", str(e.getDeliveredAt()));
+        m.put("labour_onset", e.getLabourOnset());
+        m.put("delivery_mode", e.getDeliveryMode());
+        m.put("theatre_episode_ref", e.getTheatreEpisodeRef());
+        m.put("place_of_birth", e.getPlaceOfBirth());
+        m.put("pph_suspected", e.getPphSuspected());
+        m.put("estimated_blood_loss_ml", e.getEstimatedBloodLossMl());
+        m.put("perineal_outcome", e.getPerinealOutcome());
+        m.put("babies_delivered", e.getBabiesDelivered());
+        m.put("recorded_at", str(e.getRecordedAt()));
+        m.put("recorded_by", e.getRecordedBy());
+        m.put("client_offline_id", e.getClientOfflineId());
+        return m;
+    }
+
     private static void stamp(Map<String, Object> m, String sensitivityClass, String category, String basis) {
         m.put("sensitivity_class", sensitivityClass);
         m.put("confidentiality_category", category);

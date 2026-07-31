@@ -21,6 +21,7 @@ import zw.gov.mohcc.impilo.experience.service.SubjectResolutionService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Read-only proxy for pct's confidential reproductive-health lane
@@ -42,11 +43,10 @@ import java.util.Map;
  * confidentiality was protecting. This proxy preserves that: an unresolved subject, and any list
  * pct answers as empty, both come back as a 200 with an empty list or null body, never a 404.
  *
- * <h2>This is reads only</h2>
- * <p>pct has not yet exposed a write surface for these record types on this lane (contraceptive
- * episodes, TOP procedures/authorisations, and losses are all written from clinical workflows
- * elsewhere in pct today). Clinician and citizen UI surfaces for these reads land in a later task;
- * this controller exists so the routing and lane classification are correct before either does.
+ * <h2>Reads and writes on the confidential reproductive lane</h2>
+ * <p>W14-B adds reproductive intention, preconception, fertility and delivery surfaces alongside
+ * the W13-B contraception, loss and TOP reads. Writes pass domain statuses through verbatim; only
+ * transport failure becomes a 502.
  *
  * <h2>The browser holds neither HID nor CPID (Identity Contract §12)</h2>
  * <p>{@code {subjectCpid}} / {@code {motherCpid}} exist as real path segments so a clinician who
@@ -157,6 +157,121 @@ public class ConfidentialReproductiveReadController {
                 requestId, correlationId);
     }
 
+    /** Her current stated reproductive intention. {@code subjectCpid} may be {@code "me"}. */
+    @GetMapping("/reproductive-intentions/{subjectCpid}/current")
+    public ResponseEntity<?> currentReproductiveIntention(
+            @PathVariable String subjectCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String cpid = resolveSubject(subjectCpid, actorId);
+        if (cpid == null) {
+            return emptyObject(requestId, correlationId);
+        }
+        return forward(() -> pct.getCurrentReproductiveIntention(cpid), "reproductive intention",
+                requestId, correlationId);
+    }
+
+    /** Reproductive intention history. {@code subjectCpid} may be {@code "me"}. */
+    @GetMapping("/reproductive-intentions/{subjectCpid}/history")
+    public ResponseEntity<?> reproductiveIntentionHistory(
+            @PathVariable String subjectCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String cpid = resolveSubject(subjectCpid, actorId);
+        if (cpid == null) {
+            return emptyList(requestId, correlationId);
+        }
+        return forward(() -> pct.getReproductiveIntentionHistory(cpid), "reproductive intention history",
+                requestId, correlationId);
+    }
+
+    /** Active preconception plan. {@code subjectCpid} may be {@code "me"}. */
+    @GetMapping("/preconception-plans/{subjectCpid}/active")
+    public ResponseEntity<?> activePreconceptionPlan(
+            @PathVariable String subjectCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String cpid = resolveSubject(subjectCpid, actorId);
+        if (cpid == null) {
+            return emptyObject(requestId, correlationId);
+        }
+        return forward(() -> pct.getActivePreconceptionPlan(cpid), "preconception plan",
+                requestId, correlationId);
+    }
+
+    /** Preconception plan history. {@code subjectCpid} may be {@code "me"}. */
+    @GetMapping("/preconception-plans/{subjectCpid}/history")
+    public ResponseEntity<?> preconceptionPlanHistory(
+            @PathVariable String subjectCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String cpid = resolveSubject(subjectCpid, actorId);
+        if (cpid == null) {
+            return emptyList(requestId, correlationId);
+        }
+        return forward(() -> pct.getPreconceptionPlanHistory(cpid), "preconception plan history",
+                requestId, correlationId);
+    }
+
+    /** Open fertility episode. {@code subjectCpid} may be {@code "me"}. */
+    @GetMapping("/fertility-episodes/{subjectCpid}/current")
+    public ResponseEntity<?> currentFertilityEpisode(
+            @PathVariable String subjectCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String cpid = resolveSubject(subjectCpid, actorId);
+        if (cpid == null) {
+            return emptyObject(requestId, correlationId);
+        }
+        return forward(() -> pct.getCurrentFertilityEpisode(cpid), "fertility episode",
+                requestId, correlationId);
+    }
+
+    /** Fertility episode history. {@code subjectCpid} may be {@code "me"}. */
+    @GetMapping("/fertility-episodes/{subjectCpid}/history")
+    public ResponseEntity<?> fertilityEpisodeHistory(
+            @PathVariable String subjectCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String cpid = resolveSubject(subjectCpid, actorId);
+        if (cpid == null) {
+            return emptyList(requestId, correlationId);
+        }
+        return forward(() -> pct.getFertilityEpisodeHistory(cpid), "fertility episode history",
+                requestId, correlationId);
+    }
+
+    /** Delivery records for a mother. {@code motherCpid} may be {@code "me"}. */
+    @GetMapping("/delivery-records/mother/{motherCpid}")
+    public ResponseEntity<?> deliveryRecordsForMother(
+            @PathVariable String motherCpid,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String cpid = resolveSubject(motherCpid, actorId);
+        if (cpid == null) {
+            return emptyList(requestId, correlationId);
+        }
+        return forward(() -> pct.getDeliveryRecordsForMother(cpid), "delivery records",
+                requestId, correlationId);
+    }
+
+    /** Delivery record for a pregnancy episode. */
+    @GetMapping("/delivery-records/pregnancy/{pregnancyEpisodeId}")
+    public ResponseEntity<?> deliveryRecordForPregnancy(
+            @PathVariable UUID pregnancyEpisodeId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward(() -> pct.getDeliveryRecordForPregnancy(pregnancyEpisodeId),
+                "delivery record for pregnancy", requestId, correlationId);
+    }
+
     /**
      * Resolve the path subject to a real CPID without ever asking the browser to hold one.
      *
@@ -181,6 +296,14 @@ public class ConfidentialReproductiveReadController {
     private static ResponseEntity<?> emptyList(String requestId, String correlationId) {
         Map<String, Object> body = new HashMap<>();
         body.put("data", List.of());
+        body.put("meta", meta(requestId, correlationId));
+        return ResponseEntity.ok(body);
+    }
+
+    /** Unresolved subject on an object-shaped read — null body inside 200, never 404. */
+    private static ResponseEntity<?> emptyObject(String requestId, String correlationId) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", null);
         body.put("meta", meta(requestId, correlationId));
         return ResponseEntity.ok(body);
     }

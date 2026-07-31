@@ -22,6 +22,7 @@ import {
   useContraceptionHistory,
   usePregnancyLosses,
   useTopAuthorisations,
+  useCurrentReproductiveIntention,
 } from "../useConfidentialReproductive";
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -114,5 +115,32 @@ describe("clinician reproductive reads", () => {
     expect(get).toHaveBeenCalledWith(
       "/internal/v1/confidential/reproductive/top-authorisations/CP-4",
     );
+  });
+});
+
+describe("useCurrentReproductiveIntention (W14-B)", () => {
+  it("reads current intention via me for citizens", async () => {
+    get.mockResolvedValue({
+      data: { intention_id: "I-1", subject_cpid: "CP-1", intention: "UNDECIDED" },
+    });
+
+    const { result } = renderHook(() => useCurrentReproductiveIntention(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(get).toHaveBeenCalledWith(
+      "/internal/v1/confidential/reproductive/reproductive-intentions/me/current",
+    );
+    expect(result.current.data?.intention).toBe("UNDECIDED");
+  });
+
+  it("treats null data as absent, not an error", async () => {
+    get.mockResolvedValue({ data: null });
+
+    const { result } = renderHook(() => useCurrentReproductiveIntention(REPRODUCTIVE_SELF), {
+      wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
   });
 });

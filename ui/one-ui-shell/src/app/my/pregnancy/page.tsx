@@ -22,6 +22,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { BirthDestinationPanel } from "@/features/maternity/BirthDestinationPanel";
 import { CitizenContraceptionSection } from "@/features/maternity/reproductive/CitizenContraceptionSection";
+import { CitizenIntentionSection } from "@/features/maternity/reproductive/CitizenIntentionSection";
 import {
   isPregnancyConflict,
   isPregnancyUndatable,
@@ -405,6 +406,8 @@ export default function MyPregnancyPage() {
           )}
 
           <CitizenContraceptionSection />
+
+          <CitizenIntentionSection />
 
           <section>
             <h2 className="text-sm font-medium text-slate-700">

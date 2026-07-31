@@ -730,3 +730,87 @@ export async function fetchPatientCurrentPregnancy(
   );
   return response.data.data ?? null;
 }
+
+// --- W14-B: intention, preconception, fertility, delivery -----------------------------
+
+export interface ReproductiveIntention {
+  intention_id: string;
+  subject_cpid: string;
+  intention: string | null;
+  timeframe_months: number | null;
+  status: string | null;
+  recorded_at: string | null;
+}
+
+export interface PreconceptionPlan {
+  preconception_plan_id: string;
+  subject_cpid: string;
+  status: string | null;
+  opened_on: string | null;
+  folic_acid_started_on: string | null;
+}
+
+export interface FertilityEpisode {
+  fertility_episode_id: string;
+  subject_cpid: string;
+  status: string | null;
+  opened_on: string | null;
+  months_trying: number | null;
+}
+
+export interface DeliveryRecord {
+  delivery_record_id: string;
+  mother_cpid: string;
+  pregnancy_episode_id: string | null;
+  delivered_at: string | null;
+  delivery_mode: string | null;
+  babies_delivered: number | null;
+}
+
+export async function fetchCurrentReproductiveIntention(
+  subjectCpid: string,
+): Promise<ReproductiveIntention | null> {
+  const response = await apiClient.get<{ data: ReproductiveIntention | null }>(
+    `${REPRODUCTIVE_BASE}/reproductive-intentions/${encodeURIComponent(subjectCpid)}/current`,
+  );
+  return response.data.data ?? null;
+}
+
+export async function fetchActivePreconceptionPlan(
+  subjectCpid: string,
+): Promise<PreconceptionPlan | null> {
+  const response = await apiClient.get<{ data: PreconceptionPlan | null }>(
+    `${REPRODUCTIVE_BASE}/preconception-plans/${encodeURIComponent(subjectCpid)}/active`,
+  );
+  return response.data.data ?? null;
+}
+
+export async function fetchCurrentFertilityEpisode(
+  subjectCpid: string,
+): Promise<FertilityEpisode | null> {
+  const response = await apiClient.get<{ data: FertilityEpisode | null }>(
+    `${REPRODUCTIVE_BASE}/fertility-episodes/${encodeURIComponent(subjectCpid)}/current`,
+  );
+  return response.data.data ?? null;
+}
+
+export async function fetchDeliveryRecordsForMother(
+  motherCpid: string,
+): Promise<DeliveryRecord[]> {
+  const response = await apiClient.get<{ data: DeliveryRecord[] | null }>(
+    `${REPRODUCTIVE_BASE}/delivery-records/mother/${encodeURIComponent(motherCpid)}`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function recordReproductiveIntention(params: {
+  subjectCpid: string;
+  intention: string;
+  recordedBy: string;
+}): Promise<ReproductiveIntention> {
+  const response = await apiClient.post<{ data: ReproductiveIntention }>(
+    `${REPRODUCTIVE_BASE}/reproductive-intentions`,
+    params,
+  );
+  return response.data.data;
+}

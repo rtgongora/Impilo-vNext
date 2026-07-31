@@ -13,7 +13,7 @@
  * contraception coverage only via {@link useContraceptionCoverage} with `"me"`.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 const BASE = "/internal/v1/confidential/reproductive";
@@ -209,5 +209,266 @@ export function useTerminations(subjectCpid: string, enabled = true) {
         )
         .then((res) => res.data ?? []),
     retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+// ── W14-B: intention, preconception, fertility, delivery ─────────────────────
+
+export interface ReproductiveIntentionView {
+  intention_id: string;
+  subject_cpid: string;
+  intention: string | null;
+  timeframe_months: number | null;
+  desired_family_size: number | null;
+  partner_intention: string | null;
+  fertility_concern: string | null;
+  contraception_desired: string | null;
+  unmet_need: string | null;
+  notes: string | null;
+  status: string | null;
+  recorded_at: string | null;
+  recorded_by: string | null;
+}
+
+export interface PreconceptionPlanView {
+  preconception_plan_id: string;
+  subject_cpid: string;
+  status: string | null;
+  opened_on: string | null;
+  folic_acid_started_on: string | null;
+  folic_acid_dose_mg: number | null;
+  folic_acid_high_dose_reason: string | null;
+  teratogenic_medication_found: string | null;
+  teratogenic_medication_action: string | null;
+  recorded_at: string | null;
+}
+
+export interface FertilityEpisodeView {
+  fertility_episode_id: string;
+  subject_cpid: string;
+  status: string | null;
+  opened_on: string | null;
+  months_trying: number | null;
+  female_factor_assessed: string | null;
+  male_factor_assessed: string | null;
+  partner_linkage_consent: string | null;
+  recorded_at: string | null;
+}
+
+export interface DeliveryRecordView {
+  delivery_record_id: string;
+  mother_cpid: string;
+  pregnancy_episode_id: string | null;
+  status: string | null;
+  delivered_at: string | null;
+  delivery_mode: string | null;
+  babies_delivered: number | null;
+  pph_suspected: boolean | null;
+  recorded_at: string | null;
+}
+
+export const confidentialReproductiveKeysW14 = {
+  currentIntention: (subjectCpid: string) =>
+    ["confidential-reproductive", "intention-current", subjectCpid] as const,
+  intentionHistory: (subjectCpid: string) =>
+    ["confidential-reproductive", "intention-history", subjectCpid] as const,
+  activePreconception: (subjectCpid: string) =>
+    ["confidential-reproductive", "preconception-active", subjectCpid] as const,
+  preconceptionHistory: (subjectCpid: string) =>
+    ["confidential-reproductive", "preconception-history", subjectCpid] as const,
+  currentFertility: (subjectCpid: string) =>
+    ["confidential-reproductive", "fertility-current", subjectCpid] as const,
+  fertilityHistory: (subjectCpid: string) =>
+    ["confidential-reproductive", "fertility-history", subjectCpid] as const,
+  deliveriesForMother: (motherCpid: string) =>
+    ["confidential-reproductive", "deliveries-mother", motherCpid] as const,
+  deliveryForPregnancy: (pregnancyEpisodeId: string) =>
+    ["confidential-reproductive", "delivery-pregnancy", pregnancyEpisodeId] as const,
+};
+
+export function useCurrentReproductiveIntention(
+  subjectCpid: string = REPRODUCTIVE_SELF,
+  enabled = true,
+) {
+  return useQuery<ReproductiveIntentionView | null>({
+    queryKey: confidentialReproductiveKeysW14.currentIntention(subjectCpid),
+    enabled: enabled && !!subjectCpid,
+    queryFn: () =>
+      apiClient
+        .get<{ data: ReproductiveIntentionView | null }>(
+          `${BASE}/reproductive-intentions/${encodeCpid(subjectCpid)}/current`,
+        )
+        .then((res) => res.data ?? null),
+    retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+export function useReproductiveIntentionHistory(subjectCpid: string, enabled = true) {
+  return useQuery<ReproductiveIntentionView[]>({
+    queryKey: confidentialReproductiveKeysW14.intentionHistory(subjectCpid),
+    enabled: enabled && !!subjectCpid,
+    queryFn: () =>
+      apiClient
+        .get<{ data: ReproductiveIntentionView[] | null }>(
+          `${BASE}/reproductive-intentions/${encodeCpid(subjectCpid)}/history`,
+        )
+        .then((res) => res.data ?? []),
+    retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+export function useActivePreconceptionPlan(subjectCpid: string, enabled = true) {
+  return useQuery<PreconceptionPlanView | null>({
+    queryKey: confidentialReproductiveKeysW14.activePreconception(subjectCpid),
+    enabled: enabled && !!subjectCpid,
+    queryFn: () =>
+      apiClient
+        .get<{ data: PreconceptionPlanView | null }>(
+          `${BASE}/preconception-plans/${encodeCpid(subjectCpid)}/active`,
+        )
+        .then((res) => res.data ?? null),
+    retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+export function usePreconceptionPlanHistory(subjectCpid: string, enabled = true) {
+  return useQuery<PreconceptionPlanView[]>({
+    queryKey: confidentialReproductiveKeysW14.preconceptionHistory(subjectCpid),
+    enabled: enabled && !!subjectCpid,
+    queryFn: () =>
+      apiClient
+        .get<{ data: PreconceptionPlanView[] | null }>(
+          `${BASE}/preconception-plans/${encodeCpid(subjectCpid)}/history`,
+        )
+        .then((res) => res.data ?? []),
+    retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+export function useCurrentFertilityEpisode(subjectCpid: string, enabled = true) {
+  return useQuery<FertilityEpisodeView | null>({
+    queryKey: confidentialReproductiveKeysW14.currentFertility(subjectCpid),
+    enabled: enabled && !!subjectCpid,
+    queryFn: () =>
+      apiClient
+        .get<{ data: FertilityEpisodeView | null }>(
+          `${BASE}/fertility-episodes/${encodeCpid(subjectCpid)}/current`,
+        )
+        .then((res) => res.data ?? null),
+    retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+export function useFertilityEpisodeHistory(subjectCpid: string, enabled = true) {
+  return useQuery<FertilityEpisodeView[]>({
+    queryKey: confidentialReproductiveKeysW14.fertilityHistory(subjectCpid),
+    enabled: enabled && !!subjectCpid,
+    queryFn: () =>
+      apiClient
+        .get<{ data: FertilityEpisodeView[] | null }>(
+          `${BASE}/fertility-episodes/${encodeCpid(subjectCpid)}/history`,
+        )
+        .then((res) => res.data ?? []),
+    retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+export function useDeliveryRecordsForMother(motherCpid: string, enabled = true) {
+  return useQuery<DeliveryRecordView[]>({
+    queryKey: confidentialReproductiveKeysW14.deliveriesForMother(motherCpid),
+    enabled: enabled && !!motherCpid,
+    queryFn: () =>
+      apiClient
+        .get<{ data: DeliveryRecordView[] | null }>(
+          `${BASE}/delivery-records/mother/${encodeCpid(motherCpid)}`,
+        )
+        .then((res) => res.data ?? []),
+    retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+export function useDeliveryRecordForPregnancy(pregnancyEpisodeId: string, enabled = true) {
+  return useQuery<DeliveryRecordView | null>({
+    queryKey: confidentialReproductiveKeysW14.deliveryForPregnancy(pregnancyEpisodeId),
+    enabled: enabled && !!pregnancyEpisodeId,
+    queryFn: () =>
+      apiClient
+        .get<{ data: DeliveryRecordView | null }>(
+          `${BASE}/delivery-records/pregnancy/${encodeURIComponent(pregnancyEpisodeId)}`,
+        )
+        .then((res) => res.data ?? null),
+    retry: (failureCount, error) => !isReproductiveReadUnavailable(error) && failureCount < 2,
+  });
+}
+
+export interface RecordIntentionInput {
+  subjectCpid: string;
+  intention: string;
+  timeframeMonths?: number;
+  recordedBy: string;
+  clientOfflineId?: string;
+}
+
+export function useRecordReproductiveIntention() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: RecordIntentionInput) =>
+      apiClient.post<{ data: ReproductiveIntentionView & { replayed?: boolean } }>(
+        `${BASE}/reproductive-intentions`,
+        {
+          subjectCpid: input.subjectCpid,
+          intention: input.intention,
+          timeframeMonths: input.timeframeMonths,
+          recordedBy: input.recordedBy,
+          clientOfflineId: input.clientOfflineId,
+        },
+      ),
+    onSuccess: (_data, input) => {
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.currentIntention(input.subjectCpid),
+      });
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.intentionHistory(input.subjectCpid),
+      });
+    },
+  });
+}
+
+export interface RecordDeliveryInput {
+  motherCpid: string;
+  pregnancyEpisodeId?: string;
+  deliveredAt: string;
+  deliveryMode: string;
+  babiesDelivered?: number;
+  recordedBy: string;
+  clientOfflineId?: string;
+}
+
+export function useRecordDelivery() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: RecordDeliveryInput) =>
+      apiClient.post<{ data: DeliveryRecordView & { replayed?: boolean } }>(
+        `${BASE}/delivery-records`,
+        {
+          motherCpid: input.motherCpid,
+          pregnancyEpisodeId: input.pregnancyEpisodeId,
+          deliveredAt: input.deliveredAt,
+          deliveryMode: input.deliveryMode,
+          babiesDelivered: input.babiesDelivered,
+          recordedBy: input.recordedBy,
+          clientOfflineId: input.clientOfflineId,
+        },
+      ),
+    onSuccess: (_data, input) => {
+      void client.invalidateQueries({
+        queryKey: confidentialReproductiveKeysW14.deliveriesForMother(input.motherCpid),
+      });
+      if (input.pregnancyEpisodeId) {
+        void client.invalidateQueries({
+          queryKey: confidentialReproductiveKeysW14.deliveryForPregnancy(input.pregnancyEpisodeId),
+        });
+      }
+    },
   });
 }

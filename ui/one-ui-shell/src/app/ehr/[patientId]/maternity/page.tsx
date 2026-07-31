@@ -28,6 +28,12 @@ import { MaternitySummaryPanel } from "@/features/maternity/MaternitySummaryPane
 import { BirthDestinationPanel } from "@/features/maternity/BirthDestinationPanel";
 import { PregnancyEpisodesPanel } from "@/features/maternity/reproductive/PregnancyEpisodesPanel";
 import { ReproductiveConfidentialPanel } from "@/features/maternity/reproductive/ReproductiveConfidentialPanel";
+import {
+  DeliveryRecordPanel,
+  FertilityPanel,
+  PreconceptionPanel,
+  ReproductiveIntentionPanel,
+} from "@/features/maternity/reproductive/W14ReproductivePanels";
 import { MaternityClinicalJourneysSection } from "@/features/maternity/journeys/MaternityClinicalJourneysSection";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -66,6 +72,41 @@ export default function MaternityMonitoringPage() {
           <>
             <PregnancyEpisodesPanel patientCpid={patientId} />
             <ReproductiveConfidentialPanel patientCpid={patientId} />
+            <section
+              className="mb-4 rounded-lg border border-violet-200/90 bg-card p-5"
+              data-testid="w14-reproductive-panel"
+            >
+              <h2 className="text-lg font-semibold text-foreground">
+                Intention, preconception, fertility & delivery
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                W14-B confidential lane — empty sections may mean withheld, not absent.
+              </p>
+              <div className="mt-4 space-y-5">
+                <div>
+                  <h3 className="text-sm font-medium text-foreground">Reproductive intention</h3>
+                  <ReproductiveIntentionPanel
+                    patientCpid={patientId}
+                    recordedBy={user?.id ?? user?.displayName ?? "unknown"}
+                  />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-foreground">Preconception</h3>
+                  <PreconceptionPanel patientCpid={patientId} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-foreground">Fertility</h3>
+                  <FertilityPanel patientCpid={patientId} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-foreground">Delivery records</h3>
+                  <DeliveryRecordPanel
+                    patientCpid={patientId}
+                    recordedBy={user?.id ?? user?.displayName ?? "unknown"}
+                  />
+                </div>
+              </div>
+            </section>
           </>
         )}
 
