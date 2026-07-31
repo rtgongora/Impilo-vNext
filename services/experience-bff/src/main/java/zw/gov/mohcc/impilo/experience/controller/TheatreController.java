@@ -327,30 +327,28 @@ public class TheatreController {
             @RequestParam(required = false) String facilityId,
             @RequestParam(required = false) String date,
             @RequestParam(required = false) String room) {
+        // Queue failure must not render as an empty theatre day. Per-case readiness
+        // gaps stay as board_state=Unknown so one bad case does not blank the board.
+        JsonNode queue = inpatientClient.theatreQueue();
+        JsonNode cases = queue != null && queue.has("data") ? queue.get("data") : queue;
         List<Map<String, Object>> rows = new ArrayList<>();
-        try {
-            JsonNode queue = inpatientClient.theatreQueue();
-            JsonNode cases = queue != null && queue.has("data") ? queue.get("data") : queue;
-            if (cases != null && cases.isArray()) {
-                for (JsonNode c : cases) {
-                    String caseId = c.has("episode_id") ? c.get("episode_id").asText()
-                            : (c.has("id") ? c.get("id").asText() : null);
-                    if (caseId == null) {
-                        continue;
-                    }
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("case", c);
-                    try {
-                        row.put("board", inpatientClient.theatreBoardReadiness(caseId, Map.of()));
-                    } catch (Exception e) {
-                        log.warn("board-readiness failed for case {}: {}", caseId, e.getMessage());
-                        row.put("board", Map.of("board_state", "Unknown"));
-                    }
-                    rows.add(row);
+        if (cases != null && cases.isArray()) {
+            for (JsonNode c : cases) {
+                String caseId = c.has("episode_id") ? c.get("episode_id").asText()
+                        : (c.has("id") ? c.get("id").asText() : null);
+                if (caseId == null) {
+                    continue;
                 }
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("case", c);
+                try {
+                    row.put("board", inpatientClient.theatreBoardReadiness(caseId, Map.of()));
+                } catch (Exception e) {
+                    log.warn("board-readiness failed for case {}: {}", caseId, e.getMessage());
+                    row.put("board", Map.of("board_state", "Unknown"));
+                }
+                rows.add(row);
             }
-        } catch (Exception e) {
-            log.warn("Readiness board composition failed: {}", e.getMessage());
         }
         Map<String, Object> board = new LinkedHashMap<>();
         board.put("facility_id", facilityId);

@@ -70,6 +70,8 @@ type Props = {
   caseId: string;
   onBack: () => void;
   onOpenProcedure?: () => void;
+  /** Wave M4 — anaesthesia chart / CSSD / controlled-drug register. */
+  onOpenCaseOps?: () => void;
 };
 
 type ReadinessResult = {
@@ -107,7 +109,7 @@ function asRows(data: unknown): Array<Record<string, unknown>> {
   return Array.isArray(data) ? (data as Array<Record<string, unknown>>) : [];
 }
 
-export function TheatreCaseScreen({ caseId, onBack, onOpenProcedure }: Props) {
+export function TheatreCaseScreen({ caseId, onBack, onOpenProcedure, onOpenCaseOps }: Props) {
   const qc = useQueryClient();
   const [readiness, setReadiness] = useState<ReadinessResult | null>(null);
   const [performedProcedure, setPerformedProcedure] = useState("");
@@ -284,6 +286,14 @@ export function TheatreCaseScreen({ caseId, onBack, onOpenProcedure }: Props) {
             title="Open procedure episode wizard"
             variant="secondary"
             onPress={onOpenProcedure}
+          />
+        ) : null}
+        {onOpenCaseOps ? (
+          <Button
+            testID="theatre-open-case-ops"
+            title="Case ops (anaesthesia / CSSD / drugs)"
+            variant="secondary"
+            onPress={onOpenCaseOps}
           />
         ) : null}
 

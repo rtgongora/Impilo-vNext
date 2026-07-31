@@ -8,11 +8,12 @@
  */
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
-import { Screen, Header, Badge, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
+import { Screen, Header, Badge, Button, LoadingSpinner, ErrorState, colors } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import { listTheatreQueue } from "../../services/procedureService";
 import { TheatreCaseScreen } from "./TheatreCaseScreen";
 import { TheatreProcedureScreen } from "./TheatreProcedureScreen";
+import { TheatreOpsHubScreen } from "./TheatreOpsHubScreen";
 
 type TheatreCaseRow = {
   id?: string;
@@ -32,11 +33,25 @@ function asRows(data: unknown): TheatreCaseRow[] {
 export function TheatreQueueScreen() {
   const [caseId, setCaseId] = useState<string | null>(null);
   const [showProcedure, setShowProcedure] = useState(false);
+  const [showOps, setShowOps] = useState(false);
+  const [opsCaseId, setOpsCaseId] = useState<string | null>(null);
 
   const queueQuery = useQuery({
     queryKey: ["theatre-queue"],
     queryFn: listTheatreQueue,
   });
+
+  if (showOps) {
+    return (
+      <TheatreOpsHubScreen
+        initialCaseId={opsCaseId}
+        onBack={() => {
+          setShowOps(false);
+          setOpsCaseId(null);
+        }}
+      />
+    );
+  }
 
   if (showProcedure && caseId) {
     return (
@@ -53,6 +68,10 @@ export function TheatreQueueScreen() {
         caseId={caseId}
         onBack={() => setCaseId(null)}
         onOpenProcedure={() => setShowProcedure(true)}
+        onOpenCaseOps={() => {
+          setOpsCaseId(caseId);
+          setShowOps(true);
+        }}
       />
     );
   }
@@ -92,6 +111,12 @@ export function TheatreQueueScreen() {
             ? "No active theatre cases on the board."
             : `${rows.length} active case${rows.length === 1 ? "" : "s"}`}
         </Text>
+        <Button
+          testID="theatre-open-ops-hub"
+          title="Theatre ops"
+          variant="secondary"
+          onPress={() => setShowOps(true)}
+        />
         <ScrollView
           refreshControl={
             <RefreshControl
