@@ -41,7 +41,7 @@ describe("ResuscitationWorkspace", () => {
     await user.click(screen.getByRole("button", { name: /Log CPR cycle/i }));
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith(
-        `/internal/v1/emergency/${ACT}/cpr-cycles`,
+        `/internal/v1/ed/resuscitation/${ACT}/cpr-cycles`,
         expect.objectContaining({ cycleNumber: 1, rhythm: "PEA" }),
         expect.objectContaining({ extraHeaders: { "X-Trauma-Episode-ID": EP } }),
       ),
@@ -54,7 +54,7 @@ describe("ResuscitationWorkspace", () => {
     await user.click(screen.getByRole("button", { name: /A · Airway/i }));
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith(
-        `/internal/v1/emergency/${ACT}/phases`,
+        `/internal/v1/ed/resuscitation/${ACT}/phases`,
         expect.objectContaining({ phase: "AIRWAY" }),
         expect.anything(),
       ),
@@ -67,7 +67,7 @@ describe("ResuscitationWorkspace", () => {
     await user.click(screen.getByRole("button", { name: /Adrenaline 1 mg/i }));
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith(
-        `/internal/v1/emergency/${ACT}/medications`,
+        `/internal/v1/ed/resuscitation/${ACT}/medications`,
         expect.objectContaining({ name: "Adrenaline", dose: "1 mg", route: "IV" }),
         expect.anything(),
       ),

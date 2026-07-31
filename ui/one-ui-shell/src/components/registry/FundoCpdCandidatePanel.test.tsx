@@ -30,6 +30,7 @@ vi.mock("@/hooks/queries/useProviderCouncil", () => ({
     ],
     isLoading: false,
   }),
+  useFundoCpdCandidatesByPublicId: () => ({ data: undefined, isLoading: false }),
   useAcceptFundoCpd: () => ({ mutate: acceptMutate, isPending: false }),
   useRejectFundoCpd: () => ({ mutate: rejectMutate, isPending: false }),
 }));
