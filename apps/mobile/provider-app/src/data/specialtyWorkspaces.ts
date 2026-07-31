@@ -5,7 +5,7 @@ export type SpecialtyWorkspaceDef = {
   tools: string[];
 };
 
-/** 18 Lovable-aligned specialty workspaces (108 tool labels). */
+/** 18 Lovable-aligned specialty workspaces (109 tool labels). */
 export const SPECIALTY_WORKSPACES: readonly SpecialtyWorkspaceDef[] = [
   { id: "anaesthesia", name: "Anaesthesia", icon: "Syringe", tools: ["Pre-op Assessment", "ASA Classification", "Airway Assessment (Mallampati)", "Anaesthetic Plan", "Recovery Checklist", "Pain Protocol"] },
   { id: "burns", name: "Burns Unit", icon: "Flame", tools: ["Burns Assessment (Rule of 9s)", "Fluid Resuscitation (Parkland)", "Wound Chart", "Graft Planning", "Pain Ladder", "Nutrition Plan"] },
@@ -20,7 +20,7 @@ export const SPECIALTY_WORKSPACES: readonly SpecialtyWorkspaceDef[] = [
   { id: "neonatal", name: "Neonatal", icon: "Baby", tools: ["APGAR Record", "Gestational Age Assessment", "Growth Chart (Fenton)", "Surfactant Protocol", "Bilirubin Chart", "Feeding Plan"] },
   { id: "nephrology", name: "Nephrology", icon: "Filter", tools: ["eGFR Trend", "Urinalysis Review", "Biopsy Report", "Transplant Assessment", "Immunosuppression Protocol", "Dialysis Access"] },
   { id: "neurology", name: "Neurology", icon: "Brain", tools: ["NIHSS Score", "GCS Tracker", "Seizure Log", "Lumbar Puncture Record", "MS Relapse Assessment", "Cognitive Screen (MMSE/MoCA)"] },
-  { id: "obstetrics", name: "Obstetrics", icon: "Baby", tools: ["Partograph", "CTG Interpretation", "Bishop Score", "PPH Protocol", "Eclampsia Protocol", "Neonatal Resuscitation"] },
+  { id: "obstetrics", name: "Obstetrics", icon: "Baby", tools: ["Partograph", "CTG Interpretation", "Bishop Score", "PPH Protocol", "Eclampsia Protocol", "Neonatal Resuscitation", "Maternal Near-Miss Assessment"] },
   { id: "oncology", name: "Oncology", icon: "Target", tools: ["Staging (TNM)", "Performance Status (ECOG)", "Treatment Plan", "Symptom Assessment (ESAS)", "Palliative Care Needs", "MDT Summary"] },
   { id: "ophthalmology", name: "Ophthalmology", icon: "Eye", tools: ["Visual Acuity Record", "IOP Measurement", "Fundoscopy Report", "Visual Field Test", "Slit Lamp Findings", "Refraction Record"] },
   { id: "orthopaedics", name: "Orthopaedics", icon: "Bone", tools: ["Fracture Classification", "Neurovascular Check", "Cast/Splint Record", "ROM Assessment", "VTE Prophylaxis", "Rehab Milestones"] },

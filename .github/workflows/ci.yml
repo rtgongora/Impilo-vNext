@@ -65,6 +65,55 @@ jobs:
         run: |
           mvn test -pl zw.gov.mohcc.impilo:tshepo-authz-service,zw.gov.mohcc.impilo:shared-core -am
 
+  # F4: non-canonical branches never reached backend-reactor-tests (gated inside
+  # preview-pipeline-gates on the staging-ux branch only). Diff-scoped -pl/-am
+  # covers the changed modules at bounded runner cost; the full reactor stays
+  # on canonical push via preview-pipeline-gates.
+  backend-diff-scoped-tests:
+    name: Backend Diff-Scoped Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && github.ref != 'refs/heads/claude/staging-ux-orchestration-remediation-Yypyl')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Resolve affected Maven modules
+        id: affected
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before || '' }}
+        run: |
+          chmod +x scripts/build/affected-maven-modules.sh
+          MODULES="$(bash scripts/build/affected-maven-modules.sh)"
+          echo "modules=$MODULES" >> "$GITHUB_OUTPUT"
+          echo "Affected modules: ${MODULES:-none}"
+
+      - name: Test affected modules (-pl -am)
+        if: steps.affected.outputs.modules != '' && steps.affected.outputs.modules != 'ALL'
+        working-directory: services
+        run: |
+          mvn test -pl "${{ steps.affected.outputs.modules }}" -am -Dspring.profiles.active=test
+
+      - name: Test full reactor (shared inputs changed)
+        if: steps.affected.outputs.modules == 'ALL'
+        working-directory: services
+        run: |
+          mvn test -Dspring.profiles.active=test \
+            -pl '!oros-service,!experience-bff,!zw.gov.mohcc.impilo:tshepo-authz-service'
+
+      - name: Nothing to test
+        if: steps.affected.outputs.modules == ''
+        run: echo "No Java module changes since baseline — skipping."
+
   oros-imaging-test:
     name: OROS Imaging Tests (dcm4che)
     runs-on: ubuntu-latest

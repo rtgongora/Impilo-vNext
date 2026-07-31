@@ -27,6 +27,13 @@ Thresholds a caller supplies are fine — `TreatmentBurdenScore` and
 `CognitiveScreenScore.atOrBelowCutOff` both take them as parameters, which puts the decision in
 governed content where a ministry can change it without a code release.
 
+## Known frontend drift (follow-up)
+
+`ui/one-ui-shell/src/components/clinical/MedscapeTools.tsx` implements CKD-EPI 2021 eGFR in
+TypeScript (around the `gfr` memo), duplicating `EgfrCalculator` in this library. Do not "fix"
+that by copying more arithmetic into the browser — route the tool through a BFF-backed calculator
+endpoint that calls this library, so web and service cannot disagree on a creatinine.
+
 ## Two safety properties every calculator holds
 
 **Cannot-compute is a first-class answer.** Every calculator returns a result type carrying either a

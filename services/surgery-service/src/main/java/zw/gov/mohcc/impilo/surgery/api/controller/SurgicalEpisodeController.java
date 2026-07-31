@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.OpenEpisodeRequest;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.ReopenEpisodeRequest;
 import zw.gov.mohcc.impilo.surgery.api.dto.SurgicalEpisodeDtos.SurgicalEpisodeView;
+import zw.gov.mohcc.impilo.surgery.core.EpisodeSpecialtyService;
 import zw.gov.mohcc.impilo.surgery.core.SurgicalEpisodeService;
 
 import java.util.List;
@@ -25,9 +26,11 @@ import java.util.UUID;
 public class SurgicalEpisodeController {
 
     private final SurgicalEpisodeService service;
+    private final EpisodeSpecialtyService specialtyService;
 
-    public SurgicalEpisodeController(SurgicalEpisodeService service) {
+    public SurgicalEpisodeController(SurgicalEpisodeService service, EpisodeSpecialtyService specialtyService) {
         this.service = service;
+        this.specialtyService = specialtyService;
     }
 
     @PostMapping
@@ -66,5 +69,34 @@ public class SurgicalEpisodeController {
             predecessor = UUID.fromString(req.reoperationOfEpisodeId());
         }
         return service.reopen(id, req.reason(), predecessor);
+    }
+
+    // ── V011, demonstration 4: every specialty on the case, not just the lead ──────────
+
+    @GetMapping("/{id}/specialties")
+    public List<Map<String, Object>> specialties(@PathVariable UUID id) {
+        return specialtyService.listSpecialties(id);
+    }
+
+    @PostMapping("/{id}/specialties")
+    public Map<String, Object> addSpecialty(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+        return specialtyService.addSpecialty(id, body.get("specialty"), body.get("role"), body.get("contribution"));
+    }
+
+    /** Handing the lead over is a distinct act from adding a team, and has its own endpoint. */
+    @PostMapping("/{id}/specialties/lead")
+    public List<Map<String, Object>> transferLead(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+        return specialtyService.transferLead(id, body.get("specialty"), body.get("contribution"));
+    }
+
+    /**
+     * The specialty travels as a QUERY PARAMETER, not a final path segment. As a segment it
+     * would become the ext_authz derived resource type ({@code .../specialties/GENERAL_SURGERY}
+     * derives {@code GENERAL_SURGERY}, not {@code specialties}), so no policy row could ever
+     * match it — the free-text-code-in-path trap the programme was corrected for.
+     */
+    @DeleteMapping("/{id}/specialties")
+    public List<Map<String, Object>> removeSpecialty(@PathVariable UUID id, @RequestParam String specialty) {
+        return specialtyService.removeSpecialty(id, specialty);
     }
 }

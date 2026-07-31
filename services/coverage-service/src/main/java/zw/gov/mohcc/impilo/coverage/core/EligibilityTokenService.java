@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.coverage.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.security.secrets.RequiredSecret;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -17,6 +18,16 @@ import java.util.Map;
  * secret, so a facility can carry an eligibility decision offline and it can be validated
  * later at claim time. Implemented with the JDK's HMAC (no external crypto dependency);
  * the wire format is a standard {@code header.payload.signature} JWT.
+ *
+ * <p>{@code ruvimbo.token.secret} is required. It previously carried an inline default with no
+ * warning at all, so a token minted anywhere in the estate could be forged by anyone reading this
+ * file — and since a token is what lets a facility claim against a payer offline, that is a
+ * financial control, not a nicety.</p>
+ *
+ * <p>A symmetric HMAC is defensible only while issue and verify both happen inside this service.
+ * If a payer is ever to verify a token independently, this must become an asymmetric signature via
+ * tshepo-keys, since handing the verifier the secret hands it the ability to mint. Recorded in
+ * {@code docs/runbooks/key-ceremony.md}.</p>
  */
 @Service
 public class EligibilityTokenService {
@@ -28,9 +39,12 @@ public class EligibilityTokenService {
 
     private final byte[] secret;
 
-    public EligibilityTokenService(
-            @Value("${ruvimbo.token.secret:ruvimbo-dev-eligibility-secret-change-me}") String secret) {
-        this.secret = secret.getBytes(StandardCharsets.UTF_8);
+    public EligibilityTokenService(@Value("${ruvimbo.token.secret:}") String secret) {
+        this.secret = RequiredSecret.require(
+                "ruvimbo.token.secret", secret,
+                "Offline eligibility tokens are signed with it, so a known secret lets anyone mint a "
+                        + "coverage decision that a payer will honour.")
+                .getBytes(StandardCharsets.UTF_8);
     }
 
     public record IssuedToken(String token, Instant issuedAt, Instant expiresAt) {}

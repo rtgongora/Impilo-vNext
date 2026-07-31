@@ -60,14 +60,14 @@ spring:
 
 vito:
   identity:
-    # Impilo ID at-rest encryption key (Identity Contract §6). Production MUST
-    # supply a >=32-char secret via tshepo-keys custody; unset falls back to a
-    # dev key with a loud warning so the preview estate boots.
+    # Impilo ID at-rest encryption key (Identity Contract §6). REQUIRED: >=32 chars,
+    # provisioned into the impilo-app-secrets Secret by scripts/secrets/bootstrap-secrets.sh.
+    # The service refuses to start without it — see ImpiloIdCipher.
     impilo-id-encryption-key: ${VITO_IMPILO_ID_ENCRYPTION_KEY:}
   qr:
     # QR signing key seed (Identity Contract §10 / C3). Deterministic Ed25519 key
-    # so signatures survive restarts and verify cross-instance. Production MUST
-    # supply a >=32-char secret via tshepo-keys custody.
+    # so signatures survive restarts and verify cross-instance. REQUIRED unless
+    # vito.qr.signing-source=tshepo-keys, where the key lives in the sovereign key service.
     signing-key-seed: ${VITO_QR_SIGNING_KEY_SEED:}
   # Argon2id parameters (Architect directive: m=64MB, t=3, p=4)
   argon2:
@@ -125,6 +125,15 @@ vito:
     # DualEmitPolicy: LEGACY_ONLY | V1_1_ONLY | DUAL
     emit-mode: ${VITO_EMIT_MODE:DUAL}
   outbox:
+
+# Printed-card trust anchor (CardAssertionVerifier). Verifying a scanned card needs
+# card-print's public key: either injected directly, or derived from the same signing
+# seed card-print-agent holds. One of the two is REQUIRED — bootstrap-secrets.sh supplies
+# the seed to both services so they agree without a key-exchange step.
+card-print:
+  qr:
+    public-key: ${CARD_PRINT_QR_PUBLIC_KEY:}
+    signing-key-seed: ${CARD_PRINT_QR_SIGNING_KEY_SEED:}
 
 impilo:
   ops:

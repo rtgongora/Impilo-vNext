@@ -30,8 +30,8 @@ import { resolveTool, RENDERED_SURFACES } from "../../screens/provider/Specialty
 const ALL_LABELS = SPECIALTY_WORKSPACES.flatMap((w) => w.tools);
 
 describe("every advertised tool is registered", () => {
-  it("covers all 108 advertised labels", () => {
-    expect(ALL_LABELS.length).toBe(108);
+  it("covers all 109 advertised labels", () => {
+    expect(ALL_LABELS.length).toBe(109);
     expect(ALL_LABELS.filter((t) => !resolveTool(t))).toEqual([]);
   });
 
@@ -131,6 +131,12 @@ describe("obstetrics: partograph and CTG resolve to the governed instruments, no
     const d = resolveTool("CTG Interpretation");
     expect(d?.state).toBe("WIRED");
     expect(d?.state === "WIRED" && d.surface).toBe("CtgWorkspace");
+  });
+
+  it("renders the governed maternal near-miss workspace", () => {
+    const d = resolveTool("Maternal Near-Miss Assessment");
+    expect(d?.state).toBe("WIRED");
+    expect(d?.state === "WIRED" && d.surface).toBe("MaternalNearMissWorkspace");
   });
 
   it("leaves Bishop Score with RMNP rather than sweeping it in", () => {

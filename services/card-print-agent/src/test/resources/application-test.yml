@@ -24,6 +24,11 @@ spring:
         jwt:
           issuer-uri: ""
 
+card-print:
+  qr:
+    # Strong test-only material — QrAssertionService refuses to start without it.
+    signing-key-seed: card-print-test-signing-seed-at-least-32b
+
 impilo:
   security:
     disable-oauth-for-tests: true

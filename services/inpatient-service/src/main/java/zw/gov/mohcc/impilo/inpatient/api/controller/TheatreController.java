@@ -71,6 +71,17 @@ public class TheatreController {
         return theatreService.caseDetail(id);
     }
 
+    /**
+     * Wave B3 — confirm marked anatomical site and laterality (authz resource {@code site-side}).
+     * Body: {@code laterality} (required, closed vocab) and optional {@code anatomicalSite}.
+     * Actor provenance is taken from the trust context ({@code X-Actor-ID}), not the body.
+     */
+    @PostMapping("/cases/{id}/site-side")
+    public Map<String, Object> confirmSiteAndSide(@PathVariable UUID id,
+                                                  @RequestBody Map<String, Object> body) {
+        return theatreService.confirmSiteAndSide(id, body != null ? body : Map.of());
+    }
+
     // ── Wave 5b §15 — EMERGENCY SURGERY rapid activation + emergency consent exception ──
     @PostMapping("/cases/emergency")
     public ResponseEntity<Map<String, Object>> activateEmergency(

@@ -8,8 +8,17 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { AssessmentType, FunctionalAssessment } from "@/hooks/queries/useStructuredHistory";
-import { useFunctionalAssessments } from "@/hooks/queries/useStructuredHistory";
+import {
+  useFunctionalAssessments,
+  useRecordFunctionalAssessment,
+} from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+
+const MAX_BY_TYPE: Record<AssessmentType, number> = {
+  barthel: 100,
+  katz: 6,
+  lawton: 8,
+};
 
 function buildTrendHistory(assessments: FunctionalAssessment[]): { date: string; barthel: number; katz: number; lawton: number }[] {
   const byDate = new Map<string, { date: string; barthel?: number; katz?: number; lawton?: number }>();
@@ -58,6 +67,7 @@ export default function FunctionalStatusPage() {
   const { data: encountersData } = useEncounters(patientId);
 
   const { data, isLoading, isError, refetch } = useFunctionalAssessments(patientId);
+  const recordAssessment = useRecordFunctionalAssessment(patientId);
   const assessments: FunctionalAssessment[] = data?.data ?? [];
   const trendHistory = buildTrendHistory(assessments);
   const activeEncounter = (encountersData?.data ?? []).find(
@@ -65,8 +75,40 @@ export default function FunctionalStatusPage() {
       encounter.attributes.isOpen
   );
   const [activeTab, setActiveTab] = useState<AssessmentType>("barthel");
+  const [showNew, setShowNew] = useState(false);
+  const [newType, setNewType] = useState<AssessmentType>("barthel");
+  const [newScore, setNewScore] = useState("");
+  const [newAssessor, setNewAssessor] = useState("");
+  const [newInterpretation, setNewInterpretation] = useState("");
+  const [scoreAbsent, setScoreAbsent] = useState("");
   const current = assessments.find((assessment) => assessment.type === activeTab);
   const assistanceFlags = current?.activities.filter((activity) => activity.score < activity.maxScore).length ?? 0;
+
+  function saveAssessment() {
+    const score = newScore.trim() === "" ? undefined : Number(newScore);
+    const reason = scoreAbsent.trim() || undefined;
+    if ((score == null) === (reason == null)) return;
+    recordAssessment.mutate(
+      {
+        assessmentType: newType,
+        assessor: newAssessor.trim() || undefined,
+        totalScore: score,
+        maxScore: score != null ? MAX_BY_TYPE[newType] : undefined,
+        scoreAbsentReason: reason,
+        interpretation: newInterpretation.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          setShowNew(false);
+          setNewScore("");
+          setNewAssessor("");
+          setNewInterpretation("");
+          setScoreAbsent("");
+          setActiveTab(newType);
+        },
+      },
+    );
+  }
 
   return (
     <EHRLayout>
@@ -142,10 +184,101 @@ export default function FunctionalStatusPage() {
                 <Activity className="h-5 w-5 text-orange-600" />
                 <h2 className="text-lg font-semibold text-foreground">Functional Status</h2>
               </div>
-              <button className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover">
-                New Assessment
+              <button
+                type="button"
+                onClick={() => setShowNew((v) => !v)}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+                data-testid="functional-new-toggle"
+              >
+                {showNew ? "Cancel" : "New Assessment"}
               </button>
             </div>
+
+            {showNew && (
+              <div
+                className="rounded-lg border border-border bg-card p-4 space-y-3"
+                data-testid="functional-new"
+              >
+                <p className="text-sm text-muted-foreground">
+                  Append-only: saving records a new assessment. Carry a score <strong>or</strong> a
+                  reason the score could not be obtained — never both, never neither (a fabricated
+                  zero reads as total dependence).
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    className="rounded border border-border px-2 py-1 text-sm"
+                    value={newType}
+                    onChange={(e) => setNewType(e.target.value as AssessmentType)}
+                    data-testid="functional-type"
+                  >
+                    {(Object.keys(TAB_LABELS) as AssessmentType[]).map((t) => (
+                      <option key={t} value={t}>
+                        {TAB_LABELS[t]}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    className="rounded border border-border px-2 py-1 text-sm w-28"
+                    placeholder={`Score / ${MAX_BY_TYPE[newType]}`}
+                    value={newScore}
+                    onChange={(e) => {
+                      setNewScore(e.target.value);
+                      if (e.target.value.trim() !== "") setScoreAbsent("");
+                    }}
+                    data-testid="functional-score"
+                  />
+                  <input
+                    type="text"
+                    className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
+                    placeholder="Or reason score could not be obtained"
+                    value={scoreAbsent}
+                    onChange={(e) => {
+                      setScoreAbsent(e.target.value);
+                      if (e.target.value.trim() !== "") setNewScore("");
+                    }}
+                    data-testid="functional-absent-reason"
+                  />
+                  <input
+                    type="text"
+                    className="rounded border border-border px-2 py-1 text-sm w-40"
+                    placeholder="Assessor"
+                    value={newAssessor}
+                    onChange={(e) => setNewAssessor(e.target.value)}
+                    data-testid="functional-assessor"
+                  />
+                  <input
+                    type="text"
+                    className="flex-1 min-w-48 rounded border border-border px-2 py-1 text-sm"
+                    placeholder="Interpretation (optional)"
+                    value={newInterpretation}
+                    onChange={(e) => setNewInterpretation(e.target.value)}
+                    data-testid="functional-interpretation"
+                  />
+                  <button
+                    type="button"
+                    onClick={saveAssessment}
+                    disabled={
+                      recordAssessment.isPending ||
+                      (newScore.trim() === "") === (scoreAbsent.trim() === "")
+                    }
+                    className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-60"
+                    data-testid="functional-save"
+                  >
+                    {recordAssessment.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin inline" />
+                    ) : (
+                      "Save assessment"
+                    )}
+                  </button>
+                </div>
+                {recordAssessment.isError && (
+                  <p className="text-sm text-danger" data-testid="functional-save-failed">
+                    The assessment was <strong>not</strong> saved. Nothing has been recorded.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {assessments.map((assessment) => (

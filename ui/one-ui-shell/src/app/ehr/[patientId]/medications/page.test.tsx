@@ -68,7 +68,12 @@ vi.mock("@tanstack/react-query", () => ({
 vi.mock("@/lib/api-client", () => ({
   apiClient: {
     post: vi.fn(),
+    get: vi.fn(),
   },
+}));
+
+vi.mock("@/features/medicine/pharm/RenalDosingPanel", () => ({
+  RenalDosingPanel: () => <div data-testid="renal-dosing-panel-stub">Renal dosing</div>,
 }));
 
 describe("MedicationsPage", () => {
@@ -79,5 +84,6 @@ describe("MedicationsPage", () => {
     expect(screen.getByText("Pending dispense")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Orders" })).toHaveAttribute("href", "/ehr/patient-1/orders");
     expect(screen.getByRole("link", { name: "Results" })).toHaveAttribute("href", "/ehr/patient-1/results");
+    expect(screen.getByTestId("renal-dosing-panel-stub")).toBeInTheDocument();
   });
 });

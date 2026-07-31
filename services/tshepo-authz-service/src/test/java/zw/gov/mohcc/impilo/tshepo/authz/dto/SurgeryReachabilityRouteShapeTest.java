@@ -14,6 +14,8 @@ class SurgeryReachabilityRouteShapeTest {
 
     private static final String EPISODE_ID = "3f9a1c2e-4b5d-4a6f-9c7e-8d0f1a2b3c4d";
     private static final String SPECIMEN_ID = "0b1c2d3e-4f50-4172-8394-a5b6c7d8e9f0";
+    private static final String PATHWAY_ID = "a1b2c3d4-e5f6-4789-a012-3456789abcde";
+    private static final String OBJECT_ID = "f0e1d2c3-b4a5-4678-9012-3456789abcde";
 
     // ── surgery-service (S1-S3) ──
 
@@ -52,6 +54,126 @@ class SurgeryReachabilityRouteShapeTest {
         assertThat(AuthzInternalRequest.deriveResourceType(
                 "/internal/v1/surgery/episodes/" + EPISODE_ID + "/decision"))
                 .isEqualTo("decision");
+    }
+
+    // ── completion wave: reoperation (V010) and shared-specialty care (V011), gated by V303 ──
+
+    @Test
+    void reopenDerivesReopen() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/reopen"))
+                .isEqualTo("reopen");
+    }
+
+    @Test
+    void everySpecialtiesVerbDerivesSpecialties() {
+        // GET, POST and DELETE all address the same path; only the action differs, which is why
+        // V303 writes three rows on one resource type rather than three resource types.
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/specialties"))
+                .isEqualTo("specialties");
+    }
+
+    @Test
+    void leadHandoverDerivesLead() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/specialties/lead"))
+                .isEqualTo("lead");
+    }
+
+    /**
+     * The reason the DELETE carries {@code ?specialty=} rather than a final path segment. This
+     * is the free-text-code-in-path trap: as a segment the specialty BECOMES the resource type,
+     * so no policy row could ever match and the route would be permanently unreachable. Asserted
+     * so that anyone who "tidies" the route back into REST shape sees why it was not.
+     */
+    @Test
+    void aSpecialtyAsAFinalSegmentWouldDeriveTheSpecialtyItselfNotSpecialties() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/specialties/GENERAL_SURGERY"))
+                .isEqualTo("GENERAL_SURGERY")
+                .isNotEqualTo("specialties");
+    }
+
+    /** The specialty-catalogue routes share the word but never the derived type. */
+    @Test
+    void theSpecialtyCatalogueRoutesDoNotCollideWithEpisodeSpecialties() {
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/surgery/specialties/indications"))
+                .isEqualTo("indications");
+        assertThat(AuthzInternalRequest.deriveResourceType("/internal/v1/surgery/specialties/templates"))
+                .isEqualTo("templates");
+    }
+
+    // ── course-of-care (parity Wave A), gated by V304 ──
+
+    @Test
+    void prehabDerivesPrehab() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/prehab"))
+                .isEqualTo("prehab");
+    }
+
+    @Test
+    void complicationsCollectionDerivesComplications() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/complications"))
+                .isEqualTo("complications");
+        // PUT .../complications/{uuid} still derives "complications" — the UUID is skipped.
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/complications/" + PATHWAY_ID))
+                .isEqualTo("complications");
+    }
+
+    @Test
+    void complicationGradeDiscloseCloseDeriveTheirOwnSegments() {
+        String base = "/internal/v1/surgery/episodes/" + EPISODE_ID + "/complications/" + PATHWAY_ID;
+        assertThat(AuthzInternalRequest.deriveResourceType(base + "/grade")).isEqualTo("grade");
+        assertThat(AuthzInternalRequest.deriveResourceType(base + "/disclose")).isEqualTo("disclose");
+        assertThat(AuthzInternalRequest.deriveResourceType(base + "/close")).isEqualTo("close");
+    }
+
+    @Test
+    void longitudinalObjectsDeriveCollectionAndLifecycleVerbs() {
+        String base = "/internal/v1/surgery/episodes/" + EPISODE_ID + "/longitudinal-objects";
+        assertThat(AuthzInternalRequest.deriveResourceType(base)).isEqualTo("longitudinal-objects");
+        assertThat(AuthzInternalRequest.deriveResourceType(base + "/" + OBJECT_ID + "/remove"))
+                .isEqualTo("remove");
+        assertThat(AuthzInternalRequest.deriveResourceType(base + "/" + OBJECT_ID + "/revise"))
+                .isEqualTo("revise");
+    }
+
+    /**
+     * Why V304 pins surgery remove/revise to {@code /surgery/episodes}: the same final segment
+     * already has V302 inventory rows on {@code /inventory/implants}. Without the pin a surgeon
+     * ALLOW on inventory would fire for a longitudinal remove (or vice versa).
+     */
+    @Test
+    void surgeryAndInventoryRemoveReviseShareTheWordButNotThePin() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/longitudinal-objects/"
+                        + OBJECT_ID + "/remove"))
+                .isEqualTo("remove");
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/inventory/implants/" + OBJECT_ID + "/remove"))
+                .isEqualTo("remove");
+    }
+
+    @Test
+    void followupAndWaitlistRevalidationDeriveTheirOwnSegments() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/followup"))
+                .isEqualTo("followup");
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/surgery/episodes/" + EPISODE_ID + "/waitlist-revalidation"))
+                .isEqualTo("waitlist-revalidation");
+    }
+
+    /** Wave B3 seed row in the same V304 file — pinned to /theatre/cases, not surgery. */
+    @Test
+    void theatreSiteSideDerivesSiteSide() {
+        assertThat(AuthzInternalRequest.deriveResourceType(
+                "/internal/v1/theatre/cases/" + EPISODE_ID + "/site-side"))
+                .isEqualTo("site-side");
     }
 
     // ── procedures-service analytics (P14) ──

@@ -109,6 +109,14 @@ public class MonitoringPlanEntity {
     @Column(name = "lifecycle_reason", length = 512)
     private String lifecycleReason;
 
+    // ── Wave 5.2: contribution anchor into pct_problems (pointer only — PCT is SoR) ──
+
+    @Column(name = "pct_problem_ref")
+    private UUID pctProblemRef;
+
+    @Column(name = "pct_problem_contributed_at")
+    private OffsetDateTime pctProblemContributedAt;
+
     @Column(name = "created_by", length = 128)
     private String createdBy;
 
@@ -178,6 +186,12 @@ public class MonitoringPlanEntity {
     public void setCareTeam(String careTeam) { this.careTeam = careTeam; }
     public String getLifecycleReason() { return lifecycleReason; }
     public void setLifecycleReason(String lifecycleReason) { this.lifecycleReason = lifecycleReason; }
+    public UUID getPctProblemRef() { return pctProblemRef; }
+    public void setPctProblemRef(UUID pctProblemRef) { this.pctProblemRef = pctProblemRef; }
+    public OffsetDateTime getPctProblemContributedAt() { return pctProblemContributedAt; }
+    public void setPctProblemContributedAt(OffsetDateTime pctProblemContributedAt) {
+        this.pctProblemContributedAt = pctProblemContributedAt;
+    }
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

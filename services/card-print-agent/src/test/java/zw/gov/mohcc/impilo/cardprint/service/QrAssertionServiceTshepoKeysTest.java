@@ -107,11 +107,10 @@ class QrAssertionServiceTshepoKeysTest {
 
     @Test
     void assertionSignedViaTshepoKeys_verifiesAgainstJwksPublishedKey() throws Exception {
-        QrAssertionService service = new QrAssertionService(MAPPER, "");
-        service.init(); // seed fields (unused on this path) — mirrors bean lifecycle
-        ReflectionTestUtils.setField(service, "signingSource", "tshepo-keys");
+        QrAssertionService service = new QrAssertionService(MAPPER, "tshepo-keys", "");
         ReflectionTestUtils.setField(service, "keysClient",
                 new TshepoKeysSigningClient(baseUrl, "11111111-1111-1111-1111-111111111111"));
+        service.init(); // no local seed when delegated — mirrors bean lifecycle after DI
 
         String envelopeJson = service.generateSignedAssertion(
                 "PRACTITIONER", "subject-99", "card-777");

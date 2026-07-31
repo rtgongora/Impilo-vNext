@@ -1,9 +1,8 @@
 package zw.gov.mohcc.impilo.vito.core.crypto;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import zw.gov.mohcc.impilo.security.secrets.RequiredSecret;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -30,30 +29,27 @@ import java.util.Base64;
  *
  * <p>Key custody: the key is a deployment secret
  * ({@code vito.identity.impilo-id-encryption-key}); the tshepo-keys custody path
- * is the production target. A weak/blank key falls back to a clearly-labelled dev
- * key with a loud warning rather than refusing to boot, so the preview estate
- * starts — production must supply a strong key.</p>
+ * is the production target. It is required, not defaulted. This used to fall back to a
+ * source-visible dev key with a warning so the preview estate would start, which meant every
+ * environment ran on a key published in this repository — the property was provisioned nowhere,
+ * so the fallback was the only path anything ever took. Encryption under a public key is not
+ * encryption.</p>
  */
 @Component
 public class ImpiloIdCipher {
 
-    private static final Logger log = LoggerFactory.getLogger(ImpiloIdCipher.class);
     private static final int IV_BYTES = 12;
     private static final int TAG_BITS = 128;
     private static final int KEY_VERSION = 1;
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final String DEV_KEY = "vito-impilo-id-dev-key-change-me-32b!!";
 
     private final SecretKeySpec key;
 
     public ImpiloIdCipher(
             @Value("${vito.identity.impilo-id-encryption-key:}") String configured) {
-        String material = configured;
-        if (material == null || material.strip().length() < 32) {
-            log.warn("vito.identity.impilo-id-encryption-key is unset/weak — using the DEV key. "
-                    + "Production MUST supply a >=32-char secret (tshepo-keys custody).");
-            material = DEV_KEY;
-        }
+        String material = RequiredSecret.require(
+                "vito.identity.impilo-id-encryption-key", configured,
+                "Impilo IDs are encrypted at rest with it, so a guessable key exposes every patient identifier.");
         try {
             byte[] aesKey = MessageDigest.getInstance("SHA-256")
                     .digest(material.getBytes(StandardCharsets.UTF_8));

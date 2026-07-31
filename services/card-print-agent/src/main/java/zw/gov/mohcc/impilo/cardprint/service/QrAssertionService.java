@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.security.secrets.RequiredSecret;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -28,50 +29,66 @@ import java.util.Map;
  * HMAC-SHA256 scheme — a card credential must be verifiable without
  * distributing a shared secret, and the kid is what makes rotation-with-overlap
  * possible. Zero cards had been issued when the scheme switched, so no
- * dual-verify window was needed. The seed is a deployment secret
- * (tshepo-keys custody target); unset falls back to a dev seed with a loud
- * warning so preview boots.</p>
+ * dual-verify window was needed. The seed is a required deployment secret
+ * (tshepo-keys custody target) whenever signing is local: the earlier dev-seed fallback was
+ * published in this repository, so any reader could sign a card assertion that VITO would accept.
+ * In {@code tshepo-keys} mode the private key never enters the agent, so no local seed is
+ * needed and none is demanded.</p>
  */
 @Service
 public class QrAssertionService {
 
     private static final Logger log = LoggerFactory.getLogger(QrAssertionService.class);
-    private static final String DEV_SEED = "card-qr-signing-dev-seed-change-me-32b";
+    private static final String TSHEPO_KEYS_SOURCE = "tshepo-keys";
     private static final String ALGORITHM = "Ed25519";
 
     private final ObjectMapper objectMapper;
+    /** Null only when signing is delegated to tshepo-keys, where no local key exists. */
     private final String seedMaterial;
-
-    private Ed25519PrivateKeyParameters privateKey;
-    private String keyId;
-    private String publicKeyBase64;
 
     /**
      * W4b signing source. {@code seed} (default) = local seed-derived Ed25519 key (unchanged
      * legacy path, fallback for one release); {@code tshepo-keys} = delegate signing to the
      * sovereign tshepo-keys-service.
      */
-    @Value("${card-print.qr.signing-source:seed}")
-    private String signingSource;
+    private final String signingSource;
+
+    private Ed25519PrivateKeyParameters privateKey;
+    private String keyId;
+    private String publicKeyBase64;
 
     /** Present only when {@code card-print.qr.signing-source=tshepo-keys} (conditional bean). */
     @Autowired(required = false)
     private TshepoKeysSigningClient keysClient;
 
     public QrAssertionService(ObjectMapper objectMapper,
+                              @Value("${card-print.qr.signing-source:seed}") String signingSource,
                               @Value("${card-print.qr.signing-key-seed:}") String configuredSeed) {
         this.objectMapper = objectMapper;
-        if (configuredSeed == null || configuredSeed.strip().length() < 32) {
-            log.warn("card-print.qr.signing-key-seed is unset/weak — using the DEV seed. Production MUST "
-                    + "supply a >=32-char secret (tshepo-keys custody); card QR signatures depend on it.");
-            this.seedMaterial = DEV_SEED;
+        this.signingSource = signingSource;
+        boolean delegated = TSHEPO_KEYS_SOURCE.equalsIgnoreCase(signingSource);
+        if (delegated && !RequiredSecret.isUsable(configuredSeed)) {
+            this.seedMaterial = null;
         } else {
-            this.seedMaterial = configuredSeed;
+            this.seedMaterial = RequiredSecret.require(
+                    "card-print.qr.signing-key-seed", configuredSeed,
+                    "Smart-card credentials are signed with it, so a known seed lets anyone mint a card "
+                            + "assertion that verifies as genuine.");
         }
     }
 
     @PostConstruct
     public void init() throws Exception {
+        if (seedMaterial == null) {
+            if (keysClient == null) {
+                throw new IllegalStateException(
+                        "Refusing to start: card-print.qr.signing-source=" + TSHEPO_KEYS_SOURCE
+                                + " but the tshepo-keys signing client is not wired, and no local "
+                                + "card-print.qr.signing-key-seed is set. Card signing would have no key at all.");
+            }
+            log.info("Card QR signing delegated to tshepo-keys — no local Ed25519 key derived");
+            return;
+        }
         byte[] priv = MessageDigest.getInstance("SHA-256")
                 .digest(seedMaterial.getBytes(StandardCharsets.UTF_8));
         privateKey = new Ed25519PrivateKeyParameters(priv, 0);
@@ -136,7 +153,7 @@ public class QrAssertionService {
 
     /** True when signing is delegated to tshepo-keys and its client is wired. */
     private boolean useTshepoKeys() {
-        return "tshepo-keys".equalsIgnoreCase(signingSource) && keysClient != null;
+        return TSHEPO_KEYS_SOURCE.equalsIgnoreCase(signingSource) && keysClient != null;
     }
 
     /** Base64url raw Ed25519 signature over the canonical payload JSON. */

@@ -18,6 +18,7 @@ import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TelemonitoringServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ClinicalPlatformProperties;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+import zw.gov.mohcc.impilo.experience.service.SubjectResolutionService;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -66,7 +67,7 @@ class ConfidentialMaternityProxyTest {
         StubPct pct = new StubPct();
         pct.conflict = true;
         ResponseEntity<?> r = controller(pct, new StubCkp(), new StubTelemonitoring())
-                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), "req-1", "corr-1");
+                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), null, "req-1", "corr-1");
 
         // The file next door turns every exception into 502 PCT_UNAVAILABLE. Here that would tell a
         // citizen the service is down and invite her to retry a booking that already exists.
@@ -84,7 +85,7 @@ class ConfidentialMaternityProxyTest {
         StubPct pct = new StubPct();
         pct.unprocessable = true;
         ResponseEntity<?> r = controller(pct, new StubCkp(), new StubTelemonitoring())
-                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), "req-2", "corr-2");
+                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), null, "req-2", "corr-2");
 
         // Retrying an identical packet will never help, and only the status says so.
         assertEquals(422, r.getStatusCode().value());
@@ -96,7 +97,7 @@ class ConfidentialMaternityProxyTest {
     void createdAndReplayedAreDistinguishable() {
         StubPct created = new StubPct();
         assertEquals(201, controller(created, new StubCkp(), new StubTelemonitoring())
-                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), "r", "c")
+                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), null, "r", "c")
                 .getStatusCode().value());
 
         StubPct replayed = new StubPct();
@@ -104,7 +105,7 @@ class ConfidentialMaternityProxyTest {
         // Collapsed to one status, an offline client either double-books or treats its own successful
         // sync as a failure.
         assertEquals(200, controller(replayed, new StubCkp(), new StubTelemonitoring())
-                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), "r", "c")
+                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), null, "r", "c")
                 .getStatusCode().value());
     }
 
@@ -114,7 +115,7 @@ class ConfidentialMaternityProxyTest {
         StubPct pct = new StubPct();
         pct.transportFailure = true;
         ResponseEntity<?> r = controller(pct, new StubCkp(), new StubTelemonitoring())
-                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), "req-3", "corr-3");
+                .openPregnancyEpisode(Map.of("subjectCpid", "CPID-1"), null, "req-3", "corr-3");
 
         assertEquals(502, r.getStatusCode().value());
         Map<?, ?> error = (Map<?, ?>) ((Map<?, ?>) r.getBody()).get("error");
@@ -129,11 +130,24 @@ class ConfidentialMaternityProxyTest {
         StubPct pct = new StubPct();
         pct.currentPregnancyNull = true;
         ResponseEntity<?> r = controller(pct, new StubCkp(), new StubTelemonitoring())
-                .currentPregnancyEpisode("CPID-1", "r", "c");
+                .currentPregnancyEpisode("CPID-1", null, "r", "c");
 
         // "She is not pregnant" and "she is pregnant and you may not know" are the two cases this lane
         // exists to make indistinguishable.
         assertEquals(200, r.getStatusCode().value());
+    }
+
+    @Test
+    @DisplayName("the citizen 'me' sentinel resolves to her CPID without the browser holding one")
+    void meSentinelResolvesFromActorIdentity() {
+        StubPct pct = new StubPct();
+        ResponseEntity<?> r = controller(pct, new StubCkp(), new StubTelemonitoring())
+                .openPregnancyEpisode(new java.util.HashMap<>(Map.of("subjectCpid", "me")),
+                        "HID-citizen-1", "req-me", "corr-me");
+
+        assertEquals(201, r.getStatusCode().value());
+        // The body that reached pct must carry the resolved CPID, never the sentinel.
+        assertEquals("CPID-FROM-HID-citizen-1", pct.lastBookingBody.get("subjectCpid"));
     }
 
     // ── SMBP verdict ──────────────────────────────────────────────────────────
@@ -307,7 +321,14 @@ class ConfidentialMaternityProxyTest {
 
     private static ConfidentialMaternityController controller(StubPct pct, StubCkp ckp,
                                                              StubTelemonitoring tm) {
-        return new ConfidentialMaternityController(pct, ckp, tm, mapper);
+        // Existing tests pass a real CPID; the stub only has to answer the "me" sentinel path.
+        SubjectResolutionService subjects = new SubjectResolutionService(null) {
+            @Override
+            public String cpidForHealthId(String healthId) {
+                return "CPID-FROM-" + healthId;
+            }
+        };
+        return new ConfidentialMaternityController(pct, ckp, tm, mapper, subjects);
     }
 
     private static HttpClientErrorException rejection(HttpStatus status, String body) {
@@ -323,6 +344,7 @@ class ConfidentialMaternityProxyTest {
         HttpStatus bookingStatus = HttpStatus.CREATED;
         HttpStatus contactStatus = HttpStatus.CREATED;
         Map<String, Object> lastContactBody;
+        Map<String, Object> lastBookingBody;
 
         StubPct() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints(), mapper);
@@ -344,6 +366,7 @@ class ConfidentialMaternityProxyTest {
 
         @Override
         public ResponseEntity<JsonNode> openPregnancyEpisode(Map<String, Object> body) {
+            lastBookingBody = body;
             maybeFail("""
                     {"data": {"code": "PREGNANCY_ALREADY_BOOKED",
                               "existing_pregnancy_episode_id": "11111111-1111-4111-8111-111111111111",

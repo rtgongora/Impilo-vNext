@@ -41,6 +41,7 @@ class SurgicalEpisodeServiceTest {
     @Mock SurgicalEpisodeRepository repository;
     @Mock PctProblemContributionClient pctClient;
     @Mock InpatientSpecimenClient specimenClient;
+    @Mock EpisodeSpecialtyService episodeSpecialtyService;
 
     private SurgicalEpisodeService service;
     private final UUID tenant = UUID.randomUUID();
@@ -48,7 +49,7 @@ class SurgicalEpisodeServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SurgicalEpisodeService(repository, pctClient, specimenClient);
+        service = new SurgicalEpisodeService(repository, pctClient, specimenClient, episodeSpecialtyService);
         TrustContextHolder.set(new TrustContext(tenant, "actor-surgeon", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
         org.mockito.Mockito.lenient().when(repository.save(any())).thenAnswer(i -> {

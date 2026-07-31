@@ -21,6 +21,7 @@ const sedationLevelState = vi.fn();
 const recoverySettingState = vi.fn();
 const aftercareTemplateState = vi.fn();
 const analyticsIndicatorsState = vi.fn();
+const competenceState = vi.fn();
 
 const IDLE = { isLoading: false, isError: false, data: undefined };
 
@@ -38,6 +39,7 @@ vi.mock("@/hooks/queries/useProceduresCatalogue", () => ({
   // SB-3: the analytics indicators panel renders on every page mount; default IDLE below.
   useAnalyticsIndicators: () => analyticsIndicatorsState(),
   useAnalyticsIndicator: () => IDLE,
+  useCompetence: () => competenceState(),
 }));
 
 beforeEach(() => {
@@ -48,6 +50,7 @@ beforeEach(() => {
   recoverySettingState.mockReturnValue(IDLE);
   aftercareTemplateState.mockReturnValue(IDLE);
   analyticsIndicatorsState.mockReturnValue(IDLE);
+  competenceState.mockReturnValue(IDLE);
 });
 
 function renderPage() {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
@@ -12,12 +13,14 @@ import zw.gov.mohcc.impilo.orgregistry.persistence.entity.*;
 import zw.gov.mohcc.impilo.orgregistry.persistence.repository.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -433,5 +436,43 @@ class RegulatoryConfigServiceTest {
         assertThatThrownBy(() -> service.activate(TENANT, release.getId(), "HID", null))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("approved or scheduled");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void theActivationEventNamesTheOrganisationWhoseConfigurationChanged() throws Exception {
+        // varapi reconciles a council's registers from this event. The council is found through the
+        // organisation, so an event that names only the pack forces every consumer to call back for
+        // something org-registry already had in hand — and to be unable to interpret the event at
+        // all while org-registry is unreachable.
+        ConfigReleaseEntity release = new ConfigReleaseEntity();
+        release.setId(UUID.randomUUID());
+        release.setTenantId(TENANT);
+        release.setPackId(PACK);
+        release.setReleaseKey("ncz-2026.1");
+        release.setLifecycleState("APPROVED");
+        when(releaseRepository.findByTenantIdAndId(TENANT, release.getId()))
+                .thenReturn(Optional.of(release));
+        when(validator.validate(release)).thenReturn(new ConfigReleaseValidator.ValidationReport(
+                true, List.of(), List.of(), 15, false, 0));
+        when(releaseItemRepository.findByReleaseId(release.getId())).thenReturn(List.of());
+        when(releaseRepository.findByTenantIdAndPackIdAndLifecycleState(TENANT, PACK, "ACTIVE"))
+                .thenReturn(Optional.empty());
+
+        ConfigPackEntity pack = new ConfigPackEntity();
+        pack.setId(PACK);
+        pack.setTenantId(TENANT);
+        pack.setOrganizationId(ORG);
+        when(packRepository.findByTenantIdAndId(TENANT, PACK)).thenReturn(Optional.of(pack));
+        when(activationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.activate(TENANT, release.getId(), "HID", null);
+
+        ArgumentCaptor<Map<String, Object>> payload = ArgumentCaptor.forClass(Map.class);
+        verify(outbox).publish(eq(TENANT), eq("REGULATORY_CONFIG_RELEASE"), any(), any(), eq("activated"),
+                any(), payload.capture());
+        assertThat(payload.getValue())
+                .as("the activated event must say whose configuration it is")
+                .containsEntry("organisationId", ORG);
     }
 }

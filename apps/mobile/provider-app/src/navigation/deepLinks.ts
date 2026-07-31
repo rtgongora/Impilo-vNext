@@ -37,6 +37,10 @@ export const DEEP_LINK_PREFIXES = [
 export interface ProviderDeepLinkIntent {
   mode: AppMode;
   tab: ProviderTabKey;
+  /** Optional Professional-tab surface (e.g. regulatory, contribute). */
+  professionalSurface?: string;
+  /** Contributor invite id for student-registration redeem. */
+  inviteId?: string;
 }
 
 /** Provider tabs a `/provider/<segment>` sub-route may target directly. */
@@ -64,7 +68,27 @@ const PROVIDER_SUBTABS: Record<string, ProviderTabKey> = {
  *
  * Longest-prefix wins; `/provider` matches both `/provider` and `/provider/*`.
  */
-const PROVIDER_ROUTES: Array<{ prefix: string; resolve: (subPath: string) => ProviderDeepLinkIntent }> = [
+const PROVIDER_ROUTES: Array<{
+  prefix: string;
+  resolve: (subPath: string, params: Record<string, string>) => ProviderDeepLinkIntent;
+}> = [
+  {
+    prefix: "/professional/regulatory/contribute",
+    resolve: (subPath, params) => ({
+      mode: "provider",
+      tab: "professional",
+      professionalSurface: "regulatory",
+      inviteId: subPath.split("/").filter(Boolean)[0] ?? params.inviteId,
+    }),
+  },
+  {
+    prefix: "/professional/regulatory",
+    resolve: () => ({
+      mode: "provider",
+      tab: "professional",
+      professionalSurface: "regulatory",
+    }),
+  },
   {
     prefix: "/provider",
     resolve: (subPath) => {
@@ -99,13 +123,13 @@ export function normalizeDeepLink(url: string): { path: string; params: Record<s
 
 /** Pure resolver: URL → destination, or null if not a routable link. */
 export function resolveProviderDeepLink(url: string): ProviderDeepLinkIntent | null {
-  const { path } = normalizeDeepLink(url);
+  const { path, params } = normalizeDeepLink(url);
   // The OAuth callback is owned by LoginScreen — never intercept it here.
   if (path.includes("auth/callback")) return null;
   const match = PROVIDER_ROUTES.find((route) => path === route.prefix || path.startsWith(`${route.prefix}/`));
   if (!match) return null;
   const subPath = path.slice(match.prefix.length);
-  return match.resolve(subPath);
+  return match.resolve(subPath, params);
 }
 
 /**
@@ -122,7 +146,14 @@ export function applyProviderDeepLink(
   intent: ProviderDeepLinkIntent,
   enterMode: (mode: AppMode) => void
 ): void {
-  appStore.getState().setProviderTab(intent.tab);
+  const store = appStore.getState();
+  store.setProviderTab(intent.tab);
+  if (intent.professionalSurface) {
+    store.setProfessionalSurfaceRequest(intent.professionalSurface);
+  }
+  if (intent.inviteId) {
+    store.setContributeInviteRequest(intent.inviteId);
+  }
   enterMode(intent.mode);
 }
 

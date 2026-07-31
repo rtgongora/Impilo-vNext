@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Card, CardHeader, CardBody, Button, Badge, TextField, Select, Switch, colors } from "@impilo/mobile-design-system";
 import { submitFeedback } from "../../services/ritoFeedbackService";
 import type { RitoCase, RitoCaseType } from "../../services/ritoFeedbackService";
@@ -104,6 +104,25 @@ export function FeedbackScreen() {
           Tell us about your experience — a complaint, compliment, suggestion, or safety concern.
         </Text>
 
+        <TouchableOpacity
+          onPress={() => appStore.getState().setPersonalSectionRequest("rito-respectful-maternity-care")}
+          testID="rito-respectful-maternity-care-link"
+        >
+          <Card>
+            <CardBody>
+              <View style={styles.maternityLinkRow}>
+                <View style={styles.maternityLinkText}>
+                  <Text style={styles.maternityLinkTitle}>Respectful maternity care</Text>
+                  <Text style={styles.subText}>
+                    Giving birth or postnatal care feedback? Use this survey instead — anonymous by
+                    default.
+                  </Text>
+                </View>
+              </View>
+            </CardBody>
+          </Card>
+        </TouchableOpacity>
+
         <Card>
           <CardBody>
             <View style={styles.formContainer}>
@@ -176,6 +195,19 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     gap: 14,
+  },
+  maternityLinkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  maternityLinkText: {
+    flex: 1,
+    gap: 4,
+  },
+  maternityLinkTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#be123c",
   },
   errorText: {
     fontSize: 13,

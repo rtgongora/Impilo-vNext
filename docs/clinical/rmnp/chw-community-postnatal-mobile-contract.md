@@ -2,9 +2,8 @@
 
 **Audience:** the mobile-recovery lane. Belongs in provider-app's existing **Outreach** mode, not a
 new workspace.
-**Status:** **the record and the clinical engines are BUILT; the BFF surface is NOT.** §2 says exactly
-which, because a contract that names endpoints which do not exist would break the mobile lane's own
-law inside the document.
+**Status:** **BUILT as of W12 (2026-07-30)** — the record, the clinical engines and the BFF surface.
+§2 names the endpoints. §4 is still the UI's work, and no endpoint can enforce those behaviours for it.
 **Companion:** [`partograph-ctg-mobile-contract.md`](partograph-ctg-mobile-contract.md) (format
 precedent) · [`citizen-pregnancy-smbp-mobile-contract.md`](citizen-pregnancy-smbp-mobile-contract.md).
 
@@ -22,12 +21,13 @@ Until pct `V436` there was nowhere to record such a visit at all. There is now.
 
 | Capability | Engine / record | BFF endpoint | Usable today |
 |---|---|---|---|
-| Postnatal contact record (home / community / virtual settings first-class) | pct `V436` + `PostnatalContactService` | **none** | **No — needs a BFF surface** |
+| Record a postnatal contact (home / community / virtual first-class) | pct `V436` + `PostnatalContactService` | **`POST /internal/v1/confidential/community/postnatal/contacts`** | **Yes (W12)** |
+| Read a mother's postnatal contacts | as above | **`GET /internal/v1/confidential/community/postnatal/contacts/{motherCpid}`** | **Yes (W12)** |
 | PNC maternal danger signs | `rmnp-pnc-maternal-danger-signs.json` (CKP) | via clinical proxies | partially |
 | PNC newborn danger signs (delegates PSBI) | `rmnp-pnc-newborn-danger-signs.json` | via clinical proxies | partially |
-| Postpartum family planning | reuses the contraceptive episode (`V430`) | **none** | **No** |
+| Postpartum family planning | reuses the contraceptive episode (`V430`) | pct serves it guarded at `GET /v1/confidential/reproductive/contraception/{cpid}`, but **no BFF proxy yet** | **No — one proxy method away** |
 
-**The gap is RMNP's to close**, and §6 states the constraint that shapes it.
+§6 states why the path segment is `/confidential/` and why it is not rewritable.
 
 ## 3. Governed form definitions
 
@@ -71,19 +71,40 @@ referred on another. Do not "helpfully" merge them in the UI.
 camelCase request, snake_case response. Deserialise the literal JSON in tests — a snake_case request
 record against a camelCase client is a silent 400 indistinguishable from a validation failure.
 
-## 6. What RMNP still owes, and the constraint that shapes it
+## 6. The W12 surface, and why its path cannot be renamed
 
-A postnatal-contact submission and read surface on the BFF, composing `PostnatalContactService`.
+`POST /internal/v1/confidential/community/postnatal/contacts` and
+`GET …/contacts/{motherCpid}`, composing `PostnatalContactService`.
 
-**It is subject to the confidential-lane rule.** A contact carrying contraception content is stamped
-`SEXUAL_REPRODUCTIVE_HEALTH`, so a controller exposing `PostnatalContactEntity` must be mounted under
-a path containing `/confidential/`. Otherwise, after the governance flip, the fail-closed guard
-withholds every stamped record from every requester — including the CHW who recorded it.
-`scripts/guard/check-confidential-lane-routing.sh` fails the build if it is not.
+**The `/confidential/` segment is load-bearing.** A contact carrying contraception content is stamped
+`SEXUAL_REPRODUCTIVE_HEALTH`, and tshepo-authz classifies confidentiality from the **path the client
+calls**. Mounted anywhere else this route is handed no confidential category, and after the governance
+flip pct's fail-closed guard withholds the contact from the CHW who recorded it — while the service
+stays green and the tests pass. `scripts/guard/check-confidential-lane-routing.sh` fails the build if
+it moves.
 
 Note the asymmetry the stamper already implements: a **routine** PNC visit is deliberately unstamped,
 so only visits carrying contraception content become confidential. The UI should not assume every
 postnatal record is protected, nor that none is.
+
+**Statuses, and why the difference matters offline:**
+
+| Status | Meaning | What the app does |
+|---|---|---|
+| **201** | contact recorded | clear the outbox entry |
+| **200** | this `clientOfflineId` was already applied | clear the outbox entry — **success, not a duplicate** |
+| **422** | pct refused it, with the reason: no `contactSetting`, or a referral with no reason | show the reason; it is something she can fix in the field |
+| **502** `PCT_UNAVAILABLE` | could not reach the record | **re-send the same packet with its original `clientOfflineId`** |
+
+That last row is the one to get right. A CHW told "the service is down" after a submit does not know
+whether the visit landed. Re-sending the same packet is safe *because* the offline id makes the replay
+idempotent; telling her to re-enter the visit creates exactly the duplicate the id prevents. And an
+empty read is never an absence of contacts — it may be a withholding, and the two are indistinguishable
+on purpose.
+
+**Nulls are forwarded as nulls.** `screeningComplete`, `dangerSignsPresent` and `breastfeedingStatus`
+pass through unfilled, and `contactSetting` is never defaulted to FACILITY. The BFF does not supply any
+of them, because every available default is the reassuring one the schema exists to refuse.
 
 ## 7. Deliberately not here
 

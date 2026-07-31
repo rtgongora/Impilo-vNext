@@ -14,7 +14,7 @@
  */
 
 import { useMemo } from "react";
-import { HeartPulse, Info, Loader2, MonitorSmartphone } from "lucide-react";
+import { AlertTriangle, HeartPulse, Info, Loader2, MonitorSmartphone } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
@@ -23,6 +23,7 @@ import {
   useMyMonitoringPlans,
   usePlanReadings,
 } from "@/hooks/queries/useTelemonitoring";
+import { isSmbpUnavailableError, useSmbpVerdict } from "@/hooks/queries/useConfidentialMaternity";
 import {
   deviceStaleNotice,
   metricPlainPhrase,
@@ -30,7 +31,63 @@ import {
   planPlainStatus,
   readingQualityLabel,
 } from "@/lib/telemonitoring/patient-wording";
+import { smbpUnavailableNotice, smbpVerdictBadge } from "@/lib/maternity/smbp-wording";
 import type { MonitoringPlanView } from "@/lib/telemonitoring/types";
+
+/** Home-BP verdict card for a monitoring plan — programme-gated so it never shows for non-BP plans. */
+function SmbpVerdictCard({ planId }: { planId: string }) {
+  // dangerSignPresent is intentionally omitted here — this card reads a series she has already
+  // submitted, it does not ask her a new question, so the field must stay unset, never `false`.
+  const verdict = useSmbpVerdict(planId);
+
+  if (verdict.isLoading) {
+    return (
+      <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Checking your blood-pressure readings…
+      </p>
+    );
+  }
+
+  if (verdict.error) {
+    if (isSmbpUnavailableError(verdict.error)) {
+      return (
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{smbpUnavailableNotice(verdict.error)}</span>
+        </div>
+      );
+    }
+    // Any other failure stays quiet here rather than duplicating the page-level error banner.
+    return null;
+  }
+
+  const data = verdict.data?.data;
+  if (!data) return null;
+
+  const badge = smbpVerdictBadge(data.verdict);
+  const isUrgent = data.verdict === "URGENT" || data.verdict === "ELEVATED_REFER";
+
+  return (
+    <div className={`mt-3 rounded-xl border p-3 ${badge.className}`}>
+      <div className="flex items-center gap-2">
+        {isUrgent ? <AlertTriangle className="h-4 w-4 shrink-0" /> : null}
+        <span className="text-sm font-semibold">{badge.label}</span>
+      </div>
+      <p className="mt-1 text-sm">{data.message}</p>
+      {data.note ? <p className="mt-1 text-xs opacity-80">{data.note}</p> : null}
+      {data.alerts.length > 0 ? (
+        <ul className="mt-2 space-y-1">
+          {data.alerts.map((a) => (
+            <li key={a.code} className="text-xs">
+              <span className="font-medium">{a.message}</span>
+              {a.requiredAction ? <span> — {a.requiredAction}</span> : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
 
 function errText(e: unknown): string {
   if (e && typeof e === "object" && (e as { status?: number }).status) {
@@ -60,6 +117,9 @@ function PlanCard({ plan }: { plan: MonitoringPlanView }) {
           {new Date(plan.reviewDueAt).toLocaleDateString()}.
         </p>
       ) : null}
+
+      {/* Home blood-pressure series verdict — hypertension plans only, §4 contract wording */}
+      {plan.programmeCode === "HYPERTENSION" ? <SmbpVerdictCard planId={plan.id} /> : null}
 
       {/* Alert notices — §14.6 wording law */}
       {liveAlerts.length > 0 ? (

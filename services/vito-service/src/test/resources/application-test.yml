@@ -44,6 +44,11 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 
 vito:
+  identity:
+    # Strong test-only material — ImpiloIdCipher refuses to start without it.
+    impilo-id-encryption-key: vito-test-impilo-id-encryption-key-32b!!
+  qr:
+    signing-key-seed: vito-test-qr-signing-seed-at-least-32-bytes
   argon2:
     memory-cost-kb: 65536
     iterations: 3
@@ -62,6 +67,12 @@ vito:
     base-url: http://localhost:3000/fhir
   v11:
     emit-mode: DUAL
+
+# Shared with card-print-agent so CardAssertionVerifier can derive the verify key.
+card-print:
+  qr:
+    signing-key-seed: card-print-test-signing-seed-at-least-32b
+
 impilo:
   security:
     disable-oauth-for-tests: true

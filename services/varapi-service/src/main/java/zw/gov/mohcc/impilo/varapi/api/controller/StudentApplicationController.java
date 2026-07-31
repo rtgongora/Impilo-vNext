@@ -1,13 +1,20 @@
 package zw.gov.mohcc.impilo.varapi.api.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.varapi.core.CouncilFeeGate;
 import zw.gov.mohcc.impilo.varapi.core.StudentAdmissionService;
 import zw.gov.mohcc.impilo.varapi.core.StudentApplicationService;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ApplicationSectionEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.CouncilEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderApplicationEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.CouncilRepository;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderApplicationRepository;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,16 +33,59 @@ import java.util.UUID;
 @RequestMapping("/v1/internal/student-applications")
 public class StudentApplicationController {
 
+    private static final String STUDENT_REGISTRATION = "STUDENT_REGISTRATION";
+
     private final StudentApplicationService applicationService;
     private final StudentAdmissionService admissionService;
     private final CouncilFeeGate feeGate;
+    private final ProviderApplicationRepository applicationRepository;
+    private final CouncilRepository councilRepository;
 
     public StudentApplicationController(StudentApplicationService applicationService,
                                         StudentAdmissionService admissionService,
-                                        CouncilFeeGate feeGate) {
+                                        CouncilFeeGate feeGate,
+                                        ProviderApplicationRepository applicationRepository,
+                                        CouncilRepository councilRepository) {
         this.applicationService = applicationService;
         this.admissionService = admissionService;
         this.feeGate = feeGate;
+        this.applicationRepository = applicationRepository;
+        this.councilRepository = councilRepository;
+    }
+
+    /**
+     * Regulator queue for student registration applications. Scoped by council (or by the
+     * org-registry organisation that owns that council). Optional {@code states} is a comma-separated
+     * workflow_state filter.
+     */
+    @GetMapping
+    public List<Map<String, Object>> listStudentApplications(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestParam(required = false) Long councilId,
+            @RequestParam(required = false) UUID organizationId,
+            @RequestParam(required = false) String states) {
+        Long resolvedCouncilId = resolveCouncilId(tenantId, councilId, organizationId);
+        List<String> stateFilter = parseStates(states);
+        List<ProviderApplicationEntity> rows = stateFilter.isEmpty()
+                ? applicationRepository.findByTenantIdAndCouncil_IdAndApplicationTypeOrderBySubmittedAtDesc(
+                        tenantId, resolvedCouncilId, STUDENT_REGISTRATION)
+                : applicationRepository
+                        .findByTenantIdAndCouncil_IdAndApplicationTypeAndWorkflowStateInOrderBySubmittedAtDesc(
+                                tenantId, resolvedCouncilId, STUDENT_REGISTRATION, stateFilter);
+        return rows.stream().map(StudentApplicationController::applicationSummary).toList();
+    }
+
+    /** Thin regulator summary for deep-linking and admit (provider id, council, workflow). */
+    @GetMapping("/{applicationId}")
+    public Map<String, Object> getStudentApplication(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable Long applicationId) {
+        ProviderApplicationEntity app = applicationRepository.findByIdAndTenantId(applicationId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
+        if (!STUDENT_REGISTRATION.equals(app.getApplicationType())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not a student registration application");
+        }
+        return applicationSummary(app);
     }
 
     // ── The applicant ────────────────────────────────────────────────────────────────────────
@@ -167,5 +217,46 @@ public class StudentApplicationController {
         row.put("returnedAt", entity.getReturnedAt());
         row.put("returnCount", entity.getReturnCount());
         return row;
+    }
+
+    private static Map<String, Object> applicationSummary(ProviderApplicationEntity app) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", app.getId());
+        row.put("applicationType", app.getApplicationType());
+        row.put("workflowState", app.getWorkflowState());
+        row.put("reviewState", app.getReviewState());
+        row.put("feeState", app.getFeeState());
+        row.put("submittedAt", app.getSubmittedAt());
+        row.put("closedAt", app.getClosedAt());
+        row.put("councilId", app.getCouncil() == null ? null : app.getCouncil().getId());
+        row.put("councilCode", app.getCouncil() == null ? null : app.getCouncil().getCouncilCode());
+        row.put("providerId", app.getProvider() == null ? null : app.getProvider().getId());
+        row.put("providerPublicId",
+                app.getProvider() == null ? null : app.getProvider().getProviderPublicId());
+        return row;
+    }
+
+    private Long resolveCouncilId(UUID tenantId, Long councilId, UUID organizationId) {
+        if (councilId != null) {
+            return councilId;
+        }
+        if (organizationId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "'councilId' or 'organizationId' is required");
+        }
+        return councilRepository.findByTenantIdAndOrgRegistryOrgId(tenantId, organizationId)
+                .map(CouncilEntity::getId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No council is linked to organisation " + organizationId));
+    }
+
+    private static List<String> parseStates(String states) {
+        if (states == null || states.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(states.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
     }
 }

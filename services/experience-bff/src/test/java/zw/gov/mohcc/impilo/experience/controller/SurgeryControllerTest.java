@@ -158,6 +158,100 @@ class SurgeryControllerTest {
                 () -> controller.recordDecision(EPISODE, "{\"finalDecision\":\"PROCEED\"}"));
     }
 
+    // ── Completion wave: reoperation (V010) and shared-specialty care (V011) ──
+
+    @Test
+    void reopenForwardsBodyAndId() {
+        SurgeryController controller = new SurgeryController(new StubClient() {
+            @Override
+            public ResponseEntity<String> reopen(UUID episodeId, String requestBody) {
+                assertEquals(EPISODE, episodeId);
+                assertEquals("{\"reason\":\"post-operative haemorrhage\"}", requestBody);
+                return ResponseEntity.ok("{\"status\":\"REOPENED\"}");
+            }
+        });
+
+        var response = controller.reopen(EPISODE, "{\"reason\":\"post-operative haemorrhage\"}");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("{\"status\":\"REOPENED\"}", response.getBody());
+    }
+
+    @Test
+    void specialtyReadAddAndLeadHandoverForwardVerbatim() {
+        SurgeryController controller = new SurgeryController(new StubClient() {
+            @Override
+            public ResponseEntity<String> specialties(UUID episodeId) {
+                return ResponseEntity.ok("[{\"specialty\":\"COLORECTAL\",\"role\":\"LEAD\"}]");
+            }
+
+            @Override
+            public ResponseEntity<String> addSpecialty(UUID episodeId, String requestBody) {
+                assertEquals("{\"specialty\":\"VASCULAR\"}", requestBody);
+                return ResponseEntity.ok("{\"specialty\":\"VASCULAR\",\"role\":\"SHARED\"}");
+            }
+
+            @Override
+            public ResponseEntity<String> transferLead(UUID episodeId, String requestBody) {
+                assertEquals("{\"specialty\":\"VASCULAR\"}", requestBody);
+                return ResponseEntity.ok("[]");
+            }
+        });
+
+        assertEquals("[{\"specialty\":\"COLORECTAL\",\"role\":\"LEAD\"}]",
+                controller.specialties(EPISODE).getBody());
+        assertEquals(HttpStatus.OK,
+                controller.addSpecialty(EPISODE, "{\"specialty\":\"VASCULAR\"}").getStatusCode());
+        assertEquals(HttpStatus.OK,
+                controller.transferLead(EPISODE, "{\"specialty\":\"VASCULAR\"}").getStatusCode());
+    }
+
+    @Test
+    void removeSpecialtyForwardsTheSpecialtyAsAValueNotAPathSegment() {
+        SurgeryController controller = new SurgeryController(new StubClient() {
+            @Override
+            public ResponseEntity<String> removeSpecialty(UUID episodeId, String specialty) {
+                assertEquals(EPISODE, episodeId);
+                assertEquals("VASCULAR", specialty);
+                return ResponseEntity.ok("[]");
+            }
+        });
+
+        assertEquals(HttpStatus.OK, controller.removeSpecialty(EPISODE, "VASCULAR").getStatusCode());
+    }
+
+    /** A failed reopen must never render as a reopened episode. */
+    @Test
+    void aDownstreamFailureOnReopenAlsoPropagates() {
+        SurgeryController controller = new SurgeryController(new StubClient() {
+            @Override
+            public ResponseEntity<String> reopen(UUID episodeId, String requestBody) {
+                throw new org.springframework.web.client.ResourceAccessException("surgery-service unreachable");
+            }
+        });
+
+        assertThrows(org.springframework.web.client.ResourceAccessException.class,
+                () -> controller.reopen(EPISODE, "{\"reason\":\"bleeding\"}"));
+    }
+
+    /**
+     * And a failed specialty READ must never render as "this case has no other teams" — the
+     * same empty-versus-unavailable failure mode, on a surface where getting it wrong means a
+     * theatre thinks a single team is operating when a second one is.
+     */
+    @Test
+    void aDownstreamFailureOnTheSpecialtyListPropagatesRatherThanRenderingEmpty() {
+        SurgeryController controller = new SurgeryController(new StubClient() {
+            @Override
+            public ResponseEntity<String> specialties(UUID episodeId) {
+                throw new org.springframework.web.client.ResourceAccessException("surgery-service unreachable");
+            }
+        });
+
+        assertThrows(org.springframework.web.client.ResourceAccessException.class,
+                () -> controller.specialties(EPISODE));
+    }
+
     /** Overridable stub so each test only implements the one method it exercises. */
     private static class StubClient extends SurgeryServiceClient {
         StubClient() {

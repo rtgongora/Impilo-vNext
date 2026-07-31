@@ -208,6 +208,20 @@ class TheatreAltJourneysTest {
         verify(outboxRepository).save(any());
     }
 
+    @Test
+    void confirmSiteAndSideDelegatesToEpisodeServiceAndEmitsEvent() {
+        UUID id = UUID.randomUUID();
+        when(episodeRepository.findById(id)).thenReturn(Optional.of(episode(id, "PREOP", "ELECTIVE")));
+        when(episodeService.confirmSiteAndSide(eq(id), anyMap()))
+                .thenReturn(new LinkedHashMap<>(Map.of("laterality", "LEFT", "surgical_side", "LEFT")));
+
+        Map<String, Object> out = service.confirmSiteAndSide(id, Map.of("laterality", "LEFT", "anatomicalSite", "Left knee"));
+
+        assertEquals("LEFT", out.get("laterality"));
+        verify(episodeService).confirmSiteAndSide(eq(id), anyMap());
+        verify(outboxRepository).save(any());
+    }
+
     // ── Multiple concurrent cases (§15 concurrency — no cross-contamination) ─────────────────────
 
     @Test

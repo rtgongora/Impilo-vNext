@@ -29,6 +29,7 @@ import {
   useCatalogueSearch,
   useCatalogueDetail,
   useAppropriatenessCheck,
+  useCompetence,
   useSafetyPauseTemplate,
   useSedationLevel,
   useRecoverySetting,
@@ -283,10 +284,13 @@ export default function ProceduresCataloguePage() {
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [side, setSide] = useState<string>("");
   const [checkRequest, setCheckRequest] = useState<AppropriatenessRequest | null>(null);
+  /** Typed provider id — do not invent a session provider; competence stays unread until entered. */
+  const [providerId, setProviderId] = useState("");
 
   const searchQ = useCatalogueSearch({ specialty, category, q });
   const detailQ = useCatalogueDetail(selectedCode);
   const checkQ = useAppropriatenessCheck(checkRequest);
+  const competenceQ = useCompetence(providerId.trim() || null, selectedCode);
 
   const runCheck = () => {
     if (!selectedCode) return;
@@ -462,6 +466,55 @@ export default function ProceduresCataloguePage() {
                     </select>
                   </div>
                 )}
+
+                <div className="mt-4" data-testid="procedures-competence-panel">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">
+                    Provider competence check
+                  </label>
+                  <input
+                    type="text"
+                    value={providerId}
+                    onChange={(e) => setProviderId(e.target.value)}
+                    placeholder="Provider id (required — not invented from session)"
+                    className="mt-1 block w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                    data-testid="procedures-competence-provider"
+                  />
+                  {!providerId.trim() ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Enter a provider id to check competence for this catalogue entry. Until then,
+                      competence is not established.
+                    </p>
+                  ) : competenceQ.isLoading ? (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Checking competence…
+                    </div>
+                  ) : competenceQ.isError ? (
+                    <p className="mt-2 text-sm text-danger" role="alert" data-testid="procedures-competence-unavailable">
+                      Could not establish competence — do not treat this as permitted.
+                    </p>
+                  ) : competenceQ.data ? (
+                    <div className="mt-2 rounded border border-gray-100 p-2 text-xs" data-testid="procedures-competence-result">
+                      <p className="font-medium">
+                        Capacity:{" "}
+                        <span data-testid="procedures-competence-capacity">{competenceQ.data.capacity}</span>
+                        {competenceQ.data.capacity === "UNKNOWN" || !competenceQ.data.mayProceedAlone ? (
+                          <span className="ml-2 text-danger"> — not established to proceed alone</span>
+                        ) : null}
+                      </p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        May proceed alone: {competenceQ.data.mayProceedAlone ? "yes" : "no"}
+                        {competenceQ.data.countersignatureRequired ? " · countersignature required" : ""}
+                      </p>
+                      {competenceQ.data.reasons?.length ? (
+                        <ul className="mt-1 list-inside list-disc text-muted-foreground">
+                          {competenceQ.data.reasons.map((r) => (
+                            <li key={r}>{r}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
 
                 <button
                   type="button"

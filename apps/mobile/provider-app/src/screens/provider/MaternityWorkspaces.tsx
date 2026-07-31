@@ -1,19 +1,25 @@
 /**
- * Partograph and CTG — governed maternal-instrument workspaces.
+ * Partograph, CTG and maternal near-miss — governed maternal-instrument workspaces.
  *
  * Replaces the generic notes-box the obstetrics specialty workspace fell back to. That fallback
  * came from a resolver that picked a tool's form by its POSITION in `specialtyWorkspaces.ts`'s
  * tool array — "Partograph" was a notes box only because it is first in that array, never because
  * anyone decided a partograph is notes. That positional resolver is gone: tools now resolve
- * through `data/specialtyToolRegistry.ts`, where these two are registered as WIRED against the
- * `PartographWorkspace` and `CtgWorkspace` surfaces below. Both instruments already have a real
- * backend (pct-service V056) and governed form definitions served from forms-service; this file
- * adds no persistence of its own.
+ * through `data/specialtyToolRegistry.ts`, where these three are registered as WIRED against the
+ * `PartographWorkspace`, `CtgWorkspace` and `MaternalNearMissWorkspace` surfaces below. Partograph
+ * and CTG persist against a real backend (pct-service V056); near-miss identification persists
+ * nothing anywhere (CKP's classification is stateless by design — see
+ * `MaternalNearMissController.java`'s doc comment on the clinical-knowledge-platform side). All
+ * three share governed form definitions served from forms-service; this file adds no persistence
+ * of its own.
  *
- * See docs/clinical/rmnp/partograph-ctg-mobile-contract.md for the six behaviours this UI must
- * preserve. The short version: a 200 saying "no session is open" and a 502 saying "could not ask"
- * are different clinical statements and must never render the same way; INSUFFICIENT_DATA is the
- * loudest state, not the calmest; and nothing here ever carries a previous value into a new entry.
+ * See docs/clinical/rmnp/partograph-ctg-mobile-contract.md for the six behaviours the partograph
+ * and CTG UIs must preserve. The short version: a 200 saying "no session is open" and a 502 saying
+ * "could not ask" are different clinical statements and must never render the same way;
+ * INSUFFICIENT_DATA is the loudest state, not the calmest; and nothing here ever carries a
+ * previous value into a new entry. The near-miss workspace answers to the same law under its own
+ * contract: blank ≠ ABSENT ≠ unrecognised, INDETERMINATE is never rendered as "no near-miss", and
+ * a 502 is an outage, not a clinical finding.
  */
 
 import React, { useMemo, useState } from "react";
@@ -33,9 +39,11 @@ import {
   getCtgSession,
   getCtgChunks,
   addCtgAnnotation,
+  classifyNearMissForm,
   type PartographProgress,
   type AddPartographPointResult,
   type CtgChunk,
+  type NearMissClassifyResult,
 } from "../../services/maternityService";
 
 // --- shared governed-form rendering (mirrors EncounterFormsPanel's approach) ---------------
@@ -155,7 +163,10 @@ function GovernedField({
           {field.options.map((opt) => (
             <Pressable
               key={opt.code}
-              onPress={() => set(opt.code)}
+              // Tapping the already-selected option retracts it back to blank rather than being a
+              // no-op — a clinician must be able to undo an accidental tap on a coded criterion,
+              // not merely switch it to the other code.
+              onPress={() => set(answers[field.id] === opt.code ? undefined : opt.code)}
               style={[styles.option, answers[field.id] === opt.code && styles.optionSelected]}
               testID={`field-${field.id}-opt-${opt.code}`}
             >
@@ -166,12 +177,16 @@ function GovernedField({
               </Text>
             </Pressable>
           ))}
+          {(answers[field.id] === undefined || answers[field.id] === null) && (
+            <Text style={styles.notAssessedHint}>not assessed</Text>
+          )}
         </View>
       </View>
     );
   }
 
-  const keyboard = field.kind === "numeric_with_unit" ? "decimal-pad" : "default";
+  const isNumeric = field.kind === "numeric_with_unit" || field.kind === "decimal";
+  const keyboard = isNumeric ? "decimal-pad" : "default";
   return (
     <View style={styles.field}>
       <Text style={styles.label}>
@@ -182,7 +197,8 @@ function GovernedField({
         testID={`field-${field.id}`}
         value={answers[field.id] === undefined || answers[field.id] === null ? "" : String(answers[field.id])}
         keyboardType={keyboard as "decimal-pad" | "default"}
-        onChangeText={(t: string) => set(field.kind === "numeric_with_unit" && t !== "" ? Number(t) : t)}
+        onChangeText={(t: string) => set(isNumeric && t !== "" ? Number(t) : t === "" ? undefined : t)}
+        placeholder={isNumeric ? "Not assessed" : undefined}
         style={[styles.input, field.kind === "text" && { minHeight: 60 }]}
         multiline={field.kind === "text"}
       />
@@ -670,6 +686,205 @@ export function CtgWorkspace() {
   );
 }
 
+// --- Maternal near-miss workspace ------------------------------------------------------------
+
+const NEAR_MISS_FORM_KEY = "impilo.maternal.nearmiss.assessment.v1";
+const LINK_PREFIX = "nearMiss.";
+
+function bareId(linkId: string): string {
+  return linkId.startsWith(LINK_PREFIX) ? linkId.slice(LINK_PREFIX.length) : linkId;
+}
+
+/** Humanises a tier code like `NEAR_MISS_CARDIOVASCULAR` into "Cardiovascular". */
+function humaniseTierCode(code: string): string {
+  return code
+    .replace(/^NEAR_MISS_/, "")
+    .split("_")
+    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+/**
+ * Whether a submitted form-21 answer set failed the BFF's read, and why. Mirrors the web lane's
+ * `useMaternalNearMiss.ts` — see that file's doc comment for the full shape reference, since both
+ * surfaces read the same controller.
+ */
+function refusalCopy(error: unknown): { title: string; body: string; list?: string[] } | null {
+  if (!(error instanceof ApiError)) return null;
+  if (error.code === "unrecognised_form_answer") {
+    return {
+      title: "These answers could not be read",
+      body:
+        error.message ||
+        "An unreadable answer being silently treated as a negative is how a near-miss is recorded as a normal birth. Correct them and resubmit.",
+      list: (error.details?.unrecognised_answers as string[] | undefined) ?? undefined,
+    };
+  }
+  if (error.status >= 500) {
+    return {
+      title: "The near-miss criteria could not be evaluated",
+      body:
+        error.message ||
+        "This is not a finding of \u2018no near-miss\u2019. Classify clinically and resubmit when the service returns.",
+    };
+  }
+  return { title: "Could not classify this assessment", body: "Nothing was recorded — try again." };
+}
+
+export function MaternalNearMissWorkspace() {
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [result, setResult] = useState<NearMissClassifyResult | null>(null);
+
+  const form = useGovernedForm(NEAR_MISS_FORM_KEY);
+
+  const labelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const section of form.definition?.sections ?? []) {
+      for (const f of section.fields) {
+        map.set(bareId(f.id), f.label);
+      }
+    }
+    return map;
+  }, [form.definition]);
+
+  const classify = useMutation({
+    mutationFn: () => classifyNearMissForm(answers, NEAR_MISS_FORM_KEY),
+    onSuccess: (r) => setResult(r),
+  });
+
+  function handleClear() {
+    setAnswers({});
+    setResult(null);
+    classify.reset();
+  }
+
+  const refusal = classify.isError ? refusalCopy(classify.error) : null;
+  const blank = result?.meta.criteria_left_blank ?? [];
+  const data = result?.data;
+  const inconclusive = !!data && (data.status === "INDETERMINATE" || data.provisional);
+
+  return (
+    <ScrollView style={styles.workspace} testID="near-miss-workspace">
+      <Text style={styles.workspaceTitle}>Maternal near-miss assessment</Text>
+      <Text style={styles.hint}>
+        WHO organ-dysfunction criteria — identification only, nothing is saved. Leave a field blank
+        if it was not assessed; a blank is never treated as a negative finding.
+      </Text>
+
+      {form.isLoading && <Text style={styles.hint}>Loading the near-miss assessment form…</Text>}
+      {!form.isLoading && !form.definition && (
+        <Text style={styles.errorText}>The near-miss assessment form definition is unavailable.</Text>
+      )}
+
+      {form.definition && (
+        <View style={styles.form} testID="near-miss-form">
+          <GovernedFormFields definition={form.definition} answers={answers} setAnswers={setAnswers} />
+
+          <Pressable
+            style={[styles.primaryBtn, classify.isPending && styles.primaryBtnDisabled]}
+            disabled={classify.isPending}
+            onPress={() => classify.mutate()}
+            testID="near-miss-submit"
+          >
+            <Text style={styles.primaryBtnText}>
+              {classify.isPending ? "Classifying…" : "Classify near-miss"}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.secondaryBtn} onPress={handleClear} testID="near-miss-clear">
+            <Text style={styles.secondaryBtnText}>Clear form</Text>
+          </Pressable>
+
+          {refusal && (
+            <View style={styles.unavailableBanner} testID="near-miss-refusal" accessibilityRole="alert">
+              <Text style={styles.unavailableTitle}>{refusal.title}</Text>
+              <Text style={styles.unavailableBody}>{refusal.body}</Text>
+              {refusal.list && refusal.list.length > 0 && (
+                <View style={{ marginTop: 4 }}>
+                  {refusal.list.map((a) => (
+                    <Text key={a} style={styles.unavailableBody}>
+                      • {a}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {data && (
+            <View style={styles.sessionBox} testID="near-miss-outcome">
+              {data.is_near_miss ? (
+                <View style={[styles.progressBox, { backgroundColor: "#FEE2E2", borderColor: "#DC2626" }]}>
+                  <Text style={[styles.progressStatus, { color: "#7F1D1D" }]}>
+                    Near-miss identified — {data.classification_name}
+                  </Text>
+                  {data.provisional && (
+                    <Text style={[styles.progressAction, { color: "#7F1D1D" }]}>
+                      Provisional: a more severe finding above this one could not be excluded.
+                    </Text>
+                  )}
+                  {data.rationale && <Text style={styles.progressDetail}>{data.rationale}</Text>}
+                  {data.review_note && <Text style={styles.progressDetail}>{data.review_note}</Text>}
+                </View>
+              ) : inconclusive ? (
+                <View style={[styles.progressBox, { backgroundColor: "#FEE2E2", borderColor: "#DC2626" }]} testID="near-miss-indeterminate">
+                  <Text style={[styles.progressStatus, { color: "#7F1D1D" }]}>
+                    Indeterminate — a near-miss cannot be ruled out
+                  </Text>
+                  <Text style={[styles.progressDetail, { color: "#7F1D1D" }]}>
+                    {data.rationale ||
+                      "A severity row could not be excluded on what was recorded. This is not the same as \u2018no near-miss\u2019."}
+                  </Text>
+                  {data.unresolved_criteria.length > 0 && (
+                    <View style={styles.outstandingBlock}>
+                      <Text style={styles.outstandingTitle}>Could not exclude</Text>
+                      {data.unresolved_criteria.map((code) => (
+                        <Text key={code} style={styles.outstandingLine}>
+                          • {humaniseTierCode(code)}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+                  {data.missing_inputs.length > 0 && (
+                    <View style={styles.outstandingBlock}>
+                      <Text style={styles.outstandingTitle}>Complete these to resolve it</Text>
+                      {data.missing_inputs.map((linkId) => (
+                        <Text key={linkId} style={styles.outstandingLine}>
+                          • {labelById.get(bareId(linkId)) ?? linkId}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View style={[styles.progressBox, { backgroundColor: "#D1FAE5", borderColor: "#22C55E" }]}>
+                  <Text style={[styles.progressStatus, { color: "#14532D" }]}>
+                    WHO near-miss criteria not met
+                  </Text>
+                  <Text style={styles.progressDetail}>
+                    {data.rationale ||
+                      "No organ-dysfunction criterion was met on the information recorded. This is not a statement that the woman was well."}
+                  </Text>
+                </View>
+              )}
+
+              {blank.length > 0 && (
+                <View style={styles.pointsList} testID="near-miss-blank">
+                  <Text style={styles.sectionTitle}>Left blank — not assessed, not recorded as absent</Text>
+                  {blank.map((field) => (
+                    <Text key={field} style={styles.pointLine}>
+                      • {labelById.get(field) ?? field}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
 const styles = StyleSheet.create({
   workspace: { flex: 1 },
   workspaceTitle: { fontSize: 16, fontWeight: "700", color: colors.gray[900], marginBottom: 8 },
@@ -701,6 +916,7 @@ const styles = StyleSheet.create({
   optionSelected: { backgroundColor: "#DBEAFE", borderColor: "#3B82F6" },
   optionText: { fontSize: 12, color: colors.gray[700] },
   optionTextSelected: { color: "#1E3A8A", fontWeight: "600" },
+  notAssessedHint: { fontSize: 11, color: colors.gray[500], alignSelf: "center", marginLeft: 4 },
   unavailableBanner: {
     backgroundColor: "#FEF2F2",
     borderWidth: 1,

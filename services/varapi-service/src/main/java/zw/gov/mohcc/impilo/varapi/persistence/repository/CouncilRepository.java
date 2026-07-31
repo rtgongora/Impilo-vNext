@@ -18,4 +18,10 @@ public interface CouncilRepository extends JpaRepository<CouncilEntity, Long> {
     List<CouncilEntity> findByTenantIdAndCouncilType(UUID tenantId, String councilType);
 
     Optional<CouncilEntity> findByIdAndTenantId(Long id, UUID tenantId);
+
+    /**
+     * The council regulated by an org-registry organisation (ROM R1). Used to turn a configuration
+     * event, which names an organisation, into the council whose registers it governs.
+     */
+    Optional<CouncilEntity> findByTenantIdAndOrgRegistryOrgId(UUID tenantId, UUID orgRegistryOrgId);
 }

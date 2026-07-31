@@ -66,6 +66,12 @@ public class OrganizationRegistryServiceClient {
                 baseUrl + "/v1/regulatory/config/organizations/" + organizationId + "/packs", null);
     }
 
+    /** Org-scoped configuration audit events (pack/release/activation). */
+    public JsonNode listConfigAuditEvents(String organizationId) {
+        return exchangeJson(HttpMethod.GET,
+                baseUrl + "/v1/regulatory/config/organizations/" + organizationId + "/audit-events", null);
+    }
+
     public JsonNode listConfigReleases(String packId) {
         return exchangeJson(HttpMethod.GET,
                 baseUrl + "/v1/regulatory/config/packs/" + packId + "/releases", null);

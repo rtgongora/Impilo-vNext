@@ -80,6 +80,15 @@ vi.mock("@/hooks/queries/usePatients", () => ({ usePatient: () => state.patient 
 vi.mock("@/hooks/queries/useConditions", () => ({ useConditions: () => state.conditions }));
 vi.mock("@/hooks/queries/useAllergies", () => ({ useAllergies: () => state.allergies }));
 vi.mock("@/hooks/queries/usePrograms", () => ({ useProgrammeEnrolments: () => state.programmes }));
+vi.mock("@/features/medicine/clerking/AmbulatoryOrderSetsPanel", () => ({
+  AmbulatoryOrderSetsPanel: () => <div data-testid="ambulatory-order-sets-stub" />,
+}));
+vi.mock("@/features/medicine/workspace/JourneyPositionIndicator", () => ({
+  JourneyPositionIndicator: () => <div data-testid="journey-position-stub" />,
+}));
+vi.mock("@/features/medicine/pharm/RenalDosingPanel", () => ({
+  RenalDosingPanel: () => <div data-testid="renal-dosing-stub" />,
+}));
 
 // eslint-disable-next-line import/first
 import { MedicineWorkspaceShell } from "../MedicineWorkspaceShell";

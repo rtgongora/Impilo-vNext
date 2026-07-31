@@ -27,6 +27,8 @@ import {
   getProfessionalAlerts,
   type ProfessionalAlerts,
 } from "../../services/professionalAlertsService";
+import { MyRegulatoryAffairsScreen } from "./MyRegulatoryAffairsScreen";
+import { appStore, useAppStore } from "../../stores/appStore";
 
 const SEVERITY_VARIANT: Record<string, "destructive" | "warning" | "secondary"> = {
   CRITICAL: "destructive",
@@ -39,6 +41,8 @@ function formatDate(iso: string): string {
 }
 
 export function ProfessionalProfileScreen() {
+  const { professionalSurfaceRequest } = useAppStore();
+  const [showRegulatory, setShowRegulatory] = useState(false);
   const [profile, setProfile] = useState<ProviderProfile | null>(null);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [alerts, setAlerts] = useState<ProfessionalAlerts | null>(null);
@@ -47,6 +51,13 @@ export function ProfessionalProfileScreen() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (professionalSurfaceRequest === "regulatory") {
+      setShowRegulatory(true);
+      appStore.getState().setProfessionalSurfaceRequest(null);
+    }
+  }, [professionalSurfaceRequest]);
 
   // Editable contact fields
   const [editEmail, setEditEmail] = useState("");
@@ -117,6 +128,10 @@ export function ProfessionalProfileScreen() {
     }
     setEditing(false);
   }, [profile]);
+
+  if (showRegulatory) {
+    return <MyRegulatoryAffairsScreen onClose={() => setShowRegulatory(false)} />;
+  }
 
   if (loading) {
     return (
@@ -303,6 +318,16 @@ export function ProfessionalProfileScreen() {
             )}
           </CardBody>
         </Card>
+
+        <Pressable
+          testID="open-my-regulatory"
+          onPress={() => setShowRegulatory(true)}
+          style={styles.editButtonContainer}
+        >
+          <View style={styles.editButton}>
+            <Text style={styles.editButtonText}>My Regulatory Affairs</Text>
+          </View>
+        </Pressable>
 
         {/* Professional standing (Phase G5) — same BFF surface as web /professional */}
         <CardHeader>Professional Standing</CardHeader>

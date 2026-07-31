@@ -21,6 +21,10 @@ import java.util.List;
  * @param functionalLimitations documented functional limitations, or null when not assessed
  * @param patientPriorities what the patient said matters to them, or null when never asked
  * @param careTeam       who is responsible for what, or null when not recorded
+ * @param egfrSource     where the eGFR came from, when that is worth stating — in practice, that
+ *                       this platform derived it from a creatinine rather than a laboratory
+ *                       reporting it. Null when a laboratory value was supplied or none exists. A
+ *                       clinician reading a filtration rate is entitled to know which it is
  */
 public record MultimorbidityContext(
         List<Condition> conditions,
@@ -31,7 +35,18 @@ public record MultimorbidityContext(
         String hepaticImpairment,
         List<String> functionalLimitations,
         List<String> patientPriorities,
-        List<CareTeamMember> careTeam) {
+        List<CareTeamMember> careTeam,
+        String egfrSource) {
+
+    /** A context whose eGFR, if any, came from a laboratory rather than from this platform. */
+    public MultimorbidityContext(
+            List<Condition> conditions, List<String> medicationCodes, List<Appointment> appointments,
+            List<Investigation> investigations, Double egfr, String hepaticImpairment,
+            List<String> functionalLimitations, List<String> patientPriorities,
+            List<CareTeamMember> careTeam) {
+        this(conditions, medicationCodes, appointments, investigations, egfr, hepaticImpairment,
+                functionalLimitations, patientPriorities, careTeam, null);
+    }
 
     /** One active problem. {@code longTerm} is the caller's assertion, not an inference from the code. */
     public record Condition(String code, String display, boolean longTerm) {

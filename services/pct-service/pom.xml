@@ -85,6 +85,12 @@
             <artifactId>paediatric-domain</artifactId>
         </dependency>
 
+        <!-- Adult clinical arithmetic; used here to derive an eGFR from a stored creatinine -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>medicine-domain</artifactId>
+        </dependency>
+
         <!-- WHO IITT triage engine (the acuity authority of record) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>

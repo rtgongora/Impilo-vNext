@@ -259,7 +259,13 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/regulators/[regulatorId]/bulk-import", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Bulk import", navLabel: "Bulk import", navZone: "work" },
   { path: "/work/regulatory/[orgId]/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory dashboards", navLabel: "Dashboards", navZone: "work" },
   { path: "/work/regulatory/[orgId]/configuration", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory configuration", navLabel: "Configuration", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/registers", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Professional registers", navLabel: "Registers", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/student-applications", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Student applications", navLabel: "Student applications", navZone: "work" },
   { path: "/work/regulatory/[orgId]/student-applications/[applicationId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Student registration review", navLabel: "Student registration", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/student-reports", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Student registration reports", navLabel: "Student reports", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/cpd-review", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "CPD review", navLabel: "CPD review", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/restrictions", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Register restrictions", navLabel: "Restrictions", navZone: "work" },
+  { path: "/work/regulatory/[orgId]/audit", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory audit", navLabel: "Audit", navZone: "work" },
   { path: "/work/regulatory/hpa/oversight", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "HPA oversight", navLabel: "HPA oversight", navZone: "work" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
@@ -317,6 +323,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my/orders/[requestId]/offers", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Compare Offers", navLabel: "Offers", navZone: "life" },
   // OF-B27 — citizen remote-monitoring home (my plan, my readings, my device, alert notices).
   { path: "/my/monitoring", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Monitoring", navLabel: "My Monitoring", navZone: "life" },
+  // W12 — citizen pregnancy booking + current pregnancy view (confidential maternity lane).
+  { path: "/my/pregnancy", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Pregnancy", navLabel: "My Pregnancy", navZone: "life" },
 
   // â”€â”€ Zone: Queue (Clinical) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/queue", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient Queue", navLabel: "Queue", navZone: "work" },
@@ -928,6 +936,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my-life/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Feedback", navLabel: "Feedback & Safety", navZone: "life" },
   { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },
   { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
+  { path: "/my-life/feedback/respectful-maternity", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Respectful Maternity Care", navLabel: "Respectful Maternity Care", navZone: "life" },
   { path: "/feedback/visit/[encounterRef]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Rate your visit", navLabel: "Rate your visit", navZone: "life" },
   // Work Home (Phase F1/F3) — guard is "auth", not "facility": oversight, programme,
   // regulatory and support contexts have no facility anchor and must still land here.
@@ -978,6 +987,8 @@ export const ROUTES: RouteDefinition[] = [
 
   // WS#6 — Theatre & Perioperative Depth (provider theatre surfaces).
   { path: "/work/clinical/theatre", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre", navLabel: "Theatre", navZone: "work" },
+  { path: "/work/clinical/theatre/board", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre Readiness Board", navLabel: "Theatre Board", navZone: "work" },
+  { path: "/work/clinical/theatre/referrals", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Surgical Referrals", navLabel: "Surgical Referrals", navZone: "work" },
   { path: "/work/clinical/theatre/[id]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre Case", navLabel: "Theatre Case", navZone: "work" },
 
   // Surgery + Procedures pipeline (SB-3 reachability wave). The procedures catalogue page
@@ -1101,14 +1112,25 @@ export const ROUTES: RouteDefinition[] = [
 // MCI casualty tagging (W15b, 28 Jul 2026): +1 — /work/daidzai/disasters/[id]/casualties. Total 827.
 // Surgery SB-3 reachability (28 Jul 2026): +2 — /work/clinical/procedures (existed but was
 // unregistered/orphaned) and /work/clinical/surgery (S1-S3 surgical episode workspace). Total 829.
+// Surgery parity close (31 Jul 2026): +2 — /work/clinical/theatre/board and
+// /work/clinical/theatre/referrals (existed but were orphan-baseline-allowed). Total 831.
+// RMNP W12 respectful maternity care citizen feedback (31 Jul 2026): +1 —
+// /my-life/feedback/respectful-maternity. Total 832.
+// RMNP W12 citizen pregnancy booking (31 Jul 2026): +1 — /my/pregnancy, the citizen
+// pregnancy booking + current-pregnancy view over the confidential maternity lane. Total 833.
+// NCZ register materialiser UI (31 Jul 2026): +1 — /work/regulatory/[orgId]/registers. Total 834.
+// NCZ regulatory UI completeness (31 Jul 2026): +5 — student queue/reports, cpd-review,
+// restrictions, audit under /work/regulatory/[orgId]/…. Total 839.
 // Emergency pack W15 (30 Jul 2026): +6 — /clinical/emergency/activation, .../pre-arrival,
 // .../analytics, .../spine/[episodeId]/disposition, .../spine/[episodeId]/observation, and
 // /ehr/[patientId]/emergency, which had a page and inbound links but no registration and therefore
-// no guard. Total 836.
+// no guard. Total 845.
 // Mental-health clinical record (W15, 30 Jul 2026): +2 — /work/mental-health/[referralId] and
 // /work/mental-health/restraint-review, the callers for the nineteen mental-health-service
-// operations that had none. Total 838.
-export const EXPECTED_ROUTE_COUNT = 838;
+// operations that had none. Total 847.
+// Merge with staging (31 Jul 2026): route-parity extract (routes.ts literals + admin registry)
+// is 848 — one above the additive comment chain after both lanes landed. Trust the extract.
+export const EXPECTED_ROUTE_COUNT = 848;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -55,6 +55,7 @@
         <module>../libs/reproductive-domain</module>
         <module>../libs/burn-domain</module>
         <module>../libs/emergency-domain</module>
+        <module>../libs/medicine-domain</module>
         <module>../libs/realtime-gateway</module>
         <module>shared-core</module>
         <module>tshepo-service</module>
@@ -402,6 +403,15 @@
             <dependency>
                 <groupId>zw.gov.mohcc.impilo</groupId>
                 <artifactId>reproductive-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Adult medicine domain: renal, hepatic, respiratory, thrombosis, metabolic,
+                 neurological and critical-care calculators, plus CVD risk, NYHA, frailty,
+                 cognition, opioid equivalence and treatment burden -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>medicine-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

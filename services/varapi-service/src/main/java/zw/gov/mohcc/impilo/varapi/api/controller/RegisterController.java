@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.CouncilEntity;
-import zw.gov.mohcc.impilo.varapi.persistence.entity.ProfessionalRegisterEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.CouncilRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProfessionalRegisterRepository;
 
@@ -42,17 +41,11 @@ public class RegisterController {
         }
         List<Map<String, Object>> registers = registerRepository
                 .findByTenantIdAndCouncilIdOrderByRegisterCodeAsc(ctx.tenantId(), council.getId()).stream()
-                .map(RegisterController::toView).toList();
+                .map(ProfessionalRegisterViews::toOperatorView).toList();
         return ResponseEntity.ok(Map.of(
                 "councilCode", council.getCouncilCode(),
                 "councilName", council.getName(),
+                "councilId", council.getId(),
                 "registers", registers));
-    }
-
-    private static Map<String, Object> toView(ProfessionalRegisterEntity r) {
-        return Map.of(
-                "registerCode", r.getRegisterCode(),
-                "name", r.getName(),
-                "status", r.getStatus());
     }
 }

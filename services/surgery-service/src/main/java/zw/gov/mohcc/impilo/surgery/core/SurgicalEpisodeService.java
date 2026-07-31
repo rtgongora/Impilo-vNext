@@ -51,12 +51,15 @@ public class SurgicalEpisodeService {
     private final SurgicalEpisodeRepository repository;
     private final PctProblemContributionClient pctClient;
     private final InpatientSpecimenClient specimenClient;
+    private final EpisodeSpecialtyService episodeSpecialtyService;
 
     public SurgicalEpisodeService(SurgicalEpisodeRepository repository, PctProblemContributionClient pctClient,
-                                  InpatientSpecimenClient specimenClient) {
+                                  InpatientSpecimenClient specimenClient,
+                                  EpisodeSpecialtyService episodeSpecialtyService) {
         this.repository = repository;
         this.pctClient = pctClient;
         this.specimenClient = specimenClient;
+        this.episodeSpecialtyService = episodeSpecialtyService;
     }
 
     private UUID currentTenant() {
@@ -100,6 +103,10 @@ public class SurgicalEpisodeService {
         e.setCreatedBy(currentActor());
         e.setStatus("ASSESSMENT");
         e = repository.save(e);
+
+        // V011: the lead specialty is recorded in both places from the episode's first moment,
+        // so surgical_episode.specialty and the join table never start out disagreeing.
+        episodeSpecialtyService.recordLeadAtOpen(e);
 
         // Best-effort contribution — a PCT outage must not block recording the episode, which
         // stays the local truth either way. idx_surgical_episode_uncontributed is the

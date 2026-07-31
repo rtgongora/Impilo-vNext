@@ -1,6 +1,6 @@
 # Web ↔ Mobile Parity Matrix — Impilo & Impilo Provider
 
-**Date:** 2026-07-23 · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
+**Date:** 2026-07-31 · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
 **Method:** Three independent static audits (citizen app, provider app, shared platform) reading actual screen/service/navigation code and cross-checking every endpoint against `services/experience-bff` controllers — **not** name-matching. Runtime evidence (emulator install/launch/screenshots) is recorded in `docs/mobile/MOBILE_RECOVERY_REPORT.md`; where a row says *static-verified*, the code is fully wired but end-to-end runtime completion has not been individually proven.
 
 **Statuses:** `Verified parity` (wired + runtime-consistent evidence) · `Partial parity` · `Mobile redesign required` · `Missing` · `Broken` · `Orphaned` (built but unreachable — a mobile-specific failure class) · `Build-blocked` · `API-blocked` · `Permission-blocked` · `N/A`.
@@ -69,7 +69,7 @@ Navigation truth: `AuthGuard` → login → ProviderActivation → SelectFacilit
 | Vashandi shifts / roster | Partial parity (static-verified) | Workforce hub + attendance/availability/roster/facility-staff → ProviderVashandiController. No Maestro flow. |
 | Rito (safety/quality) | Partial parity (static-verified) | ReportSafety + MySafetyCases → work rito cases. |
 | Tuso (premises self-service) | **Missing** | No screens; service card redirects to Professional tab. |
-| Regulatory self-service | Partial parity (thin) | FacilityRegulators (read/ack) + facility-registry applications; thinner than web regulatory module. |
+| Regulatory self-service | Partial parity (static-verified) | My Regulatory Affairs under Professional (`/internal/v1/me/regulatory/*`, practice establishments, student sections/resubmit, contributor invite redeem + deep link). Citizen public explore (councils+registers via public gateway). Operator desks (register reconcile, student review, W1D boards, config authoring) stay **WEB_ONLY**. |
 | Learning (Fundo CPD) | Partial parity (static-verified) | Fundo shell + classroom + Training tab; Maestro classroom flow. |
 | Madi (provider) | Partial parity (static-verified) | Orders/Transfusion/DriveCapture/ReactionReport/CentralBank + offline drive sync. |
 | Budgets | **Orphaned** | BudgetSummaryScreen + budgetService fully built, never imported. |
@@ -78,6 +78,10 @@ Navigation truth: `AuthGuard` → login → ProviderActivation → SelectFacilit
 | Supervisor mode | Partial parity (static-verified) | Team/metrics + inventory (stock/alerts/requisitions/dispatch) + escalations; zero Maestro coverage. |
 | Offline mode | Partial parity (static-verified) | Real sync engine, local queue, conflict review, break-glass activate/deactivate; zero Maestro coverage. |
 | Courier mode | Partial parity (thin) | 2 screens over nhume/deliveries; skeletal vs web Nhume logistics. |
+| Adult medicine workspace | **Partial parity** | Encounter → Medicine + Tools → Medicine: programmes/problems/allergies via shared BFF (`/internal/v1/programmes`, `/conditions`, `/allergies`); unavailable ≠ empty. Examination, specialty §8 tools, order sets **NOT BUILT**. See `docs/mobile/adult-medicine-parity.md`. |
+| Medicine CDS (8 topics) | **Partial parity** | Tools → Med CDS + Encounter Medicine embed: `POST /internal/v1/medicine/cds/{topic}/evaluate`; 502 surfaced as failure not all-clear. Legacy Tools → CDS tab is a different endpoint. |
+| Clerking continuity | **Partial parity** | Encounter → Clerking + Tools → Clerking: read-only problems + visit attestations; extensions/exam write **NOT BUILT**. |
+| Chronic registers | **Partial parity** | Tools → Registers: `GET /internal/v1/programmes/register` facility worklist; no control assessment write on mobile. |
 
 ## Section 3 — Shared mobile platform
 

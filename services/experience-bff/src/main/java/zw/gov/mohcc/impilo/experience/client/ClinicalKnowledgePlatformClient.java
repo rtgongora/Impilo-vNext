@@ -144,6 +144,47 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /** The bedside calculators this platform serves, with the descriptors a form renders from. */
+    public JsonNode listCalculators() {
+        String url = baseUrl + "/internal/v1/clinical/calculators";
+        log.debug("Clinical platform: list calculators");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** One calculator's description, including the fields a form must render and its caveats. */
+    public JsonNode describeCalculator(String calculatorId) {
+        String url = baseUrl + "/internal/v1/clinical/calculators/" + calculatorId;
+        log.debug("Clinical platform: describe calculator {}", calculatorId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Runs a calculator over submitted values.
+     *
+     * <p>The body is passed through as built, and the response is passed back as returned. A
+     * refusal — the calculator declining to produce a number, with a named reason and an
+     * explanation — is a successful call, and this client must not convert one into an error or an
+     * empty result. Both would present a stated clinical limitation as a system fault.</p>
+     */
+    public JsonNode evaluateCalculator(String calculatorId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/calculators/" + calculatorId + "/evaluate";
+        log.debug("Clinical platform: evaluate calculator {}", calculatorId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Renal dosing awareness — advisory bands from {@code RenalDosingAdvisor}, not dose arithmetic. */
+    public JsonNode renalDosingAdvise(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/medicine/renal-dosing/advise";
+        log.debug("Clinical platform: renal dosing advise");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";

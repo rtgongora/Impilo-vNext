@@ -91,6 +91,14 @@ const CITIZEN_ROUTES: Array<{ prefix: string; resolve: (params: Record<string, s
     prefix: "/get-involved",
     resolve: () => ({ tab: "public_health" }),
   },
+  {
+    prefix: "/explore/regulatory",
+    resolve: () => ({ tab: "personal", section: "regulatory-explore" }),
+  },
+  {
+    prefix: "/public/regulatory",
+    resolve: () => ({ tab: "personal", section: "regulatory-explore" }),
+  },
 ];
 
 /**

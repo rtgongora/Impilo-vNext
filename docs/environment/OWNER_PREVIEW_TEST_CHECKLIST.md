@@ -151,6 +151,21 @@ Smoke script: `bash scripts/test/smoke-vashandi-preview-personas.sh` (after BFF/
 | 51 | **Bootstrap** — `/bootstrap` loads First National Administrator wizard | | Token: `ImpiloPreviewBootstrap2026!` (preview only) |
 | 52 | **Onboarding** — `/work/administration-governance/onboard` and org data-uploads routes load | | BFF must reach workforce-governance-service (not localhost:8165) |
 
+### Regulatory / NCZ (2026-07-31)
+
+| # | Check | Pass? | Notes |
+|---|-------|-------|-------|
+| R1 | Regulatory hub `/work/regulatory/[orgId]` — Registers / Student applications / Student reports / CPD / Restrictions / Audit are real links (not dashed “Not yet available” stubs for those tiles) | | Requires varapi + BFF + org-registry on preview |
+| R2 | Registers page shows provenance (`CONFIG_PACK` vs `MIGRATION_SEED`) and reconcile does not invent a studio | | Task #97 materialiser |
+| R3 | Student applications queue → detail: return section requires a reason; admit blocked when fee not chargeable; admit shows index number when chargeable + complete | | NCZ-W1C |
+| R4 | Student reports panel loads four W1D boards (or honest empty/error) | | NCZ-W1D |
+| R5 | CPD review: enter provider numeric id → Fundo candidates; public-id lookup stays read-only | | No council-wide queue claim |
+| R6 | Restrictions list is read-only and points impose path to disciplinary | | |
+| R7 | Audit page states configuration-pack scope (not a full register-access desk) | | |
+| R8 | Public regulatory explorer lists registers per council without sign-in | | `/internal/v1/public/gateway/regulatory/…` |
+| R9 | Applicant student page: returned section cannot resubmit empty content | | `/professional/regulatory/apply/student/…` |
+| R10 | Legacy `/work/regulators/…/cpd-review|restrictions|audit` redirect into regulatory org tree | | No ScopedAdministrationSurface |
+
 ## Product Owner preview access (full-preview only)
 
 - Login: `superadmin@impilo.gov.zw` / `Impilo@2024!`

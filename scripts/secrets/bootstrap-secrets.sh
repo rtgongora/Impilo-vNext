@@ -9,12 +9,17 @@
 # Idempotent: existing keys are PRESERVED (never silently rotated). Fresh keys are
 # generated with `openssl rand`.
 #
-# Keys: vito-hmac-pepper, dags-signing-key, livekit-api-secret.
+# Keys: vito-hmac-pepper, dags-signing-key, livekit-api-secret, plus the F6
+# cryptographic seeds (Impilo ID encryption, QR/card signing, eligibility HMAC,
+# wallet card master key, tshepo-keys KEK).
 #
 # WARNINGS
 #  - vito-hmac-pepper is a PII-pseudonymization pepper. Rotating it on a cluster
 #    that already holds VITO data invalidates existing HMACs — preserve it or plan
 #    a data migration. This script never overwrites an existing value.
+#  - card-print-qr-signing-key-seed is shared with vito so CardAssertionVerifier
+#    can derive the matching verify key without a key-exchange step. Rotating it
+#    invalidates already-printed cards signed under the old seed.
 #  - livekit-api-secret MUST equal the LiveKit server key (livekit-config `keys` /
 #    values.livekit.apiSecret) until P2 unifies them; here it is copied from the
 #    live livekit-config (or LIVEKIT_API_SECRET env) rather than randomised.
@@ -34,6 +39,29 @@ set_if_absent() { # key value
   echo "  $k: set"
 }
 
+# Derive card-print's Ed25519 public key (base64url, no padding) from the signing
+# seed — same SHA-256(seed) → Ed25519 private → public path QrAssertionService and
+# CardAssertionVerifier use. Prefers cryptography; falls back to leaving the key
+# unset so vito can derive from the shared seed instead.
+derive_card_print_public_key() {
+  local seed="$1"
+  python3 - "$seed" <<'PY' 2>/dev/null || true
+import sys, hashlib, base64
+seed = sys.argv[1].encode("utf-8")
+priv = hashlib.sha256(seed).digest()
+try:
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    pub = Ed25519PrivateKey.from_private_bytes(priv).public_key().public_bytes_raw()
+except Exception:
+    try:
+        from nacl.signing import SigningKey
+        pub = SigningKey(priv).verify_key.encode()
+    except Exception:
+        sys.exit(1)
+print(base64.urlsafe_b64encode(pub).decode("ascii").rstrip("="))
+PY
+}
+
 kubectl get secret -n "$NS" "$SECRET" >/dev/null 2>&1 \
   || kubectl create secret generic "$SECRET" -n "$NS" >/dev/null
 
@@ -45,6 +73,30 @@ set_if_absent mushex-hmac-pepper "$(openssl rand -hex 32)"
 # nhume-webhook-secret: on rotation the partner courier's configured secret must
 # be updated to match (per-provider DB secrets take precedence over this fallback).
 set_if_absent nhume-webhook-secret "$(openssl rand -hex 32)"
+
+# F6 cryptographic seeds — previously source-visible DEV fallbacks. Fail-closed
+# constructors refuse to start without these; never commit the values.
+set_if_absent vito-impilo-id-encryption-key "$(openssl rand -hex 32)"
+set_if_absent vito-qr-signing-key-seed "$(openssl rand -hex 32)"
+set_if_absent card-print-qr-signing-key-seed "$(openssl rand -hex 32)"
+set_if_absent ruvimbo-token-secret "$(openssl rand -hex 32)"
+set_if_absent wallet-card-encryption-master-key "$(openssl rand -hex 32)"
+# tshepo-keys KEK: 32-byte AES-256 as 64 hex chars (software custody root).
+set_if_absent tshepo-keys-kek "$(openssl rand -hex 32)"
+
+# Derive the verify key from the (stable) card-print seed so vito can verify
+# without holding the signing seed. If derivation tools are absent, vito falls
+# back to the shared seed via CARD_PRINT_QR_SIGNING_KEY_SEED.
+card_seed="$(get_key card-print-qr-signing-key-seed)"
+if [[ -n "$card_seed" ]]; then
+  card_pub="$(derive_card_print_public_key "$card_seed")"
+  if [[ -n "$card_pub" ]]; then
+    set_if_absent card-print-qr-public-key "$card_pub"
+  else
+    echo "  card-print-qr-public-key: SKIP (no ed25519 derivation library; vito will use shared seed)"
+  fi
+fi
+
 # Keycloak/MinIO admin. Usernames are not secret; passwords are randomised on
 # fresh clusters. NOTE: Keycloak/MinIO read these only at first init — rotating on
 # an initialised cluster needs an admin-API/mc password change, not just a re-seed.

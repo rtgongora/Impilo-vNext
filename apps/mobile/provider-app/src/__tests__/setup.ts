@@ -11,9 +11,20 @@ vi.mock("react-native", async () => {
   const createComponent =
     (tag: string) =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ({ children, testID, contentContainerStyle: _contentContainerStyle, refreshControl: _refreshControl, ...props }: any) => {
+    ({
+      children,
+      testID,
+      onPress,
+      contentContainerStyle: _contentContainerStyle,
+      refreshControl: _refreshControl,
+      ...props
+    }: any) => {
       const domProps = { ...props } as Record<string, unknown>;
       if (testID) domProps["data-testid"] = testID;
+      // Pressable/TouchableOpacity's `onPress` has no DOM equivalent; without this, a synthetic
+      // click event dispatched in a test silently does nothing and the component under test looks
+      // broken rather than the test harness being the gap.
+      if (onPress) domProps.onClick = onPress;
       return React.createElement(tag, domProps, children);
     };
 

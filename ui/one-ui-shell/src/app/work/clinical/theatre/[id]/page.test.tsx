@@ -20,10 +20,15 @@ describe("TheatreCaseDetailPage", () => {
     post.mockReset();
     get.mockImplementation((url: string) => {
       if (url.endsWith("/safety-events")) return Promise.resolve([]);
-      return Promise.resolve({
-        id: "c-1", patient_id: "CPID-1", procedure_name: "Appendectomy", status: "BOOKED", triage_priority: "URGENT", surgeon_id: "surgeon-1",
-        checklist: [{ id: "i1", phase: "SIGN_IN", item_code: "CONSENT", item_label: "Consent verified", completed: false }],
-      });
+      if (url.endsWith("/note")) return Promise.resolve({ status: "NONE" });
+      if (/\/theatre\/cases\/c-1$/.test(url)) {
+        return Promise.resolve({
+          id: "c-1", patient_id: "CPID-1", procedure_name: "Appendectomy", status: "BOOKED", triage_priority: "URGENT", surgeon_id: "surgeon-1",
+          checklist: [{ id: "i1", phase: "SIGN_IN", item_code: "CONSENT", item_label: "Consent verified", completed: false }],
+          returns_to_theatre: [],
+        });
+      }
+      return Promise.resolve({ data: [] });
     });
   });
 
@@ -124,8 +129,9 @@ describe("TheatreCaseDetailPage", () => {
   it("shows the Lane 1 obstetric + emergency-consent surfaces for an EMERGENCY caesarean", async () => {
     get.mockImplementation((url: string) => {
       if (url.endsWith("/safety-events")) return Promise.resolve([]);
+      if (url.endsWith("/note")) return Promise.resolve({ status: "NONE" });
       if (/\/theatre\/cases\/c-1$/.test(url)) {
-        return Promise.resolve({ id: "c-1", patient_id: "CPID-1", procedure_name: "Emergency Caesarean Section", status: "IN_PROGRESS", triage_priority: "EMERGENCY", emergency_override: true, consent_status: "EMERGENCY_EXCEPTION", checklist: [] });
+        return Promise.resolve({ id: "c-1", patient_id: "CPID-1", procedure_name: "Emergency Caesarean Section", status: "IN_PROGRESS", triage_priority: "EMERGENCY", emergency_override: true, consent_status: "EMERGENCY_EXCEPTION", checklist: [], returns_to_theatre: [] });
       }
       return Promise.resolve({ data: [] });
     });
@@ -133,5 +139,69 @@ describe("TheatreCaseDetailPage", () => {
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
     expect(screen.getByTestId("obstetric-section")).toBeInTheDocument();
     expect(screen.getByTestId("emergency-consent-panel")).toBeInTheDocument();
+  });
+
+  it("SB-5 draft note POST includes operative depth fields", async () => {
+    post.mockResolvedValue({});
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
+    await userEvent.type(screen.getByTestId("note-performed-procedure"), "Appendicectomy");
+    await userEvent.type(screen.getByTestId("note-patient-position"), "Supine");
+    await userEvent.selectOptions(screen.getByTestId("note-wound-classification"), "CLEAN_CONTAMINATED");
+    await userEvent.click(screen.getByTestId("note-save"));
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith(
+        "/internal/v1/theatre/cases/c-1/note",
+        expect.objectContaining({
+          performedProcedure: "Appendicectomy",
+          patientPosition: "Supine",
+          woundClassification: "CLEAN_CONTAMINATED",
+        }),
+      ),
+    );
+  });
+
+  it("a failed note GET renders unavailable, not an empty draft pretending no note exists", async () => {
+    get.mockImplementation((url: string) => {
+      if (url.endsWith("/safety-events")) return Promise.resolve([]);
+      if (url.endsWith("/note")) return Promise.reject({ status: 502 });
+      if (/\/theatre\/cases\/c-1$/.test(url)) {
+        return Promise.resolve({
+          id: "c-1", patient_id: "CPID-1", procedure_name: "Appendectomy", status: "BOOKED", triage_priority: "URGENT", checklist: [],
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByTestId("operative-note-unavailable")).toBeInTheDocument());
+    expect(screen.getByTestId("operative-note-unavailable")).toHaveTextContent(/Could not read the operative note/);
+  });
+
+  it("disables save when the operative template pair is half-set", async () => {
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
+    await userEvent.type(screen.getByTestId("note-performed-procedure"), "Appendicectomy");
+    await userEvent.type(screen.getByTestId("note-template-ref"), "3f9a1c2e-4b5d-4a6f-9c7e-8d0f1a2b3c4d");
+    expect(screen.getByTestId("note-save")).toBeDisabled();
+    expect(screen.getByTestId("note-template-pair-required")).toBeInTheDocument();
+    await userEvent.type(screen.getByTestId("note-template-code"), "APPENDECTOMY");
+    expect(screen.getByTestId("note-save")).not.toBeDisabled();
+  });
+
+  it("shows the return-to-theatre panel when the case is in PACU", async () => {
+    get.mockImplementation((url: string) => {
+      if (url.endsWith("/safety-events")) return Promise.resolve([]);
+      if (url.endsWith("/note")) return Promise.resolve({ status: "NONE" });
+      if (/\/theatre\/cases\/c-1$/.test(url)) {
+        return Promise.resolve({
+          id: "c-1", patient_id: "CPID-1", procedure_name: "Appendectomy", status: "PACU", triage_priority: "URGENT", checklist: [],
+          returns_to_theatre: [{ id: "r-1", seq: 1, complication_category: "SEPSIS", reason: "Washout", planned: false }],
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByTestId("return-to-theatre-panel")).toBeInTheDocument());
+    expect(screen.getByTestId("return-to-theatre-list")).toHaveTextContent("SEPSIS");
   });
 });

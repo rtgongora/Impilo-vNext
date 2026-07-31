@@ -103,12 +103,15 @@ function VersionHistory({ definitionId, onClose }: { definitionId: string; onClo
 function DefinitionRow({
   definition,
   definitionId,
+  organizationId,
 }: {
   definition: ConfigDefinitionSummary;
   definitionId: string | undefined;
+  organizationId: string;
 }) {
   const [showHistory, setShowHistory] = useState(false);
   const pending = policyLabel(definition);
+  const isRegister = definition.typeCode === "REGISTER";
 
   return (
     <li className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
@@ -128,6 +131,19 @@ function DefinitionRow({
         <p className="mt-2 flex items-center gap-2 text-sm text-amber-300/90">
           <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden />
           {pending}
+        </p>
+      ) : null}
+
+      {isRegister ? (
+        <p className="mt-2 text-xs text-white/50">
+          Materialised into the council&apos;s professional registers —{" "}
+          <Link
+            href={`/work/regulatory/${encodeURIComponent(organizationId)}/registers`}
+            className="text-teal-300/90 hover:underline"
+          >
+            view live registers
+          </Link>
+          .
         </p>
       ) : null}
 
@@ -158,7 +174,7 @@ function DefinitionRow({
   );
 }
 
-function PackCard({ pack }: { pack: ConfigPackSummary }) {
+function PackCard({ pack, organizationId }: { pack: ConfigPackSummary; organizationId: string }) {
   const pending = useMemo(
     () => pack.definitions.filter((d) => d.policy.status === "PENDING_REGULATOR_APPROVAL"),
     [pack.definitions],
@@ -214,6 +230,7 @@ function PackCard({ pack }: { pack: ConfigPackSummary }) {
             <DefinitionRow
               key={`${definition.typeCode}:${definition.definitionKey}`}
               definition={definition}
+              organizationId={organizationId}
               definitionId={
                 pack.definitionIndex?.[`${definition.typeCode}:${definition.definitionKey}`]
               }
@@ -268,7 +285,7 @@ export default function RegulatoryConfigurationPage() {
           {data?.packs?.length ? (
             <div className="space-y-6">
               {data.packs.map((pack) => (
-                <PackCard key={pack.packId} pack={pack} />
+                <PackCard key={pack.packId} pack={pack} organizationId={orgId} />
               ))}
             </div>
           ) : null}

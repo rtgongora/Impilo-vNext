@@ -1,50 +1,31 @@
 "use client";
 
 /**
- * Clinical History — Lovable-aligned structured clinical history.
+ * Clinical History — narrative entry + §6 Clerking continuity compose.
  * Route: /ehr/[patientId]/history | pageTitle: "History"
- *
- * Combines:
- * - Presenting complaint from active encounter
- * - History of Present Illness (HPI) capture via clinical notes
- * - Past medical history (active conditions)
- * - Current medications cross-reference
- * - Allergies cross-reference
- * - Past encounters and resolved conditions
- * - Immunization history
  */
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import {
   ArrowRightLeft,
   Loader2,
-  Clock,
-  AlertCircle,
-  Activity,
   FileText,
+  Activity,
   Stethoscope,
   Pill,
   ShieldAlert,
-  Syringe,
   Save,
   CheckCircle2,
 } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
+import { ClerkingContinuityShell } from "@/features/medicine/clerking/ClerkingContinuityShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
-
-interface GenericResource {
-  id: string;
-  type: string;
-  attributes: Record<string, unknown>;
-}
+import { apiClient } from "@/lib/api-client";
 
 export default function ClinicalHistoryPage() {
   const params = useParams<{ patientId: string }>();
@@ -53,51 +34,9 @@ export default function ClinicalHistoryPage() {
   const facility = useFacilityStore((state) => state.facility);
 
   const { data: encountersData, isLoading: loadingEnc } = useEncounters(patientId);
-  const { data: conditionsData, isLoading: loadingCond, isError: conditionsUnavailable } = useQuery<ApiResponse<GenericResource[]>>({
-    queryKey: ["conditions", { patientId }],
-    queryFn: () => apiClient.get(`/internal/v1/conditions?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
-  const { data: allergiesData, isLoading: loadingAllergy } = useQuery<ApiResponse<GenericResource[]>>({
-    queryKey: ["allergies", { patientId }],
-    queryFn: () => apiClient.get(`/internal/v1/allergies?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
-  const { data: medsData, isLoading: loadingMeds } = useQuery<ApiResponse<GenericResource[]>>({
-    queryKey: ["prescriptions", { patientId }],
-    queryFn: () => apiClient.get(`/internal/v1/pharmacy/prescriptions?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
-  const { data: immunData, isLoading: loadingImmun } = useQuery<ApiResponse<GenericResource[]>>({
-    queryKey: ["immunizations", { patientId }],
-    queryFn: () => apiClient.get(`/internal/v1/immunizations?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
-
   const encounters = encountersData?.data ?? [];
-  const conditions = (conditionsData?.data ?? []);
-  const allergies = (allergiesData?.data ?? []);
-  const medications = (medsData?.data ?? []);
-  const immunizations = (immunData?.data ?? []);
+  const activeEncounter = encounters.find((e) => e.attributes.isOpen);
 
-  const activeEncounter = encounters.find(
-    (e) => e.attributes.isOpen
-  );
-  const activeConditions = conditions.filter(
-    (c) => c.attributes.clinical_status === "ACTIVE" || c.attributes.clinicalStatus === "ACTIVE"
-  );
-  const resolvedConditions = conditions.filter(
-    (c) => c.attributes.clinical_status === "RESOLVED" || c.attributes.clinicalStatus === "RESOLVED"
-  );
-  const activeAllergies = allergies.filter((a) => a.attributes.status === "ACTIVE");
-  const activeMeds = medications.filter(
-    (m) => m.attributes.status === "PENDING" || m.attributes.status === "ACTIVE"
-  );
-  const completedEncounters = encounters.filter(
-    (e) => e.attributes.status !== "IN_PROGRESS" && e.attributes.status !== "ACTIVE"
-  );
-
-  // HPI capture state
   const [hpiText, setHpiText] = useState("");
   const [hpiSaving, setHpiSaving] = useState(false);
   const [hpiSaved, setHpiSaved] = useState(false);
@@ -117,19 +56,16 @@ export default function ClinicalHistoryPage() {
       });
       setHpiSaved(true);
     } catch {
-      // Error handled by UI
+      // Error surfaced by leaving unsaved state
     } finally {
       setHpiSaving(false);
     }
   }
 
-  const isLoading = loadingEnc || loadingCond || loadingAllergy || loadingMeds || loadingImmun;
-
   return (
     <EHRLayout>
       <PageShell title="History">
-
-        {isLoading ? (
+        {loadingEnc ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
@@ -138,8 +74,8 @@ export default function ClinicalHistoryPage() {
             <ClinicalReviewHeader
               badge="Longitudinal history"
               badgeIcon={FileText}
-              title="Review the active story, then branch into conditions, medications, and allergies without losing encounter context"
-              description="History now acts as the narrative entry point for longitudinal review: start with the active encounter, capture the present illness, and move into the supporting review surfaces from the same context."
+              title="Review the active story, then branch into structured continuity without inventing empty history"
+              description="History is the narrative entry point: capture the present illness, then compose PMH, episodes, meds, allergies and related SoRs from the clerking continuity shell."
               facilityName={facility?.name}
               encounterLabel={
                 activeEncounter
@@ -153,40 +89,23 @@ export default function ClinicalHistoryPage() {
                 { href: `/ehr/${patientId}/allergies`, label: "Allergies", icon: ShieldAlert, tone: "secondary" },
                 { href: `/ehr/${patientId}/notes`, label: "Notes", icon: ArrowRightLeft, tone: "secondary" },
               ]}
-              metrics={[
-                {
-                  label: "Active problems",
-                  value: String(activeConditions.length),
-                  detail: "Conditions still shaping the current clinical story.",
-                },
-                {
-                  label: "Medication review",
-                  value: String(activeMeds.length),
-                  detail: "Current therapies to reconcile against the presenting complaint.",
-                },
-                {
-                  label: "Allergy alerts",
-                  value: String(activeAllergies.length),
-                  detail: activeAllergies.some((item) => item.attributes.severity === "SEVERE")
-                    ? "Severe allergy documented. Review before ordering or prescribing."
-                    : "Known allergy burden carried into the current review.",
-                },
-              ]}
+              metrics={[]}
             />
-            {/* Presenting Complaint — from active encounter */}
-            {activeEncounter && typeof (activeEncounter.attributes as Record<string, unknown>).chief_complaint === "string" && (
-              <div className="bg-card rounded-lg border border-border p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="w-4 h-4 text-impilo-400" />
-                  <h3 className="text-sm font-medium text-foreground">Presenting Complaint</h3>
-                </div>
-                <p className="text-sm text-foreground">
-                  {String((activeEncounter.attributes as Record<string, unknown>).chief_complaint)}
-                </p>
-              </div>
-            )}
 
-            {/* History of Present Illness — capture */}
+            {activeEncounter &&
+              typeof (activeEncounter.attributes as Record<string, unknown>).chief_complaint ===
+                "string" && (
+                <div className="bg-card rounded-lg border border-border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="w-4 h-4 text-impilo-400" />
+                    <h3 className="text-sm font-medium text-foreground">Presenting Complaint</h3>
+                  </div>
+                  <p className="text-sm text-foreground">
+                    {String((activeEncounter.attributes as Record<string, unknown>).chief_complaint)}
+                  </p>
+                </div>
+              )}
+
             {activeEncounter && (
               <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -213,192 +132,19 @@ export default function ClinicalHistoryPage() {
                   className="mt-2 px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-primary disabled:opacity-50 flex items-center gap-2 transition-colors"
                 >
                   {hpiSaving ? (
-                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</>
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                    </>
                   ) : (
-                    <><Save className="w-3.5 h-3.5" /> Save HPI</>
+                    <>
+                      <Save className="w-3.5 h-3.5" /> Save HPI
+                    </>
                   )}
                 </button>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Past Medical History — active conditions */}
-              <div className="bg-card rounded-lg border border-border p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Stethoscope className="w-4 h-4 text-orange-500" />
-                  <h3 className="text-sm font-medium text-foreground">Past Medical History ({activeConditions.length})</h3>
-                </div>
-                {conditionsUnavailable ? (
-                  <p className="text-sm text-warning">
-                    Problem list unavailable — this is not a record that there are no conditions.
-                  </p>
-                ) : activeConditions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No active conditions recorded</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {activeConditions.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between p-2 rounded bg-background">
-                        <div>
-                          <span className="text-sm font-medium text-foreground">
-                            {String(c.attributes.condition_name ?? c.attributes.conditionName ?? "")}
-                          </span>
-                          {typeof (c.attributes.icd_code ?? c.attributes.icdCode) === "string" && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({String(c.attributes.icd_code ?? c.attributes.icdCode ?? "")})
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-xs text-muted-foreground capitalize">
-                          {String(c.attributes.severity ?? "")}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <Link href={`/ehr/${patientId}/conditions`} className="mt-2 inline-block text-xs text-primary hover:text-primary-hover">
-                  Manage conditions
-                </Link>
-              </div>
-
-              {/* Current Medications */}
-              <div className="bg-card rounded-lg border border-border p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Pill className="w-4 h-4 text-green-500" />
-                  <h3 className="text-sm font-medium text-foreground">Current Medications ({activeMeds.length})</h3>
-                </div>
-                {activeMeds.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No active medications</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {activeMeds.map((m) => (
-                      <div key={m.id} className="p-2 rounded bg-background">
-                        <span className="text-sm font-medium text-foreground">
-                          {String(m.attributes.medication_name ?? m.attributes.medicationName ?? "")}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {String(m.attributes.dosage ?? "")} {String(m.attributes.frequency ?? "")}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <Link href={`/ehr/${patientId}/medications`} className="mt-2 inline-block text-xs text-primary hover:text-primary-hover">
-                  Manage medications
-                </Link>
-              </div>
-
-              {/* Allergies */}
-              <div className={`bg-card rounded-lg border p-4 ${activeAllergies.some((a) => a.attributes.severity === "SEVERE") ? "border-danger/28" : "border-border"}`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <ShieldAlert className={`w-4 h-4 ${activeAllergies.length > 0 ? "text-red-500" : "text-green-500"}`} />
-                  <h3 className="text-sm font-medium text-foreground">Allergies ({activeAllergies.length})</h3>
-                </div>
-                {activeAllergies.length === 0 ? (
-                  <p className="text-sm text-green-600">No known allergies (NKDA)</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {activeAllergies.map((a) => (
-                      <div key={a.id} className={`p-2 rounded ${
-                        a.attributes.severity === "SEVERE" ? "bg-danger-soft" : "bg-background"
-                      }`}>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-foreground">{String(a.attributes.allergen)}</span>
-                          <span className={`text-xs capitalize ${
-                            a.attributes.severity === "SEVERE" ? "text-danger" : "text-muted-foreground"
-                          }`}>{String(a.attributes.severity)}</span>
-                        </div>
-                        {typeof a.attributes.reaction === "string" && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{String(a.attributes.reaction)}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <Link href={`/ehr/${patientId}/allergies`} className="mt-2 inline-block text-xs text-primary hover:text-primary-hover">
-                  Manage allergies
-                </Link>
-              </div>
-
-              {/* Resolved Conditions */}
-              <div className="bg-card rounded-lg border border-border p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle className="w-4 h-4 text-green-500" />
-                  <h3 className="text-sm font-medium text-foreground">Resolved Conditions ({resolvedConditions.length})</h3>
-                </div>
-                {resolvedConditions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No resolved conditions</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {resolvedConditions.slice(0, 5).map((c) => (
-                      <div key={c.id} className="flex items-center justify-between p-2 rounded bg-background">
-                        <span className="text-sm text-foreground">
-                          {String(c.attributes.condition_name ?? c.attributes.conditionName ?? "")}
-                        </span>
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Resolved</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Past Encounters */}
-            <div className="bg-card rounded-lg border border-border p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Clock className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-medium text-foreground">Past Encounters ({completedEncounters.length})</h3>
-              </div>
-              {completedEncounters.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No completed encounters</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {completedEncounters.slice(0, 8).map((enc) => (
-                    <Link
-                      key={enc.id}
-                      href={`/ehr/${patientId}/encounter/${enc.id}`}
-                      className="flex items-center justify-between p-2 rounded bg-background hover:bg-neutral-100 transition-colors"
-                    >
-                      <div>
-                        <span className="text-sm font-medium text-foreground">{enc.attributes.encounterType}</span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {new Date(enc.attributes.startedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-neutral-100 text-muted-foreground">
-                        {enc.attributes.status}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Immunization History */}
-            {immunizations.length > 0 && (
-              <div className="bg-card rounded-lg border border-border p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Syringe className="w-4 h-4 text-teal-500" />
-                  <h3 className="text-sm font-medium text-foreground">Immunizations ({immunizations.length})</h3>
-                </div>
-                <div className="space-y-1.5">
-                  {immunizations.slice(0, 8).map((imm) => (
-                    <div key={imm.id} className="flex items-center justify-between p-2 rounded bg-background">
-                      <span className="text-sm text-foreground">
-                        {String(imm.attributes.vaccine_name ?? imm.attributes.vaccineName ?? "")}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {imm.attributes.administered_at
-                          ? new Date(String(imm.attributes.administered_at ?? imm.attributes.administeredAt)).toLocaleDateString()
-                          : ""}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <Link href={`/ehr/${patientId}/immunizations`} className="mt-2 inline-block text-xs text-primary hover:text-primary-hover">
-                  View all immunizations
-                </Link>
-              </div>
-            )}
+            <ClerkingContinuityShell patientId={patientId} />
           </div>
         )}
       </PageShell>

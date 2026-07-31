@@ -370,6 +370,59 @@ class FormExtractionTest {
                 .andExpect(jsonPath("$.data").isEmpty());
     }
 
+    @Test
+    void duplicateDiagnosis_submitStillSucceeds_andFailedProvenanceIsPersisted() throws Exception {
+        // F9 reproduction: submit a diagnosis already ACTIVE on the patient. Before REQUIRES_NEW,
+        // ProblemService.add threw DuplicateProblemException, marked the submit tx rollback-only,
+        // and commit threw UnexpectedRollbackException → 500 and the form was lost. Now the item
+        // is isolated: submit returns 200, the form response persists, and FAILED provenance is kept.
+        String firstBody = mapper.writeValueAsString(Map.of(
+                "encounterId", encounterId, "formKey", "impilo.test.consult",
+                "answers", Map.of("primaryDiagnosis", "Duplicate Malaria")));
+        MvcResult first = mockMvc.perform(trust(post("/v1/forms/responses"))
+                        .contentType(MediaType.APPLICATION_JSON).content(firstBody))
+                .andExpect(status().isCreated()).andReturn();
+        String firstId = mapper.readTree(first.getResponse().getContentAsString())
+                .get("data").get("responseId").asText();
+        mockMvc.perform(trust(post("/v1/forms/responses/" + firstId + "/submit"))
+                .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isOk());
+
+        // Fresh encounter, same patient CPID — problem list is patient-scoped.
+        EncounterEntity enc2 = new EncounterEntity();
+        enc2.setTenantId(UUID.fromString(TENANT));
+        enc2.setJourneyId("jny-" + UUID.randomUUID());
+        enc2.setSubjectCpid(CPID);
+        enc2.setEncounterRef(UUID.randomUUID());
+        enc2.setButanoEncounterRef("butano-enc-2");
+        enc2.setCareSetting("OUTPATIENT");
+        enc2.setEncounterContext("outpatient");
+        enc2.setStatus("STARTED");
+        Long encounterId2 = encounterRepository.save(enc2).getId();
+
+        String secondBody = mapper.writeValueAsString(Map.of(
+                "encounterId", encounterId2, "formKey", "impilo.test.consult",
+                "answers", Map.of("primaryDiagnosis", "Duplicate Malaria", "labOrder", "FBC")));
+        MvcResult second = mockMvc.perform(trust(post("/v1/forms/responses"))
+                        .contentType(MediaType.APPLICATION_JSON).content(secondBody))
+                .andExpect(status().isCreated()).andReturn();
+        String secondId = mapper.readTree(second.getResponse().getContentAsString())
+                .get("data").get("responseId").asText();
+        mockMvc.perform(trust(post("/v1/forms/responses/" + secondId + "/submit"))
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isOk());
+
+        List<FormExtractedResourceEntity> rows =
+                extractedRepository.findByResponseId(UUID.fromString(secondId));
+        assertThat(rows).as("extraction provenance must survive the rejected item").isNotEmpty();
+        FormExtractedResourceEntity condition = byType(rows, "CONDITION");
+        assertThat(condition.getStatus()).isEqualTo("FAILED");
+        assertThat(condition.getFailureReason()).isNotBlank();
+        // Sibling items must still be attempted: a poisoned shared transaction used to lose them all.
+        assertThat(rows.stream().map(FormExtractedResourceEntity::getResourceType).toList())
+                .as("later mappings must still run after a rejected condition")
+                .contains("SERVICE_REQUEST");
+    }
+
     private static FormExtractedResourceEntity byType(List<FormExtractedResourceEntity> rows, String type) {
         return rows.stream().filter(r -> r.getResourceType().equals(type)).findFirst().orElseThrow();
     }

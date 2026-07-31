@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.security.secrets.RequiredSecret;
 import zw.gov.mohcc.impilo.vito.keys.TshepoKeysSigningClient;
 
 import java.nio.charset.StandardCharsets;
@@ -37,17 +38,28 @@ import java.util.*;
  * regenerated on every startup. Previously each restart minted a fresh random
  * key, so QRs signed before a restart could not be verified afterward and two
  * instances disagreed. A stable seed makes signatures survive restarts and
- * verify cross-instance. The seed is a deployment secret (tshepo-keys custody
- * target); unset falls back to a dev seed with a loud warning so preview boots.</p>
+ * verify cross-instance. The seed is a required deployment secret (tshepo-keys custody
+ * target) whenever signing is local: it used to fall back to a dev seed published in this
+ * repository, which meant anyone reading the source could mint a QR that VITO would accept as
+ * its own. In {@code tshepo-keys} mode the private key never enters VITO, so no local seed is
+ * needed and none is demanded.</p>
  */
 @Service
 public class QrSigningService {
 
     private static final Logger log = LoggerFactory.getLogger(QrSigningService.class);
-    private static final String DEV_SEED = "vito-qr-signing-dev-seed-change-me-32b";
+    private static final String TSHEPO_KEYS_SOURCE = "tshepo-keys";
 
+    /** Null only when signing is delegated to tshepo-keys, where no local key exists. */
     private final String seedMaterial;
     private final String previousSeedMaterial;
+
+    /**
+     * W4b signing source. {@code seed} (default) = local seed-derived Ed25519 key (unchanged
+     * legacy path, fallback for one release); {@code tshepo-keys} = delegate signing+verification
+     * to the sovereign tshepo-keys-service.
+     */
+    private final String signingSource;
 
     private OctetKeyPair jwk;
     private JWSSigner signer;
@@ -55,33 +67,40 @@ public class QrSigningService {
     private String previousKeyId;
     private JWSVerifier previousVerifier;
 
-    /**
-     * W4b signing source. {@code seed} (default) = local seed-derived Ed25519 key (unchanged
-     * legacy path, fallback for one release); {@code tshepo-keys} = delegate signing+verification
-     * to the sovereign tshepo-keys-service.
-     */
-    @Value("${vito.qr.signing-source:seed}")
-    private String signingSource;
-
     /** Present only when {@code vito.qr.signing-source=tshepo-keys} (conditional bean). */
     @Autowired(required = false)
     private TshepoKeysSigningClient keysClient;
 
-    public QrSigningService(@Value("${vito.qr.signing-key-seed:}") String configuredSeed,
+    public QrSigningService(@Value("${vito.qr.signing-source:seed}") String signingSource,
+                            @Value("${vito.qr.signing-key-seed:}") String configuredSeed,
                             @Value("${vito.qr.signing-key-seed-previous:}") String previousSeed) {
-        if (configuredSeed == null || configuredSeed.strip().length() < 32) {
-            log.warn("vito.qr.signing-key-seed is unset/weak — using the DEV seed. Production MUST "
-                    + "supply a >=32-char secret (tshepo-keys custody); QR signatures depend on it.");
-            this.seedMaterial = DEV_SEED;
+        this.signingSource = signingSource;
+        // Delegated signing holds no local key material, so an absent seed is correct there and
+        // fatal here. A seed supplied anyway is still honoured, keeping the flip reversible.
+        boolean delegated = TSHEPO_KEYS_SOURCE.equalsIgnoreCase(signingSource);
+        if (delegated && !RequiredSecret.isUsable(configuredSeed)) {
+            this.seedMaterial = null;
         } else {
-            this.seedMaterial = configuredSeed;
+            this.seedMaterial = RequiredSecret.require(
+                    "vito.qr.signing-key-seed", configuredSeed,
+                    "QR tokens for pickup, wallet and emergency access are signed with it, so a known "
+                            + "seed lets anyone forge one.");
         }
-        this.previousSeedMaterial =
-                (previousSeed == null || previousSeed.strip().length() < 32) ? null : previousSeed;
+        this.previousSeedMaterial = RequiredSecret.isUsable(previousSeed) ? previousSeed.strip() : null;
     }
 
     @PostConstruct
     public void init() throws Exception {
+        if (seedMaterial == null) {
+            if (keysClient == null) {
+                throw new IllegalStateException(
+                        "Refusing to start: vito.qr.signing-source=" + TSHEPO_KEYS_SOURCE
+                                + " but the tshepo-keys signing client is not wired, and no local "
+                                + "vito.qr.signing-key-seed is set. QR signing would have no key at all.");
+            }
+            log.info("QR signing delegated to tshepo-keys — no local Ed25519 key derived");
+            return;
+        }
         // Deterministic Ed25519 key from the seed: 32-byte private scalar =
         // SHA-256(seed); public key derived via BouncyCastle. Same seed -> same
         // key on every instance and every restart.
@@ -205,7 +224,7 @@ public class QrSigningService {
 
     /** True when signing/verification is delegated to tshepo-keys and its client is wired. */
     private boolean useTshepoKeys() {
-        return "tshepo-keys".equalsIgnoreCase(signingSource) && keysClient != null;
+        return TSHEPO_KEYS_SOURCE.equalsIgnoreCase(signingSource) && keysClient != null;
     }
 
     /**
@@ -235,9 +254,15 @@ public class QrSigningService {
     }
 
     /**
-     * Get the public key in JWK format (for external verifiers).
+     * Get the public key in JWK format (for external verifiers). In {@code tshepo-keys} mode the
+     * verifying key belongs to the sovereign key service, and callers must read its JWKS instead.
      */
     public String getPublicKeyJwk() {
+        if (jwk == null) {
+            throw new IllegalStateException(
+                    "No local QR verify key: signing is delegated to tshepo-keys. "
+                            + "Read the sovereign JWKS from tshepo-keys-service instead.");
+        }
         return jwk.toPublicJWK().toJSONString();
     }
 

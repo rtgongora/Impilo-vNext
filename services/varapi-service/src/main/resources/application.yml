@@ -104,6 +104,9 @@ varapi:
     enabled: false
   tuso:
     base-url: http://localhost:8084
+  org-registry:
+    base-url: ${ORGANIZATION_REGISTRY_BASE_URL:http://localhost:8153}
+    enabled: ${VARAPI_ORG_REGISTRY_ENABLED:true}
   document:
     storage-type: MINIO
     minio-endpoint: http://localhost:9000

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.security.secrets.RequiredSecret;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -26,18 +27,21 @@ import java.util.Optional;
  * "signature":<b64url raw Ed25519>,"algorithm":"Ed25519","kid":...}}. We verify
  * the signature over the canonical payload JSON with card-print's public key.</p>
  *
- * <p>Key distribution: production injects card-print's <b>published public key</b>
- * ({@code card-print.qr.public-key}, base64url raw Ed25519). When unset we derive
- * it from the shared card-print seed ({@code card-print.qr.signing-key-seed},
- * default dev seed) — the same derivation card-print uses — so preview verifies
- * without a key-exchange step. The seed is NEVER used to sign here, only to
- * reconstruct the public key.</p>
+ * <p>Key distribution: the preferred input is card-print's <b>published public key</b>
+ * ({@code card-print.qr.public-key}, base64url raw Ed25519). Failing that, the key is derived
+ * from the shared card-print seed ({@code card-print.qr.signing-key-seed}) — the same derivation
+ * card-print uses — so an estate that provisions the seed to both services verifies without a
+ * key-exchange step. The seed is NEVER used to sign here, only to reconstruct the public key.</p>
+ *
+ * <p>One of the two must be supplied. Deriving from a dev seed used to be the fallback, which
+ * made the trust anchor for every printed card a value published in this repository: anyone could
+ * forge an assertion this verifier would accept. Verifying against a public key is only
+ * meaningful when the corresponding private key is secret.</p>
  */
 @Service
 public class CardAssertionVerifier {
 
     private static final Logger log = LoggerFactory.getLogger(CardAssertionVerifier.class);
-    private static final String DEV_SEED = "card-qr-signing-dev-seed-change-me-32b";
 
     private final ObjectMapper objectMapper;
     private final Ed25519PublicKeyParameters publicKey;
@@ -46,21 +50,18 @@ public class CardAssertionVerifier {
                                  @Value("${card-print.qr.public-key:}") String configuredPublicKey,
                                  @Value("${card-print.qr.signing-key-seed:}") String configuredSeed) {
         this.objectMapper = objectMapper;
-        Ed25519PublicKeyParameters pub;
         if (configuredPublicKey != null && !configuredPublicKey.isBlank()) {
             byte[] raw = Base64.getUrlDecoder().decode(configuredPublicKey.strip());
-            pub = new Ed25519PublicKeyParameters(raw, 0);
+            this.publicKey = new Ed25519PublicKeyParameters(raw, 0);
             log.info("Card assertion verifier using configured card-print public key");
         } else {
-            String seed = (configuredSeed != null && configuredSeed.strip().length() >= 32)
-                    ? configuredSeed : DEV_SEED;
-            if (seed.equals(DEV_SEED)) {
-                log.warn("card-print.qr.public-key unset — deriving verify key from the DEV seed. "
-                        + "Production MUST inject card-print's published public key.");
-            }
-            pub = deriveFromSeed(seed);
+            String seed = RequiredSecret.require(
+                    "card-print.qr.public-key (or card-print.qr.signing-key-seed)", configuredSeed,
+                    "It is the trust anchor for every scanned printed card, so a known value lets "
+                            + "anyone forge a card this service accepts.");
+            this.publicKey = deriveFromSeed(seed);
+            log.info("Card assertion verifier derived card-print verify key from the shared seed");
         }
-        this.publicKey = pub;
     }
 
     private static Ed25519PublicKeyParameters deriveFromSeed(String seed) {
