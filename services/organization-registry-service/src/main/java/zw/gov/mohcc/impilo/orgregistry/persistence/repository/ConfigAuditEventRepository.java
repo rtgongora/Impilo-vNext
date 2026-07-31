@@ -10,4 +10,7 @@ public interface ConfigAuditEventRepository extends JpaRepository<ConfigAuditEve
 
     List<ConfigAuditEventEntity> findByTenantIdAndSubjectTypeAndSubjectIdOrderByOccurredAtDesc(
             UUID tenantId, String subjectType, UUID subjectId);
+
+    List<ConfigAuditEventEntity> findByTenantIdAndOrganizationIdOrderByOccurredAtDesc(
+            UUID tenantId, UUID organizationId);
 }

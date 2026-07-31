@@ -121,6 +121,15 @@ public class RegulatoryConfigService {
                 });
     }
 
+    /**
+     * Org-scoped configuration audit trail. This is configuration and pack lifecycle truth — not a
+     * council desk of every register access. Callers must state that residual gap in the UI.
+     */
+    @Transactional(readOnly = true)
+    public List<ConfigAuditEventEntity> listAuditEventsForOrganization(UUID tenantId, UUID organizationId) {
+        return auditRepository.findByTenantIdAndOrganizationIdOrderByOccurredAtDesc(tenantId, organizationId);
+    }
+
     public List<ConfigPackEntity> listPacks(UUID tenantId, UUID organizationId) {
         return packRepository.findByTenantIdAndOrganizationId(tenantId, organizationId);
     }
