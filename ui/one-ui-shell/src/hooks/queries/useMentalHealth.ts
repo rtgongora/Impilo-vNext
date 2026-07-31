@@ -56,6 +56,24 @@ export type MentalHealthReferral = Record<string, unknown> & {
   decline_reason?: string | null;
 };
 
+/** Manual retry when BFF auto-intake after MENTAL_HEALTH handover reported FAILED. */
+export function useIntakeMentalHealthReferral() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      episodeId: string;
+      handoverId: string;
+      facilityId?: string;
+      subjectCpid?: string;
+      requestReason?: string;
+      requestedBy?: string;
+    }) => apiClient.post<{ data: MentalHealthReferral }>(`${BASE}/referrals`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["mental-health-referrals"] });
+    },
+  });
+}
+
 export type MentalHealthAssessment = Record<string, unknown> & {
   id?: string;
   referral_id?: string;

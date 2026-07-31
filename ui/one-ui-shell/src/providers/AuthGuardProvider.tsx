@@ -25,6 +25,7 @@ import { buildContextGuardRedirect } from "@/lib/resolve-post-login-destination"
 import { matchRouteDefinition } from "@/lib/routes";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 import { evaluateRouteTrust } from "@/lib/auth/action-trust-matrix";
+import { resolveWorkRouteVisibility } from "@/lib/auth/work-route-visibility";
 
 /** Re-export for existing imports from this module. */
 export { ROLE_GROUPS, matchesRequiredRole };
@@ -47,7 +48,7 @@ const CONSENT_EXEMPT_PREFIXES = [
 export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, hasRole, hasActiveProvider } = useAuthStore();
+  const { isAuthenticated, hasRole, hasActiveProvider, sessionRestoreAttempted } = useAuthStore();
   const { hasConsented, hydrated: consentHydrated } = useConsentStore();
   const { hasFacility } = useFacilityStore();
   const { hasWorkspace } = useWorkspaceStore();
@@ -58,6 +59,13 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const { contract, isLoading: contractLoading } = useSessionExperienceContract();
 
   useEffect(() => {
+    // The session lives in sessionStorage and is restored by StoreHydrator, which is this
+    // component's parent — so React runs this effect first, against a store that is still
+    // empty. Every redirect below reads as "no session, no professional identity" on that
+    // pass, which is how a full page load of any guarded deep link ended up at /home or
+    // /auth/login before the session had been read. Wait for the read to have happened.
+    if (!sessionRestoreAttempted) return;
+
     // Consent gate: redirect authenticated users who haven't consented,
     // unless they're on a consent-exempt path.
     const isConsentExempt = CONSENT_EXEMPT_PREFIXES.some((p) =>
@@ -110,20 +118,22 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
     // The BFF Session Experience Contract is authoritative for visibility. The client-side
     // isCitizenOnly heuristic only blocks when the contract does NOT grant the route, so a
     // contract that unlocks work/governance (e.g. an operator with a WGV assignment) is not
-    // overridden by stale client identity inference.
-    if (identity.isCitizenOnly && isRouteBlockedForCitizen(pathname, identity)) {
-      // The contract is authoritative — never bounce while it is still loading,
-      // or a work-granted operator gets flashed back to /home mid-navigation.
-      if (!contract && contractLoading) {
-        return;
-      }
-      const contractGrantsRoute =
+    // overridden by stale client identity inference. Neither source may be acted on until it
+    // has settled: both start empty, and empty reads the same as "citizen".
+    const visibility = resolveWorkRouteVisibility({
+      isCitizenOnly: identity.isCitizenOnly,
+      identityLoading: identity.isLoading,
+      routeBlockedForCitizen: isRouteBlockedForCitizen(pathname, identity),
+      hasContract: !!contract,
+      contractLoading,
+      contractGrantsRoute:
         (!!contract && sessionContractAllowsRoute(contract, pathname)) ||
-        isGovernanceWorkPathGrantedBySession(contract, pathname);
-      if (!contractGrantsRoute) {
-        router.replace("/home");
-        return;
-      }
+        isGovernanceWorkPathGrantedBySession(contract, pathname),
+    });
+    if (visibility === "wait") return;
+    if (visibility === "block") {
+      router.replace("/home");
+      return;
     }
 
     const { guard, requiredRole } = routeInfo;
@@ -189,7 +199,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
         break;
     }
-  }, [pathname, isAuthenticated, hasConsented, consentHydrated, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, contract, contractLoading, router]);
+  }, [pathname, sessionRestoreAttempted, isAuthenticated, hasConsented, consentHydrated, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, contract, contractLoading, router]);
 
   return <>{children}</>;
 }

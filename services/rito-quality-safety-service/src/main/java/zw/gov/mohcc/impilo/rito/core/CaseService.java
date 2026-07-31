@@ -120,6 +120,11 @@ public class CaseService {
         recordEvent(c, CaseLifecycle.SUBMITTED, null, c.getStatus(), cmd.reporterActorId(),
                 cmd.reporterActorType(), "Case opened via " + source, null);
 
+        // W17 after-action linkage: when PCT (or another integrator) opens a case with
+        // metadata.episodeId, persist the reverse EMERGENCY_EPISODE link on rit_case_link so
+        // the after-action graph is bidirectional — not just a rito_case_ref on the alert row.
+        linkEmergencyEpisodeFromMetadata(tenantId, c.getId(), cmd.metadata());
+
         if (!cmd.asDraft()) {
             emitCaseEvent(c, "rito.case.submitted");
             emitTypeSpecificSubmission(c);
@@ -127,6 +132,22 @@ public class CaseService {
                     "CLIENT", Map.of("caseReference", c.getCaseReference()));
         }
         return c;
+    }
+
+    private void linkEmergencyEpisodeFromMetadata(UUID tenantId, UUID caseId, Map<String, Object> metadata) {
+        if (metadata == null || metadata.isEmpty()) return;
+        Object raw = metadata.get("episodeId");
+        if (raw == null) raw = metadata.get("episode_id");
+        if (raw == null) return;
+        String episodeRef = String.valueOf(raw).trim();
+        if (episodeRef.isEmpty() || "null".equalsIgnoreCase(episodeRef)) return;
+        try {
+            addLink(tenantId, caseId, "EMERGENCY_EPISODE", episodeRef, "PCT",
+                    "Auto-linked from INTEGRATION_API metadata (W17 after-action)");
+        } catch (RuntimeException ex) {
+            // Link failure must not roll back case creation — the forward rito_case_ref on PCT
+            // still holds; reverse link can be repaired.
+        }
     }
 
     @Transactional(readOnly = true)

@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.pct.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -33,12 +36,18 @@ public class EdTriageAssessmentEntity {
     @Column(name = "pain_score")
     private Integer painScore;
 
+    // These five columns are JSONB in V012 and V202. Postgres will not accept a varchar bind for
+    // a jsonb column, so a triage row could not be written at all without this — see the same
+    // fix on EmergencyEpisodeEntity.entryContextJson.
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "vitals", columnDefinition = "jsonb")
     private String vitalsJson = "{}";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "danger_signs", columnDefinition = "jsonb")
     private String dangerSignsJson = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "discriminators", columnDefinition = "jsonb")
     private String discriminatorsJson = "{}";
 
@@ -67,6 +76,7 @@ public class EdTriageAssessmentEntity {
     @Column(name = "iitt_priority")
     private String iittPriority;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "emergency_signs_json", columnDefinition = "jsonb")
     private String emergencySignsJson;
 
@@ -78,6 +88,7 @@ public class EdTriageAssessmentEntity {
     private String reviewReason;
 
     /** ESI/MTS advisory scores, retained but never the acuity of record. */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "advisory_scores_json", columnDefinition = "jsonb")
     private String advisoryScoresJson;
 

@@ -1,92 +1,90 @@
 "use client";
 
 /**
- * Emergency analytics — deliberately empty, and specific about why.
+ * Emergency analytics — W17 Theatre-pattern indicators.
  *
- * The WHO DSEC minimum dataset and its derived indicators are not computed anywhere yet;
- * docs/clinical-governance/emergency/coverage-exclusions.json records EMS.DSEC.MINIMUM_DATASET as
- * DEFERRED to W17. Until that wave lands the projection and the definitions, this page names each
- * measure that is missing and says which one thing is stopping it.
- *
- * It renders no zeros. A zero on an emergency dashboard is read as "no deaths", not as "no
- * pipeline", and that misreading is the whole reason this page is a named-absence list instead of
- * a grid of cards.
+ * Governed report keys run against rpt_emergency_episode_metric (never pct.*).
+ * Measures that are still NOT_COMPUTABLE are named without zeros — a zero on an
+ * emergency dashboard is read as "no deaths", not as "no pipeline".
  */
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { useGenerateReport } from "@/hooks/queries/useReports";
 
-type PendingMeasure = {
+type LiveMeasure = {
+  name: string;
+  reportKey: string;
+  dsecElement: string;
+  status: "IMPLEMENTED" | "PARTIAL";
+  limit?: string;
+};
+
+type AbsentMeasure = {
   name: string;
   dsecElement: string;
   blockedBy: string;
 };
 
-/**
- * Named, not counted. Each entry is a measure a clinician or a district officer would expect to
- * find here, paired with the DSEC element it derives from and the single reason it is absent.
- */
-const PENDING_MEASURES: PendingMeasure[] = [
+const LIVE_MEASURES: LiveMeasure[] = [
   {
-    name: "Time to first clinician assessment",
-    dsecElement: "Arrival time; time of first provider contact",
-    blockedBy: "No projection reads pct.emergency_episode; reporting-service has its own database",
+    name: "Emergency episode summary",
+    reportKey: "emergency-episode-summary",
+    dsecElement: "Disposition; outcome; alerts; RITO linkage",
+    status: "IMPLEMENTED",
+  },
+  {
+    name: "Disposition mix",
+    reportKey: "emergency-disposition-mix",
+    dsecElement: "Disposition",
+    status: "IMPLEMENTED",
   },
   {
     name: "Triage acuity distribution",
+    reportKey: "emergency-acuity-distribution",
     dsecElement: "Triage category",
-    blockedBy: "IITT is the acuity of record in pct, but no indicator definition aggregates it",
+    status: "PARTIAL",
+    limit: "Episodes without a projected acuity bucket as NOT_YET_TRIAGED — never a fabricated colour.",
   },
   {
-    name: "Emergency unit length of stay",
-    dsecElement: "Arrival time; disposition time",
-    blockedBy: "Disposition timestamps land in pct.emergency_disposition; nothing derives the interval",
+    name: "Emergency episode register",
+    reportKey: "emergency-episode-register",
+    dsecElement: "Episode identity; arrival; state",
+    status: "IMPLEMENTED",
   },
-  {
-    name: "Disposition mix across the 15 outcome types",
-    dsecElement: "Disposition",
-    blockedBy: "No rpt_ definition exists for the disposition vocabulary",
-  },
-  {
-    name: "Emergency unit mortality",
-    dsecElement: "Outcome at disposition",
-    blockedBy: "Deaths are recorded per-episode; no governed denominator is defined",
-  },
-  {
-    name: "Left without being seen",
-    dsecElement: "Disposition; time of departure",
-    blockedBy: "Captured as a disposition type; no indicator aggregates it",
-  },
-  {
-    name: "Handover acceptance time and expiry rate",
-    dsecElement: "Referral / transfer out",
-    blockedBy: "The acceptance handshake is recorded in pct; no projection exposes its timings",
-  },
+];
+
+const ABSENT_MEASURES: AbsentMeasure[] = [
   {
     name: "Resuscitation interval adherence",
     dsecElement: "Interventions performed",
-    blockedBy: "Timings exist on the resuscitation record only; not projected",
+    blockedBy: "Resuscitation timings live on inpatient records and are not projected yet",
   },
   {
     name: "Observation and short-stay conversion",
     dsecElement: "Disposition",
-    blockedBy: "Observation stays are per-episode rows with no aggregate definition",
+    blockedBy: "Observation stay rows have no projection into rpt_emergency_episode_metric",
   },
   {
     name: "Critical result acknowledgement time",
     dsecElement: "Diagnostics ordered and resulted",
-    blockedBy: "The act/close chain is recorded per order; no indicator measures the delay",
+    blockedBy: "pct.emergency.critical_result is routed but not yet projected into the metric table",
   },
 ];
 
 export default function EmergencyAnalyticsPage() {
+  const generate = useGenerateReport();
+  const [lastKey, setLastKey] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   return (
     <AppLayout>
       <PageShell
         title="Emergency analytics"
-        subtitle="Not yet computed — every measure below is named so its absence cannot be mistaken for a zero"
+        subtitle="W17 — Theatre-pattern indicators from rpt_emergency_episode_metric (EMS.DSEC.MINIMUM_DATASET)"
       >
         <div className="mb-4 flex gap-4 text-sm">
           <Link href="/clinical/emergency/command" className="text-primary underline">
@@ -98,25 +96,87 @@ export default function EmergencyAnalyticsPage() {
         </div>
 
         <div
-          className="mb-6 rounded-lg border border-warning/40 bg-warning-soft p-4 text-sm"
-          data-testid="analytics-not-computed"
+          className="mb-6 rounded-lg border border-border bg-card p-4 text-sm"
+          data-testid="analytics-w17-live"
         >
           <p className="font-medium text-foreground">
-            No emergency indicator is being computed today.
+            Live report keys (query the Kafka projection — never pct.* directly)
           </p>
           <p className="mt-1 text-muted-foreground">
-            The WHO DSEC minimum dataset is recorded as deferred in the emergency standards
-            register. The national reporting store cannot read the emergency schema directly, so a
-            projection must be built before any of these can be produced. Nothing on this page is a
-            measured value, and no figure below should be quoted.
+            Mapping:{" "}
+            <code className="text-xs">docs/clinical/emergency-domain-pack/dsec-element-mapping.json</code>
           </p>
         </div>
 
         <h2 className="mb-2 text-sm font-semibold text-foreground">
-          Measures that are expected here and are not available ({PENDING_MEASURES.length})
+          Computable measures ({LIVE_MEASURES.length})
+        </h2>
+        <ul className="mb-8 space-y-2" data-testid="analytics-live-measures">
+          {LIVE_MEASURES.map((measure) => (
+            <li
+              key={measure.reportKey}
+              className="rounded border border-border bg-card p-3 text-sm"
+              data-testid="analytics-live-measure"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium text-foreground">{measure.name}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Key: <code>{measure.reportKey}</code> · {measure.status}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Derived from: {measure.dsecElement}
+                  </p>
+                  {measure.limit ? (
+                    <p className="mt-0.5 text-xs text-amber-800">Limit: {measure.limit}</p>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  className="rounded bg-primary px-3 py-1.5 text-xs text-white disabled:opacity-50"
+                  disabled={generate.isPending}
+                  data-testid={`run-report-${measure.reportKey}`}
+                  onClick={() => {
+                    setError(null);
+                    setLastKey(measure.reportKey);
+                    generate.mutate(
+                      { report_type: measure.reportKey },
+                      {
+                        onError: (err) => {
+                          const message =
+                            err && typeof err === "object" && "error" in err
+                              ? String((err as { error?: { message?: string } }).error?.message ?? err)
+                              : String(err);
+                          setError(message);
+                        },
+                      },
+                    );
+                  }}
+                >
+                  Queue report
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {lastKey && generate.isSuccess ? (
+          <p className="mb-4 text-sm text-foreground" data-testid="analytics-report-queued">
+            Queued <code>{lastKey}</code>
+            {generate.data?.data?.id ? ` — job ${generate.data.data.id}` : ""}.
+          </p>
+        ) : null}
+        {error ? (
+          <p className="mb-4 text-sm text-danger" role="alert" data-testid="analytics-report-error">
+            {error}
+          </p>
+        ) : null}
+
+        <h2 className="mb-2 text-sm font-semibold text-foreground">
+          Still not computable ({ABSENT_MEASURES.length})
         </h2>
         <ul className="space-y-2" data-testid="analytics-pending-measures">
-          {PENDING_MEASURES.map((measure) => (
+          {ABSENT_MEASURES.map((measure) => (
             <li
               key={measure.name}
               className="rounded border border-border bg-card p-3 text-sm"

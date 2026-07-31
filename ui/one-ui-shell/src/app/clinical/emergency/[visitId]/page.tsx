@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { EdTriageDiscriminatorPanel } from "@/components/clinical/EdTriageDiscriminatorPanel";
@@ -12,6 +12,17 @@ import { TraumaTeamPanel } from "@/components/clinical/TraumaTeamPanel";
 import { TraumaSurveyPanel } from "@/components/clinical/TraumaSurveyPanel";
 import { useEdVisit, useEdVisitActions } from "@/hooks/queries/useEdVisit";
 import { useActivateEmergency, useEmergencyActivations } from "@/hooks/queries/useEmergency";
+import {
+  isBrowserOffline,
+  NOT_TRIAGEABLE_OFFLINE,
+  NOT_TRIAGEABLE_OFFLINE_MESSAGE,
+} from "@/lib/offline";
+import { OfflineIittPreviewPanel } from "@/features/emergency/triage/OfflineIittPreviewPanel";
+import { EdZoneAndDiagnosticsPanel } from "@/features/emergency/ed/EdZoneAndDiagnosticsPanel";
+import { BloodReadinessPanel } from "@/components/clinical/BloodReadinessPanel";
+import { StalenessBadge } from "shared-ui";
+import { stalenessFromTransport } from "@/lib/offline/staleness";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 const STEPS = ["Arrival", "Triage", "Treatment", "Trauma", "Resus", "Protocol", "Disposition"] as const;
 const ACUITY = [
@@ -25,6 +36,8 @@ const ACUITY = [
 export default function EdVisitPage({ params }: { params: { visitId: string } }) {
   const { data: visit, isLoading } = useEdVisit(params.visitId);
   const actions = useEdVisitActions(params.visitId);
+  const { user } = useAuthStore();
+  const actor = user?.providerId ?? user?.staffId ?? user?.id ?? "";
   const emergencyActivations = useEmergencyActivations();
   const activateResus = useActivateEmergency();
   const [resusActivationId, setResusActivationId] = useState<string | undefined>();
@@ -39,6 +52,20 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
   const [traumaLevel, setTraumaLevel] = useState(2);
   const [mechanism, setMechanism] = useState("BLUNT");
   const [teamLeader, setTeamLeader] = useState("");
+  const [pathwayRedFlags, setPathwayRedFlags] = useState(false);
+  const [pathwayNotes, setPathwayNotes] = useState("");
+  const [offline, setOffline] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setOffline(isBrowserOffline());
+    sync();
+    window.addEventListener("online", sync);
+    window.addEventListener("offline", sync);
+    return () => {
+      window.removeEventListener("online", sync);
+      window.removeEventListener("offline", sync);
+    };
+  }, []);
 
   const handleRecommendedAcuity = useCallback((level: number) => setAcuity(level), []);
   const handleDiscriminatorChange = useCallback((id: string, value: boolean | number) => {
@@ -50,6 +77,16 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
     [visit?.protocol_suggestions],
   );
 
+  const bloodOrderId = useMemo(() => {
+    const fromVisit = visit?.blood_order_id ?? visit?.madi_order_id ?? visit?.blood_order_ref;
+    if (fromVisit) return String(fromVisit);
+    const orders = (visit?.diagnostic_orders as Array<Record<string, unknown>> | undefined) ?? [];
+    const bloodish = orders.find((o) =>
+      /BLOOD|XM|CROSS|T_AND_S|TYPE/i.test(String(o.test_code ?? o.order_type ?? "")),
+    );
+    return bloodish?.oros_order_id ? String(bloodish.oros_order_id) : undefined;
+  }, [visit]);
+
   // The triage of record is the newest assessment; pct returns triage_assessments newest-first.
   const latestTriage = useMemo(
     () => ((visit?.triage_assessments as TriageAssessment[] | undefined) ?? [])[0] ?? null,
@@ -58,13 +95,29 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
 
   // A 422 from triage means NOT_TRIAGEABLE / incomplete — surface the message, do not treat it as
   // a generic failure or an outage (the BFF now passes the pct 422 through instead of a 502).
-  const triageError = actions.triage.error as { status?: number; error?: { message?: string } } | null;
-  const triageErrorMessage =
-    triageError?.status === 422
-      ? triageError.error?.message ?? "Assessment incomplete — this is not triageable yet. Complete the assessment and repeat."
+  // Offline Tier B uses the same channel with code NOT_TRIAGEABLE_OFFLINE — never a fabricated acuity.
+  const triageError = actions.triage.error as {
+    status?: number;
+    error?: { code?: string; message?: string };
+  } | null;
+  const triageErrorMessage = offline
+    ? NOT_TRIAGEABLE_OFFLINE_MESSAGE
+    : triageError?.status === 422
+      ? triageError.error?.message ??
+        "Assessment incomplete — this is not triageable yet. Complete the assessment and repeat."
       : triageError
         ? "Triage could not be recorded. Try again or check connectivity."
         : null;
+  const triageErrorCode = offline
+    ? NOT_TRIAGEABLE_OFFLINE
+    : triageError?.error?.code ?? (triageError?.status === 422 ? "NOT_TRIAGEABLE" : null);
+
+  const visitStaleness = stalenessFromTransport({
+    asOf: typeof visit?.updated_at === "string" ? visit.updated_at : null,
+    thresholdSeconds: 120,
+    fromOfflineCache: offline,
+    sourceReachable: !offline,
+  });
 
   if (isLoading || !visit) {
     return (
@@ -92,6 +145,14 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
         title="ED patient journey"
         subtitle={`${patientId} — ${status} — zone ${String(visit.zone ?? "—")}`}
       >
+        <div className="mb-3">
+          <StalenessBadge
+            state={visitStaleness}
+            asOf={typeof visit.updated_at === "string" ? visit.updated_at : null}
+            subject="ED visit"
+            data-testid="ed-visit-staleness"
+          />
+        </div>
         <div className="mb-4 flex flex-wrap gap-2 text-xs">
           {STEPS.map((label, i) => (
             <button
@@ -168,8 +229,11 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
             />
             <button
               type="button"
-              disabled={actions.triage.isPending}
-              onClick={() => actions.triage.mutate({
+              data-testid="complete-triage"
+              disabled={actions.triage.isPending || offline}
+              onClick={() => {
+                if (offline) return;
+                actions.triage.mutate({
                 acuity,
                 triageSystem,
                 autoAcuity: triageSystem !== "IMPILO_5",
@@ -178,20 +242,33 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
                 painScore: Number(pain),
                 discriminators,
                 dangerSigns: acuity <= 2 ? ["High acuity presentation"] : [],
-              })}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white"
+              });
+              }}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
             >
               Complete triage
             </button>
-            {triageErrorMessage && (
+            {(triageErrorMessage || offline) && (
               <p
                 className="rounded-lg border border-amber-500 bg-amber-50 p-3 text-sm text-amber-900"
                 role="alert"
                 data-testid="triage-error"
+                data-error-code={triageErrorCode ?? undefined}
               >
-                {triageErrorMessage}
+                {offline ? (
+                  <>
+                    <span data-testid="not-triageable-offline">{NOT_TRIAGEABLE_OFFLINE}</span>
+                    {": "}
+                    {NOT_TRIAGEABLE_OFFLINE_MESSAGE}{" "}
+                    You can still run a WHO IITT advisory preview offline (Tier A); it does not
+                    replace the of-record write.
+                  </>
+                ) : (
+                  triageErrorMessage
+                )}
               </p>
             )}
+            {offline ? <OfflineIittPreviewPanel /> : null}
           </section>
         )}
 
@@ -202,24 +279,54 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
         )}
 
         {step === 2 && (
-          <section className="rounded-xl border p-4 space-y-3">
-            <h2 className="font-semibold">Treatment / encounter</h2>
-            <button
-              type="button"
-              disabled={actions.startEncounter.isPending || status === "IN_TREATMENT"}
-              onClick={() => actions.startEncounter.mutate()}
-              className="rounded-lg bg-primary px-4 py-2 text-sm text-white"
-            >
-              {status === "IN_TREATMENT" ? "Encounter active" : "Start ED encounter"}
-            </button>
-            <button
-              type="button"
-              disabled={actions.pageTeam.isPending}
-              onClick={() => actions.pageTeam.mutate({ pageType: "STAT_CONSULT", message: "Urgent consult to ED", recipientRole: "ON_CALL" })}
-              className="rounded-lg border px-4 py-2 text-sm"
-            >
-              Page on-call team
-            </button>
+          <section className="space-y-4">
+            <div className="rounded-xl border p-4 space-y-3">
+              <h2 className="font-semibold">Treatment / encounter</h2>
+              <button
+                type="button"
+                disabled={actions.startEncounter.isPending || status === "IN_TREATMENT"}
+                onClick={() => actions.startEncounter.mutate()}
+                className="rounded-lg bg-primary px-4 py-2 text-sm text-white"
+              >
+                {status === "IN_TREATMENT" ? "Encounter active" : "Start ED encounter"}
+              </button>
+              <button
+                type="button"
+                disabled={actions.pageTeam.isPending}
+                onClick={() =>
+                  actions.pageTeam.mutate({
+                    pageType: "STAT_CONSULT",
+                    message: "Urgent consult to ED",
+                    recipientRole: "ON_CALL",
+                  })
+                }
+                className="rounded-lg border px-4 py-2 text-sm"
+              >
+                Page on-call team
+              </button>
+            </div>
+            <EdZoneAndDiagnosticsPanel
+              currentZone={visit?.zone ? String(visit.zone) : null}
+              diagnosticOrders={
+                Array.isArray(visit?.diagnostic_orders)
+                  ? (visit.diagnostic_orders as Array<Record<string, unknown>>)
+                  : undefined
+              }
+              actor={actor}
+              isMutating={
+                actions.assignZone.isPending ||
+                actions.orderDiagnostic.isPending ||
+                actions.actOnDiagnostic.isPending ||
+                actions.closeDiagnostic.isPending ||
+                actions.reconcileCritical.isPending
+              }
+              onAssignZone={(body) => actions.assignZone.mutateAsync(body)}
+              onOrderDiagnostic={(body) => actions.orderDiagnostic.mutateAsync(body)}
+              onAct={(body) => actions.actOnDiagnostic.mutateAsync(body)}
+              onClose={(body) => actions.closeDiagnostic.mutateAsync(body)}
+              onReconcile={(body) => actions.reconcileCritical.mutateAsync(body)}
+            />
+            <BloodReadinessPanel orderId={bloodOrderId} />
           </section>
         )}
 
@@ -382,16 +489,40 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
               ))}
             </ul>
             {Boolean(visit.pathway_session_id) && (
-              <button
-                type="button"
-                onClick={() => actions.advancePathway.mutate({
-                  sessionId: String(visit.pathway_session_id),
-                  answers: { red_flags: false },
-                })}
-                className="rounded-lg border px-4 py-2 text-sm"
-              >
-                Advance pathway step
-              </button>
+              <div className="space-y-2 rounded border p-3">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={pathwayRedFlags}
+                    onChange={(e) => setPathwayRedFlags(e.target.checked)}
+                    data-testid="pathway-red-flags"
+                  />
+                  Red flags present
+                </label>
+                <input
+                  className="w-full rounded border px-2 py-1 text-sm"
+                  placeholder="Pathway step notes (optional)"
+                  value={pathwayNotes}
+                  onChange={(e) => setPathwayNotes(e.target.value)}
+                  data-testid="pathway-notes"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    actions.advancePathway.mutate({
+                      sessionId: String(visit.pathway_session_id),
+                      answers: {
+                        red_flags: pathwayRedFlags,
+                        notes: pathwayNotes.trim() || undefined,
+                      },
+                    })
+                  }
+                  className="rounded-lg border px-4 py-2 text-sm"
+                  data-testid="pathway-advance"
+                >
+                  Advance pathway step
+                </button>
+              </div>
             )}
           </section>
         )}
@@ -421,13 +552,54 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
         )}
 
         {step === 6 && Boolean(visit.disposition) && (
-          <section className="rounded-xl border border-green-200 bg-success-soft p-4 text-sm text-primary-hover">
-            Disposition recorded: <strong>{String(visit.disposition)}</strong>. The trauma episode closes on ED disposition.
+          <section className="space-y-3">
+            <div className="rounded-xl border border-green-200 bg-success-soft p-4 text-sm text-primary-hover">
+              Disposition recorded:{" "}
+              <strong>
+                {typeof visit.disposition === "object"
+                  ? String(
+                      (visit.disposition as Record<string, unknown>).disposition_type ??
+                        "recorded",
+                    )
+                  : String(visit.disposition)}
+              </strong>
+              . The ED visit row is closed.
+            </div>
+            {visit.emergency_episode_id ? (
+              <div
+                className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+                data-testid="episode-disposition-reconcile"
+              >
+                <p className="font-medium">Episode disposition may still be required</p>
+                <p className="mt-1 text-xs">
+                  When the ED disposition cannot satisfy the episode R12 map, the continuum episode
+                  stays open (silent-open). Complete episode disposition on the spine — do not invent
+                  destination fields.
+                </p>
+                <Link
+                  href={`/clinical/emergency/spine/${String(visit.emergency_episode_id)}/disposition`}
+                  className="mt-2 inline-block text-primary underline"
+                >
+                  Open episode disposition
+                </Link>
+              </div>
+            ) : null}
           </section>
         )}
 
         {Boolean(visit.disposition) && step !== 6 && (
-          <p className="mt-3 text-sm text-green-700">Disposition recorded — visit complete.</p>
+          <div className="mt-3 space-y-2">
+            <p className="text-sm text-green-700">Disposition recorded — visit complete.</p>
+            {visit.emergency_episode_id ? (
+              <Link
+                href={`/clinical/emergency/spine/${String(visit.emergency_episode_id)}/disposition`}
+                className="text-sm text-primary underline"
+                data-testid="episode-disposition-reconcile-inline"
+              >
+                Reconcile episode disposition if still open
+              </Link>
+            ) : null}
+          </div>
         )}
       </PageShell>
     </AppLayout>

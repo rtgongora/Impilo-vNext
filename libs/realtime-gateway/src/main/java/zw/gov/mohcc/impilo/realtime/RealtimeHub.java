@@ -1,8 +1,7 @@
-package zw.gov.mohcc.impilo.khuluma.realtime;
+package zw.gov.mohcc.impilo.realtime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,10 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * The single subscription/dispatch core shared by both transports (SSE + WebSocket). Holds the
  * locally-connected subscribers and fans an event out to those whose channel set matches. It is
  * transport-agnostic: SSE emitters and WS sessions both register a {@link RealtimeSubscription}.
- * Cross-instance fan-out is layered on top by the Redis dispatcher, which calls
+ * Cross-instance fan-out is layered on top by a Redis dispatcher, which calls
  * {@link #dispatchLocal} when a remote event arrives.
+ *
+ * Constructed via {@link RealtimeCoreConfiguration} — not component-scanned.
  */
-@Component
 public class RealtimeHub {
 
     private static final Logger log = LoggerFactory.getLogger(RealtimeHub.class);
@@ -37,12 +37,10 @@ public class RealtimeHub {
         return subscriptions.size();
     }
 
-    /** Number of local subscribers currently listening to a tenant+channel (test/observability aid). */
     public long listenerCount(java.util.UUID tenantId, String channel) {
         return subscriptions.values().stream().filter(s -> s.listensTo(tenantId, channel)).count();
     }
 
-    /** Fan one event out to all matching local subscribers. Broken sinks are dropped. */
     public void dispatchLocal(RealtimeEvent event) {
         for (RealtimeSubscription sub : subscriptions.values()) {
             if (!sub.listensTo(event.tenantId(), event.channel())) {
@@ -57,7 +55,6 @@ public class RealtimeHub {
         }
     }
 
-    /** Convenience for callers that have raw fields rather than a {@link RealtimeEvent}. */
     public void dispatchLocal(java.util.UUID tenantId, String channel, String eventType,
                               Map<String, Object> payload, String originInstanceId) {
         dispatchLocal(new RealtimeEvent(tenantId, channel, eventType, payload, originInstanceId));

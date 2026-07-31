@@ -1,19 +1,17 @@
-package zw.gov.mohcc.impilo.khuluma.realtime;
+package zw.gov.mohcc.impilo.realtime;
 
 import java.util.Set;
 import java.util.UUID;
 
 /**
  * One connected subscriber (an SSE emitter or a WebSocket session) registered with the
- * {@link RealtimeHub}. It is scoped to a tenant and a fixed set of logical channels, and
- * carries a transport-agnostic {@link Sink} the hub calls to deliver an event.
+ * {@link RealtimeHub}. Scoped to a tenant and a fixed set of logical channels, with a
+ * transport-agnostic {@link Sink} the hub calls to deliver an event.
  */
 public final class RealtimeSubscription {
 
-    /** Transport binding: how a delivered event reaches the wire (SSE or WS). */
     @FunctionalInterface
     public interface Sink {
-        /** Deliver one event; throwing signals a broken connection and triggers unregistration. */
         void deliver(RealtimeEvent event) throws Exception;
     }
 

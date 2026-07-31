@@ -1,17 +1,23 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const prodBuild = process.env.PLAYWRIGHT_PROD_BUILD === "1";
+const skipWebServer =
+  !!process.env.PLAYWRIGHT_SKIP_WEBSERVER || !!process.env.PLAYWRIGHT_COMPOSE_E2E;
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: !process.env.PLAYWRIGHT_SKIP_WEBSERVER,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  timeout: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.PLAYWRIGHT_COMPOSE_E2E ? 60_000 : 15_000,
-  workers: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.CI ? 1 : undefined,
+  timeout: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.PLAYWRIGHT_COMPOSE_E2E || prodBuild
+    ? 60_000
+    : 15_000,
+  workers: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.CI || prodBuild ? 1 : undefined,
   reporter: "list",
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",
-    actionTimeout: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? 15_000 : 5_000,
+    actionTimeout: process.env.PLAYWRIGHT_SKIP_WEBSERVER || prodBuild ? 15_000 : 5_000,
   },
   projects: [
     {
@@ -58,12 +64,23 @@ export default defineConfig({
       },
     },
   ],
-  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.PLAYWRIGHT_COMPOSE_E2E
+  webServer: skipWebServer
     ? undefined
-    : {
-        command: "npm run dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
-      },
+    : prodBuild
+      ? {
+          // Service workers are unreliable under `next dev`. W16b specs require a prod server.
+          // Gateway/BFF URLs are required at build time (rewrites bake them in); the W16b
+          // specs intercept `/internal/v1/**` in the browser, so a live BFF is not required.
+          command:
+            "API_GATEWAY_URL=http://127.0.0.1:8160 BFF_URL=http://127.0.0.1:8160 NEXT_PUBLIC_API_GATEWAY_URL=http://127.0.0.1:8160 NEXT_PUBLIC_BFF_URL=http://127.0.0.1:8160 npm run build && npm run start -- --port 3000",
+          url: "http://localhost:3000",
+          reuseExistingServer: !process.env.CI,
+          timeout: 600_000,
+        }
+      : {
+          command: "npm run dev",
+          url: "http://localhost:3000",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
 });

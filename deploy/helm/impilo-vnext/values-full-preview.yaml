@@ -417,6 +417,9 @@ oneUiShell:
     # Defense-in-depth: UI /internal/* rewrites must not target localhost:10000.
     API_GATEWAY_URL: "http://experience-bff:8160"
     NEXT_PUBLIC_API_GATEWAY_URL: "http://experience-bff:8160"
+    # Emergency + Khuluma realtime (W19). Without these, boards stay poll-only.
+    NEXT_PUBLIC_REALTIME_WS: "wss://impilo.mohcc.gov.zw/internal/v1/khuluma/stream/ws"
+    NEXT_PUBLIC_KHULUMA_WS: "wss://impilo.mohcc.gov.zw/internal/v1/khuluma/stream/ws"
 
 # Domain microservices: see values-full-preview-runtime.generated.yaml (wave-enabled set).
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave <N>
@@ -456,6 +459,8 @@ fullBootServices:
   pct-service:
     env:
       IMPILO_SUBJECT_CONTEXT_MODE: "log"
+      # Emergency board invalidation via Redis → Khuluma hub (W19). Deploy authorize still required.
+      PCT_EMERGENCY_REALTIME_ENABLED: "true"
   butano-service:
     env:
       IMPILO_SUBJECT_CONTEXT_MODE: "log"

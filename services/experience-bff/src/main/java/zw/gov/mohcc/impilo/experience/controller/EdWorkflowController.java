@@ -210,6 +210,13 @@ public class EdWorkflowController {
         return proxyVisitPost(id, "/disposition", body, "PCT edDisposition");
     }
 
+    /**
+     * Legacy parallel case path beside {@code ed_visit} / emergency episode spine.
+     *
+     * @deprecated Prefer {@code POST /internal/v1/ed/visits} (open ED visit) or
+     * {@code POST /internal/v1/emergency-episodes}. Kept for continuity; new UI must not call this.
+     */
+    @Deprecated
     @PostMapping("/emergency-cases")
     public ResponseEntity<Map<String, Object>> openEmergencyCase(@RequestBody Map<String, Object> body) {
         try {
@@ -288,6 +295,81 @@ public class EdWorkflowController {
         } catch (Exception e) {
             throw upstreamFailure("Inpatient endEmergency", e);
         }
+    }
+
+    /** Canonical ED surface for phase / CPR / med depth (previously only on /emergency/* ClinicalDepth). */
+    @PostMapping("/resuscitation/{activationId}/phases")
+    public ResponseEntity<Map<String, Object>> edResusStartPhase(@PathVariable UUID activationId,
+                                                                 @RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data",
+                    requirePayload(inpatientClient.startResuscitationPhase(activationId.toString(), body),
+                            "Inpatient startResuscitationPhase")));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient startResuscitationPhase", e);
+        }
+    }
+
+    @PostMapping("/resuscitation/{activationId}/phases/{phaseId}/end")
+    public ResponseEntity<Map<String, Object>> edResusEndPhase(@PathVariable UUID activationId,
+                                                               @PathVariable UUID phaseId,
+                                                               @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode ended = inpatientClient.endResuscitationPhase(activationId.toString(), phaseId.toString(), body);
+            return ResponseEntity.ok(ended != null && ended.isObject()
+                    ? Map.of("data", ended, "ended", true)
+                    : Map.of("ended", true));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient endResuscitationPhase", e);
+        }
+    }
+
+    @GetMapping("/resuscitation/{activationId}/phases")
+    public ResponseEntity<Map<String, Object>> edResusPhases(@PathVariable UUID activationId) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.listResuscitationPhases(activationId.toString()),
+                            "Inpatient listResuscitationPhases")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listResuscitationPhases", e);
+        }
+    }
+
+    @PostMapping("/resuscitation/{activationId}/cpr-cycles")
+    public ResponseEntity<Map<String, Object>> edResusCpr(@PathVariable UUID activationId,
+                                                          @RequestBody Map<String, Object> body) {
+        Map<String, Object> action = new LinkedHashMap<>(body != null ? body : Map.of());
+        action.put("actionType", "CPR_CYCLE");
+        action.putIfAbsent("description", "CPR cycle " + action.getOrDefault("cycleNumber", action.get("cycle_number")));
+        JsonNode created = inpatientClient.logEmergencyAction(activationId.toString(), action);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created != null ? created : Map.of()));
+    }
+
+    @GetMapping("/resuscitation/{activationId}/cpr-cycles")
+    public ResponseEntity<Map<String, Object>> edResusCprList(@PathVariable UUID activationId) {
+        JsonNode data = inpatientClient.listEmergencyActions(activationId.toString(), "CPR_CYCLE");
+        return ResponseEntity.ok(Map.of("data", data != null ? data : java.util.List.of()));
+    }
+
+    @PostMapping("/resuscitation/{activationId}/medications")
+    public ResponseEntity<Map<String, Object>> edResusMed(@PathVariable UUID activationId,
+                                                          @RequestBody Map<String, Object> body) {
+        Map<String, Object> action = new LinkedHashMap<>(body != null ? body : Map.of());
+        action.put("actionType", "RESUS_MEDICATION");
+        String drug = action.getOrDefault("name", action.getOrDefault("medication", "Resuscitation medication")).toString();
+        action.putIfAbsent("description", drug + " " + action.getOrDefault("dose", ""));
+        JsonNode created = inpatientClient.logEmergencyAction(activationId.toString(), action);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created != null ? created : Map.of()));
+    }
+
+    @GetMapping("/resuscitation/{activationId}/medications")
+    public ResponseEntity<Map<String, Object>> edResusMedList(@PathVariable UUID activationId) {
+        JsonNode data = inpatientClient.listEmergencyActions(activationId.toString(), "RESUS_MEDICATION");
+        return ResponseEntity.ok(Map.of("data", data != null ? data : java.util.List.of()));
     }
 
     // ── Trauma-team roster / ack / escalate (WU2) — passthrough to pct-service ────────
@@ -382,6 +464,11 @@ public class EdWorkflowController {
     // Ordering a diagnostic, acting on a critical result and closing an order were all pct-only. The
     // estate's one ED safety event (pct.ed.critical_result) is raised by this lane, and the clinician
     // who must act on it had no route to record that they did.
+
+    @GetMapping("/visits/{visitId}/diagnostics")
+    public ResponseEntity<Map<String, Object>> listDiagnostics(@PathVariable UUID visitId) {
+        return proxyPct(() -> pctClient.listEdDiagnostics(visitId), "PCT listEdDiagnostics", HttpStatus.OK);
+    }
 
     @PostMapping("/visits/{visitId}/diagnostics")
     public ResponseEntity<Map<String, Object>> orderDiagnostic(@PathVariable UUID visitId,

@@ -54,6 +54,18 @@ interface AuthState {
   refreshToken: string | null;
   expiresAt: string | null;
   isAuthenticated: boolean;
+  /**
+   * True once the provider tree has tried to restore a session from sessionStorage.
+   *
+   * The store starts logged out and is filled by an effect in `StoreHydrator`, which sits
+   * *above* the route guard — so on a full page load the guard's first pass sees an empty
+   * store. Before this flag existed that pass could not tell "signed out" from "not read
+   * yet", and every deep link into a guarded route was redirected away before the session
+   * arrived. Consumers that act on the absence of a session must wait for this.
+   */
+  sessionRestoreAttempted: boolean;
+  /** Called by the hydrator once, on every path including failure, so nothing waits forever. */
+  markSessionRestoreAttempted: () => void;
   setAuth: (user: AuthUser, token: string, refreshToken?: string | null, expiresAt?: string | null) => void;
   hydrateSession: (user: AuthUser, refreshToken?: string | null, expiresAt?: string | null) => void;
   setTokens: (token: string, refreshToken?: string | null, expiresAt?: string | null) => void;
@@ -101,6 +113,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   refreshToken: null,
   expiresAt: null,
   isAuthenticated: false,
+  sessionRestoreAttempted: false,
+
+  markSessionRestoreAttempted: () => set({ sessionRestoreAttempted: true }),
 
   setAuth: (user, token, refreshToken, expiresAt) => {
     const currentUser = get().user;

@@ -51,6 +51,7 @@ import { MadiCentralBankScreen } from "../madi/MadiCentralBankScreen";
 import { ProviderLiveHubScreen } from "../live/ProviderLiveHubScreen";
 import { TriageScreen } from "./TriageScreen";
 import { PrehospitalEpcrScreen } from "./PrehospitalEpcrScreen";
+import { EmergencyHubScreen } from "./EmergencyHubScreen";
 import { BillingScreen } from "./BillingScreen";
 import { PACSViewerScreen } from "./PACSViewerScreen";
 import { DischargeScreen } from "./DischargeScreen";
@@ -59,6 +60,7 @@ import { MySafetyCasesScreen } from "../rito/MySafetyCasesScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
 
 type ToolTab =
+  | "emergency"
   | "soap"
   | "triage"
   | "prehospital_epcr"
@@ -109,6 +111,7 @@ type ToolTab =
   | "impilo_live";
 
 const TABS: { id: ToolTab; label: string }[] = [
+  { id: "emergency", label: "Emergency" },
   { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "prehospital_epcr", label: "ePCR" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
   { id: "care", label: "Care Plan" }, { id: "mar", label: "MAR" }, { id: "cds", label: "CDS" },
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
@@ -167,6 +170,7 @@ export function ClinicalToolsScreen() {
         ))}
       </ScrollView>
       <ScrollView style={styles.content} contentContainerStyle={styles.contentPad}>
+        {tab === "emergency" && <EmergencyHubScreen />}
         {tab === "soap" && <SOAPPanel />}
         {tab === "triage" && <TriageScreen />}
         {tab === "prehospital_epcr" && <PrehospitalEpcrScreen />}

@@ -55,6 +55,7 @@
         <module>../libs/reproductive-domain</module>
         <module>../libs/burn-domain</module>
         <module>../libs/emergency-domain</module>
+        <module>../libs/realtime-gateway</module>
         <module>shared-core</module>
         <module>tshepo-service</module>
         <module>vito-service</module>
@@ -387,6 +388,13 @@
             <dependency>
                 <groupId>zw.gov.mohcc.impilo</groupId>
                 <artifactId>emergency-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Realtime gateway core (hub + channel-resolver interface) -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>realtime-gateway</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

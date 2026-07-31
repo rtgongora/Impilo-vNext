@@ -36,6 +36,7 @@ export type GovernedAppMode = "provider" | "supervisor";
 export type UngovernedAppMode = Exclude<AppMode, GovernedAppMode>;
 export type ProviderTabKey =
   | "workhome"
+  | "emergency"
   | "dashboard"
   | "patients"
   | "encounter"

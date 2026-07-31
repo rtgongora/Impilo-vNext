@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.experience.client.MentalHealthServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
@@ -15,6 +16,12 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * BFF proxy for pct's emergency-episode spine + acceptance handshake — the gap
@@ -38,9 +45,17 @@ class EmergencyEpisodeControllerTest {
         return ServiceClientConfig.testServiceEndpoints();
     }
 
+    private static EmergencyEpisodeController controller(PctServiceClient pct) {
+        return new EmergencyEpisodeController(pct, mock(MentalHealthServiceClient.class), mapper);
+    }
+
+    private static EmergencyEpisodeController controller(PctServiceClient pct, MentalHealthServiceClient mh) {
+        return new EmergencyEpisodeController(pct, mh, mapper);
+    }
+
     @Test
     void open_returns201WithData() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.open(Map.of("entryRoute", "WALK_IN"));
         assertThat(response.getStatusCode().value()).isEqualTo(201);
         JsonNode data = (JsonNode) response.getBody().get("data");
@@ -49,14 +64,14 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void get_returns200WithData() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.get(EPISODE_ID);
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
 
     @Test
     void board_forwardsFacilityIdAndReturnsList() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.board(FACILITY_ID);
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         JsonNode data = (JsonNode) response.getBody().get("data");
@@ -65,15 +80,55 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void requestHandover_returns201() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.requestHandover(EPISODE_ID,
                 Map.of("targetType", "ADMISSION", "requestedBy", "nurse-A"));
         assertThat(response.getStatusCode().value()).isEqualTo(201);
     }
 
     @Test
+    void requestHandover_mentalHealth_autoIntakesReferral() {
+        MentalHealthServiceClient mh = mock(MentalHealthServiceClient.class);
+        when(mh.intakeReferral(any())).thenReturn(
+                mapper.createObjectNode().put("id", "mh-ref-1").put("status", "PENDING"));
+        var controller = controller(new StubPctClient(), mh);
+
+        ResponseEntity<Map<String, Object>> response = controller.requestHandover(EPISODE_ID,
+                Map.of("targetType", "MENTAL_HEALTH", "requestedBy", "nurse-A", "facilityId", FACILITY_ID.toString()));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(201);
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertThat(data.get("mh_intake_status").asText()).isEqualTo("OK");
+        assertThat(data.get("referral_id").asText()).isEqualTo("mh-ref-1");
+        verify(mh, times(1)).intakeReferral(any());
+    }
+
+    @Test
+    void requestHandover_nonMentalHealth_skipsIntake() {
+        MentalHealthServiceClient mh = mock(MentalHealthServiceClient.class);
+        var controller = controller(new StubPctClient(), mh);
+        controller.requestHandover(EPISODE_ID, Map.of("targetType", "ADMISSION", "requestedBy", "nurse-A"));
+        verify(mh, never()).intakeReferral(any());
+    }
+
+    @Test
+    void requestHandover_mentalHealth_intakeFailure_stillReturnsHandover() {
+        MentalHealthServiceClient mh = mock(MentalHealthServiceClient.class);
+        when(mh.intakeReferral(any())).thenThrow(new RuntimeException("connection refused"));
+        var controller = controller(new StubPctClient(), mh);
+
+        ResponseEntity<Map<String, Object>> response = controller.requestHandover(EPISODE_ID,
+                Map.of("targetType", "MENTAL_HEALTH", "requestedBy", "nurse-A", "facilityId", FACILITY_ID.toString()));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(201);
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertThat(data.get("handover_id").asText()).isEqualTo(HANDOVER_ID.toString());
+        assertThat(data.get("mh_intake_status").asText()).isEqualTo("FAILED");
+    }
+
+    @Test
     void acceptHandover_returns200AndClosedState() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.acceptHandover(HANDOVER_ID,
                 Map.of("acceptedBy", "clerk", "acceptingRef", "ADM-1"));
         assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -83,7 +138,7 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void aFourHundredFromPct_surfacesAsIs_notCollapsedTo502() {
-        var controller = new EmergencyEpisodeController(new PctClientThrowing409());
+        var controller = controller(new PctClientThrowing409());
         assertThatThrownBy(() -> controller.acceptHandover(HANDOVER_ID, Map.of("acceptedBy", "x")))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(409));
@@ -91,7 +146,7 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void aServerErrorFromPct_collapsesTo502() {
-        var controller = new EmergencyEpisodeController(new PctClientThrowing500());
+        var controller = controller(new PctClientThrowing500());
         assertThatThrownBy(() -> controller.get(EPISODE_ID))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(502));
@@ -101,7 +156,7 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void closeAlert_isReachable_soASuppressedHazardCanReRaise() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.closeAlert(ALERT_ID, Map.of("closedBy", "nurse-A"));
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         JsonNode data = (JsonNode) response.getBody().get("data");
@@ -110,7 +165,7 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void invokeOrderSet_returns201WithItems() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response =
                 controller.invokeOrderSet(EPISODE_ID, Map.of("orderSetCode", "EM_SEPSIS_BUNDLE"));
         assertThat(response.getStatusCode().value()).isEqualTo(201);
@@ -120,14 +175,14 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void orderSetsForEpisode_returnsList() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         JsonNode data = (JsonNode) controller.orderSets(EPISODE_ID).getBody().get("data");
         assertThat(data.isArray()).isTrue();
     }
 
     @Test
     void declineOrderSetItem_withoutReason_surfacesPctsOwn422_notA502() {
-        var controller = new EmergencyEpisodeController(new PctClientRejectingReasonlessDecline());
+        var controller = controller(new PctClientRejectingReasonlessDecline());
         assertThatThrownBy(() -> controller.declineItem(ITEM_ID, Map.of()))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> {
@@ -139,7 +194,7 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void recordMedication_returns201() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.recordMedication(EPISODE_ID,
                 Map.of("medicationCode", "ADRENALINE", "doseValue", 1, "doseUnit", "mg"));
         assertThat(response.getStatusCode().value()).isEqualTo(201);
@@ -147,7 +202,7 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void observationStay_startListAndEnd_areAllReachable() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         assertThat(controller.startObservationStay(EPISODE_ID, Map.of("reason", "head injury watch"))
                 .getStatusCode().value()).isEqualTo(201);
         assertThat(((JsonNode) controller.observationStays(EPISODE_ID).getBody().get("data")).isArray()).isTrue();
@@ -159,7 +214,7 @@ class EmergencyEpisodeControllerTest {
     void commandBoard_stillRendersWhenOneSourceIsBlind_andNamesWhichOne() {
         // A 502 here would blank a board a charge nurse is standing in front of, on the strength of
         // one dead upstream. The board renders; the tile that cannot be read says so.
-        var controller = new EmergencyEpisodeController(new PctClientWithDeadAlerts());
+        var controller = controller(new PctClientWithDeadAlerts());
         ResponseEntity<Map<String, Object>> response = controller.commandBoard(FACILITY_ID);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -179,7 +234,7 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void commandBoard_isNotMarkedDegradedWhenEverySourceAnswered() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.commandBoard(FACILITY_ID);
 
         @SuppressWarnings("unchecked")
@@ -189,7 +244,7 @@ class EmergencyEpisodeControllerTest {
 
     @Test
     void identityLink_isAppendOnly_historyIsAList() {
-        var controller = new EmergencyEpisodeController(new StubPctClient());
+        var controller = controller(new StubPctClient());
         assertThat(controller.linkIdentity(EPISODE_ID,
                 Map.of("resolvedSubjectCpid", "CPID-1", "resolutionMethod", "CLINICAL_RECOGNITION"))
                 .getStatusCode().value()).isEqualTo(201);

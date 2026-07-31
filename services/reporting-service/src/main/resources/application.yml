@@ -74,3 +74,5 @@ reporting:
       surveillance-event: ${REPORTING_KAFKA_TOPICS_SURVEILLANCE_EVENT:analytics.surveillance.event}
       # Wave 4 §20 — theatre.* projection: the legacy inpatient theatre event streams.
       theatre: ${REPORTING_KAFKA_TOPICS_THEATRE:inpatient.events,inpatient.safety}
+      # W17 — emergency episode / alert / handover projection (Theatre pattern).
+      emergency: ${REPORTING_KAFKA_TOPICS_EMERGENCY:pct.emergency.episode.state_changed,pct.emergency.alert.raised,pct.emergency.handover.updated,pct.emergency.identity.linked}

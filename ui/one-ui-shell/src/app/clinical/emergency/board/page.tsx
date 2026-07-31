@@ -13,7 +13,9 @@ import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useEmergencyRealtime } from "@/hooks/useEmergencyRealtime";
 import { useEmergencyEpisodeBoard, useOpenEmergencyEpisode } from "@/hooks/queries/useEmergencyEpisode";
+import { EmergencyOfflineOutboxPanel } from "@/features/emergency/offline/EmergencyOfflineOutboxPanel";
 import { useState } from "react";
 
 const ENTRY_ROUTES = [
@@ -35,6 +37,7 @@ export default function EmergencyEpisodeBoardPage() {
   const board = useEmergencyEpisodeBoard(facility?.id);
   const openEpisode = useOpenEmergencyEpisode();
   const [entryRoute, setEntryRoute] = useState<string>("WALK_IN");
+  useEmergencyRealtime(Boolean(facility?.id));
 
   return (
     <AppLayout>
@@ -67,6 +70,10 @@ export default function EmergencyEpisodeBoardPage() {
               {openEpisode.isPending ? "Opening…" : "Open episode"}
             </button>
           </div>
+        </div>
+
+        <div className="mb-6">
+          <EmergencyOfflineOutboxPanel />
         </div>
 
         {board.isLoading && <p className="text-sm text-muted-foreground">Loading board…</p>}

@@ -129,8 +129,21 @@ export function useEmergencyEpisodeActions(episodeId: string) {
     }),
     /** Request a handover. Requesting is NOT accepting — the episode moves to OPEN_AWAITING_ACCEPTANCE. */
     requestHandover: useMutation({
-      mutationFn: (body: { targetType: string; targetService?: string; requestedBy: string; reason?: string }) =>
-        apiClient.post<{ data: EmergencyHandoverRow }>(`${BASE}/${episodeId}/handover`, body),
+      mutationFn: (body: {
+        targetType: string;
+        targetService?: string;
+        requestedBy: string;
+        reason?: string;
+        facilityId?: string;
+        subjectCpid?: string;
+      }) =>
+        apiClient.post<{
+          data: EmergencyHandoverRow & {
+            mh_intake_status?: string;
+            referral_id?: string;
+            mh_intake_error?: string;
+          };
+        }>(`${BASE}/${episodeId}/handover`, body),
       onSuccess: invalidate,
     }),
   };
@@ -293,8 +306,12 @@ export function useEmergencyOrderSetActions(episodeId: string) {
 
   return {
     invoke: useMutation({
-      mutationFn: (body: { orderSetCode: string; invokedBy?: string }) =>
-        apiClient.post(`${BASE}/${episodeId}/order-sets`, body),
+      mutationFn: (body: {
+        orderSetCode: string;
+        orderSetName?: string;
+        invokedBy: string;
+        items?: { orderCode: string; orderLabel?: string; orderType?: string }[];
+      }) => apiClient.post(`${BASE}/${episodeId}/order-sets`, body),
       onSuccess: invalidate,
     }),
     orderItem: useMutation({

@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Providers } from "./Providers";
@@ -74,9 +74,18 @@ function futureExpiry(): string {
   return new Date(Date.now() + 60 * 60 * 1000).toISOString();
 }
 
+/** Records what the store looked like on this child's first effect pass. */
+function RestoreProbe({ seen }: { seen: boolean[] }) {
+  useEffect(() => {
+    seen.push(useAuthStore.getState().sessionRestoreAttempted);
+  }, [seen]);
+  return <div>probe</div>;
+}
+
 describe("Providers", () => {
   beforeEach(() => {
     useAuthStore.getState().clearAuth();
+    useAuthStore.setState({ sessionRestoreAttempted: false });
     sessionStorageMock.clear();
     vi.clearAllMocks();
     window.history.pushState({}, "", "/");
@@ -213,5 +222,49 @@ describe("Providers", () => {
 
     expect(useAuthStore.getState().token).toBeNull();
     expect(useFacilityStore.getState().facility).toBeNull();
+  });
+
+  // The session restore happens in an effect on StoreHydrator, which is a *parent* of the
+  // route guard, so React runs the guard's effect against an empty store first. The guard
+  // used to read that emptiness as "signed out, citizen only" and redirect, which is why a
+  // full page load of a guarded deep link never reached its page.
+
+  it("children see the session as unrestored on their first pass, before the hydrator announces it", async () => {
+    sessionStorageMock.setItem("exp:auth_token", "token-1");
+    sessionStorageMock.setItem("exp:expires_at", futureExpiry());
+    sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
+
+    const seen: boolean[] = [];
+    render(
+      <Providers>
+        <RestoreProbe seen={seen} />
+      </Providers>,
+    );
+    await screen.findByText("probe");
+
+    expect(seen[0]).toBe(false);
+    await waitFor(() => {
+      expect(useAuthStore.getState().sessionRestoreAttempted).toBe(true);
+    });
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+  });
+
+  it("announces the restore even when the stored session cannot be read", async () => {
+    sessionStorageMock.setItem("exp:auth_token", "token-1");
+    sessionStorageMock.setItem("exp:expires_at", futureExpiry());
+    sessionStorageMock.setItem("exp:auth_user", "{not json");
+
+    render(
+      <Providers>
+        <div>ready</div>
+      </Providers>,
+    );
+    await screen.findByText("ready");
+
+    // Silence here would leave every guarded route waiting forever, i.e. ungated.
+    await waitFor(() => {
+      expect(useAuthStore.getState().sessionRestoreAttempted).toBe(true);
+    });
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
   });
 });

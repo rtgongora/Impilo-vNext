@@ -26,6 +26,15 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { randomUUID } from "@/lib/uuid";
 import { isStepUpRequired } from "@/lib/stepUp";
 import { recordNompiloFailure } from "@/lib/nompilo-failure";
+import {
+  enqueueOfflineWrite,
+  flushOfflineQueue,
+  isBrowserOffline,
+  isQueueableOfflineWrite,
+  isTriagePath,
+  offlineTriageRefusal,
+  type QueuedOperation,
+} from "@/lib/offline";
 
 // Use NEXT_PUBLIC_BFF_URL when explicitly set (Docker, tests, SSR).
 // In the browser without an explicit URL, use relative paths so requests proxy
@@ -410,7 +419,46 @@ function recordApiFailure(
 
 export type ApiRequestOptions = {
   extraHeaders?: Record<string, string>;
+  /** Internal: outbox flush must not re-enqueue on transient failure. */
+  skipOfflineQueue?: boolean;
 };
+
+/** While true, mutation network failures do not create new outbox rows (flush path). */
+let offlineFlushInProgress = false;
+
+function isNetworkFailure(error: unknown): boolean {
+  if (isBrowserOffline()) return true;
+  if (error instanceof TypeError) return true;
+  return false;
+}
+
+/**
+ * When the wire is down: triage refuses (Tier B — never invent an acuity); other enrolled
+ * emergency writes land in the IndexedDB outbox with the same Idempotency-Key that would have
+ * gone on the wire, so reconnect replay is exactly-once at the server.
+ */
+async function handleOfflineMutation<T>(
+  method: string,
+  path: string,
+  body: unknown,
+  idempotencyKey: string | undefined,
+): Promise<T | null> {
+  if (offlineFlushInProgress) return null;
+  if (!["POST", "PUT", "PATCH", "DELETE"].includes(method)) return null;
+  if (isTriagePath(path)) {
+    throw offlineTriageRefusal();
+  }
+  if (!(await isQueueableOfflineWrite(method, path))) return null;
+  const key = idempotencyKey ?? randomUUID();
+  const op = await enqueueOfflineWrite({ method, path, body, idempotencyKey: key });
+  return {
+    data: {
+      queued_offline: true,
+      outbox_id: op.id,
+      idempotency_key: op.idempotencyKey,
+    },
+  } as T;
+}
 
 async function request<T>(
   method: string,
@@ -426,12 +474,35 @@ async function request<T>(
     headers["Idempotency-Key"] = headers["Idempotency-Key"] ?? randomUUID();
   }
 
-  const response = await fetch(`${BFF_BASE_URL}${path}`, {
-    method,
-    headers,
-    credentials: fetchCredentials,
-    body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
-  });
+  if (
+    !opts?.skipOfflineQueue &&
+    isBrowserOffline() &&
+    ["POST", "PUT", "PATCH", "DELETE"].includes(method)
+  ) {
+    const queued = await handleOfflineMutation<T>(method, path, body, headers["Idempotency-Key"]);
+    if (queued !== null) return queued;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${BFF_BASE_URL}${path}`, {
+      method,
+      headers,
+      credentials: fetchCredentials,
+      body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
+    });
+  } catch (error) {
+    if (
+      !opts?.skipOfflineQueue &&
+      isNetworkFailure(error) &&
+      ["POST", "PUT", "PATCH", "DELETE"].includes(method)
+    ) {
+      const queued = await handleOfflineMutation<T>(method, path, body, headers["Idempotency-Key"]);
+      if (queued !== null) return queued;
+      if (isTriagePath(path)) throw offlineTriageRefusal();
+    }
+    throw error;
+  }
 
   if (response.status === 401 && !path.includes("/auth/")) {
     // A STEP_UP_REQUIRED challenge is also a 401, but it is NOT a session expiry — it must
@@ -598,6 +669,37 @@ async function requestBlob(path: string): Promise<Blob> {
   return response.blob();
 }
 
+/** Flush the IndexedDB outbox over the live api-client, replaying each Idempotency-Key unchanged. */
+export async function flushApiOfflineQueue(): Promise<{ flushed: number; failed: number }> {
+  offlineFlushInProgress = true;
+  try {
+    return await flushOfflineQueue(async (op: QueuedOperation) => {
+      const headers = { "Idempotency-Key": op.idempotencyKey };
+      const method = op.method.toUpperCase();
+      const opts = { extraHeaders: headers, skipOfflineQueue: true };
+      if (method === "POST") {
+        await request("POST", op.path, op.payload, "json", opts);
+        return;
+      }
+      if (method === "PUT") {
+        await request("PUT", op.path, op.payload, "json", opts);
+        return;
+      }
+      if (method === "PATCH") {
+        await request("PATCH", op.path, op.payload, "json", opts);
+        return;
+      }
+      if (method === "DELETE") {
+        await request("DELETE", op.path, op.payload, "json", opts);
+        return;
+      }
+      throw new Error(`unsupported outbox method ${op.method}`);
+    });
+  } finally {
+    offlineFlushInProgress = false;
+  }
+}
+
 export const apiClient = {
   get: <T>(path: string, opts?: ApiRequestOptions) => request<T>("GET", path, undefined, "json", opts),
   getBlob: (path: string) => requestBlob(path),
@@ -607,4 +709,5 @@ export const apiClient = {
   patch: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("PATCH", path, body, "json", opts),
   delete: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("DELETE", path, body, "json", opts),
   postForm: <T>(path: string, body: FormData, opts?: ApiRequestOptions) => requestForm<T>("POST", path, body, opts),
+  flushOfflineQueue: flushApiOfflineQueue,
 };

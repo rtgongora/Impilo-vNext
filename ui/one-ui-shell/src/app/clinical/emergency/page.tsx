@@ -37,6 +37,7 @@ import { CriticalResultsPanel } from "@/components/clinical/CriticalResultsPanel
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useEdVisits, useOpenEdVisit } from "@/hooks/queries/useEdVisit";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { EmergencyOfflineOutboxPanel } from "@/features/emergency/offline/EmergencyOfflineOutboxPanel";
 
 const PROTOCOL_OPTIONS = ["CODE_BLUE", "TRAUMA", "RSI", "MATERNITY", "TOXICOLOGY", "OTHER"] as const;
 
@@ -165,6 +166,8 @@ export default function EmergencyDepartmentPage() {
           </div>
 
           <CriticalResultsPanel />
+
+          <EmergencyOfflineOutboxPanel />
 
           <EdPreArrivalBoard facilityId={facility?.id} />
 

@@ -191,10 +191,14 @@ public class EmergencyAlertSweepJob {
 
     private void emit(EmergencyAlertEntity a, String eventType) {
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("event_type", eventType);
         payload.put("alertId", a.getAlertId() != null ? a.getAlertId().toString() : null);
         payload.put("episodeId", a.getEpisodeId().toString());
+        payload.put("episode_id", a.getEpisodeId().toString());
         payload.put("tenantId", a.getTenantId().toString());
+        payload.put("tenant_id", a.getTenantId().toString());
         payload.put("facilityId", a.getFacilityId() != null ? a.getFacilityId().toString() : null);
+        payload.put("facility_id", a.getFacilityId() != null ? a.getFacilityId().toString() : null);
         payload.put("alertType", a.getAlertType());
         payload.put("severity", a.getSeverity());
         payload.put("status", a.getStatus());
@@ -202,6 +206,7 @@ public class EmergencyAlertSweepJob {
         payload.put("responseDueAt", a.getResponseDueAt() != null ? a.getResponseDueAt().toString() : null);
         payload.put("subjectCpid", a.getSubjectCpid());
         payload.put("ritoCaseRef", a.getRitoCaseRef());
+        payload.put("rito_case_ref", a.getRitoCaseRef());
 
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("EMERGENCY_ALERT");

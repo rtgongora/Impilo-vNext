@@ -1,12 +1,15 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.experience.client.MentalHealthServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.support.EmergencyHonesty;
 
@@ -23,10 +26,9 @@ import java.util.UUID;
  * to avoid colliding with {@code CareEmergencyInpatientController}'s existing (deprecated) resuscitation
  * aliases already squatting on that namespace.
  *
- * <p>pct is sovereign here — this controller orchestrates nothing extra, it only forwards. A 4xx from
- * pct (an invalid FSM transition, a handover already resolved, a disposition that contradicts the
- * episode's state) is a real client-facing validation error and is surfaced as-is; only a genuine
- * upstream outage collapses to 502.
+ * <p>pct is sovereign for episode truth. One deliberate orchestration: after a successful
+ * {@code MENTAL_HEALTH} handover request, auto-intake the mh_referral so the MH queue is not empty.
+ * Intake failure does not roll back the PCT handover — it is reported as {@code mh_intake_status}.
  */
 @RestController
 @RequestMapping("/internal/v1/emergency-episodes")
@@ -35,9 +37,15 @@ public class EmergencyEpisodeController {
     private static final Logger log = LoggerFactory.getLogger(EmergencyEpisodeController.class);
 
     private final PctServiceClient pctClient;
+    private final MentalHealthServiceClient mentalHealthClient;
+    private final ObjectMapper objectMapper;
 
-    public EmergencyEpisodeController(PctServiceClient pctClient) {
+    public EmergencyEpisodeController(PctServiceClient pctClient,
+                                      MentalHealthServiceClient mentalHealthClient,
+                                      ObjectMapper objectMapper) {
         this.pctClient = pctClient;
+        this.mentalHealthClient = mentalHealthClient;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping
@@ -75,7 +83,104 @@ public class EmergencyEpisodeController {
 
     @PostMapping("/{episodeId}/handover")
     public ResponseEntity<Map<String, Object>> requestHandover(@PathVariable UUID episodeId, @RequestBody Map<String, Object> body) {
-        return proxyPost(() -> pctClient.requestEmergencyHandover(episodeId, body), "PCT requestEmergencyHandover", HttpStatus.CREATED);
+        JsonNode handover;
+        try {
+            handover = requirePayload(pctClient.requestEmergencyHandover(episodeId, body), "PCT requestEmergencyHandover");
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                throw new ResponseStatusException(e.getStatusCode(), e.getResponseBodyAsString(), e);
+            }
+            throw upstreamFailure("PCT requestEmergencyHandover", e);
+        } catch (Exception e) {
+            throw upstreamFailure("PCT requestEmergencyHandover", e);
+        }
+
+        String targetType = text(body, "targetType", "target_type");
+        if (!"MENTAL_HEALTH".equals(targetType)) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", handover));
+        }
+
+        ObjectNode enriched = handover.isObject()
+                ? ((ObjectNode) handover).deepCopy()
+                : objectMapper.createObjectNode().set("handover", handover);
+        try {
+            ObjectNode intake = objectMapper.createObjectNode();
+            intake.put("episodeId", episodeId.toString());
+            String handoverId = textNode(handover, "handover_id", "handoverId");
+            if (handoverId != null) {
+                intake.put("handoverId", handoverId);
+            }
+            putIfPresent(intake, "facilityId", text(body, "facilityId", "facility_id"));
+            putIfPresent(intake, "subjectCpid", text(body, "subjectCpid", "subject_cpid"));
+            putIfPresent(intake, "requestReason", text(body, "requestReason", "request_reason", "reason"));
+            putIfPresent(intake, "requestedBy", text(body, "requestedBy", "requested_by"));
+            if (!intake.hasNonNull("facilityId") || !intake.hasNonNull("subjectCpid")) {
+                try {
+                    JsonNode episode = pctClient.getEmergencyEpisode(episodeId);
+                    if (episode != null && episode.isObject()) {
+                        if (!intake.hasNonNull("facilityId")) {
+                            putIfPresent(intake, "facilityId", textNode(episode, "facility_id", "facilityId"));
+                        }
+                        if (!intake.hasNonNull("subjectCpid")) {
+                            putIfPresent(intake, "subjectCpid", textNode(episode, "subject_cpid", "subjectCpid"));
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("MH intake: could not enrich facility/subject from episode {}: {}", episodeId, e.getMessage());
+                }
+            }
+            JsonNode referral = mentalHealthClient.intakeReferral(intake);
+            enriched.put("mh_intake_status", "OK");
+            String referralId = textNode(referral, "id", "referral_id", "referralId");
+            if (referralId != null) {
+                enriched.put("referral_id", referralId);
+            }
+            if (referral != null && !referral.isNull()) {
+                enriched.set("mh_referral", referral);
+            }
+        } catch (Exception e) {
+            log.warn("MH auto-intake failed after MENTAL_HEALTH handover for episode {}: {}", episodeId, e.getMessage());
+            enriched.put("mh_intake_status", "FAILED");
+            enriched.put("mh_intake_error", e.getMessage() != null ? e.getMessage() : "mental-health intake failed");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", enriched));
+    }
+
+    private static String text(Map<String, Object> body, String... keys) {
+        if (body == null) {
+            return null;
+        }
+        for (String key : keys) {
+            Object v = body.get(key);
+            if (v != null) {
+                String s = String.valueOf(v).trim();
+                if (!s.isEmpty() && !"null".equals(s)) {
+                    return s;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String textNode(JsonNode node, String... keys) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        for (String key : keys) {
+            JsonNode child = node.get(key);
+            if (child != null && !child.isNull() && !child.asText().isBlank()) {
+                return child.asText();
+            }
+        }
+        return null;
+    }
+
+    private static void putIfPresent(ObjectNode node, String field, String value) {
+        if (value != null && !value.isBlank()) {
+            node.put(field, value);
+        }
     }
 
     @GetMapping("/{episodeId}/handovers")

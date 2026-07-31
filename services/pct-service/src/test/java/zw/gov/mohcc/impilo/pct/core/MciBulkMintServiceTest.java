@@ -41,7 +41,7 @@ class MciBulkMintServiceTest {
         var handoverRepo = new EmergencyEpisodeServiceTest.InMemoryHandoverRepo();
         var outbox = new EmergencyEpisodeServiceTest.CountingOutbox();
         EmergencyEpisodeService episodeService =
-                new EmergencyEpisodeService(episodeRepo, handoverRepo, outbox, new ObjectMapper());
+                new EmergencyEpisodeService(episodeRepo, handoverRepo, outbox, new ObjectMapper(), org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class));
         daidzaiClient = new StubDaidzaiEpisodeClient();
         service = new MciBulkMintService(episodeService, daidzaiClient);
     }

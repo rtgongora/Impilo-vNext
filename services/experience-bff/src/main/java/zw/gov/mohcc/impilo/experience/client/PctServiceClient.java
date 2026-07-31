@@ -1360,6 +1360,12 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    public JsonNode listEdDiagnostics(UUID visitId) {
+        String url = baseUrl + "/v1/ed/visits/" + visitId + "/diagnostics";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode reconcileEdCriticalResult(Map<String, Object> body) {
         String url = baseUrl + "/v1/ed/diagnostics/reconcile-critical";
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);

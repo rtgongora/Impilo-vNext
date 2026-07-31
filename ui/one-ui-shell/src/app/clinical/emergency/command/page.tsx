@@ -19,6 +19,7 @@ import { PageShell } from "@/components/PageShell";
 import { CommandBoardView } from "@/features/emergency/command/CommandBoardView";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useEmergencyRealtime } from "@/hooks/useEmergencyRealtime";
 import {
   useEmergencyAlertActions,
   useEmergencyCommandBoard,
@@ -31,6 +32,7 @@ export default function EmergencyCommandPage() {
   const { user } = useAuthStore();
   const board = useEmergencyCommandBoard(facility?.id);
   const alertActions = useEmergencyAlertActions(facility?.id);
+  useEmergencyRealtime(Boolean(facility?.id));
 
   const [pendingAlertId, setPendingAlertId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);

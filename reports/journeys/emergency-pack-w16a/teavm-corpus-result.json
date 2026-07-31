@@ -1,0 +1,12 @@
+{
+  "status": "GO",
+  "teavmVersion": "0.11.0",
+  "resourcePlugin": "org.teavm.classlib.ResourceSupplier via META-INF/services (IittCorpusResourceSupplier)",
+  "result": "PASS scenarios=23 failures=0 elapsedMs=44",
+  "coldStartMs": 49,
+  "wallMs": 225,
+  "bundleBytes": 152834,
+  "bundleKiB": 149.3,
+  "title": "PASS scenarios=23 failures=0 elapsedMs=44",
+  "console": []
+}

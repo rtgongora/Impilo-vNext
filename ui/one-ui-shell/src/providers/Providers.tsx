@@ -30,6 +30,8 @@ import { ShellWorkspaceRemoteSync } from "@/components/shell/ShellWorkspaceRemot
 import { loadHydratedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import { registerImpiloServiceWorker } from "@/lib/offline";
+import { apiClient } from "@/lib/api-client";
 
 function StoreHydrator({ children }: { children: ReactNode }) {
   const [, setHydrated] = useState(false);
@@ -79,8 +81,24 @@ function StoreHydrator({ children }: { children: ReactNode }) {
       clearAuth();
     }
 
+    // Announced on every path, including the catch: the route guard waits for this before it
+    // acts on a missing session, so failing to announce would leave guarded routes ungated.
+    useAuthStore.getState().markSessionRestoreAttempted();
     setHydrated(true);
   }, [setAuth, clearAuth, setFacility, setWorkspace, startShift]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    void registerImpiloServiceWorker();
+
+    const onOnline = () => {
+      void apiClient.flushOfflineQueue().catch(() => {
+        // Flush errors stay in the outbox; next reconnect retries.
+      });
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, []);
 
   return (
     <>
