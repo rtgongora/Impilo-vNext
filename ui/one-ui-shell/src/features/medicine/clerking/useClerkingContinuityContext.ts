@@ -13,7 +13,7 @@ import {
 } from "@/hooks/queries/useStructuredHistory";
 import { useCarePlans, usePatientGoalsFromCarePlans } from "@/hooks/queries/useCareContinuity";
 import { useAdmissions } from "@/hooks/queries/useInpatient";
-import { useMedicalEpisodes } from "@/hooks/queries/useMedicalEpisodes";
+import { useMedicalEpisodes, type MedicalEpisode } from "@/hooks/queries/useMedicalEpisodes";
 import { useMaternitySummary } from "@/hooks/queries/useMaternitySummary";
 import {
   useMedicationReconciliationItems,
@@ -28,7 +28,7 @@ export interface ClerkingContinuityContext {
   patientId: string;
   activeProblems: ConditionResource[];
   resolvedProblems: ConditionResource[];
-  episodes: ReturnType<typeof useMedicalEpisodes>["data"] extends { data?: infer D } ? NonNullable<D> : never;
+  episodes: MedicalEpisode[];
   medications: unknown[];
   adherenceFindings: { display: string; finding: string; patientSays: string | null }[];
   allergies: unknown[];

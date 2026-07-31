@@ -44,7 +44,7 @@ public class ClerkingAttestationService {
 
     @Transactional
     public Map<String, Object> attest(Map<String, Object> body) {
-        TrustContext ctx = TrustContextHolder.require();
+        // Stance first — silence must fail as client validation, not as missing trust context.
         String stance = str(body.get("stance"));
         if (stance == null) {
             throw new IllegalArgumentException(
@@ -61,6 +61,7 @@ public class ClerkingAttestationService {
             throw new IllegalArgumentException("Unrecognised section_key: " + section);
         }
 
+        TrustContext ctx = TrustContextHolder.require();
         ClerkingVisitAttestationEntity e = new ClerkingVisitAttestationEntity();
         e.setTenantId(ctx.tenantId());
         e.setSubjectCpid(required(body, "subject_cpid", "subjectCpid"));
