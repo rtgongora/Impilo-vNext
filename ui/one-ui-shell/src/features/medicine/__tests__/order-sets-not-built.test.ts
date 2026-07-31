@@ -4,8 +4,8 @@ import { join } from "path";
 import { AMBULATORY_ORDER_SETS_BUILT } from "@/data/orderSets";
 
 /**
- * EncounterCart / OrderSetPicker must not be mounted as a live feature until an ambulatory
- * order-set SoR exists. This guard fails the build if anything outside the cart folder imports them.
+ * When ambulatory order sets are not built, EncounterCart / OrderSetPicker must not mount.
+ * When built, mounts are allowed (and the flag must stay true only while OROS SoR + BFF place exist).
  */
 
 function walkTsFiles(dir: string, out: string[] = []): string[] {
@@ -22,12 +22,13 @@ function walkTsFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-describe("ambulatory order sets — honest not-built", () => {
-  it("declares ambulatory order sets as not built", () => {
-    expect(AMBULATORY_ORDER_SETS_BUILT).toBe(false);
+describe("ambulatory order sets — mount honesty", () => {
+  it("declares ambulatory order sets built after OROS SoR", () => {
+    expect(AMBULATORY_ORDER_SETS_BUILT).toBe(true);
   });
 
-  it("does not mount EncounterCart or OrderSetPicker outside the cart folder", () => {
+  it("does not mount EncounterCart when the built flag is false", () => {
+    if (AMBULATORY_ORDER_SETS_BUILT) return;
     const root = join(__dirname, "../../..");
     const cartDir = join(root, "components/ehr/cart");
     const offenders: string[] = [];

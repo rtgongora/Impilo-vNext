@@ -5,6 +5,7 @@ import { AlertTriangle, Activity, Lock, ShieldAlert, Stethoscope } from "lucide-
 import { useMedicineContext } from "./useMedicineContext";
 import { isConfidential, programmeLabel } from "./medicine-summary";
 import { MEDICINE_SPECIALTIES } from "@/features/medicine/specialties/specialty-config";
+import { AmbulatoryOrderSetsPanel } from "@/features/medicine/clerking/AmbulatoryOrderSetsPanel";
 
 /**
  * The adult medicine workspace.
@@ -59,6 +60,8 @@ export function MedicineWorkspaceShell({ patientId }: MedicineWorkspaceShellProp
       </div>
 
       <AllergiesStrip context={context} />
+
+      <AmbulatoryOrderSetsPanel patientId={patientId} />
 
       {/* brief.md §8's thirteen specialties. Each is a view onto this same record, which is the
           point — thirteen separate screens would be the folder of specialist forms the brief

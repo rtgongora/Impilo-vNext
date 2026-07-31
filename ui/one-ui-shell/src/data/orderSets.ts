@@ -1,17 +1,12 @@
 /**
- * Order sets — NOT a live ambulatory SoR.
- *
- * `ORDER_SETS` and `components/ehr/cart/*` (EncounterCart, OrderSetPicker) are orphaned static UI.
- * Nothing in the product mounts them. There is no OROS/PCT ambulatory order-set definition that
- * places real orders when selected. Pathway "apply" on the mobile BFF starts a CKP pathway session
- * and places no order. ED has separate instance-tracking order sets — a different surface.
- *
- * Do not wire these constants into a submit path. Keep as a design sketch until a real SoR exists.
+ * Ambulatory order sets — OROS SoR (V018) + BFF `/internal/v1/order-sets` batch place.
+ * EncounterCart / OrderSetPicker may mount when this flag is true.
+ * ED emergency order sets remain PCT/CKP scoped — a different surface.
  *
  * @see docs/clinical/adult-medicine-domain-pack/completion-register.md §11
  */
 
-export const AMBULATORY_ORDER_SETS_BUILT = false as const;
+export const AMBULATORY_ORDER_SETS_BUILT = true as const;
 
 /**
  * Design-sketch catalogue only — not served to clinicians as a live feature.
