@@ -26,10 +26,10 @@ public class KeycloakAdminClient {
     private String keycloakUrl;
     @Value("${KEYCLOAK_REALM:impilo}")
     private String realm;
-    @Value("${KEYCLOAK_BACKEND_CLIENT_ID:impilo-backend}")
-    private String backendClientId;
-    @Value("${KEYCLOAK_BACKEND_SECRET:impilo-backend-secret}")
-    private String backendSecret;
+    @Value("${KEYCLOAK_USER_ADMIN_CLIENT_ID:impilo-user-admin}")
+    private String userAdminClientId;
+    @Value("${KEYCLOAK_USER_ADMIN_SECRET:}")
+    private String userAdminSecret;
 
     private final RestTemplate restTemplate;
 
@@ -221,6 +221,92 @@ public class KeycloakAdminClient {
         }
     }
 
+    /** Sanitized credential metadata only. Keycloak never returns factor secrets here. */
+    public List<CredentialMetadata> credentials(String userId) {
+        String token = getServiceAccountToken();
+        if (token == null || userId == null || userId.isBlank()) return List.of();
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    usersUrl() + "/" + userId + "/credentials", HttpMethod.GET,
+                    new HttpEntity<>(adminHeaders(token)), JsonNode.class);
+            if (response.getBody() == null || !response.getBody().isArray()) return List.of();
+            List<CredentialMetadata> result = new ArrayList<>();
+            for (JsonNode item : response.getBody()) {
+                result.add(new CredentialMetadata(
+                        item.path("id").asText(), item.path("type").asText(),
+                        item.path("userLabel").asText(null),
+                        item.hasNonNull("createdDate") ? item.path("createdDate").asLong() : null));
+            }
+            return List.copyOf(result);
+        } catch (Exception e) {
+            log.warn("Keycloak credential metadata read failed for {}: {}", userId, e.getMessage());
+            return List.of();
+        }
+    }
+
+    public List<SessionMetadata> sessions(String userId) {
+        String token = getServiceAccountToken();
+        if (token == null || userId == null || userId.isBlank()) return List.of();
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    usersUrl() + "/" + userId + "/sessions", HttpMethod.GET,
+                    new HttpEntity<>(adminHeaders(token)), JsonNode.class);
+            if (response.getBody() == null || !response.getBody().isArray()) return List.of();
+            List<SessionMetadata> result = new ArrayList<>();
+            for (JsonNode item : response.getBody()) {
+                result.add(new SessionMetadata(item.path("id").asText(),
+                        item.path("ipAddress").asText(""), item.path("start").asLong(0),
+                        item.path("lastAccess").asLong(0), item.path("clients")));
+            }
+            return List.copyOf(result);
+        } catch (Exception e) {
+            log.warn("Keycloak session metadata read failed for {}: {}", userId, e.getMessage());
+            return List.of();
+        }
+    }
+
+    public boolean removeCredential(String userId, String credentialId) {
+        if (!safeId(userId) || !safeId(credentialId)) return false;
+        String token = getServiceAccountToken();
+        if (token == null) return false;
+        try {
+            restTemplate.exchange(usersUrl() + "/" + userId + "/credentials/" + credentialId,
+                    HttpMethod.DELETE, new HttpEntity<>(adminHeaders(token)), Void.class);
+            return true;
+        } catch (Exception e) {
+            log.warn("Keycloak credential removal failed for {}: {}", userId, e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean terminateSession(String sessionId) {
+        if (!safeId(sessionId)) return false;
+        String token = getServiceAccountToken();
+        if (token == null) return false;
+        try {
+            restTemplate.exchange(keycloakUrl + "/admin/realms/" + realm + "/sessions/" + sessionId,
+                    HttpMethod.DELETE, new HttpEntity<>(adminHeaders(token)), Void.class);
+            return true;
+        } catch (Exception e) {
+            log.warn("Keycloak session termination failed for {}: {}", sessionId, e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean terminateAllSessions(String userId) {
+        if (!safeId(userId)) return false;
+        String token = getServiceAccountToken();
+        if (token == null) return false;
+        try {
+            restTemplate.exchange(usersUrl() + "/" + userId + "/logout", HttpMethod.POST,
+                    new HttpEntity<>(adminHeaders(token)), Void.class);
+            return true;
+        } catch (Exception e) {
+            log.warn("Keycloak all-session termination failed for {}: {}", userId, e.getMessage());
+            return false;
+        }
+    }
+
     private boolean sendExecuteActionsEmail(String userId, List<String> actions, HttpHeaders adminHeaders) {
         try {
             String url = usersUrl() + "/" + userId + "/execute-actions-email";
@@ -268,12 +354,13 @@ public class KeycloakAdminClient {
     }
 
     private String getServiceAccountToken() {
+        if (userAdminSecret == null || userAdminSecret.isBlank()) return null;
         try {
             String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
             MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
             formData.add("grant_type", "client_credentials");
-            formData.add("client_id", backendClientId);
-            formData.add("client_secret", backendSecret);
+            formData.add("client_id", userAdminClientId);
+            formData.add("client_secret", userAdminSecret);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             ResponseEntity<JsonNode> response = restTemplate.exchange(
@@ -296,6 +383,10 @@ public class KeycloakAdminClient {
 
     private String usersUrl() {
         return keycloakUrl + "/admin/realms/" + realm + "/users";
+    }
+
+    private static boolean safeId(String value) {
+        return value != null && value.matches("[A-Za-z0-9._:-]{1,160}");
     }
 
     private static String extractUserId(String locationHeader) {
@@ -339,6 +430,11 @@ public class KeycloakAdminClient {
             List<String> realmRoles,
             boolean emailVerified
     ) {}
+
+    public record CredentialMetadata(String id, String type, String userLabel, Long createdDate) {}
+
+    public record SessionMetadata(String id, String ipAddress, long startedAt,
+                                  long lastAccessAt, JsonNode clients) {}
 
     public record KeycloakUserResult(
             boolean available,

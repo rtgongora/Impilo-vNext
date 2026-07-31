@@ -110,6 +110,12 @@ set_if_absent keycloak-client-secret-bff "$(openssl rand -hex 24)"
 set_if_absent keycloak-client-secret-ops-console "$(openssl rand -hex 24)"
 set_if_absent keycloak-client-secret-admin-cli "$(openssl rand -hex 24)"
 set_if_absent keycloak-backend-secret "$(openssl rand -hex 24)"
+set_if_absent keycloak-user-admin-secret "$(openssl rand -hex 32)"
+set_if_absent keycloak-event-reader-secret "$(openssl rand -hex 32)"
+# AES-256 key for BFF-held browser sessions; base64 is required by the runtime.
+set_if_absent web-session-encryption-key "$(openssl rand -base64 32 | tr -d '\n')"
+set_if_absent keycloak-db-user "keycloak"
+set_if_absent keycloak-db-password "$(openssl rand -hex 32)"
 
 # SMTP / SMS gateway credentials are OPERATOR-PROVIDED out-of-band — never
 # randomised (a random SMTP password is useless). Placeholders are seeded so

@@ -1,287 +1,134 @@
 "use client";
 
-/**
- * Security Settings — Password change, MFA toggle, active sessions.
- * Route: /settings/security | pageTitle: "Security Settings"
- */
-
 import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
-  ShieldCheck,
-  Smartphone,
-  Monitor,
-  LogOut,
-} from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, ArrowLeft, KeyRound, Loader2, LogOut, RefreshCw, ShieldCheck, Smartphone } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import { TrustGovernanceStrip } from "@/components/trust/TrustGovernanceStrip";
 
-interface SessionResource {
-  id: string;
-  device: string;
-  ipAddress: string;
-  lastActive: string;
-  current: boolean;
-}
+type Credential = { id: string; method: string; label?: string; createdAt?: string; removable: boolean };
+type Session = { id: string; ipAddress: string; startedAt?: string; lastActiveAt?: string; current: boolean; clients: string[] };
+type SecuritySnapshot = {
+  methods: Credential[];
+  sessions: Session[];
+  requiredAal: string;
+  workforce: boolean;
+  privileged: boolean;
+  currentAal?: string;
+  currentMethods: string[];
+  recoveryCodesConfigured: boolean;
+  recoveryCodesRemaining?: number | null;
+  availableActions: string[];
+};
+type SecurityResponse = { data: SecuritySnapshot };
 
-interface SecurityResource {
-  id: string;
-  type: "security_settings";
-  attributes: {
-    mfaEnabled: boolean;
-    mfaMethod: string;
-    sessions: SessionResource[];
-    [key: string]: unknown;
-  };
-}
-
-type SecurityResponse = ApiResponse<SecurityResource>;
-
-function useSecuritySettings() {
-  return useQuery<SecurityResponse>({
-    queryKey: ["settings-security"],
-    queryFn: () => apiClient.get<SecurityResponse>("/internal/v1/settings/security"),
-  });
-}
+const actionLabels: Record<string, { title: string; detail: string }> = {
+  CONFIGURE_TOTP: { title: "Authenticator app", detail: "Scan a QR code or enter the manual setup key in Keycloak." },
+  "webauthn-register": { title: "Security key", detail: "Register and name a user-verified hardware credential." },
+  "webauthn-register-passwordless": { title: "Passkey", detail: "Use a device passkey for phishing-resistant sign-in." },
+  CONFIGURE_RECOVERY_AUTHN_CODES: { title: "Recovery codes", detail: "Generate 12 one-use codes and confirm that you saved them." },
+};
 
 export default function SecuritySettingsPage() {
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useSecuritySettings();
-  const security = data?.data;
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const changePassword = useMutation({
-    mutationFn: (payload: { currentPassword: string; newPassword: string }) =>
-      apiClient.post("/internal/v1/settings/security/password", payload),
-    onSuccess: () => {
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    },
+  const [notice, setNotice] = useState<string>();
+  const security = useQuery<SecurityResponse>({
+    queryKey: ["settings-security"],
+    queryFn: () => apiClient.get<SecurityResponse>("/internal/v1/settings/security"),
   });
 
-  const toggleMfa = useMutation({
-    mutationFn: (enabled: boolean) =>
-      apiClient.put("/internal/v1/settings/security/mfa", { enabled }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings-security"] });
-    },
+  const beginAction = useMutation({
+    mutationFn: (action: string) => apiClient.post<{ data: { authorizeUrl: string } }>(
+      "/internal/v1/auth/oidc/action", { action, returnTo: "/settings/security" }),
+    onSuccess: (response) => window.location.assign(response.data.authorizeUrl),
+  });
+  const stepUp = useMutation({
+    mutationFn: () => apiClient.post<{ data: { authorizeUrl: string } }>(
+      "/internal/v1/auth/oidc/step-up", { requiredAcr: "urn:impilo:aal2", returnTo: "/settings/security" }),
+    onSuccess: (response) => window.location.assign(response.data.authorizeUrl),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/internal/v1/settings/security/credentials/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["settings-security"] }),
+    onError: () => setNotice("Verify again at AAL2, then retry removing the method."),
+  });
+  const revoke = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/internal/v1/settings/security/sessions/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["settings-security"] }),
+    onError: () => setNotice("A fresh AAL2 verification is required to revoke a session."),
+  });
+  const logoutOthers = useMutation({
+    mutationFn: () => apiClient.post("/internal/v1/settings/security/sessions/logout-others", {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["settings-security"] }),
+    onError: () => setNotice("A fresh AAL2 verification is required to revoke other sessions."),
   });
 
-  const revokeSession = useMutation({
-    mutationFn: (sessionId: string) =>
-      apiClient.delete(`/internal/v1/settings/security/sessions/${sessionId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings-security"] });
-    },
-  });
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) return;
-    changePassword.mutate({ currentPassword, newPassword });
-  };
-
+  const data = security.data?.data;
   return (
     <AppLayout>
-      <PageShell
-        title="Security Settings"
-        subtitle="Manage your password, MFA, and active sessions"
-      >
+      <PageShell title="Account security" subtitle="Sign-in methods, recovery and active sessions are governed by Keycloak">
         <div className="mb-4">
-          <Link
-            href="/settings"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to settings
+          <Link href="/settings" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" /> Back to settings
           </Link>
         </div>
-
-        {error ? (
-          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
-            <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
-            <p className="text-red-600 text-sm">Failed to load security settings</p>
-          </div>
-        ) : isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-sm text-muted-foreground">Loading security settings...</span>
+        {security.isLoading ? (
+          <div className="flex items-center gap-2 py-16"><Loader2 className="h-5 w-5 animate-spin" /> Loading account security…</div>
+        ) : security.error || !data ? (
+          <div className="rounded-xl border border-danger/30 bg-danger-soft p-6 text-danger">
+            <AlertCircle className="mb-2 h-5 w-5" /> Account security could not be loaded. No setting was changed.
           </div>
         ) : (
-          <div className="space-y-6 max-w-2xl">
-            {/* Change Password */}
-            <div className="bg-card rounded-lg border border-border p-6">
-              <h3 className="text-sm font-medium text-foreground mb-4">Change Password</h3>
-
-              {changePassword.isSuccess && (
-                <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <p className="text-sm text-green-700">Password changed successfully</p>
-                </div>
-              )}
-
-              {changePassword.isError && (
-                <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-danger-soft border border-danger/28 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-red-600" />
-                  <p className="text-sm text-danger">Failed to change password</p>
-                </div>
-              )}
-
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="currentPassword" className="block text-sm font-medium text-foreground mb-1">
-                    Current Password
-                  </label>
-                  <input
-                    id="currentPassword"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-foreground mb-1">
-                    New Password
-                  </label>
-                  <input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-1">
-                    Confirm New Password
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
-                    required
-                  />
-                  {confirmPassword && newPassword !== confirmPassword && (
-                    <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  disabled={changePassword.isPending || newPassword !== confirmPassword}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
-                >
-                  {changePassword.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Change Password
-                </button>
-              </form>
-            </div>
-
-            {/* MFA Toggle */}
-            <div className="bg-card rounded-lg border border-border p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-foreground">
-                      Multi-Factor Authentication
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {security?.attributes.mfaEnabled
-                        ? `Enabled via ${security.attributes.mfaMethod}`
-                        : "Add an extra layer of security to your account"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => toggleMfa.mutate(!security?.attributes.mfaEnabled)}
-                  disabled={toggleMfa.isPending}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    security?.attributes.mfaEnabled ? "bg-primary" : "bg-gray-300"
-                  } disabled:opacity-50`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
-                      security?.attributes.mfaEnabled ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
+          <div className="max-w-3xl space-y-6">
+            {data.privileged && <TrustGovernanceStrip />}
+            <section className="rounded-xl border border-border bg-card p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div><h2 className="font-semibold">Current assurance</h2><p className="text-sm text-muted-foreground">{data.currentAal ?? "Not reported"} · {data.currentMethods.join(", ") || "method not reported"}</p></div>
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Required: {data.requiredAal}</span>
               </div>
-            </div>
+              {data.workforce && data.methods.length === 0 && <p className="mt-4 rounded-lg bg-warning-soft p-3 text-sm text-warning-foreground">Workforce access requires MFA. Enrol a method before continuing work.</p>}
+            </section>
 
-            {/* Active Sessions */}
-            <div className="bg-card rounded-lg border border-border">
-              <div className="px-5 py-4 border-b">
-                <h3 className="text-sm font-medium text-foreground">Active Sessions</h3>
+            <section className="rounded-xl border border-border bg-card p-5">
+              <h2 className="font-semibold">Sign-in and recovery methods</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Setup happens on the trusted Keycloak page. Impilo never receives your secret or recovery codes.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {Object.entries(actionLabels).map(([action, copy]) => (
+                  <button key={action} onClick={() => beginAction.mutate(action)} disabled={beginAction.isPending}
+                    className="rounded-xl border border-border p-4 text-left hover:border-primary/40 hover:bg-primary/5 disabled:opacity-50">
+                    <div className="flex items-center gap-2 font-medium"><KeyRound className="h-4 w-4 text-primary" />{copy.title}</div>
+                    <p className="mt-2 text-xs text-muted-foreground">{copy.detail}</p>
+                  </button>
+                ))}
               </div>
-              {!security?.attributes.sessions || security.attributes.sessions.length === 0 ? (
-                <div className="p-8 text-center">
-                  <p className="text-muted-foreground text-sm">No active sessions</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-100">
-                  {security.attributes.sessions.map((session) => (
-                    <div
-                      key={session.id}
-                      className="px-5 py-4 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-neutral-100 text-muted-foreground flex items-center justify-center">
-                          {session.device.toLowerCase().includes("mobile") ? (
-                            <Smartphone className="w-4 h-4" />
-                          ) : (
-                            <Monitor className="w-4 h-4" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm text-foreground">
-                            {session.device}
-                            {session.current && (
-                              <span className="ml-2 inline-block px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-700">
-                                Current
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {session.ipAddress} &middot; Last active{" "}
-                            {new Date(session.lastActive).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                      {!session.current && (
-                        <button
-                          onClick={() => revokeSession.mutate(session.id)}
-                          disabled={revokeSession.isPending}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-danger bg-danger-soft rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
-                        >
-                          <LogOut className="w-3 h-3" />
-                          Revoke
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+              <div className="mt-5 space-y-2">
+                {data.methods.length === 0 ? <p className="text-sm text-muted-foreground">No MFA credential is enrolled.</p> : data.methods.map((method) => (
+                  <div key={method.id} className="flex items-center justify-between gap-3 rounded-lg border border-border px-4 py-3">
+                    <div><p className="text-sm font-medium capitalize">{method.label || method.method}</p><p className="text-xs text-muted-foreground">{method.method}{method.createdAt ? ` · added ${new Date(method.createdAt).toLocaleDateString()}` : ""}</p></div>
+                    {method.removable && <button onClick={() => remove.mutate(method.id)} className="text-xs font-medium text-danger hover:underline">Remove</button>}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">Recovery codes: {data.recoveryCodesConfigured ? (data.recoveryCodesRemaining == null ? "configured; remaining count is shown only by Keycloak" : `${data.recoveryCodesRemaining} remaining`) : "not configured"}</p>
+              <button onClick={() => beginAction.mutate("UPDATE_PASSWORD")} className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"><RefreshCw className="h-4 w-4" /> Change password securely</button>
+            </section>
 
-            <TrustGovernanceStrip />
+            <section className="rounded-xl border border-border bg-card">
+              <div className="flex items-center justify-between border-b border-border px-5 py-4"><div><h2 className="font-semibold">Active sessions</h2><p className="text-xs text-muted-foreground">Revoke a lost or unfamiliar session immediately.</p></div><button onClick={() => logoutOthers.mutate()} className="text-xs font-medium text-danger hover:underline">Log out other sessions</button></div>
+              <div className="divide-y divide-border">
+                {data.sessions.length === 0 ? <p className="p-5 text-sm text-muted-foreground">No active Keycloak sessions were returned.</p> : data.sessions.map((session) => (
+                  <div key={session.id} className="flex items-center justify-between gap-3 p-5">
+                    <div className="flex items-start gap-3"><Smartphone className="mt-0.5 h-5 w-5 text-muted-foreground" /><div><p className="text-sm font-medium">{session.clients.join(", ") || "Impilo session"}{session.current ? " · this session" : ""}</p><p className="text-xs text-muted-foreground">{session.ipAddress || "IP unavailable"}{session.lastActiveAt ? ` · active ${new Date(session.lastActiveAt).toLocaleString()}` : ""}</p></div></div>
+                    {!session.current && <button onClick={() => revoke.mutate(session.id)} className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:underline"><LogOut className="h-3.5 w-3.5" /> Revoke</button>}
+                  </div>
+                ))}
+              </div>
+            </section>
+            {notice && <div className="flex items-center justify-between gap-3 rounded-xl border border-warning/40 bg-warning-soft p-4 text-sm"><span>{notice}</span><button onClick={() => stepUp.mutate()} className="font-semibold text-primary hover:underline">Verify again</button></div>}
+            <p className="text-xs text-muted-foreground">Lost every factor? Contact support to open a governed recovery case. A requester cannot approve their own recovery.</p>
           </div>
         )}
       </PageShell>

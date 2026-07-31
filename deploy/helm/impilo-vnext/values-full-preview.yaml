@@ -384,6 +384,9 @@ experienceBff:
     KEYCLOAK_CLIENT_SECRET:
       name: impilo-app-secrets
       key: keycloak-client-secret-bff
+    KEYCLOAK_USER_ADMIN_SECRET:
+      name: impilo-app-secrets
+      key: keycloak-user-admin-secret
     IMPILO_AUTH_SESSION_ENCRYPTION_KEY:
       name: impilo-app-secrets
       key: web-session-encryption-key
@@ -395,6 +398,7 @@ experienceBff:
     KEYCLOAK_INTERNAL_ISSUER: http://keycloak:8080/realms/impilo
     KEYCLOAK_REALM: impilo
     KEYCLOAK_CLIENT_ID: experience-ui
+    KEYCLOAK_USER_ADMIN_CLIENT_ID: impilo-user-admin
     KEYCLOAK_BACKEND_CLIENT_ID: impilo-backend
     AUTH_FALLBACK_ENABLED: "false"
     IMPILO_SECURITY_ALLOW_ANONYMOUS: "false"

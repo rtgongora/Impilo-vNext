@@ -91,6 +91,12 @@ function getV12Headers(): Record<string, string> {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  // The BFF-managed OIDC session uses an opaque HttpOnly cookie. Its readable,
+  // session-bound companion is copied to a header for double-submit CSRF checks;
+  // it is not an authentication token and contains no identity or clinical data.
+  const csrfToken = getCookie("__Host-impilo_csrf");
+  if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
+
   // ── Actor identity (Health OS §5–§6: who is acting) ──────────
   // PII Wave 0.3: the browser must NOT send its raw Health ID as the actor. The BFF derives the
   // authoritative X-Actor-ID from the validated JWT (health_id claim) and overrides whatever arrives,
@@ -184,6 +190,13 @@ function getV12Headers(): Record<string, string> {
   }
 
   return headers;
+}
+
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const prefix = `${encodeURIComponent(name)}=`;
+  const found = document.cookie.split("; ").find((item) => item.startsWith(prefix));
+  return found ? decodeURIComponent(found.slice(prefix.length)) : null;
 }
 
 /** @deprecated Use getV12Headers — kept as alias during migration */

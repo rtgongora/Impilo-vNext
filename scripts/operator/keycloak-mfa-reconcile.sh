@@ -46,6 +46,11 @@ kc_put() {
     --header "Authorization: Bearer $token" --header 'Content-Type: application/json' \
     --data-binary "@$2" "$admin_base$1" >/dev/null
 }
+kc_post() {
+  curl --fail --silent --show-error --request POST \
+    --header "Authorization: Bearer $token" --header 'Content-Type: application/json' \
+    --data-binary "@$2" "$admin_base$1" >/dev/null
+}
 
 kc_get '' >"$tmp/realm.json"
 user_count="$(kc_get '/users/count' | jq -er '.')"
@@ -166,17 +171,18 @@ jq --slurpfile desired "$tmp/desired-managed.json" --arg hash "$desired_hash" --
 kc_put '' "$tmp/realm-update.json"
 
 update_client() {
-  local client_id="$1" redirects_json="$2" public_client="$3"
+  local client_id="$1" redirects_json="$2" public_client="$3" secret="${4:-}"
   local uuid
   uuid="$(jq -er --arg id "$client_id" '.[] | select(.clientId == $id) | .id' "$tmp/clients.json")"
   kc_get "/clients/$uuid" >"$tmp/client-$client_id.json"
-  jq --argjson redirects "$redirects_json" --argjson public "$public_client" '
+  jq --argjson redirects "$redirects_json" --argjson public "$public_client" --arg secret "$secret" '
     .redirectUris = $redirects |
     .webOrigins = [] |
     .publicClient = $public |
     .standardFlowEnabled = true |
     .implicitFlowEnabled = false |
     .directAccessGrantsEnabled = false |
+    .secret = (if ($secret | length) > 0 then $secret else .secret end) |
     .attributes = ((.attributes // {}) + {
       "pkce.code.challenge.method": "S256",
       "post.logout.redirect.uris": ($redirects | join("##"))
@@ -185,9 +191,55 @@ update_client() {
   kc_put "/clients/$uuid" "$tmp/client-$client_id-update.json"
 }
 
-update_client experience-ui '["https://impilo.mohcc.gov.zw/internal/v1/auth/callback"]' false
+: "${KEYCLOAK_BFF_CLIENT_SECRET:?KEYCLOAK_BFF_CLIENT_SECRET is required for apply}"
+: "${KEYCLOAK_USER_ADMIN_SECRET:?KEYCLOAK_USER_ADMIN_SECRET is required for apply}"
+: "${KEYCLOAK_EVENT_READER_SECRET:?KEYCLOAK_EVENT_READER_SECRET is required for apply}"
+
+update_client experience-ui '["https://impilo.mohcc.gov.zw/internal/v1/auth/oidc/callback"]' false "$KEYCLOAK_BFF_CLIENT_SECRET"
 update_client citizen-app '["impilo-citizen://auth/callback"]' true
 update_client provider-app '["impilo-provider://auth/callback"]' true
+
+ensure_service_client() {
+  local client_id="$1" secret="$2"
+  local uuid
+  uuid="$(jq -r --arg id "$client_id" '.[] | select(.clientId == $id) | .id' "$tmp/clients.json")"
+  if [[ -z "$uuid" ]]; then
+    jq -n --arg id "$client_id" --arg secret "$secret" '{
+      clientId: $id, secret: $secret, enabled: true, publicClient: false,
+      serviceAccountsEnabled: true, standardFlowEnabled: false,
+      implicitFlowEnabled: false, directAccessGrantsEnabled: false,
+      protocol: "openid-connect"
+    }' >"$tmp/service-$client_id.json"
+    kc_post '/clients' "$tmp/service-$client_id.json"
+    clients_json="$(kc_get '/clients?max=500')"
+    printf '%s' "$clients_json" >"$tmp/clients.json"
+    uuid="$(jq -er --arg id "$client_id" '.[] | select(.clientId == $id) | .id' "$tmp/clients.json")"
+  else
+    kc_get "/clients/$uuid" >"$tmp/service-$client_id.json"
+    jq --arg secret "$secret" '.secret = $secret | .enabled = true | .publicClient = false |
+      .serviceAccountsEnabled = true | .standardFlowEnabled = false |
+      .implicitFlowEnabled = false | .directAccessGrantsEnabled = false' \
+      "$tmp/service-$client_id.json" >"$tmp/service-$client_id-update.json"
+    kc_put "/clients/$uuid" "$tmp/service-$client_id-update.json"
+  fi
+  printf '%s' "$uuid"
+}
+
+grant_management_roles() {
+  local service_uuid="$1"; shift
+  local service_user management_uuid
+  service_user="$(kc_get "/clients/$service_uuid/service-account-user" | jq -er '.id')"
+  management_uuid="$(jq -er '.[] | select(.clientId == "realm-management") | .id' "$tmp/clients.json")"
+  kc_get "/clients/$management_uuid/roles" >"$tmp/management-roles.json"
+  jq --arg roles "$*" '[.[] | select(.name as $name | ($roles | split(" ") | index($name)))]' \
+    "$tmp/management-roles.json" >"$tmp/roles-grant.json"
+  kc_post "/users/$service_user/role-mappings/clients/$management_uuid" "$tmp/roles-grant.json"
+}
+
+user_admin_uuid="$(ensure_service_client impilo-user-admin "$KEYCLOAK_USER_ADMIN_SECRET")"
+event_reader_uuid="$(ensure_service_client impilo-event-reader "$KEYCLOAK_EVENT_READER_SECRET")"
+grant_management_roles "$user_admin_uuid" view-users query-users manage-users
+grant_management_roles "$event_reader_uuid" view-events
 
 for alias in CONFIGURE_TOTP webauthn-register webauthn-register-passwordless CONFIGURE_RECOVERY_AUTHN_CODES; do
   jq -e --arg alias "$alias" '.[] | select(.alias == $alias) | .enabled == true' "$tmp/required-actions.json" >/dev/null || {
