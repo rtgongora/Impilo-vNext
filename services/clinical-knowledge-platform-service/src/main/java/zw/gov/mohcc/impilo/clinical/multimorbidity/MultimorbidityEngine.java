@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.clinical.multimorbidity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.medicine.burden.TreatmentBurdenScore;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -454,10 +455,30 @@ public class MultimorbidityEngine {
         long visits = inWindow(c.appointments(), asOf, window).stream()
                 .map(MultimorbidityContext.Appointment::date).distinct().count();
         long longTerm = c.conditions().stream().filter(MultimorbidityContext.Condition::longTerm).count();
+        int medicineCount = c.medicationCodes().size();
+        int attendanceCount = (int) visits;
+        int conditionCount = (int) longTerm;
 
-        int score = Math.max(0, c.medicationCodes().size() - medThreshold)
-                    + (int) Math.max(0, visits - visitThreshold)
-                    + (int) Math.max(0, longTerm - (conditionThreshold + 1));
+        // medicine-domain owns the safety properties (missing ≠ zero, plausibility ceilings).
+        // The composite itself stays the excess-points formula documented in multimorbidity-rules.json
+        // ("one point per unit beyond each threshold") — TreatmentBurdenScore's cut-point levels are a
+        // different index, used elsewhere; here the thresholds remain content's.
+        TreatmentBurdenScore.BurdenThresholds thresholds = new TreatmentBurdenScore.BurdenThresholds(
+                List.of(medThreshold),
+                List.of(visitThreshold),
+                List.of(conditionThreshold + 1));
+        TreatmentBurdenScore.Burden burden = TreatmentBurdenScore.score(
+                medicineCount, attendanceCount, conditionCount, thresholds);
+        if (!burden.computed()) {
+            return MultimorbidityView.Detection.undetermined(key, title,
+                    burden.explanation() == null
+                            ? "Treatment burden could not be scored from the available inputs."
+                            : burden.explanation());
+        }
+
+        int score = Math.max(0, medicineCount - medThreshold)
+                    + Math.max(0, attendanceCount - visitThreshold)
+                    + Math.max(0, conditionCount - (conditionThreshold + 1));
         if (score < high) {
             return MultimorbidityView.Detection.clear(key, title);
         }
@@ -465,7 +486,7 @@ public class MultimorbidityEngine {
                 "MM_TREATMENT_BURDEN",
                 "MODERATE",
                 "Treatment burden score " + score + " (threshold " + high + "): "
-                + c.medicationCodes().size() + " medicine(s), " + visits + " attendance(s) in "
+                + medicineCount + " medicine(s), " + visits + " attendance(s) in "
                 + window + " days, " + longTerm + " long-term condition(s).",
                 "Treatment burden is what the patient is being asked to carry, and it accumulates one "
                 + "reasonable decision at a time. Beyond a point the plan stops being followed, and "

@@ -72,7 +72,8 @@
             <artifactId>paediatric-domain</artifactId>
         </dependency>
         <!-- Adult-medicine calculators: the arithmetic behind /internal/v1/clinical/calculators
-             and behind the renal thresholds the rules engine and deprescribing gates read -->
+             and behind the renal thresholds the rules engine and deprescribing gates read;
+             treatment burden arithmetic lives in medicine-domain -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
             <artifactId>medicine-domain</artifactId>
