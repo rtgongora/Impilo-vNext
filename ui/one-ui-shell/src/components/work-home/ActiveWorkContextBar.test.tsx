@@ -21,6 +21,9 @@ vi.mock("@/hooks/useSessionExperienceContract", () => ({
 vi.mock("@/hooks/queries/useSwitchWorkContext", () => ({
   useSwitchWorkContext: () => switchMock,
 }));
+vi.mock("@/hooks/useWorkSessionStore", () => ({
+  useWorkSessionStore: (sel: (s: { session: null }) => unknown) => sel({ session: null }),
+}));
 
 function context(overrides: Partial<ResolvedWorkContextView>): ResolvedWorkContextView {
   return {
@@ -87,7 +90,7 @@ describe("ActiveWorkContextBar", () => {
     switchMock.mockResolvedValue(undefined);
     const contexts = [
       context({ contextId: "a", label: "Current post" }),
-      context({ contextId: "b", label: "Other post", defaultMode: "FACILITY_MANAGEMENT", groupHint: "other" }),
+      context({ contextId: "b", label: "Other post", defaultMode: "FACILITY_MANAGEMENT", availableModes: ["FACILITY_MANAGEMENT"], groupHint: "other" }),
     ];
     contractState.contract = { resolvedWorkContexts: contexts, recommendedContextId: "a" };
 

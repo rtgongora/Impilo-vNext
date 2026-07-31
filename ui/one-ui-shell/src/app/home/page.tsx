@@ -647,13 +647,22 @@ export default function HomePage() {
     enterMode(mode, nextPath);
   }
 
-  function enterIndependentMode(mode: "independent_practice" | "emergency_response" | "community_outreach") {
+  function enterIndependentMode(mode: "independent_practice" | "emergency_response") {
     useOperationalContextStore.getState().setOperationalMode("facility_work");
     useWorkModeStore.getState().setMode(mode, {
       licenseNumber: licenses[0]?.licenseNumber ?? "",
       licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
     });
     router.push("/queue");
+  }
+
+  /**
+   * Community outreach is a governed WorkMode (COMMUNITY_OUTREACH). Do not set a local
+   * UI mode and route to /queue — that invents authority. Send the person to /work so they
+   * mint against a proven context that offers the mode.
+   */
+  function enterCommunityOutreachViaWorkHome() {
+    router.push("/work");
   }
 
   // Fetch recent encounters — the encounters endpoint requires a patient_id
@@ -1441,12 +1450,14 @@ export default function HomePage() {
                       <p className="text-sm font-medium text-foreground group-hover:text-warning-foreground">Independent Practice</p>
                       <p className="text-xs text-muted-foreground mt-0.5">Work under your own licence without facility context</p>
                     </button>
-                    {/* Field Work */}
-                    <button onClick={() => enterIndependentMode("community_outreach")}
+                    {/* Field Work — governed: mint via Work Home, never a local mode flag */}
+                    <button onClick={() => enterCommunityOutreachViaWorkHome()}
                       className="text-left bg-teal-50 rounded-lg border border-teal-200 p-4 hover:border-teal-400 transition-all group">
                       <MapPin className="w-5 h-5 text-teal-600 mb-2" />
                       <p className="text-sm font-medium text-foreground group-hover:text-teal-700">Field & Community Work</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Community outreach, home visits, mobile clinics, school health</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Choose a workplace that grants community outreach, then start that duty session
+                      </p>
                     </button>
                     {/* Emergency Response */}
                     <button onClick={() => enterIndependentMode("emergency_response")}

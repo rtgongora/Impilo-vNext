@@ -5,50 +5,65 @@
  *
  * Route: /work (guard: auth, NOT facility — oversight, programme, regulatory and support
  * contexts have no facility anchor at all and must still land somewhere real). When no
- * single context is recommended, renders WorkHomeWorkplacePicker in-page rather than
- * bouncing to /facility.
+ * duty session is active, renders WorkHomeWorkplacePicker which mints before composing.
  *
  * Sections come entirely from the BFF (`GET /internal/v1/work-home`) — this page does not
- * decide which sections exist for which family, that branching lives in the BFF's family
- * adapters (Phase E4). Section presentation (icon/accent) comes from
- * `lib/work-home/section-registry.ts`, metadata only.
+ * decide which sections exist for which family.
  */
 
-import { useState } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
+import { useWorkSessionStore } from "@/hooks/useWorkSessionStore";
 import { useWorkHome, useWorkHomeSectionRetry } from "@/hooks/queries/useWorkHome";
 import { WorkHomeWorkplacePicker } from "@/components/work-home/WorkHomeWorkplacePicker";
 import { WorkHomeSectionCard } from "@/components/work-home/WorkHomeSectionCard";
 import { WorkOperationsPanel } from "@/components/work-home/WorkOperationsPanel";
 import { WORK_HOME_FAMILY_LABELS } from "@/lib/work-home/section-registry";
+import { describeWorkContextRestrictions, describeWorkMode } from "@/lib/work-home/restriction-copy";
+
+function friendlyWorkHomeMessage(state: string | undefined): { title: string; body: string } {
+  switch (state) {
+    case "work_mode_unavailable":
+      return {
+        title: "This workplace isn't available in the requested mode right now.",
+        body: "Try another mode for this workplace, or choose a different workplace.",
+      };
+    case "work_context_unavailable":
+      return {
+        title: "Your work context isn't available right now.",
+        body: "The assignment could not be re-proven from its source. Try again shortly, or pick another workplace.",
+      };
+    default:
+      return {
+        title: "Your work context isn't available right now.",
+        body: "Try choosing a different workplace, or check back shortly.",
+      };
+  }
+}
 
 export default function WorkHomePage() {
   const { contract, isLoading: contractLoading } = useSessionExperienceContract();
   const resolvedContexts = contract?.resolvedWorkContexts ?? [];
+  const session = useWorkSessionStore((s) => s.session);
 
-  const [manualContextId, setManualContextId] = useState<string | null>(null);
-  const [manualMode, setManualMode] = useState<string | null>(null);
-  // Distinct from "no context resolved": lets a person with a recommended context still
-  // return to the picker (Switch workplace) without the recommendation immediately winning again.
-  const [showPicker, setShowPicker] = useState(false);
-
-  const activeContextId = showPicker ? undefined : (manualContextId ?? contract?.recommendedContextId ?? undefined);
-  const activeMode = manualContextId ? (manualMode ?? undefined) : undefined;
+  // Prefer the minted session's context — that is what the duty token proves. Fall back to
+  // the resolver's recommendation only when no session has been minted yet (first paint
+  // after login may still recommend before the person chooses).
+  const activeContextId = session?.contextId || contract?.recommendedContextId || undefined;
+  const activeMode = session?.workMode || undefined;
+  const activeContext = resolvedContexts.find((c) => c.contextId === activeContextId);
+  const restrictionLines = describeWorkContextRestrictions(activeContext?.restrictions);
 
   const { workHome, isLoading: workHomeLoading, isError } = useWorkHome(activeContextId, activeMode);
   const retrySection = useWorkHomeSectionRetry(activeContextId, activeMode);
 
-  function selectContext(contextId: string, mode: string | null) {
-    setManualContextId(contextId);
-    setManualMode(mode);
-    setShowPicker(false);
-  }
-
   function returnToPicker() {
-    setShowPicker(true);
+    // Clear local session so the picker mints fresh; token revocation happens on next mint
+    // via previousJti inside useSwitchWorkContext.
+    useWorkSessionStore.getState().clearSession();
+    window.location.assign("/work");
   }
 
   if (contractLoading) {
@@ -63,13 +78,11 @@ export default function WorkHomePage() {
     );
   }
 
-  // No recommended context and none manually chosen yet (or the person asked to switch):
-  // render the chooser in-page.
   if (!activeContextId) {
     return (
       <AppLayout>
         <PageShell title="Work" density="compact">
-          <WorkHomeWorkplacePicker contexts={resolvedContexts} onSelect={selectContext} />
+          <WorkHomeWorkplacePicker contexts={resolvedContexts} />
         </PageShell>
       </AppLayout>
     );
@@ -90,18 +103,13 @@ export default function WorkHomePage() {
   }
 
   if (isError || workHome.friendlyState) {
+    const copy = friendlyWorkHomeMessage(workHome.friendlyState);
     return (
       <AppLayout>
         <PageShell title="Work" density="compact">
           <div className="rounded-lg border border-border bg-card p-6 text-center">
-            <p className="text-sm font-medium text-foreground">
-              {workHome.friendlyState === "work_mode_unavailable"
-                ? "This workplace isn't available in the requested mode right now."
-                : "Your work context isn't available right now."}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Try choosing a different workplace, or check back shortly.
-            </p>
+            <p className="text-sm font-medium text-foreground">{copy.title}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{copy.body}</p>
             <button
               type="button"
               onClick={returnToPicker}
@@ -122,10 +130,18 @@ export default function WorkHomePage() {
         subtitle={workHome.family ? WORK_HOME_FAMILY_LABELS[workHome.family] ?? workHome.family : undefined}
         density="compact"
       >
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            {resolvedContexts.find((c) => c.contextId === activeContextId)?.label}
-          </p>
+        <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">
+              {activeContext?.label ?? activeContextId}
+              {activeMode ? ` · ${describeWorkMode(activeMode)}` : ""}
+            </p>
+            {restrictionLines.map((line) => (
+              <p key={line} className="text-xs text-amber-700 dark:text-amber-400">
+                {line}
+              </p>
+            ))}
+          </div>
           {resolvedContexts.length > 1 && (
             <button
               type="button"
@@ -145,9 +161,6 @@ export default function WorkHomePage() {
           <p className="text-sm text-muted-foreground">No sections to show for this workplace yet.</p>
         )}
 
-        {/* Phase F6 — the real feeds /provider-workspace carried that the BFF's family
-            adapters don't produce (core-transaction journey, workflow/dispatch operator
-            telemetry). Facility-clinical only: that was /provider-workspace's actual audience. */}
         {workHome.family === "FACILITY_CLINICAL" && (
           <div className="mt-4">
             <WorkOperationsPanel />

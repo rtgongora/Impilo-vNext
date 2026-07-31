@@ -1,15 +1,14 @@
 "use client";
 
 /**
- * Renders one Work Home section (Phase F1). Five states per the plan: loading is the
- * caller's concern (skeleton before data arrives); this component covers ok / empty /
- * degraded. "Forbidden" never reaches here — a family the caller isn't authorised for
- * simply has no adapter, so the BFF never emits its section at all.
+ * Renders one Work Home section. Items with href are links into the workflow the BFF
+ * named — a title-only preview is not Work Home.
  */
 
+import Link from "next/link";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import type { WorkHomeSection } from "@/hooks/queries/useWorkHome";
+import type { WorkHomeItem, WorkHomeSection } from "@/hooks/queries/useWorkHome";
 import { WORK_HOME_BUCKET_LABELS } from "@/lib/work-home/section-registry";
 import { workHomeSectionMeta } from "@/lib/work-home/section-registry";
 
@@ -18,12 +17,57 @@ interface WorkHomeSectionCardProps {
   onRetry?: (sectionId: string) => Promise<void>;
 }
 
+function formatDue(dueAt: string | null | undefined): string | null {
+  if (!dueAt) return null;
+  const d = new Date(dueAt);
+  if (Number.isNaN(d.getTime())) return dueAt;
+  return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
+function ItemRow({ item }: { item: WorkHomeItem }) {
+  const due = formatDue(item.due_at);
+  const body = (
+    <>
+      <span className="min-w-0 flex-1">
+        <span className="block text-foreground">{item.title ?? item.id}</span>
+        {item.description && (
+          <span className="mt-0.5 block text-xs text-muted-foreground">{item.description}</span>
+        )}
+        {due && <span className="mt-0.5 block text-xs text-muted-foreground">Due {due}</span>}
+      </span>
+      <span className="flex shrink-0 flex-col items-end gap-0.5 text-xs text-muted-foreground">
+        {item.priority && <span>{item.priority}</span>}
+        {item.status && <span>{item.status}</span>}
+      </span>
+    </>
+  );
+
+  if (item.href) {
+    return (
+      <li>
+        <Link
+          href={item.href}
+          className="flex items-start justify-between gap-2 rounded-md px-1 py-1 text-sm hover:bg-background"
+        >
+          {body}
+        </Link>
+      </li>
+    );
+  }
+
+  return <li className="flex items-start justify-between gap-2 px-1 py-1 text-sm">{body}</li>;
+}
+
 export function WorkHomeSectionCard({ section, onRetry }: WorkHomeSectionCardProps) {
   const [retrying, setRetrying] = useState(false);
   const meta = workHomeSectionMeta(section.sectionId);
   const Icon = meta.icon;
 
   const nonEmptyBuckets = Object.entries(section.buckets ?? {}).filter(([, items]) => items.length > 0);
+  // Prefer buckets when the BFF sent them; otherwise fall back to the flat items list so a
+  // section that only populated `items` is still actionable.
+  const hasBuckets = nonEmptyBuckets.length > 0;
+  const flatItems = !hasBuckets ? (section.items ?? []).slice(0, 12) : [];
 
   async function handleRetry() {
     if (!onRetry) return;
@@ -68,26 +112,29 @@ export function WorkHomeSectionCard({ section, onRetry }: WorkHomeSectionCardPro
 
       {section.status === "OK" && (
         <div className="space-y-3">
-          {nonEmptyBuckets.map(([bucketKey, items]) => (
-            <div key={bucketKey}>
-              <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-                {WORK_HOME_BUCKET_LABELS[bucketKey] ?? bucketKey} ({items.length})
-              </p>
-              <ul className="space-y-1">
-                {items.slice(0, 6).map((item) => (
-                  <li key={item.id} className="flex items-start justify-between gap-2 text-sm">
-                    <span className="text-foreground">{item.title ?? item.id}</span>
-                    {item.priority && (
-                      <span className="shrink-0 text-xs text-muted-foreground">{item.priority}</span>
-                    )}
-                  </li>
+          {hasBuckets
+            ? nonEmptyBuckets.map(([bucketKey, items]) => (
+                <div key={bucketKey}>
+                  <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">
+                    {WORK_HOME_BUCKET_LABELS[bucketKey] ?? bucketKey} ({items.length})
+                  </p>
+                  <ul className="space-y-0.5">
+                    {items.slice(0, 6).map((item) => (
+                      <ItemRow key={item.id} item={item} />
+                    ))}
+                  </ul>
+                  {items.length > 6 && (
+                    <p className="mt-1 text-xs text-muted-foreground">+{items.length - 6} more</p>
+                  )}
+                </div>
+              ))
+            : (
+              <ul className="space-y-0.5">
+                {flatItems.map((item) => (
+                  <ItemRow key={item.id} item={item} />
                 ))}
               </ul>
-              {items.length > 6 && (
-                <p className="mt-1 text-xs text-muted-foreground">+{items.length - 6} more</p>
-              )}
-            </div>
-          ))}
+            )}
         </div>
       )}
     </div>
