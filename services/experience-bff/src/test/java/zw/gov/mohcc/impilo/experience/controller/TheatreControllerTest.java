@@ -226,6 +226,38 @@ class TheatreControllerTest {
                 () -> controller().recordSpecimenReceipt("boom", "sp1", "req-x", "corr-x"));
     }
 
+    // ── Operative note honesty + return-to-theatre (V305) ──
+
+    @Test
+    void getNote_passesThroughNoneWhenNoDraft() {
+        ResponseEntity<Map<String, Object>> r = controller().getNote("c1", "req-n", "corr-n");
+        assertEquals(200, r.getStatusCode().value());
+        assertEquals("NONE", ((JsonNode) r.getBody().get("data")).get("status").asText());
+    }
+
+    @Test
+    void getNote_failurePropagates_doesNotFabricateNone() {
+        assertThrows(RuntimeException.class,
+                () -> controller().getNote("boom", "req-n2", "corr-n2"));
+    }
+
+    @Test
+    void returnToTheatre_passesThroughRecord() {
+        ResponseEntity<Map<String, Object>> r = controller().returnToTheatre("c1", "req-rtt", "corr-rtt",
+                Map.of("reason", "Bleeding", "complicationCategory", "HAEMORRHAGE", "planned", false));
+        assertEquals(200, r.getStatusCode().value());
+        JsonNode data = (JsonNode) r.getBody().get("data");
+        assertEquals("HAEMORRHAGE", data.get("complication_category").asText());
+        assertEquals("Bleeding", data.get("reason").asText());
+    }
+
+    @Test
+    void returnToTheatre_failurePropagates() {
+        assertThrows(RuntimeException.class,
+                () -> controller().returnToTheatre("boom", "req-rtt2", "corr-rtt2",
+                        Map.of("reason", "x", "complicationCategory", "OTHER")));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -253,6 +285,19 @@ class TheatreControllerTest {
 
         @Override public JsonNode signTheatreNote(String caseId, Map<String, Object> body) {
             return mapper.createObjectNode().put("status", "SIGNED").put("signed_provider_id", "surgeon-1");
+        }
+
+        @Override public JsonNode getTheatreNote(String caseId) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode().put("status", "NONE");
+        }
+
+        @Override public JsonNode returnTheatreCaseToTheatre(String caseId, Map<String, Object> body) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode()
+                    .put("reason", String.valueOf(body.get("reason")))
+                    .put("complication_category", String.valueOf(body.get("complicationCategory")))
+                    .put("planned", Boolean.TRUE.equals(body.get("planned")));
         }
 
         @Override public JsonNode routeTheatreDeath(String caseId, Map<String, Object> body) {

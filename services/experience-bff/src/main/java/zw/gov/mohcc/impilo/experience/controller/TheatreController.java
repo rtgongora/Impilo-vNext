@@ -148,12 +148,9 @@ public class TheatreController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            return ok(inpatientClient.getTheatreNote(id), requestId, correlationId);
-        } catch (Exception e) {
-            log.warn("Theatre note get failed: {}", e.getMessage());
-            return ok(Map.of("status", "NONE"), requestId, correlationId);
-        }
+        // No swallow: "NONE" is only what inpatient returns when there is genuinely no note.
+        // A 5xx or connection failure must reach the UI as a failure, not as an empty draft.
+        return ok(inpatientClient.getTheatreNote(id), requestId, correlationId);
     }
 
     @PostMapping("/cases/{id}/pacu/disposition")
@@ -219,6 +216,21 @@ public class TheatreController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody(required = false) Map<String, Object> body) {
         return ok(inpatientClient.theatrePacuDischarge(id, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
+    /**
+     * Return to theatre (V305). Pass-through only — a downstream failure must propagate, never
+     * render as "no return recorded". Authz: tshepo V034 SURGEON/CONSULTANT on
+     * {@code return-to-theatre}.
+     */
+    @PostMapping("/cases/{id}/return-to-theatre")
+    public ResponseEntity<Map<String, Object>> returnToTheatre(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return ok(inpatientClient.returnTheatreCaseToTheatre(id, body != null ? body : Map.of()),
                 requestId, correlationId);
     }
 

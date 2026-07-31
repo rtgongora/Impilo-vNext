@@ -896,6 +896,15 @@ public class InpatientServiceClient {
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
     }
 
+    /**
+     * Return a PACU/recovered case to theatre (V305). Body must carry {@code reason} and a closed
+     * {@code complicationCategory}; gated by tshepo-authz V034.
+     */
+    public JsonNode returnTheatreCaseToTheatre(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/return-to-theatre";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
     // ── Surgical discharge summary (draft → complete, FHIR Composition → Butano) ───────────────────
     public JsonNode getTheatreDischarge(String caseId) {
         return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/discharge", JsonNode.class).getBody();
