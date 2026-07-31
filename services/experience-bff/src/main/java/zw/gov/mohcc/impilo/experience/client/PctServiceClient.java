@@ -1439,6 +1439,25 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    public JsonNode listMedicalEpisodes(String subjectCpid, boolean openOnly) {
+        String url = baseUrl + "/v1/medical-episodes?subject_cpid=" + subjectCpid
+                + "&open_only=" + openOnly;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listMedicationReconciliations(String subjectCpid) {
+        String url = baseUrl + "/v1/medication-reconciliations?subject_cpid=" + subjectCpid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listMedicationReconciliationItems(UUID reconciliationId) {
+        String url = baseUrl + "/v1/medication-reconciliations/" + reconciliationId + "/items";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode getMaternitySummary(String patientId, String encounterId) {
         StringBuilder url = new StringBuilder(baseUrl + "/v1/maternity/summary?patientId=" + patientId);
         if (encounterId != null) url.append("&encounterId=").append(encounterId);
