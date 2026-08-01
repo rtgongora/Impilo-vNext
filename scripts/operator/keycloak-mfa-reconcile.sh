@@ -43,14 +43,24 @@ token="$(curl --fail --silent --show-error --request POST "$token_endpoint" \
 
 kc_get() { curl --fail --silent --show-error --header "Authorization: Bearer $token" "$admin_base$1"; }
 kc_put() {
-  curl --fail --silent --show-error --request PUT \
+  local status response="$tmp/kc-response.json"
+  status="$(curl --silent --show-error --request PUT \
     --header "Authorization: Bearer $token" --header 'Content-Type: application/json' \
-    --data-binary "@$2" "$admin_base$1" >/dev/null
+    --data-binary "@$2" --output "$response" --write-out '%{http_code}' "$admin_base$1")"
+  if [[ "$status" -lt 200 || "$status" -ge 300 ]]; then
+    echo "KEYCLOAK_PUT_FAILED endpoint=$1 status=$status response=$(jq -c . "$response" 2>/dev/null || head -c 500 "$response")" >&2
+    return 1
+  fi
 }
 kc_post() {
-  curl --fail --silent --show-error --request POST \
+  local status response="$tmp/kc-response.json"
+  status="$(curl --silent --show-error --request POST \
     --header "Authorization: Bearer $token" --header 'Content-Type: application/json' \
-    --data-binary "@$2" "$admin_base$1" >/dev/null
+    --data-binary "@$2" --output "$response" --write-out '%{http_code}' "$admin_base$1")"
+  if [[ "$status" -lt 200 || "$status" -ge 300 ]]; then
+    echo "KEYCLOAK_POST_FAILED endpoint=$1 status=$status response=$(jq -c . "$response" 2>/dev/null || head -c 500 "$response")" >&2
+    return 1
+  fi
 }
 
 flow_exists() {
