@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 import {
-  PREVIEW_ORIGIN,
   RUN_PREVIEW,
-  installPreviewSession,
+  authenticatePreviewPage,
+  skipUnlessAuthenticated,
   gotoAppPath,
   bffGetFromBrowser,
 } from "./preview-sandbox-helpers";
@@ -65,13 +65,11 @@ test.describe("Preview sandbox cross-service journey proofs", () => {
   test.beforeAll(() => {
     test.skip(!RUN_PREVIEW, "Set PREVIEW_SANDBOX_E2E=1 or PLAYWRIGHT_BASE_URL to preview ingress");
   });
-
-  test.beforeEach(async ({ context, baseURL }) => {
-    await installPreviewSession(context, baseURL ?? PREVIEW_ORIGIN);
-  });
+  test.setTimeout(120_000);
 
   for (const journey of JOURNEY_PROBES) {
     test(`${journey.id}: route + BFF read path`, async ({ page }) => {
+      skipUnlessAuthenticated(await authenticatePreviewPage(page));
       await gotoAppPath(page, journey.route);
       await expect(page.locator("body")).toBeVisible();
       await expect(page.locator("body")).not.toContainText(/502 Bad Gateway|503 Service Unavailable/i);

@@ -1,8 +1,28 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices, type PlaywrightTestConfig } from "@playwright/test";
 
 const prodBuild = process.env.PLAYWRIGHT_PROD_BUILD === "1";
 const skipWebServer =
   !!process.env.PLAYWRIGHT_SKIP_WEBSERVER || !!process.env.PLAYWRIGHT_COMPOSE_E2E;
+
+type ChromiumUse = NonNullable<PlaywrightTestConfig["projects"]>[number]["use"];
+
+/** Chromium launch options shared by projects (system chrome, hairpin host map). */
+function chromiumUse(): ChromiumUse {
+  const args = process.env.PLAYWRIGHT_HOST_RESOLVER_RULES
+    ? [`--host-resolver-rules=${process.env.PLAYWRIGHT_HOST_RESOLVER_RULES}`]
+    : [];
+  const launchOptions: { executablePath?: string; args?: string[] } = {};
+  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+    launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  }
+  if (args.length) launchOptions.args = args;
+
+  return {
+    ...devices["Desktop Chrome"],
+    ...(process.env.PLAYWRIGHT_USE_SYSTEM_CHROME ? { channel: "chrome" as const } : {}),
+    ...(Object.keys(launchOptions).length ? { launchOptions } : {}),
+  };
+}
 
 export default defineConfig({
   testDir: "./e2e",
@@ -23,14 +43,7 @@ export default defineConfig({
     {
       name: "chromium",
       testIgnore: "journeys/**",
-      use: {
-        ...devices["Desktop Chrome"],
-        ...(process.env.PLAYWRIGHT_USE_SYSTEM_CHROME
-          ? { channel: "chrome" as const }
-          : process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
-            ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
-            : {}),
-      },
+      use: chromiumUse(),
     },
     {
       // Golden-journey persona walkthroughs — honest auth against a live estate.
@@ -39,28 +52,11 @@ export default defineConfig({
       testMatch: "journeys/**/*.spec.ts",
       timeout: 180_000,
       use: {
-        ...devices["Desktop Chrome"],
+        ...chromiumUse(),
         video: "retain-on-failure",
         screenshot: "on",
         trace: "retain-on-failure",
         actionTimeout: 15_000,
-        ...(process.env.PLAYWRIGHT_USE_SYSTEM_CHROME
-          ? { channel: "chrome" as const }
-          : process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
-            ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
-            : {}),
-        // Hairpin NAT on the preview VM: the public hostname is unreachable from
-        // inside, so map it to the local ingress (curl's --resolve, for Chromium).
-        ...(process.env.PLAYWRIGHT_HOST_RESOLVER_RULES
-          ? {
-              launchOptions: {
-                ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
-                  ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
-                  : {}),
-                args: [`--host-resolver-rules=${process.env.PLAYWRIGHT_HOST_RESOLVER_RULES}`],
-              },
-            }
-          : {}),
       },
     },
   ],

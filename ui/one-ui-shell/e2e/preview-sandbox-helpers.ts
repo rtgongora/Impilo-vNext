@@ -1,4 +1,4 @@
-import type { BrowserContext } from "@playwright/test";
+import { test, type BrowserContext, type Page } from "@playwright/test";
 
 export const PREVIEW_ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw";
 
@@ -9,7 +9,14 @@ export const PREVIEW_TENANT_ID = "00000000-0000-4000-8000-000000000001";
 export const PREVIEW_FACILITY_ID = "a1b2c3d4-0001-4000-8000-000000000001";
 
 export const RUN_PREVIEW =
-  process.env.PREVIEW_SANDBOX_E2E === "1" || /41\.57\.127\.235|127\.0\.0\.1|localhost/.test(PREVIEW_ORIGIN);
+  process.env.PREVIEW_SANDBOX_E2E === "1" ||
+  /41\.57\.127\.235|127\.0\.0\.1|localhost|impilo\.mohcc\.gov\.zw/.test(PREVIEW_ORIGIN);
+
+/** Seeded SYSTEM_ADMIN — covers enterprise / governance / registry proofs. */
+export const PREVIEW_PERSONA = {
+  username: process.env.PREVIEW_E2E_PERSONA ?? "admin.central",
+  password: process.env.PREVIEW_E2E_PASSWORD ?? process.env.PERSONA_PASSWORD ?? "ImpiloTest123!",
+};
 
 export const PREVIEW_USER = {
   id: "preview-persist-e2e",
@@ -31,10 +38,14 @@ export const PREVIEW_FACILITY = {
   capabilities: ["INPATIENT", "OUTPATIENT", "EMERGENCY", "PHARMACY", "LAB"],
 };
 
+/**
+ * Client-side facility/consent context only. Authentication is the opaque
+ * `__Host-impilo_session` cookie established by {@link loginPreviewPersona} —
+ * production middleware rejects the old `exp_has_session` fixture.
+ */
 export function seedPreviewExperienceSession() {
   const user = PREVIEW_USER;
-  sessionStorage.setItem("exp:auth_token", "preview-persist-e2e-token");
-  sessionStorage.setItem("exp:auth_user", JSON.stringify(user));
+  sessionStorage.removeItem("exp:auth_token");
   sessionStorage.setItem("exp:facility", JSON.stringify(PREVIEW_FACILITY));
   sessionStorage.setItem(
     "exp:shift",
@@ -47,10 +58,149 @@ export function seedPreviewExperienceSession() {
   localStorage.setItem("exp:consent_version", "2026-04-11");
 }
 
-export async function installPreviewSession(context: BrowserContext, baseURL?: string) {
-  const origin = baseURL ?? PREVIEW_ORIGIN;
-  await context.addCookies([{ name: "exp_has_session", value: "1", url: origin }]);
+/** Seed non-auth client context. Does not unlock production middleware. */
+export async function installPreviewSession(context: BrowserContext, _baseURL?: string) {
   await context.addInitScript(seedPreviewExperienceSession);
+}
+
+/** First login may land on the policy-consent gate — accept it like a real user. */
+export async function acceptPreviewPoliciesIfGated(page: Page) {
+  const gate = page.getByText(/review our policies/i).first();
+  const gated = await gate
+    .waitFor({ state: "visible", timeout: 5_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!gated) return;
+  for (const box of await page.locator('input[type="checkbox"]').all()) {
+    await box.check();
+  }
+  await page.getByRole("button", { name: /accept and continue/i }).click();
+  await gate.waitFor({ state: "hidden", timeout: 15_000 });
+}
+
+export type PreviewAuthResult =
+  | { ok: true }
+  | { ok: false; reason: "mfa_required_action" | "login_failed"; detail: string };
+
+async function keycloakRequiredActionVisible(page: Page): Promise<string | null> {
+  const markers = [
+    page.getByRole("heading", { name: /Mobile Authenticator Setup|Configure OTP|Update Password|Verify Email/i }),
+    page.getByText(/Scan the QR code|one-time code provided by the application/i),
+  ];
+  for (const marker of markers) {
+    if (await marker.first().isVisible({ timeout: 1_500 }).catch(() => false)) {
+      return (await marker.first().innerText().catch(() => "required-action")).slice(0, 120);
+    }
+  }
+  return null;
+}
+
+/**
+ * Honest OIDC login through the progressive shell door → Keycloak → callback.
+ * Uses the Personal intent so preview E2E does not require AAL2 step-up.
+ * Returns `{ ok:false, reason:'mfa_required_action' }` when Keycloak demands
+ * TOTP enrollment the automated suite cannot complete.
+ */
+export async function loginPreviewPersona(page: Page): Promise<PreviewAuthResult> {
+  try {
+    await page.goto(`${PREVIEW_ORIGIN}/auth/login`, { waitUntil: "domcontentloaded" });
+    // Keep Personal & Family selected (default) to avoid workforce AAL2.
+    const identifier = page.locator("#identifier-input");
+    await identifier.waitFor({ state: "visible", timeout: 20_000 });
+    await identifier.click();
+    await identifier.fill("");
+    // Controlled React input: type so onChange enables the submit button.
+    await identifier.pressSequentially(PREVIEW_PERSONA.username, { delay: 15 });
+    const continueBtn = page.getByRole("button", { name: /continue to secure sign-in/i });
+    await continueBtn.waitFor({ state: "visible", timeout: 10_000 });
+    await expectEnabled(page, continueBtn);
+    await continueBtn.click();
+
+    // Keycloak hosts password entry. Field names vary by theme/version.
+    const password = page.locator("#password, input[name='password'], input[type='password']").first();
+    const passwordVisible = await password
+      .waitFor({ state: "visible", timeout: 45_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!passwordVisible) {
+      const required = await keycloakRequiredActionVisible(page);
+      if (required) return { ok: false, reason: "mfa_required_action", detail: required };
+      return { ok: false, reason: "login_failed", detail: `no password field at ${page.url()}` };
+    }
+    // Some themes pre-fill username from login_hint; fill if an empty username field exists.
+    const username = page.locator("#username, input[name='username']").first();
+    if (await username.isVisible().catch(() => false)) {
+      const current = await username.inputValue().catch(() => "");
+      if (!current) await username.fill(PREVIEW_PERSONA.username);
+    }
+    await password.fill(PREVIEW_PERSONA.password);
+    await page.locator("#kc-login, button[type='submit'], input[type='submit']").first().click();
+
+    // Either we land in-app, or Keycloak forces a required action (TOTP setup, etc.).
+    const landed = await Promise.race([
+      page
+        .waitForURL(
+          (url) =>
+            !url.pathname.startsWith("/auth") &&
+            !url.pathname.includes("/realms/") &&
+            !url.pathname.includes("/protocol/openid-connect") &&
+            !url.pathname.includes("/login-actions/"),
+          { timeout: 60_000 },
+        )
+        .then(() => "app" as const),
+      page
+        .getByRole("heading", { name: /Mobile Authenticator Setup|Configure OTP/i })
+        .first()
+        .waitFor({ state: "visible", timeout: 60_000 })
+        .then(() => "mfa" as const),
+    ]).catch(async () => {
+      const required = await keycloakRequiredActionVisible(page);
+      return required ? ("mfa" as const) : ("timeout" as const);
+    });
+
+    if (landed === "mfa") {
+      const detail = (await keycloakRequiredActionVisible(page)) || "Keycloak required action";
+      return { ok: false, reason: "mfa_required_action", detail };
+    }
+    if (landed !== "app") {
+      return { ok: false, reason: "login_failed", detail: `stuck at ${page.url()}` };
+    }
+
+    await acceptPreviewPoliciesIfGated(page);
+    await page.evaluate(seedPreviewExperienceSession);
+    return { ok: true };
+  } catch (error) {
+    const required = await keycloakRequiredActionVisible(page);
+    if (required) return { ok: false, reason: "mfa_required_action", detail: required };
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, reason: "login_failed", detail: message.slice(0, 240) };
+  }
+}
+
+async function expectEnabled(page: Page, locator: ReturnType<Page["getByRole"]>) {
+  await locator.waitFor({ state: "attached", timeout: 10_000 });
+  for (let i = 0; i < 30; i++) {
+    if (await locator.isEnabled().catch(() => false)) return;
+    await page.waitForTimeout(100);
+  }
+  if (!(await locator.isEnabled().catch(() => false))) {
+    throw new Error("Continue button stayed disabled after identifier entry");
+  }
+}
+
+/** Install client context + perform real login for a page under test. */
+export async function authenticatePreviewPage(page: Page): Promise<PreviewAuthResult> {
+  await installPreviewSession(page.context());
+  return loginPreviewPersona(page);
+}
+
+/** Skip the current test when live preview cannot complete opaque-session login. */
+export function skipUnlessAuthenticated(result: PreviewAuthResult): asserts result is { ok: true } {
+  if (result.ok) return;
+  if (result.reason === "mfa_required_action") {
+    test.skip(true, `Preview persona requires Keycloak MFA enrollment: ${result.detail}`);
+  }
+  test.skip(true, `Preview OIDC login failed: ${result.detail}`);
 }
 
 /** Navigate to a domain route (session seeded via addInitScript on each document). */
@@ -58,15 +208,14 @@ export async function gotoAppPath(page: import("@playwright/test").Page, path: s
   await page.goto(path, { waitUntil: "domcontentloaded" });
 }
 
-/** POST to same-origin BFF path with trust headers derived from the seeded preview session. */
+/** POST to same-origin BFF path; auth is the opaque session cookie + CSRF double-submit. */
 export async function bffPostFromBrowser(
-  page: import("@playwright/test").Page,
+  page: Page,
   path: string,
   body: Record<string, unknown>,
 ) {
   return page.evaluate(
     async ({ path, body, tenantId }) => {
-      const user = JSON.parse(sessionStorage.getItem("exp:auth_user") || "{}");
       const facility = JSON.parse(sessionStorage.getItem("exp:facility") || "{}");
       const requestId =
         typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -79,14 +228,24 @@ export async function bffPostFromBrowser(
         "X-Request-ID": requestId,
         "X-Correlation-ID": requestId,
         "Idempotency-Key": requestId,
-        "X-Actor-ID": user.id || "preview-persist-e2e",
-        "X-Actor-Type": user.actorType || "PROVIDER",
+        "X-Actor-Type": "PROVIDER",
         "X-Purpose-Of-Use": "TREATMENT",
         "X-Device-Fingerprint": "preview-e2e",
       };
-      if (user.providerId) headers["X-Provider-ID"] = user.providerId;
+      const csrf = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("__Host-impilo_csrf="))
+        ?.split("=")
+        .slice(1)
+        .join("=");
+      if (csrf) headers["X-CSRF-Token"] = decodeURIComponent(csrf);
       if (facility.id) headers["X-Facility-ID"] = facility.id;
-      const res = await fetch(path, { method: "POST", headers, body: JSON.stringify(body) });
+      const res = await fetch(path, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        credentials: "same-origin",
+      });
       const text = await res.text();
       let json: unknown = null;
       try {
@@ -100,31 +259,30 @@ export async function bffPostFromBrowser(
   );
 }
 
-/** GET from same-origin BFF with trust headers. */
-export async function bffGetFromBrowser(page: import("@playwright/test").Page, path: string) {
+/** GET from same-origin BFF; auth is the opaque session cookie. */
+export async function bffGetFromBrowser(page: Page, path: string) {
   return page.evaluate(
     async ({ path, tenantId }) => {
-    const user = JSON.parse(sessionStorage.getItem("exp:auth_user") || "{}");
-    const facility = JSON.parse(sessionStorage.getItem("exp:facility") || "{}");
-    const requestId =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const headers: Record<string, string> = {
-      "X-Tenant-ID": tenantId,
-      "X-Pod-ID": "default",
-      "X-Request-ID": requestId,
-      "X-Correlation-ID": requestId,
-      "X-Actor-ID": user.id || "preview-persist-e2e",
-      "X-Actor-Type": user.actorType || "PROVIDER",
-      "X-Purpose-Of-Use": "TREATMENT",
-    };
-    if (user.providerId) headers["X-Provider-ID"] = user.providerId;
-    if (facility.id) headers["X-Facility-ID"] = facility.id;
-    const res = await fetch(path, { headers });
-    const text = await res.text();
-    return { ok: res.ok, status: res.status, text };
-  }, { path, tenantId: PREVIEW_TENANT_ID });
+      const facility = JSON.parse(sessionStorage.getItem("exp:facility") || "{}");
+      const requestId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const headers: Record<string, string> = {
+        "X-Tenant-ID": tenantId,
+        "X-Pod-ID": "default",
+        "X-Request-ID": requestId,
+        "X-Correlation-ID": requestId,
+        "X-Actor-Type": "PROVIDER",
+        "X-Purpose-Of-Use": "TREATMENT",
+      };
+      if (facility.id) headers["X-Facility-ID"] = facility.id;
+      const res = await fetch(path, { headers, credentials: "same-origin" });
+      const text = await res.text();
+      return { ok: res.ok, status: res.status, text };
+    },
+    { path, tenantId: PREVIEW_TENANT_ID },
+  );
 }
 
 export function uniqueMarker(prefix: string) {

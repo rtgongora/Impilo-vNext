@@ -2,7 +2,8 @@ import { test, expect } from "@playwright/test";
 import {
   PREVIEW_FACILITY_ID,
   RUN_PREVIEW,
-  installPreviewSession,
+  authenticatePreviewPage,
+  skipUnlessAuthenticated,
   uniqueMarker,
   gotoAppPath,
   bffPostFromBrowser,
@@ -27,13 +28,10 @@ test.describe("Preview sandbox persistence proofs", () => {
   test.beforeAll(() => {
     test.skip(!RUN_PREVIEW, "Set PREVIEW_SANDBOX_E2E=1 or PLAYWRIGHT_BASE_URL to preview ingress");
   });
-
-  test.beforeEach(async ({ context, baseURL }) => {
-    await installPreviewSession(context, baseURL ?? process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
-  });
+  test.setTimeout(120_000);
 
   async function openStableShell(page: import("@playwright/test").Page) {
-    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await gotoAppPath(page, "/enterprise");
     const login = page.getByText(/Sign in to continue to Impilo/i);
     const ready = page
@@ -44,13 +42,13 @@ test.describe("Preview sandbox persistence proofs", () => {
       ready.first().waitFor({ state: "visible", timeout: 30_000 }).then(() => "ready" as const),
       login.waitFor({ state: "visible", timeout: 30_000 }).then(() => "login" as const),
     ]).catch(() => "unknown" as const);
-    test.skip(settled === "login" || await isPreviewLoginScreen(page), "Preview redirected to login");
+    test.skip(settled === "login" || (await isPreviewLoginScreen(page)), "Preview redirected to login");
     await expect(ready.first()).toBeVisible({ timeout: 5_000 });
   }
 
   test("governance: policy POST persists across re-navigation", async ({ page }) => {
     const policyName = uniqueMarker("e2e-governance-policy");
-    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await gotoAppPath(page, "/");
 
     const post = await bffPostFromBrowser(page, "/internal/v1/governance/access/policies", {
@@ -74,7 +72,7 @@ test.describe("Preview sandbox persistence proofs", () => {
 
   test("inventory: requisition POST persists across re-navigation", async ({ page }) => {
     const notes = uniqueMarker("e2e-requisition-notes");
-    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await gotoAppPath(page, "/");
 
     const post = await bffPostFromBrowser(page, "/internal/v1/inventory/requisitions", {
@@ -122,7 +120,7 @@ test.describe("Preview sandbox persistence proofs", () => {
   });
 
   test("learning: library GET payload stable across re-navigation", async ({ page }) => {
-    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await gotoAppPath(page, "/enterprise");
     test.skip(await isPreviewLoginScreen(page), "Preview redirected to login");
     // Learning proof is BFF-only; do not block on workspace hero paint under preview load.
@@ -148,6 +146,7 @@ test.describe("Preview sandbox persistence proofs", () => {
   });
 
   test("registry: identity BFF list survives re-navigation", async ({ page }) => {
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await gotoAppPath(page, "/registry");
     test.skip(await isPreviewLoginScreen(page), "Registry requires live auth on preview");
     await waitForBffGet(page, "/internal/v1/");

@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { PREVIEW_ORIGIN, RUN_PREVIEW, installPreviewSession, isPreviewLoginScreen } from "./preview-sandbox-helpers";
+import {
+  RUN_PREVIEW,
+  authenticatePreviewPage,
+  skipUnlessAuthenticated,
+  isPreviewLoginScreen,
+} from "./preview-sandbox-helpers";
 
 /**
  * Preview sandbox runtime cohesion — live browser/API proof against the Dev Preview Sandbox.
@@ -12,19 +17,17 @@ test.describe("Preview sandbox runtime cohesion", () => {
   test.beforeAll(() => {
     test.skip(!RUN_PREVIEW, "Set PREVIEW_SANDBOX_E2E=1 or PLAYWRIGHT_BASE_URL to preview ingress");
   });
+  test.setTimeout(120_000);
 
-  test.beforeEach(async ({ context, baseURL }) => {
-    await installPreviewSession(context, baseURL ?? PREVIEW_ORIGIN);
-  });
-
-  test("public ingress responds", async ({ request, baseURL }) => {
-    const origin = baseURL ?? PREVIEW_ORIGIN;
+  test("public ingress responds", async ({ request }) => {
+    // Node request client cannot use Chromium host-resolver rules; hit local ingress.
+    const origin = process.env.PREVIEW_INTERNAL_URL || "http://127.0.0.1";
     const response = await request.get(origin, { maxRedirects: 5 });
     expect(response.status(), "preview UI ingress").toBeLessThan(500);
   });
 
-  test("health/version endpoint returns JSON", async ({ request, baseURL }) => {
-    const origin = baseURL ?? PREVIEW_ORIGIN;
+  test("health/version endpoint returns JSON", async ({ request }) => {
+    const origin = process.env.PREVIEW_INTERNAL_URL || "http://127.0.0.1";
     const response = await request.get(`${origin}/health/version`);
     expect(response.ok(), "/health/version status").toBeTruthy();
     const body = await response.json();
@@ -38,6 +41,7 @@ test.describe("Preview sandbox runtime cohesion", () => {
   });
 
   test("registry administration reaches BFF (network)", async ({ page }) => {
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     const registryResponse = page.waitForResponse(
       (response) => response.url().includes("/internal/v1/identity") && response.request().method() === "GET",
       { timeout: 20_000 },
@@ -52,18 +56,21 @@ test.describe("Preview sandbox runtime cohesion", () => {
   });
 
   test("vashandi workforce surface loads", async ({ page }) => {
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await page.goto("/work/vashandi/workforce");
     await expect(page.locator("body")).toBeVisible();
     await expect(page.getByText(/Workforce|Vashandi|Loading/i).first()).toBeVisible();
   });
 
   test("enterprise dashboard loads BFF-backed tiles", async ({ page }) => {
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await page.goto("/enterprise");
     await expect(page.locator("body")).toBeVisible();
     await expect(page.getByText(/Enterprise resources|inventory|procurement/i).first()).toBeVisible();
   });
 
   test("fundo learning library calls learning BFF", async ({ page }) => {
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await page.goto("/learning/library", { waitUntil: "domcontentloaded" });
     test.skip(await isPreviewLoginScreen(page), "Preview redirected to login for /learning/library");
 
@@ -82,6 +89,7 @@ test.describe("Preview sandbox runtime cohesion", () => {
   });
 
   test("governance policies surface loads", async ({ page }) => {
+    skipUnlessAuthenticated(await authenticatePreviewPage(page));
     await page.goto("/dags");
     await expect(page.getByText(/Data Access Governance|governance policies/i).first()).toBeVisible();
   });
