@@ -30,37 +30,37 @@
 -- =====================================================================================
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/patients/"', '"/patients"')
+   SET conditions = replace(conditions::text, '"/patients/"', '"/patients"')::jsonb
  WHERE name = 'work-mode-management-no-patient-record';
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/clinical/"', '"/clinical"')
+   SET conditions = replace(conditions::text, '"/clinical/"', '"/clinical"')::jsonb
  WHERE name = 'work-mode-support-no-clinical-read';
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/encounters/"', '"/encounters"')
+   SET conditions = replace(conditions::text, '"/encounters/"', '"/encounters"')::jsonb
  WHERE name = 'work-mode-support-no-encounter-read';
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/prescriptions/"', '"/prescriptions"')
+   SET conditions = replace(conditions::text, '"/prescriptions/"', '"/prescriptions"')::jsonb
  WHERE name = 'work-mode-support-no-prescription-read';
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/observations/"', '"/observations"')
+   SET conditions = replace(conditions::text, '"/observations/"', '"/observations"')::jsonb
  WHERE name = 'work-mode-support-no-observation-read';
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/facility-mode/"', '"/facility-mode"')
+   SET conditions = replace(conditions::text, '"/facility-mode/"', '"/facility-mode"')::jsonb
  WHERE name = 'work-mode-regulator-no-facility-operation';
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/queue/"', '"/queue"')
+   SET conditions = replace(conditions::text, '"/queue/"', '"/queue"')::jsonb
  WHERE name = 'work-mode-regulator-no-queue-operation';
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/service-points/"', '"/service-points"')
+   SET conditions = replace(conditions::text, '"/service-points/"', '"/service-points"')::jsonb
  WHERE name = 'work-mode-regulator-no-service-point-operation';
 
 UPDATE tshepo_authz.policy_rule
-   SET conditions = replace(conditions, '"/workspaces/"', '"/workspaces"')
+   SET conditions = replace(conditions::text, '"/workspaces/"', '"/workspaces"')::jsonb
  WHERE name = 'work-mode-regulator-no-workspace-operation';
