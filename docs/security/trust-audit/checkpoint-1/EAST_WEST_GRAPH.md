@@ -1,5 +1,7 @@
 # East–west communication graph — Checkpoint 1
 
+**Coverage closure:** every Deployment/CronJob/Job node, registry reconcile, observation window, and edge evidence class is in [`EAST_WEST_GRAPH_COVERAGE.md`](./EAST_WEST_GRAPH_COVERAGE.md). Digest→commit mapping: [`runtime-evidence/IMAGE_DIGEST_PROVENANCE.md`](./runtime-evidence/IMAGE_DIGEST_PROVENANCE.md).
+
 ## Live ingress (north–south) — Envoy not in path
 
 ```

@@ -2,16 +2,18 @@
 
 **Branch:** `claude/tshepo-trust-cp1-truth-audit` · **Base commit:** `f190318e1`  
 **Classification standard:** intended production design (not preview posture).  
-**Evidence sources:** `runtime-evidence/*`, `source-audits/01`–`05`.
+**Evidence sources:** `runtime-evidence/*`, `source-audits/01`–`05`, closure pack (`CAPABILITY_TRUTH_LAYERS.md` and siblings).
 
-Status vocabulary: `ENFORCED` · `ACTIVE_NOT_ENFORCED` · `SHADOW` · `PARTIAL` · `BYPASSABLE` · `DISCONNECTED` · `DOCUMENTED_ONLY` · `ABSENT` · `INSUFFICIENT_EVIDENCE`.
+Status vocabulary (journey/design posture): `ENFORCED` · `ACTIVE_NOT_ENFORCED` · `SHADOW` · `PARTIAL` · `BYPASSABLE` · `DISCONNECTED` · `DOCUMENTED_ONLY` · `ABSENT` · `INSUFFICIENT_EVIDENCE`.
+
+**Closure rule:** Do not read a single `ENFORCED` cell as `PREVIEW_ENFORCED`. Authoritative layered truth is in [`CAPABILITY_TRUTH_LAYERS.md`](./CAPABILITY_TRUTH_LAYERS.md) (`SOURCE_IMPLEMENTED` / `TEST_PROVEN` / `PREVIEW_DEPLOYED` / `PREVIEW_ENFORCED`).
 
 | # | Capability area | Capability | Status | Evidence |
 |---|---|---|---|---|
-| 1 | Authentication | Browser OIDC auth-code + PKCE via BFF | **ENFORCED** (preview) | 05-bff; web-session enabled live |
-| 2 | Authentication | Encrypted Redis sessions + `__Host-` cookies + CSRF | **ENFORCED** | 05-bff |
+| 1 | Authentication | Browser OIDC auth-code + PKCE via BFF | **ENFORCED** (preview session path; shipped default-off) | 05-bff; MFA_FOUNDATION_TRUTH; CAPABILITY_TRUTH_LAYERS |
+| 2 | Authentication | Encrypted Redis sessions + `__Host-` cookies + CSRF | **ENFORCED** (preview session path) | 05-bff; MFA_FOUNDATION_TRUTH |
 | 3 | Authentication | Legacy ROPC / password login reachable | **DISCONNECTED** (denyAll) / code residue PARTIAL | 05-bff; 04-audit-recovery |
-| 4 | Authentication | Mobile PKCE + SecureStore + replay protection | **ENFORCED** | 04-audit-recovery |
+| 4 | Authentication | Mobile PKCE + SecureStore + replay protection | **SOURCE_IMPLEMENTED** / PREVIEW_ENFORCED **UNKNOWN** | 04-audit-recovery; MFA_FOUNDATION_TRUTH |
 | 5 | Authentication | Mobile residual password-grant (sign-up) | **PARTIAL** | 04-audit-recovery |
 | 6 | Authentication assurance | Keycloak ACR→AAL mapping | **ENFORCED** (code) | 03-policyengine |
 | 7 | Authentication assurance | Recovery codes yield restricted recovery state | **BYPASSABLE** (grants full AAL2) | 04-audit-recovery |
@@ -40,7 +42,7 @@ Status vocabulary: `ENFORCED` · `ACTIVE_NOT_ENFORCED` · `SHADOW` · `PARTIAL` 
 | 30 | Application enforcement | JWT audience validation | **ABSENT** | 05-bff |
 | 31 | Spoofing protection | Server-authoritative X-Actor-ID (BFF) | **ENFORCED** | 05-bff |
 | 32 | Spoofing protection | Server-authoritative X-Assurance-Level / X-Provider-ID | **BYPASSABLE** (preview) | 05-bff |
-| 33 | Recovery | Two-person lost-device recovery | **ENFORCED** | 04-audit-recovery |
+| 33 | Recovery | Two-person lost-device recovery | **SOURCE_IMPLEMENTED** / PREVIEW_ENFORCED **UNKNOWN** | 04-audit-recovery; CAPABILITY_TRUTH_LAYERS |
 | 34 | Break-glass | PDP break-glass doctrine | **ENFORCED** (in-service; off-path) | 03/04 |
 | 35 | Transport | Inter-service mTLS | **ABSENT** | 01-east-west |
 | 36 | Transport | Kafka auth/ACLs | **ABSENT** | PLAINTEXT |
@@ -53,16 +55,19 @@ Status vocabulary: `ENFORCED` · `ACTIVE_NOT_ENFORCED` · `SHADOW` · `PARTIAL` 
 
 ## Separate declarations (no broad "Tshepo complete" claim)
 
-| Plane facet | Declaration |
-|---|---|
-| Authentication | Browser/mobile MFA foundation **ENFORCED** at BFF; workforce enforcement **not activated**; recovery-code policy **defective** |
-| Workload trust | **ABSENT** as unique identities; minted tokens **ACTIVE_NOT_ENFORCED** |
-| Context | Mint **ENFORCED**; binding **SHADOW** and off-path |
-| Authority | Policy rules exist; licence/delegation **PARTIAL** / **ACTIVE_NOT_ENFORCED** |
-| Consent | Capture real; clinical gating **ABSENT/BYPASSABLE**; PDP contract broken |
-| Policy evaluation | PolicyEngine real; **not on live path**; OPA **DISCONNECTED** |
-| Edge enforcement | TLS yes; Envoy/ext_authz **DISCONNECTED** |
-| Application enforcement | **BYPASSABLE** estate-wide via OAuth-disable flag |
-| Recovery | Lost-device **ENFORCED**; recovery-code state **BYPASSABLE** |
-| Audit | Chain **ENFORCED**; correlation incomplete |
-| User experience | OIDC login real; unified TrustChallenge UX **ABSENT** |
+| Plane facet | SOURCE | TEST | PREVIEW_DEPLOYED | PREVIEW_ENFORCED | Notes |
+|---|---|---|---|---|---|
+| Authentication (browser session) | YES | PARTIAL | YES | YES | Keycloak 26.7/PostgreSQL + BFF session live — see MFA_FOUNDATION_TRUTH |
+| Authentication (mobile) | YES | PARTIAL | UNKNOWN | UNKNOWN | No Redroid proof in closure window |
+| Authentication (workforce MFA) | PARTIAL | NO | PARTIAL | NO | Not activated |
+| Workload trust | NO unique IDs | NO | NO | NO | Minted CC ACTIVE_NOT_ENFORCED |
+| Context | YES mint | PARTIAL | YES | mint YES / bind NO | Binding SHADOW + off-path |
+| Authority | PARTIAL | PARTIAL | PARTIAL | NO | Off-path |
+| Consent | YES capture/engine | PARTIAL | YES | NO PDP gate | POST≠GET — CONSENT_CONTRACT_INCOMPATIBILITY |
+| Policy evaluation | YES PolicyEngine | YES | YES | NO | Envoy/ext_authz/OPA DISCONNECTED from live path |
+| Edge enforcement | TLS YES | N/A | YES TLS | TLS YES / Envoy NO | Traefik→BFF |
+| Application enforcement | YES configs | PARTIAL | YES flags | NO | 96/98 OAuth-disabled — BYPASS_INVENTORY_EXPANDED |
+| Recovery (lost-device) | YES | PARTIAL | YES | UNKNOWN | Demoted from broad ENFORCED |
+| Recovery (codes) | defect YES | NO | N/A | NO | SOURCE_CONFIRMED ordinary AAL2 — RECOVERY_CODE_PROOF |
+| Audit | YES chain | YES | YES | PARTIAL | Correlation incomplete |
+| User experience | OIDC YES | PARTIAL | YES | PARTIAL | TrustChallenge UX ABSENT |
