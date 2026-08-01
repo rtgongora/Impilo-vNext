@@ -17,6 +17,8 @@ export { borderRadius, shadows, neon, glass, tokens } from "./tokens/index";
 // Theme
 export { ThemeProvider, useTheme, useOptionalTheme, lightTheme, darkTheme } from "./theme/ThemeProvider";
 export type { Theme, ThemeMode } from "./theme/ThemeProvider";
+export { experiencePalettes } from "./theme/experience";
+export type { Experience } from "./theme/experience";
 
 // Future-Realism primitives
 export { GlassSurface, resolveGlassStyle } from "./components/GlassSurface";

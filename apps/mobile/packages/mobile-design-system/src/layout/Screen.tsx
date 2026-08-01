@@ -4,6 +4,7 @@
 
 import React from "react";
 import { View, ScrollView, StyleSheet, Platform } from "react-native";
+import { useOptionalTheme } from "../theme/ThemeProvider";
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -17,12 +18,14 @@ export function Screen({
   children,
   scrollable = false,
   padding = false,
-  backgroundColor = "#F8FAFC",
+  backgroundColor,
   testID,
 }: ScreenProps) {
+  const { theme } = useOptionalTheme();
+  const resolvedBackground = backgroundColor ?? theme.colors.canvas;
   if (scrollable) {
     return (
-      <View style={[styles.safe, { backgroundColor }]}>
+      <View style={[styles.safe, { backgroundColor: resolvedBackground }]}>
         <ScrollView
           testID={testID}
           style={styles.scroll}
@@ -44,7 +47,7 @@ export function Screen({
       style={[
         styles.safe,
         styles.container,
-        { backgroundColor },
+        { backgroundColor: resolvedBackground },
         padding ? styles.padded : undefined,
       ]}
     >

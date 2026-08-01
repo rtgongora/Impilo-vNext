@@ -4,6 +4,7 @@
 
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useOptionalTheme } from "../theme/ThemeProvider";
 
 export interface HeaderProps {
   title: string;
@@ -23,12 +24,14 @@ export function Header({
   actions,
   rightElement,
   leftElement,
-  accent = "#059669",
+  accent,
   testID,
 }: HeaderProps) {
+  const { theme } = useOptionalTheme();
+  const resolvedAccent = accent ?? theme.colors.primary;
   const resolvedActions = actions ?? rightElement;
   return (
-    <View testID={testID} style={styles.container}>
+    <View testID={testID} style={[styles.container, { backgroundColor: theme.colors.elevatedSurface, borderBottomColor: theme.colors.navigationBorder }]}>
       <View style={styles.leftSection}>
         {leftElement ?? null}
         {onBack ? (
@@ -39,15 +42,15 @@ export function Header({
             hitSlop={8}
             style={styles.backButton}
           >
-            <View style={[styles.backIconCircle, { borderColor: accent + "30" }]}>
-              <Text style={[styles.backArrow, { color: accent }]}>{"\u2190"}</Text>
+            <View style={[styles.backIconCircle, { borderColor: resolvedAccent + "30" }]}>
+              <Text style={[styles.backArrow, { color: resolvedAccent }]}>{"\u2190"}</Text>
             </View>
           </Pressable>
         ) : null}
         <View style={styles.titleBlock}>
-          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>{title}</Text>
           {subtitle ? (
-            <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>{subtitle}</Text>
           ) : null}
         </View>
       </View>

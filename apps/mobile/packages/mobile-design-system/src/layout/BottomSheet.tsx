@@ -4,6 +4,7 @@
 
 import React from "react";
 import { View, Text, Pressable, ScrollView, Modal, StyleSheet } from "react-native";
+import { useOptionalTheme } from "../theme/ThemeProvider";
 
 export interface BottomSheetProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function BottomSheet({
   children,
   testID,
 }: BottomSheetProps) {
+  const { theme } = useOptionalTheme();
   if (!isOpen) return null;
 
   return (
@@ -35,19 +37,19 @@ export function BottomSheet({
         <Pressable
           onPress={onClose}
           accessibilityLabel="Close bottom sheet"
-          style={styles.backdrop}
+          style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
         />
         {/* Sheet content */}
         <View
           accessibilityRole="summary"
           accessibilityLabel={title ?? "Bottom sheet"}
-          style={styles.sheet}
+          style={[styles.sheet, { backgroundColor: theme.colors.elevatedSurface }]}
         >
           {/* Handle bar */}
           <View style={styles.handleContainer}>
-            <View style={styles.handle} />
+            <View style={[styles.handle, { backgroundColor: theme.colors.navigationBorder }]} />
           </View>
-          {title ? <Text style={styles.title}>{title}</Text> : null}
+          {title ? <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text> : null}
           <ScrollView style={styles.content}>
             {children}
           </ScrollView>

@@ -72,7 +72,7 @@ export function App() {
         contain. #009739 is the real Impilo brand green (tokens/colors.ts
         primary[500]) — see docs/design/mobile-visual-redesign-brief.md.
       */}
-      <ThemeProvider mode="light" accentColor="#009739">
+      <ThemeProvider mode="light" experience="citizen" accentColor="#009739">
         <AppNavigator />
       </ThemeProvider>
     </SafeAreaProvider>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F6FBF7",
   },
   loadingText: {
     marginTop: 16,

@@ -74,7 +74,7 @@ export function App() {
         #0F766E ~ Tailwind teal-700: dark enough for white button text,
         distinguishable from both citizen green and plain blue at a glance.
       */}
-      <ThemeProvider mode="light" accentColor="#0F766E">
+      <ThemeProvider mode="light" experience="provider" accentColor="#0F766E">
         <AppNavigator />
       </ThemeProvider>
     </SafeAreaProvider>
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F2F8F8",
   },
   loadingText: {
     marginTop: 16,

@@ -6,9 +6,9 @@
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { colors } from "../tokens/colors";
+import { experiencePalettes, type Experience } from "./experience";
 
 export type ThemeMode = "light" | "dark" | "system";
-
 export interface Theme {
   mode: ThemeMode;
   resolvedMode: "light" | "dark";
@@ -31,6 +31,13 @@ export interface Theme {
     warning: string;
     info: string;
     overlay: string;
+    canvas: string;
+    elevatedSurface: string;
+    navigationSurface: string;
+    navigationBorder: string;
+    navigationMuted: string;
+    focus: string;
+    emergency: string;
   };
   accentColor?: string;
 }
@@ -57,6 +64,13 @@ export const lightTheme: Theme = {
     warning: colors.warning.main,
     info: colors.info.main,
     overlay: "rgba(0, 0, 0, 0.5)",
+    canvas: "#F7FAF8",
+    elevatedSurface: "#FFFFFF",
+    navigationSurface: "#FFFFFF",
+    navigationBorder: "#DCE7DF",
+    navigationMuted: "#5F6F66",
+    focus: "#006B36",
+    emergency: "#C62828",
   },
 };
 
@@ -82,6 +96,13 @@ export const darkTheme: Theme = {
     warning: colors.warning.light,
     info: colors.info.light,
     overlay: "rgba(0, 0, 0, 0.7)",
+    canvas: colors.neutral[900],
+    elevatedSurface: colors.neutral[800],
+    navigationSurface: colors.neutral[800],
+    navigationBorder: colors.neutral[600],
+    navigationMuted: colors.neutral[400],
+    focus: colors.primary[300],
+    emergency: colors.error.light,
   },
 };
 
@@ -99,6 +120,7 @@ export function ThemeProvider({
   defaultMode = "light",
   mode,
   accentColor,
+  experience,
 }: {
   children: React.ReactNode;
   defaultMode?: ThemeMode;
@@ -108,6 +130,7 @@ export function ThemeProvider({
    */
   mode?: ThemeMode;
   accentColor?: string;
+  experience?: Experience;
 }) {
   const [modeState, setMode] = useState<ThemeMode>(mode ?? defaultMode);
   const [accent, setAccentColor] = useState<string | undefined>(accentColor);
@@ -116,23 +139,27 @@ export function ThemeProvider({
 
   const theme = useMemo<Theme>(() => {
     const base = resolvedMode === "dark" ? darkTheme : lightTheme;
-    if (accent) {
+    const experienceColors = resolvedMode === "light" && experience
+      ? experiencePalettes[experience]
+      : {};
+    if (accent || experience) {
       return {
         ...base,
         accentColor: accent,
         colors: {
           ...base.colors,
-          primary: accent,
+          ...experienceColors,
+          primary: accent ?? base.colors.primary,
           // Light tint of the accent for badge/chip containers, so an app's
           // brand color flows into every primary-tagged element, not just
           // solid-fill buttons. "1F" is ~12% alpha appended to a 6-digit hex.
-          primaryContainer: `${accent}1F`,
+          primaryContainer: accent ? `${accent}1F` : base.colors.primaryContainer,
           onPrimary: "#FFFFFF",
         },
       };
     }
     return base;
-  }, [resolvedMode, accent]);
+  }, [resolvedMode, accent, experience]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({ theme, mode: modeState, setMode, setAccentColor }),
