@@ -399,9 +399,17 @@ grant_management_roles() {
   service_user="$(kc_get "/clients/$service_uuid/service-account-user" | jq -er '.id')"
   management_uuid="$(jq -er '.[] | select(.clientId == "realm-management") | .id' "$tmp/clients.json")"
   kc_get "/clients/$management_uuid/roles" >"$tmp/management-roles.json"
-  jq --arg roles "$*" '[.[] | select(.name as $name | ($roles | split(" ") | index($name)))]' \
-    "$tmp/management-roles.json" >"$tmp/roles-grant.json"
-  kc_post "/users/$service_user/role-mappings/clients/$management_uuid" "$tmp/roles-grant.json"
+  kc_get "/users/$service_user/role-mappings/clients/$management_uuid/composite" >"$tmp/current-role-mappings.json"
+  jq --arg roles "$*" --slurpfile current "$tmp/current-role-mappings.json" '
+    [.[] | select(
+      .name as $name |
+      ($roles | split(" ") | index($name)) and
+      (($current[0] | map(.name) | index($name)) | not)
+    )]
+  ' "$tmp/management-roles.json" >"$tmp/roles-grant.json"
+  if [[ "$(jq 'length' "$tmp/roles-grant.json")" -gt 0 ]]; then
+    kc_post "/users/$service_user/role-mappings/clients/$management_uuid" "$tmp/roles-grant.json"
+  fi
 }
 
 user_admin_uuid="$(ensure_service_client impilo-user-admin "$KEYCLOAK_USER_ADMIN_SECRET")"
