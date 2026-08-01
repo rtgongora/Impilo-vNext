@@ -18,14 +18,14 @@ import java.util.UUID;
 
 /**
  * Gateway public lane (ADR gateway-public-lane-security): a truly anonymous caller — a
- * deep link, a shared URL, curl, any non-shell client — arrives with NO platform headers
+ * deep link, an OIDC redirect, a shared URL, curl, any non-shell client — arrives with NO platform headers
  * at all, but the companion {@code V11HeaderFilter} hard-requires the four v1.1 headers
  * on every {@code /internal/v1/**} route, which made the "public" gateway namespace
  * return 400 {@code MISSING_REQUIRED_HEADER} to exactly the callers it exists for
  * (rig-caught in the W1 runtime proof).
  *
- * <p>For <strong>GET</strong> requests inside the single public gateway namespace
- * ({@code /internal/v1/public/gateway/**}) this filter synthesizes service-originated
+ * <p>For <strong>GET</strong> requests inside the public gateway and browser-auth namespaces
+ * ({@code /internal/v1/public/gateway/**} and {@code /internal/v1/auth/**}) this filter synthesizes service-originated
  * defaults — the public default tenant, the national pod, and fresh request/correlation
  * ids — for whichever of the four headers are missing. Caller-supplied values are never
  * overridden, most non-GET methods are untouched (the write lanes — SOS, feedback,

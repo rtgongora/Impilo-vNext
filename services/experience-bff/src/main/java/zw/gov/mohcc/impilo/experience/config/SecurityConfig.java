@@ -175,6 +175,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET,
                             "/internal/v1/auth/oidc/authorize",
                             "/internal/v1/auth/oidc/callback",
+                            "/internal/v1/auth/oidc/session",
                             "/internal/v1/auth/readiness").permitAll()
                     .requestMatchers("/internal/v1/auth/contact/otp/**").permitAll()
                     // Fail closed on every legacy browser credential/token endpoint. Contact

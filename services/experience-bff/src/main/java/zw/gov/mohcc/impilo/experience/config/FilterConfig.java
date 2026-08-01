@@ -43,16 +43,16 @@ public class FilterConfig {
     }
 
     /**
-     * Anonymous public gateway lane: synthesize missing platform headers on GETs under
-     * the single public namespace so the V11HeaderFilter below does not 400 genuinely
-     * anonymous callers (ADR gateway-public-lane-security; rig-caught W1 defect).
+     * Anonymous browser lanes: synthesize missing platform headers on GETs under
+     * the public gateway and OIDC namespaces so the V11HeaderFilter below does not
+     * reject genuinely anonymous callers (ADR gateway-public-lane-security).
      * Must stay ordered before {@link #v11HeaderFilter()}.
      */
     @Bean
     public FilterRegistrationBean<PublicGatewayAnonymousDefaultsFilter> publicGatewayAnonymousDefaultsFilter() {
         FilterRegistrationBean<PublicGatewayAnonymousDefaultsFilter> reg = new FilterRegistrationBean<>();
         reg.setFilter(new PublicGatewayAnonymousDefaultsFilter());
-        reg.addUrlPatterns("/internal/v1/public/gateway/*");
+        reg.addUrlPatterns("/internal/v1/public/gateway/*", "/internal/v1/auth/*");
         reg.setOrder(Ordered.HIGHEST_PRECEDENCE + 9);
         reg.setName("publicGatewayAnonymousDefaultsFilter");
         return reg;
