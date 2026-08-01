@@ -448,6 +448,28 @@ class AuditChainServiceTest {
     }
 
     @Test
+    @DisplayName("verifyChain recovers legacy hashes created before PostgreSQL timestamp rounding")
+    void verifyChain_legacySubMicrosecondTimestamp_returnsSuccess() {
+        Instant originalTimestamp = Instant.parse("2025-01-15T10:00:00.123456789Z");
+        Instant persistedTimestamp = Instant.parse("2025-01-15T10:00:00.123457Z");
+
+        AuditEventEntity event = buildVerifiableEvent(TENANT_A, 1, GENESIS_HASH, originalTimestamp);
+        event.setCreatedAt(persistedTimestamp);
+
+        AuditChainHeadEntity head = buildChainHead(TENANT_A, event.getEntryHash(), 1L);
+        when(chainHeadRepository.findByTenantId(TENANT_A))
+                .thenReturn(Optional.of(head));
+        when(eventRepository.findByTenantIdAndSequenceNumberBetween(TENANT_A, 1L, 1L))
+                .thenReturn(List.of(event));
+
+        ChainVerificationResponse result = auditChainService.verifyChain(TENANT_A);
+
+        assertThat(result.intact()).isTrue();
+        assertThat(result.eventsVerified()).isEqualTo(1);
+        assertThat(result.brokenAtSequence()).isNull();
+    }
+
+    @Test
     @DisplayName("verifyChain detects tampered previousHash linkage")
     void verifyChain_tamperedPreviousHash_returnsFailure() {
         Instant t1 = Instant.parse("2025-01-15T10:00:00Z");

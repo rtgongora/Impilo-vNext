@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,8 @@ public class AuditChainService {
 
     private static final Logger log = LoggerFactory.getLogger(AuditChainService.class);
     private static final String GENESIS_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
+    private static final int POSTGRES_TIMESTAMP_ROUNDING_MIN_NANOS = -500;
+    private static final int POSTGRES_TIMESTAMP_ROUNDING_MAX_NANOS = 499;
 
     private final AuditEventRepository eventRepository;
     private final AuditChainHeadRepository chainHeadRepository;
@@ -61,7 +64,9 @@ public class AuditChainService {
     @Transactional
     public AuditEventEntity appendEvent(AuditEventRequest request) {
         UUID tenantId = request.tenantId();
-        Instant now = Instant.now();
+        // PostgreSQL stores timestamps at microsecond precision. Hash the same precision that is
+        // persisted so a later integrity check sees the exact timestamp input.
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
         // Step 1: Lock and retrieve (or create) the chain head
         AuditChainHeadEntity chainHead = chainHeadRepository.findByTenantIdForUpdate(tenantId)
@@ -142,6 +147,7 @@ public class AuditChainService {
         // Walk the chain forward in batches
         long batchSize = 1000;
         long verified = 0;
+        long legacyTimestampsRecovered = 0;
         String expectedPreviousHash = GENESIS_HASH;
 
         for (long start = 1; start <= totalEvents; start += batchSize) {
@@ -170,11 +176,15 @@ public class AuditChainService {
                         event.getCreatedAt().toString()
                 );
 
-                if (!recomputedHash.equals(event.getEntryHash())) {
+                if (!recomputedHash.equals(event.getEntryHash())
+                        && !matchesLegacyPrePersistenceTimestamp(event)) {
                     return ChainVerificationResponse.failure(
                             tenantId, verified, event.getSequenceNumber(),
                             recomputedHash, event.getEntryHash()
                     );
+                }
+                if (!recomputedHash.equals(event.getEntryHash())) {
+                    legacyTimestampsRecovered++;
                 }
 
                 expectedPreviousHash = event.getEntryHash();
@@ -190,7 +200,42 @@ public class AuditChainService {
             );
         }
 
+        if (legacyTimestampsRecovered > 0) {
+            log.info("Verified audit chain for tenant={} with {} legacy sub-microsecond timestamps recovered",
+                    tenantId, legacyTimestampsRecovered);
+        }
         return ChainVerificationResponse.success(tenantId, verified);
+    }
+
+    /**
+     * Before timestamps were normalized to PostgreSQL precision, an event was hashed with the
+     * nanosecond value from {@link Instant#now()} and then persisted at microsecond precision.
+     * The missing sub-microsecond component is recoverable without rewriting immutable events:
+     * PostgreSQL's rounding window contains at most 1,000 possible original timestamps.
+     */
+    private boolean matchesLegacyPrePersistenceTimestamp(AuditEventEntity event) {
+        Instant persistedTimestamp = event.getCreatedAt();
+        for (int nanos = POSTGRES_TIMESTAMP_ROUNDING_MIN_NANOS;
+             nanos <= POSTGRES_TIMESTAMP_ROUNDING_MAX_NANOS;
+             nanos++) {
+            if (nanos == 0) {
+                continue;
+            }
+            String candidateHash = computeHash(
+                    event.getPreviousHash(),
+                    event.getTenantId().toString(),
+                    event.getEventType(),
+                    event.getActorId(),
+                    event.getAction(),
+                    event.getOutcome(),
+                    String.valueOf(event.getSequenceNumber()),
+                    persistedTimestamp.plusNanos(nanos).toString()
+            );
+            if (candidateHash.equals(event.getEntryHash())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
