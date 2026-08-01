@@ -195,3 +195,48 @@ See [[public-tls-ingress-architecture]] (WEBSITE DEPLOY DRIFT).
 - Narrow imports are much faster than a full required-spine import;
 - Selective OCI import can lose the expected :preview containerd tag reference even when the index import reports success, forcing a second privileged checkpoint;
 - Detached launchers must record exit codes and survive SSH disconnects.
+
+## 2026-08-01 MFA targeted-release observations
+
+The production-MFA rollout validated a mixed security release without a fullboot. Five
+initial images were built once and deployed by digest; later defects rebuilt only the
+affected Authz, BFF, or Audit image. The final Audit correction took about 65 seconds
+to package, build, push, and resolve, then rolled one pod. All target pods remained
+ready with zero restarts, and no namespace, PVC, or unchanged workload was replaced.
+
+### Improvements proven in this cycle
+
+- **Per-service immutable provenance:** mixed-commit releases are legitimate when each
+  image records its own commit/tree/digest. A single Helm-wide `gitCommit` is not a
+  sufficient release identity.
+- **External issuer reachability:** readiness must test the issuer through the public
+  HTTPS edge. In-cluster health was green while the earlier `:8480` issuer was not
+  reachable by browsers or mobile clients.
+- **Functional security gates:** health alone missed a broken public authorization URI
+  and an audit-chain precision defect. Targeted release acceptance now needs the public
+  OIDC redirect, protected endpoint behavior, and a full audit-chain verification.
+- **Cohort posture checks:** a service selected for OAuth enforcement must fail release
+  if `IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS` is absent or true. Explicit false values
+  are required because an additive manifest does not remove an inherited environment
+  value reliably.
+- **Database semantics before rollout:** validate Flyway SQL against the live engine in
+  a rollback transaction. This caught a `jsonb`/text function mismatch before the
+  Authz pod could be treated as healthy.
+- **Bounded registry readiness:** keep retrying `/v2/` after container start; a running
+  registry process can still reset its first connection.
+- **Reproducible mobile builds:** Gradle wrapper jars must be tracked, and the Redroid
+  package command must load the repository Android environment itself. A clean
+  worktree should not depend on ignored files copied from an older checkout.
+
+### Next tooling changes
+
+1. Add a checked-in release-manifest generator that accepts `service=commit@digest`
+   entries and emits both a server-side dry-run and a narrowly filtered Helm apply.
+2. Make the targeted deployer own pod-template provenance annotations so `kubectl`
+   emergency corrections cannot drift from Helm values.
+3. Add public-issuer reachability, OAuth-bypass cohort policy, and audit-chain integrity
+   to the blocking targeted-release gate.
+4. Add transactional Flyway validation for selected services before image builds.
+5. Cache the frozen mobile dependency tree and Gradle artifacts by lockfile hash; keep
+   APK signing and SHA-256 verification outside the cache boundary.
+6. Record immutable rollback digests automatically before every targeted apply.

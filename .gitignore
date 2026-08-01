@@ -2,6 +2,8 @@
 **/target/
 *.class
 *.jar
+!apps/mobile/citizen-app/android/gradle/wrapper/gradle-wrapper.jar
+!apps/mobile/provider-app/android/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.log
@@ -125,4 +127,3 @@ artifacts/
 # docs/runbooks/deploy-optimization-program.md).
 **/id_file
 services/oros-service/id_file
-

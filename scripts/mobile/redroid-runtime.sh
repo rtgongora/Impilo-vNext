@@ -15,6 +15,12 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ART="${2:-$(ls -d "$REPO_ROOT"/artifacts/mobile/*/ 2>/dev/null | sort | tail -1)}"
 BOOT_TIMEOUT="${REDROID_BOOT_TIMEOUT:-600}"
 
+# Keep the package.json command self-contained in non-interactive CI shells.
+if ! command -v adb >/dev/null 2>&1; then
+  # shellcheck source=/dev/null
+  source "$REPO_ROOT/scripts/mobile/android-env.sh"
+fi
+
 die() { echo "redroid-runtime: $*" >&2; exit 1; }
 
 adb_bin() { command -v adb >/dev/null || die "adb not on PATH — source scripts/mobile/android-env.sh"; }
