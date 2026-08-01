@@ -87,6 +87,8 @@ spec:
                   key: keycloak-admin-password
             - name: KC_DB
               value: postgres
+            - name: KC_SPI_CONNECTIONS_JPA__QUARKUS__MIGRATION_STRATEGY
+              value: update
             - name: KC_DB_URL_HOST
               value: {{ .Values.keycloak.database.host | quote }}
             - name: KC_DB_URL_PORT
