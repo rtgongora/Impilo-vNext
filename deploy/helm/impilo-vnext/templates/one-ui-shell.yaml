@@ -45,7 +45,7 @@ spec:
               value: {{ .Values.global.shellGitCommit | default .Values.global.gitCommit | default "" | quote }}
             - name: NEXT_PUBLIC_BUILD_DATE
               value: {{ .Values.global.buildDate | default "" | quote }}
-            {{- range $k, $v := .Values.oneUiShell.env }}
+            {{- range $k, $v := omit .Values.oneUiShell.env "NEXT_PUBLIC_IMPILO_ENV" }}
             - name: {{ $k }}
               value: {{ $v | quote }}
             {{- end }}
