@@ -257,11 +257,18 @@ done
 
 required_actions="$(kc_get '/authentication/required-actions')"
 printf '%s' "$required_actions" >"$tmp/required-actions.json"
+missing_registerable_actions=()
 for alias in CONFIGURE_TOTP webauthn-register webauthn-register-passwordless CONFIGURE_RECOVERY_AUTHN_CODES; do
-  jq -e --arg alias "$alias" '.[] | select(.alias == $alias)' "$tmp/required-actions.json" >/dev/null || {
-    echo "REFUSING: Keycloak does not expose required action $alias (26.3+ required)" >&2
-    exit 67
-  }
+  if ! jq -e --arg alias "$alias" '.[] | select(.alias == $alias)' "$tmp/required-actions.json" >/dev/null; then
+    kc_get '/authentication/unregistered-required-actions' >"$tmp/unregistered-required-actions.json"
+    if jq -e --arg alias "$alias" '.[] | select(.providerId == $alias)' "$tmp/unregistered-required-actions.json" >/dev/null; then
+      echo "REQUIRED_ACTION_STATE=$alias:missing-registerable"
+      missing_registerable_actions+=("$alias")
+    else
+      echo "REFUSING: Keycloak does not expose or offer required action $alias" >&2
+      exit 67
+    fi
+  fi
 done
 
 if verify_impilo_flow; then
@@ -283,6 +290,23 @@ fi
   echo "REFUSING: live managed state changed after planning (expected $EXPECTED_CURRENT_HASH, got $current_hash)" >&2
   exit 65
 }
+
+# Realms migrated from an older Keycloak do not automatically register newly
+# available required-action providers. Register only providers that Keycloak
+# itself reports as available; this does not alter users or credentials.
+for alias in "${missing_registerable_actions[@]}"; do
+  jq --arg alias "$alias" '.[] | select(.providerId == $alias)' \
+    "$tmp/unregistered-required-actions.json" >"$tmp/register-action-$alias.json"
+  kc_post '/authentication/register-required-action' "$tmp/register-action-$alias.json"
+done
+required_actions="$(kc_get '/authentication/required-actions')"
+printf '%s' "$required_actions" >"$tmp/required-actions.json"
+for alias in CONFIGURE_TOTP webauthn-register webauthn-register-passwordless CONFIGURE_RECOVERY_AUTHN_CODES; do
+  jq -e --arg alias "$alias" '.[] | select(.alias == $alias)' "$tmp/required-actions.json" >/dev/null || {
+    echo "REFUSING: required action $alias is still absent after registration" >&2
+    exit 70
+  }
+done
 
 ensure_impilo_flow
 
