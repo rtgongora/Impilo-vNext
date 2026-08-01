@@ -64,6 +64,8 @@ FROM node:20-bookworm-slim AS runner
 # Bake build provenance so the running image is self-describing (deploy truth).
 ARG SOURCE_COMMIT=unknown
 ARG SOURCE_BRANCH=unknown
+ARG SOURCE_TREE=unknown
+ARG SOURCE_DIRTY=unknown
 ARG BUILD_DATE=unknown
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -71,6 +73,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV IMPILO_GIT_COMMIT=${SOURCE_COMMIT} \
     IMPILO_GIT_BRANCH=${SOURCE_BRANCH} \
     IMPILO_BUILD_DATE=${BUILD_DATE}
+LABEL org.opencontainers.image.revision=${SOURCE_COMMIT} \
+      org.opencontainers.image.created=${BUILD_DATE} \
+      org.opencontainers.image.source="https://github.com/rtgongora/Impilo-vNext" \
+      zw.gov.mohcc.impilo.source.branch=${SOURCE_BRANCH} \
+      zw.gov.mohcc.impilo.source.tree=${SOURCE_TREE} \
+      zw.gov.mohcc.impilo.source.dirty=${SOURCE_DIRTY}
 COPY --from=base /workspace/ui/one-ui-shell/.next-build/standalone /app
 COPY --from=base /workspace/ui/one-ui-shell/.next-build/static /app/one-ui-shell/.next-build/static
 COPY --from=base /workspace/ui/one-ui-shell/public /app/one-ui-shell/public
