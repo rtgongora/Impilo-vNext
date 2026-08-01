@@ -51,7 +51,7 @@ describe("WelcomeHero", () => {
     push.mockReset();
   });
 
-  it("starts with the person's need and keeps public and trust-boundary actions visible", () => {
+  it("starts with the person's need and keeps care, virtual and trust-boundary actions visible", () => {
     render(<WelcomeHero />);
 
     expect(
@@ -62,9 +62,9 @@ describe("WelcomeHero", () => {
       "href",
       "/welcome/find-care",
     );
-    expect(screen.getByRole("link", { name: "Emergency" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Virtual care" })).toHaveAttribute(
       "href",
-      "/welcome/emergency",
+      "/welcome/find-care?q=virtual%20care",
     );
     expect(screen.getByRole("link", { name: "My Impilo" })).toBeInTheDocument();
     // The "you don't need an account" promise moved into the continuity block, which now

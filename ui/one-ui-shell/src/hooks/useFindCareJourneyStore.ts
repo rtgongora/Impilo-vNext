@@ -5,20 +5,19 @@
  * need/service they asked for, the location they shared (or chose), the filters
  * they set, the facility they were looking at, the list/map view, and a
  * `returnTo` path for sign-in continuity ("save this facility" → sign in → come
- * back here). The last search response is kept too, so a browser back-navigation
- * lands on the same results instead of an empty page.
+ * back here). Search results and free-text health needs remain session memory only.
  *
- * State is persisted to localStorage (versioned, mirroring useConsentStore) so a
- * full reload — common on low-bandwidth devices — resumes the journey. The store
- * carries NO personal/health data: a free-text need, a service token, a coarse
- * lat/lng the person volunteered, and public facility ids.
+ * A deliberately minimal, expiring continuity envelope is persisted so a full
+ * reload can resume a chosen public service without leaving sensitive health text,
+ * precise coordinates, or full API responses indefinitely on a shared device.
  */
 
 import { create } from "zustand";
 import type { CareSearchResponse } from "@/lib/find-care/types";
 
 /** Bumped when the persisted shape changes; a mismatch discards stale state. */
-export const FIND_CARE_JOURNEY_VERSION = "2026-07-21";
+export const FIND_CARE_JOURNEY_VERSION = "2026-08-01";
+export const FIND_CARE_JOURNEY_TTL_MS = 30 * 60 * 1000;
 
 const STORAGE_KEY = "exp:find_care_journey";
 const STORAGE_VERSION_KEY = "exp:find_care_journey_version";
@@ -55,6 +54,17 @@ interface FindCareJourneySnapshot {
   results: CareSearchResponse | null;
 }
 
+interface PersistedFindCareJourney {
+  savedAt: number;
+  serviceToken: string | null;
+  serviceLabel: string | null;
+  location: FindCareLocation | null;
+  filters: FindCareFilters;
+  selectedFacilityId: number | null;
+  view: FindCareView;
+  returnTo: string | null;
+}
+
 interface FindCareJourneyState extends FindCareJourneySnapshot {
   /** True once hydrate() has run (avoids SSR/client flash before localStorage read). */
   hydrated: boolean;
@@ -84,7 +94,7 @@ const INITIAL_SNAPSHOT: FindCareJourneySnapshot = {
   location: null,
   filters: EMPTY_FILTERS,
   selectedFacilityId: null,
-  view: "list",
+  view: "map",
   returnTo: null,
   results: null,
 };
@@ -92,7 +102,27 @@ const INITIAL_SNAPSHOT: FindCareJourneySnapshot = {
 function persist(snapshot: FindCareJourneySnapshot): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    const location = snapshot.location
+      ? {
+          ...snapshot.location,
+          lat: Number(snapshot.location.lat.toFixed(2)),
+          lng: Number(snapshot.location.lng.toFixed(2)),
+        }
+      : null;
+    const envelope: PersistedFindCareJourney = {
+      savedAt: Date.now(),
+      serviceToken: snapshot.serviceToken,
+      serviceLabel: snapshot.serviceLabel,
+      location,
+      filters: snapshot.filters,
+      selectedFacilityId: snapshot.selectedFacilityId,
+      view: snapshot.view,
+      returnTo:
+        snapshot.returnTo?.startsWith("/") && !snapshot.returnTo.startsWith("//")
+          ? snapshot.returnTo
+          : null,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
     localStorage.setItem(STORAGE_VERSION_KEY, FIND_CARE_JOURNEY_VERSION);
   } catch {
     // Storage may be full or blocked (private mode). The in-memory store still
@@ -169,17 +199,29 @@ export const useFindCareJourneyStore = create<FindCareJourneyState>((set, get) =
           set({ hydrated: true });
           return;
         }
-        const parsed = JSON.parse(stored) as Partial<FindCareJourneySnapshot>;
+        const parsed = JSON.parse(stored) as Partial<PersistedFindCareJourney>;
+        if (
+          typeof parsed.savedAt !== "number" ||
+          Date.now() - parsed.savedAt > FIND_CARE_JOURNEY_TTL_MS
+        ) {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(STORAGE_VERSION_KEY);
+          set({ ...INITIAL_SNAPSHOT, hydrated: true });
+          return;
+        }
         set({
-          need: parsed.need ?? "",
+          need: "",
           serviceToken: parsed.serviceToken ?? null,
           serviceLabel: parsed.serviceLabel ?? null,
           location: parsed.location ?? null,
           filters: { ...EMPTY_FILTERS, ...(parsed.filters ?? {}) },
           selectedFacilityId: parsed.selectedFacilityId ?? null,
-          view: parsed.view === "map" ? "map" : "list",
-          returnTo: parsed.returnTo ?? null,
-          results: parsed.results ?? null,
+          view: parsed.view === "list" ? "list" : "map",
+          returnTo:
+            parsed.returnTo?.startsWith("/") && !parsed.returnTo.startsWith("//")
+              ? parsed.returnTo
+              : null,
+          results: null,
           hydrated: true,
         });
       } catch {

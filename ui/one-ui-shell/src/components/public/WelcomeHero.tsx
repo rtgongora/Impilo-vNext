@@ -12,9 +12,9 @@ import {
   MessageSquareHeart,
   Search,
   ShieldCheck,
-  Siren,
   Sparkles,
   UserRound,
+  Video,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { useI18n } from "@/lib/i18n/useI18n";
@@ -377,11 +377,11 @@ export function WelcomeHero() {
               Get care
             </Link>
             <Link
-              href="/welcome/emergency"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-red-400/60 bg-red-500/90 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950"
+              href="/welcome/find-care?q=virtual%20care"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-teal-200/40 bg-white/10 px-4 py-2.5 text-sm font-bold text-white hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950"
             >
-              <Siren className="h-4 w-4" aria-hidden />
-              Emergency
+              <Video className="h-4 w-4" aria-hidden />
+              Virtual care
             </Link>
             <Link
               href="/welcome/report"

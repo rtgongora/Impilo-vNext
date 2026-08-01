@@ -93,11 +93,10 @@ export function PublicHeader() {
           </Link>
           <Link
             href="/welcome/emergency"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-bold text-red-800 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+            className="hidden min-h-10 items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-bold text-red-800 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 lg:inline-flex"
           >
             <Phone className="h-4 w-4" aria-hidden />
-            <span className="hidden sm:inline">{t("public.chrome.emergency")}</span>
-            <span className="sm:hidden">Help</span>
+            <span>{t("public.chrome.emergency")}</span>
           </Link>
         </div>
       </div>

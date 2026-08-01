@@ -66,8 +66,10 @@ export function AuthLayout({
         </div>
       </main>
 
-      {/* Emergency Help floating button remains accessible */}
-      <EmergencyHelpButton />
+      {/* Desktop uses the header action; condensed layouts use the persistent control. */}
+      <div className="lg:hidden">
+        <EmergencyHelpButton />
+      </div>
 
       {/* Shared Public Footer */}
       <PublicFooter />

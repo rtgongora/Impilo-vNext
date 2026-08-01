@@ -245,9 +245,11 @@ export function FindCareExperience() {
   const radiusActive = Boolean(location) && radiusKm > 0;
   const visibleResults =
     results && radiusActive
-      ? results.results.filter((r) => r.distanceMeters == null || r.distanceMeters <= radiusKm * 1000)
+      ? results.results.filter((r) => r.distanceMeters != null && r.distanceMeters <= radiusKm * 1000)
       : results?.results ?? [];
   const radiusHiddenCount = results ? results.results.length - visibleResults.length : 0;
+  const unknownDistanceCount =
+    results && radiusActive ? results.results.filter((r) => r.distanceMeters == null).length : 0;
 
   return (
     <div className="space-y-6">
@@ -556,7 +558,13 @@ export function FindCareExperience() {
                 ? "No facilities matched. Try a different service, a shorter word, or another province."
                 : radiusActive
                   ? `${visibleResults.length} within ${radiusKm} km${
-                      radiusHiddenCount > 0 ? ` · ${radiusHiddenCount} farther hidden` : ""
+                      radiusHiddenCount - unknownDistanceCount > 0
+                        ? ` · ${radiusHiddenCount - unknownDistanceCount} farther hidden`
+                        : ""
+                    }${
+                      unknownDistanceCount > 0
+                        ? ` · ${unknownDistanceCount} without distance hidden`
+                        : ""
                     }`
                   : `${total} facilit${total === 1 ? "y" : "ies"} found${
                       results.distanceAvailable ? " · sorted by nearest" : " · sorted by best match"
