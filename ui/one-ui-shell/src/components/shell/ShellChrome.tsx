@@ -14,7 +14,6 @@ import { ShellSearchPalette } from "./ShellSearchPalette";
 import { ShellStartMenu } from "./ShellStartMenu";
 import { ShellTaskbar } from "./ShellTaskbar";
 import { ShellTaskManagerModal } from "./ShellTaskManagerModal";
-import { NompiloGlobalCommandBar } from "@/components/intelligent/NompiloGlobalCommandBar";
 import { ProactiveAssistant } from "@/components/intelligent/ProactiveAssistant";
 import { HealthIdStatusChip } from "./HealthIdStatusChip";
 
@@ -92,7 +91,7 @@ export function ShellChrome() {
     <>
       <ShellRouteSync />
       <ShellScrollRestoration />
-      {showEmergencyHelp ? <EmergencyHelpButton raised={show} /> : null}
+      {showEmergencyHelp ? <EmergencyHelpButton raised={show} className={show ? "lg:hidden" : ""} /> : null}
       {show ? (
         <>
           <ShellEhrTaskEnricher />
@@ -103,7 +102,6 @@ export function ShellChrome() {
       {show && startOpen ? <ShellStartMenu /> : null}
       {show && searchOpen ? <ShellSearchPalette /> : null}
       {show ? <ShellTaskManagerModal /> : null}
-      {show ? <NompiloGlobalCommandBar /> : null}
       {show ? <ProactiveAssistant /> : null}
     </>
   );

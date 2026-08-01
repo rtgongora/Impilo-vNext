@@ -299,7 +299,7 @@ export function ProactiveAssistant() {
         aria-expanded={isOpen}
         data-testid="proactive-assistant-launcher"
         data-minimized={focusedWork && !isOpen ? "true" : "false"}
-        className={`fixed z-40 flex items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl ${
+        className={`fixed z-40 hidden items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl ${
           focusedWork && !isOpen ? "right-2 h-9 w-9 opacity-75 hover:opacity-100 focus-visible:opacity-100" : "right-6 h-14 w-14"
         }`}
         style={{

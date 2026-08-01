@@ -4,11 +4,17 @@ import { describe, expect, it, vi } from "vitest";
 import { MobileTabBar } from "./MobileTabBar";
 
 const toggleNavDrawer = vi.fn();
+const setPanelOpen = vi.fn();
+const setChatOpen = vi.fn();
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/home" }));
 vi.mock("@/hooks/useShellStore", () => ({
   useShellStore: (selector: (state: { toggleNavDrawer: () => void }) => unknown) =>
     selector({ toggleNavDrawer }),
+}));
+vi.mock("@/hooks/useAssistantUiStore", () => ({
+  useAssistantUiStore: (selector: (state: { setPanelOpen: typeof setPanelOpen; setChatOpen: typeof setChatOpen }) => unknown) =>
+    selector({ setPanelOpen, setChatOpen }),
 }));
 
 describe("MobileTabBar", () => {
@@ -17,8 +23,15 @@ describe("MobileTabBar", () => {
 
     expect(screen.getByRole("link", { name: /Home/i })).toHaveAttribute("href", "/home");
     expect(screen.getByRole("link", { name: /Services/i })).toHaveAttribute("href", "/discover");
-    expect(screen.getByRole("link", { name: /Nompilo/i })).toHaveAttribute("href", "/ask");
+    expect(screen.getByRole("button", { name: /Open Nompilo assistant/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Wallet/i })).toHaveAttribute("href", "/wallet");
+  });
+
+  it("opens the one contextual Nompilo surface without changing route", async () => {
+    render(<MobileTabBar />);
+    await userEvent.click(screen.getByRole("button", { name: /Open Nompilo assistant/i }));
+    expect(setPanelOpen).toHaveBeenCalledWith(true);
+    expect(setChatOpen).toHaveBeenCalledWith(true);
   });
 
   it("lights up the active destination for the current route", () => {

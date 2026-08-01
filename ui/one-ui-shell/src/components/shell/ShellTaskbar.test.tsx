@@ -34,6 +34,11 @@ vi.mock("@/hooks/useShellStore", () => ({
   },
 }));
 
+vi.mock("@/hooks/useAssistantUiStore", () => ({
+  useAssistantUiStore: (sel: (s: Record<string, unknown>) => unknown) =>
+    sel({ setPanelOpen: vi.fn(), setChatOpen: vi.fn() }),
+}));
+
 vi.mock("./ShellSosDialog", () => ({
   ShellSosDialog: () => null,
 }));
@@ -57,7 +62,7 @@ describe("ShellTaskbar", () => {
     expect(screen.getByTestId("shell-floating-dock")).toBeInTheDocument();
     expect(screen.getByLabelText(/start menu/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/open search and commands/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/open nompilo ask/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/open nompilo assistant/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/open sos/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/accessibility options/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/open modules/i)).toBeInTheDocument();

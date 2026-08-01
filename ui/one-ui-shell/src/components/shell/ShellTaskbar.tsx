@@ -19,6 +19,7 @@ import {
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useLayoutPrefsStore } from "@/hooks/useLayoutPrefsStore";
 import { useShellStore } from "@/hooks/useShellStore";
+import { useAssistantUiStore } from "@/hooks/useAssistantUiStore";
 import {
   findShellAppByCode,
   listVisibleShellApps,
@@ -75,6 +76,8 @@ export function ShellTaskbar() {
   const pinApp = useShellStore((s) => s.pinApp);
   const openNewTaskInstance = useShellStore((s) => s.openNewTaskInstance);
   const launchApp = useShellStore((s) => s.launchApp);
+  const setAssistantPanelOpen = useAssistantUiStore((s) => s.setPanelOpen);
+  const setAssistantChatOpen = useAssistantUiStore((s) => s.setChatOpen);
 
   const sosDialogOpen = useShellStore((s) => s.sosDialogOpen);
   const setSosDialogOpen = useShellStore((s) => s.setSosDialogOpen);
@@ -303,7 +306,13 @@ export function ShellTaskbar() {
             <span className="hidden text-xs font-medium text-foreground xl:inline">Help</span>
           </DockButton>
 
-          <DockButton onClick={() => router.push("/ask")} ariaLabel="Open Nompilo Ask">
+          <DockButton
+            onClick={() => {
+              setAssistantPanelOpen(true);
+              setAssistantChatOpen(true);
+            }}
+            ariaLabel="Open Nompilo assistant"
+          >
             <span className="text-xs font-semibold text-primary">Nompilo</span>
           </DockButton>
 

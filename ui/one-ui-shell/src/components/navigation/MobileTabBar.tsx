@@ -16,6 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Compass, Home, Menu, Sparkles, Wallet, type LucideIcon } from "lucide-react";
 import { useShellStore } from "@/hooks/useShellStore";
+import { useAssistantUiStore } from "@/hooks/useAssistantUiStore";
 
 interface TabDef {
   key: string;
@@ -39,6 +40,8 @@ const TABS: TabDef[] = [
 export function MobileTabBar() {
   const pathname = usePathname() ?? "/home";
   const toggleNavDrawer = useShellStore((s) => s.toggleNavDrawer);
+  const setAssistantPanelOpen = useAssistantUiStore((s) => s.setPanelOpen);
+  const setAssistantChatOpen = useAssistantUiStore((s) => s.setChatOpen);
 
   return (
     <nav
@@ -74,6 +77,22 @@ export function MobileTabBar() {
           </span>
         );
 
+        if (tab.key === "ask") {
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => {
+                setAssistantPanelOpen(true);
+                setAssistantChatOpen(true);
+              }}
+              aria-label="Open Nompilo assistant"
+              className="flex min-h-[56px] flex-1 items-stretch text-center outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)]"
+            >
+              {inner}
+            </button>
+          );
+        }
         if (tab.href) {
           return (
             <Link
