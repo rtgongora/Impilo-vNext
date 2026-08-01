@@ -248,7 +248,7 @@ diff --unified "$tmp/current-managed.json" "$tmp/desired-managed.json" || true
 
 clients_json="$(kc_get '/clients?max=500')"
 printf '%s' "$clients_json" >"$tmp/clients.json"
-for client_id in experience-ui citizen-app provider-app; do
+for client_id in experience-ui impilo-mobile-citizen impilo-mobile-provider; do
   if ! jq -e --arg id "$client_id" '.[] | select(.clientId == $id)' "$tmp/clients.json" >/dev/null; then
     echo "REFUSING: required client is absent: $client_id" >&2
     exit 66
@@ -323,8 +323,8 @@ update_client() {
 : "${KEYCLOAK_EVENT_READER_SECRET:?KEYCLOAK_EVENT_READER_SECRET is required for apply}"
 
 update_client experience-ui '["https://impilo.mohcc.gov.zw/internal/v1/auth/oidc/callback"]' false "$KEYCLOAK_BFF_CLIENT_SECRET"
-update_client citizen-app '["impilo-citizen://auth/callback"]' true
-update_client provider-app '["impilo-provider://auth/callback"]' true
+update_client impilo-mobile-citizen '["impilo-citizen://auth/callback"]' true
+update_client impilo-mobile-provider '["impilo-provider://auth/callback"]' true
 
 ensure_service_client() {
   local client_id="$1" secret="$2"
