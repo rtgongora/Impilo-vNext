@@ -59,25 +59,35 @@ export function ProviderTabs() {
       icon: tabIcon(providerTab === "workhome" ? "home" : "home-outline", providerTab === "workhome"),
     },
     {
-      key: "emergency" as const,
-      label: "Emergency",
-      icon: tabIcon(providerTab === "emergency" ? "medkit" : "medkit-outline", providerTab === "emergency"),
-    },
-    {
-      key: "dashboard" as const,
-      label: "Worklist",
-      icon: tabIcon(providerTab === "dashboard" ? "briefcase" : "briefcase-outline", providerTab === "dashboard"),
-      badge: unreadNotifications > 0 ? unreadNotifications : undefined,
-    },
-    {
-      key: "professional" as const,
-      label: "My Professional",
-      icon: tabIcon(providerTab === "professional" ? "id-card" : "id-card-outline", providerTab === "professional"),
+      key: "queue" as const,
+      label: "Queue",
+      icon: tabIcon(providerTab === "queue" ? "list" : "list-outline", providerTab === "queue"),
     },
     {
       key: "patients" as const,
       label: "Patients",
       icon: tabIcon(providerTab === "patients" ? "people" : "people-outline", providerTab === "patients"),
+    },
+    {
+      key: "messaging" as const,
+      label: "Messages",
+      icon: tabIcon(providerTab === "messaging" ? "chatbubbles" : "chatbubbles-outline", providerTab === "messaging"),
+      badge: unreadNotifications > 0 ? unreadNotifications : undefined,
+    },
+    {
+      key: "dashboard" as const,
+      label: "Worklist",
+      icon: tabIcon(providerTab === "dashboard" ? "briefcase" : "briefcase-outline", providerTab === "dashboard"),
+    },
+    {
+      key: "emergency" as const,
+      label: "Emergency",
+      icon: tabIcon(providerTab === "emergency" ? "medkit" : "medkit-outline", providerTab === "emergency"),
+    },
+    {
+      key: "professional" as const,
+      label: "My Professional",
+      icon: tabIcon(providerTab === "professional" ? "id-card" : "id-card-outline", providerTab === "professional"),
     },
     ...(activeEncounter
       ? [
@@ -99,11 +109,6 @@ export function ProviderTabs() {
       icon: tabIcon(providerTab === "results" ? "flask" : "flask-outline", providerTab === "results"),
     },
     {
-      key: "queue" as const,
-      label: "Queue",
-      icon: tabIcon(providerTab === "queue" ? "list" : "list-outline", providerTab === "queue"),
-    },
-    {
       key: "theatre" as const,
       label: "Theatre",
       icon: tabIcon(providerTab === "theatre" ? "medkit" : "medkit-outline", providerTab === "theatre"),
@@ -112,11 +117,6 @@ export function ProviderTabs() {
       key: "surgery" as const,
       label: "Surgery",
       icon: tabIcon(providerTab === "surgery" ? "medical" : "medical-outline", providerTab === "surgery"),
-    },
-    {
-      key: "messaging" as const,
-      label: "Messages",
-      icon: tabIcon(providerTab === "messaging" ? "chatbubbles" : "chatbubbles-outline", providerTab === "messaging"),
     },
     {
       key: "social" as const,

@@ -10,7 +10,9 @@ export type CitizenTab =
   | "messaging"
   | "comms"
   | "telehealth"
-  | "public_health";
+  | "public_health"
+  | "find"
+  | "timeline";
 
 export interface CitizenProfile {
   cpid: string;

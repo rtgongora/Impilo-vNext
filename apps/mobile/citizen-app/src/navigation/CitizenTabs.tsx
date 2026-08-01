@@ -20,6 +20,8 @@ import { MessagingInboxScreen } from "../screens/messaging/MessagingInboxScreen"
 import { CommsHubScreen } from "../screens/comms/CommsHubScreen";
 import { TelehealthListScreen } from "../screens/telehealth/TelehealthListScreen";
 import { PublicHealthScreen } from "../screens/publicHealth/PublicHealthScreen";
+import { ProviderDiscoveryScreen } from "../screens/discover/ProviderDiscoveryScreen";
+import { HealthTimelineScreen } from "../screens/personal/HealthTimelineScreen";
 
 const ACCENT = "#059669";
 
@@ -32,6 +34,8 @@ const TAB_SCREENS: Record<CitizenTab, React.FC> = {
   comms: CommsHubScreen,
   telehealth: TelehealthListScreen,
   public_health: PublicHealthScreen,
+  find: ProviderDiscoveryScreen,
+  timeline: HealthTimelineScreen,
 };
 
 function tabIcon(name: string, isActive: boolean): React.ReactNode {
@@ -49,19 +53,24 @@ export function CitizenTabs() {
       icon: tabIcon(activeTab === "home" ? "home" : "home-outline", activeTab === "home"),
     },
     {
+      id: "telehealth",
+      label: "Care",
+      icon: tabIcon(activeTab === "telehealth" ? "videocam" : "videocam-outline", activeTab === "telehealth"),
+    },
+    {
+      id: "find",
+      label: "Find",
+      icon: tabIcon(activeTab === "find" ? "search" : "search-outline", activeTab === "find"),
+    },
+    {
+      id: "timeline",
+      label: "Timeline",
+      icon: tabIcon(activeTab === "timeline" ? "time" : "time-outline", activeTab === "timeline"),
+    },
+    {
       id: "personal",
-      label: "Health",
+      label: "My Impilo",
       icon: tabIcon(activeTab === "personal" ? "heart" : "heart-outline", activeTab === "personal"),
-    },
-    {
-      id: "social",
-      label: "Feed",
-      icon: tabIcon(activeTab === "social" ? "earth" : "earth-outline", activeTab === "social"),
-    },
-    {
-      id: "marketplace",
-      label: "Services",
-      icon: tabIcon(activeTab === "marketplace" ? "storefront" : "storefront-outline", activeTab === "marketplace"),
     },
     {
       id: "messaging",
@@ -75,9 +84,14 @@ export function CitizenTabs() {
       icon: tabIcon(activeTab === "comms" ? "chatbox-ellipses" : "chatbox-ellipses-outline", activeTab === "comms"),
     },
     {
-      id: "telehealth",
-      label: "Care",
-      icon: tabIcon(activeTab === "telehealth" ? "videocam" : "videocam-outline", activeTab === "telehealth"),
+      id: "social",
+      label: "Community",
+      icon: tabIcon(activeTab === "social" ? "earth" : "earth-outline", activeTab === "social"),
+    },
+    {
+      id: "marketplace",
+      label: "Services",
+      icon: tabIcon(activeTab === "marketplace" ? "storefront" : "storefront-outline", activeTab === "marketplace"),
     },
     {
       id: "public_health",
