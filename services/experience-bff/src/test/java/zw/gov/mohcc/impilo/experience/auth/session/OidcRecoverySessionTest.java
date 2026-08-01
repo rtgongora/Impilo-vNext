@@ -200,6 +200,46 @@ class OidcRecoverySessionTest {
         assertEquals("AbC123_-AbC123_-AbC1", saved.getValue().continuationId());
     }
 
+    // ── CP3 closure proofs: lifetime, step-up laundering, forced fresh auth ─
+
+    @Test
+    @DisplayName("Recovery session lifetime is at most 15 minutes by default")
+    void recoveryLifetimeAtMostFifteenMinutes() {
+        assertTrue(new WebAuthSessionProperties().getRecoverySessionTtlSeconds() <= 900,
+                "default recovery TTL must not exceed 900 seconds");
+    }
+
+    @Test
+    @DisplayName("Step-up cannot launder a recovery session into ordinary AAL2 — classification is re-derived from AMR")
+    void stepUpCannotLaunderRecoveryIntoAal2() {
+        // The user step-ups from a recovery session but authenticates AGAIN with a recovery
+        // code. Even though Keycloak minted numeric acr aal2 in the stub, the new session
+        // must remain CONSTRAINED_RECOVERY: authority follows AMR, not the numeric claim.
+        stubTokenExchange(List.of("pwd", "auth-recovery-authn-code-form"));
+        stubTransaction(tx("/work/clinical", "prev-recovery-session", null));
+        when(store.newOpaqueValue()).thenReturn("session-6", "csrf-6");
+        when(store.findSession("prev-recovery-session")).thenReturn(Optional.of(recoverySession()));
+        when(store.saveContinuation("/work/clinical")).thenReturn("continuation-6");
+
+        OidcSessionService.EstablishedSession established = service.complete("state-1", "code-1");
+
+        assertTrue(established.data().recovery(), "recovery AMR must keep the session constrained");
+        assertNotNull(established.data().recoveryExpiresAt());
+        // Still diverted to the recovery landing, never the protected destination.
+        assertTrue(established.returnTo().startsWith("/settings/security?recovery=1"));
+    }
+
+    @Test
+    @DisplayName("Step-up/action from an existing session always forces full fresh authentication at the IdP")
+    void stepUpForcesFreshAuthentication() {
+        when(store.newOpaqueValue()).thenReturn("state-x", "nonce-x", "ver-a", "ver-b");
+        java.net.URI authorize = service.begin("/home", "urn:impilo:aal2", null,
+                "existing-session", null, null);
+        String query = authorize.getQuery();
+        assertTrue(query.contains("prompt=login"), "must force re-authentication");
+        assertTrue(query.contains("max_age=0"), "must not accept a cached IdP SSO session");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────
 
     private static WebAuthSessionStore.AuthTransaction tx(String returnTo, String previousSessionId,

@@ -56,6 +56,61 @@ class SecuritySettingsServiceTest {
         assertEquals("passkey", snapshot.methods().getFirst().method());
     }
 
+    // ── Constrained recovery boundary (CP3 closure) ─────────────────────────────────
+
+    @Test
+    void constrainedRecoveryCanNeverDeleteCredentials() {
+        Jwt jwt = recoveryJwt();
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.removeCredential(jwt, "otp-1"));
+
+        assertEquals("CONSTRAINED_RECOVERY_SESSION", error.getReason());
+        verifyNoInteractions(keycloak);
+    }
+
+    @Test
+    void constrainedRecoveryMayTerminateOtherSessions() {
+        Jwt jwt = recoveryJwt();
+        when(keycloak.sessions("user-1")).thenReturn(List.of(
+                new KeycloakAdminClient.SessionMetadata("session-current", "10.0.0.1", 1L, 2L, null),
+                new KeycloakAdminClient.SessionMetadata("session-other", "10.0.0.2", 1L, 2L, null)));
+        when(keycloak.terminateSession("session-other")).thenReturn(true);
+
+        assertEquals(1, service.terminateOtherSessions(jwt));
+    }
+
+    @Test
+    void constrainedRecoveryMayTerminateAnOwnedSession() {
+        Jwt jwt = recoveryJwt();
+        when(keycloak.sessions("user-1")).thenReturn(List.of(
+                new KeycloakAdminClient.SessionMetadata("session-other", "10.0.0.2", 1L, 2L, null)));
+        when(keycloak.terminateSession("session-other")).thenReturn(true);
+
+        service.terminateSession(jwt, "session-other");
+    }
+
+    @Test
+    void ordinaryAal1StillRequiresStepUpForSessionTermination() {
+        Jwt jwt = jwt("urn:impilo:aal1", List.of("CITIZEN"));
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.terminateSession(jwt, "session-other"));
+
+        assertEquals("STEP_UP_AAL2_REQUIRED", error.getReason());
+        verifyNoInteractions(keycloak);
+    }
+
+    /** Recovery-code login: AAL1 with the canonical recovery AMR marker. */
+    private static Jwt recoveryJwt() {
+        Instant now = Instant.now();
+        return Jwt.withTokenValue("token").header("alg", "none").subject("user-1")
+                .issuedAt(now).expiresAt(now.plusSeconds(600))
+                .claim("acr", "urn:impilo:aal1").claim("amr", List.of("recovery-code"))
+                .claim("auth_time", now.getEpochSecond()).claim("sid", "session-current")
+                .claim("realm_access", Map.of("roles", List.of("CLINICIAN"))).build();
+    }
+
     private static Jwt jwt(String acr, List<String> roles) {
         Instant now = Instant.now();
         return Jwt.withTokenValue("token").header("alg", "none").subject("user-1")
