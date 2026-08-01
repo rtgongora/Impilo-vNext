@@ -177,7 +177,15 @@ if [[ ${#MODULES[@]} -gt 0 ]]; then
   fi
 fi
 if [[ "$IMAGES_CSV" == *"one-ui-shell"* ]]; then
-  if ! (cd ui/one-ui-shell && npm run build); then
+  # Rewrites are baked at build time — same defaults as scripts/test/run-frontend-checks.sh.
+  if ! (
+    cd ui/one-ui-shell &&
+      API_GATEWAY_URL="${API_GATEWAY_URL:-http://experience-bff:8160}" \
+      BFF_URL="${BFF_URL:-http://experience-bff:8160}" \
+      NEXT_PUBLIC_API_GATEWAY_URL="${NEXT_PUBLIC_API_GATEWAY_URL:-http://experience-bff:8160}" \
+      NEXT_PUBLIC_BFF_URL="${NEXT_PUBLIC_BFF_URL:-http://experience-bff:8160}" \
+      npm run build
+  ); then
     preview_write_deploy_report "$REPORT_PATH" "FAIL" "targeted" "$BLAST_JSON" "one-ui-shell build failed."
     exit 1
   fi
