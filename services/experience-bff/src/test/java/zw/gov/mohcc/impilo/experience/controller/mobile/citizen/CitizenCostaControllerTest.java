@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,6 +24,7 @@ class CitizenCostaControllerTest {
     @Autowired private MockMvc mockMvc;
     @MockBean private CostaServiceClient costaClient;
     @MockBean private StringRedisTemplate stringRedisTemplate;
+    @MockBean private OidcSessionService oidcSessionService;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 

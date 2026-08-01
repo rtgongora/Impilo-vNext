@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService;
 import zw.gov.mohcc.impilo.experience.workhome.ProfessionalAlertsComposer;
 import zw.gov.mohcc.impilo.experience.workhome.WorkHomeSection;
 
@@ -31,6 +32,9 @@ class ProfessionalAlertsControllerTest {
 
     @MockBean
     private StringRedisTemplate stringRedisTemplate;
+
+    @MockBean
+    private OidcSessionService oidcSessionService;
 
     @Test
     void alerts_returnsTheComposersSectionWithoutRequiringAWorkContext() throws Exception {

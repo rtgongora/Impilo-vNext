@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService;
 import zw.gov.mohcc.impilo.experience.workhome.WorkHomeCompositionService;
 import zw.gov.mohcc.impilo.experience.workhome.WorkHomeResult;
 import zw.gov.mohcc.impilo.experience.workhome.WorkHomeSection;
@@ -33,6 +34,9 @@ class WorkHomeControllerTest {
 
     @MockBean
     private StringRedisTemplate stringRedisTemplate;
+
+    @MockBean
+    private OidcSessionService oidcSessionService;
 
     @Test
     void workHome_returns200EvenWhenFriendlyStateIsUnavailable() throws Exception {

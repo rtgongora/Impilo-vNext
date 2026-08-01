@@ -118,8 +118,8 @@ class AuthorizationHeaderPrecedenceLoopbackTest {
         KeycloakAdminClient client = new KeycloakAdminClient(new ServiceClientConfig().idpRestTemplate());
         ReflectionTestUtils.setField(client, "keycloakUrl", baseUrl);
         ReflectionTestUtils.setField(client, "realm", "impilo");
-        ReflectionTestUtils.setField(client, "backendClientId", "impilo-backend");
-        ReflectionTestUtils.setField(client, "backendSecret", "s3cret");
+        ReflectionTestUtils.setField(client, "userAdminClientId", "impilo-user-admin");
+        ReflectionTestUtils.setField(client, "userAdminSecret", "s3cret");
 
         // The loopback answers {"ok":true}, so there is no access_token to extract and the client
         // returns null — irrelevant here. What is under test is what crossed the socket.

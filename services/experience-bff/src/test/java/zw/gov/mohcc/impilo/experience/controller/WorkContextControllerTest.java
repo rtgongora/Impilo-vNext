@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService;
 import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -37,6 +38,9 @@ class WorkContextControllerTest {
 
     @MockBean
     private StringRedisTemplate stringRedisTemplate;
+
+    @MockBean
+    private OidcSessionService oidcSessionService;
 
     @MockBean
     private zw.gov.mohcc.impilo.experience.workcontext.WorkContextResolutionService resolutionService;

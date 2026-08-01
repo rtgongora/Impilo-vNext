@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService;
 import zw.gov.mohcc.impilo.experience.service.patientlane.PatientLaneService;
 
 import java.util.Map;
@@ -23,6 +24,7 @@ class CitizenVisitStatusControllerTest {
     @Autowired private MockMvc mockMvc;
     @MockBean private PatientLaneService patientLane;
     @MockBean private StringRedisTemplate stringRedisTemplate;
+    @MockBean private OidcSessionService oidcSessionService;
 
     @Test
     void visit_status_returns_composed_patient_facing_body() throws Exception {

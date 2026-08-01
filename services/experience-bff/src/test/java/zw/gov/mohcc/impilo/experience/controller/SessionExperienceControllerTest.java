@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
 import zw.gov.mohcc.impilo.experience.session.SessionExperienceService;
@@ -33,6 +34,9 @@ class SessionExperienceControllerTest {
 
     @MockBean
     private StringRedisTemplate stringRedisTemplate;
+
+    @MockBean
+    private OidcSessionService oidcSessionService;
 
     @Test
     void getSessionExperienceReturnsContractEnvelope() throws Exception {
