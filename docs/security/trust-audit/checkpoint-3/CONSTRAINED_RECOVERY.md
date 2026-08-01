@@ -23,23 +23,38 @@ Recovery-code authentication previously mapped to ordinary AAL2 authority. Sourc
 | Prevent replayed recovery use | Continuation + OIDC transaction both single-use |
 | Audit without codes/tokens | Logger `impilo.trust.recovery.audit` — hashed session ref only |
 
-## Restricted vs permitted recovery routes (BFF)
+## Restricted vs permitted recovery routes (BFF) — CP3 closure tightening
 
-**Permitted prefixes** (`RecoverySessionFilter`):
+`RecoverySessionFilter` no longer allowlists path prefixes. Every request is mapped to a
+canonical `ACTION:RESOURCE_TYPE` operation and the decision consults the canonical
+allowlist (identical to `tshepo.authz.recovery-permitted-actions`). Requests that map to
+no registered operation are **denied fail-closed**, including unknown operations under
+formerly "permitted" prefixes.
 
-- `/internal/v1/auth/oidc/**` (session, logout, action/enrollment, authorize, callback)
-- `/internal/v1/auth/logout`
-- `/internal/v1/settings/security/**` (factor inspection, credential remove, session terminate)
+**Exact operation dispositions during CONSTRAINED_RECOVERY:**
 
-**Denied examples** (return `RECOVERY_REQUIRED`):
+| Operation | Canonical | Disposition |
+|---|---|---|
+| `GET /internal/v1/settings/security` | `READ:ACCOUNT_SECURITY` | **allow** (sanitized factor status) |
+| `DELETE /internal/v1/settings/security/sessions/{id}` | `DELETE:AUTH_SESSION` | **allow** (access-reducing) |
+| `POST /internal/v1/settings/security/sessions/logout-others` | `DELETE:AUTH_SESSION` | **allow** |
+| `DELETE /internal/v1/settings/security/credentials/{id}` | `DELETE:AUTH_FACTOR` | **deny** (last-factor protection; also denied in `SecuritySettingsService` with `CONSTRAINED_RECOVERY_SESSION`) |
+| `POST/GET/POST /internal/v1/settings/security/recovery-cases/**` | `EXECUTE:ADMIN_RECOVERY` | **deny** (administrative recovery) |
+| `GET /internal/v1/auth/oidc/authorize|callback` | `CREATE:AUTH_SESSION` | **allow** (fresh ordinary authentication) |
+| `GET /internal/v1/auth/oidc/session` | `READ:AUTH_SESSION` | **allow** |
+| `POST /internal/v1/auth/oidc/step-up` | `CREATE:AUTH_SESSION` | **allow** — always forces `prompt=login&max_age=0`; classification re-derived from AMR, so recovery can never launder into AAL2 |
+| `POST /internal/v1/auth/oidc/action` | `CREATE:AUTH_FACTOR` | **allow only** `CONFIGURE_TOTP`, `webauthn-register`, `webauthn-register-passwordless`; `CONFIGURE_RECOVERY_AUTHN_CODES` (recovery-code regeneration) and `UPDATE_PASSWORD` return 403 `RECOVERY_ACTION_NOT_PERMITTED` |
+| `POST /internal/v1/auth/oidc/logout`, `POST /internal/v1/auth/logout` | `LOGOUT:*` | **allow** |
+| anything else (clinical, claims, admin, marketplace, work-context, unregistered ops) | — | **deny** `RECOVERY_REQUIRED` |
 
-- `/internal/v1/patients/**`, clinical encounters, claims, admin users, marketplace orders, work-context selection
+## Authz allowlist (`tshepo.authz.recovery-permitted-actions`) — tightened
 
-## Authz allowlist (`tshepo.authz.recovery-permitted-actions`)
+Default entries: `LOGOUT:*`, `READ:ACCOUNT_SECURITY`, `READ:AUTH_FACTOR`,
+`CREATE:AUTH_FACTOR`, `CREATE:AUTH_SESSION`, `READ:AUTH_SESSION`, `DELETE:AUTH_SESSION`.
 
-Default entries: `LOGOUT:*`, `READ|CREATE|UPDATE|DELETE:AUTH_FACTOR`, `READ:ACCOUNT_SECURITY`, `READ|DELETE:AUTH_SESSION`.
-
-Recovery codes were **removed** from `stepUpMethods` (no longer `totp, webauthn, recovery`).
+`UPDATE:AUTH_FACTOR` and `DELETE:AUTH_FACTOR` were **removed** in the CP3 closure —
+a recovery session may enroll a replacement factor but never mutate or delete existing
+credentials. Recovery codes remain removed from `stepUpMethods`.
 
 ## Layers touched
 
