@@ -41,6 +41,8 @@ export function normalizeEvents(rawEvents: RawBackendEvent[]): TimelineEvent[] {
 // --- Built-in normalizers ---
 
 function defaultNormalizer(raw: RawBackendEvent): TimelineEvent {
+  const deepLink = raw.data.deepLink as string | undefined;
+  const sourceId = (raw.data.sourceId as string | undefined) ?? raw.id;
   return {
     id: raw.id,
     type: mapResourceType(raw.resourceType),
@@ -51,10 +53,15 @@ function defaultNormalizer(raw: RawBackendEvent): TimelineEvent {
     facilityName: raw.data.facilityName as string | undefined,
     actorId: raw.data.actorId as string | undefined,
     actorName: raw.data.actorName as string | undefined,
-    deepLink: raw.data.deepLink as string | undefined,
+    deepLink,
     metadata: raw.data,
     sourceSystem: raw.source,
-    sourceId: raw.id,
+    sourceId,
+    status: raw.data.status as string | undefined,
+    provenance: { system: raw.source, resourceType: raw.resourceType, resourceId: sourceId },
+    visibility: (raw.data.visibility as TimelineEvent["visibility"] | undefined) ?? "SELF",
+    sensitivity: (raw.data.sensitivity as TimelineEvent["sensitivity"] | undefined) ?? "STANDARD",
+    actions: deepLink ? [{ id: "open", label: "View details", deepLink, enabled: true }] : [],
   };
 }
 
@@ -87,6 +94,15 @@ function mapResourceType(resourceType: string): TimelineEventType {
     consent: "CONSENT",
     coverage: "COVERAGE",
     outreach: "OUTREACH",
+    immunization: "IMMUNIZATION",
+    vaccination: "IMMUNIZATION",
+    wellness: "WELLNESS",
+    feedback: "FEEDBACK",
+    telecare: "TELECARE",
+    teleconsultation: "TELECARE",
+    collection: "COLLECTION",
+    care_milestone: "CARE_MILESTONE",
+    journey_opened: "CARE_MILESTONE",
   };
   return mapping[resourceType.toLowerCase()] ?? "SYSTEM";
 }
@@ -106,6 +122,11 @@ registerNormalizer("Encounter", (raw) => ({
   metadata: raw.data,
   sourceSystem: raw.source,
   sourceId: raw.id,
+  status: raw.data.status as string | undefined,
+  provenance: { system: raw.source, resourceType: raw.resourceType, resourceId: raw.id },
+  visibility: "SELF",
+  sensitivity: "STANDARD",
+  actions: [{ id: "open", label: "View visit", deepLink: `/visits/${raw.id}`, enabled: true }],
 }));
 
 registerNormalizer("Observation", (raw) => ({
@@ -122,6 +143,10 @@ registerNormalizer("Observation", (raw) => ({
   metadata: raw.data,
   sourceSystem: raw.source,
   sourceId: raw.id,
+  provenance: { system: raw.source, resourceType: raw.resourceType, resourceId: raw.id },
+  visibility: "SELF",
+  sensitivity: "STANDARD",
+  actions: [{ id: "open", label: "View observation", deepLink: `/vitals/${raw.id}`, enabled: true }],
 }));
 
 registerNormalizer("MedicationRequest", (raw) => ({
@@ -138,6 +163,10 @@ registerNormalizer("MedicationRequest", (raw) => ({
   metadata: raw.data,
   sourceSystem: raw.source,
   sourceId: raw.id,
+  provenance: { system: raw.source, resourceType: raw.resourceType, resourceId: raw.id },
+  visibility: "SELF",
+  sensitivity: "STANDARD",
+  actions: [{ id: "open", label: "View prescription", deepLink: `/prescriptions/${raw.id}`, enabled: true }],
 }));
 
 registerNormalizer("DiagnosticReport", (raw) => ({
@@ -154,6 +183,11 @@ registerNormalizer("DiagnosticReport", (raw) => ({
   metadata: raw.data,
   sourceSystem: raw.source,
   sourceId: raw.id,
+  status: raw.data.status as string | undefined,
+  provenance: { system: raw.source, resourceType: raw.resourceType, resourceId: raw.id },
+  visibility: "SELF",
+  sensitivity: "SENSITIVE",
+  actions: [{ id: "open", label: "View result", deepLink: `/results/${raw.id}`, enabled: true }],
 }));
 
 registerNormalizer("ServiceRequest", (raw) => ({
@@ -170,4 +204,9 @@ registerNormalizer("ServiceRequest", (raw) => ({
   metadata: raw.data,
   sourceSystem: raw.source,
   sourceId: raw.id,
+  status: raw.data.status as string | undefined,
+  provenance: { system: raw.source, resourceType: raw.resourceType, resourceId: raw.id },
+  visibility: "SELF",
+  sensitivity: "STANDARD",
+  actions: [{ id: "open", label: "View order", deepLink: `/orders/${raw.id}`, enabled: true }],
 }));

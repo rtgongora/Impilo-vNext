@@ -1,11 +1,13 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
+import zw.gov.mohcc.impilo.experience.support.PctTimelineRows;
 
 import java.util.*;
 
@@ -16,6 +18,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/internal/v1/mobile/citizen/timeline")
 public class CitizenTimelineController {
+
+    private static final Logger log = LoggerFactory.getLogger(CitizenTimelineController.class);
 
     private final PctServiceClient pctClient;
 
@@ -33,14 +37,40 @@ public class CitizenTimelineController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        JsonNode timeline = pctClient.getPatientTimeline(actorId);
+        try {
+            List<Map<String, Object>> rows = PctTimelineRows.timelineEntries(
+                    pctClient.getPatientTimeline(actorId));
+            if (eventType != null && !eventType.isBlank()) {
+                rows = rows.stream().filter(row -> {
+                    Object attributes = row.get("attributes");
+                    return attributes instanceof Map<?, ?> attrs
+                            && eventType.equalsIgnoreCase(String.valueOf(attrs.get("eventType")));
+                }).toList();
+            }
 
-        // UUID patientId = resolvePatientId(tenantId, actorId);
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            int safePage = Math.max(0, page);
+            int safeSize = Math.min(100, Math.max(1, size));
+            int from = Math.min(rows.size(), safePage * safeSize);
+            int to = Math.min(rows.size(), from + safeSize);
+            int totalPages = rows.isEmpty() ? 0 : (rows.size() + safeSize - 1) / safeSize;
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", timeline);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", rows.subList(from, to));
+            response.put("meta", Map.of(
+                    "request_id", requestId,
+                    "correlation_id", correlationId,
+                    "page", Map.of(
+                            "number", safePage,
+                            "size", safeSize,
+                            "total_elements", rows.size(),
+                            "total_pages", totalPages)));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Citizen timeline unavailable for actor={}: {}", actorId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", "timeline_unavailable",
+                    "message", "Your timeline could not be retrieved. This is not an empty health history.",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 }

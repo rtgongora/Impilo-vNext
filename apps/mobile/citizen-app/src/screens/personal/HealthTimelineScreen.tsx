@@ -2,22 +2,21 @@
  * HealthTimelineScreen — Unified vertical health timeline.
  */
 
-import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React from "react";
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
 import { LoadingSpinner, EmptyState, ErrorState, colors } from "@impilo/mobile-design-system";
-import { getTimeline } from "../../services/healthTimelineService";
-import type { TimelineEntry, TimelineEntryType } from "../../types";
+import { useMyTimeline, type TimelineEvent, type TimelineEventType } from "@impilo/mobile-timeline";
 
-const TYPE_ICON: Record<TimelineEntryType, string> = {
-  ENCOUNTER: "\u{1F3E5}",
+const TYPE_ICON: Partial<Record<TimelineEventType, string>> = {
+  VISIT: "\u{1F3E5}",
   LAB_RESULT: "\u{1F9EA}",
   PRESCRIPTION: "\u{1F48A}",
   APPOINTMENT: "\u{1F4C5}",
   IMMUNIZATION: "\u{1F489}",
 };
 
-const TYPE_DOT_COLOR: Record<TimelineEntryType, string> = {
-  ENCOUNTER: "#3B82F6",
+const TYPE_DOT_COLOR: Partial<Record<TimelineEventType, string>> = {
+  VISIT: "#3B82F6",
   LAB_RESULT: "#8B5CF6",
   PRESCRIPTION: "#10B981",
   APPOINTMENT: colors.ui.warning.main,
@@ -25,49 +24,35 @@ const TYPE_DOT_COLOR: Record<TimelineEntryType, string> = {
 };
 
 export function HealthTimelineScreen() {
-  const [entries, setEntries] = useState<TimelineEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const load = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await getTimeline({ size: 100 });
-      setEntries(result.items);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { events, isLoading, error, refresh, loadMore, hasMore } = useMyTimeline(undefined, { pageSize: 40 });
 
   if (isLoading) return <LoadingSpinner size="md" />;
-  if (error) return <ErrorState title="Error" message={error.message} onRetry={load} />;
+  if (error) return <ErrorState title="Timeline unavailable" message={error.message} onRetry={refresh} />;
 
-  if (entries.length === 0) {
+  if (events.length === 0) {
     return (
       <EmptyState
-        title="No timeline entries"
-        message="Your health history will appear here as you receive care"
+        title="Your timeline is ready"
+        message="Verified care events will appear here as they are recorded. An empty timeline does not invent history."
       />
     );
   }
 
   return (
-    <ScrollView testID="health-timeline-screen" style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      testID="health-timeline-screen"
+      style={styles.scrollView}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refresh} />}
+    >
       <View style={styles.container}>
         <Text style={styles.heading}>Health Timeline</Text>
 
         <View style={styles.timeline}>
-          {entries.map((entry, index) => {
+          {events.map((entry: TimelineEvent, index) => {
             const dotColor = TYPE_DOT_COLOR[entry.type] ?? colors.gray[400];
             const icon = TYPE_ICON[entry.type] ?? "\u{1F4CB}";
-            const isLast = index === entries.length - 1;
+            const isLast = index === events.length - 1;
 
             return (
               <View key={entry.id} testID={`timeline-entry-${entry.id}`} style={styles.entryRow}>
@@ -85,24 +70,41 @@ export function HealthTimelineScreen() {
                       {entry.type.replace(/_/g, " ")}
                     </Text>
                     <Text style={styles.entryDate}>
-                      {new Date(entry.date).toLocaleDateString()}
+                      {new Date(entry.timestamp).toLocaleDateString()}
                     </Text>
                   </View>
                   <Text style={styles.entryTitle}>{entry.title}</Text>
-                  {entry.description ? (
-                    <Text style={styles.entryDescription}>{entry.description}</Text>
+                  {entry.summary ? (
+                    <Text style={styles.entryDescription}>{entry.summary}</Text>
                   ) : null}
                   {entry.facilityName ? (
                     <Text style={styles.entryFacility}>{entry.facilityName}</Text>
                   ) : null}
-                  {entry.provider ? (
-                    <Text style={styles.entryProvider}>{entry.provider}</Text>
+                  {entry.actorName ? (
+                    <Text style={styles.entryProvider}>{entry.actorName}</Text>
                   ) : null}
+                  <Text style={styles.provenance}>Source: {entry.provenance.system}</Text>
+                  {entry.actions.map((action) => (
+                    <TouchableOpacity
+                      key={action.id}
+                      disabled={!action.enabled}
+                      accessibilityRole="button"
+                      accessibilityHint={action.unavailableReason}
+                      style={styles.action}
+                    >
+                      <Text style={styles.actionText}>{action.label}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
             );
           })}
         </View>
+        {hasMore ? (
+          <TouchableOpacity testID="timeline-load-more" onPress={loadMore} style={styles.loadMore}>
+            <Text style={styles.loadMoreText}>{isLoading ? "Loading…" : "Show earlier events"}</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </ScrollView>
   );
@@ -190,4 +192,9 @@ const styles = StyleSheet.create({
     color: colors.gray[400],
     marginVertical: 2,
   },
+  provenance: { fontSize: 11, color: colors.gray[400], marginTop: 4 },
+  action: { alignSelf: "flex-start", marginTop: 8, minHeight: 44, justifyContent: "center" },
+  actionText: { color: "#007A3D", fontWeight: "600" },
+  loadMore: { minHeight: 48, alignItems: "center", justifyContent: "center" },
+  loadMoreText: { color: "#007A3D", fontWeight: "600" },
 });

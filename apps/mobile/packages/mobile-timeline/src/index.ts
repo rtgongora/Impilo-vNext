@@ -14,6 +14,8 @@ export type {
   TimelineResponse,
   RawBackendEvent,
   EventNormalizer,
+  TimelineProvenance,
+  TimelineAction,
 } from "./types";
 
 // Normalizers

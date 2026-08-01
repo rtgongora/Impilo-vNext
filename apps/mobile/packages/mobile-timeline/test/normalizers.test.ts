@@ -18,6 +18,13 @@ describe("normalizeEvent", () => {
     expect(event!.summary).toBe("Follow-up visit");
     expect(event!.actorName).toBe("Dr. Smith");
     expect(event!.deepLink).toBe("/visits/enc-1");
+    expect(event!.provenance).toEqual({
+      system: "pct-service",
+      resourceType: "Encounter",
+      resourceId: "enc-1",
+    });
+    expect(event!.visibility).toBe("SELF");
+    expect(event!.actions[0]).toMatchObject({ enabled: true, label: "View visit" });
   });
 
   it("normalizes an Observation to a VITALS timeline event", () => {
@@ -72,6 +79,16 @@ describe("normalizeEvent", () => {
     expect(event).not.toBeNull();
     expect(event!.type).toBe("SYSTEM");
     expect(event!.title).toBe("Unknown Event");
+    expect(event!.actions).toEqual([]);
+  });
+
+  it("maps recorded journey and vaccination events into canonical categories", () => {
+    const events = normalizeEvents([
+      { id: "j-1", resourceType: "JOURNEY_OPENED", timestamp: "2026-03-15T12:00:00Z", data: {}, source: "pct_journey" },
+      { id: "i-1", resourceType: "Immunization", timestamp: "2026-03-15T11:00:00Z", data: {}, source: "fhir" },
+    ]);
+    expect(events.map((event) => event.type)).toEqual(["CARE_MILESTONE", "IMMUNIZATION"]);
+    expect(events[0].provenance.system).toBe("pct_journey");
   });
 });
 
@@ -100,6 +117,10 @@ describe("registerNormalizer", () => {
       metadata: raw.data,
       sourceSystem: raw.source,
       sourceId: raw.id,
+      provenance: { system: raw.source, resourceType: raw.resourceType, resourceId: raw.id },
+      visibility: "SELF",
+      sensitivity: "STANDARD",
+      actions: [],
     }));
 
     const raw: RawBackendEvent = {

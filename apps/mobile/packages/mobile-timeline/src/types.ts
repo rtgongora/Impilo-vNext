@@ -21,6 +21,25 @@ export interface TimelineEvent {
   metadata: Record<string, unknown>;
   sourceSystem: string;
   sourceId: string;
+  status?: string;
+  provenance: TimelineProvenance;
+  visibility: "SELF" | "CARE_TEAM" | "RESTRICTED";
+  sensitivity: "STANDARD" | "SENSITIVE" | "HIGHLY_SENSITIVE";
+  actions: TimelineAction[];
+}
+
+export interface TimelineProvenance {
+  system: string;
+  resourceType: string;
+  resourceId: string;
+}
+
+export interface TimelineAction {
+  id: string;
+  label: string;
+  deepLink?: string;
+  enabled: boolean;
+  unavailableReason?: string;
 }
 
 export type TimelineEventType =
@@ -42,6 +61,12 @@ export type TimelineEventType =
   | "CONSENT"
   | "COVERAGE"
   | "OUTREACH"
+  | "IMMUNIZATION"
+  | "WELLNESS"
+  | "FEEDBACK"
+  | "TELECARE"
+  | "COLLECTION"
+  | "CARE_MILESTONE"
   | "SYSTEM";
 
 export interface TimelineFilters {
