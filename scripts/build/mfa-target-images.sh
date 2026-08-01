@@ -39,7 +39,7 @@ common_args=(
 )
 
 echo "BUILD source=$COMMIT tree=$TREE tag=$TAG"
-mvn -q -pl services/experience-bff,services/tshepo-authz-service,services/tshepo-audit-service \
+mvn -q -f services/pom.xml -pl experience-bff,tshepo-authz-service,tshepo-audit-service \
   -am package -DskipTests >"$LOG_DIR/maven.log" 2>&1 &
 maven_pid=$!
 docker build "${common_args[@]}" -t "$REGISTRY/impilo/keycloak:$TAG" infra/keycloak \
