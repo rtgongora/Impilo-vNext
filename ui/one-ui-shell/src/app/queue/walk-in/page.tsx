@@ -10,7 +10,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRightLeft, ClipboardCheck, Loader2, Search, User, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowRightLeft, Check, CircleCheck, ClipboardCheck, Loader2, Search, ShieldCheck, User, UserPlus } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
@@ -36,6 +36,12 @@ export default function WalkInPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [liveProbe, setLiveProbe] = useState<{ modality: Modality; probeBase64: string } | null>(null);
+  const [queueReceipt, setQueueReceipt] = useState<{
+    entryId: string;
+    encounterPath: string;
+    patientName: string;
+    facilityName: string;
+  } | null>(null);
 
   const [showNewPatient, setShowNewPatient] = useState(false);
   // True only for a patient just created via the registration wizard — they get
@@ -105,11 +111,14 @@ export default function WalkInPage() {
       if (journeyId) params.set("journey_id", journeyId);
       if (transactionId) params.set("transaction_id", transactionId);
       const query = params.toString();
-      router.push(
-        query
+      setQueueReceipt({
+        entryId: response.data.id,
+        encounterPath: query
           ? `/ehr/${patientId}/encounters?${query}`
           : `/ehr/${patientId}/encounters`,
-      );
+        patientName: getPatientDisplayName(selectedPatient),
+        facilityName: facility.name,
+      });
     } catch (e) {
       const err = e as { status?: number; error?: { message?: string } };
       if (err?.status && err.status >= 400 && err.status < 500) {
@@ -131,6 +140,32 @@ export default function WalkInPage() {
         title="Walk-in Registration"
         subtitle={facility ? `${facility.name}` : "Search for an existing patient or register a new one"}
       >
+        {queueReceipt ? (
+          <section className="mx-auto max-w-2xl rounded-3xl border border-emerald-200 bg-white p-6 shadow-sm" aria-labelledby="queue-receipt-title">
+            <div className="flex items-start gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-100 text-emerald-700">
+                <CircleCheck className="h-6 w-6" aria-hidden />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Queue entry created</p>
+                <h2 id="queue-receipt-title" className="mt-1 text-2xl font-semibold text-foreground">The patient is ready for the next step</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {queueReceipt.patientName} was added to the walk-in queue at {queueReceipt.facilityName}.
+                </p>
+              </div>
+            </div>
+            <dl className="mt-5 grid gap-3 rounded-2xl bg-emerald-50 p-4 sm:grid-cols-2">
+              <div><dt className="text-xs font-medium text-emerald-700">Queue reference</dt><dd className="mt-1 font-mono text-sm font-semibold text-emerald-950">{queueReceipt.entryId}</dd></div>
+              <div><dt className="text-xs font-medium text-emerald-700">Next action</dt><dd className="mt-1 text-sm font-semibold text-emerald-950">Open the patient encounter</dd></div>
+            </dl>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button type="button" onClick={() => router.push(queueReceipt.encounterPath)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">
+                Open patient encounter <ArrowRight className="h-4 w-4" aria-hidden />
+              </button>
+              <Link href="/queue" className="inline-flex min-h-11 items-center rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-background">Return to queue</Link>
+            </div>
+          </section>
+        ) : (
         <div className="space-y-6">
           <QueueWorkspaceHeader
             badge="Walk-in intake"
@@ -162,13 +197,32 @@ export default function WalkInPage() {
             Back to queue
           </Link>
 
-          <div className="max-w-2xl space-y-6">
+          <div className="mx-auto max-w-2xl space-y-6">
+            <ol className="grid gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-3" aria-label="Walk-in registration progress">
+              {[
+                { label: "Find patient", complete: Boolean(selectedPatient) },
+                { label: "Verify identity", complete: Boolean(selectedPatient && (liveProbe || justRegistered)) },
+                { label: "Add to queue", complete: false },
+              ].map((step, index) => (
+                <li key={step.label} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${selectedPatient || index === 0 ? "bg-primary-soft text-primary-hover" : "text-muted-foreground"}`}>
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-current">{step.complete ? <Check className="h-3.5 w-3.5" aria-hidden /> : index + 1}</span>
+                  {step.label}
+                </li>
+              ))}
+            </ol>
             {selectedPatient ? (
-              <div className="rounded-3xl border border-primary/25 bg-primary-soft p-4 text-sm text-impilo-800">
-                <p className="font-medium">Selected patient</p>
-                <p className="mt-1">{getPatientDisplayName(selectedPatient)}</p>
-                <p className="mt-1 text-xs text-primary-hover">{getPatientQueueSummary(selectedPatient)}</p>
-              </div>
+              <section className="rounded-3xl border border-primary/25 bg-primary-soft p-5" aria-labelledby="selected-patient-title">
+                <div className="flex items-start justify-between gap-3">
+                  <div><p className="text-xs font-bold uppercase tracking-wide text-primary-hover">Selected patient</p><h2 id="selected-patient-title" className="mt-1 text-lg font-semibold text-foreground">{getPatientDisplayName(selectedPatient)}</h2></div>
+                  <ShieldCheck className="h-5 w-5 text-primary" aria-label="Identity details shown under active work context" />
+                </div>
+                <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                  <div><dt className="text-xs text-muted-foreground">Date of birth</dt><dd className="mt-1 font-medium text-foreground">{selectedPatient.attributes.dateOfBirth || "Not recorded"}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Sex / gender</dt><dd className="mt-1 font-medium capitalize text-foreground">{selectedPatient.attributes.gender || "Not recorded"}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Impilo reference</dt><dd className="mt-1 font-medium text-foreground">{selectedPatient.attributes.cpid || selectedPatient.id}</dd></div>
+                </dl>
+                <button type="button" onClick={() => { setSelectedPatient(null); setLiveProbe(null); }} className="mt-4 text-xs font-semibold text-primary hover:text-primary-hover">Choose a different patient</button>
+              </section>
             ) : null}
 
             {/* Patient Search */}
@@ -221,7 +275,7 @@ export default function WalkInPage() {
                 </div>
               )}
 
-              {patients.length > 0 && (
+              {!selectedPatient && patients.length > 0 && (
                 <div className="mt-4 space-y-2">
                   {patients.map((patient) => (
                     <button
@@ -231,11 +285,7 @@ export default function WalkInPage() {
                         setShowNewPatient(false);
                         setJustRegistered(false);
                       }}
-                      className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
-                        selectedPatient?.id === patient.id
-                          ? "border-impilo-400 bg-primary-soft"
-                          : "border-border hover:border-border hover:bg-background"
-                      }`}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg border border-border text-left transition-colors hover:border-primary/40 hover:bg-background"
                     >
                       <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center">
                         <User className="w-4 h-4 text-muted-foreground" />
@@ -311,6 +361,7 @@ export default function WalkInPage() {
             )}
           </div>
         </div>
+        )}
       </PageShell>
     </AppLayout>
   );

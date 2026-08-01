@@ -76,7 +76,7 @@ describe("WalkInPage", () => {
     });
   });
 
-  it("can receive a patient from search and create the queue entry in place", async () => {
+  it("can receive a patient from search and returns an explicit queue receipt", async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -96,6 +96,11 @@ describe("WalkInPage", () => {
         }),
       ),
     );
+    expect(await screen.findByText("The patient is ready for the next step")).toBeInTheDocument();
+    expect(screen.getByText("entry-1")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: /open patient encounter/i }));
     expect(push).toHaveBeenCalledWith(
       "/ehr/patient-1/encounters?journey_id=journey-42&transaction_id=journey-42",
     );

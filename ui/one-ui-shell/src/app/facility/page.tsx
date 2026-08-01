@@ -87,8 +87,12 @@ export default function FacilityPage() {
           isLoading={isLoading}
           onSelectFacility={handleSelect}
           selectedFacilityId={facility?.id}
-          title="Workplace Selection Hub"
-          subtitle="Lovable-style inline facility cards keep the selection flow in one place while preserving the existing auth and router guard sequence."
+          title="Choose your workplace"
+          subtitle={
+            facility
+              ? `${facility.name} is your current context. Choose it again to continue, or select another authorised workplace.`
+              : "Select an authorised facility, then continue into the workspace and shift you need."
+          }
           modeActions={[
             ...(facilityModeEligible && facility
               ? [{
